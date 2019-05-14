@@ -42,8 +42,7 @@ class ngraph::runtime::cpu::pass::CPUMemoryAssignment : public ngraph::pass::Fun
 {
 public:
     CPUMemoryAssignment(
-        std::unordered_map<size_t,
-                           std::pair<CPUTensorRole, std::unordered_set<descriptor::Tensor*>>>&,
+        std::unordered_map<size_t, std::pair<TensorRole, std::unordered_set<descriptor::Tensor*>>>&,
         std::unordered_map<descriptor::Tensor*, size_t>&,
         size_t alignment = 1,
         bool disable_memory_sharing = false);
@@ -74,7 +73,7 @@ private:
     bool m_disable_memory_sharing;
     std::set<descriptor::Tensor*> m_tensor_caching;
     std::unordered_map<size_t,
-                       std::pair<ngraph::CPUTensorRole, std::unordered_set<descriptor::Tensor*>>>&
+                       std::pair<ngraph::TensorRole, std::unordered_set<descriptor::Tensor*>>>&
         m_bufferID_to_tensorSets;
     std::unordered_map<descriptor::Tensor*, size_t>& m_tensor_to_bufferID;
 };

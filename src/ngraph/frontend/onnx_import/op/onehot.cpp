@@ -26,8 +26,9 @@
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "onehot.hpp"
-#include "utils/broadcasting.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -79,7 +80,8 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> one_hot = std::make_shared<ngraph::op::Convert>(
                         std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
                         values->get_element_type());
-                    auto broadcasted_values = numpy_style_broadcast({one_hot, on_value, off_value});
+                    auto broadcasted_values =
+                        ngraph::op::numpy_style_broadcast({one_hot, on_value, off_value});
                     on_value = broadcasted_values[1];
                     off_value = broadcasted_values[2];
                     one_hot = one_hot * (on_value - off_value) + off_value;

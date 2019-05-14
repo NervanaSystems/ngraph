@@ -50,14 +50,17 @@
 #include "op/dropout.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
+#include "op/erf.hpp"
 #include "op/exp.hpp"
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
+#include "op/gather.hpp"
 #include "op/gemm.hpp"
 #include "op/global_average_pool.hpp"
 #include "op/global_max_pool.hpp"
 #include "op/greater.hpp"
 #include "op/hard_sigmoid.hpp"
+#include "op/hardmax.hpp"
 #include "op/identity.hpp"
 #include "op/leaky_relu.hpp"
 #include "op/less.hpp"
@@ -82,6 +85,7 @@
 #include "op/prelu.hpp"
 #include "op/quant_conv.hpp"
 #include "op/quantize_linear.hpp"
+#include "op/quantized_matmul.hpp"
 #include "op/reciprocal.hpp"
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
@@ -249,14 +253,17 @@ namespace ngraph
             REGISTER_OPERATOR("Dropout", 1, dropout);
             REGISTER_OPERATOR("Elu", 1, elu);
             REGISTER_OPERATOR("Equal", 1, equal);
+            REGISTER_OPERATOR("Erf", 1, erf);
             REGISTER_OPERATOR("Exp", 1, exp);
             REGISTER_OPERATOR("Flatten", 1, flatten);
             REGISTER_OPERATOR("Floor", 1, floor);
+            REGISTER_OPERATOR("Gather", 1, gather);
             REGISTER_OPERATOR("Gemm", 1, gemm);
             REGISTER_OPERATOR("GlobalAveragePool", 1, global_average_pool);
             REGISTER_OPERATOR("GlobalLpPool", 1, global_lp_pool);
             REGISTER_OPERATOR("GlobalMaxPool", 1, global_max_pool);
             REGISTER_OPERATOR("Greater", 1, greater);
+            REGISTER_OPERATOR("Hardmax", 1, hardmax);
             REGISTER_OPERATOR("HardSigmoid", 1, hard_sigmoid);
             REGISTER_OPERATOR("Identity", 1, identity);
             REGISTER_OPERATOR("LeakyRelu", 1, leaky_relu);
@@ -283,6 +290,7 @@ namespace ngraph
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
             REGISTER_OPERATOR("QLinearConv", 1, quant_conv);
+            REGISTER_OPERATOR("QLinearMatMul", 1, quantized_matmul);
             REGISTER_OPERATOR("QuantizeLinear", 1, quantize_linear);
             REGISTER_OPERATOR("Reciprocal", 1, reciprocal);
             REGISTER_OPERATOR("ReduceLogSum", 1, reduce_log_sum);
@@ -326,6 +334,7 @@ namespace ngraph
             REGISTER_OPERATOR("Xor", 1, logical_xor);
         }
 
+#undef REGISTER_OPERATOR
     } // namespace onnx_import
 
 } // namespace ngraph

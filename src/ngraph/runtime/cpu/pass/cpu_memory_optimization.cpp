@@ -64,7 +64,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
     {
         if (n->description() == "Concat")
         {
-            auto concat = std::static_pointer_cast<op::Concat>(n);
+            auto concat = std::static_pointer_cast<ngraph::op::Concat>(n);
             auto shape = concat->get_input_shape(0);
             auto axis = concat->get_concatenation_axis();
             auto product = 1;
@@ -105,7 +105,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             for (descriptor::Input& input : concat->get_inputs())
             {
                 // no tensors with zero-sized dimensions after zero_dim_tensor_elimination
-                NGRAPH_ASSERT(shape_size(input.get_shape()) != 0);
+                NGRAPH_CHECK(shape_size(input.get_shape()) != 0);
 
                 // check if input layout is padded
                 auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), index);
@@ -128,13 +128,13 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     break;
                 }
 
-                NGRAPH_ASSERT(arg->get_output_size() == 1);
+                NGRAPH_CHECK(arg->get_output_size() == 1);
 
                 if (arg->description() != "Concat")
                 {
                     if (arg->is_op())
                     {
-                        auto op = std::static_pointer_cast<op::Op>(arg);
+                        auto op = std::static_pointer_cast<ngraph::op::Op>(arg);
                         auto annotation = op->get_op_annotations();
                         if (annotation && annotation->get_in_place_oi_pairs().size() > 0)
 
@@ -177,7 +177,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                         {
                             if (user->is_op())
                             {
-                                auto op = std::static_pointer_cast<op::Op>(user);
+                                auto op = std::static_pointer_cast<ngraph::op::Op>(user);
                                 if (auto op_annotations = op->get_op_annotations())
                                 {
                                     if (op_annotations->get_in_place_oi_pairs().size() > 0)
@@ -227,7 +227,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
     {
         if (n->description() == "Slice")
         {
-            auto slice = std::static_pointer_cast<op::Slice>(n);
+            auto slice = std::static_pointer_cast<ngraph::op::Slice>(n);
             auto in_shape = slice->get_input_shape(0);
             auto out_shape = slice->get_output_shape(0);
             auto strides = slice->get_strides();

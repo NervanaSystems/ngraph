@@ -22,6 +22,23 @@
 #include "ngraph/except.hpp"
 #include "ngraph/node.hpp"
 
+#ifdef _WIN32
+#pragma warning(push)
+
+#pragma warning(disable : 4100)
+#endif
+
+// Prevents the compiler from complaining about or optimizing away variables
+// that appear unused on Linux
+#if (defined(__GNUC__) && !defined(__clang__))
+#undef ONNX_ATTRIBUTE_UNUSED
+#define ONNX_ATTRIBUTE_UNUSED __attribute__((__unused__))
+#else
+#define ONNX_ATTRIBUTE_UNUSED
+#endif
+
+#define UNUSED_PARAMETER ONNX_ATTRIBUTE_UNUSED = 0
+
 namespace ngraph
 {
     namespace onnx_import
@@ -41,13 +58,39 @@ namespace ngraph
 
             namespace detail
             {
-                std::shared_ptr<ngraph::Node> sigmoid(const std::shared_ptr<ngraph::Node>& arg);
-                std::shared_ptr<ngraph::Node> tanh(const std::shared_ptr<ngraph::Node>& arg);
-                std::shared_ptr<ngraph::Node> relu(const std::shared_ptr<ngraph::Node>& arg);
+                std::shared_ptr<ngraph::Node> sigmoid(const std::shared_ptr<ngraph::Node>& arg,
+                                                      float alpha UNUSED_PARAMETER,
+                                                      float beta UNUSED_PARAMETER);
+                std::shared_ptr<ngraph::Node> tanh(const std::shared_ptr<ngraph::Node>& arg,
+                                                   float alpha UNUSED_PARAMETER,
+                                                   float beta UNUSED_PARAMETER);
+                std::shared_ptr<ngraph::Node> relu(const std::shared_ptr<ngraph::Node>& arg,
+                                                   float alpha UNUSED_PARAMETER,
+                                                   float beta UNUSED_PARAMETER);
+                std::shared_ptr<ngraph::Node>
+                    hardsigmoid(const std::shared_ptr<ngraph::Node>& arg, float alpha, float beta);
             }
 
-            using ActivationFunction =
-                std::function<std::shared_ptr<ngraph::Node>(const std::shared_ptr<ngraph::Node>&)>;
+            using ActivationFunctionType = std::shared_ptr<ngraph::Node> (*)(
+                const std::shared_ptr<ngraph::Node>&, float, float);
+
+            class ActivationFunction
+            {
+            public:
+                ActivationFunction(ActivationFunctionType f, float alpha, float beta);
+                ActivationFunction(ActivationFunctionType f, float alpha);
+                ActivationFunction(ActivationFunctionType f);
+
+                std::shared_ptr<ngraph::Node>
+                    operator()(const std::shared_ptr<ngraph::Node>& arg) const;
+
+                void set_alpha(float alpha) { m_alpha = alpha; }
+                void set_beta(float beta) { m_beta = beta; }
+            private:
+                ActivationFunctionType m_function;
+                float m_alpha;
+                float m_beta;
+            };
 
             /// \brief      Gets the activation function by name.
             ///
@@ -64,3 +107,14 @@ namespace ngraph
     } // namespace onnx_import
 
 } // namespace ngraph
+
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
+
+#ifdef UNUSED_PARAMETER
+#undef UNUSED_PARAMETER
+#endif
+#ifdef ONNX_ATTRIBUTE_UNUSED
+#undef ONNX_ATTRIBUTE_UNUSED
+#endif

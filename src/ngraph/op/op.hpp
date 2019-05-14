@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
 

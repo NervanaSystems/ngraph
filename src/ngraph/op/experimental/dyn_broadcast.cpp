@@ -60,6 +60,8 @@ void op::DynBroadcast::validate_and_infer_types()
                           "DynBroadcast axes rank must be 1, but has ",
                           axes_shape_rank);
 
+    set_input_is_relevant_to_shape(1);
+    set_input_is_relevant_to_shape(2);
     set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }
 

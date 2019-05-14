@@ -30,7 +30,7 @@ namespace ngraph
     ///    indent level specified.
     std::string serialize(std::shared_ptr<ngraph::Function> func, size_t indent = 0);
 
-    /// \brief Serialize a Function to as a json file
+    /// \brief Serialize a Function to a json file
     /// \param path The path to the output file
     /// \param func The Function to serialize
     /// \param indent If 0 then there is no formatting applied and the resulting string is the
@@ -40,7 +40,7 @@ namespace ngraph
                    std::shared_ptr<ngraph::Function> func,
                    size_t indent = 0);
 
-    /// \brief Serialize a Function to a CPIO file with all constant data stored as binary
+    /// \brief Serialize a Function to a json stream
     /// \param out The output stream to which the data is serialized.
     /// \param func The Function to serialize
     /// \param indent If 0 then there is no formatting applied and the json is the
@@ -55,4 +55,10 @@ namespace ngraph
     /// \brief Deserialize a Function
     /// \param str The json formatted string to deseriailze.
     std::shared_ptr<ngraph::Function> deserialize(const std::string& str);
+
+    /// \brief If enabled adds output shapes to the serialized graph
+    /// \param enable Set to true to enable or false otherwise
+    ///
+    /// Option may be enabled by setting the environment variable NGRAPH_SERIALIZER_OUTPUT_SHAPES
+    void set_serialize_output_shapes(bool enable);
 }

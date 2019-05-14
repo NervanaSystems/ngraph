@@ -43,6 +43,7 @@
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
@@ -378,9 +379,9 @@ TEST(algebraic_simplification, concat_reshape_slice)
     auto concat = make_shared<op::Concat>(NodeVector{reshape1, reshape2, reshape3}, concat_axis);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
@@ -401,9 +402,9 @@ TEST(algebraic_simplification, concat_slice)
     auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
@@ -421,9 +422,9 @@ TEST(algebraic_simplification, concat_parameter_slice)
     auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
@@ -441,9 +442,9 @@ TEST(algebraic_simplification, concat_parameter_slices_reversed)
     auto concat = make_shared<op::Concat>(NodeVector{slice3, slice2, slice1}, concat_axis);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
@@ -462,9 +463,9 @@ TEST(algebraic_simplification, concat_parameter_slices_element_count)
     auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
@@ -482,9 +483,9 @@ TEST(algebraic_simplification, concat_parameter_non_uniform_slices)
     auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
@@ -507,9 +508,9 @@ TEST(algebraic_simplification, concat_different_goes)
     auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::VisualizeTree>("before.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::AlgebraicSimplification>();
-    pass_manager.register_pass<pass::VisualizeTree>("after.pdf");
+    pass_manager.register_pass<pass::VisualizeTree>("after.png");
 
     auto f = std::make_shared<Function>(ngraph::NodeVector{concat}, ParameterVector{a});
     pass_manager.run_passes(f);
@@ -582,4 +583,14 @@ TEST(algebraic_simplification, log_no_divide)
     auto f = std::make_shared<Function>(ngraph::NodeVector{neg4}, ParameterVector{a, b});
     pass_manager.run_passes(f);
     ASSERT_EQ(neg_inner->get_argument(0), log_mul);
+}
+
+TEST(algebraic_simplification, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::AlgebraicSimplification>();
+
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(true,
+              pass->get_property(pass::PassPropertyMask(pass::PassProperty::REGULAR_FUSIONS) |
+                                 pass::PassPropertyMask(pass::PassProperty::REQUIRE_STATIC_SHAPE)));
 }

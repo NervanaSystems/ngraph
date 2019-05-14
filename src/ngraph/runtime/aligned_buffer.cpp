@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <memory>
 
 #include "ngraph/runtime/aligned_buffer.hpp"
@@ -30,23 +31,15 @@ runtime::AlignedBuffer::AlignedBuffer()
 
 runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
 {
-    m_byte_size = byte_size;
-    if (m_byte_size > 0)
-    {
-        size_t allocation_size = m_byte_size + alignment;
-        m_allocated_buffer = static_cast<char*>(ngraph_malloc(allocation_size));
-        m_aligned_buffer = m_allocated_buffer;
-        size_t mod = size_t(m_aligned_buffer) % alignment;
+    m_byte_size = std::max<size_t>(1, byte_size);
+    size_t allocation_size = m_byte_size + alignment;
+    m_allocated_buffer = static_cast<char*>(ngraph_malloc(allocation_size));
+    m_aligned_buffer = m_allocated_buffer;
+    size_t mod = size_t(m_aligned_buffer) % alignment;
 
-        if (mod != 0)
-        {
-            m_aligned_buffer += (alignment - mod);
-        }
-    }
-    else
+    if (mod != 0)
     {
-        m_allocated_buffer = nullptr;
-        m_aligned_buffer = nullptr;
+        m_aligned_buffer += (alignment - mod);
     }
 }
 

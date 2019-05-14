@@ -4295,6 +4295,15 @@ TEST(
     }
 }
 
+TEST(type_prop, tile)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8, 10});
+    auto param1 = op::Constant::create(element::i64, Shape{3}, {3, 4, 1});
+    auto top = make_shared<op::Tile>(param0, param1);
+    ASSERT_EQ(top->get_element_type(), element::f32);
+    ASSERT_EQ(top->get_shape(), (Shape{18, 32, 10}));
+}
+
 TEST(type_prop, one_hot_deduce_scalar)
 {
     auto param = make_shared<op::Parameter>(element::i32, Shape{});
@@ -4343,12 +4352,32 @@ TEST(type_prop, one_hot_deduce_matrix_2)
     ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 2}));
 }
 
+TEST(type_prop, one_hot_deduce_et_dynamic)
+{
+    auto param = make_shared<op::Parameter>(element::dynamic, Shape{12, 24});
+    auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 2}, 2);
+    ASSERT_EQ(oh->get_element_type(), element::dynamic);
+    ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 2}));
+}
+
 TEST(type_prop, one_hot_deduce_floating_point)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{12, 24});
-    auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 2);
-    ASSERT_EQ(oh->get_element_type(), element::f32);
-    ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 8}));
+    try
+    {
+        auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 8}, 3);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid floating-point element type not detected.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument does not have integral element type."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
 TEST(type_prop, one_hot_deduce_axis_oob)
@@ -4396,7 +4425,7 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_dynamic)
     PartialShape requested_shape{PartialShape::dynamic()};
     size_t one_hot_axis{3000};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4419,10 +4448,10 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_ok)
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
 
-    ASSERT_EQ(oh->get_output_element_type(0), element::f32);
+    ASSERT_EQ(oh->get_output_element_type(0), element::i32);
     ASSERT_TRUE(oh->get_output_partial_shape(0).same_scheme(
         PartialShape{Dimension::dynamic(), 2, 3, Dimension::dynamic()}));
 }
@@ -4433,7 +4462,7 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_one_hot_dim_dyn
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
     size_t one_hot_axis{3};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4458,7 +4487,7 @@ TEST(type_prop, one_hot_partial_rank_dynamic_rank_static_dynamic_one_hot_axis_oo
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic()};
     size_t one_hot_axis{4};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4484,10 +4513,10 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_ok)
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
 
-    ASSERT_EQ(oh->get_output_element_type(0), element::f32);
+    ASSERT_EQ(oh->get_output_element_type(0), element::i32);
     ASSERT_TRUE(oh->get_output_partial_shape(0).same_scheme(
         PartialShape{3, 2, 3, Dimension::dynamic(), 4}));
 }
@@ -4499,7 +4528,7 @@ TEST(type_prop,
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4526,7 +4555,7 @@ TEST(type_prop,
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4553,7 +4582,7 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_incompat
     PartialShape requested_shape{Dimension::dynamic(), 2, 3, Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4580,7 +4609,7 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_one_hot_
         Dimension::dynamic(), 2, Dimension::dynamic(), Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -4607,7 +4636,7 @@ TEST(type_prop, one_hot_partial_rank_static_dynamic_rank_static_dynamic_one_hot_
         Dimension::dynamic(), 2, Dimension::dynamic(), Dimension::dynamic(), 4};
     size_t one_hot_axis{2};
 
-    auto param = make_shared<op::Parameter>(element::f32, input_shape);
+    auto param = make_shared<op::Parameter>(element::i32, input_shape);
     try
     {
         auto oh = make_shared<op::OneHot>(param, requested_shape, one_hot_axis);
@@ -5374,6 +5403,132 @@ TEST(type_prop, conv_2d_deduce_padded_neg)
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{2, -3}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{3, -4}));
 }
+
+struct DeduceAutoPadTest
+    : ::testing::TestWithParam<
+          std::tuple<Shape, Shape, Strides, Strides, CoordinateDiff, CoordinateDiff>>
+{
+};
+
+TEST_P(DeduceAutoPadTest, same_upper)
+{
+    auto image_shape = std::get<0>(GetParam());
+    image_shape.insert(image_shape.begin(), {1, 1}); // Add {N, C}
+    auto filter_shape = std::get<1>(GetParam());
+    filter_shape.insert(filter_shape.begin(), {1, 1}); // Add {O, I}
+    auto param0 = make_shared<op::Parameter>(element::f32, image_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filter_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             std::get<2>(GetParam()),
+                                             std::get<3>(GetParam()),
+                                             CoordinateDiff(),
+                                             CoordinateDiff(),
+                                             Strides(),
+                                             op::PadType::SAME_UPPER);
+    EXPECT_EQ(conv->get_padding_below(), std::get<4>(GetParam()));
+    EXPECT_EQ(conv->get_padding_above(), std::get<5>(GetParam()));
+
+    auto no_dilation = std::all_of(std::get<3>(GetParam()).begin(),
+                                   std::get<3>(GetParam()).end(),
+                                   [](size_t i) { return i <= 1; });
+    if (no_dilation)
+    {
+        auto max_pool = make_shared<op::MaxPool>(param0,
+                                                 std::get<1>(GetParam()),
+                                                 std::get<2>(GetParam()),
+                                                 Shape(),
+                                                 Shape(),
+                                                 op::PadType::SAME_UPPER);
+        CoordinateDiff padding_below(max_pool->get_padding_below().begin(),
+                                     max_pool->get_padding_below().end());
+        CoordinateDiff padding_above(max_pool->get_padding_above().begin(),
+                                     max_pool->get_padding_above().end());
+        EXPECT_EQ(padding_below, std::get<4>(GetParam()));
+        EXPECT_EQ(padding_above, std::get<5>(GetParam()));
+
+        auto avg_pool = make_shared<op::AvgPool>(param0,
+                                                 std::get<1>(GetParam()),
+                                                 std::get<2>(GetParam()),
+                                                 Shape(),
+                                                 Shape(),
+                                                 false,
+                                                 op::PadType::SAME_UPPER);
+        CoordinateDiff pad_below(avg_pool->get_padding_below().begin(),
+                                 avg_pool->get_padding_below().end());
+        CoordinateDiff pad_above(avg_pool->get_padding_above().begin(),
+                                 avg_pool->get_padding_above().end());
+        EXPECT_EQ(pad_below, std::get<4>(GetParam()));
+        EXPECT_EQ(pad_above, std::get<5>(GetParam()));
+    }
+}
+
+TEST_P(DeduceAutoPadTest, same_lower)
+{
+    auto image_shape = std::get<0>(GetParam());
+    image_shape.insert(image_shape.begin(), {1, 1}); // Add {N, C}
+    auto filter_shape = std::get<1>(GetParam());
+    filter_shape.insert(filter_shape.begin(), {1, 1}); // Add {O, I}
+    auto param0 = make_shared<op::Parameter>(element::f32, image_shape);
+    auto param1 = make_shared<op::Parameter>(element::f32, filter_shape);
+
+    auto conv = make_shared<op::Convolution>(param0,
+                                             param1,
+                                             std::get<2>(GetParam()),
+                                             std::get<3>(GetParam()),
+                                             CoordinateDiff(),
+                                             CoordinateDiff(),
+                                             Strides(),
+                                             op::PadType::SAME_LOWER);
+    EXPECT_EQ(conv->get_padding_above(), std::get<4>(GetParam()));
+    EXPECT_EQ(conv->get_padding_below(), std::get<5>(GetParam()));
+}
+
+INSTANTIATE_TEST_CASE_P(type_prop,
+                        DeduceAutoPadTest,
+                        ::testing::Values(std::make_tuple(Shape{5, 6},
+                                                          Shape{3, 4},
+                                                          Strides{2, 1},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{1, 1},
+                                                          CoordinateDiff{1, 2}),
+                                          std::make_tuple(Shape{3, 3},
+                                                          Shape{2, 2},
+                                                          Strides{1, 1},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{0, 0},
+                                                          CoordinateDiff{1, 1}),
+                                          std::make_tuple(Shape{28, 28},
+                                                          Shape{3, 3},
+                                                          Strides{2, 2},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{0, 0},
+                                                          CoordinateDiff{1, 1}),
+                                          std::make_tuple(Shape{100, 150},
+                                                          Shape{10, 20},
+                                                          Strides{1, 1},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{4, 9},
+                                                          CoordinateDiff{5, 10}),
+                                          std::make_tuple(Shape{2},
+                                                          Shape{1},
+                                                          Strides{3},
+                                                          Strides{1},
+                                                          CoordinateDiff{0},
+                                                          CoordinateDiff{0}),
+                                          std::make_tuple(Shape{10, 1},
+                                                          Shape{4, 1},
+                                                          Strides{1, 1},
+                                                          Strides{2, 1},
+                                                          CoordinateDiff{3, 0},
+                                                          CoordinateDiff{3, 0}),
+                                          std::make_tuple(Shape{10, 5, 6},
+                                                          Shape{3, 3, 4},
+                                                          Strides{1, 2, 1},
+                                                          Strides{2, 1, 1},
+                                                          CoordinateDiff{2, 1, 1},
+                                                          CoordinateDiff{2, 1, 2})), );
 
 TEST(type_prop, conv_2d_deduce_strided)
 {
@@ -10420,19 +10575,20 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_channel_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{3};
-    Shape offset_shape{3};
+    Shape zero_point_shape{3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10442,19 +10598,20 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_image_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64};
-    Shape offset_shape{64};
+    Shape zero_point_shape{64};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10464,19 +10621,20 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_row_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{480};
-    Shape offset_shape{480};
+    Shape zero_point_shape{480};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{2};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10486,19 +10644,20 @@ TEST(type_prop, quantize_f32_to_i8_nchw_per_image_channel_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10508,19 +10667,20 @@ TEST(type_prop, quantize_f32_to_i8_nchw_whole_batch_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10530,19 +10690,20 @@ TEST(type_prop, quantize_f64_to_i8_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f64;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10552,19 +10713,20 @@ TEST(type_prop, quantize_f64_to_u8_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f64;
     element::Type quantized_type = element::u8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -10574,23 +10736,23 @@ TEST(type_prop, quantize_f64_to_dyn_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f64;
     element::Type quantized_type = element::dynamic;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Attempt to quantize to dynamic type not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -10607,29 +10769,29 @@ TEST(type_prop, quantize_i8_to_u8_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::i8;
     element::Type quantized_type = element::u8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Attempt to quantize non-floating point type not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale/input element type (element::Type{8, 0, 1, 1, \"int8_t\"}) "
+                             "Scale / input element type (element::Type{8, 0, 1, 1, \"int8_t\"}) "
                              "must be a floating point number");
     }
     catch (...)
@@ -10642,23 +10804,23 @@ TEST(type_prop, quantize_f32_to_f32_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::f32;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Attempt to quantize to non-quantized type not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -10677,23 +10839,23 @@ TEST(type_prop, quantize_batch_scale_type_mismatch_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = element::f64;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Mismatch of batch and scale element types not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -10708,34 +10870,35 @@ TEST(type_prop, quantize_batch_scale_type_mismatch_fails)
     }
 }
 
-TEST(type_prop, quantize_offset_type_mismatch_fails)
+TEST(type_prop, quantize_zero_point_type_mismatch_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = element::u8;
+    element::Type zero_point_type = element::u8;
     AxisSet axes{};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Mismatch of offset element type with offset argument not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of zero point element type with zero point argument not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
-                             "match output element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
+            "match output element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
     }
     catch (...)
     {
@@ -10747,23 +10910,23 @@ TEST(type_prop, quantize_oob_axis_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{320};
-    Shape offset_shape{320};
+    Shape zero_point_shape{320};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{3, 4};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Out-of-bounds quantization axis not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -10781,29 +10944,29 @@ TEST(type_prop, quantize_scale_shape_mismatch_same_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 4};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Mismatch of scale argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,4}) and offset shape ({64,3}) must match");
+                             "Scale shape ({64,4}) and zero point shape ({64,3}) must match");
     }
     catch (...)
     {
@@ -10815,29 +10978,29 @@ TEST(type_prop, quantize_scale_shape_mismatch_different_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3, 2};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Mismatch of scale argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3,2}) and offset shape ({64,3}) must match");
+                             "Scale shape ({64,3,2}) and zero point shape ({64,3}) must match");
     }
     catch (...)
     {
@@ -10845,33 +11008,33 @@ TEST(type_prop, quantize_scale_shape_mismatch_different_rank_fails)
     }
 }
 
-TEST(type_prop, quantize_offset_shape_mismatch_same_rank_fails)
+TEST(type_prop, quantize_zero_point_shape_mismatch_same_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 4};
+    Shape zero_point_shape{64, 4};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of zero point argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3}) and offset shape ({64,4}) must match");
+                             "Scale shape ({64,3}) and zero point shape ({64,4}) must match");
     }
     catch (...)
     {
@@ -10879,33 +11042,33 @@ TEST(type_prop, quantize_offset_shape_mismatch_same_rank_fails)
     }
 }
 
-TEST(type_prop, quantize_offset_shape_mismatch_different_rank_fails)
+TEST(type_prop, quantize_zero_point_shape_mismatch_different_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 3, 2};
+    Shape zero_point_shape{64, 3, 2};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of zero point argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3}) and offset shape ({64,3,2}) must match");
+                             "Scale shape ({64,3}) and zero point shape ({64,3,2}) must match");
     }
     catch (...)
     {
@@ -10917,42 +11080,44 @@ TEST(type_prop, quantize_partial_all_rank_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{PartialShape::dynamic()};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 2000};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
 }
 
 TEST(type_prop,
-     quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_dynamic_ok)
+     quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 2000};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -10960,34 +11125,34 @@ TEST(type_prop,
 
 TEST(
     type_prop,
-    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_dynamic_axis_count_inconsistent)
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_dynamic_axis_count_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Mismatch of scale/offset rank with axis count not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Mismatch of scale / zero point rank with axis count not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            "Scale/offset rank (3) does not match the number of quantization axes (2)");
+            "Scale / zero point rank (3) does not match the number of quantization axes (2)");
     }
     catch (...)
     {
@@ -10995,24 +11160,26 @@ TEST(
     }
 }
 
-TEST(type_prop,
-     quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ok)
+TEST(
+    type_prop,
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{64, 22, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape zero_point_shape{64, 22, Dimension::dynamic(), Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -11020,33 +11187,34 @@ TEST(type_prop,
 
 TEST(
     type_prop,
-    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ranks_inconsistent)
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ranks_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{64, 22, Dimension::dynamic(), Dimension::dynamic(), 3};
+    PartialShape zero_point_shape{64, 22, Dimension::dynamic(), Dimension::dynamic(), 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Inconsistent scale/offset ranks not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Inconsistent scale / zero point ranks not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), "Scale shape ({64,?,96,?}) and offset shape ({64,22,?,?,3}) must match");
+            error.what(),
+            "Scale shape ({64,?,96,?}) and zero point shape ({64,22,?,?,3}) must match");
     }
     catch (...)
     {
@@ -11056,33 +11224,34 @@ TEST(
 
 TEST(
     type_prop,
-    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_dims_inconsistent)
+    quantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_dims_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{65, 22, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape zero_point_shape{65, 22, Dimension::dynamic(), Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
-        FAIL() << "Inconsistent scale/offset dims not detected";
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
+        FAIL() << "Inconsistent scale / zero point dims not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,?,96,?}) and offset shape ({65,22,?,?}) must match");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale shape ({64,?,96,?}) and zero point shape ({65,22,?,?}) must match");
     }
     catch (...)
     {
@@ -11092,23 +11261,24 @@ TEST(
 
 TEST(
     type_prop,
-    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ok)
+    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
 {
     PartialShape batch_shape{2, 4, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 5};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant =
+        make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
 
     ASSERT_EQ(quant->get_output_element_type(0), quantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).same_scheme(
@@ -11117,27 +11287,27 @@ TEST(
 
 TEST(
     type_prop,
-    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_axis_oob)
+    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_axis_oob)
 {
     PartialShape batch_shape{2, 4, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 6};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Out-of-bound quantization axis not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -11153,34 +11323,35 @@ TEST(
 
 TEST(
     type_prop,
-    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_dims_inconsistent)
+    quantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_dims_inconsistent)
 {
     PartialShape batch_shape{2, 5, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = unquantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 5};
     auto round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
         auto quant =
-            make_shared<op::Quantize>(batch, scale, offset, quantized_type, axes, round_mode);
+            make_shared<op::Quantize>(batch, scale, zero_point, quantized_type, axes, round_mode);
         FAIL() << "Inconsistent dimensions not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale/offset shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
-                             "at the quantization axes (AxisSet{1, 3, 5})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale / zero point shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
+            "at the quantization axes (AxisSet{1, 3, 5})");
     }
     catch (...)
     {
@@ -11192,18 +11363,18 @@ TEST(type_prop, dequantize_f32_from_i8_nchw_per_channel_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{3};
-    Shape offset_shape{3};
+    Shape zero_point_shape{3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11213,18 +11384,18 @@ TEST(type_prop, dequantize_f32_from_i8_nchw_per_image_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64};
-    Shape offset_shape{64};
+    Shape zero_point_shape{64};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11234,18 +11405,18 @@ TEST(type_prop, dequantize_f32_from_i8_nchw_per_row_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{480};
-    Shape offset_shape{480};
+    Shape zero_point_shape{480};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{2};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11255,18 +11426,18 @@ TEST(type_prop, dequantize_f32_from_i8_nchw_per_image_channel_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11276,18 +11447,18 @@ TEST(type_prop, dequantize_f32_from_i8_nchw_whole_batch_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11297,18 +11468,18 @@ TEST(type_prop, dequantize_f64_from_i8_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f64;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11318,18 +11489,18 @@ TEST(type_prop, dequantize_f64_to_u8_ok)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f64;
     element::Type quantized_type = element::u8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_EQ(quant->get_output_shape(0), batch_shape);
@@ -11339,21 +11510,21 @@ TEST(type_prop, dequantize_i8_from_u8_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::i8;
     element::Type quantized_type = element::u8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Attempt to dequantize to non-floating point type not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -11372,28 +11543,29 @@ TEST(type_prop, dequantize_f32_from_f32_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::f32;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Attempt to dequantize from non-quantized type not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset/input element type (element::Type{32, 1, 1, 0, \"float\"}) "
-                             "must be a quantized type");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Zero point / input element type (element::Type{32, 1, 1, 0, \"float\"}) "
+            "must be a quantized type");
     }
     catch (...)
     {
@@ -11401,32 +11573,33 @@ TEST(type_prop, dequantize_f32_from_f32_fails)
     }
 }
 
-TEST(type_prop, dequantize_batch_offset_type_mismatch_fails)
+TEST(type_prop, dequantize_batch_zero_point_type_mismatch_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = element::u8;
+    element::Type zero_point_type = element::u8;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Mismatch of batch and offset element types not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Mismatch of batch and zero point element types not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Offset element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
-                             "match input element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
+            "match input element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
     }
     catch (...)
     {
@@ -11438,21 +11611,21 @@ TEST(type_prop, dequantize_scale_type_mismatch_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{};
-    Shape offset_shape{};
+    Shape zero_point_shape{};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = element::f64;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Mismatch of scale element type with scale argument not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -11473,21 +11646,21 @@ TEST(type_prop, dequantize_oob_axis_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{320};
-    Shape offset_shape{320};
+    Shape zero_point_shape{320};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{3, 4};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Out-of-bounds quantization axis not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -11505,27 +11678,27 @@ TEST(type_prop, dequantize_scale_shape_mismatch_same_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 4};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Mismatch of scale argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,4}) and offset shape ({64,3}) must match");
+                             "Scale shape ({64,4}) and zero point shape ({64,3}) must match");
     }
     catch (...)
     {
@@ -11537,27 +11710,27 @@ TEST(type_prop, dequantize_scale_shape_mismatch_different_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3, 2};
-    Shape offset_shape{64, 3};
+    Shape zero_point_shape{64, 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Mismatch of scale argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3,2}) and offset shape ({64,3}) must match");
+                             "Scale shape ({64,3,2}) and zero point shape ({64,3}) must match");
     }
     catch (...)
     {
@@ -11565,31 +11738,31 @@ TEST(type_prop, dequantize_scale_shape_mismatch_different_rank_fails)
     }
 }
 
-TEST(type_prop, dequantize_offset_shape_mismatch_same_rank_fails)
+TEST(type_prop, dequantize_zero_point_shape_mismatch_same_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 4};
+    Shape zero_point_shape{64, 4};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Mismatch of zero point argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3}) and offset shape ({64,4}) must match");
+                             "Scale shape ({64,3}) and zero point shape ({64,4}) must match");
     }
     catch (...)
     {
@@ -11597,31 +11770,31 @@ TEST(type_prop, dequantize_offset_shape_mismatch_same_rank_fails)
     }
 }
 
-TEST(type_prop, dequantize_offset_shape_mismatch_different_rank_fails)
+TEST(type_prop, dequantize_zero_point_shape_mismatch_different_rank_fails)
 {
     Shape batch_shape{64, 3, 480, 640};
     Shape scale_shape{64, 3};
-    Shape offset_shape{64, 3, 2};
+    Shape zero_point_shape{64, 3, 2};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Mismatch of offset argument shape with required shape not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Mismatch of zero point argument shape with required shape not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,3}) and offset shape ({64,3,2}) must match");
+                             "Scale shape ({64,3}) and zero point shape ({64,3,2}) must match");
     }
     catch (...)
     {
@@ -11633,40 +11806,40 @@ TEST(type_prop, dequantize_partial_all_rank_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{PartialShape::dynamic()};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 2000};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
 }
 
 TEST(type_prop,
-     dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_dynamic_ok)
+     dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 2000};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -11674,32 +11847,32 @@ TEST(type_prop,
 
 TEST(
     type_prop,
-    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_dynamic_axis_count_inconsistent)
+    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_dynamic_axis_count_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96};
-    PartialShape offset_shape{PartialShape::dynamic()};
+    PartialShape zero_point_shape{PartialShape::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Mismatch of scale/offset rank with axis count not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Mismatch of scale / zero point rank with axis count not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            "Scale/offset rank (3) does not match the number of quantization axes (2)");
+            "Scale / zero point rank (3) does not match the number of quantization axes (2)");
     }
     catch (...)
     {
@@ -11707,23 +11880,24 @@ TEST(
     }
 }
 
-TEST(type_prop,
-     dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ok)
+TEST(
+    type_prop,
+    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{64, 22, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape zero_point_shape{64, 22, Dimension::dynamic(), Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).rank().is_dynamic());
@@ -11731,31 +11905,32 @@ TEST(type_prop,
 
 TEST(
     type_prop,
-    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ranks_inconsistent)
+    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ranks_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{64, 22, Dimension::dynamic(), Dimension::dynamic(), 3};
+    PartialShape zero_point_shape{64, 22, Dimension::dynamic(), Dimension::dynamic(), 3};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Inconsistent scale/offset ranks not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Inconsistent scale / zero point ranks not detected";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(), "Scale shape ({64,?,96,?}) and offset shape ({64,22,?,?,3}) must match");
+            error.what(),
+            "Scale shape ({64,?,96,?}) and zero point shape ({64,22,?,?,3}) must match");
     }
     catch (...)
     {
@@ -11765,31 +11940,32 @@ TEST(
 
 TEST(
     type_prop,
-    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_dims_inconsistent)
+    dequantize_partial_input_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_dims_inconsistent)
 {
     PartialShape batch_shape{PartialShape::dynamic()};
     PartialShape scale_shape{64, Dimension::dynamic(), 96, Dimension::dynamic()};
-    PartialShape offset_shape{65, 22, Dimension::dynamic(), Dimension::dynamic()};
+    PartialShape zero_point_shape{65, 22, Dimension::dynamic(), Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{0, 1, 5, 88};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
-        FAIL() << "Inconsistent scale/offset dims not detected";
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
+        FAIL() << "Inconsistent scale / zero point dims not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale shape ({64,?,96,?}) and offset shape ({65,22,?,?}) must match");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale shape ({64,?,96,?}) and zero point shape ({65,22,?,?}) must match");
     }
     catch (...)
     {
@@ -11799,22 +11975,22 @@ TEST(
 
 TEST(
     type_prop,
-    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_ok)
+    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_ok)
 {
     PartialShape batch_shape{2, 4, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 5};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
-    auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
+    auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
 
     ASSERT_EQ(quant->get_output_element_type(0), unquantized_type);
     ASSERT_TRUE(quant->get_output_partial_shape(0).same_scheme(
@@ -11823,25 +11999,25 @@ TEST(
 
 TEST(
     type_prop,
-    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_axis_oob)
+    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_axis_oob)
 {
     PartialShape batch_shape{2, 4, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 6};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Out-of-bound quantization axis not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -11857,32 +12033,33 @@ TEST(
 
 TEST(
     type_prop,
-    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_offset_rank_static_dynamic_dims_inconsistent)
+    dequantize_partial_input_static_rank_dynamic_scale_rank_static_dynamic_zero_point_rank_static_dynamic_dims_inconsistent)
 {
     PartialShape batch_shape{2, 5, 6, Dimension::dynamic(), 10, Dimension::dynamic()};
     PartialShape scale_shape{4, Dimension::dynamic(), Dimension::dynamic()};
-    PartialShape offset_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
+    PartialShape zero_point_shape{Dimension::dynamic(), 8, Dimension::dynamic()};
     element::Type unquantized_type = element::f32;
     element::Type quantized_type = element::i8;
     element::Type batch_type = quantized_type;
     element::Type scale_type = unquantized_type;
-    element::Type offset_type = quantized_type;
+    element::Type zero_point_type = quantized_type;
     AxisSet axes{1, 3, 5};
 
     auto batch = make_shared<op::Parameter>(batch_type, batch_shape);
     auto scale = make_shared<op::Parameter>(scale_type, scale_shape);
-    auto offset = make_shared<op::Parameter>(offset_type, offset_shape);
+    auto zero_point = make_shared<op::Parameter>(zero_point_type, zero_point_shape);
 
     try
     {
-        auto quant = make_shared<op::Dequantize>(batch, scale, offset, unquantized_type, axes);
+        auto quant = make_shared<op::Dequantize>(batch, scale, zero_point, unquantized_type, axes);
         FAIL() << "Inconsistent dimensions not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale/offset shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
-                             "at the quantization axes (AxisSet{1, 3, 5})");
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Scale / zero point shape ({4,8,?}) must match input shape ({2,5,6,?,10,?}) "
+            "at the quantization axes (AxisSet{1, 3, 5})");
     }
     catch (...)
     {
@@ -11895,7 +12072,7 @@ TEST(type_prop, shape_of)
     auto a = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11904,7 +12081,7 @@ TEST(type_prop, shape_of_partial_et_dynamic)
     auto a = make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3, 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11914,7 +12091,7 @@ TEST(type_prop, shape_of_partial_rank_static_dynamic)
         element::f32, PartialShape{1, Dimension::dynamic(), Dimension::dynamic(), 4});
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_EQ(so->get_shape(), Shape{4});
 }
 
@@ -11923,7 +12100,7 @@ TEST(type_prop, shape_of_partial_rank_dynamic)
     auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto so = make_shared<op::ShapeOf>(a);
 
-    ASSERT_EQ(so->get_output_element_type(0), element::u64);
+    ASSERT_EQ(so->get_output_element_type(0), element::i64);
     ASSERT_TRUE(so->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 }
 
@@ -12923,6 +13100,106 @@ TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_dynamic_ok)
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
 }
 
+TEST(type_prop, dynslice_static_shape)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
+    auto lower_bounds = op::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
+    auto upper_bounds = op::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
+    auto strides = op::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
+
+    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_EQ(r->get_shape(), (Shape{1, 2, 1, 1, 3}));
+}
+
+struct DynSliceParams
+{
+    std::vector<Shape> shapes;
+    std::vector<std::vector<int64_t>> vals;
+    std::vector<AxisSet> attrs;
+
+    DynSliceParams(const std::vector<Shape>& shape,
+                   const std::vector<std::vector<int64_t>>& val,
+                   const std::vector<AxisSet>& attr)
+        : shapes(shape)
+        , vals(val)
+        , attrs(attr)
+    {
+    }
+};
+
+struct DeduceDynSliceTest : ::testing::TestWithParam<DynSliceParams>
+{
+};
+
+TEST_P(DeduceDynSliceTest, output_shape)
+{
+    auto tp = GetParam();
+    auto arg = make_shared<op::Parameter>(element::f32, tp.shapes[0]);
+    auto lower_bounds = op::Constant::create(element::i64, tp.shapes[1], tp.vals[0]);
+    auto upper_bounds = op::Constant::create(element::i64, tp.shapes[2], tp.vals[1]);
+    auto strides = op::Constant::create(element::i64, tp.shapes[3], tp.vals[2]);
+
+    auto r = make_shared<op::DynSlice>(arg,
+                                       lower_bounds,
+                                       upper_bounds,
+                                       strides,
+                                       tp.attrs[0],
+                                       tp.attrs[1],
+                                       tp.attrs[2],
+                                       tp.attrs[3],
+                                       tp.attrs[4]);
+
+    EXPECT_EQ(r->get_shape(), tp.shapes[4]);
+}
+
+INSTANTIATE_TEST_CASE_P(
+    type_prop,
+    DeduceDynSliceTest,
+    ::testing::Values(
+        DynSliceParams({{2, 3, 4, 5, 6}, {5}, {5}, {5}, {1, 2, 1, 1, 3}},
+                       {{0, 1, 2, 3, 1}, {1, 3, 3, 5, 6}, {1, 1, 1, 2, 2}},
+                       {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {0}, {0}, {0}, {10}}, {{}, {}, {}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {0}, {10}},
+                       {{0}, {0}, {}},
+                       {{}, {0}, {}, {}, {}}), // end-mask
+        DynSliceParams({{10}, {1}, {1}, {0}, {9}},
+                       {{-1}, {-1}, {}},
+                       {{0}, {}, {}, {}, {}}), // begin-mask
+        DynSliceParams({{10}, {1}, {1}, {0}, {10}}, {{0}, {10}, {}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {0}, {5}}, {{5}, {10}, {}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {0}, {5}}, {{-5}, {10}, {}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {6}},
+                       {{-5}, {0}, {-1}}, // negative-stride
+                       {{}, {0}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {3}}, {{-5}, {2}, {-1}}, {{}, {}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {5}}, {{0}, {0}, {2}}, {{}, {0}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {5}}, {{1}, {0}, {2}}, {{}, {0}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {10}}, {{-1}, {0}, {-1}}, {{}, {0}, {}, {}, {}}),
+        DynSliceParams({{10}, {1}, {1}, {1}, {5}}, {{-1}, {0}, {-2}}, {{}, {0}, {}, {}, {}}),
+        /* Axis Masks: New, Shrink, Ellipsis */
+        DynSliceParams({{10}, {1}, {1}, {0}, {1, 10}}, {{0}, {10}, {}}, {{}, {}, {0}, {}, {}}),
+        DynSliceParams({{1, 2, 3}, {2}, {2}, {0}, {1, 2, 2}},
+                       {{0, 0}, {1, 2}, {}},
+                       {{}, {}, {}, {}, {1}}),
+        DynSliceParams({{1, 2, 3}, {4}, {4}, {0}, {1, 2, 1}},
+                       {{0, 0, 0, 1}, {2, 3, 2, 2}, {}},
+                       {{}, {}, {2}, {3}, {}}),
+        DynSliceParams({{1, 2, 3}, {3}, {3}, {0}, {1, 1, 2, 1}},
+                       {{0, 0, 1}, {2, 2, 2}, {}},
+                       {{}, {}, {0}, {}, {1}}),
+        DynSliceParams({{1, 2, 2, 2}, {1}, {1}, {1}, {1, 2, 2}},
+                       {{-1}, {0}, {-2}},
+                       {{1}, {1}, {}, {1}, {}}),
+        DynSliceParams({{1, 2, 2, 2}, {4}, {4}, {0}, {1, 2, 2}},
+                       {{0, 1, 0, 0}, {1, 2, 2, 2}, {}},
+                       {{1}, {1}, {}, {1}, {}}),
+        DynSliceParams({{1, 2, 3}, {3}, {3}, {0}, {1, 1, 2}},
+                       {{0, 0, 1}, {2, 2, 2}, {}},
+                       {{}, {}, {0}, {2}, {1}})));
+
 void DynSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
                                 const shared_ptr<Node>& param_1,
                                 const shared_ptr<Node>& param_2,
@@ -13053,4 +13330,1119 @@ TEST(type_prop, dynslice_params_et_wrong)
         strides = make_shared<op::Parameter>(element::boolean, Shape{4});
         DynSlice_Test_Type_Except(arg, lower_bounds, upper_bounds, strides);
     }
+}
+
+TEST(type_prop, batchmatmul_deduce_3d)
+{
+    // Deduce type for matrix/matrix arguments
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 3});
+    auto bc = make_shared<op::BatchMatMul>(param1, param2);
+    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_shape(), (Shape{5, 4, 3}));
+}
+
+TEST(type_prop, batchmatmul_deduce_left_rank_wrong)
+{
+    // Type deduction fails due to element type mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 3"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_deduce_right_rank_wrong)
+{
+    // Type deduction fails due to element type mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 5, 2, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 3"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_deduce_element_type_mismatch)
+{
+    // Type deduction fails due to element type mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::i32, Shape{5, 2, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Element type mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("compatible element type"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_deduce_reduction_axes_size_mismatch)
+{
+    // Type deduction fails due to reduction axes size mismatch
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 4, 2});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{6, 3, 5});
+    try
+    {
+        auto bc = make_shared<op::BatchMatMul>(param1, param2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "BatchMatMul reduction axes size mismatch not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Product dimensions are not equal"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, batchmatmul_partial_both_rank_dynamic_implicit)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
+}
+
+TEST(type_prop, batchmatmul_partial_left_rank_dynamic_right_rank_static_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto param1 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
+}
+
+TEST(type_prop, batchmatmul_partial_left_rank_static_dynamic_right_rank_dynamic)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).rank().same_scheme(3));
+}
+
+TEST(type_prop, batchmatmul_partial_left_rank_static_dynamic_right_rank_static)
+{
+    auto param0 =
+        make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 4});
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape{3, 4, 5});
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_TRUE(d->get_output_partial_shape(0).same_scheme(PartialShape{3, 2, 5}));
+}
+
+TEST(type_prop, batchmatmul_partial_left_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::f32);
+}
+
+TEST(type_prop, batchmatmul_partial_right_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::i32);
+}
+
+TEST(type_prop, batchmatmul_partial_both_et_dynamic)
+{
+    auto param0 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto param1 = make_shared<op::Parameter>(element::dynamic, PartialShape::dynamic());
+    auto d = make_shared<op::BatchMatMul>(param0, param1);
+
+    ASSERT_EQ(d->get_output_element_type(0), element::dynamic);
+}
+
+TEST(type_prop, prelu)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto slope = make_shared<op::Parameter>(element::f32, Shape{2});
+    Shape prelu_shape{2, 4};
+    auto prelu = make_shared<op::PRelu>(param, slope);
+    ASSERT_EQ(prelu->get_element_type(), element::f32);
+    ASSERT_EQ(prelu->get_shape(), prelu_shape);
+}
+
+TEST(type_prop, elu)
+{
+    Shape data_shape{2, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto alpha = make_shared<op::Parameter>(element::f32, Shape{});
+    auto elu = make_shared<op::Elu>(data, alpha);
+    ASSERT_EQ(elu->get_element_type(), element::f32);
+    ASSERT_EQ(elu->get_shape(), data_shape);
+}
+
+TEST(type_prop, gather_no_axis)
+{
+    Shape params_shape{3, 2};
+    Shape indices_shape{2, 2};
+    Shape out_shape{2, 2, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::Gather>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather)
+{
+    Shape params_shape{3, 3};
+    Shape indices_shape{1, 2};
+    Shape out_shape{3, 1, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::Gather>(P, I, 1);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, depth_to_space)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 128, 8, 8});
+    auto space_to_depth = make_shared<op::DepthToSpace>(A, 8);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 64, 64}));
+}
+
+TEST(type_prop, space_to_depth)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 64, 64});
+    auto space_to_depth = make_shared<op::SpaceToDepth>(A, 8);
+
+    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 128, 8, 8}));
+}
+
+TEST(type_prop, gather_nd_scalar_from_2d)
+{
+    Shape params_shape{2, 2};
+    Shape indices_shape{2, 2};
+    Shape out_shape{2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather_nd_1d_from_2d)
+{
+    Shape params_shape{2, 2};
+    Shape indices_shape{2, 1};
+    Shape out_shape{2, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather_nd_scalar_from_3d)
+{
+    Shape params_shape{2, 2, 2};
+    Shape indices_shape{2, 3};
+    Shape out_shape{2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather_nd_1d_from_3d)
+{
+    Shape params_shape{2, 2, 2};
+    Shape indices_shape{2, 2};
+    Shape out_shape{2, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather_nd_2d_from_3d)
+{
+    Shape params_shape{2, 2, 2};
+    Shape indices_shape{1, 1};
+    Shape out_shape{1, 2, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather_nd_batch_scalar_from_2d)
+{
+    Shape params_shape{2, 2};
+    Shape indices_shape{2, 1, 2};
+    Shape out_shape{2, 1};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather_nd_batch_1d_from_2d)
+{
+    Shape params_shape{2, 2};
+    Shape indices_shape{2, 1, 1};
+    Shape out_shape{2, 1, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather_nd_batch_scalar_from_3d)
+{
+    Shape params_shape{2, 2, 2};
+    Shape indices_shape{2, 2, 3};
+    Shape out_shape{2, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather_nd_batch_1d_from_3d)
+{
+    Shape params_shape{2, 2, 2};
+    Shape indices_shape{2, 2, 2};
+    Shape out_shape{2, 2, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather_nd_batch_2d_from_3d)
+{
+    Shape params_shape{2, 2, 2};
+    Shape indices_shape{2, 1, 1};
+    Shape out_shape{2, 1, 2, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::GatherND>(P, I);
+    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_shape(), out_shape);
+}
+
+TEST(type_prop, gather_fail_params_rank)
+{
+    Shape params_shape{3, 3};
+    Shape indices_shape{1, 2};
+    Shape out_shape{3, 1, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    try
+    {
+        auto G = make_shared<op::Gather>(P, I, 2);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect params rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("params rank is expected to be at least axis + 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, gather_fail_indices_element_type)
+{
+    Shape params_shape{3, 3};
+    Shape indices_shape{1, 2};
+    Shape out_shape{3, 1, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
+    try
+    {
+        auto G = make_shared<op::Gather>(P, I, 1);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices element type must be i64 or i32"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, gather_nd_fail_params_rank)
+{
+    Shape params_shape{};
+    Shape indices_shape{2, 1, 1};
+    Shape out_shape{2, 1, 2, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    try
+    {
+        auto G = make_shared<op::GatherND>(P, I);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect params rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("params rank is expected to be at least 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, gather_nd_fail_indices_rank)
+{
+    Shape params_shape{2, 2, 2};
+    Shape indices_shape{};
+    Shape out_shape{2, 1, 2, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    try
+    {
+        auto G = make_shared<op::GatherND>(P, I);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("indices rank is expected to be at least 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, gather_nd_fail_indices_element_type)
+{
+    Shape params_shape{2, 2, 2};
+    Shape indices_shape{2, 1, 1};
+    Shape out_shape{2, 1, 2, 2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
+    try
+    {
+        auto G = make_shared<op::GatherND>(P, I);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices element type must be i64 or i32"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_add_fail_indices_element_type)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2, 2};
+    Shape updates_shape{2, 2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices element type must be i64 or i32"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_add_fail_updates_element_type)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2, 2};
+    Shape updates_shape{2, 2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::i32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Updates element type must be the same as Inputs"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_add_fail_updates_rank)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2, 2};
+    Shape updates_shape{2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Updates rank is expected to be indices rank + inputs rank - 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_add_fail_updates_shape)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2, 2};
+    Shape updates_shape{1, 2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates shape";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Updates shape must be indices_shape + inputs_shape[1:]"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_indices_element_type)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices element type must be i64 or i32"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_indices_rank)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{};
+    Shape updates_shape{3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Indices rank is expected to be at least 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_indices_last_dim)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{2, 4};
+    Shape updates_shape{2, 3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices innermost dim";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Last dimension of indices can be at most the rank of inputs"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_updates_element_type)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::i32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Updates element type must be the same as inputs"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_updates_rank)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{3, 3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Rank of updates must be rank of inputs + rank of indices "
+                                         "- last dimension of indices - 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_updates_shape)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{2, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates shape";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Updates shape must be indices_shape[:-1] + inputs_shape[indices.shape[-1]:]"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, conv_bias_2d_deduce)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{128});
+    auto conv = make_shared<op::ConvolutionBias>(param0, param1, param2);
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+
+    EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_window_dilation_strides(), (Strides{1, 1}));
+    EXPECT_EQ(conv->get_data_dilation_strides(), (Strides{1, 1}));
+
+    EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{0, 0}));
+}
+
+TEST(type_prop, conv_bias_add_2d_deduce)
+{
+    // Deduce type
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param2 = make_shared<op::Parameter>(element::f32, Shape{128});
+    auto param3 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91, 131});
+    auto conv = make_shared<op::ConvolutionBiasAdd>(param0,
+                                                    param1,
+                                                    param2,
+                                                    param3,
+                                                    Strides{1, 1},
+                                                    Strides{1, 1},
+                                                    CoordinateDiff{0, 0},
+                                                    CoordinateDiff{0, 0},
+                                                    Strides{1, 1});
+    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+}
+
+TEST(type_prop, conv_bias_bprop_2d_deduce)
+{
+    // Deduce type
+    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto bias = make_shared<op::Parameter>(element::f32, Shape{128});
+    auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91, 131});
+    auto conv = make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
+                                                                    filters->get_shape(),
+                                                                    bias->get_shape(),
+                                                                    delta,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{0, 0},
+                                                                    CoordinateDiff{0, 0},
+                                                                    Strides{1, 1});
+    EXPECT_EQ(conv->get_output_element_type(0), element::f32);
+    EXPECT_EQ(conv->get_output_element_type(1), element::f32);
+    EXPECT_EQ(conv->get_output_shape(0), filters->get_shape());
+    EXPECT_EQ(conv->get_output_shape(1), bias->get_shape());
+}
+
+TEST(type_prop, hardsigmoid)
+{
+    Shape data_shape{3, 5};
+    float alpha = 0.1;
+    float beta = 1.2;
+    auto P = make_shared<op::Parameter>(element::f32, data_shape);
+    auto H = make_shared<op::HardSigmoid>(P, alpha, beta);
+    ASSERT_EQ(H->get_element_type(), element::f32);
+    ASSERT_EQ(H->get_shape(), data_shape);
+}
+
+TEST(type_prop, group_conv)
+{
+    // Deduce type
+    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 4, 100, 150});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
+    auto conv = make_shared<op::GroupConvolution>(data,
+                                                  filters,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1},
+                                                  2);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+}
+
+TEST(type_prop, group_conv_auto)
+{
+    // Deduce type
+    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 4, 100, 150});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
+    auto conv = make_shared<op::GroupConvolution>(data,
+                                                  filters,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1},
+                                                  2,
+                                                  op::PadType::AUTO);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 100, 150}));
+    EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{4, 9}));
+    EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{5, 10}));
+}
+
+TEST(type_prop, group_conv_invalid_groups)
+{
+    // Deduce type
+    try
+    {
+        auto conv = make_shared<op::GroupConvolution>(
+            make_shared<op::Parameter>(element::f32, Shape{64, 20, 100, 150}),
+            make_shared<op::Parameter>(element::f32, Shape{30, 10, 10, 20}),
+            Strides{1, 1},
+            Strides{1, 1},
+            CoordinateDiff{0, 0},
+            CoordinateDiff{0, 0},
+            Strides{1, 1},
+            3);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid group conv";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Data channels not a multiple of group size"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+    try
+    {
+        auto conv = make_shared<op::GroupConvolution>(
+            make_shared<op::Parameter>(element::f32, Shape{64, 30, 100, 150}),
+            make_shared<op::Parameter>(element::f32, Shape{20, 10, 10, 20}),
+            Strides{1, 1},
+            Strides{1, 1},
+            CoordinateDiff{0, 0},
+            CoordinateDiff{0, 0},
+            Strides{1, 1},
+            3);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid group conv";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("# Filters not a multiple of group size"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+    try
+    {
+        auto conv = make_shared<op::GroupConvolution>(
+            make_shared<op::Parameter>(element::f32, Shape{64, 30, 100, 150}),
+            make_shared<op::Parameter>(element::f32, Shape{30, 20, 10, 20}),
+            Strides{1, 1},
+            Strides{1, 1},
+            CoordinateDiff{0, 0},
+            CoordinateDiff{0, 0},
+            Strides{1, 1},
+            3);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid group conv";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Incorrect number of channels per filter"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, normalize_invalid_input_tensor_rank)
+{
+    Shape data_shape{1, 2, 3, 4, 5};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{});
+    bool across_spatial{false};
+    bool channel_shared{true};
+    float eps{1e-6f};
+
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    data = make_shared<op::Parameter>(element::f32, Shape{2});
+
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, normalize_invalid_scale_rank)
+{
+    Shape data_shape{1, 2, 3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{3});
+    bool across_spatial{false};
+    bool channel_shared{true};
+    float eps{1e-6f};
+
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Scale must be a scalar if 'channels_shared' "
+                                         "parameter is true"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    channel_shared = false;
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Scale must be a vector of size of input tensor "
+                                         "channels"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    data = make_shared<op::Parameter>(element::f32, Shape{4, 3});
+    try
+    {
+        auto normalize =
+            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Scale must be a scalar if input tensor is of rank 2"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, normalize)
+{
+    Shape data_shape{2, 3, 4};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{2});
+    bool across_spatial{false};
+    bool channel_shared{false};
+    float eps{1e-6f};
+
+    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    EXPECT_EQ(normalize->get_element_type(), element::f32);
+    EXPECT_EQ(normalize->get_shape(), (Shape{2, 3, 4}));
+}
+
+TEST(type_prop, function_revalidate_and_infer)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = op::Constant::create(element::i64, Shape{6}, {1, 3, 16, 2, 2, 2});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+    auto relu = make_shared<op::Relu>(r);
+    auto f = make_shared<Function>(relu, ParameterVector{arg});
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_EQ(r->get_output_shape(0), (Shape{1, 3, 16, 2, 2, 2}));
+    EXPECT_EQ(f->get_output_shape(0), (Shape{1, 3, 16, 2, 2, 2}));
+
+    auto new_pattern = op::Constant::create(element::i64, Shape{2}, {32, 12});
+    r->input(1).replace_source_output(new_pattern->output(0));
+
+    f->validate_nodes_and_infer_types();
+    EXPECT_EQ(r->get_output_shape(0), (Shape{32, 12}));
+    EXPECT_EQ(f->get_output_shape(0), (Shape{32, 12}));
+}
+
+TEST(type_prop, gemm)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    EXPECT_EQ(gemm_func->get_element_type(), element::f32);
+    EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
+}
+
+TEST(type_prop, gemm_broadcast_input_C)
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    EXPECT_EQ(gemm_func->get_element_type(), element::f32);
+    EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
+}
+
+TEST(type_prop, mvn)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6});
+    auto mvn_func = make_shared<op::MVN>(data);
+    EXPECT_EQ(mvn_func->get_element_type(), element::f32);
+    EXPECT_EQ(mvn_func->get_shape(), (Shape{1, 3, 6}));
+}
+
+TEST(type_prop, fused_clamp)
+{
+    const auto data = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+
+    try
+    {
+        const auto clamp = make_shared<op::Clamp>(data, 2.0, 1.0);
+        EXPECT_FALSE(clamp.get())
+            << "Clamp validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("The 'min' parameter needs to be less than 'max' for Clamp"));
+    }
+
+    const auto clamp = make_shared<op::Clamp>(data, 1.0, 2.0);
+    EXPECT_EQ(clamp->get_element_type(), element::f64);
+    EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
+}
+
+TEST(type_prop, scale_shift_no_broadcast)
+{
+    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto shift = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    EXPECT_EQ(scale_shift_func->get_element_type(), element::f64);
+    EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
+}
+
+TEST(type_prop, scale_shift)
+{
+    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto shift = make_shared<op::Parameter>(element::f64, Shape{});
+    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    EXPECT_EQ(scale_shift_func->get_element_type(), element::f64);
+    EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
 }

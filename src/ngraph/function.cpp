@@ -70,10 +70,6 @@ Function::Function(const std::shared_ptr<Node>& result,
                    const std::string& name)
     : Function(NodeVector{result}, parameters, name)
 {
-    // TODO this does not do anything while infer happens in the constructors
-    // and it will go away after we add shape during a clone; it is here now
-    // to assist development between those two stages.
-    validate_nodes_and_infer_types();
 }
 
 void Function::validate_nodes_and_infer_types()
@@ -200,15 +196,15 @@ size_t Function::get_graph_size() const
         total_size += sizeof(*node);
         if (node->description() == "Constant")
         {
-            const Shape& shape = node->get_outputs()[0].get_shape();
-            size_t const_size = node->get_outputs()[0].get_element_type().size();
+            const Shape& shape = node->output(0).get_shape();
+            size_t const_size = node->output(0).get_element_type().size();
             if (shape.size() == 0)
             {
                 total_size += const_size;
             }
             else
             {
-                total_size += (const_size * shape_size(node->get_outputs()[0].get_shape()));
+                total_size += (const_size * shape_size(node->output(0).get_shape()));
             }
         }
     }
@@ -223,4 +219,20 @@ size_t Function::get_placement() const
 void Function::set_placement(size_t placement)
 {
     m_placement = placement;
+}
+
+// TODO(pthoreho) this will be expensive, since we will be traversing all the nodes in
+// the graph, figure out if their is a way to cache the result and invalidate/update
+// the result if the function is modified
+bool Function::is_dynamic() const
+{
+    auto list_of_nodes = this->get_ops();
+    for (auto& node : list_of_nodes)
+    {
+        if (node->get_output_partial_shape(0).is_dynamic())
+        {
+            return true;
+        }
+    }
+    return false;
 }

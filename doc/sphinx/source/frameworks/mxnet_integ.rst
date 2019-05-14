@@ -1,18 +1,18 @@
-.. mxnet_integ.rst:
+.. frameworks/mxnet_integ.rst:
 
 MXNet\* bridge
 ===============
 
-* See the `README`_ on nGraph-MXNet repo.
+* See the nGraph-MXNet `Integration Guide`_ on the nGraph-MXNet repo.
 
 * **Testing inference latency**:  See the :doc:`validated/testing-latency` 
   doc for a fully-documented example how to compile and test latency with an 
-  MXNet-supported model.     
+  MXNet-supported model.  
 
-* **Training**: For experimental or alternative approaches to distributed 
-  training methodologies, including data parallel training, see the 
-  MXNet-relevant sections of the docs on :doc:`../distr/index` and 
-  :doc:`How to <../core/constructing-graphs/index>` topics like :doc:`../core/constructing-graphs/distribute-train`. 
+.. note:: The nGraph-MXNet bridge is designed to be used with trained models 
+   only; it does not support distributed training.  
+
+ 
 
 
-.. _README: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/README.md
+.. _Integration Guide: https://github.com/NervanaSystems/ngraph-mxnet/blob/master/NGRAPH_README.md

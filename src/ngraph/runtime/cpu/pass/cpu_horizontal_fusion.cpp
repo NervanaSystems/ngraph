@@ -20,12 +20,12 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
-#include "ngraph/runtime/cpu/op/conv_bias.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -101,7 +101,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
                                                                    Strides{1, 1},
                                                                    true);
 
-    pattern::graph_rewrite_callback callback = [data_conv](pattern::Matcher& m) {
+    auto callback = [data_conv](pattern::Matcher& m) {
         NGRAPH_DEBUG << "conv_horizontal_fusion: In a callback for conv horizontal fusion for "
                      << m.get_match_root()->get_name();
 
@@ -188,7 +188,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(
-        conv_bias, callback, "CPUHorizontalFusion.CpuConvHorizontalFusion");
-    this->add_matcher(m);
+    auto m =
+        make_shared<pattern::Matcher>(conv_bias, "CPUHorizontalFusion.CpuConvHorizontalFusion");
+    this->add_matcher(m, callback);
 }

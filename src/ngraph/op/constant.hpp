@@ -19,8 +19,8 @@
 #include <cstring>
 #include <sstream>
 
-#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/type/bfloat16.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -44,8 +44,8 @@ namespace ngraph
                 : Node("Constant", {})
                 , m_element_type(type)
                 , m_shape(shape)
-                , m_data(ngraph::aligned_alloc(m_element_type.size(),
-                                               shape_size(m_shape) * m_element_type.size()))
+                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                    host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -80,12 +80,12 @@ namespace ngraph
                 : Node("Constant", {})
                 , m_element_type(type)
                 , m_shape(shape)
-                , m_data(ngraph::aligned_alloc(m_element_type.size(),
-                                               shape_size(m_shape) * m_element_type.size()))
+                , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                    host_alignment()))
             {
                 NODE_VALIDATION_CHECK(
                     this,
-                    values.size() == shape_size(m_shape),
+                    values.size() == shape_size(m_shape) || values.size() == 1,
                     "Did not get the expected number of literals for a constant of shape ",
                     m_shape,
                     " (got ",
@@ -94,8 +94,34 @@ namespace ngraph
                     shape_size(m_shape),
                     ".");
 
-                std::vector<double> dvalues = parse_string<double>(values);
-                write_values(dvalues);
+                std::vector<std::string> tmp_values;
+                if (values.size() == 1 && shape_size(m_shape) != 1)
+                {
+                    tmp_values = std::vector<std::string>(shape_size(m_shape), values[0]);
+                }
+                else
+                {
+                    tmp_values = values;
+                }
+
+                if (type.is_integral())
+                {
+                    if (type.is_signed())
+                    {
+                        std::vector<int64_t> dvalues = parse_string<int64_t>(tmp_values);
+                        write_values(dvalues);
+                    }
+                    else
+                    {
+                        std::vector<uint64_t> dvalues = parse_string<uint64_t>(tmp_values);
+                        write_values(dvalues);
+                    }
+                }
+                else
+                {
+                    std::vector<double> dvalues = parse_string<double>(tmp_values);
+                    write_values(dvalues);
+                }
                 constructor_validate_and_infer_types();
             }
 
@@ -112,8 +138,9 @@ namespace ngraph
                 , m_data(nullptr)
             {
                 size_t size = shape_size(m_shape) * m_element_type.size();
-                m_data = ngraph::aligned_alloc(m_element_type.size(), size);
-                std::memcpy(m_data, data, size);
+                m_data.reset(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
+                                                        host_alignment()));
+                std::memcpy(m_data->get_ptr(), data, size);
                 constructor_validate_and_infer_types();
             }
 
@@ -124,6 +151,15 @@ namespace ngraph
                 infer_element_type();
                 set_output_type(0, m_element_type, m_shape);
             }
+
+            /// \brief Returns the value of the constant node as a Shape object
+            ///        Can only be used on element::i64 nodes and interprets
+            ///        negative values as zeros.
+            Shape get_shape_val() const;
+            /// \brief Returns the value of the constant node as a Strides object
+            ///        Can only be used on element::i64 nodes and interprets
+            ///        negative values as zeros.
+            Strides get_strides_val() const;
 
             /// \brief Wrapper around constructing a shared_ptr of a Constant
             ///
@@ -168,7 +204,7 @@ namespace ngraph
                 }
 
                 std::vector<T> rc;
-                const T* p = reinterpret_cast<const T*>(m_data);
+                const T* p = reinterpret_cast<const T*>(m_data->get_ptr());
                 for (size_t i = 0; i < shape_size(m_shape); i++)
                 {
                     rc.push_back(p[i]);
@@ -176,15 +212,18 @@ namespace ngraph
                 return rc;
             }
 
-            const void* get_data_ptr() const { return m_data; }
+            const void* get_data_ptr() const { return (m_data ? m_data->get_ptr() : nullptr); }
             template <typename T>
             const T* get_data_ptr() const
             {
-                return reinterpret_cast<T*>(m_data);
+                return reinterpret_cast<const T*>(get_data_ptr());
             }
 
             bool is_constant() const override { return true; }
+            bool are_all_data_elements_bitwise_identical() const;
+
         protected:
+            void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }
             Constant(const std::string& name, const NodeVector& args)
                 : Node(name, args)
                 , m_shape({})
@@ -195,7 +234,8 @@ namespace ngraph
             template <typename T>
             void write_values(const std::vector<T>& values)
             {
-                write_to_buffer(m_element_type, m_shape, values, m_data, shape_size(m_shape));
+                write_to_buffer(
+                    m_element_type, m_shape, values, get_data_ptr_nc(), shape_size(m_shape));
             }
 
             template <typename T, typename U>
@@ -219,63 +259,60 @@ namespace ngraph
                 {
                     throw std::runtime_error("Constant initializer does not match shape");
                 }
-                if (target_type == element::boolean)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+                switch (target_type.get_type_enum())
                 {
+                case element::Type_t::boolean:
                     write_buffer<char, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::bf16)
-                {
+                    break;
+                case element::Type_t::bf16:
                     write_buffer<bfloat16, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::f32)
-                {
+                    break;
+                case element::Type_t::f16:
+                    write_buffer<float16, T>(target, source, target_element_count);
+                    break;
+                case element::Type_t::f32:
                     write_buffer<float, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::f64)
-                {
+                    break;
+                case element::Type_t::f64:
                     write_buffer<double, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::i8)
-                {
+                    break;
+                case element::Type_t::i8:
                     write_buffer<int8_t, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::i16)
-                {
+                    break;
+                case element::Type_t::i16:
                     write_buffer<int16_t, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::i32)
-                {
+                    break;
+                case element::Type_t::i32:
                     write_buffer<int32_t, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::i64)
-                {
+                    break;
+                case element::Type_t::i64:
                     write_buffer<int64_t, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::u8)
-                {
+                    break;
+                case element::Type_t::u8:
                     write_buffer<uint8_t, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::u16)
-                {
+                    break;
+                case element::Type_t::u16:
                     write_buffer<uint16_t, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::u32)
-                {
+                    break;
+                case element::Type_t::u32:
                     write_buffer<uint32_t, T>(target, source, target_element_count);
-                }
-                else if (target_type == element::u64)
-                {
+                    break;
+                case element::Type_t::u64:
                     write_buffer<uint64_t, T>(target, source, target_element_count);
+                    break;
+                case element::Type_t::undefined: throw std::runtime_error("unsupported type");
+                case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }
-                else
-                {
-                    throw std::runtime_error("unsupported type");
-                }
+#pragma GCC diagnostic pop
             }
 
+            static constexpr size_t host_alignment() { return 64; }
             element::Type m_element_type;
             Shape m_shape{};
-            void* m_data{nullptr};
+            std::unique_ptr<runtime::AlignedBuffer> m_data;
             Constant(const Constant&) = delete;
             Constant operator=(const Constant&) = delete;
         };

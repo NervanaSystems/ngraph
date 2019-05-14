@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/tensor.hpp"
-#include "ngraph/assertion.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
@@ -27,6 +26,11 @@ using namespace std;
 const Shape& runtime::Tensor::get_shape() const
 {
     return m_descriptor->get_shape();
+}
+
+const PartialShape& runtime::Tensor::get_partial_shape() const
+{
+    return m_descriptor->get_partial_shape();
 }
 
 Strides runtime::Tensor::get_strides() const

@@ -216,7 +216,7 @@ public:
         auto cloneit = clone.begin();
         while (origit != orig.end() && cloneit != clone.end())
         {
-            if (*cloneit != nm.get_node_map().at(*origit))
+            if (*cloneit != nm.at((*origit).get()))
             {
                 return false;
             }
@@ -232,11 +232,11 @@ TEST_F(CloneTest, clone_nodes_full)
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(A)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(B)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.get(C)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Add>(node_map.get(AplusB)));
-    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Multiply>(node_map.get(AplusBtimesC)));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.at(A.get())));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.at(B.get())));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Parameter>(node_map.at(C.get())));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Add>(node_map.at(AplusB.get())));
+    ASSERT_NE(nullptr, std::dynamic_pointer_cast<op::Multiply>(node_map.at(AplusBtimesC.get())));
 
     auto sorted_nodes = topological_sort(nodes);
     auto sorted_cloned_nodes = topological_sort(cloned_nodes);
@@ -247,13 +247,13 @@ TEST_F(CloneTest, clone_nodes_partial)
 {
     // map A -> A' prior to clone
     auto Aprime = make_shared<op::Parameter>(element::f32, shape);
-    node_map.add(A, Aprime);
+    node_map[A.get()] = Aprime;
 
     auto cloned_nodes = clone_nodes(nodes, node_map);
     ASSERT_TRUE(CompareNodeVector(nodes, cloned_nodes, node_map));
 
     // ensure A -> A' after clone
-    ASSERT_EQ(Aprime, node_map.get(A));
+    ASSERT_EQ(Aprime, node_map.at(A.get()));
 }
 
 TEST_F(CloneTest, clone_function_full)
@@ -394,15 +394,146 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     ASSERT_EQ(expected, sorted);
 }
 
-TEST(pass, visualize_tree)
+TEST(util, enum_mask_construction)
 {
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
+    enum class Type : uint32_t
+    {
+        a = 0x1,
+        b = 1 << 1,
+        c = 1 << 2,
+        d = 1 << 3
+    };
+    {
+        EnumMask<Type> m;
+        EXPECT_EQ(0, m.value());
+    }
+    {
+        EnumMask<Type> m(Type::c);
+        EXPECT_EQ(static_cast<uint32_t>(Type::c), m.value());
+    }
+    {
+        EnumMask<Type> a(Type::c);
+        EnumMask<Type> b{a};
+        EXPECT_EQ(a.value(), b.value());
+    }
+    {
+        EnumMask<Type> a{Type::a, Type::c, Type::d};
+        EXPECT_EQ((static_cast<uint32_t>(Type::a) | static_cast<uint32_t>(Type::c) |
+                   static_cast<uint32_t>(Type::d)),
+                  a.value());
+    }
+}
 
-    ngraph::pass::Manager pm;
-    pm.register_pass<pass::VisualizeTree>("test_viz.png");
-    pm.run_passes(f);
+TEST(util, enum_mask_set_clear)
+{
+    enum class Type : uint32_t
+    {
+        a = 0x1,
+        b = 1 << 1,
+        c = 1 << 2,
+        d = 1 << 3
+    };
+    EnumMask<Type> m;
+    m.set(Type::b);
+    EXPECT_EQ(static_cast<uint32_t>(Type::b), m.value());
+    m.set(Type::c);
+    EXPECT_EQ(static_cast<uint32_t>(Type::b) | static_cast<uint32_t>(Type::c), m.value());
+    m.clear(Type::b);
+    EXPECT_EQ(static_cast<uint32_t>(Type::c), m.value());
+    m.clear_all();
+    EXPECT_EQ(0, m.value());
+    m.set(Type::d);
+    m.set(Type::b);
+    EXPECT_EQ(true, m.is_set(Type::d));
+    EXPECT_EQ(false, m.is_set(Type::a));
+    EXPECT_EQ(true, m.is_set(Type::b));
+    EXPECT_EQ(false, m.is_set(Type::c));
+    EXPECT_EQ(false, m.is_set({Type::a, Type::b}));
+    EXPECT_EQ(false, m.is_set({Type::c, Type::d}));
+    EXPECT_EQ(false, m.is_set({Type::a, Type::c}));
+    EXPECT_EQ(true, m.is_set({Type::b, Type::d}));
+    EXPECT_EQ(false, m.is_clear(Type::d));
+    EXPECT_EQ(true, m.is_clear(Type::a));
+    EXPECT_EQ(false, m.is_clear(Type::b));
+    EXPECT_EQ(true, m.is_clear(Type::c));
+    EXPECT_EQ(false, m.is_clear({Type::c, Type::d}));
+    EXPECT_EQ(false, m.is_clear({Type::a, Type::b}));
+    EXPECT_EQ(true, m.is_clear({Type::a, Type::c}));
+    EXPECT_EQ(false, m.is_clear({Type::b, Type::d}));
+
+    EXPECT_EQ(true, m.is_any_set({Type::a, Type::b}));
+    EXPECT_EQ(true, m.is_any_set({Type::a, Type::d}));
+    EXPECT_EQ(true, m.is_any_set({Type::b, Type::c}));
+    EXPECT_EQ(true, m.is_any_set({Type::c, Type::d}));
+    EXPECT_EQ(false, m.is_any_set({Type::a, Type::c}));
+    EXPECT_EQ(true, m.is_any_clear({Type::c, Type::d}));
+    EXPECT_EQ(true, m.is_any_clear({Type::a, Type::b}));
+    EXPECT_EQ(true, m.is_any_clear({Type::a, Type::c}));
+    EXPECT_EQ(true, m.is_any_clear({Type::b, Type::c}));
+    EXPECT_EQ(false, m.is_any_clear({Type::b, Type::d}));
+
+    m.set(Type::a);
+    EXPECT_EQ(false, m.is_clear(Type::a));
+    EXPECT_EQ(false, m.is_clear(Type::b));
+    EXPECT_EQ(true, m.is_clear(Type::c));
+    EXPECT_EQ(false, m.is_clear(Type::d));
+}
+
+TEST(util, enum_mask_operators)
+{
+    enum class Type : uint32_t
+    {
+        a = 0x1,
+        b = 1 << 1,
+        c = 1 << 2,
+        d = 1 << 3
+    };
+    EnumMask<Type> m;
+    m = Type::b;
+    EXPECT_EQ(static_cast<uint32_t>(Type::b), m.value());
+    EXPECT_EQ(true, m[Type::b]);
+    EXPECT_EQ(false, m[Type::a]);
+    EXPECT_EQ(false, m[Type::c]);
+    m |= Type::c;
+    EXPECT_EQ(static_cast<uint32_t>(Type::b) | static_cast<uint32_t>(Type::c), m.value());
+    m &= Type::d;
+    EXPECT_EQ(0, m.value());
+
+    m |= Type::a;
+    m |= Type::c;
+    EXPECT_EQ(true, m.is_set(Type::a));
+    EXPECT_EQ(false, m.is_set(Type::b));
+    EXPECT_EQ(true, m.is_set(Type::c));
+    EXPECT_EQ(false, m.is_set(Type::d));
+    EXPECT_EQ(true, m.is_any_set(Type::a));
+    EXPECT_EQ(false, m.is_any_set(Type::b));
+    EXPECT_EQ(true, m.is_any_set(Type::c));
+    EXPECT_EQ(false, m.is_any_set(Type::d));
+    EXPECT_EQ(true, m.is_any_set({Type::a, Type::c}));
+    EXPECT_EQ(false, m.is_any_set({Type::b, Type::d}));
+
+    EnumMask<Type> n;
+    n = m | n;
+    EXPECT_EQ(m, n);
+    n = m & n;
+    EXPECT_EQ(m, n);
+    bool r = (n == m);
+    EXPECT_EQ(true, r);
+    r = (n != m);
+    EXPECT_EQ(false, r);
+    n.clear_all();
+    n = {Type::a, Type::b};
+    r = (n == m);
+    EXPECT_EQ(false, r);
+    r = (n != m);
+    EXPECT_EQ(true, r);
+    n = m & n;
+    EXPECT_EQ(static_cast<uint32_t>(Type::a), n.value());
+    n = m | Type::b;
+    EXPECT_EQ(true, n.is_set(Type::a));
+    EXPECT_EQ(true, n.is_set(Type::b));
+    EXPECT_EQ(true, n.is_set(Type::c));
+    EXPECT_EQ(false, n.is_set(Type::d));
+    EXPECT_EQ(false, n[Type::d]);
+    EXPECT_EQ(true, n[Type::b]);
 }

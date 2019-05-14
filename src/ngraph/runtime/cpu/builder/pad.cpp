@@ -38,9 +38,9 @@ namespace ngraph
 
                 auto& functors = external_function->get_functors();
 
-                auto& arg_tensor = external_function->get_tensor_data(args[0].get_name());
-                auto& padding_value = external_function->get_tensor_data(args[1].get_name());
-                auto& out_tensor = external_function->get_tensor_data(out[0].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto padding_value_index = external_function->get_buffer_index(args[1].get_name());
+                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto pad = static_cast<const ngraph::op::Pad*>(node);
 
@@ -50,7 +50,7 @@ namespace ngraph
                 auto padding_above = pad->get_padding_above();
                 auto pad_mode = pad->get_pad_mode();
 
-                if (pad->get_pad_mode() == ngraph::op::PadMode::CONSTANT)
+                if (pad_mode == ngraph::op::PadMode::CONSTANT)
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
@@ -59,11 +59,19 @@ namespace ngraph
                                           arg_shape.size(),
                                           runtime::cpu::kernel::pad_and_slice);
 
-                    auto functor = [&, kernel, arg_shape, out_shape, padding_below, padding_above](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        kernel(arg_tensor,
-                               out_tensor,
-                               padding_value,
+                    auto functor = [&,
+                                    kernel,
+                                    arg_shape,
+                                    out_shape,
+                                    padding_below,
+                                    padding_above,
+                                    arg_buffer_index,
+                                    padding_value_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               ctx->buffer_data[padding_value_index],
                                arg_shape,
                                out_shape,
                                CoordinateDiff(padding_below.begin(), padding_below.end()),
@@ -79,24 +87,90 @@ namespace ngraph
                     SELECT_KERNEL(
                         kernel, args[0].get_element_type(), runtime::cpu::kernel::pad_ref);
 
-                    auto functor =
-                        [&, kernel, arg_shape, out_shape, padding_below, padding_above, pad_mode](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(arg_tensor,
-                                   padding_value,
-                                   out_tensor,
-                                   arg_shape,
-                                   out_shape,
-                                   padding_below,
-                                   padding_above,
-                                   pad_mode,
-                                   ectx->arena);
-                        };
+                    auto functor = [&,
+                                    kernel,
+                                    arg_shape,
+                                    out_shape,
+                                    padding_below,
+                                    padding_above,
+                                    pad_mode,
+                                    arg_buffer_index,
+                                    padding_value_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg_buffer_index],
+                               ctx->buffer_data[padding_value_index],
+                               ctx->buffer_data[out_buffer_index],
+                               arg_shape,
+                               out_shape,
+                               padding_below,
+                               padding_above,
+                               pad_mode,
+                               ectx->arena);
+                    };
                     functors.emplace_back(functor);
                 }
             }
 
             REGISTER_OP_BUILDER(Pad);
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Pad)
+            {
+                auto pad = static_cast<const ngraph::op::Pad*>(node);
+
+                auto arg_shape = pad->get_argument(0)->get_shape();
+                auto out_shape = pad->get_shape();
+                auto padding_below = pad->get_padding_below();
+                auto padding_above = pad->get_padding_above();
+                auto pad_mode = pad->get_pad_mode();
+
+                if (pad_mode == ngraph::op::PadMode::CONSTANT)
+                {
+                    std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
+
+                    SELECT_KERNEL_BY_RANK(kernel,
+                                          pad->get_input_element_type(0),
+                                          arg_shape.size(),
+                                          runtime::cpu::kernel::pad_and_slice);
+
+                    auto functor = [kernel, arg_shape, out_shape, padding_below, padding_above](
+                        const std::vector<void*>& inputs, std::vector<void*>& outputs) {
+                        kernel(inputs[0],
+                               outputs[0],
+                               inputs[1],
+                               arg_shape,
+                               out_shape,
+                               CoordinateDiff(padding_below.begin(), padding_below.end()),
+                               CoordinateDiff(padding_above.begin(), padding_above.end()),
+                               0);
+                    };
+                    return functor;
+                }
+                else
+                {
+                    std::function<decltype(runtime::cpu::kernel::pad_ref<float>)> kernel;
+
+                    SELECT_KERNEL(
+                        kernel, pad->get_input_element_type(0), runtime::cpu::kernel::pad_ref);
+
+                    auto functor =
+                        [kernel, arg_shape, out_shape, padding_below, padding_above, pad_mode](
+                            const std::vector<void*>& inputs, std::vector<void*>& outputs) {
+                            kernel(inputs[0],
+                                   inputs[1],
+                                   outputs[0],
+                                   arg_shape,
+                                   out_shape,
+                                   padding_below,
+                                   padding_above,
+                                   pad_mode,
+                                   0);
+                        };
+                    return functor;
+                }
+            }
+            REGISTER_CF_BUILDER(Pad);
         }
     }
 }

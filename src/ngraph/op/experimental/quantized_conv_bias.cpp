@@ -34,7 +34,7 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
                                                        const CoordinateDiff& padding_below,
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides,
-                                                       const std::shared_ptr<Node> scale,
+                                                       const shared_ptr<Node>& scale,
                                                        const bool with_relu)
     : Op("QuantizedConvolutionBias", check_single_output_args({data_batch, filters, bias, scale}))
     , m_window_movement_strides(window_movement_strides)
@@ -100,8 +100,8 @@ op::QuantizedConvolutionBiasAdd::QuantizedConvolutionBiasAdd(const shared_ptr<No
                                                              const CoordinateDiff& padding_below,
                                                              const CoordinateDiff& padding_above,
                                                              const Strides& data_dilation_strides,
-                                                             const std::shared_ptr<Node> scale,
-                                                             const std::shared_ptr<Node> sum_scale,
+                                                             const shared_ptr<Node>& scale,
+                                                             const shared_ptr<Node>& sum_scale,
                                                              const bool with_relu)
     : Op("QuantizedConvolutionBiasAdd",
          check_single_output_args({data_batch, filters, bias, sum_input, scale, sum_scale}))
@@ -172,8 +172,8 @@ op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
     const CoordinateDiff& padding_below,
     const CoordinateDiff& padding_above,
     const Strides& data_dilation_strides,
-    const std::shared_ptr<Node> scale,
-    const std::shared_ptr<Node> sum_scale,
+    const shared_ptr<Node>& scale,
+    const shared_ptr<Node>& sum_scale,
     const bool with_relu)
     : Op("QuantizedConvolutionBiasSignedAdd",
          check_single_output_args({data_batch, filters, bias, sum_input, scale, sum_scale}))
@@ -193,7 +193,7 @@ op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
     // util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
 
     // TODO (nbpatel): Remove with_relu arg from the API
-    NGRAPH_ASSERT(with_relu == true) << "with_relu must be true";
+    NGRAPH_CHECK(with_relu == true, "with_relu must be true");
     set_output_type(0,
                     element::i8,
                     util::infer_convolution_output_shape(this,

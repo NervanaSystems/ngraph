@@ -22,11 +22,8 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/tensor.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/runtime/reference/allreduce.hpp"
-#endif
 
 namespace ngraph
 {
@@ -36,6 +33,7 @@ namespace ngraph
         {
             class INTBackend;
             class INTExecutable;
+            class INTBackendConstructor;
         }
     }
 }

@@ -32,10 +32,8 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
@@ -52,7 +50,7 @@ public:
     virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
     {
         auto clone = make_shared<ControlDependencyOp>(new_args, std::set<std::shared_ptr<Node>>{});
-        return clone;
+        return move(clone);
     }
 
     ControlDependencyOp(const NodeVector& args, const std::set<std::shared_ptr<Node>>& deps)
@@ -63,9 +61,9 @@ public:
             throw ngraph_error("Expected some arguments or dependencies");
         }
 
-        if (deps.size() != 0)
+        for (auto& node : deps)
         {
-            m_control_dependencies.insert(deps.begin(), deps.end());
+            add_control_dependency(node);
         }
 
         if (args.size() != 0)
@@ -132,7 +130,7 @@ TEST(control_dependencies, clone_function_cdop)
 
     auto f = make_shared<Function>(cdop, ParameterVector{A});
     auto clone = ngraph::clone_function(*f.get());
-    auto matcher = std::make_shared<pattern::Matcher>(cdop, nullptr);
+    auto matcher = std::make_shared<pattern::Matcher>(cdop);
     auto cdop_clone = clone->get_results().at(0)->get_argument(0);
     ASSERT_TRUE(matcher->match(cdop_clone));
     auto cloned_deps = cdop_clone->get_control_dependencies();
@@ -153,7 +151,7 @@ TEST(control_dependencies, clone_function_cdop_abs)
 
     auto f = make_shared<Function>(absn_cdop, ParameterVector{A, B});
     auto clone = ngraph::clone_function(*f.get());
-    auto matcher = std::make_shared<pattern::Matcher>(cdop, nullptr);
+    auto matcher = std::make_shared<pattern::Matcher>(cdop);
     auto cdop_clone = clone->get_results().at(0)->get_argument(0)->get_argument(0);
     ASSERT_TRUE(matcher->match(cdop_clone));
     auto cloned_deps = cdop_clone->get_control_dependencies();
@@ -164,6 +162,7 @@ TEST(control_dependencies, clone_function_cdop_abs)
     }
 }
 
+#ifdef NGRAPH_JSON_ENABLE
 TEST(control_dependencies, serialize_cdop)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{});
@@ -175,7 +174,7 @@ TEST(control_dependencies, serialize_cdop)
     string js = serialize(f, 4);
     shared_ptr<Function> clone = deserialize(js);
 
-    auto matcher = std::make_shared<pattern::Matcher>(cdop, nullptr);
+    auto matcher = std::make_shared<pattern::Matcher>(cdop);
     auto cdop_clone = clone->get_results().at(0)->get_argument(0);
     ASSERT_TRUE(matcher->match(cdop_clone));
     auto cloned_deps = cdop_clone->get_control_dependencies();
@@ -199,7 +198,7 @@ TEST(control_dependencies, serialize_cdop_abs)
 
     string js = serialize(f, 4);
     shared_ptr<Function> clone = deserialize(js);
-    auto matcher = std::make_shared<pattern::Matcher>(cdop, nullptr);
+    auto matcher = std::make_shared<pattern::Matcher>(cdop);
     auto cdop_clone = clone->get_results().at(0)->get_argument(0)->get_argument(0);
     ASSERT_TRUE(matcher->match(cdop_clone));
     auto cloned_deps = cdop_clone->get_control_dependencies();
@@ -209,3 +208,4 @@ TEST(control_dependencies, serialize_cdop_abs)
         ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(ccdep));
     }
 }
+#endif

@@ -37,6 +37,7 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
 
     auto& data_shape = data->get_shape();
     auto& weights_shape = weights->get_shape();
+    // QuantizedDot does [n, ic] * [oc, ic] = [n, oc]
     NODE_VALIDATION_CHECK(this,
                           data_shape.size() == 2 && weights_shape.size() == 2 &&
                               data_shape[1] == weights_shape[1],
@@ -45,6 +46,6 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
                           " weights shape ",
                           weights_shape);
 
-    auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::f32;
+    auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::i32;
     set_output_type(0, output_et, Shape{data_shape[0], weights_shape[0]});
 }

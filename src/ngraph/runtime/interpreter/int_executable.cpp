@@ -21,6 +21,8 @@
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
 #include "ngraph/pass/assign_layout.hpp"
+#include "ngraph/pass/core_fusion.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -35,10 +37,12 @@ using descriptor::layout::DenseTensorLayout;
 
 runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
                                                    bool enable_performance_collection)
+    : m_performance_counters_enabled{enable_performance_collection}
 {
     m_is_compiled = true;
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
+    pass_manager.register_pass<pass::FusedOpDecomposition>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(function);
@@ -80,7 +84,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            descriptor::Tensor* tensor = param->get_output_tensor_ptr(i).get();
+            descriptor::Tensor* tensor = &param->output(i).get_tensor();
             tensor_map.insert({tensor, func_inputs[input_count++]});
         }
     }
@@ -93,14 +97,14 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::Tensor* tensor = output->get_output_tensor_ptr(0).get();
+        descriptor::Tensor* tensor = &output->output(0).get_tensor();
         tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
     // for each ordered op in the graph
     for (const NodeWrapper& wrapped : m_wrapped_nodes)
     {
-        const Node* op = &wrapped.get_node();
+        auto op = wrapped.get_node();
         auto type_id = wrapped.get_typeid();
         if (type_id == OP_TYPEID::Parameter)
         {
@@ -109,9 +113,9 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
 
         // get op inputs from map
         vector<shared_ptr<HostTensor>> op_inputs;
-        for (const descriptor::Input& input : op->get_inputs())
+        for (auto input : op->inputs())
         {
-            descriptor::Tensor* tensor = input.get_output().get_tensor_ptr().get();
+            descriptor::Tensor* tensor = &input.get_tensor();
             op_inputs.push_back(tensor_map.at(tensor));
         }
 
@@ -119,14 +123,14 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         vector<shared_ptr<HostTensor>> op_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
-            descriptor::Tensor* tensor = op->get_output_tensor_ptr(i).get();
+            descriptor::Tensor* tensor = &op->output(i).get_tensor();
             shared_ptr<HostTensor> host_tensor;
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
                 const Shape& shape = op->get_output_shape(i);
                 const element::Type& type = op->get_output_element_type(i);
-                string name = op->get_output_tensor(i).get_name();
+                string name = op->output(i).get_tensor().get_name();
                 host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
                 tensor_map.insert({tensor, host_tensor});
             }
@@ -175,7 +179,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         }
         if (m_nan_check_enabled)
         {
-            perform_nan_check(op_outputs, op);
+            perform_nan_check(op_outputs, op.get());
         }
     }
 
@@ -204,7 +208,8 @@ void runtime::interpreter::INTExecutable::generate_calls(const element::Type& ty
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     case element::Type_t::bf16:
-        ss << "unsupported element type " << type << " op " << op.get_node().get_name();
+    case element::Type_t::f16:
+        ss << "unsupported element type " << type << " op " << op.get_node()->get_name();
         throw ngraph_error(ss.str());
     }
 }
@@ -218,11 +223,9 @@ vector<runtime::PerformanceCounter>
     runtime::interpreter::INTExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
-    for (const pair<const Node*, stopwatch> p : m_timer_map)
+    for (const pair<shared_ptr<const Node>, stopwatch> p : m_timer_map)
     {
-        rc.emplace_back(p.first->get_name().c_str(),
-                        p.second.get_total_microseconds(),
-                        p.second.get_call_count());
+        rc.emplace_back(p.first, p.second.get_total_microseconds(), p.second.get_call_count());
     }
     return rc;
 }
