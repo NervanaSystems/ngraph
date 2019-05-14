@@ -21,13 +21,6 @@ shape_of_5d
 shape_of_matrix
 shape_of_scalar
 shape_of_vector
-prelu
-prelu_shared_slope
-prelu_negative_slope
-elu
-elu_negative_alpha
-space_to_depth
-depth_to_space
 
 # Unsupported extra padding modes
 pad_edge_1d
@@ -48,7 +41,6 @@ pad_reflect_2d_with_neg
 
 # Not implemented
 erf
-fused_clamp
 gather_no_axis
 gather
 gather_nd_scalar_from_2d
