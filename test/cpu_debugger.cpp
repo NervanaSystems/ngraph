@@ -340,13 +340,13 @@ TEST(tracer, count_tracepoint)
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
-    constexpr size_t num_iterations = 10;
-    constexpr size_t offset = 5;
+    size_t num_iterations = 10;
+    size_t offset = 5;
 
-    std::function<void(void**, const std::string&)> callback = [](void** values,
-                                                                  const std::string& name) {
-        ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);
-    };
+    std::function<void(void**, const std::string&)> callback =
+        [&num_iterations, offset](void** values, const std::string& name) {
+            ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);
+        };
 
     ngraph::runtime::cpu::CPU_CountTracepoint count_tracepoint(callback, 10);
     for (size_t i = 0; i < num_iterations; i++)
