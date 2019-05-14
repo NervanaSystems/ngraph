@@ -32,7 +32,7 @@ namespace ngraph
             /// \param data - Node producing the input tensor
             /// \param axis - channel dimension index in the data tensor
             /// \param groups - a number of groups the channel dimension specified by axis should be split to
-            ShuffleChannels(const std::shared_ptr<ngraph::Node>& data, const size_t axis, const size_t groups);
+            ShuffleChannels(const std::shared_ptr<ngraph::Node>& data, const int axis, const int groups);
 
             void pre_validate_and_infer_types() override;
 
@@ -41,11 +41,11 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            const size_t get_axis() const { return m_axis; }
-            const size_t get_groups() const { return m_groups; }
+            const int get_axis() const { return m_axis; }
+            const int get_groups() const { return m_groups; }
         private:
-            const size_t m_axis = 1;
-            const size_t m_groups = 1;
+            const int m_axis = 1;
+            const int m_groups = 1;
         };
     }
 }
