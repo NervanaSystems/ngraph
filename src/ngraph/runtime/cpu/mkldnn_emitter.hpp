@@ -73,7 +73,7 @@ namespace ngraph
 
             // TODO (nbpatel) Templatize the return type when we have double scales
             template <typename OP>
-            static std::vector<float> extract_scale_value(const ngraph::Node* node, int index)
+            inline std::vector<float> extract_scale_value(const ngraph::Node* node, int index)
             {
                 auto qc = static_cast<const OP*>(node);
                 std::vector<float> scale_val = {1.0f};
