@@ -30,18 +30,24 @@ op::ShuffleChannels::ShuffleChannels(const shared_ptr<Node>& data, const int axi
 
 void op::ShuffleChannels::pre_validate_and_infer_types()
 {
-    NODE_VALIDATION_CHECK(
-        this, m_axis >= 0, "Accepted values of the 'axis' parameter for ShuffleChannels are positive integers and zero.");
+    NODE_VALIDATION_CHECK(this,
+                          m_axis >= 0,
+                          "Accepted values of the 'axis' parameter for ShuffleChannels are "
+                          "positive integers and zero.");
 
     NODE_VALIDATION_CHECK(
-        this, m_groups > 0, "The 'groups' parameter for ShuffleChannels needs to be greater than zero.");
+        this,
+        m_groups > 0,
+        "The 'groups' parameter for ShuffleChannels needs to be greater than zero.");
 
     const auto data = get_argument(0);
     const auto shape = data->get_shape();
     const auto channel_dim_size = shape.at(m_axis);
 
     NODE_VALIDATION_CHECK(
-        this, m_axis < shape.size(), "The 'axis' parameter for ShuffleChannels needs to be less than the input tensor rank.");
+        this,
+        m_axis < shape.size(),
+        "The 'axis' parameter for ShuffleChannels needs to be less than the input tensor rank.");
 
     NODE_VALIDATION_CHECK(
         this, shape.size() == 4, "The input tensor's shape is expected to be 4D.");
@@ -68,7 +74,8 @@ NodeVector op::ShuffleChannels::decompose_op() const
         std::swap(N, C);
     }
 
-    const auto reshaped = util::reshape(data, {N, static_cast<size_t>(m_groups), C / m_groups, H * W});
+    const auto reshaped =
+        util::reshape(data, {N, static_cast<size_t>(m_groups), C / m_groups, H * W});
     const auto reordered = util::reorder_axes(reshaped, {0, 2, 1, 3});
     const auto shuffled = util::reshape(data, {N, C, H, W});
 
