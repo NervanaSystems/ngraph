@@ -1221,8 +1221,8 @@ TEST(builder, scaled_QDotInteger)
 {
     Shape shape_a{1, 2}; // input shape
     vector<uint8_t> a_data = {2, 3};
-    Shape shape_b{3, 2}; // filter shape
-    vector<int8_t> b_data = {0, 1, 2, 3, 4, 5};
+    Shape shape_b{2, 3}; // filter shape
+    vector<int8_t> b_data = {0, 2, 4, 1, 3, 5};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::i8, shape_b);
 
@@ -1474,8 +1474,8 @@ TEST(builder, scaled_QDot_u8u8)
 {
     Shape shape_a{1, 2}; // input shape
     vector<uint8_t> a_data = {2, 3};
-    Shape shape_b{3, 2}; // filter shape
-    vector<uint8_t> b_data = {0, 1, 2, 3, 4, 5};
+    Shape shape_b{2, 3}; // filter shape
+    vector<uint8_t> b_data = {0, 2, 4, 1, 3, 5};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::u8, shape_b);
     auto input_scale = op::Constant::create(element::f32, Shape{}, {2});

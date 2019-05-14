@@ -127,93 +127,38 @@ namespace ngraph
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto scales_size = shape_size(args[2].get_shape());
+                std::function<decltype(
+                    runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>)>
+                    kernel;
 
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                kernel = runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>;
 
-                    auto ip_desc =
-                        mkldnn_emitter->get_inner_product_forward_desc<ngraph::op::QuantizedDot>(
-                            node);
-                    auto ip_attr =
-                        mkldnn_emitter->get_inner_product_forward_attr<ngraph::op::QuantizedDot>(
-                            node);
-                    size_t ip_index = mkldnn_emitter->inner_product_forward_init(false);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(ip_index);
+                auto functor = [&,
+                                kernel,
+                                arg0_shape,
+                                arg1_shape,
+                                result_shape,
+                                arg0_buffer_index,
+                                arg1_buffer_index,
+                                arg2_buffer_index,
+                                out0_buffer_index,
+                                scales_size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
 
-                    auto functor = [&,
-                                    scales_size,
-                                    ip_desc,
-                                    ip_attr,
-                                    deps,
-                                    ip_index,
-                                    arg0_buffer_index,
-                                    arg1_buffer_index,
-                                    arg2_buffer_index,
-                                    out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) mutable {
-                        if (ctx->first_iteration)
-                        {
-                            vector<float> dyn_scales;
-                            dyn_scales.assign(
-                                static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
-                                static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
-                                    scales_size);
-                            ip_attr.set_output_scales(0, dyn_scales);
-                            mkldnn_emitter->build_inner_product_forward<false>(
-                                ctx->mkldnn_primitives,
-                                ip_desc,
-                                ip_attr,
-                                executor::global_cpu_engine,
-                                deps,
-                                ip_index);
-                        }
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, ip_index);
-                    };
-                    functors.emplace_back(functor);
-                }
-                else
-                {
-                    std::function<decltype(
-                        runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>)>
-                        kernel;
+                    vector<float> dyn_scales;
+                    dyn_scales.assign(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
+                                      static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
+                                          scales_size);
 
-                    kernel = runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>;
-
-                    auto functor = [&,
-                                    kernel,
-                                    arg0_shape,
-                                    arg1_shape,
-                                    result_shape,
-                                    arg0_buffer_index,
-                                    arg1_buffer_index,
-                                    arg2_buffer_index,
-                                    out0_buffer_index,
-                                    scales_size](CPURuntimeContext* ctx,
-                                                 CPUExecutionContext* ectx) {
-
-                        vector<float> dyn_scales;
-                        dyn_scales.assign(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
-                                          static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
-                                              scales_size);
-
-                        kernel(ctx->buffer_data[arg0_buffer_index],
-                               ctx->buffer_data[arg1_buffer_index],
-                               ctx->buffer_data[out0_buffer_index],
-                               arg0_shape,
-                               arg1_shape,
-                               result_shape,
-                               1,
-                               dyn_scales[0]);
-                    };
-                    functors.emplace_back(functor);
-                }
+                    kernel(ctx->buffer_data[arg0_buffer_index],
+                           ctx->buffer_data[arg1_buffer_index],
+                           ctx->buffer_data[out0_buffer_index],
+                           arg0_shape,
+                           arg1_shape,
+                           result_shape,
+                           1,
+                           dyn_scales[0]);
+                };
+                functors.emplace_back(functor);
             }
             REGISTER_OP_BUILDER(QuantizedDotBias);
             REGISTER_OP_BUILDER(QuantizedDot);

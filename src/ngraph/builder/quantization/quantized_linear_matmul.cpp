@@ -80,20 +80,7 @@ namespace ngraph
                     check_zero_point(output_zero))
                 {
                     auto requantization_scale = (input0_scale * input1_scale) / output_scale;
-
-                    // Since u8u8 goes to ref reshape the input1 so that the ref dot can do a matmul
-                    // which requires [m, n] * [n, k] order where as mkldnn requires [m, n] * [k, n]
-                    if (input0->get_element_type() == element::u8 &&
-                        input1->get_element_type() == element::u8)
-                    {
-                        reshaped_input1 = make_shared<op::Reshape>(
-                            input1,
-                            AxisVector{1, 0},
-                            Shape{input1->get_shape()[1], input1->get_shape()[0]});
-                    }
-
-                    return make_shared<op::QuantizedDot>(
-                        input0, reshaped_input1, requantization_scale);
+                    return make_shared<op::QuantizedDot>(input0, input1, requantization_scale);
                 }
                 else
                 {

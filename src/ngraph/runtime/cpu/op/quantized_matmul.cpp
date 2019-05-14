@@ -19,17 +19,17 @@
 #include <utility>
 
 #include "ngraph/shape.hpp"
-#include "quantized_dot.hpp"
+#include "quantized_matmul.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
-                               const shared_ptr<Node>& weights,
-                               const shared_ptr<Node>& scale,
-                               bool requantize,
-                               bool with_relu)
-    : Op("QuantizedDot", check_single_output_args({data, weights, scale}))
+op::QuantizedMatmul::QuantizedMatmul(const shared_ptr<Node>& data,
+                                     const shared_ptr<Node>& weights,
+                                     const shared_ptr<Node>& scale,
+                                     bool requantize,
+                                     bool with_relu)
+    : Op("QuantizedMatmul", check_single_output_args({data, weights, scale}))
     , m_requantize(requantize)
     , m_with_relu(with_relu)
 {
@@ -37,10 +37,10 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
 
     auto& data_shape = data->get_shape();
     auto& weights_shape = weights->get_shape();
-    // QuantizedDot does [m ,n] * [n, k] = [m, k]
+    // QuantizedMatmul does [n, ic] * [oc, ic] = [n, oc]
     NODE_VALIDATION_CHECK(this,
                           data_shape.size() == 2 && weights_shape.size() == 2 &&
-                              data_shape[1] == weights_shape[0],
+                              data_shape[1] == weights_shape[1],
                           "only valid tensors of rank 2 supported. data shape ",
                           data_shape,
                           " weights shape ",
@@ -51,5 +51,5 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
     {
         output_et = element::u8;
     }
-    set_output_type(0, output_et, Shape{data_shape[0], weights_shape[1]});
+    set_output_type(0, output_et, Shape{data_shape[0], weights_shape[0]});
 }

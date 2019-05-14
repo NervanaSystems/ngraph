@@ -124,6 +124,10 @@ public:
         construct_qconcat();
         construct_qconvb_add();
         construct_dq_q();
+        construct_quantized_matmul(false, false);
+        construct_quantized_matmul(false, true);
+        construct_quantized_matmul(true, false);
+        construct_quantized_matmul(true, true);
     }
 
 private:
@@ -133,4 +137,5 @@ private:
     void construct_qconcat();
     void construct_dq_q();
     void construct_qconvb_add();
+    void construct_quantized_matmul(bool requantize, bool with_relu);
 };
