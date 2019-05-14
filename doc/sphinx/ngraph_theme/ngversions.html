@@ -1,0 +1,26 @@
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book">nGraph Compiler stack</span>
+      v: {{ version }}
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>{{ _('Document Release Versions') }}</dt>
+        {% for slug, url in versions %} 
+          <dd><a href="/0.19.0">0.19</a></dd>
+          <dd><a href="/0.18.0">0.18</a></dd>
+          <dd><a href="/0.17.0">0.17</a></dd>
+        {% endfor %}
+      </dl>
+      <dl>
+        <dt>{{ _(' Links') }}</dt>
+          <dd>
+           <a href="https://www.ngraph.ai/">Project Home</a>
+          </dd>
+          <dd>
+            <a href="https://github.com/NervanaSystems/ngraph/releases">Releases</a>
+          </dd>
+      </dl>
+    </div>
+</div>
