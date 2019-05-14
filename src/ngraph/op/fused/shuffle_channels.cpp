@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 #include "ngraph/op/fused/shuffle_channels.hpp"
-
-#include "ngraph/builder/make_constant.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -44,6 +44,9 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
         this, m_axis < shape.size(), "The 'axis' parameter for ShuffleChannels needs to be less than the input tensor rank.");
 
     NODE_VALIDATION_CHECK(
+        this, shape.size() == 4, "The input tensor's shape is expected to be 4D.");
+
+    NODE_VALIDATION_CHECK(
         this,
         channel_dim_size % m_groups == 0,
         "The channel dimension size has to be divisible by the 'groups' parameter value");
@@ -51,15 +54,25 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 
 NodeVector op::ShuffleChannels::decompose_op() const
 {
-//    const auto data = get_argument(0);
-//    const auto data_shape = data->get_shape();
-//
-//    const auto clamp_min = builder::make_constant(data->get_element_type(), data_shape, m_min);
-//    const auto clamp_max = builder::make_constant(data->get_element_type(), data_shape, m_max);
-//
-//    return {std::make_shared<ngraph::op::Minimum>(
-//        clamp_max, std::make_shared<ngraph::op::Maximum>(clamp_min, data))};
-    return {};
+    const auto data = get_argument(0);
+    const auto data_shape = data->get_shape();
+
+    size_t N = data_shape.at(0);
+    size_t C = data_shape.at(1);
+    size_t H = data_shape.at(2);
+    size_t W = data_shape.at(3);
+
+    // if the axis parameter is different than one, the C value must be taken from dimension 0
+    if (m_axis != 1)
+    {
+        std::swap(N, C);
+    }
+
+    const auto reshaped = util::reshape(data, {N, static_cast<size_t>(m_groups), C / m_groups, H * W});
+    const auto reordered = util::reorder_axes(reshaped, {0, 2, 1, 3});
+    const auto shuffled = util::reshape(data, {N, C, H, W});
+
+    return {shuffled};
 }
 
 shared_ptr<Node> op::ShuffleChannels::copy_with_new_args(const NodeVector& new_args) const
