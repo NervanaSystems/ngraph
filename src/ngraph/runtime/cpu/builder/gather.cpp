@@ -114,6 +114,14 @@ namespace ngraph
                 {
                     functor = prepare_functor<double>(node, args, out, external_function);
                 }
+                else if (element_type == element::i8)
+                {
+                    functor = prepare_functor<int8_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::i16)
+                {
+                    functor = prepare_functor<int16_t>(node, args, out, external_function);
+                }
                 else if (element_type == element::i32)
                 {
                     functor = prepare_functor<int32_t>(node, args, out, external_function);
@@ -121,6 +129,26 @@ namespace ngraph
                 else if (element_type == element::i64)
                 {
                     functor = prepare_functor<int64_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::u8)
+                {
+                    functor = prepare_functor<uint8_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::u16)
+                {
+                    functor = prepare_functor<uint16_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::u32)
+                {
+                    functor = prepare_functor<uint32_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::u64)
+                {
+                    functor = prepare_functor<uint64_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::boolean)
+                {
+                    functor = prepare_functor<bool>(node, args, out, external_function);
                 }
                 else
                 {
