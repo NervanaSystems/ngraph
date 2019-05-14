@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/op/fused/squared_difference.hpp"
-
 #include "ngraph/node.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
