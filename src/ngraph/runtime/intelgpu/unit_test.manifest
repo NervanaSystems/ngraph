@@ -87,3 +87,5 @@ scatter_add_scalar_indices
 scatter_nd_add_batch_2d_to_3d
 scatter_nd_add_2d_to_3d
 zero_sized_erf
+gather_no_axis_int32
+gather_no_axis_int64
