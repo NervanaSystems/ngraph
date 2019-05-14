@@ -122,6 +122,8 @@
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
+#include "ngraph/runtime/reference/scatter_add.hpp"
+#include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/runtime/reference/sigmoid.hpp"
@@ -1162,6 +1164,66 @@ private:
             else
             {
                 throw ngraph_error("only int32 indices are supported");
+            }
+            break;
+        }
+        case OP_TYPEID::ScatterAdd:
+        {
+            if (node.get_input_element_type(1) == element::i64)
+            {
+                reference::scatter_add<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                                   args[1]->get_data_ptr<int64_t>(),
+                                                   args[2]->get_data_ptr<T>(),
+                                                   out[0]->get_data_ptr<T>(),
+                                                   node.get_input_shape(0),
+                                                   node.get_input_shape(1),
+                                                   node.get_input_shape(2),
+                                                   node.get_output_shape(0));
+            }
+            else if (node.get_input_element_type(1) == element::i32)
+            {
+                reference::scatter_add<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                                   args[1]->get_data_ptr<int32_t>(),
+                                                   args[2]->get_data_ptr<T>(),
+                                                   out[0]->get_data_ptr<T>(),
+                                                   node.get_input_shape(0),
+                                                   node.get_input_shape(1),
+                                                   node.get_input_shape(2),
+                                                   node.get_output_shape(0));
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
+            break;
+        }
+        case OP_TYPEID::ScatterNDAdd:
+        {
+            if (node.get_input_element_type(1) == element::i64)
+            {
+                reference::scatter_nd_add<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                                      args[1]->get_data_ptr<int64_t>(),
+                                                      args[2]->get_data_ptr<T>(),
+                                                      out[0]->get_data_ptr<T>(),
+                                                      node.get_input_shape(0),
+                                                      node.get_input_shape(1),
+                                                      node.get_input_shape(2),
+                                                      node.get_output_shape(0));
+            }
+            else if (node.get_input_element_type(1) == element::i32)
+            {
+                reference::scatter_nd_add<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                                      args[1]->get_data_ptr<int32_t>(),
+                                                      args[2]->get_data_ptr<T>(),
+                                                      out[0]->get_data_ptr<T>(),
+                                                      node.get_input_shape(0),
+                                                      node.get_input_shape(1),
+                                                      node.get_input_shape(2),
+                                                      node.get_output_shape(0));
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
             }
             break;
         }

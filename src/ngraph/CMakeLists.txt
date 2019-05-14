@@ -252,6 +252,10 @@ set (SRC
     op/reverse.hpp
     op/reverse_sequence.cpp
     op/reverse_sequence.hpp
+    op/scatter_add.cpp
+    op/scatter_add.hpp
+    op/scatter_nd_add.cpp
+    op/scatter_nd_add.hpp
     op/select.cpp
     op/select.hpp
     op/sigmoid.cpp
@@ -300,6 +304,8 @@ set (SRC
     op/fused/normalize.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/scale_shift.cpp
+    op/fused/scale_shift.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/util/arithmetic_reduction.cpp

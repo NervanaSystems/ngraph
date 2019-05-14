@@ -108,20 +108,18 @@ bool runtime::dynamic::DynamicExecutable::call(
 
     std::vector<std::shared_ptr<runtime::Tensor>> wrapped_outputs;
 
-    auto results_it = results.begin();
-
-    for (auto& output : outputs)
+    for (size_t i = 0; i < outputs.size(); i++)
     {
         if (auto dynamic_tensor =
-                std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(output))
+                std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(outputs[i]))
         {
-            dynamic_tensor->make_storage((*results_it)->get_output_element_type(0),
-                                         (*results_it)->get_output_shape(0));
+            dynamic_tensor->make_storage(results[i]->get_output_element_type(0),
+                                         results[i]->get_output_shape(0));
             wrapped_outputs.push_back(dynamic_tensor->get_wrapped_tensor());
         }
         else
         {
-            wrapped_outputs.push_back(output);
+            wrapped_outputs.push_back(outputs[i]);
         }
     }
 
