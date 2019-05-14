@@ -381,11 +381,11 @@ TEST(tracer, conditional_tracepoint)
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
-    constexpr size_t num_iterations = 10;
-    constexpr size_t offset = 5;
+    size_t num_iterations = 10;
+    size_t offset = 5;
     int countdown = num_iterations;
 
-    auto add_tracer = [&countdown](void** values, const std::string& name) {
+    auto add_tracer = [&countdown, num_iterations, offset](void** values, const std::string& name) {
         if (countdown-- == 0)
         {
             ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);
