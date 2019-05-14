@@ -1,5 +1,5 @@
 ![nGraph Compiler stack](doc/sphinx/source/graphics/ngraph_header.png)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE) [![Build Status][build-status-badge]][build-status] 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE) [![Build Status][build-status-badge]][build-status]
 
 <div align="left">
   <h4>
@@ -9,19 +9,21 @@
 
 ## Quick start
 
-To begin using nGraph with popular frameworks to accelerate deep learning 
-workloads on CPU for inference, please refer to the links below. 
+Hello, this is test.
 
-|  Framework (Version)       | Installation guide                     | Notes  
+To begin using nGraph with popular frameworks to accelerate deep learning
+workloads on CPU for inference, please refer to the links below.
+
+|  Framework (Version)       | Installation guide                     | Notes
 |----------------------------|----------------------------------------|-----------------------------------
 | TensorFlow* 1.12           | [Pip install](https://github.com/NervanaSystems/ngraph-tf#option-1-use-a-pre-built-ngraph-tensorflow-bridge) or [Build from source](https://github.com/NervanaSystems/ngraph-tf#option-2-build-ngraph-bridge-from-source)   | 20 [Validated workloads]
-| MXNet* 1.3                 | [Pip install](https://github.com/NervanaSystems/ngraph-mxnet#Installation) or [Build from source](https://github.com/NervanaSystems/ngraph-mxnet#building-with-ngraph-support)| 18 [Validated workloads]   
-| ONNX 1.4                   | [Pip install](https://github.com/NervanaSystems/ngraph-onnx#installation)                          | 17 [Validated workloads] 
+| MXNet* 1.3                 | [Pip install](https://github.com/NervanaSystems/ngraph-mxnet#Installation) or [Build from source](https://github.com/NervanaSystems/ngraph-mxnet#building-with-ngraph-support)| 18 [Validated workloads]
+| ONNX 1.4                   | [Pip install](https://github.com/NervanaSystems/ngraph-onnx#installation)                          | 17 [Validated workloads]
 
 
-#### Python wheels for nGraph 
+#### Python wheels for nGraph
 
-The Python wheels for nGraph have been tested and are supported on the following 
+The Python wheels for nGraph have been tested and are supported on the following
 64-bit systems
 
 * Ubuntu 16.04 or later
@@ -29,44 +31,44 @@ The Python wheels for nGraph have been tested and are supported on the following
 * Debian 10
 * macOS 10.14.3 (Mojave)
 
-Frameworks using nGraph Compiler stack to execute workloads have shown 
-[**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/) 
-performance boost when compared to native framework implementations. We've also 
-seen performance boosts running workloads that are not included on the list of  
+Frameworks using nGraph Compiler stack to execute workloads have shown
+[**up to 45X**](https://ai.intel.com/ngraph-compiler-stack-beta-release/)
+performance boost when compared to native framework implementations. We've also
+seen performance boosts running workloads that are not included on the list of
 [Validated workloads], thanks to nGraph's powerful subgraph pattern matching.
 
-Additionally we have integrated nGraph with [PlaidML] to provide deep learning 
-performance acceleration on Intel, nVidia, & AMD GPUs. More details on current 
+Additionally we have integrated nGraph with [PlaidML] to provide deep learning
+performance acceleration on Intel, nVidia, & AMD GPUs. More details on current
 architecture of the nGraph Compiler stack can be found in [Architecture and features],
 and recent changes to the stack are explained in [Release Notes].
 
-## What is nGraph Compiler? 
+## What is nGraph Compiler?
 
 nGraph Compiler aims to accelerate developing AI workloads using any deep learning
-framework and deploying to a variety of hardware targets. We strongly believe in 
-providing freedom, performance, and ease-of-use to AI developers. 
+framework and deploying to a variety of hardware targets. We strongly believe in
+providing freedom, performance, and ease-of-use to AI developers.
 
 The diagram below shows deep learning frameworks and hardware targets
-supported by nGraph. NNP-L and NNP-I in the diagram refer to Intel's next generation 
-deep learning accelerators: Intel® Nervana™ Neural Network Processor for Learning and 
-Inference respectively.  Future plans for supporting addtional deep learning frameworks 
-and backends are outlined in the [ecosystem] section. 
+supported by nGraph. NNP-L and NNP-I in the diagram refer to Intel's next generation
+deep learning accelerators: Intel® Nervana™ Neural Network Processor for Learning and
+Inference respectively.  Future plans for supporting addtional deep learning frameworks
+and backends are outlined in the [ecosystem] section.
 
 
 ![](doc/sphinx/source/graphics/main_diagram_fw_hw.png)
 
 
-While the ecosystem shown above is all functioning, we have validated 
-performance for deep learning inference on CPU processors, such as Intel® Xeon® 
-for the Beta release of nGraph. The Gold release is targeted for June 2019; it 
-will feature broader workload coverage including quantized graphs (int8) and 
-will implement support for dynamic shapes. 
+While the ecosystem shown above is all functioning, we have validated
+performance for deep learning inference on CPU processors, such as Intel® Xeon®
+for the Beta release of nGraph. The Gold release is targeted for June 2019; it
+will feature broader workload coverage including quantized graphs (int8) and
+will implement support for dynamic shapes.
 
-Our documentation has extensive information about how to use nGraph Compiler 
-stack to create an nGraph computational graph, integrate custom frameworks, 
-and to interact with supported backends. If you wish to contribute to the 
-project, please don't hesitate to ask questions in [GitHub issues] after 
-reviewing our contribution guide below. 
+Our documentation has extensive information about how to use nGraph Compiler
+stack to create an nGraph computational graph, integrate custom frameworks,
+and to interact with supported backends. If you wish to contribute to the
+project, please don't hesitate to ask questions in [GitHub issues] after
+reviewing our contribution guide below.
 
 
 ## How to contribute
@@ -93,7 +95,7 @@ to improve it:
 [build the Library]: https://ngraph.nervanasys.com/docs/latest/buildlb.html
 [Getting Started Guides]: Getting-started-guides
 [Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/validated/list.html
-[Functional]: https://github.com/NervanaSystems/ngraph-onnx/ 
+[Functional]: https://github.com/NervanaSystems/ngraph-onnx/
 [How to contribute]: How-to-contribute
 [framework integration guides]: https://ngraph.nervanasys.com/docs/latest/frameworks/index.html
 [release notes]: https://ngraph.nervanasys.com/docs/latest/project/release-notes.html
