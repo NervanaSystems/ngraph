@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "ngraph/function.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 
 using namespace std;
@@ -46,7 +47,21 @@ void op::DynReshape::validate_and_infer_types()
     Rank output_rank = pattern_shape.rank().is_dynamic() ? Rank::dynamic() : pattern_shape[0];
 
     set_input_is_relevant_to_shape(1);
-    set_output_type(0, get_input_element_type(0), PartialShape::dynamic(output_rank));
+    if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    {
+        // TODO: replace with const_shape->get_shapes_val()
+        auto out_shape = const_shape->get_vector<int64_t>();
+        Shape output_shape(shape_size(const_shape->get_shape()));
+        std::transform(out_shape.begin(),
+                       out_shape.end(),
+                       output_shape.begin(),
+                       [&](const int64_t& v) { return max(v, int64_t(0)); });
+        set_output_type(0, get_input_element_type(0), output_shape);
+    }
+    else
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic(output_rank));
+    }
 }
 
 shared_ptr<Node> op::DynReshape::copy_with_new_args(const NodeVector& new_args) const

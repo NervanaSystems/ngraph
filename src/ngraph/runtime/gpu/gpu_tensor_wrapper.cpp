@@ -26,13 +26,12 @@ runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const shared_ptr<descriptor::Te
                                                  const string& alias)
     : m_tensor(tv)
     , m_alias(alias)
-    , m_offset(std::make_pair(runtime::gpu::GPUTensorWrapper::TensorType::UNKNOWN,
-                              std::numeric_limits<size_t>::max()))
+    , m_offset(std::make_pair(TensorRole::UNKNOWN, std::numeric_limits<size_t>::max()))
 {
 }
 
 runtime::gpu::GPUTensorWrapper::GPUTensorWrapper(const std::shared_ptr<descriptor::Tensor>& tv,
-                                                 runtime::gpu::GPUTensorWrapper::TensorType type,
+                                                 TensorRole type,
                                                  size_t offset,
                                                  const std::string& alias)
     : m_tensor(tv)
@@ -73,8 +72,7 @@ const std::string& runtime::gpu::GPUTensorWrapper::get_name() const
     }
 }
 
-const std::pair<runtime::gpu::GPUTensorWrapper::TensorType, size_t>&
-    runtime::gpu::GPUTensorWrapper::get_offset() const
+const std::pair<TensorRole, size_t>& runtime::gpu::GPUTensorWrapper::get_offset() const
 {
     return m_offset;
 }

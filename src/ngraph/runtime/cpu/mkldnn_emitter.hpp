@@ -73,7 +73,7 @@ namespace ngraph
 
             // TODO (nbpatel) Templatize the return type when we have double scales
             template <typename OP>
-            static std::vector<float> extract_scale_value(const ngraph::Node* node, int index)
+            inline std::vector<float> extract_scale_value(const ngraph::Node* node, int index)
             {
                 auto qc = static_cast<const OP*>(node);
                 std::vector<float> scale_val = {1.0f};
@@ -420,14 +420,6 @@ namespace ngraph
                             mkldnn::padding_kind::zero);
                     }
                 }
-
-                size_t build_pooling_forward(mkldnn::algorithm pooling_algorithm,
-                                             const mkldnn::memory::desc& input_desc,
-                                             const mkldnn::memory::desc& result_desc,
-                                             const ngraph::Strides& window_strides,
-                                             const ngraph::Shape& window_shape,
-                                             const ngraph::Shape& padding_below,
-                                             const ngraph::Shape& padding_above);
 
                 template <typename OP>
                 mkldnn::pooling_forward::desc get_max_pooling_forward_desc(const ngraph::Node* node,
@@ -821,10 +813,6 @@ namespace ngraph
                                         const mkldnn::eltwise_forward::desc& bounded_relu_desc,
                                         const std::vector<size_t>& deps,
                                         size_t bounded_relu_index);
-
-                size_t build_quantized_max_pool(const ngraph::Node* node);
-
-                size_t build_quantized_avg_pool(const ngraph::Node* node);
 
                 size_t build_dequantization(const ngraph::Node* node,
                                             const mkldnn::memory::desc& input_desc,

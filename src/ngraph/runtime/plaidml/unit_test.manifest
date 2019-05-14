@@ -117,3 +117,8 @@ gather_nd_batch_2d_from_3d
 gather_scalar_indices_no_axis
 gather_scalar_indices
 gather_nd_single_indices
+scatter_add_2d_indices
+scatter_add_1d_indices
+scatter_add_scalar_indices
+scatter_nd_add_batch_2d_to_3d
+scatter_nd_add_2d_to_3d

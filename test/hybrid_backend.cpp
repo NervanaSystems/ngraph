@@ -25,7 +25,6 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/runtime/hybrid/hybrid_util.hpp"
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
@@ -39,15 +38,26 @@
 using namespace std;
 using namespace ngraph;
 
-static runtime::Backend* hybrid_creator(const char* config)
+static runtime::BackendConstructor* hybrid_creator()
 {
-    vector<string> unsupported_0 = {"Add", "Max"};
-    vector<string> unsupported_1 = {"Multiply"};
-    vector<shared_ptr<runtime::Backend>> backend_list = {
-        make_shared<runtime::interpreter::INTBackend>(unsupported_0),
-        make_shared<runtime::cpu::CPU_Backend>()};
+    class HybridBackendConstructor : public runtime::BackendConstructor
+    {
+    public:
+        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+        {
+            vector<string> unsupported_0 = {"Add", "Max"};
+            vector<string> unsupported_1 = {"Multiply"};
+            vector<shared_ptr<runtime::Backend>> backend_list = {
+                make_shared<runtime::interpreter::INTBackend>(unsupported_0),
+                runtime::Backend::create("CPU")};
 
-    return new runtime::hybrid::HybridBackend(backend_list);
+            return make_shared<runtime::hybrid::HybridBackend>(backend_list);
+        }
+    };
+
+    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
+        new HybridBackendConstructor());
+    return s_backend_constructor.get();
 }
 
 TEST(HYBRID, function_call)
@@ -100,7 +110,7 @@ TEST(HYBRID, function_call)
 TEST(HYBRID, abc)
 {
     const string backend_name = "H1";
-    runtime::BackendManager::register_backend(backend_name, hybrid_creator);
+    runtime::BackendManager::register_backend(backend_name, hybrid_creator());
 
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -139,7 +149,7 @@ TEST(HYBRID, abc)
 TEST(HYBRID, simple)
 {
     const string backend_name = "H1";
-    runtime::BackendManager::register_backend(backend_name, hybrid_creator);
+    runtime::BackendManager::register_backend(backend_name, hybrid_creator());
 
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i8, shape);

@@ -410,7 +410,7 @@ static std::shared_ptr<Node> reduce_broadcast(std::shared_ptr<Node> broadcast)
         std::make_shared<op::Broadcast>(matched_broadcast_w1->get_argument(0),
                                         shape_w1,
                                         matched_broadcast_w1->get_broadcast_axes());
-    return new_broadcast_w1;
+    return move(new_broadcast_w1);
 }
 
 static size_t shape_to_index(Shape shape)

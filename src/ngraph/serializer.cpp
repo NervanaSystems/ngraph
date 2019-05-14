@@ -63,14 +63,20 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/mvn.hpp"
+#include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
@@ -104,6 +110,8 @@
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/scatter_add.hpp"
+#include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
@@ -222,7 +230,7 @@ static json write_partial_shape(const PartialShape& s)
         {
             vals[i] = write_dimension(s[i]);
         }
-        return vals;
+        return move(vals);
     }
 }
 
@@ -648,6 +656,13 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Ceiling>(args[0]);
                 break;
             }
+            case OP_TYPEID::Clamp:
+            {
+                const auto clamp_min = node_js.at("min").get<float>();
+                const auto clamp_max = node_js.at("max").get<float>();
+                node = make_shared<op::Clamp>(args[0], clamp_min, clamp_max);
+                break;
+            }
             case OP_TYPEID::Concat:
             {
                 auto axis = node_js.at("axis").get<size_t>();
@@ -660,16 +675,8 @@ static shared_ptr<ngraph::Function>
                     node_js.count("element_type") == 0 ? node_js.at("value_type") : node_js;
                 auto element_type = read_element_type(type_node_js.at("element_type"));
                 auto shape = type_node_js.at("shape");
-                auto value_it = node_js.find("value");
-                if (value_it != node_js.end())
-                {
-                    auto value = value_it->get<vector<string>>();
-                    node = make_shared<op::Constant>(element_type, shape, value);
-                }
-                else
-                {
-                    node = const_data_callback(node_name, element_type, shape);
-                }
+                auto value = node_js.at("value").get<vector<string>>();
+                node = make_shared<op::Constant>(element_type, shape, value);
                 break;
             }
             case OP_TYPEID::Convert:
@@ -977,6 +984,13 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::GreaterEq>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::HardSigmoid:
+            {
+                auto alpha = node_js.at("alpha").get<float>();
+                auto beta = node_js.at("beta").get<float>();
+                node = make_shared<op::HardSigmoid>(args[0], alpha, beta);
+                break;
+            }
             case OP_TYPEID::GroupConvolution:
             {
                 auto window_movement_strides =
@@ -1122,9 +1136,26 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Multiply>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::MVN:
+            {
+                auto normalize_variance = node_js.at("normalize_variance").get<bool>();
+                auto across_channels = node_js.at("across_channels").get<bool>();
+                auto eps = node_js.at("eps").get<double>();
+                node = make_shared<op::MVN>(args[0], normalize_variance, across_channels, eps);
+                break;
+            }
             case OP_TYPEID::Negative:
             {
                 node = make_shared<op::Negative>(args[0]);
+                break;
+            }
+            case OP_TYPEID::Normalize:
+            {
+                bool across_spatial = node_js.at("across_spatial").get<bool>();
+                bool channel_shared = node_js.at("channel_shared").get<bool>();
+                float eps = node_js.at("eps").get<float>();
+                node = make_shared<op::Normalize>(
+                    args[0], args[1], across_spatial, channel_shared, eps);
                 break;
             }
             case OP_TYPEID::NotEqual:
@@ -1337,6 +1368,21 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::ScalarConstantLike>(args[0], value);
                 break;
             }
+            case OP_TYPEID::ScaleShift:
+            {
+                node = make_shared<op::ScaleShift>(args[0], args[1], args[2]);
+                break;
+            }
+            case OP_TYPEID::ScatterAdd:
+            {
+                node = make_shared<op::ScatterAdd>(args[0], args[1], args[2]);
+                break;
+            }
+            case OP_TYPEID::ScatterNDAdd:
+            {
+                node = make_shared<op::ScatterNDAdd>(args[0], args[1], args[2]);
+                break;
+            }
             case OP_TYPEID::Select:
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
@@ -1416,6 +1462,11 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Tanh:
             {
                 node = make_shared<op::Tanh>(args[0]);
+                break;
+            }
+            case OP_TYPEID::Tile:
+            {
+                node = make_shared<op::Tile>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::TopK:
@@ -1666,6 +1717,13 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Ceiling: { break;
     }
+    case OP_TYPEID::Clamp:
+    {
+        auto tmp = dynamic_cast<const op::Clamp*>(&n);
+        node["min"] = tmp->get_min();
+        node["max"] = tmp->get_max();
+        break;
+    }
     case OP_TYPEID::Concat:
     {
         auto tmp = dynamic_cast<const op::Concat*>(&n);
@@ -1675,7 +1733,13 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Constant:
     {
         auto tmp = dynamic_cast<const op::Constant*>(&n);
-        if (!binary_constant_data)
+        if (tmp->are_all_data_elements_bitwise_identical())
+        {
+            vector<string> vs;
+            vs.push_back(tmp->get_value_strings()[0]);
+            node["value"] = vs;
+        }
+        else
         {
             node["value"] = tmp->get_value_strings();
         }
@@ -1836,6 +1900,13 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::GreaterEq: { break;
     }
+    case OP_TYPEID::HardSigmoid:
+    {
+        auto tmp = dynamic_cast<const op::HardSigmoid*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        node["beta"] = tmp->get_beta();
+        break;
+    }
     case OP_TYPEID::GroupConvolution:
     {
         auto tmp = dynamic_cast<const op::GroupConvolution*>(&n);
@@ -1900,7 +1971,23 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Multiply: { break;
     }
+    case OP_TYPEID::MVN:
+    {
+        auto tmp = dynamic_cast<const op::MVN*>(&n);
+        node["normalize_variance"] = tmp->get_normalize_variance();
+        node["across_channels"] = tmp->get_across_channels();
+        node["eps"] = tmp->get_eps();
+        break;
+    }
     case OP_TYPEID::Negative: { break;
+    }
+    case OP_TYPEID::Normalize:
+    {
+        auto tmp = dynamic_cast<const op::Normalize*>(&n);
+        node["across_spatial"] = tmp->get_across_spatial();
+        node["channel_shared"] = tmp->get_channel_shared();
+        node["eps"] = tmp->get_eps();
+        break;
     }
     case OP_TYPEID::NotEqual: { break;
     }
@@ -2049,6 +2136,12 @@ static json write(const Node& n, bool binary_constant_data)
         node["element_type"] = write_element_type(constant->get_element_type());
         break;
     }
+    case OP_TYPEID::ScaleShift: { break;
+    }
+    case OP_TYPEID::ScatterAdd: { break;
+    }
+    case OP_TYPEID::ScatterNDAdd: { break;
+    }
     case OP_TYPEID::Select: { break;
     }
     case OP_TYPEID::ShapeOf: { break;
@@ -2099,6 +2192,8 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Tan: { break;
     }
     case OP_TYPEID::Tanh: { break;
+    }
+    case OP_TYPEID::Tile: { break;
     }
     case OP_TYPEID::TopK:
     {
