@@ -160,7 +160,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
                                                            sconv->get_data_dilation_strides(),
                                                            n->get_arguments().size());
 
-    return new_conv;
+    return move(new_conv);
 }
 
 bool ngraph::pass::BatchFusion::run_on_function(std::shared_ptr<Function> func)
