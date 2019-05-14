@@ -463,5 +463,5 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis_int64)
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close((vector<int64_t>{10, 11, 20, 21, 20, 21, 30, 31}),
                                 read_vector<int64_t>(result),
-                                static_cast<int64_t>MIN_FLOAT_TOLERANCE_BITS));
+                                static_cast<int64_t> MIN_FLOAT_TOLERANCE_BITS));
 }
