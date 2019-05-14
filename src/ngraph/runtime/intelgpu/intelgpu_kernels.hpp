@@ -31,6 +31,7 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -134,6 +135,7 @@ private:
     krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBiasAdd>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::ConvolutionBiasBackpropFiltersBias>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Equal>& op) const;
+    krnl_info build_krnl(const std::shared_ptr<op::Gemm>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Greater>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::GreaterEq>& op) const;
     krnl_info build_krnl(const std::shared_ptr<op::Less>& op) const;
