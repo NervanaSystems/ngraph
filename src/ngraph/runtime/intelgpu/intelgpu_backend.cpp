@@ -2174,4 +2174,4 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     default: { return true;
     }
     }
-    }
+}
