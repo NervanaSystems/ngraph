@@ -2569,13 +2569,14 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul(bool
             auto reshape_input1 = std::make_shared<op::Reshape>(
                 input_1, AxisVector{1, 0}, Shape{input_1->get_shape()[1], input_1->get_shape()[0]});
             qmatmul = std::make_shared<ngraph::op::QuantizedMatmul>(
-                input_0, reshape_input1, scale_new, qdot->with_relu(), qdot->requantize());
+                input_0, reshape_input1, scale_new, qdot->requantize(), qdot->with_relu());
         }
         else
         {
             qmatmul = std::make_shared<ngraph::op::QuantizedMatmul>(
-                input_0, input_1, scale_new, qdot->with_relu(), qdot->requantize());
+                input_0, input_1, scale_new, qdot->requantize(), qdot->with_relu());
         }
+
         ngraph::replace_node(m.get_match_root(), qmatmul);
         return true;
     };
