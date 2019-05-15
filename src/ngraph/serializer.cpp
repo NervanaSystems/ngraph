@@ -78,6 +78,7 @@
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1443,6 +1444,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Sqrt>(args[0]);
                 break;
             }
+            case OP_TYPEID::Squeeze:
+            {
+                node = make_shared<op::Squeeze>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::Subtract:
             {
                 node = make_shared<op::Subtract>(args[0], args[1]);
@@ -2172,6 +2178,8 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Sqrt: { break;
+    }
+    case OP_TYPEID::Squeeze: { break;
     }
     case OP_TYPEID::StopGradient: { break;
     }

@@ -14,21 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each fused op.
-//
+#pragma once
 
-NGRAPH_OP(Clamp, ngraph::op)
-NGRAPH_OP(ConvolutionBias, ngraph::op)
-NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
-NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
-NGRAPH_OP(DepthToSpace, ngraph::op)
-NGRAPH_OP(Elu, ngraph::op)
-NGRAPH_OP(Gemm, ngraph::op)
-NGRAPH_OP(GroupConvolution, ngraph::op)
-NGRAPH_OP(HardSigmoid, ngraph::op)
-NGRAPH_OP(MVN, ngraph::op)
-NGRAPH_OP(Normalize, ngraph::op)
-NGRAPH_OP(PRelu, ngraph::op)
-NGRAPH_OP(ScaleShift, ngraph::op)
-NGRAPH_OP(SpaceToDepth, ngraph::op)
-NGRAPH_OP(Squeeze, ngraph::op)
+#include <memory>
+
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
+
+namespace ngraph
+{
+    namespace op
+    {
+        class Squeeze : public ngraph::op::util::FusedOp
+        {
+        public:
+            Squeeze(const std::shared_ptr<ngraph::Node>& data,
+                    const std::shared_ptr<ngraph::Node>& axes);
+
+            virtual NodeVector decompose_op() const override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
+    }
+}
