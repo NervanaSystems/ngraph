@@ -36,17 +36,16 @@ namespace ngraph
             /// \param groups - a number of groups the channel dimension specified by axis should be split to
             ShuffleChannels(const std::shared_ptr<ngraph::Node>& data,
                             const int axis = 1,
-                            const int groups = 1);
+                            const size_t groups = 1UL);
 
             void pre_validate_and_infer_types() override;
 
-            virtual NodeVector decompose_op() const override;
+            NodeVector decompose_op() const override;
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
-            const size_t get_axis() const { return m_axis; }
-            const size_t get_groups() const { return m_groups; }
+            size_t get_axis() const { return m_axis; }
+            size_t get_groups() const { return m_groups; }
         private:
             /// \brief Generates a shape required to permute the data
             ///
@@ -54,8 +53,8 @@ namespace ngraph
             /// \return A 4D tensor to be used to reshape the input data before shuffling it
             Shape get_pre_shuffle_shape(const Shape& data_shape) const;
 
-            int m_axis = 1;
-            const int m_groups = 1;
+            int m_axis;
+            const size_t m_groups;
         };
     }
 }

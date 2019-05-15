@@ -20,7 +20,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::ShuffleChannels::ShuffleChannels(const shared_ptr<Node>& data, const int axis, const int groups)
+op::ShuffleChannels::ShuffleChannels(const shared_ptr<Node>& data,
+                                     const int axis,
+                                     const size_t groups)
     : FusedOp("ShuffleChannels", {data})
     , m_axis{axis}
     , m_groups{groups}
@@ -46,17 +48,12 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
     const auto channel_dim_size = shape.at(m_axis);
 
     NODE_VALIDATION_CHECK(
-        this,
-        m_groups > 0,
-        "The 'groups' parameter for ShuffleChannels needs to be greater than zero.");
-
-    NODE_VALIDATION_CHECK(
         this, shape.size() == 4, "The input tensor's shape is expected to be 4D.");
 
     NODE_VALIDATION_CHECK(
         this,
         channel_dim_size % m_groups == 0,
-        "The channel dimension size has to be divisible by the 'groups' parameter value");
+        "The channel dimension size has to be a multiple of the groups parameter value.");
 }
 
 NodeVector op::ShuffleChannels::decompose_op() const
