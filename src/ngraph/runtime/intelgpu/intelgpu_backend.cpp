@@ -2075,6 +2075,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScatterNDAdd:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::SpaceToDepth:
+        case OP_TYPEID::Squeeze:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
@@ -2167,7 +2168,8 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
-    case OP_TYPEID::SpaceToDepth: { return false;
+    case OP_TYPEID::SpaceToDepth:
+    case OP_TYPEID::Squeeze: { return false;
     }
     default: { return true;
     }
