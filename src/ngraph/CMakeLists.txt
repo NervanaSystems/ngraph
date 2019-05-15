@@ -252,6 +252,10 @@ set (SRC
     op/reverse.hpp
     op/reverse_sequence.cpp
     op/reverse_sequence.hpp
+    op/scatter_add.cpp
+    op/scatter_add.hpp
+    op/scatter_nd_add.cpp
+    op/scatter_nd_add.hpp
     op/select.cpp
     op/select.hpp
     op/sigmoid.cpp
@@ -304,6 +308,8 @@ set (SRC
     op/fused/scale_shift.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
+    op/fused/squeeze.cpp
+    op/fused/squeeze.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
