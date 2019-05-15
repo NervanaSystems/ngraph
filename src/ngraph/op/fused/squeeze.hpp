@@ -14,26 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
-#include "ngraph/op/util/op_annotations.hpp"
+#pragma once
+
+#include <memory>
+
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace op
     {
-        namespace cpu
+        class Squeeze : public ngraph::op::util::FusedOp
         {
-            std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>
-                get_annotations_factory()
-            {
-                std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)> func =
-                    []() -> std::shared_ptr<ngraph::op::util::OpAnnotations> {
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    return std::move(op_annotations);
-                };
-                return func;
-            }
-        }
+        public:
+            Squeeze(const std::shared_ptr<ngraph::Node>& data,
+                    const std::shared_ptr<ngraph::Node>& axes);
+
+            virtual NodeVector decompose_op() const override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
     }
 }

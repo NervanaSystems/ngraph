@@ -76,7 +76,9 @@
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -109,6 +111,8 @@
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/scatter_add.hpp"
+#include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
@@ -227,7 +231,7 @@ static json write_partial_shape(const PartialShape& s)
         {
             vals[i] = write_dimension(s[i]);
         }
-        return vals;
+        return move(vals);
     }
 }
 
@@ -1365,6 +1369,21 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::ScalarConstantLike>(args[0], value);
                 break;
             }
+            case OP_TYPEID::ScaleShift:
+            {
+                node = make_shared<op::ScaleShift>(args[0], args[1], args[2]);
+                break;
+            }
+            case OP_TYPEID::ScatterAdd:
+            {
+                node = make_shared<op::ScatterAdd>(args[0], args[1], args[2]);
+                break;
+            }
+            case OP_TYPEID::ScatterNDAdd:
+            {
+                node = make_shared<op::ScatterNDAdd>(args[0], args[1], args[2]);
+                break;
+            }
             case OP_TYPEID::Select:
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
@@ -1423,6 +1442,11 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Sqrt:
             {
                 node = make_shared<op::Sqrt>(args[0]);
+                break;
+            }
+            case OP_TYPEID::Squeeze:
+            {
+                node = make_shared<op::Squeeze>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::Subtract:
@@ -2118,6 +2142,12 @@ static json write(const Node& n, bool binary_constant_data)
         node["element_type"] = write_element_type(constant->get_element_type());
         break;
     }
+    case OP_TYPEID::ScaleShift: { break;
+    }
+    case OP_TYPEID::ScatterAdd: { break;
+    }
+    case OP_TYPEID::ScatterNDAdd: { break;
+    }
     case OP_TYPEID::Select: { break;
     }
     case OP_TYPEID::ShapeOf: { break;
@@ -2148,6 +2178,8 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Sqrt: { break;
+    }
+    case OP_TYPEID::Squeeze: { break;
     }
     case OP_TYPEID::StopGradient: { break;
     }

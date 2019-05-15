@@ -21,13 +21,6 @@ shape_of_5d
 shape_of_matrix
 shape_of_scalar
 shape_of_vector
-prelu
-prelu_shared_slope
-prelu_negative_slope
-elu
-elu_negative_alpha
-space_to_depth
-depth_to_space
 
 # Unsupported extra padding modes
 pad_edge_1d
@@ -48,7 +41,6 @@ pad_reflect_2d_with_neg
 
 # Not implemented
 erf
-fused_clamp
 gather_no_axis
 gather
 gather_nd_scalar_from_2d
@@ -64,6 +56,8 @@ gather_nd_batch_2d_from_3d
 gather_scalar_indices_no_axis
 gather_scalar_indices
 gather_nd_single_indices
+gemm
+gemm_broadcast_input_C
 normalize_across_chw_scalar_scale_4d
 normalize_across_chw_scalar_scale_3d
 normalize_across_chw_scalar_scale_2d
@@ -77,4 +71,11 @@ mvn_mean_normalization
 mvn_mean_normalization_split_channels
 mvn_mean_variance_normalization
 mvn_mean_variance_normalization_split_channels
+scale_shift_no_broadcast
+scale_shift
+scatter_add_2d_indices
+scatter_add_1d_indices
+scatter_add_scalar_indices
+scatter_nd_add_batch_2d_to_3d
+scatter_nd_add_2d_to_3d
 zero_sized_erf
