@@ -42,8 +42,9 @@ ExternalProject_Add(
                 -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                 # -DCLDNN__OUTPUT_DIR=out/Debug
                 -DCLDNN__BOOST_VERSION=${BOOST_VERSION}
-                -DCLDNN__INCLUDE_TESTS=FALSE
-                -DCLDNN__INCLUDE_TUTORIAL=FALSE
+                -DCLDNN__INCLUDE_TESTS=OFF
+                -DCLDNN__INCLUDE_CORE_INTERNAL_TESTS=OFF
+                -DCLDNN__INCLUDE_TUTORIAL=OFF
     EXCLUDE_FROM_ALL TRUE
     )
 
