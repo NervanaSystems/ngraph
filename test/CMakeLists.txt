@@ -14,6 +14,16 @@
 # limitations under the License.
 # ******************************************************************************
 
+add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
+
+if(NOT NGRAPH_UNIT_TEST_ENABLE)
+    message(STATUS "unit tests disabled")
+    add_subdirectory(util)
+    return()
+endif()
+
+message(STATUS "unit tests enabled")
+
 if(LINUX)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 endif()
@@ -126,7 +136,6 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
 endif()
 
-add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
 add_definitions("-DTEST_FILES=\"${CMAKE_CURRENT_SOURCE_DIR}/files\"")
 add_subdirectory(util)
 
