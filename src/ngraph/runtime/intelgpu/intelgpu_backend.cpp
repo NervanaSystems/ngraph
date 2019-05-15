@@ -875,9 +875,7 @@ shared_ptr<runtime::Executable>
             const shared_ptr<op::MaxPool> max_pool = static_pointer_cast<op::MaxPool>(op);
 
             if ((op->get_input_shape(0).size() > 4) ||
-                (op->get_output_element_type(0) != element::f32) ||
-                has_non_zero(max_pool->get_padding_below()) ||
-                has_non_zero(max_pool->get_padding_above()))
+                (op->get_output_element_type(0) != element::f32))
             {
                 const shared_ptr<Node> def_val = max_pool->get_default_value();
                 const shared_ptr<op::Constant> def_const =
