@@ -2531,22 +2531,22 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul(bool
     auto input1 = std::make_shared<pattern::op::Label>(element::i8, shape_input1);
     auto scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
 
-    std::shared_ptr<ngraph::op::Op> qdot;
+    std::shared_ptr<ngraph::op::Op> q_dot;
     if (!requantize && !with_relu)
     {
-        qdot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, false, false);
+        q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, false, false);
     }
     else if (!requantize && with_relu)
     {
-        qdot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, false, true);
+        q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, false, true);
     }
     else if (requantize && !with_relu)
     {
-        qdot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, true, false);
+        q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, true, false);
     }
     else
     {
-        qdot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, true, true);
+        q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, true, true);
     }
     auto callback = [input0, input1, scale](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for Qdot against node = " << m.get_match_root()->get_name();
@@ -2563,16 +2563,23 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul(bool
             return false;
         }
 
-        auto reshape_input1 = std::make_shared<op::Reshape>(
-            input_1, AxisVector{1, 0}, Shape{input_1->get_shape()[1], input_1->get_shape()[0]});
-
-        auto qmatmul = std::shared_ptr<Node>(new ngraph::op::QuantizedMatmul(
-            input_0, reshape_input1, scale_new, qdot->with_relu(), qdot->requantize()));
-        ngraph::replace_node(qdot, qmatmul);
-        std::cout << "Pattern Matched " << std::endl;
+        std::shared_ptr<ngraph::op::Op> qmatmul;
+        if (input_1->get_shape()[0] != input_1->get_shape()[1])
+        {
+            auto reshape_input1 = std::make_shared<op::Reshape>(
+                input_1, AxisVector{1, 0}, Shape{input_1->get_shape()[1], input_1->get_shape()[0]});
+            qmatmul = std::make_shared<ngraph::op::QuantizedMatmul>(
+                input_0, reshape_input1, scale_new, qdot->with_relu(), qdot->requantize());
+        }
+        else
+        {
+            qmatmul = std::make_shared<ngraph::op::QuantizedMatmul>(
+                input_0, input_1, scale_new, qdot->with_relu(), qdot->requantize());
+        }
+        ngraph::replace_node(m.get_match_root(), qmatmul);
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(qdot, "CPUQuantFusion.QDot");
+    auto m = std::make_shared<pattern::Matcher>(q_dot, "CPUQuantFusion.QDot");
     this->add_matcher(m, callback);
 }
