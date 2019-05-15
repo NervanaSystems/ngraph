@@ -119,6 +119,9 @@
           {% endblock %}
         </div>
 
+  {% include "ngversions.html" %}
+
+
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           {% block menu %}
             {% set toctree = toctree(maxdepth=2, collapse=theme_collapse_navigation, includehidden=True) %}
@@ -158,7 +161,6 @@
     </section>
 
   </div>
-  {% include "versions.html" %}
 
   {% if not embedded %}
 
