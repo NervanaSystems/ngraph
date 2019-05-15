@@ -2168,7 +2168,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::PRelu:
     case OP_TYPEID::ScaleShift:
     case OP_TYPEID::SpaceToDepth:
-    case OP_TYPEID::SpaceToDepth: { return false;
+    case OP_TYPEID::SpaceToDepth:
     case OP_TYPEID::Squeeze: { return false;
     }
     default: { return true;
