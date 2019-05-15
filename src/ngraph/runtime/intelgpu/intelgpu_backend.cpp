@@ -2167,6 +2167,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
+    case OP_TYPEID::SquaredDifference:
     case OP_TYPEID::SpaceToDepth: { return false;
     }
     default: { return true;
