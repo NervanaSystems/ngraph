@@ -39,14 +39,9 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
     }
 
     NODE_VALIDATION_CHECK(this,
-                          m_axis >= 0,
-                          "Accepted values of the 'axis' parameter for ShuffleChannels are "
-                          "positive integers and zero.");
-
-    NODE_VALIDATION_CHECK(
-        this,
-        m_axis < shape.size(),
-        "The 'axis' parameter for ShuffleChannels needs to be less than the input tensor's rank.");
+                          m_axis >= 0 && m_axis < shape.size(),
+                          "The 'axis' parameter for ShuffleChannels has to point to one of the "
+                          "input tensor's shape dimensions.");
 
     const auto channel_dim_size = shape.at(m_axis);
 
