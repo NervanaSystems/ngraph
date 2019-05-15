@@ -49,7 +49,6 @@ pad_reflect_2d_with_neg
 
 # Not implemented
 erf
-fused_clamp
 gather_no_axis
 gather
 gather_nd_scalar_from_2d
