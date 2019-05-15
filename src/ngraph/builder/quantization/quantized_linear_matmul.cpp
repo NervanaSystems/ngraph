@@ -73,7 +73,6 @@ namespace ngraph
                 auto input1_zero = dynamic_pointer_cast<ngraph::op::Constant>(input1_zero_point);
                 auto output_zero = dynamic_pointer_cast<ngraph::op::Constant>(output_zero_point);
 
-                auto reshaped_input1 = input1;
                 // Check if zero point is constant and zero
                 if (input0_zero != nullptr && input1_zero != nullptr && output_zero != nullptr &&
                     check_zero_point(input0_zero) && check_zero_point(input1_zero) &&
@@ -92,12 +91,7 @@ namespace ngraph
                                                                  input0_scale->get_element_type(),
                                                                  axes);
 
-                    reshaped_input1 = make_shared<op::Reshape>(
-                        input1,
-                        AxisVector{1, 0},
-                        Shape{input1->get_shape()[1], input1->get_shape()[0]});
-
-                    auto dq_input1 = make_shared<op::Dequantize>(reshaped_input1,
+                    auto dq_input1 = make_shared<op::Dequantize>(input1,
                                                                  input1_scale,
                                                                  input1_zero_point,
                                                                  input1_scale->get_element_type(),

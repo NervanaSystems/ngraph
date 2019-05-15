@@ -47,9 +47,5 @@ op::QuantizedMatmul::QuantizedMatmul(const shared_ptr<Node>& data,
                           weights_shape);
 
     auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::i32;
-    if (data->get_element_type() == element::u8 && weights->get_element_type() == element::u8)
-    {
-        output_et = element::u8;
-    }
     set_output_type(0, output_et, Shape{data_shape[0], weights_shape[0]});
 }

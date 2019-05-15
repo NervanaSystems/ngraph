@@ -2522,6 +2522,9 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
     this->add_matcher(m, callback);
 }
 
+// Convert a QuantizedDot which takes [m,n]*[n,k] to
+// QuantizedMatmul which reorders input1 and does [m,n]*[k,n]
+// which is what mkldnn wants
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul(bool requantize,
                                                                             bool with_relu)
 {
@@ -2571,7 +2574,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul(bool
             qmatmul = std::make_shared<ngraph::op::QuantizedMatmul>(
                 input_0, reshape_input1, scale_new, qdot->requantize(), qdot->with_relu());
         }
-        else
+        else // If input1 has shape{n, n} don't reshape input1
         {
             qmatmul = std::make_shared<ngraph::op::QuantizedMatmul>(
                 input_0, input_1, scale_new, qdot->requantize(), qdot->with_relu());
