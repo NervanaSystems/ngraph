@@ -185,3 +185,10 @@ TEST(shape_specialization, specialization_pass_add_concat_transpose)
     ASSERT_EQ(constant_after->get_element_type(), element::i64);
     ASSERT_EQ(constant_after->get_vector<int64_t>(), (vector<int64_t>{1, 0}));
 }
+
+TEST(shape_specialization, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::ShapeSpecialization>();
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}

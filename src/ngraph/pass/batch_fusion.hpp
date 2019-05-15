@@ -29,6 +29,7 @@ namespace ngraph
                 : FunctionPass()
                 , m_fusion_type(type)
             {
+                set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
             }
             virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
 

@@ -28,6 +28,7 @@ namespace ngraph
             ShapeSpecialization()
                 : FunctionPass()
             {
+                set_property(PassProperty::CHANGE_DYNAMIC_STATE, true);
             }
             virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
         };
