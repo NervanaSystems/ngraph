@@ -310,8 +310,6 @@ endif()
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     message( STATUS "Setting clang flags...")
     include( cmake/clang_4_0_flags.cmake )
-    message(STATUS "Clang Flags: ${NGRAPH_CLANG_FLAGS}")
-    add_compile_options(${NGRAPH_CLANG_FLAGS})
 endif()
 
 if (WIN32)
