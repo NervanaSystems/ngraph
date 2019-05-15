@@ -862,13 +862,13 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_across_channels)
 
     test_case.add_input<float>(input_data);
     // input_low
-    test_case.add_input<float>(vector<float>(n_elements, 3.f, 5.f));
+    test_case.add_input<float>(vector<float>{3.f, 5.f});
     // input_high
-    test_case.add_input<float>(vector<float>(n_elements, 17.f, 12.f));
+    test_case.add_input<float>(vector<float>{17.f, 12.f});
     // output_low
-    test_case.add_input<float>(vector<float>(n_elements, 2.f, 22.f));
+    test_case.add_input<float>(vector<float>{2.f, 22.f});
     // output_high
-    test_case.add_input<float>(vector<float>(n_elements, 16.f, 32.f));
+    test_case.add_input<float>(vector<float>{16.f, 32.f});
 
     // expected result
     test_case.add_expected_output<float>(
