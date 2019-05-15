@@ -2078,6 +2078,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
+        case OP_TYPEID::Unsqueeze:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
@@ -2167,7 +2168,8 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
-    case OP_TYPEID::SpaceToDepth: { return false;
+    case OP_TYPEID::SpaceToDepth:
+    case OP_TYPEID::Unsqueeze: { return false;
     }
     default: { return true;
     }
