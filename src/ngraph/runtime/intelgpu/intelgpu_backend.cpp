@@ -45,6 +45,7 @@
 #include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
@@ -323,9 +324,13 @@ runtime::intelgpu::IntelGPUBackend::IntelGPUBackend()
     }
 
     // Disables the backend Function (graph) level optimizations
-    if (getenv("NGRAPH_INTELGPU_DISABLE_OPTIMIZATIONS") != nullptr)
+    // 0 or undefined - All optimization passes are enabled
+    // 1 - Disable optimization passes except FusedOpDecomposition
+    // >1 - Disable all optimization passes
+    const char* disable_backend_optimizations = getenv("NGRAPH_INTELGPU_DISABLE_OPTIMIZATIONS");
+    if (disable_backend_optimizations != nullptr)
     {
-        m_disable_backend_optimizations = true;
+        m_disable_backend_optimizations = strtol(disable_backend_optimizations, nullptr, 10);
     }
 
     // Disables clDNN (cldnn::network) level optimizations
@@ -411,10 +416,16 @@ shared_ptr<runtime::Executable>
         visualize_tree(func, "intelgpu_", "_orig");
     }
 
-    if (!m_disable_backend_optimizations)
-    {
-        ngraph::pass::Manager pass_manager;
+    ngraph::pass::Manager pass_manager;
 
+    if (m_disable_backend_optimizations < 2)
+    {
+        pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
+            IntelGPUBackend::is_supported_impl);
+    }
+
+    if (m_disable_backend_optimizations < 1)
+    {
         pass_manager.register_pass<ngraph::pass::NopElimination>();
         pass_manager.register_pass<ngraph::pass::BatchFusion>();
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
@@ -424,7 +435,10 @@ shared_ptr<runtime::Executable>
 
         // GetOutputElementElimination must be after CommonSubexpressionElimination
         pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
+    }
 
+    if (m_disable_backend_optimizations < 2)
+    {
         pass_manager.run_passes(func);
 
         if (m_dump_graph_enable)
@@ -2134,4 +2148,29 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_property(const Property pr
     }
 
     return false;
+}
+
+bool runtime::intelgpu::IntelGPUBackend::is_supported(const Node& node) const
+{
+    return is_supported_impl(node);
+}
+
+bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
+{
+    const OP_TYPEID op_type_id = get_typeid(node.description());
+    switch (op_type_id)
+    {
+    case OP_TYPEID::Clamp:
+    case OP_TYPEID::HardSigmoid:
+    case OP_TYPEID::DepthToSpace:
+    case OP_TYPEID::Elu:
+    case OP_TYPEID::Gemm:
+    case OP_TYPEID::MVN:
+    case OP_TYPEID::Normalize:
+    case OP_TYPEID::PRelu:
+    case OP_TYPEID::SpaceToDepth: { return false;
+    }
+    default: { return true;
+    }
+    }
 }
