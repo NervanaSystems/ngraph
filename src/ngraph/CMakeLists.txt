@@ -296,6 +296,8 @@ set (SRC
     op/fused/elu.hpp
     op/fused/gemm.cpp
     op/fused/gemm.hpp
+    op/fused/grn.cpp
+    op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
     op/fused/mvn.cpp
