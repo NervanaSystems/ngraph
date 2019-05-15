@@ -79,5 +79,3 @@ scatter_add_scalar_indices
 scatter_nd_add_batch_2d_to_3d
 scatter_nd_add_2d_to_3d
 zero_sized_erf
-grn_4d
-grn_2d_with_bias
