@@ -21,14 +21,6 @@ shape_of_5d
 shape_of_matrix
 shape_of_scalar
 shape_of_vector
-prelu
-prelu_shared_slope
-prelu_negative_slope
-elu
-elu_negative_alpha
-space_to_depth
-depth_to_space
-squared_difference
 
 # Unsupported extra padding modes
 pad_edge_1d
