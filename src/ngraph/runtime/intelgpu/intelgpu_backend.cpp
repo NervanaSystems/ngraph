@@ -1249,7 +1249,7 @@ shared_ptr<runtime::Executable>
             do_universal_unary(topology,
                                op,
                                "max(" + zero_const + ", " + convert_to_type + "(input_var))",
-                               activation_relu);
+                               activation_relu_negative_slope);
             break;
         }
         case OP_TYPEID::Sigmoid:
