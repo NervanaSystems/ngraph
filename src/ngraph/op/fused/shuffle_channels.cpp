@@ -30,6 +30,14 @@ op::ShuffleChannels::ShuffleChannels(const shared_ptr<Node>& data, const int axi
 
 void op::ShuffleChannels::pre_validate_and_infer_types()
 {
+    const auto data = get_argument(0);
+    const auto& shape = data->get_shape();
+
+    if (m_axis < 0)
+    {
+        m_axis += shape.size();
+    }
+
     NODE_VALIDATION_CHECK(this,
                           m_axis >= 0,
                           "Accepted values of the 'axis' parameter for ShuffleChannels are "
@@ -37,17 +45,15 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(
         this,
-        m_groups > 0,
-        "The 'groups' parameter for ShuffleChannels needs to be greater than zero.");
+        m_axis < shape.size(),
+        "The 'axis' parameter for ShuffleChannels needs to be less than the input tensor's rank.");
 
-    const auto data = get_argument(0);
-    const auto shape = data->get_shape();
     const auto channel_dim_size = shape.at(m_axis);
 
     NODE_VALIDATION_CHECK(
         this,
-        m_axis < shape.size(),
-        "The 'axis' parameter for ShuffleChannels needs to be less than the input tensor rank.");
+        m_groups > 0,
+        "The 'groups' parameter for ShuffleChannels needs to be greater than zero.");
 
     NODE_VALIDATION_CHECK(
         this, shape.size() == 4, "The input tensor's shape is expected to be 4D.");
@@ -61,33 +67,48 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 NodeVector op::ShuffleChannels::decompose_op() const
 {
     const auto data = get_argument(0);
-    const auto data_shape = data->get_shape();
+    const auto& data_shape = data->get_shape();
 
-    size_t N = data_shape.at(0);
-    size_t C = data_shape.at(1);
-    size_t H = data_shape.at(2);
-    size_t W = data_shape.at(3);
+    const auto reshaped = util::reshape(data, get_pre_shuffle_shape(data_shape));
+    const auto shuffled = util::reorder_axes(reshaped, {0, 2, 1, 3});
 
-    // if the axis parameter is different than one, the C value must be taken from dimension 0
-    if (m_axis != 1)
-    {
-        std::swap(N, C);
-    }
-
-    const auto reshaped =
-        util::reshape(data, {N, static_cast<size_t>(m_groups), C / m_groups, H * W});
-    const auto reordered = util::reorder_axes(reshaped, {0, 2, 1, 3});
-    const auto shuffled = util::reshape(data, {N, C, H, W});
-
-    return {shuffled};
+    return {util::reshape(shuffled, data_shape)};
 }
 
 shared_ptr<Node> op::ShuffleChannels::copy_with_new_args(const NodeVector& new_args) const
 {
-    NODE_VALIDATION_CHECK(this,
-                          new_args.size() == 1,
-                          "Expected 1 element in new_args for the ShuffleChannels op but got ",
-                          new_args.size());
+    if (new_args.size() != 1)
+    {
+        throw ngraph_error("Expected 1 element in new_args for the ShuffleChannels op but got " +
+                           std::to_string(new_args.size()));
+    }
 
     return make_shared<ShuffleChannels>(new_args.at(0), m_axis, m_groups);
+}
+
+Shape op::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
+{
+    const Shape& ds = data_shape;
+
+    // in general the resulting shape should contain the following values:
+    // [0]: ds[0] * ds[1] * ... * ds[m_axis-1] (or 1 if m_axis == 0)
+    // [1]: m_groups
+    // [2]: ds[axis] / m_groups
+    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem of ds)
+    Shape res(4, 1);
+
+    for (size_t i = 0; i < m_axis; ++i)
+    {
+        res[0] *= ds[i];
+    }
+
+    res[1] = m_groups;
+    res[2] = ds[m_axis] / m_groups;
+
+    for (size_t i = m_axis + 1; i < ds.size(); ++i)
+    {
+        res[3] *= ds[i];
+    }
+
+    return res;
 }

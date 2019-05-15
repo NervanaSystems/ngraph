@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
@@ -46,7 +48,13 @@ namespace ngraph
             const int get_axis() const { return m_axis; }
             const int get_groups() const { return m_groups; }
         private:
-            const int m_axis = 1;
+            /// \brief Generates a shape required to permute the data
+            ///
+            /// \param data_shape - Shape of the original input data tensor
+            /// \return A 4D tensor to be used to reshape the input data before shuffling it
+            Shape get_pre_shuffle_shape(const Shape& data_shape) const;
+
+            int m_axis = 1;
             const int m_groups = 1;
         };
     }
