@@ -2051,6 +2051,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Elu:
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::Erf:
+        case OP_TYPEID::FakeQuantize:
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
         case OP_TYPEID::GenerateMask:
