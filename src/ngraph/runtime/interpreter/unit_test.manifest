@@ -1,2 +1,5 @@
 # Quantized convolution is not supported on interpreter
 model_quant_conv_linear
+fake_quantize
+fake_quantize_with_clip
+fake_quantize_with_clip_across_channels
