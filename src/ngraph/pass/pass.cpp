@@ -21,8 +21,8 @@ using namespace std;
 using namespace ngraph;
 
 pass::PassBase::PassBase()
+    : m_property{all_pass_property_off}
 {
-    set_property(PassProperty::REGULAR_FUSIONS, true);
 }
 
 pass::ManagerState& pass::PassBase::get_state()
