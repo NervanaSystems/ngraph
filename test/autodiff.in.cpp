@@ -1691,14 +1691,13 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training)
     const Shape input_shape{10, 4, 5, 5};
     const Shape channel_shape{input_shape.at(1)};
     const double eps = 1e-3;
-    const element::Type& et = element::f32;
-    using T = float;
 
     // Need to keep the output elements for mean and variance from going out of scope
     // and getting freed.
     NodeVector goes;
 
-    auto make_graph = [&input_shape, &channel_shape, &eps, &et, &goes] {
+    auto make_graph = [&input_shape, &channel_shape, &eps, &goes] {
+        const element::Type& et = element::f32;
         auto input = make_shared<op::Parameter>(et, input_shape);
         auto gamma = make_shared<op::Parameter>(et, channel_shape);
         auto beta = make_shared<op::Parameter>(et, channel_shape);
@@ -1715,6 +1714,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training)
     };
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    using T = float;
     test::Uniform<T> rng(-5.0, 2.0);
     auto input = rng.initialize(backend->create_tensor<T>(input_shape));
     auto gamma = rng.initialize(backend->create_tensor<T>(channel_shape));
