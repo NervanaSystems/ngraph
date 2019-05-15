@@ -773,3 +773,19 @@ NGRAPH_TEST(${BACKEND_NAME}, squared_difference)
     test_case.add_expected_output<double>(Shape{2, 2}, {0.0, 64.0, 9.0, 4.938270617284});
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, squared_difference_broadcast)
+{
+    const auto x1 = make_shared<op::Parameter>(element::i32, Shape{2, 2});
+    const auto x2 = make_shared<op::Parameter>(element::i32, Shape{});
+
+    auto tested_op = make_shared<op::SquaredDifference>(x1, x2);
+    auto function = make_shared<Function>(tested_op, ParameterVector{x1, x2});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<int32_t>({1, 1, 1, 1});
+    test_case.add_input<int32_t>({1});
+
+    test_case.add_expected_output<int32_t>(Shape{2, 2}, {0, 0, 0, 0});
+    test_case.run();
+}
