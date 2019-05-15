@@ -751,6 +751,7 @@ NGRAPH_TEST(${BACKEND_NAME}, leaky_relu)
                                            4.25,
                                            6.66667,
                                            1000});
+}
 
 NGRAPH_TEST(${BACKEND_NAME}, scale_shift_no_broadcast)
 {

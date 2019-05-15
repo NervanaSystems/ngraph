@@ -14434,6 +14434,7 @@ TEST(type_prop, leaky_relu)
     auto leaky_relu_func = make_shared<op::LeakyRelu>(data, alpha);
     EXPECT_EQ(leaky_relu_func->get_element_type(), element::f32);
     EXPECT_EQ(leaky_relu_func->get_shape(), (Shape{3, 6}));
+}
 
 TEST(type_prop, scale_shift_no_broadcast)
 {
