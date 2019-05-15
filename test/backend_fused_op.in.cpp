@@ -801,3 +801,18 @@ NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_negative_axis)
 
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_float)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{6, 1, 1, 1});
+    auto tested_op = make_shared<op::ShuffleChannels>(data, 0, 2);
+    auto function = make_shared<Function>(tested_op, ParameterVector{data});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
+
+    test_case.add_expected_output<float>(Shape{6, 1, 1, 1}, {0.0f, 3.0f, 1.0f, 4.0f, 2.0f, 5.0f});
+
+    test_case.run();
+}
