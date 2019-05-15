@@ -363,6 +363,57 @@ TEST(core_fusion, conv_bias)
     }
 }
 
+TEST(core_fusion, conv_bias_bcast_reshape)
+{
+    // PaddlePaddle pattern
+    auto gen_f = [](bool with_fused_op) {
+        auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto weights = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+        auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+        if (with_fused_op)
+        {
+            return make_shared<Function>(make_shared<op::ConvolutionBias>(data, weights, bias),
+                                         ParameterVector{data, weights, bias});
+        }
+        else
+        {
+            auto conv = make_shared<op::Convolution>(data, weights);
+            auto bias_bcast = make_shared<op::Broadcast>(bias, Shape{2, 4, 12}, AxisSet{0, 2});
+            auto conv_bias =
+                conv + make_shared<op::Reshape>(bias_bcast, AxisVector{0, 1, 2}, conv->get_shape());
+            return make_shared<Function>(conv_bias, ParameterVector{data, weights, bias});
+        }
+    };
+
+    auto fused_f = gen_f(true);
+    auto decomp_f1 = gen_f(false);
+    auto decomp_f2 = gen_f(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.run_passes(decomp_f1);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBias>(decomp_f1), 1);
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : fused_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto fused_r = execute(fused_f, args, "INTERPRETER");
+    auto decomp_r1 = execute(decomp_f1, args, "INTERPRETER");
+    auto decomp_r2 = execute(decomp_f2, args, "INTERPRETER");
+
+    for (size_t i = 0; i < fused_r.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r1.at(i)));
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r2.at(i)));
+    }
+}
+
 TEST(core_fusion, conv_bias_add)
 {
     auto gen_f = [](bool with_fused_op) {
