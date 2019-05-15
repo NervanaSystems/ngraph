@@ -34,7 +34,7 @@ NodeVector op::LeakyRelu::decompose_op() const
     auto data = get_argument(0);
     auto alpha_node = get_argument(1);
 
-    alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
+    alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data->get_shape());
     return {std::make_shared<ngraph::op::Maximum>(data * alpha_node, data)};
 }
 
