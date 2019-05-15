@@ -71,6 +71,7 @@
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -983,6 +984,12 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::GreaterEq:
             {
                 node = make_shared<op::GreaterEq>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::GRN:
+            {
+                auto bias = node_js.at("bias").get<float>();
+                node = make_shared<op::GRN>(args[0], bias);
                 break;
             }
             case OP_TYPEID::HardSigmoid:
@@ -1905,6 +1912,12 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Greater: { break;
     }
     case OP_TYPEID::GreaterEq: { break;
+    }
+    case OP_TYPEID::GRN:
+    {
+        auto tmp = dynamic_cast<const op::GRN*>(&n);
+        node["bias"] = tmp->get_bias();
+        break;
     }
     case OP_TYPEID::HardSigmoid:
     {
