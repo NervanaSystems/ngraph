@@ -41,7 +41,7 @@ namespace ngraph
             ///
             Add(const std::shared_ptr<Node>& arg0,
                 const std::shared_ptr<Node>& arg1,
-                const AutoBcastType autob = AutoBcastType::NONE);
+                const AutoBcastSpec& autob = AutoBcastSpec());
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

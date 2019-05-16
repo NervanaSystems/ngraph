@@ -38,7 +38,7 @@ namespace ngraph
             /// | ------ | --------------------------------- | ------------------------------------------------------------------------ |
             /// | `arg0` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape. The element type \f$N\f$ may be any numeric type. |
             /// | `arg1` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same element type as `arg0`.                             |
-            /// | `autob`| AutoBcastType                     | Auto broadcast specification.                                            |
+            /// | `autob`| AutoBcastSpec                     | Auto broadcast specification.                                            |
             ///
             /// ## Output
             ///
