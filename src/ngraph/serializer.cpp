@@ -500,10 +500,12 @@ static shared_ptr<ngraph::Function>
             {
                 args.push_back(node_map.at(name));
             }
+#if !(defined(__GNUC__) && __GNUC___ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
             // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
             switch (get_typeid(node_op))
             {
             case OP_TYPEID::Abs:
@@ -1514,7 +1516,9 @@ static shared_ptr<ngraph::Function>
                 throw runtime_error(ss.str());
             }
             }
+#if !(defined(__GNUC__) && (__GNUC___ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
 
             for (const string& name : control_deps_inputs)
             {
@@ -1631,10 +1635,12 @@ static json write(const Node& n, bool binary_constant_data)
     }
 
     string node_op = n.description();
+#if !(defined(__GNUC__) && (__GNUC___ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
     // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
     switch (get_typeid(node_op))
     {
     case OP_TYPEID::Abs: { break;
@@ -2238,7 +2244,9 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::UnknownOp: { break;
     }
     }
+#if !(defined(__GNUC__) && (__GNUC___ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
 
     return node;
 }
