@@ -82,12 +82,14 @@
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -874,9 +876,7 @@ shared_ptr<runtime::Executable>
             const shared_ptr<op::MaxPool> max_pool = static_pointer_cast<op::MaxPool>(op);
 
             if ((op->get_input_shape(0).size() > 4) ||
-                (op->get_output_element_type(0) != element::f32) ||
-                has_non_zero(max_pool->get_padding_below()) ||
-                has_non_zero(max_pool->get_padding_above()))
+                (op->get_output_element_type(0) != element::f32))
             {
                 const shared_ptr<Node> def_val = max_pool->get_default_value();
                 const shared_ptr<op::Constant> def_const =
@@ -1250,7 +1250,7 @@ shared_ptr<runtime::Executable>
             do_universal_unary(topology,
                                op,
                                "max(" + zero_const + ", " + convert_to_type + "(input_var))",
-                               activation_relu);
+                               activation_relu_negative_slope);
             break;
         }
         case OP_TYPEID::Sigmoid:
@@ -2053,6 +2053,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
         case OP_TYPEID::GenerateMask:
+        case OP_TYPEID::GRN:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::MVN:
         case OP_TYPEID::Normalize:
@@ -2074,6 +2075,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScatterNDAdd:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::SpaceToDepth:
+        case OP_TYPEID::Squeeze:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
@@ -2163,10 +2165,13 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::DepthToSpace:
     case OP_TYPEID::Elu:
     case OP_TYPEID::Gemm:
+    case OP_TYPEID::GRN:
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
-    case OP_TYPEID::SpaceToDepth: { return false;
+    case OP_TYPEID::ScaleShift:
+    case OP_TYPEID::SpaceToDepth:
+    case OP_TYPEID::Squeeze: { return false;
     }
     default: { return true;
     }

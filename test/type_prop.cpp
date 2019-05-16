@@ -13554,6 +13554,23 @@ TEST(type_prop, space_to_depth)
     ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 128, 8, 8}));
 }
 
+TEST(type_prop, squeeze)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 4, 1, 8});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{0, 2});
+    auto squeeze = make_shared<op::Squeeze>(param, axes_node);
+
+    ASSERT_EQ(squeeze->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze->get_shape(), (Shape{4, 4, 1, 8}));
+
+    axes_node = make_shared<ngraph::op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
+    auto squeeze_default_axes = make_shared<op::Squeeze>(param, axes_node);
+
+    ASSERT_EQ(squeeze_default_axes->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze_default_axes->get_shape(), (Shape{4, 4, 8}));
+}
+
 TEST(type_prop, gather_nd_scalar_from_2d)
 {
     Shape params_shape{2, 2};
@@ -14396,6 +14413,57 @@ TEST(type_prop, gemm_broadcast_input_C)
     auto gemm_func = make_shared<op::Gemm>(A, B, C);
     EXPECT_EQ(gemm_func->get_element_type(), element::f32);
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
+}
+
+TEST(type_prop, grn)
+{
+    float bias = 1.25f;
+    Shape data_shape{2, 3, 4, 5};
+    auto A = make_shared<op::Parameter>(element::f32, data_shape);
+    auto grn = make_shared<op::GRN>(A, bias);
+
+    ASSERT_EQ(grn->get_element_type(), element::f32);
+    ASSERT_EQ(grn->get_shape(), data_shape);
+}
+
+TEST(type_prop, grn_invalid_data_rank)
+{
+    float bias = 1.25f;
+    auto A = make_shared<op::Parameter>(element::f32, Shape{4});
+
+    try
+    {
+        auto grn = make_shared<op::GRN>(A, bias);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4, 5});
+
+    try
+    {
+        auto grn = make_shared<op::GRN>(A, bias);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
 TEST(type_prop, mvn)

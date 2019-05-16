@@ -48,11 +48,13 @@ namespace ngraph
         };
         enum class PassProperty : uint32_t
         {
-            REGULAR_FUSIONS = 1 << 1,
-            REQUIRE_STATIC_SHAPE = 1 << 2,
-            CHANGE_FUNCTION_STATE = 1 << 3
+            // Pass requires node shapes to be static
+            REQUIRE_STATIC_SHAPE = 0x1,
+            // Pass transformation will change the function's dynamic state
+            CHANGE_DYNAMIC_STATE = 1 << 1
         };
         typedef EnumMask<PassProperty> PassPropertyMask;
+        constexpr PassPropertyMask all_pass_property_off;
     }
 }
 
