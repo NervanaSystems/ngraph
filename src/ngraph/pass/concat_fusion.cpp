@@ -114,7 +114,7 @@ void pass::ConcatElimination::construct_concat_elimination()
     };
 
     auto m = std::make_shared<pattern::Matcher>(concat_label, "ConcatElimination");
-    this->add_matcher(m, callback);
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)

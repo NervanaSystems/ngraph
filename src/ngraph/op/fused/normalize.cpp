@@ -46,8 +46,8 @@ void op::Normalize::pre_validate_and_infer_types()
 
     if (data_pshape.is_static() && scale_pshape.is_static())
     {
-        const auto& data_shape{data_pshape.to_shape()};
-        const auto& scale_shape{scale_pshape.to_shape()};
+        const Shape data_shape{data_pshape.to_shape()};
+        const Shape scale_shape{scale_pshape.to_shape()};
 
         // Input data must be 2, 3 or 4D tensor.
         NODE_VALIDATION_CHECK(this,
@@ -86,10 +86,9 @@ void op::Normalize::pre_validate_and_infer_types()
 
 NodeVector op::Normalize::decompose_op() const
 {
-    const auto input_node{get_argument(0)};
-    const auto& input_shape{input_node->get_shape()};
+    shared_ptr<Node> data{get_argument(0)};
+    const Shape input_shape{data->get_shape()};
 
-    auto data{input_node};
     // Reshape to 4D tensor.
     if (input_shape.size() != 4)
     {
@@ -110,7 +109,7 @@ NodeVector op::Normalize::decompose_op() const
     shared_ptr<Node> norm = builder::l2_norm(data, reduction_axes, m_eps);
     norm = make_broadcast_node(norm, data->get_shape(), 0);
 
-    auto scale_node{get_argument(1)};
+    shared_ptr<Node> scale_node{get_argument(1)};
 
     // Broadcast scale to data tensor shape.
     if (m_channel_shared)

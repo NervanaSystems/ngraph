@@ -73,7 +73,7 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
     };
 
     auto m = make_shared<pattern::Matcher>(reshape1);
-    this->add_matcher(m, callback);
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 void pass::ReshapeElimination::construct_reshapex2_pattern()
@@ -132,7 +132,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
         return false;
     };
     auto m = make_shared<pattern::Matcher>(reshape2);
-    this->add_matcher(m, callback);
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 void pass::ReshapeElimination::construct_dot_transpose_pattern()
@@ -189,7 +189,7 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
     };
 
     auto m = make_shared<pattern::Matcher>(preshape);
-    this->add_matcher(m, callback);
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
@@ -291,5 +291,5 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m =
         std::make_shared<pattern::RecurrentMatcher>(reshape_label, op, empty_correlated_matches);
-    this->add_matcher(m, callback);
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }

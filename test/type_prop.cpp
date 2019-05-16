@@ -13554,6 +13554,23 @@ TEST(type_prop, space_to_depth)
     ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 128, 8, 8}));
 }
 
+TEST(type_prop, squeeze)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 4, 1, 8});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{0, 2});
+    auto squeeze = make_shared<op::Squeeze>(param, axes_node);
+
+    ASSERT_EQ(squeeze->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze->get_shape(), (Shape{4, 4, 1, 8}));
+
+    axes_node = make_shared<ngraph::op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
+    auto squeeze_default_axes = make_shared<op::Squeeze>(param, axes_node);
+
+    ASSERT_EQ(squeeze_default_axes->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze_default_axes->get_shape(), (Shape{4, 4, 8}));
+}
+
 TEST(type_prop, gather_nd_scalar_from_2d)
 {
     Shape params_shape{2, 2};
@@ -13784,6 +13801,269 @@ TEST(type_prop, gather_nd_fail_indices_element_type)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices element type must be i64 or i32"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_add_fail_indices_element_type)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2, 2};
+    Shape updates_shape{2, 2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices element type must be i64 or i32"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_add_fail_updates_element_type)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2, 2};
+    Shape updates_shape{2, 2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::i32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Updates element type must be the same as Inputs"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_add_fail_updates_rank)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2, 2};
+    Shape updates_shape{2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Updates rank is expected to be indices rank + inputs rank - 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_add_fail_updates_shape)
+{
+    Shape ref_shape{2, 3, 3};
+    Shape indices_shape{2, 2};
+    Shape updates_shape{1, 2, 3, 3};
+    Shape out_shape{2, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates shape";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Updates shape must be indices_shape + inputs_shape[1:]"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_indices_element_type)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Indices element type must be i64 or i32"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_indices_rank)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{};
+    Shape updates_shape{3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Indices rank is expected to be at least 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_indices_last_dim)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{2, 4};
+    Shape updates_shape{2, 3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices innermost dim";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Last dimension of indices can be at most the rank of inputs"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_updates_element_type)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::i32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Updates element type must be the same as inputs"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_updates_rank)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{3, 3, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates rank";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Rank of updates must be rank of inputs + rank of indices "
+                                         "- last dimension of indices - 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, scatter_nd_add_fail_updates_shape)
+{
+    Shape ref_shape{3, 3, 3};
+    Shape indices_shape{1};
+    Shape updates_shape{2, 3};
+    Shape out_shape{3, 3, 3};
+    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    try
+    {
+        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect updates shape";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Updates shape must be indices_shape[:-1] + inputs_shape[indices.shape[-1]:]"));
     }
     catch (...)
     {
@@ -14135,6 +14415,57 @@ TEST(type_prop, gemm_broadcast_input_C)
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
 }
 
+TEST(type_prop, grn)
+{
+    float bias = 1.25f;
+    Shape data_shape{2, 3, 4, 5};
+    auto A = make_shared<op::Parameter>(element::f32, data_shape);
+    auto grn = make_shared<op::GRN>(A, bias);
+
+    ASSERT_EQ(grn->get_element_type(), element::f32);
+    ASSERT_EQ(grn->get_shape(), data_shape);
+}
+
+TEST(type_prop, grn_invalid_data_rank)
+{
+    float bias = 1.25f;
+    auto A = make_shared<op::Parameter>(element::f32, Shape{4});
+
+    try
+    {
+        auto grn = make_shared<op::GRN>(A, bias);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4, 5});
+
+    try
+    {
+        auto grn = make_shared<op::GRN>(A, bias);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, mvn)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6});
@@ -14162,4 +14493,35 @@ TEST(type_prop, fused_clamp)
     const auto clamp = make_shared<op::Clamp>(data, 1.0, 2.0);
     EXPECT_EQ(clamp->get_element_type(), element::f64);
     EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
+}
+
+TEST(type_prop, unsqueeze)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{4, 1, 4, 1, 8});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{1, 2});
+    auto squeeze = make_shared<op::Unsqueeze>(param, axes_node);
+
+    ASSERT_EQ(squeeze->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze->get_shape(), (Shape{4, 1, 1, 1, 4, 1, 8}));
+}
+
+TEST(type_prop, scale_shift_no_broadcast)
+{
+    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto shift = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    EXPECT_EQ(scale_shift_func->get_element_type(), element::f64);
+    EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
+}
+
+TEST(type_prop, scale_shift)
+{
+    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto shift = make_shared<op::Parameter>(element::f64, Shape{});
+    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    EXPECT_EQ(scale_shift_func->get_element_type(), element::f64);
+    EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
 }

@@ -84,9 +84,6 @@ boost compared to native implementations. For a high-level overview, see the
    :caption: Inspecting Graphs
 
    inspection/index.rst
-   inspection/performance-profile.rst
-   inspection/debug.rst 
-
 
 .. toctree::
    :maxdepth: 1
