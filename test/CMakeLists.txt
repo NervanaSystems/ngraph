@@ -41,6 +41,7 @@ set(SRC
     copy.cpp
     cpio.cpp
     cse.cpp
+    dyn_elimination.cpp
     element_type.cpp
     file_util.cpp
     float16.cpp

@@ -68,6 +68,7 @@ void pass::DynElimination::construct_transpose()
         auto replacement = std::make_shared<op::Reshape>(data_arg, perm, output_shape);
 
         replace_node(m.get_match_root(), replacement);
+        return true;
     };
 
     auto transpose_matcher = make_shared<pattern::Matcher>(transpose, "DynElimination.Transpose");
