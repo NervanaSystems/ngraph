@@ -340,11 +340,11 @@ TEST(tracer, count_tracepoint)
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
-    const size_t num_iterations = 10;
-    const size_t offset = 5;
+    size_t num_iterations = 10;
+    size_t offset = 5;
 
     std::function<void(void**, const std::string&)> callback =
-        [num_iterations, offset](void** values, const std::string& name) {
+        [&num_iterations, offset](void** values, const std::string& name) {
             ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);
         };
 
@@ -381,11 +381,11 @@ TEST(tracer, conditional_tracepoint)
 
     ngraph::runtime::cpu::CPU_Debugger dbg(*cf);
 
-    const size_t num_iterations = 10;
-    const size_t offset = 5;
+    size_t num_iterations = 10;
+    size_t offset = 5;
     int countdown = num_iterations;
 
-    auto add_tracer = [offset, &countdown, num_iterations](void** values, const std::string& name) {
+    auto add_tracer = [&countdown, num_iterations, offset](void** values, const std::string& name) {
         if (countdown-- == 0)
         {
             ASSERT_EQ(static_cast<int*>(values[0])[0], num_iterations - 1 + offset);
