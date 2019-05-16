@@ -1,3 +1,6 @@
+
+/* ngraph 0.20 theming */
+
 @charset "UTF-8";
 * {
   -webkit-box-sizing: border-box;
@@ -2651,10 +2654,6 @@ div[class^='highlight'] pre {
   margin-right: 4px;
 }
 
-.rst-other-versions { display: list-item; }
-
-.docvs { font-weight: bolder; }
-
 .docbws {
   font-family: monospace;
   color: #A79992;
@@ -2760,7 +2759,6 @@ span[id*='MathJax-Span'] {
   line-height: 44.8px;
   padding: 0 1.618em;
   margin-bottom: 0;
-  margin-left: 0.003em;
   display: block;
   font-weight: bold;
   text-transform: uppercase;

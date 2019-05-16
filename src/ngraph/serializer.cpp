@@ -71,6 +71,7 @@
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -78,6 +79,7 @@
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
@@ -985,6 +987,12 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::GreaterEq>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::GRN:
+            {
+                auto bias = node_js.at("bias").get<float>();
+                node = make_shared<op::GRN>(args[0], bias);
+                break;
+            }
             case OP_TYPEID::HardSigmoid:
             {
                 auto alpha = node_js.at("alpha").get<float>();
@@ -1442,6 +1450,11 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Sqrt:
             {
                 node = make_shared<op::Sqrt>(args[0]);
+                break;
+            }
+            case OP_TYPEID::Squeeze:
+            {
+                node = make_shared<op::Squeeze>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::Subtract:
@@ -1906,6 +1919,12 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::GreaterEq: { break;
     }
+    case OP_TYPEID::GRN:
+    {
+        auto tmp = dynamic_cast<const op::GRN*>(&n);
+        node["bias"] = tmp->get_bias();
+        break;
+    }
     case OP_TYPEID::HardSigmoid:
     {
         auto tmp = dynamic_cast<const op::HardSigmoid*>(&n);
@@ -2178,6 +2197,8 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Sqrt: { break;
+    }
+    case OP_TYPEID::Squeeze: { break;
     }
     case OP_TYPEID::StopGradient: { break;
     }
