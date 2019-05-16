@@ -25,6 +25,11 @@ namespace ngraph
     {
         class DynElimination : public GraphRewrite
         {
+        public:
+            DynElimination();
+
+        private:
+            void construct_transpose();
         };
     }
 }

@@ -17,6 +17,7 @@
 #include "ngraph/runtime/dynamic/dynamic_backend.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
 #include "ngraph/specialize_shapes.hpp"
@@ -80,61 +81,76 @@ bool runtime::dynamic::DynamicExecutable::call(
     // (1) all shapes;
     // (2) all values of shape-relevant input tensors.
 
+    NGRAPH_CHECK(m_wrapped_function->get_parameters().size() == inputs.size());
+
     std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
     std::vector<element::Type> arg_element_types;
     std::vector<PartialShape> arg_shapes;
-    std::vector<void*> arg_values(inputs.size());
 
-    size_t i = 0;
-
-    for (auto& input : inputs)
+    std::shared_ptr<Function> clone;
     {
-        std::cout << "Parm " << i << ": Relevant to shapes = "
-                  << m_wrapped_function->get_parameters()[i]->is_relevant_to_shapes() << std::endl;
-        if (m_wrapped_function->get_parameters()[i]->is_relevant_to_shapes())
+        // We'll use AlignedBuffers to back the base pointers, storing them in this vector for RAII
+        // purposes. It seems we need to wrap them in unique_ptr rather than store them directly in
+        // the vector, because the move constructor is disabled. I don't think that is necessary,
+        // but whatever gogogogogogo.
+        std::vector<std::unique_ptr<AlignedBuffer>> arg_buffers(inputs.size());
+        std::vector<void*> arg_value_base_pointers(inputs.size());
+
+        size_t i = 0;
+
+        for (auto& input : inputs)
         {
-            // TODO(amprocte): Don't malloc here, use AlignedBuffer or something
-            // instead.
-            arg_values[i] = malloc(input->get_size_in_bytes());
-            input->read(arg_values[i], 0, input->get_size_in_bytes());
-        }
-        else
-        {
-            arg_values[i] = nullptr;
+            if (m_wrapped_function->get_parameters()[i]->is_relevant_to_shapes())
+            {
+                // TODO(amprocte): Move has_storage() to runtime::Tensor?
+                if (auto dynamic_tensor =
+                        std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
+                {
+                    NGRAPH_CHECK(dynamic_tensor->has_storage());
+                }
+
+                arg_buffers[i] = std::unique_ptr<AlignedBuffer>(
+                    new AlignedBuffer(input->get_size_in_bytes(), /*alignment=*/64));
+                arg_value_base_pointers[i] = arg_buffers[i]->get_ptr();
+
+                // TODO(amprocte): For host-resident tensors we should be able to skip the read,
+                // but no API for that yet.
+                input->read(arg_value_base_pointers[i], 0, input->get_size_in_bytes());
+            }
+            else
+            {
+                arg_value_base_pointers[i] = nullptr;
+                arg_buffers[i] = nullptr;
+            }
+
+            if (auto dynamic_tensor =
+                    std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
+            {
+                NGRAPH_CHECK(dynamic_tensor->has_storage());
+                arg_element_types.push_back(
+                    dynamic_tensor->get_wrapped_tensor()->get_element_type());
+                arg_shapes.push_back(dynamic_tensor->get_wrapped_tensor()->get_shape());
+                wrapped_inputs.push_back(dynamic_tensor->get_wrapped_tensor());
+            }
+            else
+            {
+                arg_element_types.push_back(input->get_element_type());
+                arg_shapes.push_back(input->get_shape());
+                wrapped_inputs.push_back(input);
+            }
+
+            i++;
         }
 
-        if (auto dynamic_tensor = std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
-        {
-            NGRAPH_CHECK(dynamic_tensor->has_storage());
-            arg_element_types.push_back(dynamic_tensor->get_wrapped_tensor()->get_element_type());
-            arg_shapes.push_back(dynamic_tensor->get_wrapped_tensor()->get_shape());
-            wrapped_inputs.push_back(dynamic_tensor->get_wrapped_tensor());
-        }
-        else
-        {
-            arg_element_types.push_back(input->get_element_type());
-            arg_shapes.push_back(input->get_shape());
-            wrapped_inputs.push_back(input);
-        }
-
-        i++;
-    }
-
-    auto clone = specialize_shapes(m_wrapped_function, arg_element_types, arg_shapes, arg_values);
-
-    for (auto& p : arg_values)
-    {
-        if (p != nullptr)
-        {
-            free(p);
-        }
+        clone = specialize_shapes(
+            m_wrapped_function, arg_element_types, arg_shapes, arg_value_base_pointers);
     }
 
     pass::Manager passes;
     passes.register_pass<pass::ConstantFolding>();
+    passes.register_pass<pass::DynElimination>();
     passes.run_passes(clone);
 
-    // TODO: run de-dynification on clone.
     const ResultVector& results = clone->get_results();
     NGRAPH_CHECK(results.size() == outputs.size());
 

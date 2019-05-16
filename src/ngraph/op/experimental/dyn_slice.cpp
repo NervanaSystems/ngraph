@@ -51,9 +51,9 @@ Shape op::DynSlice::compute_output_shape() const
 
     if (lower_bounds && upper_bounds && strides)
     {
-        auto lb = lower_bounds->get_vector<int64_t>();
-        auto ub = upper_bounds->get_vector<int64_t>();
-        auto str = strides->get_vector<int64_t>();
+        auto lb = lower_bounds->get_coordinate_val();
+        auto ub = upper_bounds->get_coordinate_val();
+        auto str = strides->get_strides_val();
 
         int max_dims = input_shape.size() + m_new_axis.size();
         if (lb.size() && ub.size())

@@ -19,6 +19,7 @@
 #include <cstring>
 #include <sstream>
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/type/bfloat16.hpp"
@@ -156,10 +157,31 @@ namespace ngraph
             ///        Can only be used on element::i64 nodes and interprets
             ///        negative values as zeros.
             Shape get_shape_val() const;
-            /// \brief Returns the value of the constant node as a Strides object
+            /// \brief Returns the value of the constant node as a Strides
+            ///        object
             ///        Can only be used on element::i64 nodes and interprets
             ///        negative values as zeros.
             Strides get_strides_val() const;
+            /// \brief Returns the value of the constant node as a Coordinate
+            ///        object
+            ///        Can only be used on element::i64 nodes and interprets
+            ///        negative values as zeros.
+            Coordinate get_coordinate_val() const;
+            /// \brief Returns the value of the constant node as a
+            ///        CoordinateDiff object
+            ///        Can only be used on element::i64 nodes.
+            CoordinateDiff get_coordinate_diff_val() const;
+            /// \brief Returns the value of the constant node as an AxisVector
+            ///        object
+            ///        Can only be used on element::i64 nodes and interprets
+            ///        negative values as zeros.
+            AxisVector get_axis_vector_val() const;
+            /// \brief Returns the value of the constant node as an AxisSet
+            ///        object
+            ///        Can only be used on element::i64 nodes and interprets
+            ///        negative values as zeros.
+            ///        Repeated values are allowed.
+            AxisSet get_axis_set_val() const;
 
             /// \brief Wrapper around constructing a shared_ptr of a Constant
             ///

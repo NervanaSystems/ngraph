@@ -33,7 +33,6 @@ std::shared_ptr<Function>
 
     for (size_t i = 0; i < parameter_shapes.size(); i++)
     {
-        std::cout << parameter_shapes[i] << std::endl;
         NGRAPH_CHECK(
             parameter_shapes[i].refines(f->get_parameters()[i]->get_output_partial_shape(0)));
         NGRAPH_CHECK(f->get_parameters()[i]->get_element_type().is_dynamic() ||
