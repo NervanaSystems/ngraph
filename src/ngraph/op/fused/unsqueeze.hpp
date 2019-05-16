@@ -16,24 +16,28 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
-#include "ngraph/util.hpp"
+#include <memory>
+
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace op
     {
-        class AlgebraicSimplification;
+        class Unsqueeze : public ngraph::op::util::FusedOp
+        {
+        public:
+            Unsqueeze(const std::shared_ptr<ngraph::Node>& data,
+                      const std::shared_ptr<ngraph::Node>& axes);
+
+            virtual void pre_validate_and_infer_types() override;
+            virtual NodeVector decompose_op() const override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
     }
 }
-
-class ngraph::pass::AlgebraicSimplification : public FunctionPass
-{
-public:
-    AlgebraicSimplification()
-        : FunctionPass()
-    {
-        set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
-    }
-    virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
-};

@@ -82,7 +82,7 @@ void pass::CoreFusion::construct_relu()
     };
 
     auto m = make_shared<pattern::Matcher>(max, "CoreFusion.Relu");
-    this->add_matcher(m, callback);
+    this->add_matcher(m, callback, all_pass_property_off);
 }
 
 void pass::CoreFusion::construct_sigmoid()
@@ -129,8 +129,8 @@ void pass::CoreFusion::construct_sigmoid()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(divide_1_over_exp, "CoreFusion.Sigmoid");
-    this->add_matcher(m, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(divide_1_over_exp, "CoreFusion.Sigmoid");
+    this->add_matcher(m, callback, all_pass_property_off);
 }
 
 void pass::CoreFusion::construct_sigmoid_bprop()
@@ -180,8 +180,8 @@ void pass::CoreFusion::construct_sigmoid_bprop()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(negative_2, "CoreFusion.SigmoidBprop");
-    this->add_matcher(m, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(negative_2, "CoreFusion.SigmoidBprop");
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 void pass::CoreFusion::construct_folded_batch_norm()
@@ -260,8 +260,8 @@ void pass::CoreFusion::construct_folded_batch_norm()
 
     };
 
-    auto m = make_shared<pattern::Matcher>(bn, "CoreFusion.FoldedBatchNorm");
-    this->add_matcher(m, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(bn, "CoreFusion.FoldedBatchNorm");
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 void pass::CoreFusion::construct_conv_affine_folding()
@@ -370,7 +370,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
     };
 
     auto m = make_shared<pattern::Matcher>(add, "CoreFusion.ConvAffineFolding");
-    this->add_matcher(m, callback);
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 static bool is_trivial_convolution(shared_ptr<op::Convolution> conv, bool skip_pad_checks = false)
@@ -499,7 +499,7 @@ void pass::CoreFusion::construct_reshape_broadcast()
     };
 
     auto m = make_shared<pattern::Matcher>(broadcast, "CoreFusion.ReshapeBroadcast");
-    this->add_matcher(m, callback);
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 //   conv(56w3s1)                        conv(28w3s2)
@@ -685,7 +685,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
     };
 
     auto m = make_shared<pattern::Matcher>(eltwise_conv, "CoreFusion.OptimizedStridedConv");
-    this->add_matcher(m, callback);
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 void pass::CoreFusion::construct_reshape_softmax_reshape()
@@ -732,7 +732,7 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
     };
 
     auto m = make_shared<pattern::Matcher>(reshape2, "CoreFusion.ReshapeSoftmaxReshape");
-    this->add_matcher(m, callback);
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 void pass::CoreFusion::construct_conv_bias()
@@ -819,8 +819,8 @@ void pass::CoreFusion::construct_conv_bias()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(p_conv_bias, "CoreFusion.ConvBias");
-    this->add_matcher(m, callback);
+    auto m = std::make_shared<ngraph::pattern::Matcher>(p_conv_bias, "CoreFusion.ConvBias");
+    this->add_matcher(m, callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 void pass::CoreFusion::construct_conv_bias_add()
@@ -867,6 +867,6 @@ void pass::CoreFusion::construct_conv_bias_add()
         return true;
     };
 
-    auto m = make_shared<pattern::Matcher>(padd, "CoreFusion.ConvBiasAdd");
-    this->add_matcher(m, callback);
+    auto m = std::make_shared<pattern::Matcher>(padd, "CoreFusion.ConvBiasAdd");
+    this->add_matcher(m, callback, all_pass_property_off);
 }
