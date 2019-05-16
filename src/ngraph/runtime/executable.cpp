@@ -123,3 +123,18 @@ void runtime::Executable::save(std::ostream& output_stream)
 {
     throw runtime_error("save opertion unimplemented.");
 }
+
+bool runtime::Executable::begin_execute_helper(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
+{
+    bool rc = call(outputs, inputs);
+    return rc;
+}
+
+future<bool> runtime::Executable::begin_execute(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
+{
+    using namespace std::placeholders;
+    auto bound_f = bind(&Executable::begin_execute_helper, this, _1, _2);
+    return async(bound_f, outputs, inputs);
+}

@@ -14,10 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/tensor.hpp"
+#include <functional>
+
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
@@ -94,4 +96,22 @@ void runtime::Tensor::copy_from(const ngraph::runtime::Tensor& source)
     AlignedBuffer buffer{size, 64};
     source.read(buffer.get_ptr(), 0, size);
     write(buffer.get_ptr(), 0, size);
+}
+
+future<void> runtime::Tensor::begin_write(const void* p, size_t n)
+{
+    using namespace std::placeholders;
+    auto f = m_promise.get_future();
+    auto bound_f = bind(&Tensor::write, this, _1, _2, _3);
+    async(bound_f, p, 0, n);
+    return f;
+}
+
+future<void> runtime::Tensor::begin_read(void* p, size_t n)
+{
+    using namespace std::placeholders;
+    auto f = m_promise.get_future();
+    auto bound_f = bind(&Tensor::read, this, _1, _2, _3);
+    async(bound_f, p, 0, n);
+    return f;
 }

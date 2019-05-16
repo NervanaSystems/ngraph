@@ -111,14 +111,14 @@ namespace ngraph
             /// \param p Pointer to source of data
             /// \param n Number of bytes to write, must be integral number of elements.
             /// \return std::future to track the operation
-            virtual std::future<bool> begin_write(const void* p, size_t n);
+            virtual std::future<void> begin_write(const void* p, size_t n);
 
             /// \brief Read bytes from the tensor. The data buffer pointed to by `p` must
             ///     be kept live until after the future is signaled complete
             /// \param p Pointer to destination for data
             /// \param n Number of bytes to read, must be integral number of elements.
             /// \return std::future to track the operation
-            virtual std::future<bool> begin_read(void* p, size_t n) const;
+            virtual std::future<void> begin_read(void* p, size_t n);
 
             /// \brief copy bytes directly from source to this tensor
             /// \param source The source tensor
@@ -127,6 +127,7 @@ namespace ngraph
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
+            std::promise<void> m_promise;
         };
 
         using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;

@@ -58,7 +58,7 @@ public:
     /// \param inputs vector of runtime::Tensor used as inputs
     /// \returns a valid std::future to monitor the execution. Use future.get() to get the results
     ///     or future.wait*() to wait for completion.
-    virtual std::future<bool>&
+    virtual std::future<bool>
         begin_execute(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
@@ -90,8 +90,10 @@ protected:
     /// \param func The function with Results fully resolved.
     void set_parameters_and_results(const Function& func);
 
+    bool begin_execute_helper(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+
 private:
     ngraph::ParameterVector m_parameters;
     ngraph::ResultVector m_results;
-    std::future<bool> m_future;
 };
