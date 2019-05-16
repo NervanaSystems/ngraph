@@ -495,6 +495,14 @@ if(NGRAPH_DISTRIBUTED_ENABLE)
     endif()
 endif()
 
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+    set_property(SOURCE op/constant.cpp APPEND PROPERTY COMPILE_FLAGS "-Werror=switch -Werror=switch-enum")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.8.5)
+        set_property(SOURCE op/constant.cpp APPEND PROPERTY COMPILE_FLAGS "-Werror=switch -Werror=switch-enum")
+    endif()
+endif()
+
 add_subdirectory(frontend)
 
 find_package(Graphviz QUIET)
