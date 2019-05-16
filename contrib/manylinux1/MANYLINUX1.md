@@ -21,9 +21,9 @@ Then follow the steps below.
 After this procedure completes, the `python/dist` directory should contain Python packages.
 
     $ ls python/dist
-    ngraph_core-0.15.0-cp27-cp27m-manylinux1.whl
-    ngraph_core-0.15.0-cp34-cp34m-manylinux1.whl
-    ngraph_core-0.15.0-cp36-cp36m-manylinux1.whl
-    ngraph_core-0.15.0-cp27-cp27mu-manylinux1.whl
-    ngraph_core-0.15.0-cp35-cp35m-manylinux1.whl
-    ngraph_core-0.15.0-cp37-cp37m-manylinux1.whl
+    ngraph_core-0.19.0rc0-cp27-cp27m-manylinux1.whl
+    ngraph_core-0.19.0rc0-cp34-cp34m-manylinux1.whl
+    ngraph_core-0.19.0rc0-cp36-cp36m-manylinux1.whl
+    ngraph_core-0.19.0rc0-cp27-cp27mu-manylinux1.whl
+    ngraph_core-0.19.0rc0-cp35-cp35m-manylinux1.whl
+    ngraph_core-0.19.0rc0-cp37-cp37m-manylinux1.whl
