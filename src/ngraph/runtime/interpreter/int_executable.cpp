@@ -21,9 +21,9 @@
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
 #include "ngraph/pass/assign_layout.hpp"
-#include "ngraph/pass/auto_broadcast.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -44,7 +44,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
-    pass_manager.register_pass<pass::AutoBroadcast>();
+    pass_manager.register_pass<pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(function);

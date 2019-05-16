@@ -104,7 +104,7 @@ bool Dimension::merge(Dimension& dst, const Dimension d1, const Dimension d2)
     }
 }
 
-bool Dimension::merge_bcast(Dimension& dst, const Dimension d1, const Dimension d2)
+bool Dimension::broadcast_merge(Dimension& dst, const Dimension d1, const Dimension d2)
 {
     if (d1.is_dynamic() && d2.is_dynamic())
     {

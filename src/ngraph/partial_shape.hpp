@@ -205,9 +205,10 @@ namespace ngraph
         /// unspecified changes to `dst`.
         static bool merge_into(PartialShape& dst, const PartialShape& src);
 
-        static bool bcast_merge_into(PartialShape& dst,
-                                     const PartialShape& src,
-                                     const op::AutoBcastType autob);
+        /// \brief Try to merge one shape into another along with implicit broadcasting
+        static bool broadcast_merge_into(PartialShape& dst,
+                                         const PartialShape& src,
+                                         const op::AutoBcastSpec autob);
 
     private:
         // Private constructor for PartialShape::dynamic().

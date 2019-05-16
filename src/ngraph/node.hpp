@@ -102,9 +102,9 @@ namespace ngraph
         void constructor_validate_and_infer_types();
 
         std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
-            const op::AutoBcastType autob = op::AutoBcastType::NONE);
+            const op::AutoBcastSpec autob = op::AutoBcastSpec());
         void validate_and_infer_elementwise_arithmetic(
-            const op::AutoBcastType autob = op::AutoBcastType::NONE);
+            const op::AutoBcastSpec autob = op::AutoBcastSpec());
         void validate_and_infer_elementwise_logical();
 
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);

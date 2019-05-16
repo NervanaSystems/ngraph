@@ -93,7 +93,7 @@ namespace ngraph
 
         /// \brief Try to merge two Dimension objects together with implicit broadcasting
         ///        of unit-sized dimension to non unit-sized dimension
-        static bool merge_bcast(Dimension& dst, const Dimension d1, const Dimension d2);
+        static bool broadcast_merge(Dimension& dst, const Dimension d1, const Dimension d2);
 
         /// \brief Check whether this dimension is capable of being merged with the argument
         ///        dimension.

@@ -42,12 +42,12 @@
 #include <CPP/topology.hpp>
 
 #include "ngraph/pass/algebraic_simplification.hpp"
-#include "ngraph/pass/auto_broadcast.hpp"
 #include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
@@ -422,7 +422,7 @@ shared_ptr<runtime::Executable>
     {
         pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
             IntelGPUBackend::is_supported_impl);
-        pass_manager.register_pass<ngraph::pass::AutoBroadcast>();
+        pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
     }
 
     if (m_disable_backend_optimizations < 1)

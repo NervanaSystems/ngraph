@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace ngraph
 {
     namespace op
@@ -54,6 +56,23 @@ namespace ngraph
         {
             NONE = 0,
             NUMPY
+        };
+
+        struct AutoBcastSpec
+        {
+            AutoBcastSpec()
+                : type(AutoBcastType::NONE)
+                , axis(0)
+            {
+            }
+            AutoBcastSpec(AutoBcastType t)
+                : type(t)
+                , axis(0)
+            {
+            }
+
+            AutoBcastType type;
+            size_t axis;
         };
     }
 }

@@ -246,11 +246,11 @@ bool PartialShape::merge_into(PartialShape& dst, const PartialShape& src)
     }
 }
 
-bool PartialShape::bcast_merge_into(PartialShape& dst,
-                                    const PartialShape& src,
-                                    const op::AutoBcastType autob)
+bool PartialShape::broadcast_merge_into(PartialShape& dst,
+                                        const PartialShape& src,
+                                        const op::AutoBcastSpec autob)
 {
-    NGRAPH_CHECK(autob == op::AutoBcastType::NUMPY, "Unsupported auto broadcast type");
+    NGRAPH_CHECK(autob.type == op::AutoBcastType::NUMPY, "Unsupported auto broadcast type");
 
     if (dst.rank().is_dynamic() || src.rank().is_dynamic())
     {
@@ -269,7 +269,7 @@ bool PartialShape::bcast_merge_into(PartialShape& dst,
         {
             auto dsti = i < (new_rank - dst_rank) ? Dimension(1) : dst[i - (new_rank - dst_rank)];
             auto srci = i < (new_rank - src_rank) ? Dimension(1) : src[i - (new_rank - src_rank)];
-            success &= Dimension::merge_bcast(dims[i], dsti, srci);
+            success &= Dimension::broadcast_merge(dims[i], dsti, srci);
         }
         dst = PartialShape(dims);
         return success;

@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -24,7 +23,7 @@ op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
     const std::string& node_type,
     const std::shared_ptr<Node>& arg0,
     const std::shared_ptr<Node>& arg1,
-    const AutoBcastType autob)
+    const AutoBcastSpec& autob)
     : Op(node_type, check_single_output_args({arg0, arg1}))
     , m_autob(autob)
 {
@@ -33,12 +32,4 @@ op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
 void op::util::BinaryElementwiseArithmetic::validate_and_infer_types()
 {
     validate_and_infer_elementwise_arithmetic(m_autob);
-}
-
-NodeVector op::util::BinaryElementwiseArithmetic::auto_broadcast()
-{
-    if (m_autob == op::AutoBcastType::NUMPY)
-    {
-        return op::numpy_style_broadcast(get_arguments());
-    }
 }

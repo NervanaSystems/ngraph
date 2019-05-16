@@ -333,8 +333,8 @@ set (SRC
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
-    pass/auto_broadcast.hpp
-    pass/auto_broadcast.cpp
+    pass/implicit_broadcast_elimination.hpp
+    pass/implicit_broadcast_elimination.cpp
     pass/batch_fusion.hpp
     pass/batch_fusion.cpp
     pass/common_function_collection.cpp

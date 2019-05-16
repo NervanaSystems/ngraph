@@ -14,24 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/pass/auto_broadcast.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-bool ngraph::pass::AutoBroadcast::run_on_node(std::shared_ptr<ngraph::Node> node)
+bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngraph::Node> node)
 {
     bool modified = false;
 
     if (auto op = std::dynamic_pointer_cast<ngraph::op::util::BinaryElementwiseArithmetic>(node))
     {
-        if (op->get_autob() != op::AutoBcastType::NONE)
+        if (op->get_autob().type != op::AutoBcastType::NONE)
         {
-            auto new_args = op->auto_broadcast();
+            auto new_args = explicit_broadcast<ngraph::op::util::BinaryElementwiseArithmetic>(op);
             size_t i = 0;
             for (size_t i = 0; i < new_args.size(); i++)
             {
