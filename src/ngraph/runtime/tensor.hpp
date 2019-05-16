@@ -106,13 +106,15 @@ namespace ngraph
             /// \param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t offset, size_t n) const = 0;
 
-            /// \brief Write bytes directly into the tensor
+            /// \brief Write bytes into the tensor. The data buffer pointed to by `p` must
+            ///     be kept live until after the future is signaled complete
             /// \param p Pointer to source of data
             /// \param n Number of bytes to write, must be integral number of elements.
             /// \return std::future to track the operation
             virtual std::future<bool> begin_write(const void* p, size_t n);
 
-            /// \brief Read bytes directly from the tensor
+            /// \brief Read bytes from the tensor. The data buffer pointed to by `p` must
+            ///     be kept live until after the future is signaled complete
             /// \param p Pointer to destination for data
             /// \param n Number of bytes to read, must be integral number of elements.
             /// \return std::future to track the operation
