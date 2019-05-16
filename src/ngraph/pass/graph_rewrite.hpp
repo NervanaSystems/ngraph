@@ -52,6 +52,7 @@ public:
     GraphRewrite()
         : FunctionPass()
     {
+        // Being explicit:
         // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
         // callback needs static shape during run_on_function().
         set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
@@ -87,6 +88,7 @@ public:
         : FunctionPass()
         , m_num_iters(num_iters)
     {
+        // Being explicit:
         // Setting REQUIRE_STATIC_SHAPE to false because we will check if each
         // callback needs static shape during run_on_function().
         set_property(PassProperty::REQUIRE_STATIC_SHAPE, false);
