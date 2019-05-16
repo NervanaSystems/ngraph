@@ -33,8 +33,12 @@ TEST(specialize_shapes, et_shape_static)
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
 
-    auto g = specialize_shapes(
-        f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}});
+    std::vector<void*> param_vals{nullptr, nullptr};
+
+    auto g = specialize_shapes(f,
+                               {element::f32, element::i32},
+                               {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}},
+                               param_vals);
 
     ASSERT_EQ(g->get_output_shape(0), (Shape{1, 2, 3}));
     ASSERT_EQ(g->get_output_element_type(0), element::f32);
@@ -51,8 +55,12 @@ TEST(specialize_shapes, et_dynamic_shape_static)
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
 
-    auto g = specialize_shapes(
-        f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}});
+    std::vector<void*> param_vals{nullptr, nullptr};
+
+    auto g = specialize_shapes(f,
+                               {element::f32, element::i32},
+                               {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}},
+                               param_vals);
 
     ASSERT_EQ(g->get_output_shape(0), (Shape{1, 2, 3}));
     ASSERT_EQ(g->get_output_element_type(0), element::f32);
@@ -69,8 +77,12 @@ TEST(specialize_shapes, et_static_shape_rank_dynamic)
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
 
-    auto g = specialize_shapes(
-        f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}});
+    std::vector<void*> param_vals{nullptr, nullptr};
+
+    auto g = specialize_shapes(f,
+                               {element::f32, element::i32},
+                               {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}},
+                               param_vals);
 
     ASSERT_EQ(g->get_output_shape(0), (Shape{1, 2, 3}));
     ASSERT_EQ(g->get_output_element_type(0), element::f32);
@@ -87,8 +99,12 @@ TEST(specialize_shapes, et_static_shape_rank_static_dynamic)
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
 
-    auto g = specialize_shapes(
-        f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}});
+    std::vector<void*> param_vals{nullptr, nullptr};
+
+    auto g = specialize_shapes(f,
+                               {element::f32, element::i32},
+                               {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}},
+                               param_vals);
 
     ASSERT_EQ(g->get_output_shape(0), (Shape{1, 2, 3}));
     ASSERT_EQ(g->get_output_element_type(0), element::f32);
@@ -107,10 +123,14 @@ TEST(specialize_shapes, et_static_shape_rank_dynamic_validation_fails)
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
 
+    std::vector<void*> param_vals{nullptr, nullptr};
+
     ASSERT_THROW(
         {
-            specialize_shapes(
-                f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 2, 3, 4}});
+            specialize_shapes(f,
+                              {element::f32, element::i32},
+                              {PartialShape{1, 2, 3}, PartialShape{1, 2, 3, 4}},
+                              param_vals);
         },
         NodeValidationFailure);
 }
@@ -128,10 +148,14 @@ TEST(specialize_shapes, et_dynamic_shape_static_validation_fails)
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
 
+    std::vector<void*> param_vals{nullptr, nullptr};
+
     ASSERT_THROW(
         {
-            specialize_shapes(
-                f, {element::u32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}});
+            specialize_shapes(f,
+                              {element::u32, element::i32},
+                              {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}},
+                              param_vals);
         },
         NodeValidationFailure);
 }
@@ -152,10 +176,14 @@ TEST(specialize_shapes, et_static_shape_rank_static_dynamic_rank_mismatch)
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
 
+    std::vector<void*> param_vals{nullptr, nullptr};
+
     ASSERT_THROW(
         {
-            specialize_shapes(
-                f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 2, 3, 4}});
+            specialize_shapes(f,
+                              {element::f32, element::i32},
+                              {PartialShape{1, 2, 3}, PartialShape{1, 2, 3, 4}},
+                              param_vals);
         },
         CheckFailure);
 }
@@ -177,10 +205,14 @@ TEST(specialize_shapes, et_static_shape_rank_static_dynamic_dim_mismatch)
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
 
+    std::vector<void*> param_vals{nullptr, nullptr};
+
     ASSERT_THROW(
         {
-            specialize_shapes(
-                f, {element::f32, element::i32}, {PartialShape{1, 2, 3}, PartialShape{1, 9, 4}});
+            specialize_shapes(f,
+                              {element::f32, element::i32},
+                              {PartialShape{1, 2, 3}, PartialShape{1, 9, 4}},
+                              param_vals);
         },
         CheckFailure);
 }
@@ -196,11 +228,14 @@ TEST(specialize_shapes, et_count_wrong)
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
 
+    std::vector<void*> param_vals{nullptr, nullptr};
+
     ASSERT_THROW(
         {
             specialize_shapes(f,
                               {element::f32, element::i32, element::u32},
-                              {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}});
+                              {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}},
+                              param_vals);
         },
         CheckFailure);
 }
@@ -216,12 +251,37 @@ TEST(specialize_shapes, shape_count_wrong)
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
 
+    std::vector<void*> param_vals{nullptr, nullptr};
+
     ASSERT_THROW(
         {
-            specialize_shapes(
-                f,
-                {element::f32, element::i32},
-                {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}, PartialShape{4, 5, 6}});
+            specialize_shapes(f,
+                              {element::f32, element::i32},
+                              {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}, PartialShape{4, 5, 6}},
+                              param_vals);
+        },
+        CheckFailure);
+}
+
+// Test for failure when we supply the wrong number of replacement parameter values.
+TEST(specialize_shapes, value_count_wrong)
+{
+    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
+    auto p1 = std::make_shared<op::Parameter>(element::i32, PartialShape{1, 2, 3});
+
+    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto a = p0 + k;
+
+    auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
+
+    std::vector<void*> param_vals{nullptr, nullptr, nullptr};
+
+    ASSERT_THROW(
+        {
+            specialize_shapes(f,
+                              {element::f32, element::i32},
+                              {PartialShape{1, 2, 3}, PartialShape{1, 2, 3}},
+                              param_vals);
         },
         CheckFailure);
 }

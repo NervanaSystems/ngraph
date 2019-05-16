@@ -16,6 +16,7 @@
 
 #include "ngraph/runtime/dynamic/dynamic_backend.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
 #include "ngraph/specialize_shapes.hpp"
@@ -82,9 +83,26 @@ bool runtime::dynamic::DynamicExecutable::call(
     std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
     std::vector<element::Type> arg_element_types;
     std::vector<PartialShape> arg_shapes;
+    std::vector<void*> arg_values(inputs.size());
+
+    size_t i = 0;
 
     for (auto& input : inputs)
     {
+        std::cout << "Parm " << i << ": Relevant to shapes = "
+                  << m_wrapped_function->get_parameters()[i]->is_relevant_to_shapes() << std::endl;
+        if (m_wrapped_function->get_parameters()[i]->is_relevant_to_shapes())
+        {
+            // TODO(amprocte): Don't malloc here, use AlignedBuffer or something
+            // instead.
+            arg_values[i] = malloc(input->get_size_in_bytes());
+            input->read(arg_values[i], 0, input->get_size_in_bytes());
+        }
+        else
+        {
+            arg_values[i] = nullptr;
+        }
+
         if (auto dynamic_tensor = std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
         {
             NGRAPH_CHECK(dynamic_tensor->has_storage());
@@ -98,11 +116,25 @@ bool runtime::dynamic::DynamicExecutable::call(
             arg_shapes.push_back(input->get_shape());
             wrapped_inputs.push_back(input);
         }
+
+        i++;
     }
 
-    // TODO: specialize_shapes needs to fill in values of shape-relevant params.
-    auto clone = specialize_shapes(m_wrapped_function, arg_element_types, arg_shapes);
-    // TODO: run constant folding and de-dynification on clone.
+    auto clone = specialize_shapes(m_wrapped_function, arg_element_types, arg_shapes, arg_values);
+
+    for (auto& p : arg_values)
+    {
+        if (p != nullptr)
+        {
+            free(p);
+        }
+    }
+
+    pass::Manager passes;
+    passes.register_pass<pass::ConstantFolding>();
+    passes.run_passes(clone);
+
+    // TODO: run de-dynification on clone.
     const ResultVector& results = clone->get_results();
     NGRAPH_CHECK(results.size() == outputs.size());
 

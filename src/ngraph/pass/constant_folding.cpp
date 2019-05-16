@@ -22,6 +22,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -39,6 +40,7 @@
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/convert.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
@@ -762,4 +764,50 @@ void pass::ConstantFolding::construct_constant_quantize()
         make_shared<pattern::Matcher>(quant, "ConstantFolding.ConstantQuantize");
     this->add_matcher(
         quantize_matcher, constant_quantize_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+}
+
+shared_ptr<op::Constant> fold_constant_convert_i32_i64(shared_ptr<op::Constant> constant)
+{
+    auto out_shape = constant->get_shape();
+    vector<int64_t> out_vec(shape_size(out_shape));
+
+    runtime::reference::convert<int32_t, int64_t>(
+        constant->get_vector<int32_t>().data(), out_vec.data(), shape_size(out_shape));
+
+    return make_shared<op::Constant>(element::i64, out_shape, out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_convert()
+{
+    auto constant_label = make_shared<pattern::op::Label>(
+        element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto convert_op = make_shared<op::Convert>(constant_label, element::i64);
+
+    auto constant_convert_callback = [constant_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_convert_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto convert_match = m.get_match_root();
+        auto convert_op = static_pointer_cast<op::Convert>(convert_match);
+
+        // TODO(amprocte): Only int32->int64 for now!
+        if (constant_match->get_output_element_type(0) == element::i32 &&
+            convert_op->get_output_element_type(0) == element::i64)
+        {
+            replace_node(m.get_match_root(), fold_constant_convert_i32_i64(constant_match));
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    };
+
+    auto convert_matcher =
+        make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantConvert");
+    this->add_matcher(convert_matcher, constant_convert_callback, {});
 }

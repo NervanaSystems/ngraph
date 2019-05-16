@@ -87,5 +87,6 @@ namespace ngraph
     std::shared_ptr<Function>
         specialize_shapes(std::shared_ptr<Function> f,
                           const std::vector<element::Type>& parameter_element_types,
-                          const std::vector<PartialShape>& parameter_shapes);
+                          const std::vector<PartialShape>& parameter_shapes,
+                          const std::vector<void*>& parameter_values);
 }
