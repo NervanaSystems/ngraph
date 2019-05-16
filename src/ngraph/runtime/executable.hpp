@@ -96,5 +96,4 @@ protected:
 private:
     ngraph::ParameterVector m_parameters;
     ngraph::ResultVector m_results;
-    std::future<bool> m_future;
 };
