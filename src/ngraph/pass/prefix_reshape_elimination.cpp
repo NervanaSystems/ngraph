@@ -81,5 +81,7 @@ pass::PrefixReshapeElimination::PrefixReshapeElimination()
         replace_node(m.get_matched_nodes().at(1), m.get_matched_nodes().at(2));
         return true;
     };
-    add_matcher(make_shared<pattern::Matcher>(target_op, "PrefixReshapeElimination"), callback);
+    add_matcher(make_shared<pattern::Matcher>(target_op, "PrefixReshapeElimination"),
+                callback,
+                PassProperty::REQUIRE_STATIC_SHAPE);
 }
