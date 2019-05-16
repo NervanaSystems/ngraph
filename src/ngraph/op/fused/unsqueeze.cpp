@@ -32,15 +32,20 @@ op::Unsqueeze::Unsqueeze(const shared_ptr<Node>& data, const shared_ptr<Node>& a
     constructor_validate_and_infer_types();
 }
 
-NodeVector op::Unsqueeze::decompose_op() const
+void op::Unsqueeze::pre_validate_and_infer_types()
 {
-    auto data = get_argument(0);
     auto axes_node = get_argument(1);
 
     // Currently only support Constant node for axes.
     NODE_VALIDATION_CHECK(this,
                           axes_node->is_constant(),
                           "doesn't support 'axes' input of other type than a Constant.");
+}
+
+NodeVector op::Unsqueeze::decompose_op() const
+{
+    auto data = get_argument(0);
+    auto axes_node = get_argument(1);
 
     // Get value of axes from Constant
     auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
