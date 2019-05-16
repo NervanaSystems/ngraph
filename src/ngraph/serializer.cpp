@@ -81,6 +81,7 @@
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1509,6 +1510,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::StopGradient>(args[0]);
                 break;
             }
+            case OP_TYPEID::Unsqueeze:
+            {
+                node = make_shared<op::Unsqueeze>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::UnknownOp:
             {
                 stringstream ss;
@@ -2241,6 +2247,8 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Transpose: { break;
+    }
+    case OP_TYPEID::Unsqueeze: { break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }
