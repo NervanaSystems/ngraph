@@ -504,7 +504,7 @@ static shared_ptr<ngraph::Function>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-            // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
             switch (get_typeid(node_op))
             {
@@ -1639,7 +1639,7 @@ static json write(const Node& n, bool binary_constant_data)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-    // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
     switch (get_typeid(node_op))
     {

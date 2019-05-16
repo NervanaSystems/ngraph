@@ -203,7 +203,7 @@ private:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-        // #pragma GCC diagnostic error "-Wcovered-switch-default"
+// #pragma GCC diagnostic error "-Wcovered-switch-default"
 #endif
         switch (node_wrapper.get_typeid())
         {
