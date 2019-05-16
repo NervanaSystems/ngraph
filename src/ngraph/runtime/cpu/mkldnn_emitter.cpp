@@ -1679,7 +1679,7 @@ size_t MKLDNNEmitter::build_leaky_relu(const mkldnn::memory::desc& input_desc,
 
 mkldnn::eltwise_forward::desc MKLDNNEmitter::get_leaky_relu_desc(const ngraph::Node* node)
 {
-    auto alpha = static_cast<const ngraph::op::LeakyRelu*>(node)->get_alpha();
+    auto alpha = static_cast<const ngraph::op::CPULeakyRelu*>(node)->get_alpha();
 
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
 

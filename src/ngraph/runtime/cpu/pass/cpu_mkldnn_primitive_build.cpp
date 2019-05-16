@@ -1550,9 +1550,9 @@ namespace ngraph
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(LeakyRelu)
+                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(CPULeakyRelu)
                 {
-                    auto leaky_relu_node = static_cast<const ngraph::op::LeakyRelu*>(node);
+                    auto leaky_relu_node = static_cast<const ngraph::op::CPULeakyRelu*>(node);
                     float alpha = leaky_relu_node->get_alpha();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
@@ -1683,7 +1683,7 @@ static const PrimitiveBuildOpMap prim_build_dispatcher{
      &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBiasBackpropFiltersBias>},
     {TI(Relu), &MKLDNNPrimitiveBuildPass::build_primitive<Relu>},
     {TI(ReluBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<ReluBackprop>},
-    {TI(LeakyRelu), &MKLDNNPrimitiveBuildPass::build_primitive<LeakyRelu>},
+    {TI(CPULeakyRelu), &MKLDNNPrimitiveBuildPass::build_primitive<CPULeakyRelu>},
     {TI(Sigmoid), &MKLDNNPrimitiveBuildPass::build_primitive<Sigmoid>},
     {TI(SigmoidBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<SigmoidBackprop>},
     {TI(QuantizedMaxPool), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedMaxPool>},
