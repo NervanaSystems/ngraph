@@ -346,6 +346,8 @@ set (SRC
     pass/cse.hpp
     pass/dump_sorted.cpp
     pass/dump_sorted.hpp
+    pass/dyn_elimination.cpp
+    pass/dyn_elimination.hpp
     pass/fused_op_decomposition.cpp
     pass/fused_op_decomposition.hpp
     pass/get_output_element_elimination.cpp
