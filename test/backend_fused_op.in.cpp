@@ -773,6 +773,21 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_2d_with_bias)
     test_case.run();
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, unsqueeze)
+{
+    auto data_node = make_shared<op::Parameter>(element::f32, Shape{4, 2});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{1, 2});
+    auto squeeze = make_shared<op::Unsqueeze>(data_node, axes_node);
+
+    auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{data_node});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto data = vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+    test_case.add_input(data);
+    test_case.add_expected_output<float>(Shape{4, 1, 1, 2}, data);
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, scale_shift_no_broadcast)
 {
     auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});

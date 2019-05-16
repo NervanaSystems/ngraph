@@ -14495,6 +14495,17 @@ TEST(type_prop, fused_clamp)
     EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
 }
 
+TEST(type_prop, unsqueeze)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{4, 1, 4, 1, 8});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{1, 2});
+    auto squeeze = make_shared<op::Unsqueeze>(param, axes_node);
+
+    ASSERT_EQ(squeeze->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze->get_shape(), (Shape{4, 1, 1, 1, 4, 1, 8}));
+}
+
 TEST(type_prop, scale_shift_no_broadcast)
 {
     auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
