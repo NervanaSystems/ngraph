@@ -30,7 +30,7 @@ namespace ngraph
             /// \brief Allows a value to be used as a function result.
             ///
             /// \param arg Node that produces the input tensor.
-            Result(const std::shared_ptr<Node>& arg);
+            Result(const std::shared_ptr<Node>& arg, bool can_double_buffer = false);
 
             void validate_and_infer_types() override;
 
@@ -40,12 +40,14 @@ namespace ngraph
             virtual bool is_output() const override { return true; }
             void set_needs_default_layout(bool val) { m_needs_default_layout = val; }
             bool needs_default_layout() const { return m_needs_default_layout; }
+            bool get_can_double_buffer() const { return m_can_double_buffer; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
         private:
             bool m_needs_default_layout{false};
+            bool m_can_double_buffer;
         };
     }
     using ResultVector = std::vector<std::shared_ptr<op::Result>>;

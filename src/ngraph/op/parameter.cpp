@@ -23,12 +23,14 @@ using namespace ngraph;
 
 op::Parameter::Parameter(const element::Type& element_type,
                          const PartialShape& pshape,
-                         const bool cacheable)
+                         const bool cacheable,
+                         bool can_double_buffer)
     : Op("Parameter", {})
     , m_cacheable(cacheable)
     , m_partial_shape(pshape)
     , m_element_type(element_type)
     , m_is_relevant_to_shapes(false)
+    , m_can_double_buffer(can_double_buffer)
 {
     constructor_validate_and_infer_types();
 }

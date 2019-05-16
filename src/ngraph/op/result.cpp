@@ -24,8 +24,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::Result::Result(const shared_ptr<Node>& arg)
+op::Result::Result(const shared_ptr<Node>& arg, bool can_double_buffer)
     : Op("Result", check_single_output_args({arg}))
+    , m_can_double_buffer(can_double_buffer)
 {
     constructor_validate_and_infer_types();
     // always borrow the placement conf even the default one

@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <future>
 #include <memory>
 
 #include "ngraph/function.hpp"
@@ -51,6 +52,10 @@ public:
     bool call_with_validate(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                             const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
+    virtual std::future<bool>&
+        begin_execute(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
+
     /// \brief Collect performance information gathered on a Function.
     /// \returns Vector of PerformanceCounter information.
     virtual std::vector<PerformanceCounter> get_performance_data() const;
@@ -82,4 +87,5 @@ protected:
 private:
     ngraph::ParameterVector m_parameters;
     ngraph::ResultVector m_results;
+    std::future<bool> m_future;
 };
