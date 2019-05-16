@@ -766,15 +766,153 @@ void pass::ConstantFolding::construct_constant_quantize()
         quantize_matcher, constant_quantize_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
-shared_ptr<op::Constant> fold_constant_convert_i32_i64(shared_ptr<op::Constant> constant)
+template <typename TI, typename TO>
+shared_ptr<op::Constant> fold_constant_convert_helper1(shared_ptr<op::Constant> constant,
+                                                       const element::Type& output_element_type)
 {
     auto out_shape = constant->get_shape();
-    vector<int64_t> out_vec(shape_size(out_shape));
+    vector<TO> out_vec(shape_size(out_shape));
 
-    runtime::reference::convert<int32_t, int64_t>(
-        constant->get_vector<int32_t>().data(), out_vec.data(), shape_size(out_shape));
+    runtime::reference::convert<TI, TO>(
+        constant->get_vector<TI>().data(), out_vec.data(), shape_size(out_shape));
 
-    return make_shared<op::Constant>(element::i64, out_shape, out_vec);
+    return make_shared<op::Constant>(output_element_type, out_shape, out_vec);
+}
+
+template <typename TI>
+shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
+                                                       const element::Type& output_element_type)
+{
+    if (output_element_type == element::boolean)
+    {
+        return fold_constant_convert_helper1<TI, char>(constant, output_element_type);
+    }
+    else if (output_element_type == element::bf16)
+    {
+        return fold_constant_convert_helper1<TI, bfloat16>(constant, output_element_type);
+    }
+    else if (output_element_type == element::f16)
+    {
+        return fold_constant_convert_helper1<TI, float16>(constant, output_element_type);
+    }
+    else if (output_element_type == element::f32)
+    {
+        return fold_constant_convert_helper1<TI, float>(constant, output_element_type);
+    }
+    else if (output_element_type == element::f64)
+    {
+        return fold_constant_convert_helper1<TI, double>(constant, output_element_type);
+    }
+    else if (output_element_type == element::i8)
+    {
+        return fold_constant_convert_helper1<TI, int8_t>(constant, output_element_type);
+    }
+    else if (output_element_type == element::i16)
+    {
+        return fold_constant_convert_helper1<TI, int16_t>(constant, output_element_type);
+    }
+    else if (output_element_type == element::i32)
+    {
+        return fold_constant_convert_helper1<TI, int32_t>(constant, output_element_type);
+    }
+    else if (output_element_type == element::i64)
+    {
+        return fold_constant_convert_helper1<TI, int64_t>(constant, output_element_type);
+    }
+    else if (output_element_type == element::u8)
+    {
+        return fold_constant_convert_helper1<TI, uint8_t>(constant, output_element_type);
+    }
+    else if (output_element_type == element::u16)
+    {
+        return fold_constant_convert_helper1<TI, uint16_t>(constant, output_element_type);
+    }
+    else if (output_element_type == element::u32)
+    {
+        return fold_constant_convert_helper1<TI, uint32_t>(constant, output_element_type);
+    }
+    else if (output_element_type == element::u64)
+    {
+        return fold_constant_convert_helper1<TI, uint64_t>(constant, output_element_type);
+    }
+    else
+    {
+        NGRAPH_CHECK(false,
+                     "Unhandled output element type ",
+                     output_element_type,
+                     " in fold_constant_convert");
+    }
+}
+
+shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> constant,
+                                               const element::Type& output_element_type)
+{
+    auto& input_element_type = constant->get_output_element_type(0);
+
+    if (input_element_type == output_element_type)
+    {
+        return constant;
+    }
+
+    if (input_element_type == element::boolean)
+    {
+        return fold_constant_convert_helper0<char>(constant, output_element_type);
+    }
+    else if (input_element_type == element::bf16)
+    {
+        return fold_constant_convert_helper0<bfloat16>(constant, output_element_type);
+    }
+    else if (input_element_type == element::f16)
+    {
+        return fold_constant_convert_helper0<float16>(constant, output_element_type);
+    }
+    else if (input_element_type == element::f32)
+    {
+        return fold_constant_convert_helper0<float>(constant, output_element_type);
+    }
+    else if (input_element_type == element::f64)
+    {
+        return fold_constant_convert_helper0<double>(constant, output_element_type);
+    }
+    else if (input_element_type == element::i8)
+    {
+        return fold_constant_convert_helper0<int8_t>(constant, output_element_type);
+    }
+    else if (input_element_type == element::i16)
+    {
+        return fold_constant_convert_helper0<int16_t>(constant, output_element_type);
+    }
+    else if (input_element_type == element::i32)
+    {
+        return fold_constant_convert_helper0<int32_t>(constant, output_element_type);
+    }
+    else if (input_element_type == element::i64)
+    {
+        return fold_constant_convert_helper0<int64_t>(constant, output_element_type);
+    }
+    else if (input_element_type == element::u8)
+    {
+        return fold_constant_convert_helper0<uint8_t>(constant, output_element_type);
+    }
+    else if (input_element_type == element::u16)
+    {
+        return fold_constant_convert_helper0<uint16_t>(constant, output_element_type);
+    }
+    else if (input_element_type == element::u32)
+    {
+        return fold_constant_convert_helper0<uint32_t>(constant, output_element_type);
+    }
+    else if (input_element_type == element::u64)
+    {
+        return fold_constant_convert_helper0<uint64_t>(constant, output_element_type);
+    }
+    else
+    {
+        NGRAPH_CHECK(false,
+                     "Unhandled input element type ",
+                     input_element_type,
+                     " in fold_constant_convert");
+    }
 }
 
 void pass::ConstantFolding::construct_constant_convert()
@@ -793,18 +931,9 @@ void pass::ConstantFolding::construct_constant_convert()
         auto convert_match = m.get_match_root();
         auto convert_op = static_pointer_cast<op::Convert>(convert_match);
 
-        // TODO(amprocte): Only int32->int64 for now!
-        if (constant_match->get_output_element_type(0) == element::i32 &&
-            convert_op->get_output_element_type(0) == element::i64)
-        {
-            replace_node(m.get_match_root(), fold_constant_convert_i32_i64(constant_match));
-
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        replace_node(m.get_match_root(),
+                     fold_constant_convert(constant_match, convert_op->get_output_element_type(0)));
+        return true;
     };
 
     auto convert_matcher =
