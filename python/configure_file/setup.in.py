@@ -256,8 +256,10 @@ class BdistWheel(bdist_wheel):
     def get_tag(self):
         """Override get_tag."""
         tag = bdist_wheel.get_tag(self)
-        if '${NGRAPH_MANYLINUX_ENABLE}' == 'TRUE' and sys.platform.startswith('linux'):
+        if '${NGRAPH_MANYLINUX_STANDARD}' == '1' and sys.platform.startswith('linux'):
             tag = tag[:2] + ('manylinux1_x86_64',) + tag[3:]
+        elif '${NGRAPH_MANYLINUX_STANDARD}' == '2010' and sys.platform.startswith('linux'):
+            tag = tag[:2] + ('manylinux2010_x86_64',) + tag[3:]
         return tag
 
 

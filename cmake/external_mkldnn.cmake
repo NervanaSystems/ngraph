@@ -117,7 +117,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     endif()
 endif()
 
-if(NGRAPH_MANYLINUX_ENABLE)
+if(NGRAPH_USE_LLVM_OMPLIB)
     if(NGRAPH_CODEGEN_ENABLE)
         set(MKL_DEPENDS ext_llvm)
     else()
@@ -152,7 +152,7 @@ ExternalProject_Add_Step(
     DEPENDEES download
     )
 
-if(NOT NGRAPH_MANYLINUX_ENABLE)
+if(NOT NGRAPH_USE_LLVM_OMPLIB)
 ExternalProject_Add_Step(
     ext_mkl
     CopyOMP

@@ -358,7 +358,7 @@ string file_util::tmp_filename(const string& extension)
 #ifdef _WIN32
     rc = _tempnam(file_util::get_temp_directory_path().c_str(), "ngraph_");
 #else
-#if !defined(NGRAPH_MANYLINUX_ENABLE)
+#if !(defined(NGRAPH_MANYLINUX_STANDARD) && NGRAPH_MANYLINUX_STANDARD == 1)
     string tmp_template =
         file_util::path_join(file_util::get_temp_directory_path(), "ngraph_XXXXXX" + extension);
     char* tmpname = strdup(tmp_template.c_str());
