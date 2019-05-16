@@ -26,10 +26,6 @@
 #include <tbb/global_control.h>
 #include <tbb/task_scheduler_init.h>
 
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-#include <mlsl.hpp>
-#endif
-
 namespace mkldnn
 {
     class primitive;
@@ -61,18 +57,16 @@ namespace ngraph
                 int64_t* op_durations;
                 bool* p_en;
                 bool first_iteration;
-                mkldnn::primitive* const* mkldnn_primitives;
+                // stores tensor pointers
+                std::vector<void*> buffer_data;
+                std::vector<mkldnn::primitive*> mkldnn_primitives;
                 std::vector<AlignedBuffer*> memory_buffers;
-                char* const* mkldnn_workspaces;
+                std::vector<char*> mkldnn_workspaces;
                 tbb::flow::graph* G;
                 tbb::global_control* c;
                 State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;
-#ifdef NGRAPH_DISTRIBUTED_MLSL_ENABLE
-                MLSL::Environment* mlsl_env;
-                MLSL::Distribution* mlsl_dist;
-#endif
             };
             }
 

@@ -18,12 +18,15 @@
 
 #include <cstdint> // std::int64_t
 #include <memory>  // std::make_shared
+#include <utility> // std::move
 
 #include "core/node.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 #include "utils/reshape.hpp"
 
 namespace ngraph
@@ -67,7 +70,7 @@ namespace ngraph
 
                 if (keepdims == 0)
                 {
-                    return op_node;
+                    return std::move(op_node);
                 }
 
                 // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
@@ -77,14 +80,14 @@ namespace ngraph
                 output_shape.at(axis) = 1;
                 auto reshape_node = std::make_shared<ngraph::op::Reshape>(
                     convert_node,
-                    reshape::get_default_axis_vector(op_node->get_shape().size()),
+                    ngraph::get_default_order(op_node->get_shape().size()),
                     Shape{output_shape});
 
                 // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
                 auto reconvert_node =
                     std::make_shared<ngraph::op::Convert>(reshape_node, element::i64);
 
-                return reconvert_node;
+                return std::move(reconvert_node);
             }
 
         } // namespace  reduction

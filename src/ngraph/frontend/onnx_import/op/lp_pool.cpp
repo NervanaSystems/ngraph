@@ -21,10 +21,12 @@
 #include "exceptions.hpp"
 #include "lp_pool.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/builder/norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/util/reshape.hpp"
+#include "ngraph/util.hpp"
 #include "utils/common.hpp"
-#include "utils/norm.hpp"
 #include "utils/reshape.hpp"
 
 namespace ngraph
@@ -54,15 +56,15 @@ namespace ngraph
                         AxisSet reduction_axes{
                             common::get_monotonic_range<std::size_t>(orig_shape.size(), 2)};
 
-                        slice =
-                            norm::lp_norm(slice, reduction_axes, static_cast<std::size_t>(p_norm));
+                        slice = ngraph::builder::lp_norm(
+                            slice, reduction_axes, static_cast<std::size_t>(p_norm));
 
                         // output shape is all ones except N channel
                         Shape output_shape(orig_shape.size(), 1);
                         output_shape.at(0) = orig_shape.at(0);
                         slice = std::make_shared<ngraph::op::Reshape>(
                             slice,
-                            reshape::get_default_axis_vector(slice->get_shape().size()),
+                            ngraph::get_default_order(slice->get_shape().size()),
                             output_shape);
                     }
 

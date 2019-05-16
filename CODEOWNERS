@@ -32,7 +32,7 @@
 /src/resource/                      @rkimballn1
 /src/tools/                         @rkimballn1
 /src/ngraph/autodiff/               @diyessi
-/src/ngraph/builder/                @mbrookhart
+/src/ngraph/builder/                @sfvaroglu
 /src/ngraph/codegen/                @rkimballn1
 /src/ngraph/distributed.*           @wenzhe-nrv @diyessi @avijit-nervana
 /src/ngraph/frontend/               @postrational
@@ -43,9 +43,10 @@
 /src/ngraph/runtime/                @rkimballn1 @jbobba
 /src/ngraph/runtime/cpu/            @jbobba
 /src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba @avijit-nervana
+/src/ngraph/runtime/dynamic/        @aprocter
 /src/ngraph/runtime/gpu/            @rkimballn1
 /src/ngraph/runtime/hybrid/         @rkimballn1
-/src/ngraph/runtime/intelgpu/       @shssf
+/src/ngraph/runtime/intelgpu/       @dmyershov
 /src/ngraph/runtime/interpreter/    @rkimballn1
 /src/ngraph/runtime/plaidml/        @earhart
 /src/ngraph/runtime/reference/      @aprocter

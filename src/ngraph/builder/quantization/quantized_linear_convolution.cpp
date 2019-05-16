@@ -37,16 +37,16 @@ namespace ngraph
     {
         namespace quantization
         {
-            shared_ptr<Node> QuantizedLinearConvolution(shared_ptr<Node> input,
-                                                        shared_ptr<Node> filter,
+            shared_ptr<Node> QuantizedLinearConvolution(const shared_ptr<Node>& input,
+                                                        const shared_ptr<Node>& filter,
                                                         const Strides& window_movement_strides,
                                                         const Strides& window_dilation_strides,
                                                         const CoordinateDiff& padding_below,
                                                         const CoordinateDiff& padding_above,
                                                         const Strides& data_dilation_strides,
-                                                        shared_ptr<Node> input_scale,
-                                                        shared_ptr<Node> filter_scale,
-                                                        shared_ptr<Node> output_scale)
+                                                        const shared_ptr<Node>& input_scale,
+                                                        const shared_ptr<Node>& filter_scale,
+                                                        const shared_ptr<Node>& output_scale)
             {
                 // TODO: need to establish cross-nGraph view of scale (mult or div)
                 auto requantization_scale = (input_scale * filter_scale) / output_scale;
@@ -65,19 +65,19 @@ namespace ngraph
             //       need to make this the primary builder which means
             //       1) add support for zero point in QuantizeConvolution op API
             //       2) add QuantizedConvolution reference kernel, including zero point
-            shared_ptr<Node> QuantizedLinearConvolution(shared_ptr<Node> input,
-                                                        shared_ptr<Node> filter,
+            shared_ptr<Node> QuantizedLinearConvolution(const shared_ptr<Node>& input,
+                                                        const shared_ptr<Node>& filter,
                                                         const Strides& window_movement_strides,
                                                         const Strides& window_dilation_strides,
                                                         const CoordinateDiff& padding_below,
                                                         const CoordinateDiff& padding_above,
                                                         const Strides& data_dilation_strides,
-                                                        shared_ptr<Node> input_scale,
-                                                        shared_ptr<Node> input_zero_point,
-                                                        shared_ptr<Node> filter_scale,
-                                                        shared_ptr<Node> filter_zero_point,
-                                                        shared_ptr<Node> output_scale,
-                                                        shared_ptr<Node> output_zero_point)
+                                                        const shared_ptr<Node>& input_scale,
+                                                        const shared_ptr<Node>& input_zero_point,
+                                                        const shared_ptr<Node>& filter_scale,
+                                                        const shared_ptr<Node>& filter_zero_point,
+                                                        const shared_ptr<Node>& output_scale,
+                                                        const shared_ptr<Node>& output_zero_point)
             {
                 AxisSet axes;
 
@@ -104,24 +104,25 @@ namespace ngraph
                                               output_zero_point->get_element_type(),
                                               axes,
                                               op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
-                return q_convolution;
+                return move(q_convolution);
             }
 
-            shared_ptr<Node> QuantizedLinearConvolutionBias(shared_ptr<Node> input,
-                                                            shared_ptr<Node> filter,
-                                                            shared_ptr<Node> bias,
+            shared_ptr<Node> QuantizedLinearConvolutionBias(const shared_ptr<Node>& input,
+                                                            const shared_ptr<Node>& filter,
+                                                            const shared_ptr<Node>& bias,
                                                             const Strides& window_movement_strides,
                                                             const Strides& window_dilation_strides,
                                                             const CoordinateDiff& padding_below,
                                                             const CoordinateDiff& padding_above,
                                                             const Strides& data_dilation_strides,
-                                                            shared_ptr<Node> input_scale,
-                                                            shared_ptr<Node> filter_scale,
-                                                            shared_ptr<Node> output_scale)
+                                                            const shared_ptr<Node>& input_scale,
+                                                            const shared_ptr<Node>& filter_scale,
+                                                            const shared_ptr<Node>& output_scale)
             {
                 // TODO: need to establish cross-nGraph view of scale (mult or div)
                 auto requantization_scale = (input_scale * filter_scale) / output_scale;
 
+                auto mybias = bias;
                 if (bias->get_element_type() != element::i32)
                 {
                     auto zero = make_constant(element::i32, input_scale->get_shape(), 0);
@@ -130,13 +131,13 @@ namespace ngraph
                     op::Quantize::RoundMode round_mode =
                         op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
-                    bias = make_shared<op::Quantize>(
+                    mybias = make_shared<op::Quantize>(
                         bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
                 }
 
                 return make_shared<op::QuantizedConvolutionBias>(input,
                                                                  filter,
-                                                                 bias,
+                                                                 mybias,
                                                                  window_movement_strides,
                                                                  window_dilation_strides,
                                                                  padding_below,
@@ -146,8 +147,8 @@ namespace ngraph
                                                                  false);
             }
 
-            shared_ptr<Node> QuantizedConvInteger(shared_ptr<Node> input,
-                                                  shared_ptr<Node> filter,
+            shared_ptr<Node> QuantizedConvInteger(const shared_ptr<Node>& input,
+                                                  const shared_ptr<Node>& filter,
                                                   const Strides& window_movement_strides,
                                                   const Strides& window_dilation_strides,
                                                   const CoordinateDiff& padding_below,

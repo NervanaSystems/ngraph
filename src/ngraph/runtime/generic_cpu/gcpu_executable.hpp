@@ -69,6 +69,7 @@
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/all.hpp"
+#include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/argmax.hpp"
@@ -77,6 +78,7 @@
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
+#include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/constant.hpp"
@@ -120,6 +122,8 @@
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
+#include "ngraph/runtime/reference/scatter_add.hpp"
+#include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/runtime/reference/sigmoid.hpp"
@@ -135,11 +139,6 @@
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
-
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-#include "ngraph/runtime/reference/allreduce.hpp"
-#include "ngraph/runtime/reference/broadcast_distributed.hpp"
-#endif
 
 namespace ngraph
 {
@@ -234,13 +233,12 @@ private:
                            all->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::AllReduce: {
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
+        case OP_TYPEID::AllReduce:
+        {
             reference::allreduce<T>(static_cast<T*>(const_cast<void*>(args[0])),
                                     static_cast<T*>(out[0]),
                                     node.get_input_element_type(0),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
-#endif
             break;
         }
         case OP_TYPEID::And:
@@ -441,12 +439,10 @@ private:
                                        broadcast_axes);
             break;
         }
-        case OP_TYPEID::BroadcastDistributed: {
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-            Distributed dist;
-            int Rank_ID;
-            Rank_ID = dist.get_rank();
-            if (Rank_ID == 0)
+        case OP_TYPEID::BroadcastDistributed:
+        {
+            int rank_ID = get_distributed_interface()->get_rank();
+            if (rank_ID == 0)
             {
                 reference::broadcastdistributed<T>(
                     static_cast<T*>(args[0]),
@@ -463,8 +459,6 @@ private:
                     node.get_input_element_type(0),
                     static_cast<int>(shape_size(node.get_input_shape(0))));
             }
-            break;
-#endif
             break;
         }
         case OP_TYPEID::BroadcastLike: break;
@@ -1170,6 +1164,66 @@ private:
             else
             {
                 throw ngraph_error("only int32 indices are supported");
+            }
+            break;
+        }
+        case OP_TYPEID::ScatterAdd:
+        {
+            if (node.get_input_element_type(1) == element::i64)
+            {
+                reference::scatter_add<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                                   args[1]->get_data_ptr<int64_t>(),
+                                                   args[2]->get_data_ptr<T>(),
+                                                   out[0]->get_data_ptr<T>(),
+                                                   node.get_input_shape(0),
+                                                   node.get_input_shape(1),
+                                                   node.get_input_shape(2),
+                                                   node.get_output_shape(0));
+            }
+            else if (node.get_input_element_type(1) == element::i32)
+            {
+                reference::scatter_add<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                                   args[1]->get_data_ptr<int32_t>(),
+                                                   args[2]->get_data_ptr<T>(),
+                                                   out[0]->get_data_ptr<T>(),
+                                                   node.get_input_shape(0),
+                                                   node.get_input_shape(1),
+                                                   node.get_input_shape(2),
+                                                   node.get_output_shape(0));
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
+            }
+            break;
+        }
+        case OP_TYPEID::ScatterNDAdd:
+        {
+            if (node.get_input_element_type(1) == element::i64)
+            {
+                reference::scatter_nd_add<T, int64_t>(args[0]->get_data_ptr<T>(),
+                                                      args[1]->get_data_ptr<int64_t>(),
+                                                      args[2]->get_data_ptr<T>(),
+                                                      out[0]->get_data_ptr<T>(),
+                                                      node.get_input_shape(0),
+                                                      node.get_input_shape(1),
+                                                      node.get_input_shape(2),
+                                                      node.get_output_shape(0));
+            }
+            else if (node.get_input_element_type(1) == element::i32)
+            {
+                reference::scatter_nd_add<T, int32_t>(args[0]->get_data_ptr<T>(),
+                                                      args[1]->get_data_ptr<int32_t>(),
+                                                      args[2]->get_data_ptr<T>(),
+                                                      out[0]->get_data_ptr<T>(),
+                                                      node.get_input_shape(0),
+                                                      node.get_input_shape(1),
+                                                      node.get_input_shape(2),
+                                                      node.get_output_shape(0));
+            }
+            else
+            {
+                throw ngraph_error("Unexpected type");
             }
             break;
         }

@@ -25,6 +25,8 @@ set (SRC
     builder/autobroadcast.cpp
     builder/autobroadcast.hpp
     builder/make_constant.hpp
+    builder/norm.cpp
+    builder/norm.hpp
     builder/numpy_transpose.cpp
     builder/numpy_transpose.hpp
     builder/quantization.cpp
@@ -59,9 +61,9 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
+    distributed.cpp
+    distributed.hpp
     except.hpp
-    event_tracing.hpp
-    event_tracing.cpp
     file_util.cpp
     file_util.hpp
     function.cpp
@@ -74,7 +76,6 @@ set (SRC
     ngraph_visibility.hpp
     node.cpp
     node.hpp
-    node_vector.hpp
     op/abs.cpp
     op/abs.hpp
     op/acos.cpp
@@ -157,12 +158,32 @@ set (SRC
     op/experimental/quantized_max_pool.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
+    op/experimental/tile.cpp
+    op/experimental/tile.hpp
     op/experimental/quantized_dot.cpp
     op/experimental/quantized_dot.hpp
     op/experimental/quantized_dot_bias.cpp
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    op/experimental/layers/detection_output.cpp
+    op/experimental/layers/detection_output.hpp
+    op/experimental/layers/interpolate.cpp
+    op/experimental/layers/interpolate.hpp
+    op/experimental/layers/prior_box.cpp
+    op/experimental/layers/prior_box.hpp
+    op/experimental/layers/prior_box_clustered.cpp
+    op/experimental/layers/prior_box_clustered.hpp
+    op/experimental/layers/proposal.hpp
+    op/experimental/layers/proposal.cpp
+    op/experimental/layers/psroi_pooling.hpp
+    op/experimental/layers/psroi_pooling.cpp
+    op/experimental/layers/region_yolo.hpp
+    op/experimental/layers/region_yolo.cpp
+    op/experimental/layers/reorg_yolo.hpp
+    op/experimental/layers/reorg_yolo.cpp
+    op/experimental/layers/roi_pooling.hpp
+    op/experimental/layers/roi_pooling.cpp
     op/floor.cpp
     op/floor.hpp
     op/gather.cpp
@@ -231,6 +252,10 @@ set (SRC
     op/reverse.hpp
     op/reverse_sequence.cpp
     op/reverse_sequence.hpp
+    op/scatter_add.cpp
+    op/scatter_add.hpp
+    op/scatter_nd_add.cpp
+    op/scatter_nd_add.hpp
     op/select.cpp
     op/select.hpp
     op/sigmoid.cpp
@@ -259,10 +284,36 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/fused/clamp.cpp
+    op/fused/clamp.hpp
     op/fused/conv_fused.cpp
     op/fused/conv_fused.hpp
+    op/fused/hard_sigmoid.cpp
+    op/fused/hard_sigmoid.hpp
+    op/fused/depth_to_space.cpp
+    op/fused/depth_to_space.hpp
+    op/fused/elu.cpp
+    op/fused/elu.hpp
+    op/fused/gemm.cpp
+    op/fused/gemm.hpp
+    op/fused/grn.cpp
+    op/fused/grn.hpp
+    op/fused/group_conv.hpp
+    op/fused/group_conv.cpp
+    op/fused/mvn.cpp
+    op/fused/mvn.hpp
+    op/fused/normalize.cpp
+    op/fused/normalize.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/scale_shift.cpp
+    op/fused/scale_shift.hpp
+    op/fused/space_to_depth.cpp
+    op/fused/space_to_depth.hpp
+    op/fused/squeeze.cpp
+    op/fused/squeeze.hpp
+    op/fused/unsqueeze.cpp
+    op/fused/unsqueeze.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -279,14 +330,17 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
+    op/util/reshape.cpp
+    op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
-    parameter_vector.hpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
+    pass/batch_fusion.hpp
+    pass/batch_fusion.cpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding.cpp
@@ -332,6 +386,8 @@ set (SRC
     pass/reshape_sinking.hpp
     pass/serialize.cpp
     pass/serialize.hpp
+    pass/shape_relevance.cpp
+    pass/shape_relevance.hpp
     pass/shape_specialization.cpp
     pass/shape_specialization.hpp
     pass/validate_graph.cpp
@@ -358,7 +414,6 @@ set (SRC
     provenance.cpp
     provenance.hpp
     rank.hpp
-    result_vector.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
     runtime/backend.cpp
@@ -372,8 +427,6 @@ set (SRC
     runtime/performance_counter.hpp
     runtime/tensor.cpp
     runtime/tensor.hpp
-    serializer.cpp
-    serializer.hpp
     shape.cpp
     shape.hpp
     shape_util.cpp
@@ -384,6 +437,9 @@ set (SRC
     strides.cpp
     strides.hpp
     type/bfloat16.cpp
+    type/bfloat16.hpp
+    type/float16.cpp
+    type/float16.hpp
     type/element_type.cpp
     util.cpp
     util.hpp
@@ -396,6 +452,7 @@ set(SRC ${SRC}
     runtime/hybrid/hybrid_backend.hpp
     runtime/hybrid/hybrid_executable.cpp
     runtime/hybrid/hybrid_executable.hpp
+    runtime/hybrid/hybrid_tensor.cpp
     runtime/hybrid/hybrid_util.cpp
     runtime/hybrid/hybrid_util.hpp
     runtime/hybrid/op/function_call.cpp
@@ -412,9 +469,13 @@ set(SRC ${SRC}
     runtime/hybrid/pass/memory_layout.hpp
     )
 
+set(SRC ${SRC}
+    runtime/dynamic/dynamic_backend.cpp
+    runtime/dynamic/dynamic_backend.hpp
+    )
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND SRC distributed.cpp distributed.hpp)
+if(NGRAPH_JSON_ENABLE)
+    list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
 endif()
 
 configure_file(version.in.hpp version.hpp)
@@ -422,7 +483,6 @@ configure_file(version.in.hpp version.hpp)
 add_library(ngraph SHARED ${SRC})
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    target_sources(ngraph PRIVATE distributed.cpp)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         target_include_directories(ngraph SYSTEM PRIVATE libmlsl)
         target_link_libraries(ngraph PRIVATE libmlsl)
@@ -461,7 +521,9 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
         VERSION ${NGRAPH_VERSION}
         SOVERSION ${NGRAPH_API_VERSION})
 endif()
-target_link_libraries(ngraph PRIVATE libjson)
+if(NGRAPH_JSON_ENABLE)
+    target_link_libraries(ngraph PRIVATE libjson)
+endif()
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 
 if (LINUX)

@@ -48,10 +48,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, test_test_case)
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.prototxt"));
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
-    test_case.add_input(std::vector<float>{1});
-    test_case.add_input(std::vector<float>{2});
-    test_case.add_input(std::vector<float>{3});
-    test_case.add_expected_output(std::vector<float>{6});
+    test_case.add_input<float>({1});
+    test_case.add_input<float>({2});
+    test_case.add_input<float>({3});
+    test_case.add_expected_output<float>(Shape{1}, {6});
     test_case.run();
 }
 
@@ -62,7 +62,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, test_test_case_mutliple_inputs)
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(Inputs{{1}, {2}, {3}});
-    test_case.add_expected_output(std::vector<float>{6});
+    test_case.add_expected_output(Shape{1}, std::vector<float>{6});
     test_case.run();
 }
 
@@ -335,17 +335,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_addmul_abc)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/addmul_abc.prototxt"));
 
-    std::vector<std::vector<float>> inputs;
-
-    Shape shape{1, 2, 2};
-    inputs.emplace_back(test::NDArray<float, 3>({{{9, 10}}, {{11, 12}}}).get_vector());
-    inputs.emplace_back(test::NDArray<float, 3>({{{5, 6}}, {{7, 8}}}).get_vector());
-    inputs.emplace_back(test::NDArray<float, 3>({{{1, 2}}, {{3, 4}}}).get_vector());
-
-    auto expected_output = test::NDArray<float, 3>({{{46, 62}}, {{80, 100}}}).get_vector();
-
-    auto result_vectors = execute(function, inputs, "${BACKEND_NAME}");
-    EXPECT_TRUE(test::all_close_f(expected_output, result_vectors.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({9, 10, 11, 12});
+    test_case.add_input<float>({5, 6, 7, 8});
+    test_case.add_input<float>({1, 2, 3, 4});
+    test_case.add_expected_output<float>(Shape{1, 2, 2}, {46, 62, 80, 100});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmin_no_keepdims)
@@ -353,11 +348,10 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmin_no_keepdims)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/argmin_no_keepdims.prototxt"));
 
-    Inputs inputs{test::NDArray<float, 2>{{2, 1}, {3, 10}}.get_vector()};
-    std::vector<std::vector<int64_t>> expected_output{{1, 0}};
-    std::vector<std::vector<int64_t>> result{
-        execute<float, int64_t>(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_EQ(expected_output, result);
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({2, 1, 3, 10});
+    test_case.add_expected_output<float>(Shape{2}, {1, 0});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_batchnorm_default)
@@ -366,28 +360,15 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_batchnorm_default)
     auto function = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/batchnorm_default.prototxt"));
 
-    Inputs inputs;
-
-    // input data shape (1, 2, 1, 3)
-    inputs.push_back(
-        test::NDArray<float, 4>({{{{-1.f, 0.f, 1.f}}, {{2.f, 3.f, 4.f}}}}).get_vector());
-
-    // scale (3)
-    inputs.emplace_back(std::vector<float>{1.f, 1.5f});
-    // bias (3)
-    inputs.emplace_back(std::vector<float>{0.f, 1.f});
-    // mean (3)
-    inputs.emplace_back(std::vector<float>{0.f, 3.f});
-    // var (3)
-    inputs.emplace_back(std::vector<float>{1.f, 1.5f});
-
-    // shape (1, 2, 1, 3)
-    Outputs expected_outputs{test::NDArray<float, 4>{
-        {{{{-0.999995f, 0.f, 0.999995f}}, {{-0.22474074f, 1.f, 2.2247407f}}}}}
-                                 .get_vector()};
-
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({-1.f, 0.f, 1.f, 2.f, 3.f, 4.f}); // data {1, 2, 1, 3}
+    test_case.add_input<float>({1.f, 1.5f});                     // scale
+    test_case.add_input<float>({0.f, 1.f});                      // bias
+    test_case.add_input<float>({0.f, 3.f});                      // mean
+    test_case.add_input<float>({1.f, 1.5f});                     // var
+    test_case.add_expected_output<float>(
+        Shape{1, 2, 1, 3}, {-0.999995f, 0.f, 0.999995f, -0.22474074f, 1.f, 2.2247407f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_relu)
@@ -409,15 +390,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum)
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/sum.prototxt"));
 
-    // input data shape (3, )
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{3.f, 0.f, 2.f});
-    inputs.emplace_back(std::vector<float>{1.f, 3.f, 4.f});
-    inputs.emplace_back(std::vector<float>{2.f, 6.f, 6.f});
-
-    Outputs expected_outputs{{6.f, 9.f, 12.f}};
-    Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
-    EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({3.f, 0.f, 2.f});
+    test_case.add_input<float>({1.f, 3.f, 4.f});
+    test_case.add_input<float>({2.f, 6.f, 6.f});
+    test_case.add_expected_output<float>(Shape{3}, {6.f, 9.f, 12.f});
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sum_one_input)
@@ -1297,20 +1275,12 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_top_k)
     auto function =
         onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/top_k.prototxt"));
 
-    Inputs inputs;
-    inputs.emplace_back(std::vector<float>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
-
-    std::vector<float> expected_values_output{3, 2, 1, 7, 6, 5, 11, 10, 9};
-    std::vector<std::int64_t> expected_indices_output{3, 2, 1, 3, 2, 1, 3, 2, 1};
-
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> result_tensors =
-        prepare_and_run(function, inputs, "${BACKEND_NAME}");
-
-    std::vector<float> values_output = read_vector<float>(result_tensors.at(0));
-    std::vector<std::int64_t> indices_output = read_vector<std::int64_t>(result_tensors.at(1));
-
-    EXPECT_TRUE(test::all_close_f(expected_values_output, values_output));
-    EXPECT_TRUE(test::all_close(expected_indices_output, indices_output));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11});
+    test_case.add_expected_output<float>(Shape{3, 3}, {3, 2, 1, 7, 6, 5, 11, 10, 9}); // values
+    test_case.add_expected_output<std::int64_t>(Shape{3, 3},
+                                                {3, 2, 1, 3, 2, 1, 3, 2, 1}); // indices
+    test_case.run();
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sinh)
@@ -1449,4 +1419,40 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_erf_int32)
     const std::vector<std::vector<int32_t>> outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
     EXPECT_TRUE(test::all_close(expected_outputs, outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_hardmax)
+{
+    auto hardmax_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/hardmax.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(hardmax_fn, "${BACKEND_NAME}");
+    test_case.add_input<float>(
+        {-2.02458119f, 0.00126542f,  -0.58045743f, -0.75186814f, 0.9406899f,
+         -0.513188f,   0.85887463f,  1.61444086f,  0.23801147f,  -0.26816885f,
+         0.6597208f,   1.43889519f,  0.28798895f,  1.44769952f,  -1.99466756f,
+         0.41386644f,  0.69389555f,  1.46118255f,  -1.67628606f, 1.49697552f,
+
+         0.06337166f,  -1.15740783f, 0.8792142f,   -0.95352717f, -1.87895792f,
+         -0.74066102f, -0.27131459f, 0.2219685f,   0.31831001f,  0.52495901f,
+         0.60283089f,  0.60397976f,  0.92401468f,  0.29565101f,  -1.14443776f,
+         -1.07399045f, -0.92266259f, 0.24017731f,  -0.30105675f, 1.18513269f,
+
+         0.55494542f,  1.12119279f,  -0.43156474f, 0.15101668f,  -1.460439f,
+         0.96375129f,  1.10411785f,  -0.30272771f, -0.48855848f, 0.12103213f,
+         -0.71388492f, 1.38398178f,  0.21924434f,  0.93105052f,  -0.21074303f,
+         0.48213503f,  -1.37810638f, 8.99060285f,  0.54794592f,  -0.46820172f});
+
+    // values for hardmax with axis==2
+    test_case.add_expected_output<float>(
+        Shape{3, 4, 5}, {0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                         0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+
+                         0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+                         0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+
+                         0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+                         0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f});
+
+    test_case.run();
 }

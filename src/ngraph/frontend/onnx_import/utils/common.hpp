@@ -63,36 +63,6 @@ namespace ngraph
                 return range;
             }
 
-            /// \brief      Makes a Constant Ngraph node.
-            ///
-            /// \param[in]  type   The node element type.
-            /// \param[in]  shape  The tensor data shape.
-            /// \param[in]  data   The data to initialize node with.
-            ///
-            /// \tparam     T      Input data value type.
-            ///
-            /// \return     The Ngraph node representing Constant data.
-            ///
-            template <typename T>
-            std::shared_ptr<ngraph::Node> make_constant_node(const ngraph::element::Type& type,
-                                                             const ngraph::Shape& shape,
-                                                             const std::vector<T>& data)
-            {
-                std::shared_ptr<ngraph::Node> node;
-                // Make constant node filled with single value.
-                if (data.size() == 1)
-                {
-                    node = std::make_shared<ngraph::op::Constant>(type, ngraph::Shape{}, data);
-                    node = ngraph::op::make_broadcast_node(node, shape);
-                }
-                else
-                {
-                    node = std::make_shared<ngraph::op::Constant>(type, shape, data);
-                }
-
-                return node;
-            }
-
             /// \brief      Handle negative axis value.
             ///
             /// \param[in]  axis        The requested axis value.
@@ -116,6 +86,25 @@ namespace ngraph
                 }
             }
 
+            /// \brief Creates a square identity matrix.
+            ///
+            /// \param[in] n Order of the resulting matrix.
+            ///
+            /// \return A Constant node representing identity matrix with shape (n, n).
+            template <typename T = double>
+            std::shared_ptr<ngraph::op::Constant> square_identity(const size_t n,
+                                                                  const element::Type& type)
+            {
+                std::vector<T> identity_matrix(n * n, T{0});
+
+                for (size_t row = 0; row < n; ++row)
+                {
+                    const size_t diagonal_element = (n * row) + row;
+                    identity_matrix.at(diagonal_element) = T{1};
+                }
+
+                return std::make_shared<ngraph::op::Constant>(type, Shape{{n, n}}, identity_matrix);
+            }
         } // namespace  common
     }     // namespace onnx_import
 } // namespace ngraph
