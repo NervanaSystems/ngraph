@@ -82,6 +82,7 @@
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -89,6 +90,7 @@
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -2052,6 +2054,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
         case OP_TYPEID::GenerateMask:
+        case OP_TYPEID::GRN:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::MVN:
         case OP_TYPEID::Normalize:
@@ -2077,6 +2080,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
+        case OP_TYPEID::Unsqueeze:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
@@ -2163,11 +2167,14 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::DepthToSpace:
     case OP_TYPEID::Elu:
     case OP_TYPEID::Gemm:
+    case OP_TYPEID::GRN:
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
+    case OP_TYPEID::ScaleShift:
     case OP_TYPEID::SpaceToDepth:
-    case OP_TYPEID::Squeeze: { return false;
+    case OP_TYPEID::Squeeze:
+    case OP_TYPEID::Unsqueeze: { return false;
     }
     default: { return true;
     }
