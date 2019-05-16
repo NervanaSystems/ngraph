@@ -14552,7 +14552,8 @@ TEST(type_prop, shuffle_channels_invalid_input_shape)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "The input tensor's shape is expected to be at least 1D.");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "The input tensor's shape is expected to be at least 1D.");
     }
 }
 
