@@ -25,6 +25,7 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -939,4 +940,40 @@ void pass::ConstantFolding::construct_constant_convert()
     auto convert_matcher =
         make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantConvert");
     this->add_matcher(convert_matcher, constant_convert_callback, {});
+}
+
+// ShapeOf is a bit of an odd duck: it doesn't matter if the input's value is
+// constant, as long as it has static shape.
+void pass::ConstantFolding::construct_constant_shape_of()
+{
+    auto arg_label = make_shared<pattern::op::Label>(element::i32, Shape{2, 3, 4});
+    auto shape_of_op = make_shared<op::ShapeOf>(arg_label);
+
+    auto constant_shape_of_callback = [arg_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_shape_of_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto arg_match = pattern_map[arg_label];
+
+        if (arg_match->get_output_partial_shape(0).is_static())
+        {
+            auto arg_shape = arg_match->get_output_shape(0);
+            auto replacement =
+                make_shared<op::Constant>(element::i64, Shape{arg_shape.size()}, arg_shape.data());
+
+            replace_node(m.get_match_root(), replacement);
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    };
+
+    auto shape_of_matcher =
+        make_shared<pattern::Matcher>(shape_of_op, "ConstantFolding.ConstantShapeOf");
+    this->add_matcher(shape_of_matcher, constant_shape_of_callback, {});
 }
