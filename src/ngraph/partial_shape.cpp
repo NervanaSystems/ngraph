@@ -248,9 +248,9 @@ bool PartialShape::merge_into(PartialShape& dst, const PartialShape& src)
 
 bool PartialShape::broadcast_merge_into(PartialShape& dst,
                                         const PartialShape& src,
-                                        const op::AutoBcastSpec autob)
+                                        const op::AutoBroadcastSpec autob)
 {
-    NGRAPH_CHECK(autob.type == op::AutoBcastType::NUMPY, "Unsupported auto broadcast type");
+    NGRAPH_CHECK(autob.type == op::AutoBroadcastType::NUMPY, "Unsupported auto broadcast type");
 
     if (dst.rank().is_dynamic() || src.rank().is_dynamic())
     {

@@ -23,7 +23,7 @@ op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
     const std::string& node_type,
     const std::shared_ptr<Node>& arg0,
     const std::shared_ptr<Node>& arg1,
-    const AutoBcastSpec& autob)
+    const AutoBroadcastSpec& autob)
     : Op(node_type, check_single_output_args({arg0, arg1}))
     , m_autob(autob)
 {

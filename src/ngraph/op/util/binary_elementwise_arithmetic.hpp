@@ -38,7 +38,7 @@ namespace ngraph
             /// | ------ | --------------------------------- | ------------------------------------------------------------------------ |
             /// | `arg0` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape. The element type \f$N\f$ may be any numeric type. |
             /// | `arg1` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same element type as `arg0`.                             |
-            /// | `autob`| AutoBcastSpec                     | Auto broadcast specification.                                            |
+            /// | `autob`| AutoBroadcastSpec                 | Auto broadcast specification.                                            |
             ///
             /// ## Output
             ///
@@ -55,13 +55,13 @@ namespace ngraph
                 BinaryElementwiseArithmetic(const std::string& node_type,
                                             const std::shared_ptr<Node>& arg0,
                                             const std::shared_ptr<Node>& arg1,
-                                            const AutoBcastSpec& autob = AutoBcastSpec());
+                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
                 void validate_and_infer_types() override;
 
-                AutoBcastSpec get_autob() const { return m_autob; }
+                AutoBroadcastSpec get_autob() const { return m_autob; }
             private:
-                AutoBcastSpec m_autob;
+                AutoBroadcastSpec m_autob;
             };
         }
     }

@@ -28,7 +28,7 @@ bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngr
 
     if (auto op = std::dynamic_pointer_cast<ngraph::op::util::BinaryElementwiseArithmetic>(node))
     {
-        if (op->get_autob().type != op::AutoBcastType::NONE)
+        if (op->get_autob().type != op::AutoBroadcastType::NONE)
         {
             auto new_args = explicit_broadcast<ngraph::op::util::BinaryElementwiseArithmetic>(op);
             size_t i = 0;

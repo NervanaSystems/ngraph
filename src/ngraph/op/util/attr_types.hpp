@@ -52,26 +52,26 @@ namespace ngraph
             NOTSET = EXPLICIT
         };
 
-        enum class AutoBcastType
+        enum class AutoBroadcastType
         {
             NONE = 0,
             NUMPY
         };
 
-        struct AutoBcastSpec
+        struct AutoBroadcastSpec
         {
-            AutoBcastSpec()
-                : type(AutoBcastType::NONE)
+            AutoBroadcastSpec()
+                : type(AutoBroadcastType::NONE)
                 , axis(0)
             {
             }
-            AutoBcastSpec(AutoBcastType t)
+            AutoBroadcastSpec(AutoBroadcastType t)
                 : type(t)
                 , axis(0)
             {
             }
 
-            AutoBcastType type;
+            AutoBroadcastType type;
             size_t axis;
         };
     }

@@ -84,7 +84,7 @@ NGRAPH_TEST(${BACKEND_NAME}, add_bcast)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
     auto B = make_shared<op::Parameter>(element::f32, Shape{3});
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B, op::AutoBcastType::NUMPY),
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B, op::AutoBroadcastType::NUMPY),
                                    ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
