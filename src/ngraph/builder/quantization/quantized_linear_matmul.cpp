@@ -37,27 +37,6 @@ namespace ngraph
     {
         namespace quantization
         {
-            // Check if zero point is zero
-            bool check_zero_point(const shared_ptr<op::Constant>& input)
-            {
-                bool is_zero = false;
-                if (input->get_element_type() == element::i8)
-                {
-                    auto input_zero_value = input->get_vector<int8_t>();
-                    is_zero = all_of(input_zero_value.begin(), input_zero_value.end(), [](int i) {
-                        return i == 0;
-                    });
-                }
-                else
-                {
-                    auto input_zero_value = input->get_vector<uint8_t>();
-                    is_zero = all_of(input_zero_value.begin(), input_zero_value.end(), [](int i) {
-                        return i == 0;
-                    });
-                }
-                return is_zero;
-            }
-
             // TODO: this code is falling back to fp32 dot
             //       1) add support in reference kernel for zero point
             shared_ptr<Node> QuantizedLinearMatmul(const shared_ptr<Node>& input0,
@@ -75,8 +54,8 @@ namespace ngraph
 
                 // Check if zero point is constant and zero
                 if (input0_zero != nullptr && input1_zero != nullptr && output_zero != nullptr &&
-                    check_zero_point(input0_zero) && check_zero_point(input1_zero) &&
-                    check_zero_point(output_zero))
+                    ngraph::is_zero(input0_zero) && ngraph::is_zero(input1_zero) &&
+                    ngraph::is_zero(output_zero))
                 {
                     auto requantization_scale = (input0_scale * input1_scale) / output_scale;
                     return make_shared<op::QuantizedDot>(input0, input1, requantization_scale);

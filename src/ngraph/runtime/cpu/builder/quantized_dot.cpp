@@ -127,6 +127,10 @@ namespace ngraph
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto scales_size = shape_size(args[2].get_shape());
+                if (scales_size != 1)
+                {
+                    throw ngraph_error("Scale size should be 1 for QuantizedDot");
+                }
                 std::function<decltype(
                     runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>)>
                     kernel;
@@ -144,10 +148,7 @@ namespace ngraph
                                 out0_buffer_index,
                                 scales_size](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
 
-                    vector<float> dyn_scales;
-                    dyn_scales.assign(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
-                                      static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
-                                          scales_size);
+                    float dyn_scale = *(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]));
 
                     kernel(ctx->buffer_data[arg0_buffer_index],
                            ctx->buffer_data[arg1_buffer_index],
@@ -156,7 +157,7 @@ namespace ngraph
                            arg1_shape,
                            result_shape,
                            1,
-                           dyn_scales[0]);
+                           dyn_scale);
                 };
                 functors.emplace_back(functor);
             }

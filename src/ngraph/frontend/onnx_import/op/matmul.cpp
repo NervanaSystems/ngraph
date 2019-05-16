@@ -105,11 +105,6 @@ namespace ngraph
                     {
                         if (quantized)
                         {
-                            right = std::make_shared<ngraph::op::Reshape>(
-                                right,
-                                AxisVector{1, 0},
-                                Shape(right->get_shape().rbegin(), right->get_shape().rend()));
-
                             return {ngraph::builder::quantization::QuantizedLinearMatmul(
                                 left,
                                 right,
@@ -171,11 +166,6 @@ namespace ngraph
 
                         if (quantized)
                         {
-                            sliced_right = std::make_shared<ngraph::op::Reshape>(
-                                sliced_right,
-                                AxisVector{1, 0},
-                                Shape(sliced_right->get_shape().rbegin(),
-                                      sliced_right->get_shape().rend()));
                             sub_dot = ngraph::builder::quantization::QuantizedLinearMatmul(
                                 sliced_left,
                                 sliced_right,

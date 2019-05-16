@@ -2525,8 +2525,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
 // Convert a QuantizedDot which takes [m,n]*[n,k] to
 // QuantizedMatmul which reorders input1 and does [m,n]*[k,n]
 // which is what mkldnn wants
-void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul(bool requantize,
-                                                                            bool with_relu)
+void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
 {
     Shape shape_input0{2, 3};
     Shape shape_input1{3, 4};
@@ -2534,23 +2533,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul(bool
     auto input1 = std::make_shared<pattern::op::Label>(element::i8, shape_input1);
     auto scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
 
-    std::shared_ptr<ngraph::op::Op> q_dot;
-    if (!requantize && !with_relu)
-    {
-        q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, false, false);
-    }
-    else if (!requantize && with_relu)
-    {
-        q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, false, true);
-    }
-    else if (requantize && !with_relu)
-    {
-        q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, true, false);
-    }
-    else
-    {
-        q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale, true, true);
-    }
+    auto q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale);
     auto callback = [input0, input1, scale](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for Qdot against node = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
