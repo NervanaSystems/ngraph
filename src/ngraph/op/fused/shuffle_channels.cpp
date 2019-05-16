@@ -24,21 +24,26 @@ op::ShuffleChannels::ShuffleChannels(const shared_ptr<Node>& data,
                                      const int axis,
                                      const size_t groups)
     : FusedOp("ShuffleChannels", {data})
-    , m_axis{axis}
     , m_groups{groups}
 {
+    if (axis < 0)
+    {
+        m_axis = axis + data->get_shape().size();
+    }
+    else
+    {
+        m_axis = axis;
+    }
+
     constructor_validate_and_infer_types();
 }
 
 void op::ShuffleChannels::pre_validate_and_infer_types()
 {
-    const auto data = get_argument(0);
-    const auto& shape = data->get_shape();
+    const auto shape = get_argument(0)->get_shape();
 
-    if (m_axis < 0)
-    {
-        m_axis += shape.size();
-    }
+    NODE_VALIDATION_CHECK(
+        this, shape.size() >= 1, "The input tensor's shape is expected to be at least 1D.");
 
     NODE_VALIDATION_CHECK(this,
                           m_axis >= 0 && m_axis < shape.size(),
@@ -46,10 +51,6 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
                           "input tensor's shape dimensions.");
 
     const auto channel_dim_size = shape.at(m_axis);
-
-    NODE_VALIDATION_CHECK(
-        this, shape.size() == 4, "The input tensor's shape is expected to be 4D.");
-
     NODE_VALIDATION_CHECK(
         this,
         channel_dim_size % m_groups == 0,

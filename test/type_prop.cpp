@@ -14545,14 +14545,14 @@ TEST(type_prop, shuffle_channels_invalid_input_shape)
 {
     try
     {
-        const auto data = make_shared<op::Parameter>(element::f64, Shape{1, 2, 3, 4, 5});
-        const auto shuffle_channels = make_shared<op::ShuffleChannels>(data);
+        const auto data = make_shared<op::Parameter>(element::f64, Shape{});
+        const auto shuffle_channels = make_shared<op::ShuffleChannels>(data, 0, 1);
         FAIL() << "ShuffleChannels validation did not work. Op node was created with incorrect "
                   "params.";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "The input tensor's shape is expected to be 4D");
+        EXPECT_HAS_SUBSTRING(error.what(), "The input tensor's shape is expected to be at least 1D.");
     }
 }
 
