@@ -24,18 +24,17 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -2421,6 +2420,132 @@ namespace ngraph
                     construct_primitive_build_string_concat<QuantizedConcat>(
                         mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
+
+                template <typename OP>
+                void construct_primitive_build_string_inner_product(
+                    ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                    ngraph::Node* node,
+                    std::string& construct_string,
+                    std::vector<size_t>& deps,
+                    size_t& index,
+                    std::ofstream& desc_file)
+                {
+                    auto has_bias = false;
+                    if (mkldnn_emitter.has_bias<OP>())
+                    {
+                        has_bias = true;
+                    }
+
+                    auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+
+                    // MKLDNN relies on named formats for kernel selection
+                    if (weights_desc.data.format == mkldnn_nchw)
+                    {
+                        weights_desc.data.format = mkldnn_oihw;
+                    }
+                    if (weights_desc.data.format == mkldnn_ncdhw)
+                    {
+                        weights_desc.data.format = mkldnn_oidhw;
+                    }
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    if (has_bias)
+                    {
+                        // QuantizedDotBias needs 5 primitives: input, weights, bias, result, and inner_product.
+                        index = mkldnn_emitter.reserve_primitive_space_cg(5);
+                    }
+                    else
+                    {
+                        // QuantizedDot needs 4 primitives: input, weights, result, and inner_product.
+                        index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    }
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {
+                        data_desc, weights_desc, result_desc};
+
+                    if (has_bias)
+                    {
+                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                        descs.push_back(bias_desc);
+                    }
+
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "\n// build primitive descriptor\n";
+                    writer << "auto ip_desc = "
+                              "mkldnn::inner_product_forward::desc(mkldnn::prop_kind::forward,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n"
+                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n";
+                    if (has_bias)
+                    {
+                        writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 3 << "],\n";
+                    }
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 2 << "]);\n";
+
+                    writer << "\nmkldnn::post_ops ops;\n";
+                    if (has_relu<OP>(node))
+                    {
+                        writer << "const float ops_scale = 1.f;\n";
+                        writer << "const float ops_alpha = -0.f; // relu negative slope\n";
+                        writer << "const float ops_beta = 0.f;\n";
+                        writer << "ops.append_eltwise("
+                                  "ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, "
+                                  "ops_beta);\n";
+                    }
+
+                    writer << "mkldnn::primitive_attr ip_attr;\n";
+                    writer << "ip_attr.set_post_ops(ops);\n";
+
+                    if (mkldnn_emitter.is_quantized_inner_product<OP>())
+                    {
+                        writer << "ip_attr.set_int_output_round_mode(mkldnn::round_mode::round_"
+                                  "nearest);\n";
+                        writer << "ip_attr.set_output_scales(mask, dyn_scales);\n";
+                    }
+
+                    writer << "auto ip_pd = "
+                              "mkldnn::inner_product_forward::primitive_desc(ip_desc, ip_attr, "
+                              "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::inner_product_forward(ip_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]";
+                    if (has_bias)
+                    {
+                        writer << ", *cg_ctx->mkldnn_primitives[" << std::to_string(deps[3]) << "]";
+                    }
+                    writer << ", *cg_ctx->mkldnn_primitives[" << std::to_string(deps[2]) << "]);\n";
+
+                    construct_string = writer.get_code();
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedDot)
+                {
+                    construct_primitive_build_string_inner_product<QuantizedDot>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    QuantizedDotBias)
+                {
+                    construct_primitive_build_string_inner_product<QuantizedDotBias>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
             }
         }
     }
@@ -2508,6 +2633,9 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPoolBackprop>},
     {TI(Quantize), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Quantize>},
     {TI(Dequantize), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Dequantize>},
+    {TI(QuantizedDot), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedDot>},
+    {TI(QuantizedDotBias),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedDotBias>},
 };
 
 bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
