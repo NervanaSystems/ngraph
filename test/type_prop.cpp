@@ -12442,6 +12442,39 @@ TEST(type_prop, transpose_arg_static_input_order_static_ok)
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
 }
 
+TEST(type_prop, transpose_arg_static_input_order_constant_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = op::Constant::create(element::i64, Shape{4}, vector<int64_t>{2, 1, 0, 3});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{6, 4, 2, 8}));
+}
+
+TEST(type_prop, transpose_arg_static_input_order_constant_invalid_perm)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = op::Constant::create(element::i64, Shape{4}, vector<int64_t>{2, 9, 0, 3});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect invalid permutation";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Permutation AxisVector{2, 9, 0, 3} is not valid for input shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_static_ok)
 {
     auto arg = make_shared<op::Parameter>(
