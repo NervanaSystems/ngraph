@@ -90,6 +90,7 @@
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -454,9 +455,11 @@ shared_ptr<runtime::Executable>
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
         switch (op_type_id)
         {
         case OP_TYPEID::Parameter:
@@ -2075,16 +2078,20 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScatterNDAdd:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::SpaceToDepth:
+        case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
+        case OP_TYPEID::Unsqueeze:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
         }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
         }
     }
 
@@ -2171,7 +2178,9 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::PRelu:
     case OP_TYPEID::ScaleShift:
     case OP_TYPEID::SpaceToDepth:
-    case OP_TYPEID::Squeeze: { return false;
+    case OP_TYPEID::SquaredDifference:
+    case OP_TYPEID::Squeeze:
+    case OP_TYPEID::Unsqueeze: { return false;
     }
     default: { return true;
     }

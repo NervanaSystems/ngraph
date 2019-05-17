@@ -60,6 +60,11 @@ namespace ngraph
                 return static_cast<int>(MLSL::Environment::GetEnv().GetProcessIdx());
             }
 
+            void log_print(const std::string& timestamp, const std::vector<char>& buf) override
+            {
+                std::printf("%s [MLSL RANK: %d]: %s\n", timestamp.c_str(), get_rank(), buf.data());
+            }
+
             void
                 all_reduce(void* in, void* out, element::Type_t element_type, size_t count) override
             {

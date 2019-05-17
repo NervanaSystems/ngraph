@@ -67,7 +67,6 @@ set(SRC
     pass_manager.cpp
     pass_memory_layout.cpp
     pass_shape_relevance.cpp
-    pass_shape_specialization.cpp
     pattern.cpp
     provenance.cpp
     reshape_elimination.cpp

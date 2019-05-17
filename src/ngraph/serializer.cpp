@@ -79,7 +79,9 @@
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/squared_difference.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -499,10 +501,12 @@ static shared_ptr<ngraph::Function>
             {
                 args.push_back(node_map.at(name));
             }
+#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-            // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
             switch (get_typeid(node_op))
             {
             case OP_TYPEID::Abs:
@@ -1451,6 +1455,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Sqrt>(args[0]);
                 break;
             }
+            case OP_TYPEID::SquaredDifference:
+            {
+                node = make_shared<op::SquaredDifference>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::Squeeze:
             {
                 node = make_shared<op::Squeeze>(args[0], args[1]);
@@ -1501,6 +1510,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::StopGradient>(args[0]);
                 break;
             }
+            case OP_TYPEID::Unsqueeze:
+            {
+                node = make_shared<op::Unsqueeze>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::UnknownOp:
             {
                 stringstream ss;
@@ -1508,7 +1522,9 @@ static shared_ptr<ngraph::Function>
                 throw runtime_error(ss.str());
             }
             }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
 
             for (const string& name : control_deps_inputs)
             {
@@ -1625,10 +1641,12 @@ static json write(const Node& n, bool binary_constant_data)
     }
 
     string node_op = n.description();
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-    // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
     switch (get_typeid(node_op))
     {
     case OP_TYPEID::Abs: { break;
@@ -2192,6 +2210,8 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Sqrt: { break;
     }
+    case OP_TYPEID::SquaredDifference: { break;
+    }
     case OP_TYPEID::Squeeze: { break;
     }
     case OP_TYPEID::StopGradient: { break;
@@ -2227,10 +2247,14 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Transpose: { break;
     }
+    case OP_TYPEID::Unsqueeze: { break;
+    }
     case OP_TYPEID::UnknownOp: { break;
     }
     }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
 
     return node;
 }

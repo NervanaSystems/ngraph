@@ -33,8 +33,8 @@ set (SRC
     builder/quantization.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization/quantized_linear_dot.cpp
-    builder/quantization/quantized_linear_dot.hpp
+    builder/quantization/quantized_linear_matmul.cpp
+    builder/quantization/quantized_linear_matmul.hpp
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
@@ -310,8 +310,12 @@ set (SRC
     op/fused/scale_shift.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
+    op/fused/squared_difference.cpp
+    op/fused/squared_difference.hpp
     op/fused/squeeze.cpp
     op/fused/squeeze.hpp
+    op/fused/unsqueeze.cpp
+    op/fused/unsqueeze.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -386,8 +390,6 @@ set (SRC
     pass/serialize.hpp
     pass/shape_relevance.cpp
     pass/shape_relevance.hpp
-    pass/shape_specialization.cpp
-    pass/shape_specialization.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
     pass/visualize_tree.cpp
