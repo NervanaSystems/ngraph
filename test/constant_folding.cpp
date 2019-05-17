@@ -357,3 +357,10 @@ TEST(constant_folding, shape_of_rank_dynamic)
     ASSERT_TRUE(result_as_shape_of->get_output_partial_shape(0).same_scheme(
         PartialShape{Dimension::dynamic()}));
 }
+
+TEST(constant_folding, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::ConstantFolding>();
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}

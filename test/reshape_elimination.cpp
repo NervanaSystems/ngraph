@@ -433,3 +433,17 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
     size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
     ASSERT_EQ(num_reshapes_optimized, 2);
 }
+
+TEST(reshape_elimination, pass_property)
+{
+    {
+        auto pass = std::make_shared<ngraph::pass::ReshapeElimination>();
+        ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+        ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+    }
+    {
+        auto pass = std::make_shared<ngraph::pass::RecurrentReshapeElimination>();
+        ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+        ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+    }
+}

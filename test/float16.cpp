@@ -64,3 +64,26 @@ TEST(float16, conversions)
     EXPECT_STREQ(source_string, f16_string.c_str());
     EXPECT_EQ(static_cast<float>(f16), 1.5);
 }
+
+TEST(float16, assigns)
+{
+    float16 f16;
+    f16 = 2.0;
+    EXPECT_EQ(f16, float16(2.0));
+
+    std::vector<float> f32vec{1.0, 2.0, 4.0};
+    std::vector<float16> f16vec;
+    std::copy(f32vec.begin(), f32vec.end(), std::back_inserter(f16vec));
+    for (int i = 0; i < f32vec.size(); ++i)
+    {
+        EXPECT_EQ(f32vec.at(i), f16vec.at(i));
+    }
+
+    float f32arr[] = {1.0, 2.0, 4.0};
+    float16 f16arr[sizeof(f32arr)];
+    for (int i = 0; i < sizeof(f32arr) / sizeof(f32arr[0]); ++i)
+    {
+        f16arr[i] = f32arr[i];
+        EXPECT_EQ(f32arr[i], f16arr[i]);
+    }
+}
