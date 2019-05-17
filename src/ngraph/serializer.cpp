@@ -1451,8 +1451,8 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Split:
             {
                 const auto axis = node_js.at("axis").get<size_t>();
-                const auto num_split = node_js.at("num_split").get<size_t>();
-                node = make_shared<op::Split>(args[0], axis, num_split);
+                const auto splits = node_js.at("splits").get<vector<size_t>>();
+                node = make_shared<op::Split>(args[0], axis, splits);
                 break;
             }
             case OP_TYPEID::Sqrt:
@@ -2208,7 +2208,7 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::Split*>(&n);
         node["axis"] = tmp->get_axis();
-        node["num_split"] = tmp->get_num_split();
+        node["splits"] = tmp->get_splits();
         break;
     }
     case OP_TYPEID::Sqrt: { break;

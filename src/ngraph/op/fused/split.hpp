@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/fused_op.hpp"
@@ -25,16 +26,23 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Splits the input tensor into a list of smaller, evenly-sized tensors
+        /// \brief Splits the input tensor into a list of smaller tensors ("pieces")
         class Split : public ngraph::op::util::FusedOp
         {
         public:
-            /// \brief Constructs a Clamp node.
+            /// \brief Constructs a Split op that evenly divides the input tensor.
             ///
             /// \param data - Node producing the input tensor
             /// \param axis - indicates an axis along which the input tensor should be split. Negative values mean counting from the back of the input tensor's shape.
             /// \param num_split - a number of "pieces" the input tensor will be split to
             Split(const std::shared_ptr<ngraph::Node>& data, const int axis, const size_t num_split);
+
+            /// \brief Constructs a Split op that splits the input tensor into variable length "pieces"
+            ///
+            /// \param data - Node producing the input tensor
+            /// \param axis - indicates an axis along which the input tensor should be split. Negative values mean counting from the back of the input tensor's shape.
+            /// \param splits - a list of lengths that the input tensor should be split to. Use this constructor to split the input tensor to variable length chunks.
+            Split(const std::shared_ptr<ngraph::Node>& data, const int axis, const std::vector<size_t>& splits);
 
             void pre_validate_and_infer_types() override;
 
@@ -44,10 +52,19 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             size_t get_axis() const { return m_axis; }
-            size_t get_num_split() const { return m_num_split; }
+            const std::vector<size_t>& get_splits() const { return m_splits; }
         private:
+            /// \brief Adjusts the axis for negative values
+            ///
+            /// \param axis - original axis value; negative values are accepted
+            /// \param input_tensor_rank - rank of the input data tensor
+            /// \return Returns a sum of parameters for negative axis value, or axis itself otherwise
+            size_t adjust_axis_value(const int axis, const size_t input_tensor_rank) const;
+
+            bool m_split_evenly; /// used internally for validation purposes, indicates which constructor was used
             size_t m_axis;
-            const size_t m_num_split;
+            size_t m_num_split;
+            std::vector<size_t> m_splits; /// contains lengths of chunks that the input tensor will be split to
         };
     }
 }
