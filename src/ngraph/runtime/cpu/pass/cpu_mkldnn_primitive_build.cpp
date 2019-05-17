@@ -782,6 +782,22 @@ namespace ngraph
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
                     writer << "\n// create memory primitive descriptors\n";
+                    // FIXME
+                    // clang generates 16 bytes aligned store with unaligned address,
+                    // which results in segmentation fault.
+                    // Workaround for now: Use push_back to avoid generating such store.
+                    writer << "mkldnn::memory::dims dims1;\n";
+                    for (auto i = 0; i < result_shape.size(); i++)
+                    {
+                        writer << "dims1.push_back(" << std::to_string(result_shape[i]) << ");\n";
+                    }
+
+                    writer << "\nmkldnn::memory::dims dims2;\n";
+                    for (auto i = 0; i < lower_bounds.size(); i++)
+                    {
+                        writer << "dims2.push_back(" << std::to_string(lower_bounds[i]) << ");\n";
+                    }
+
                     writer << "mkldnn::memory::primitive_desc input_pd = "
                               "mkldnn::memory::primitive_desc(*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], "
@@ -791,15 +807,13 @@ namespace ngraph
                            << desc_index + 1 << "], "
                                                 "cg_ctx->global_cpu_engine);\n";
 
-                    writer << "auto view_pd = mkldnn::view::primitive_desc(input_pd, ";
-                    WRITE_MKLDNN_DIMS(result_shape);
-                    writer << ", ";
-                    WRITE_MKLDNN_DIMS(lower_bounds);
-                    writer << ").dst_primitive_desc();\n";
+                    writer
+                        << "auto view_pd = mkldnn::view::primitive_desc(input_pd, dims1, dims2);\n";
 
                     writer << "\n// create reorder primitive descriptor\n";
                     writer << "mkldnn::reorder::primitive_desc reorder_pd = "
-                              "mkldnn::reorder::primitive_desc(view_pd, result_pd);\n";
+                              "mkldnn::reorder::primitive_desc(view_pd.dst_primitive_desc(), "
+                              "result_pd);\n";
 
                     writer << "\n// build reorder primitives\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
@@ -2321,33 +2335,83 @@ namespace ngraph
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Dequantize)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Quantize)
                 {
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    return mkldnn_emitter.build_dequantization(node, input_data_desc, result_desc);
+
+                    // Quantize needs 3 primitives: input, result, and reorder.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_output_scales(mask, dyn_scales);\n";
+                    writer
+                        << "attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);\n";
+
+                    writer << "\n// build reorder primitive\n";
+                    writer << "auto reorder_pd = "
+                              "mkldnn::reorder::primitive_desc({"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], cg_ctx->global_cpu_engine}, "
+                                            "{*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], cg_ctx->global_cpu_engine}, attr);\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::reorder(reorder_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Quantize)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Dequantize)
                 {
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto quantize = static_cast<const ngraph::op::Quantize*>(node);
-                    auto scale_const_op =
-                        std::dynamic_pointer_cast<Constant>(quantize->get_argument(1));
 
-                    if (scale_const_op == nullptr)
-                    {
-                        throw ngraph_error("Quantize scale must be a constant");
-                    }
+                    // Dequantize needs 3 primitives: input, result, and reorder.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
 
-                    auto scale = scale_const_op->get_vector<float>();
-                    std::vector<float> scales;
-                    scales.push_back(1.0 / scale[0]);
+                    CodeWriter writer;
 
-                    return mkldnn_emitter.build_quantize_reorder(
-                        input_data_desc, result_desc, scales);
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_output_scales(mask, dyn_scales);\n";
+                    writer
+                        << "attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);\n";
+
+                    writer << "\n// build reorder primitive\n";
+                    writer << "auto reorder_pd = "
+                              "mkldnn::reorder::primitive_desc({"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], cg_ctx->global_cpu_engine}, "
+                                            "{*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], cg_ctx->global_cpu_engine}, attr);\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::reorder(reorder_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
@@ -2365,11 +2429,6 @@ namespace ngraph
 using namespace ngraph::runtime::cpu::pass;
 
 #define TI(x) std::type_index(typeid(x))
-
-static const PrimitiveBuildOpMap prim_build_dispatcher{
-    {TI(Quantize), &MKLDNNPrimitiveBuildPass::build_primitive<Quantize>},
-    {TI(Dequantize), &MKLDNNPrimitiveBuildPass::build_primitive<Dequantize>},
-};
 
 static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_dispatcher{
     {TI(Add), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Add>},
@@ -2447,94 +2506,15 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<AvgPoolBackprop>},
     {TI(MaxPoolBackprop),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPoolBackprop>},
+    {TI(Quantize), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Quantize>},
+    {TI(Dequantize), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Dequantize>},
 };
-
-// Check if the node builds primitives at first iteration.
-// Needed during transition when there are two maps.
-static bool in_new_map(const std::shared_ptr<Node>& node)
-{
-    if (std::dynamic_pointer_cast<ngraph::op::Add>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BoundedRelu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Concat>(node) ||
-        std::dynamic_pointer_cast<ngraph::runtime::cpu::op::ConvertLayout>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BatchNormInference>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BatchNormTraining>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BatchNormInferenceRelu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BatchNormTrainingRelu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BatchNormTrainingBackprop>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::LeakyRelu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::LRN>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Lstm>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Rnn>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Convolution>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionRelu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionBias>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionBiasAdd>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionAdd>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolution>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionRelu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBias>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasAdd>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionBackpropData>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionBackpropFilters>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionBiasBackpropFiltersBias>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::DeconvolutionBias>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConcat>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::MaxPoolWithIndices>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::MaxPoolWithIndicesBackprop>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Relu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ReluBackprop>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Sigmoid>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::SigmoidBackprop>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Slice>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Softmax>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::MaxPool>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedMaxPool>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::AvgPool>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedAvgPool>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::MaxPoolBackprop>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::AvgPoolBackprop>(node))
-    {
-        return true;
-    }
-    return false;
-}
 
 bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
 {
-    for (const auto& shp_node : nodes)
-    {
-        if (in_new_map(shp_node))
-        {
-            continue;
-        }
-
-        Node* node = shp_node.get();
-
-        if (mkldnn_utils::use_mkldnn_kernel(node))
-        {
-            auto handler = prim_build_dispatcher.find(TI(*node));
-            NGRAPH_CHECK(handler != prim_build_dispatcher.end(),
-                         "Unsupported node '",
-                         node->description(),
-                         "' in MKLDNNPrimitiveBuildPass");
-
-            size_t primitive_idx = handler->second(m_mkldnn_emitter, node);
-            m_node_primitive_idx_map[node] = primitive_idx;
-        }
-    }
-
     std::ofstream desc_file(m_desc_filename, std::ios::out | std::ios::binary);
     for (const auto& shp_node : nodes)
     {
-        if (!in_new_map(shp_node))
-        {
-            continue;
-        }
-
         Node* node = shp_node.get();
 
         if (mkldnn_utils::use_mkldnn_kernel(node))

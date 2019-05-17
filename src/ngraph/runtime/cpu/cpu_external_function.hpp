@@ -114,17 +114,6 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
-                /// Returns the index of the mkldnn primitive previously created for \p node.
-                size_t get_primitive_index(const Node* node) const
-                {
-                    auto it = m_node_primitive_idx_map.find(node);
-                    NGRAPH_CHECK(it != m_node_primitive_idx_map.end(),
-                                 "Primitive not found for node ",
-                                 node->description());
-
-                    return it->second;
-                }
-
                 // Return the tuple including the string to create mkldnn primitive, the deps and the index in CODEGEN
                 const std::tuple<std::string, std::vector<size_t>, size_t>&
                     get_primitive_build_tuple(const Node* node) const
@@ -328,8 +317,6 @@ namespace ngraph
                 std::unordered_map<std::string, size_t> subgraph_param_indices;
 #endif
 
-                /// Map each node with mkldnn implementation to its mkldnn primitive index.
-                std::unordered_map<const Node*, size_t> m_node_primitive_idx_map;
                 /// Map each node with mkldnn implementation to its mkldnn primitive creating string, deps, and mkldnn primitive index.
                 std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>
                     m_node_primitive_string_deps_index_map;

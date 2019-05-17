@@ -1547,12 +1547,24 @@ namespace ngraph
                 auto index_type_name = embed->get_argument(0)->get_element_type().c_type_string();
                 auto type_name = embed->get_element_type().c_type_string();
                 auto element_count = shape_size(embed->get_argument(0)->get_shape());
+
+                // FIXME
+                // clang generates 16 bytes aligned store with unaligned address,
+                // which results in segmentation fault.
+                // Workaround for now: Use push_back to avoid generating such store.
+                auto arg1_shape = args[1].get_shape();
+                writer << "ngraph::Shape shape;\n";
+                for (auto i = 0; i < arg1_shape.size(); i++)
+                {
+                    writer << "shape.push_back(" << std::to_string(arg1_shape[i]) << ");\n";
+                }
+
                 writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";
                 writer << "            " << args[0].get_name() << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
                 writer << "            " << out[0].get_name() << ",\n";
                 writer << "            " << element_count << ",\n";
-                writer << "            {" << join(args[1].get_shape()) << "});\n";
+                writer << "             shape);\n";
                 writer.block_end();
             }
 
@@ -3771,16 +3783,38 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t dequantize_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(dequantize_index);
+                    auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
+                    auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
+                        dequantize->get_argument(1));
+                    auto scales_size = shape_size(dequantize->get_input_shape(1));
+                    const element::Type& et = node->get_input_element_type(1);
+                    std::string type = et.c_type_string();
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(dequantize_index) << ");\n";
+                    writer << "if (ctx->first_iteration)\n";
+                    writer.block_begin();
+                    writer << "std::vector<float> dyn_scales;\n";
+                    writer << "dyn_scales.assign(" << args[1].get_name() << ", "
+                           << args[1].get_name() << " + " << std::to_string(scales_size) << ");\n";
+                    writer << "// quantize across first dim (mask=2^0) if dyn_scales is a "
+                              "vector \n";
+                    writer << "const int mask = " << std::to_string(scales_size)
+                           << " == 1 ? 0 : 1;\n";
+
+                    // get the string, deps, and index from the map
+                    writer << get<0>(external_function->get_primitive_build_tuple(node));
+                    writer.block_end();
+
+                    size_t dequantize_index =
+                        get<2>(external_function->get_primitive_build_tuple(node));
+                    std::vector<std::size_t> deps =
+                        get<1>(external_function->get_primitive_build_tuple(node));
+
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(dequantize_index)
+                           << ");\n";
                 }
                 else
                 {
@@ -3802,16 +3836,44 @@ namespace ngraph
                 auto quantize = static_cast<const ngraph::op::Quantize*>(node);
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    size_t quantize_index = external_function->get_primitive_index(node);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(quantize_index);
+                    auto quantize = static_cast<const ngraph::op::Quantize*>(node);
+                    auto scale_const_op =
+                        std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));
+                    auto scales_size = shape_size(quantize->get_input_shape(1));
+                    const element::Type& et = node->get_input_element_type(1);
+                    std::string type = et.c_type_string();
 
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[0])
-                           << ", " << args[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::set_memory_ptr(ctx, " << to_string(deps[1])
-                           << ", " << out[0].get_name() << ");\n";
-                    writer << "cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, "
-                           << to_string(quantize_index) << ");\n";
+                    writer << "if (ctx->first_iteration)\n";
+                    writer.block_begin();
+                    writer << "std::vector<float> dyn_scales;\n";
+                    writer << "dyn_scales.assign(" << args[1].get_name() << ", "
+                           << args[1].get_name() << " + " << std::to_string(scales_size) << ");\n";
+                    writer << "for (size_t i = 0; i < " << std::to_string(scales_size)
+                           << "; i++)\n";
+                    writer.block_begin();
+                    writer << "dyn_scales[i] = 1.0 / dyn_scales[i];\n";
+                    writer.block_end();
+
+                    writer << "// quantize across first dim (mask=2^0) if dyn_scales is a "
+                              "vector \n";
+                    writer << "const int mask = " << std::to_string(scales_size)
+                           << " == 1 ? 0 : 1;\n";
+
+                    // get the string, deps, and index from the map
+                    writer << get<0>(external_function->get_primitive_build_tuple(node));
+                    writer.block_end();
+
+                    size_t quantize_index =
+                        get<2>(external_function->get_primitive_build_tuple(node));
+                    std::vector<std::size_t> deps =
+                        get<1>(external_function->get_primitive_build_tuple(node));
+
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
+                           << args[0].get_name() << ");\n";
+                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
+                           << out[0].get_name() << ");\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(quantize_index)
+                           << ");\n";
                 }
                 else
                 {
