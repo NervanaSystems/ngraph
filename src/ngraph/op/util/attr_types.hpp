@@ -70,6 +70,11 @@ namespace ngraph
                 , axis(0)
             {
             }
+            AutoBroadcastSpec(AutoBroadcastType t, size_t s)
+                : type(t)
+                , axis(s)
+            {
+            }
 
             AutoBroadcastType type;
             size_t axis;
