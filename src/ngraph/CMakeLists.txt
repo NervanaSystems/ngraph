@@ -310,6 +310,8 @@ set (SRC
     op/fused/scale_shift.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
+    op/fused/squared_difference.cpp
+    op/fused/squared_difference.hpp
     op/fused/squeeze.cpp
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
