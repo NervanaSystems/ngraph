@@ -53,9 +53,11 @@ vector<string> op::Constant::get_value_strings() const
 {
     vector<string> rc;
 
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
     switch (get_element_type().get_type_enum())
     {
     case element::Type_t::boolean:
@@ -139,7 +141,9 @@ vector<string> op::Constant::get_value_strings() const
     case element::Type_t::undefined: throw runtime_error("unsupported type");
     case element::Type_t::dynamic: throw runtime_error("unsupported type");
     }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
 
     return rc;
 }
