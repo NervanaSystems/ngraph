@@ -773,6 +773,21 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_2d_with_bias)
     test_case.run();
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, unsqueeze)
+{
+    auto data_node = make_shared<op::Parameter>(element::f32, Shape{4, 2});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{1, 2});
+    auto squeeze = make_shared<op::Unsqueeze>(data_node, axes_node);
+
+    auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{data_node});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    auto data = vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+    test_case.add_input(data);
+    test_case.add_expected_output<float>(Shape{4, 1, 1, 2}, data);
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, scale_shift_no_broadcast)
 {
     auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
@@ -852,4 +867,36 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze_dynamic)
     const auto data_param = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     const auto axes_param = make_shared<op::Parameter>(element::i64, Shape{2});
     EXPECT_THROW(make_shared<op::Squeeze>(data_param, axes_param), CheckFailure);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, squared_difference)
+{
+    const auto x1 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+    const auto x2 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+
+    auto tested_op = make_shared<op::SquaredDifference>(x1, x2);
+    auto function = make_shared<Function>(tested_op, ParameterVector{x1, x2});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<double>({1.0, 16.0, 0.0, 1.234567});
+    test_case.add_input<double>({1.0, 8.0, -3.0, 3.456789});
+
+    test_case.add_expected_output<double>(Shape{2, 2}, {0.0, 64.0, 9.0, 4.938270617284});
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, squared_difference_broadcast)
+{
+    const auto x1 = make_shared<op::Parameter>(element::i32, Shape{2, 2});
+    const auto x2 = make_shared<op::Parameter>(element::i32, Shape{});
+
+    auto tested_op = make_shared<op::SquaredDifference>(x1, x2);
+    auto function = make_shared<Function>(tested_op, ParameterVector{x1, x2});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<int32_t>({1, 1, 1, 1});
+    test_case.add_input<int32_t>({1});
+
+    test_case.add_expected_output<int32_t>(Shape{2, 2}, {0, 0, 0, 0});
+    test_case.run();
 }

@@ -16,28 +16,28 @@
 
 #pragma once
 
-#include <cstddef>
 #include <memory>
-#include <string>
 
-#include "ngraph/type/element_type.hpp"
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
-    class DistributedInterface
+    namespace op
     {
-    public:
-        virtual ~DistributedInterface() {}
-        virtual const std::string& get_name() const = 0;
-        virtual int get_size() = 0;
-        virtual int get_rank() = 0;
-        virtual void log_print(const std::string& timestamp, const std::vector<char>& buf) = 0;
+        class Unsqueeze : public ngraph::op::util::FusedOp
+        {
+        public:
+            Unsqueeze(const std::shared_ptr<ngraph::Node>& data,
+                      const std::shared_ptr<ngraph::Node>& axes);
 
-        virtual void
-            all_reduce(void* in, void* out, element::Type_t element_type, size_t count) = 0;
-        virtual void broadcast(void* in, element::Type_t element_type, size_t count) = 0;
-    };
+            virtual void pre_validate_and_infer_types() override;
+            virtual NodeVector decompose_op() const override;
 
-    void set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface);
-    DistributedInterface* get_distributed_interface();
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
+    }
 }
