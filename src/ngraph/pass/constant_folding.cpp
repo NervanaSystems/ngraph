@@ -929,11 +929,11 @@ void pass::ConstantFolding::construct_constant_convert()
         auto pattern_map = m.get_pattern_map();
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto convert_match = m.get_match_root();
-        auto convert_op = static_pointer_cast<op::Convert>(convert_match);
+        auto convert_match = static_pointer_cast<op::Convert>(m.get_match_root());
 
-        replace_node(m.get_match_root(),
-                     fold_constant_convert(constant_match, convert_op->get_output_element_type(0)));
+        replace_node(
+            m.get_match_root(),
+            fold_constant_convert(constant_match, convert_match->get_output_element_type(0)));
         return true;
     };
 
