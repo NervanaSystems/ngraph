@@ -559,10 +559,6 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_link_libraries(ngraph PRIVATE onnx_import)
 endif()
 
-if (NGRAPH_MANYLINUX_ENABLE)
-    target_compile_definitions(ngraph PRIVATE "NGRAPH_MANYLINUX_ENABLE")
-endif()
-
 # Build subdirectories for all build types on Windows
 if(WIN32)
     foreach(BUILD_TYPE Release Debug RelWithDebInfo MinSizeRel)

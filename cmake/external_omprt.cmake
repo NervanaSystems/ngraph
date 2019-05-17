@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(NOT NGRAPH_MANYLINUX_ENABLE)
+if(NOT NGRAPH_USE_LLVM_OMPLIB)
     return()
 endif()
 

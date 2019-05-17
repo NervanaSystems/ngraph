@@ -67,14 +67,14 @@ if(WIN32)
     set(LLVM_DEPENDS ext_clang)
 else()
     set(PASS_LLVM_OPENMP_DIR -DLLVM_EXTERNAL_OPENMP_SOURCE_DIR=${OPENMP_SOURCE_DIR})
-    if(NGRAPH_MANYLINUX_ENABLE)
+    if(NGRAPH_USE_LLVM_OMPLIB)
         set(LLVM_DEPENDS ext_clang ext_openmp ext_hwloc)
     else()
         set(LLVM_DEPENDS ext_clang ext_openmp)
     endif()
 endif()
 
-if(NGRAPH_MANYLINUX_ENABLE)
+if(NGRAPH_USE_LLVM_OMPLIB)
     ExternalProject_Get_Property(ext_hwloc INSTALL_DIR)
     set(LIBOMP_MANYLINUX_ARGS
         -DLIBOMP_LIB_NAME=${CMAKE_SHARED_LIBRARY_PREFIX}iomp5
@@ -124,7 +124,7 @@ ExternalProject_Add(
 
 ExternalProject_Get_Property(ext_llvm INSTALL_DIR)
 
-if(NGRAPH_MANYLINUX_ENABLE)
+if(NGRAPH_USE_LLVM_OMPLIB)
     ExternalProject_Add_Step(
         ext_llvm
         CopyOMPRT
