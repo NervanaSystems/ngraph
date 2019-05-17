@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cstdio>
 #include <string>
 
 #include "ngraph/distributed.hpp"
@@ -30,6 +31,10 @@ namespace ngraph
             const std::string& get_name() const override { return m_name; }
             int get_size() override { return 0; }
             int get_rank() override { return 0; }
+            void log_print(const std::string& timestamp, const std::vector<char>& buf) override
+            {
+                std::printf("%s: %s\n", timestamp.c_str(), buf.data());
+            }
             void
                 all_reduce(void* in, void* out, element::Type_t element_type, size_t count) override
             {

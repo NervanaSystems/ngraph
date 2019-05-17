@@ -90,6 +90,7 @@
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -2079,6 +2080,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
+        case OP_TYPEID::Unsqueeze:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
@@ -2171,7 +2173,8 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::PRelu:
     case OP_TYPEID::ScaleShift:
     case OP_TYPEID::SpaceToDepth:
-    case OP_TYPEID::Squeeze: { return false;
+    case OP_TYPEID::Squeeze:
+    case OP_TYPEID::Unsqueeze: { return false;
     }
     default: { return true;
     }
