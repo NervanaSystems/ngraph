@@ -43,18 +43,59 @@ TEST(async, execute)
 
     auto handle = backend->compile(f);
     auto future = handle->begin_execute({r}, {a, b});
+    ASSERT_TRUE(future.valid());
     bool rc = future.get();
 
     for (float x : result_data)
     {
-        ASSERT_EQ(x, 2);
+        ASSERT_EQ(x, 4);
+    }
+}
+
+TEST(async, tensor_write)
+{
+    Shape shape{100000};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("INTERPRETER");
+    auto handle = backend->compile(f);
+
+    vector<float> data(shape_size(shape), 2);
+    vector<float> result_data(shape_size(shape), 0);
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> r = backend->create_tensor(element::f32, shape, result_data.data());
+
+    auto future_a = a->begin_write(data.data(), data.size() * sizeof(float));
+    auto future_b = b->begin_write(data.data(), data.size() * sizeof(float));
+    ASSERT_TRUE(future_a.valid());
+    ASSERT_TRUE(future_b.valid());
+
+    chrono::milliseconds ten_ms(10);
+    EXPECT_EQ(future_a.wait_for(ten_ms), future_status::timeout);
+    EXPECT_EQ(future_b.wait_for(ten_ms), future_status::timeout);
+
+    this_thread::sleep_for(chrono::milliseconds(500));
+
+    EXPECT_EQ(future_a.wait_for(ten_ms), future_status::timeout);
+    EXPECT_EQ(future_b.wait_for(ten_ms), future_status::timeout);
+
+    auto future = handle->begin_execute({r}, {a, b});
+    bool rc = future.get();
+
+    EXPECT_EQ(future_a.wait_for(ten_ms), future_status::ready);
+    EXPECT_EQ(future_b.wait_for(ten_ms), future_status::ready);
+
+    for (float x : result_data)
+    {
+        ASSERT_EQ(x, 4);
     }
 }
 
 TEST(async, tensor_read)
-{
-}
-
-TEST(async, tensor_write)
 {
 }

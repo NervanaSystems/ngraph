@@ -38,6 +38,8 @@ namespace ngraph
     {
         class Tensor
         {
+            friend class Executable;
+
         protected:
             Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
                 : m_descriptor(descriptor)
