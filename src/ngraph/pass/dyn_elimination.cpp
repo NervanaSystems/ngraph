@@ -72,5 +72,5 @@ void pass::DynElimination::construct_transpose()
     };
 
     auto transpose_matcher = make_shared<pattern::Matcher>(transpose, "DynElimination.Transpose");
-    add_matcher(transpose_matcher, transpose_callback, {});
+    add_matcher(transpose_matcher, transpose_callback, {PassProperty::CHANGE_DYNAMIC_STATE});
 }
