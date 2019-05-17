@@ -310,6 +310,8 @@ set (SRC
     op/fused/scale_shift.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
+    op/fused/squared_difference.cpp
+    op/fused/squared_difference.hpp
     op/fused/squeeze.cpp
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
@@ -388,8 +390,6 @@ set (SRC
     pass/serialize.hpp
     pass/shape_relevance.cpp
     pass/shape_relevance.hpp
-    pass/shape_specialization.cpp
-    pass/shape_specialization.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
     pass/visualize_tree.cpp

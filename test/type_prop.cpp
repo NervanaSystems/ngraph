@@ -14525,3 +14525,24 @@ TEST(type_prop, scale_shift)
     EXPECT_EQ(scale_shift_func->get_element_type(), element::f64);
     EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
 }
+
+TEST(type_prop, squared_difference)
+{
+    const auto x1 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+    const auto x2 = make_shared<op::Parameter>(element::f64, Shape{3, 2});
+    const auto x3 = make_shared<op::Parameter>(element::f64, Shape{1, 2});
+
+    try
+    {
+        const auto squared_diff = make_shared<op::SquaredDifference>(x1, x2);
+        FAIL() << "SquaredDifference node was created with incorrect data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("axes are incompatible"));
+    }
+
+    const auto clamp = make_shared<op::SquaredDifference>(x1, x3);
+    EXPECT_EQ(clamp->get_element_type(), element::f64);
+    EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
+}
