@@ -172,6 +172,57 @@ namespace ngraph
                 index = get<2>(external_function->get_primitive_build_tuple(node));
             }
 
+            static void emit_build_primitives(CPU_ExternalFunction* external_function,
+                                              const ngraph::Node* node,
+                                              CodeWriter& writer,
+                                              size_t& index,
+                                              std::vector<std::size_t>& deps,
+                                              const std::vector<TensorViewWrapper>& args,
+                                              size_t scale_index,
+                                              size_t sum_scale_index = 0,
+                                              bool is_quantize_op = false)
+            {
+                writer << "if (ctx->first_iteration)\n";
+                writer.block_begin();
+
+                auto scales_size = shape_size(node->get_input_shape(scale_index));
+                writer << "std::vector<float> dyn_scales;\n";
+                writer << "dyn_scales.assign(" << args[scale_index].get_name() << ", "
+                       << args[scale_index].get_name() << " + " << std::to_string(scales_size)
+                       << ");\n";
+
+                // for Quantize
+                if (is_quantize_op)
+                {
+                    writer << "for (size_t i = 0; i < " << std::to_string(scales_size)
+                           << "; i++)\n";
+                    writer.block_begin();
+                    writer << "dyn_scales[i] = 1.0 / dyn_scales[i];\n";
+                    writer.block_end();
+                }
+
+                // QuantizedConvolutionBiasAdd and QuantizedConvolutionBiasSignedAdd
+                if (sum_scale_index != 0)
+                {
+                    auto sum_scales_size = shape_size(node->get_input_shape(sum_scale_index));
+                    writer << "std::vector<float> dyn_post_op_scales;\n";
+                    writer << "dyn_post_op_scales.assign(" << args[sum_scale_index].get_name()
+                           << ", " << args[sum_scale_index].get_name() << " + "
+                           << std::to_string(scales_size) << ");\n";
+                }
+
+                writer << "// quantize across first dim (mask=2^0) if dyn_scales is a "
+                          "vector \n";
+                writer << "const int mask = " << std::to_string(scales_size) << " == 1 ? 0 : 1;\n";
+
+                // get the string, deps, and index from the map
+                writer << get<0>(external_function->get_primitive_build_tuple(node));
+                writer.block_end();
+
+                deps = get<1>(external_function->get_primitive_build_tuple(node));
+                index = get<2>(external_function->get_primitive_build_tuple(node));
+            }
+
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Add)
             {
@@ -2016,7 +2067,8 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, args, 2 /*scale index*/);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2039,7 +2091,8 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, args, 2 /*scale index*/);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2051,7 +2104,36 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("unsupported parameters for QuantizedConvolution");
+                    auto convolution = static_cast<const ngraph::op::QuantizedConvolution*>(node);
+
+                    auto arg0_shape = args[0].get_shape();
+                    auto arg1_shape = args[1].get_shape();
+                    auto result_shape = out[0].get_shape();
+
+                    auto scales_size = shape_size(node->get_input_shape(2));
+                    writer << "std::vector<float> dyn_scales;\n";
+                    writer << "dyn_scales.assign(" << args[2].get_name() << ", "
+                           << args[2].get_name() << " + " << std::to_string(scales_size) << ");\n";
+
+                    writer << "reference::convolution<" << out[0].get_type() << ">("
+                           << args[0].get_name() << ",\n";
+                    writer << "                         " << args[1].get_name() << ",\n";
+                    writer << "                         " << out[0].get_name() << ",\n";
+                    writer << "                         {" << join(arg0_shape) << "},\n";
+                    writer << "                         {" << join(arg1_shape) << "},\n";
+                    writer << "                         {" << join(result_shape) << "},\n";
+                    writer << "                         {"
+                           << join(convolution->get_window_movement_strides()) << "},\n";
+                    writer << "                         {"
+                           << join(convolution->get_window_dilation_strides()) << "},\n";
+                    writer << "                         {" << join(convolution->get_padding_below())
+                           << "},\n";
+                    writer << "                         {" << join(convolution->get_padding_above())
+                           << "},\n";
+                    writer << "                         {"
+                           << join(convolution->get_data_dilation_strides()) << "}, \n";
+                    writer << "                         dyn_scales[0]);\n";
+                    //throw ngraph_error("unsupported parameters for QuantizedConvolution");
                 }
             }
 
@@ -2281,7 +2363,8 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    emit_build_primitives(
+                        external_function, node, writer, conv_index, deps, args, 3 /*scale index*/);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2307,7 +2390,14 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    emit_build_primitives(external_function,
+                                          node,
+                                          writer,
+                                          conv_index,
+                                          deps,
+                                          args,
+                                          4 /*scale index*/,
+                                          5 /*sum scale index*/);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
                     writer.block_begin();
@@ -2338,7 +2428,14 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, conv_index, deps);
+                    emit_build_primitives(external_function,
+                                          node,
+                                          writer,
+                                          conv_index,
+                                          deps,
+                                          args,
+                                          4 /*scale index*/,
+                                          5 /*sum scale index*/);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
                     writer.block_begin();
@@ -2367,26 +2464,10 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto qip = static_cast<const ngraph::op::QuantizedDotBias*>(node);
-                    auto scales_size = shape_size(qip->get_input_shape(3));
-
-                    writer << "if (ctx->first_iteration)\n";
-                    writer.block_begin();
-                    writer << "std::vector<float> dyn_scales;\n";
-                    writer << "dyn_scales.assign(" << args[3].get_name() << ", "
-                           << args[3].get_name() << " + " << std::to_string(scales_size) << ");\n";
-                    writer << "// quantize across first dim (mask=2^0) if dyn_scales is a "
-                              "vector \n";
-                    writer << "const int mask = " << std::to_string(scales_size)
-                           << " == 1 ? 0 : 1;\n";
-
-                    // get the string, deps, and index from the map
-                    writer << get<0>(external_function->get_primitive_build_tuple(node));
-                    writer.block_end();
-
-                    size_t qip_index = get<2>(external_function->get_primitive_build_tuple(node));
-                    std::vector<std::size_t> deps =
-                        get<1>(external_function->get_primitive_build_tuple(node));
+                    size_t qip_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(
+                        external_function, node, writer, qip_index, deps, args, 3 /*scale index*/);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2417,26 +2498,10 @@ namespace ngraph
                             "Unsupported data types for QuantizedDot MKLDNN kernel.");
                     }
 
-                    auto qip = static_cast<const ngraph::op::QuantizedDot*>(node);
-                    auto scales_size = shape_size(qip->get_input_shape(2));
-
-                    writer << "if (ctx->first_iteration)\n";
-                    writer.block_begin();
-                    writer << "std::vector<float> dyn_scales;\n";
-                    writer << "dyn_scales.assign(" << args[2].get_name() << ", "
-                           << args[2].get_name() << " + " << std::to_string(scales_size) << ");\n";
-                    writer << "// quantize across first dim (mask=2^0) if dyn_scales is a "
-                              "vector \n";
-                    writer << "const int mask = " << std::to_string(scales_size)
-                           << " == 1 ? 0 : 1;\n";
-
-                    // get the string, deps, and index from the map
-                    writer << get<0>(external_function->get_primitive_build_tuple(node));
-                    writer.block_end();
-
-                    size_t qip_index = get<2>(external_function->get_primitive_build_tuple(node));
-                    std::vector<std::size_t> deps =
-                        get<1>(external_function->get_primitive_build_tuple(node));
+                    size_t qip_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(
+                        external_function, node, writer, qip_index, deps, args, 2 /*scale index*/);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3813,27 +3878,15 @@ namespace ngraph
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
-                    auto scales_size = shape_size(dequantize->get_input_shape(1));
-
-                    writer << "if (ctx->first_iteration)\n";
-                    writer.block_begin();
-                    writer << "std::vector<float> dyn_scales;\n";
-                    writer << "dyn_scales.assign(" << args[1].get_name() << ", "
-                           << args[1].get_name() << " + " << std::to_string(scales_size) << ");\n";
-                    writer << "// quantize across first dim (mask=2^0) if dyn_scales is a "
-                              "vector \n";
-                    writer << "const int mask = " << std::to_string(scales_size)
-                           << " == 1 ? 0 : 1;\n";
-
-                    // get the string, deps, and index from the map
-                    writer << get<0>(external_function->get_primitive_build_tuple(node));
-                    writer.block_end();
-
-                    size_t dequantize_index =
-                        get<2>(external_function->get_primitive_build_tuple(node));
-                    std::vector<std::size_t> deps =
-                        get<1>(external_function->get_primitive_build_tuple(node));
+                    size_t dequantize_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function,
+                                          node,
+                                          writer,
+                                          dequantize_index,
+                                          deps,
+                                          args,
+                                          1 /*scale index*/);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3862,32 +3915,17 @@ namespace ngraph
                 auto quantize = static_cast<const ngraph::op::Quantize*>(node);
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    auto scales_size = shape_size(quantize->get_input_shape(1));
-
-                    writer << "if (ctx->first_iteration)\n";
-                    writer.block_begin();
-                    writer << "std::vector<float> dyn_scales;\n";
-                    writer << "dyn_scales.assign(" << args[1].get_name() << ", "
-                           << args[1].get_name() << " + " << std::to_string(scales_size) << ");\n";
-                    writer << "for (size_t i = 0; i < " << std::to_string(scales_size)
-                           << "; i++)\n";
-                    writer.block_begin();
-                    writer << "dyn_scales[i] = 1.0 / dyn_scales[i];\n";
-                    writer.block_end();
-
-                    writer << "// quantize across first dim (mask=2^0) if dyn_scales is a "
-                              "vector \n";
-                    writer << "const int mask = " << std::to_string(scales_size)
-                           << " == 1 ? 0 : 1;\n";
-
-                    // get the string, deps, and index from the map
-                    writer << get<0>(external_function->get_primitive_build_tuple(node));
-                    writer.block_end();
-
-                    size_t quantize_index =
-                        get<2>(external_function->get_primitive_build_tuple(node));
-                    std::vector<std::size_t> deps =
-                        get<1>(external_function->get_primitive_build_tuple(node));
+                    size_t quantize_index;
+                    std::vector<std::size_t> deps;
+                    emit_build_primitives(external_function,
+                                          node,
+                                          writer,
+                                          quantize_index,
+                                          deps,
+                                          args,
+                                          1 /*scale index*/,
+                                          0 /*no sum scale_index*/,
+                                          true /*Quantize op*/);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
