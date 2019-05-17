@@ -20,6 +20,7 @@
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/reference/convolution.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/shape.hpp"
 
@@ -167,22 +168,28 @@ namespace ngraph
                         input0, input1, output, input0_shape, input1_shape, output_shape, arena);
                 }
 
-                template <typename ElementType>
+                template <typename INPUT0,
+                          typename INPUT1,
+                          typename OUTPUT,
+                          typename ACCUMULATION =
+                              typename ngraph::runtime::reference::widen<OUTPUT>::type>
                 void dot_ref(void* arg0,
                              void* arg1,
                              void* out,
                              const Shape& arg0_shape,
                              const Shape& arg1_shape,
                              const Shape& out_shape,
-                             size_t reduction_axes_count)
+                             size_t reduction_axes_count,
+                             const float requant_scale)
                 {
-                    reference::dot(static_cast<const ElementType*>(arg0),
-                                   static_cast<const ElementType*>(arg1),
-                                   static_cast<ElementType*>(out),
+                    reference::dot(static_cast<const INPUT0*>(arg0),
+                                   static_cast<const INPUT1*>(arg1),
+                                   static_cast<OUTPUT*>(out),
                                    arg0_shape,
                                    arg1_shape,
                                    out_shape,
-                                   reduction_axes_count);
+                                   reduction_axes_count,
+                                   requant_scale);
                 }
             }
         }
