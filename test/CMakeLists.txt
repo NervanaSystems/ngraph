@@ -64,7 +64,7 @@ set(SRC
     reshape_elimination.cpp
     reshape_sinking.cpp
     shape.cpp
-    specialize_shapes.cpp
+    specialize_function.cpp
     tensor.cpp
     type_prop.cpp
     type_prop_layers.cpp

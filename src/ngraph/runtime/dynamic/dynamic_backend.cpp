@@ -20,7 +20,7 @@
 #include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
-#include "ngraph/specialize_shapes.hpp"
+#include "ngraph/specialize_function.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -142,7 +142,7 @@ bool runtime::dynamic::DynamicExecutable::call(
             i++;
         }
 
-        clone = specialize_shapes(
+        clone = specialize_function(
             m_wrapped_function, arg_element_types, arg_shapes, arg_value_base_pointers);
     }
 

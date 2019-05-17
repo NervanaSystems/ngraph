@@ -14,16 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/specialize_shapes.hpp"
+#include "ngraph/specialize_function.hpp"
 #include "ngraph/op/constant.hpp"
 
 using namespace ngraph;
 
 std::shared_ptr<Function>
-    ngraph::specialize_shapes(std::shared_ptr<Function> f,
-                              const std::vector<element::Type>& parameter_element_types,
-                              const std::vector<PartialShape>& parameter_shapes,
-                              const std::vector<void*>& parameter_values)
+    ngraph::specialize_function(std::shared_ptr<Function> f,
+                                const std::vector<element::Type>& parameter_element_types,
+                                const std::vector<PartialShape>& parameter_shapes,
+                                const std::vector<void*>& parameter_values)
 {
     NGRAPH_CHECK(f->get_parameters().size() == parameter_shapes.size());
     NGRAPH_CHECK(f->get_parameters().size() == parameter_element_types.size());
