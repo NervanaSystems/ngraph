@@ -82,7 +82,6 @@ if(NGRAPH_USE_LLVM_OMPLIB)
         -DLIBOMP_USE_HWLOC=ON
         -DLIBOMP_HWLOC_INSTALL_DIR=${INSTALL_DIR}
     )
-    set(NGRAPH_USE_LLVM_OMPLIB TRUE)
 endif()
 
 ExternalProject_Add(
