@@ -16,6 +16,7 @@
 #include <numeric>
 
 #include "ngraph/op/fused/split.hpp"
+#include "ngraph/op/util/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -54,7 +55,6 @@ void op::Split::pre_validate_and_infer_types()
 
     if (m_split_evenly)
     {
-
         NODE_VALIDATION_CHECK(
                 this,
                 dimension_at_axis % m_num_split == 0,
@@ -78,14 +78,14 @@ void op::Split::pre_validate_and_infer_types()
 
 NodeVector op::Split::decompose_op() const
 {
-    return {}; //TODO
+    return op::util::split(get_argument(0), m_splits, m_axis);
 }
 
 shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 1)
     {
-        throw ngraph_error("Expected 1 element in new_args for the ShuffleChannels op but got " + std::to_string(new_args.size()));
+        throw ngraph_error("Expected 1 element in new_args for the Split op but got " + std::to_string(new_args.size()));
     }
 
     return make_shared<Split>(new_args.at(0), m_axis, m_num_split);
