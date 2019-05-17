@@ -2484,6 +2484,42 @@ TEST(type_prop, or_bad_arguments)
         });
 }
 
+template <typename T>
+void test_binary_eltwise_numpy(const element::Type& et, const op::AutoBroadcastSpec& autob)
+{
+    auto param1 = make_shared<op::Parameter>(et, Shape{1, 3, 6});
+    auto param2 = make_shared<op::Parameter>(et, Shape{3, 1});
+    auto param3 = make_shared<op::Parameter>(et, Shape{2, 3, 6});
+    auto param4 = make_shared<op::Parameter>(et, Shape{6});
+    EXPECT_EQ(make_shared<T>(param1, param2, autob)->get_shape(), (Shape{1, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param1, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param4, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+
+    auto pp1 = make_shared<op::Parameter>(et, PartialShape{1, Dimension::dynamic(), 6});
+    auto pp2 = make_shared<op::Parameter>(et, PartialShape{3, 1});
+    EXPECT_EQ(make_shared<T>(pp1, pp2, autob)->get_shape(), (Shape{1, 3, 6}));
+}
+
+TEST(type_prop, eltwise_auto_bcast)
+{
+    test_binary_eltwise_numpy<op::Add>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::And>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Divide>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::GreaterEq>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Less>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::LessEq>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Divide>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Maximum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Minimum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Multiply>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::NotEqual>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Or>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Power>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Subtract>(element::f32, op::AutoBroadcastType::NUMPY);
+}
+
 TEST(type_prop, embedding_lookup_non_matrix_weights)
 {
     auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
@@ -14526,21 +14562,23 @@ TEST(type_prop, scale_shift)
     EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
 }
 
-TEST(type_prop, add_bcast)
+TEST(type_prop, squared_difference)
 {
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6});
-    auto param2 = make_shared<op::Parameter>(element::f32, Shape{3, 1});
-    auto param3 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 6});
-    auto param4 = make_shared<op::Parameter>(element::f32, Shape{6});
-    EXPECT_EQ(make_shared<op::Add>(param1, param2, op::AutoBroadcastType::NUMPY)->get_shape(),
-              (Shape{1, 3, 6}));
-    EXPECT_EQ(make_shared<op::Add>(param1, param3, op::AutoBroadcastType::NUMPY)->get_shape(),
-              (Shape{2, 3, 6}));
-    EXPECT_EQ(make_shared<op::Add>(param4, param3, op::AutoBroadcastType::NUMPY)->get_shape(),
-              (Shape{2, 3, 6}));
+    const auto x1 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+    const auto x2 = make_shared<op::Parameter>(element::f64, Shape{3, 2});
+    const auto x3 = make_shared<op::Parameter>(element::f64, Shape{1, 2});
 
-    auto pp1 = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 6});
-    auto pp2 = make_shared<op::Parameter>(element::f32, PartialShape{3, 1});
-    EXPECT_EQ(make_shared<op::Add>(pp1, pp2, op::AutoBroadcastType::NUMPY)->get_shape(),
-              (Shape{1, 3, 6}));
+    try
+    {
+        const auto squared_diff = make_shared<op::SquaredDifference>(x1, x2);
+        FAIL() << "SquaredDifference node was created with incorrect data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("axes are incompatible"));
+    }
+
+    const auto clamp = make_shared<op::SquaredDifference>(x1, x3);
+    EXPECT_EQ(clamp->get_element_type(), element::f64);
+    EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
 }

@@ -19,6 +19,9 @@
 #include <cmath>
 #include <utility>
 
+#include <cfenv>
+#include <functional>
+#include "convolution.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/shape_util.hpp"
 
@@ -28,15 +31,21 @@ namespace ngraph
     {
         namespace reference
         {
-            template <typename T>
-            void dot(const T* arg0,
-                     const T* arg1,
-                     T* out,
+            template <typename INPUT0,
+                      typename INPUT1,
+                      typename OUTPUT,
+                      typename ACCUMULATION = typename widen<OUTPUT>::type>
+            void dot(const INPUT0* arg0,
+                     const INPUT1* arg1,
+                     OUTPUT* out,
                      const Shape& arg0_shape,
                      const Shape& arg1_shape,
                      const Shape& out_shape,
-                     size_t reduction_axes_count)
+                     size_t reduction_axes_count,
+                     const float requant_scale = 1.0f)
             {
+                auto old_mode = std::fegetround();
+                std::fesetround(FE_TONEAREST);
                 // Get the sizes of the dot axes. It's easiest to pull them from arg1 because they're
                 // right up front.
                 Shape dot_axis_sizes(reduction_axes_count);
@@ -84,7 +93,7 @@ namespace ngraph
                             arg1_projected_coord.begin(), arg1_projected_coord.end(), out_coord_it);
 
                         // Zero out to start the sum.
-                        T sum = 0;
+                        ACCUMULATION sum = 0;
 
                         size_t out_index = output_transform.index(out_coord);
 
@@ -113,8 +122,9 @@ namespace ngraph
                         }
 
                         // Write the sum back.
-                        out[out_index] = sum;
+                        out[out_index] = static_cast<OUTPUT>(sum * requant_scale);
                     }
+                    std::fesetround(old_mode);
                 }
             }
         }

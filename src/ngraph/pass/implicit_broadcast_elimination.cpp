@@ -31,7 +31,6 @@ bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngr
         if (op->get_autob().type != op::AutoBroadcastType::NONE)
         {
             auto new_args = explicit_broadcast<ngraph::op::util::BinaryElementwiseArithmetic>(op);
-            size_t i = 0;
             for (size_t i = 0; i < new_args.size(); i++)
             {
                 op->input(i).replace_source_output(new_args[i]->output(0));
