@@ -148,7 +148,7 @@ namespace ngraph
                 }
                 else if (element_type == element::boolean)
                 {
-                    functor = prepare_functor<bool>(node, args, out, external_function);
+                    functor = prepare_functor<char>(node, args, out, external_function);
                 }
                 else
                 {
