@@ -524,9 +524,9 @@ void Node::validate_and_infer_elementwise_arithmetic(const op::AutoBroadcastSpec
     set_output_type(0, args_et, args_pshape);
 }
 
-void Node::validate_and_infer_elementwise_logical()
+void Node::validate_and_infer_elementwise_logical(const op::AutoBroadcastSpec autob)
 {
-    auto args_et_pshape = validate_and_infer_elementwise_args();
+    auto args_et_pshape = validate_and_infer_elementwise_args(autob);
     element::Type& args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 

@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include "attr_types.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
@@ -27,7 +27,7 @@ namespace ngraph
         {
             /// \brief Abstract base class for elementwise binary arithmetic operations, i.e., operations where the same
             ///        scalar binary arithmetic operation is applied to each corresponding pair of elements in the two
-            ///        input tensors. Implicit broadcast of input tensors is supported through one of the AutoBcast modes
+            ///        input tensors. Implicit broadcast of input tensors is supported through one of the AutoBroadcast modes
             ///
             /// For example, if the underlying arithmetic operation (determined by the subclass) is \f$\mathit{op}(x,y)\f$, the input tensors
             /// \f$[[x_0,y_0],[z_0,w_0]]\f$ and \f$[[x_1,y_1],[z_1,w_1]]\f$ will be mapped to \f$[[\mathit{op}(x_0,x_1),\mathit{op}(y_0,y_1)],[\mathit{op}(z_0,z_1),\mathit{op}(w_0,w_1)]]\f$.
@@ -52,6 +52,7 @@ namespace ngraph
                 ///
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
+                /// \param autob AutoBroadcast mode.
                 BinaryElementwiseArithmetic(const std::string& node_type,
                                             const std::shared_ptr<Node>& arg0,
                                             const std::shared_ptr<Node>& arg1,
