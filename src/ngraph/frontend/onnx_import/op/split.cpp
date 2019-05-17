@@ -19,7 +19,7 @@
 
 #include "exceptions.hpp"
 #include "op/split.hpp"
-#include "utils/reshape.hpp"
+#include "ngraph/op/util/reshape.hpp"
 
 namespace ngraph
 {
@@ -125,7 +125,7 @@ namespace ngraph
                     }
                     ASSERT_VALID_ARGUMENT(node, total_parts_length == input_shape.at(axis_to_split))
                         << "Cannot split using values in 'split' attribute";
-                    return reshape::split(input, length_parts, axis_to_split);
+                    return ngraph::op::util::split(input, length_parts, axis_to_split);
                 }
 
             } // namespace set_1
