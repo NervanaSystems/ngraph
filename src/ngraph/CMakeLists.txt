@@ -33,8 +33,8 @@ set (SRC
     builder/quantization.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization/quantized_linear_dot.cpp
-    builder/quantization/quantized_linear_dot.hpp
+    builder/quantization/quantized_linear_matmul.cpp
+    builder/quantization/quantized_linear_matmul.hpp
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
