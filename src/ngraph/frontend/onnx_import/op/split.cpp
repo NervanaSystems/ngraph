@@ -18,8 +18,8 @@
 #include <vector>
 
 #include "exceptions.hpp"
-#include "op/split.hpp"
 #include "ngraph/op/fused/split.hpp"
+#include "op/split.hpp"
 
 namespace ngraph
 {
@@ -38,15 +38,17 @@ namespace ngraph
 
                     try
                     {
-                        const auto length_parts = node.get_attribute_value<std::vector<std::size_t>>("split");
-                        const auto fused_split = std::make_shared<ngraph::op::Split>(input, axis, length_parts);
+                        const auto length_parts =
+                            node.get_attribute_value<std::vector<std::size_t>>("split");
+                        const auto fused_split =
+                            std::make_shared<ngraph::op::Split>(input, axis, length_parts);
                         return fused_split->decompose_op();
                     }
                     catch (const std::exception&)
                     {
-                        const auto fused_split = std::make_shared<ngraph::op::Split>(input, axis, count_outputs);
+                        const auto fused_split =
+                            std::make_shared<ngraph::op::Split>(input, axis, count_outputs);
                         return fused_split->decompose_op();
-
                     }
                 }
 

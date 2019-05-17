@@ -46,9 +46,9 @@ namespace
         {
             std::size_t axis{axes.at(index)};
             lower_bounds.at(axis) =
-                    get_valid_array_index(starts.at(index), node->get_shape().at(axis));
+                get_valid_array_index(starts.at(index), node->get_shape().at(axis));
             upper_bounds.at(axis) =
-                    get_valid_array_index(ends.at(index), node->get_shape().at(axis));
+                get_valid_array_index(ends.at(index), node->get_shape().at(axis));
         }
         return std::make_shared<op::Slice>(node, lower_bounds, upper_bounds);
     }
@@ -105,8 +105,8 @@ shared_ptr<Node> op::util::flatten(const shared_ptr<Node>& node, int axis)
 }
 
 NodeVector op::util::split(const shared_ptr<ngraph::Node>& node,
-                 const vector<size_t>& length_parts,
-                 size_t axis)
+                           const vector<size_t>& length_parts,
+                           size_t axis)
 {
     size_t start_index{0};
     NodeVector outputs;
@@ -128,7 +128,6 @@ NodeVector op::util::split(const shared_ptr<ngraph::Node>& node, size_t split_pa
     }
 
     size_t length_axis_to_split{node->get_shape().at(axis_to_split)};
-    vector<size_t> length_parts(split_parts,
-                                          length_axis_to_split / split_parts);
+    vector<size_t> length_parts(split_parts, length_axis_to_split / split_parts);
     return split(node, length_parts, axis_to_split);
 }

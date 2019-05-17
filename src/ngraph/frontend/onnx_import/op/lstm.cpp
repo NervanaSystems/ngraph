@@ -603,12 +603,18 @@ namespace ngraph
                     if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
                     {
                         // In bidirectional mode weights are stacked together, so we must split them.
-                        NodeVector W{ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_W), 2)};
-                        NodeVector R{ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_R), 2)};
-                        NodeVector B{ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_B), 2)};
-                        NodeVector P{ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_P), 2)};
-                        NodeVector H{ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_H), 2)};
-                        NodeVector C{ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_C), 2)};
+                        NodeVector W{
+                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_W), 2)};
+                        NodeVector R{
+                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_R), 2)};
+                        NodeVector B{
+                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_B), 2)};
+                        NodeVector P{
+                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_P), 2)};
+                        NodeVector H{
+                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_H), 2)};
+                        NodeVector C{
+                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_C), 2)};
 
                         LSTMForward lstm_fwd(input_map.at(LSTMInput::LSTM_INPUT_X),
                                              W.at(0),
