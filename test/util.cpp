@@ -537,3 +537,28 @@ TEST(util, enum_mask_operators)
     EXPECT_EQ(false, n[Type::d]);
     EXPECT_EQ(true, n[Type::b]);
 }
+
+TEST(util, apply_permutation)
+{
+    ASSERT_EQ(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{2, 1, 0, 3}), (Shape{2, 1, 0, 3}));
+}
+
+TEST(util, apply_permutation_too_short_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2}), CheckFailure);
+}
+
+TEST(util, apply_permutation_too_long_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 3, 3}), CheckFailure);
+}
+
+TEST(util, apply_permutation_oob_axis_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 4}), CheckFailure);
+}
+
+TEST(util, apply_permutation_repeated_axis_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 2}), CheckFailure);
+}

@@ -460,9 +460,19 @@ void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t
 template <typename T>
 T ngraph::apply_permutation(T input, AxisVector order)
 {
-    if (input.size() != order.size())
+    NGRAPH_CHECK(input.size() == order.size(), "Input and permutation sizes do not match");
+
+    std::vector<bool> axis_occurs(input.size(), false);
+
+    for (auto& axis : order)
     {
-        throw "input and order sizes don't match!";
+        NGRAPH_CHECK(axis < input.size(), "Axis ", axis, " is out of bounds");
+        axis_occurs[axis] = true;
+    }
+
+    for (size_t axis = 0; axis < order.size(); axis++)
+    {
+        NGRAPH_CHECK(axis_occurs[axis], "Axis ", axis, " is missing from the permutation");
     }
 
     T output(input.size());
