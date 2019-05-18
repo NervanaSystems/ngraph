@@ -259,9 +259,11 @@ namespace ngraph
                 {
                     throw std::runtime_error("Constant initializer does not match shape");
                 }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
                 switch (target_type.get_type_enum())
                 {
                 case element::Type_t::boolean:
@@ -306,7 +308,9 @@ namespace ngraph
                 case element::Type_t::undefined: throw std::runtime_error("unsupported type");
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }
+#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
             }
 
             static constexpr size_t host_alignment() { return 64; }

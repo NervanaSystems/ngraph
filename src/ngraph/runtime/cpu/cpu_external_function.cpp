@@ -172,6 +172,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
@@ -372,6 +373,7 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasSignedAdd>},
     {TI(ngraph::op::QuantizedDotBias), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDotBias>},
     {TI(ngraph::op::QuantizedDot), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDot>},
+    {TI(ngraph::op::QuantizedMatmul), &runtime::cpu::CPU_Emitter::emit<op::QuantizedMatmul>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -1190,7 +1192,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass);
     REGISTER_KNOBBED_PASS(ReshapeElimination, false, ngraph::pass);
-    REGISTER_KNOBBED_PASS(CoreFusion, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(CoreFusion, true, ngraph::pass, ngraph::pass::ALL_FUSIONS);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
     REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass);

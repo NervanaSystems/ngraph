@@ -68,6 +68,7 @@ set(SRC
     builder/quantized_concat.cpp
     builder/quantized_dot.cpp
     builder/quantized_max_pool.cpp
+    builder/quantized_matmul.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
@@ -104,6 +105,7 @@ set(SRC
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
+    op/quantized_matmul.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/update_slice.cpp

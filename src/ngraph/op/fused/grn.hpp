@@ -18,33 +18,34 @@
 
 #include <memory>
 
-#include "ngraph/op/op.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Concatenation operation.
-        class Concat : public Op
+        /// \brief  Global Response Normalization with L2 norm (across channels only).
+        ///
+        class GRN : public ngraph::op::util::FusedOp
         {
         public:
-            /// \brief Constructs a concatenation operation.
+            /// \brief      Constructs a GRN operation.
             ///
-            /// \param args               The nodes producing the input tensors.
-            /// \param concatenation_axis The axis along which to concatenate the input tensors.
-            Concat(const NodeVector& args, size_t concatenation_axis);
+            /// \param      data  - Node producing the input tensor
+            /// \param      bias  - The bias added to the variance.
+            ///
+            GRN(const std::shared_ptr<ngraph::Node>& data, float bias);
 
-            void validate_and_infer_types() override;
+            float get_bias() const { return m_bias; }
+            virtual void pre_validate_and_infer_types() override;
+            virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            /// \return The concatenation axis.
-            size_t get_concatenation_axis() const { return m_concatenation_axis; }
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-            const size_t m_concatenation_axis;
+            float m_bias = 1.0f;
         };
     }
 }

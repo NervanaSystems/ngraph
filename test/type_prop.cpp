@@ -14415,6 +14415,57 @@ TEST(type_prop, gemm_broadcast_input_C)
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
 }
 
+TEST(type_prop, grn)
+{
+    float bias = 1.25f;
+    Shape data_shape{2, 3, 4, 5};
+    auto A = make_shared<op::Parameter>(element::f32, data_shape);
+    auto grn = make_shared<op::GRN>(A, bias);
+
+    ASSERT_EQ(grn->get_element_type(), element::f32);
+    ASSERT_EQ(grn->get_shape(), data_shape);
+}
+
+TEST(type_prop, grn_invalid_data_rank)
+{
+    float bias = 1.25f;
+    auto A = make_shared<op::Parameter>(element::f32, Shape{4});
+
+    try
+    {
+        auto grn = make_shared<op::GRN>(A, bias);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+
+    A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4, 5});
+
+    try
+    {
+        auto grn = make_shared<op::GRN>(A, bias);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Invalid input tensor rank.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, mvn)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6});
@@ -14444,6 +14495,17 @@ TEST(type_prop, fused_clamp)
     EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
 }
 
+TEST(type_prop, unsqueeze)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{4, 1, 4, 1, 8});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{1, 2});
+    auto squeeze = make_shared<op::Unsqueeze>(param, axes_node);
+
+    ASSERT_EQ(squeeze->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze->get_shape(), (Shape{4, 1, 1, 1, 4, 1, 8}));
+}
+
 TEST(type_prop, scale_shift_no_broadcast)
 {
     auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
@@ -14462,4 +14524,25 @@ TEST(type_prop, scale_shift)
     auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
     EXPECT_EQ(scale_shift_func->get_element_type(), element::f64);
     EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
+}
+
+TEST(type_prop, squared_difference)
+{
+    const auto x1 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+    const auto x2 = make_shared<op::Parameter>(element::f64, Shape{3, 2});
+    const auto x3 = make_shared<op::Parameter>(element::f64, Shape{1, 2});
+
+    try
+    {
+        const auto squared_diff = make_shared<op::SquaredDifference>(x1, x2);
+        FAIL() << "SquaredDifference node was created with incorrect data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("axes are incompatible"));
+    }
+
+    const auto clamp = make_shared<op::SquaredDifference>(x1, x3);
+    EXPECT_EQ(clamp->get_element_type(), element::f64);
+    EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
 }

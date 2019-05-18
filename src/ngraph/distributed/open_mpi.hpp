@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cstdio>
 #include <iostream>
 
 #include "ngraph/distributed.hpp"
@@ -68,6 +69,12 @@ namespace ngraph
                 int rank;
                 MPI_Comm_rank(MPI_COMM_WORLD, &rank);
                 return rank;
+            }
+
+            void log_print(const std::string& timestamp, const std::vector<char>& buf) override
+            {
+                std::printf(
+                    "%s [OpenMPI RANK: %d]: %s\n", timestamp.c_str(), get_rank(), buf.data());
             }
 
             void
