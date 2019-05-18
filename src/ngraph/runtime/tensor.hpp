@@ -131,7 +131,5 @@ namespace ngraph
             bool m_stale;
             std::promise<void> m_promise;
         };
-
-        using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
     }
 }
