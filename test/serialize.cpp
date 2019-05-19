@@ -22,11 +22,13 @@
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/passthrough.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
+#include "util/all_close_f.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
@@ -255,4 +257,56 @@ TEST(serialize, passthrough)
     EXPECT_THAT(pt->output_shapes(),
                 ElementsAre(IsOutputShape(element::f32, Shape{2, 3}),
                             IsOutputShape(element::i8, Shape{4, 5})));
+}
+
+TEST(serialize, constant_infinity_nan)
+{
+    vector<float> a_data{123, 456, INFINITY, -INFINITY, NAN};
+    vector<float> b_data{5, 5, 5, 5, 5, 5};
+    vector<float> c_data{0.05, 0.05, 0.05, 0.05, 0.05, 0.05001, 0.05};
+    vector<int64_t> d_data{-100, -10, -1, 0, 50, 5000000000001};
+    auto A = make_shared<op::Constant>(element::f32, Shape{5}, a_data);
+    auto B = make_shared<op::Constant>(element::f32, Shape{6}, b_data);
+    auto C = make_shared<op::Constant>(element::f32, Shape{7}, c_data);
+    auto D = make_shared<op::Constant>(element::i64, Shape{d_data.size()}, d_data);
+    A->set_friendly_name("A");
+    B->set_friendly_name("B");
+    C->set_friendly_name("C");
+    D->set_friendly_name("D");
+    auto f = make_shared<Function>(NodeVector{A, B, C, D}, ParameterVector{});
+
+    string s = serialize(f, 4);
+    shared_ptr<Function> g = deserialize(s);
+
+    shared_ptr<op::Constant> a;
+    shared_ptr<op::Constant> b;
+    shared_ptr<op::Constant> c;
+    shared_ptr<op::Constant> d;
+    for (auto node : g->get_ops())
+    {
+        if (node->get_friendly_name() == "A")
+        {
+            a = static_pointer_cast<op::Constant>(node);
+        }
+        else if (node->get_friendly_name() == "B")
+        {
+            b = static_pointer_cast<op::Constant>(node);
+        }
+        else if (node->get_friendly_name() == "C")
+        {
+            c = static_pointer_cast<op::Constant>(node);
+        }
+        else if (node->get_friendly_name() == "D")
+        {
+            d = static_pointer_cast<op::Constant>(node);
+        }
+    }
+    ASSERT_NE(a, nullptr);
+    ASSERT_NE(b, nullptr);
+    ASSERT_NE(c, nullptr);
+    ASSERT_NE(d, nullptr);
+    EXPECT_TRUE(test::all_close_f(a->get_vector<float>(), a_data));
+    EXPECT_TRUE(test::all_close_f(b->get_vector<float>(), b_data));
+    EXPECT_TRUE(test::all_close_f(c->get_vector<float>(), c_data));
+    EXPECT_EQ(d->get_vector<int64_t>(), d_data);
 }

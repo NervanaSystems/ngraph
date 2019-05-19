@@ -18,6 +18,7 @@
 
 #include <cstdint> // std::int64_t
 #include <memory>  // std::make_shared
+#include <utility> // std::move
 
 #include "core/node.hpp"
 #include "ngraph/axis_set.hpp"
@@ -69,7 +70,7 @@ namespace ngraph
 
                 if (keepdims == 0)
                 {
-                    return op_node;
+                    return std::move(op_node);
                 }
 
                 // WORKAROUND FOR PROBLEMS WITH RESHAPE ON i64 @TODO: remove
@@ -86,7 +87,7 @@ namespace ngraph
                 auto reconvert_node =
                     std::make_shared<ngraph::op::Convert>(reshape_node, element::i64);
 
-                return reconvert_node;
+                return std::move(reconvert_node);
             }
 
         } // namespace  reduction

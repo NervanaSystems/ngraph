@@ -260,3 +260,9 @@ TEST(constant_folding, const_quantize)
     vector<output_c_type> values_quantize{2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5};
     ASSERT_EQ(values_quantize, values_out);
 }
+TEST(constant_folding, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::ConstantFolding>();
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}

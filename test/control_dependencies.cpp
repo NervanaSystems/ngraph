@@ -32,7 +32,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
@@ -51,7 +50,7 @@ public:
     virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
     {
         auto clone = make_shared<ControlDependencyOp>(new_args, std::set<std::shared_ptr<Node>>{});
-        return clone;
+        return move(clone);
     }
 
     ControlDependencyOp(const NodeVector& args, const std::set<std::shared_ptr<Node>>& deps)

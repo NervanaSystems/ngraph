@@ -110,7 +110,7 @@ std::vector<const element::Type*> element::Type::get_known_types()
 element::Type::Type(
     size_t bitwidth, bool is_real, bool is_signed, bool is_quantized, const std::string& cname)
 {
-    for (const pair<element::Type_t, TypeInfo>& t : get_type_info_map())
+    for (auto& t : get_type_info_map())
     {
         const TypeInfo& info = t.second;
         if (bitwidth == info.m_bitwidth && is_real == info.m_is_real &&

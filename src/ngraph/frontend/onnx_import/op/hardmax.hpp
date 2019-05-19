@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,17 +16,22 @@
 
 #pragma once
 
-#include "ngraph/coordinate_diff.hpp"
+#include "core/node.hpp"
 #include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace builder
+    namespace onnx_import
     {
-        namespace quantization
+        namespace op
         {
-            std::shared_ptr<Node> QuantizedDotInteger(std::shared_ptr<Node> input,
-                                                      std::shared_ptr<Node> filter);
-        }
-    }
-}
+            namespace set_1
+            {
+                NodeVector hardmax(const Node& node);
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

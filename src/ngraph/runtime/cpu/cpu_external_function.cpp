@@ -113,6 +113,8 @@
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/scatter_add.hpp"
+#include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -170,6 +172,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
@@ -313,6 +316,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Erf), &runtime::cpu::CPU_Emitter::emit<op::Erf>},
     {TI(ngraph::op::Gather), &runtime::cpu::CPU_Emitter::emit<op::Gather>},
     {TI(ngraph::op::GatherND), &runtime::cpu::CPU_Emitter::emit<op::GatherND>},
+    {TI(ngraph::op::ScatterAdd), &runtime::cpu::CPU_Emitter::emit<op::ScatterAdd>},
+    {TI(ngraph::op::ScatterNDAdd), &runtime::cpu::CPU_Emitter::emit<op::ScatterNDAdd>},
     {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
     {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
     {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},
@@ -368,6 +373,7 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasSignedAdd>},
     {TI(ngraph::op::QuantizedDotBias), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDotBias>},
     {TI(ngraph::op::QuantizedDot), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDot>},
+    {TI(ngraph::op::QuantizedMatmul), &runtime::cpu::CPU_Emitter::emit<op::QuantizedMatmul>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -557,6 +563,8 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
+#include "ngraph/runtime/reference/scatter_add.hpp"
+#include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
@@ -653,7 +661,7 @@ using namespace ngraph::runtime;
                 for (auto& ele_t : tensor_set)
                 {
                     NGRAPH_CHECK(ele_t->get_pool_offset() == 0, "no offset set for constants");
-                    m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
+                    m_tensor_roles[ele_t->get_name()] = TensorRole::CONSTANT;
                     m_variable_name_map[ele_t->get_name()] = output_tensor->get_name();
                 }
             }
@@ -795,7 +803,7 @@ using namespace ngraph::runtime;
                     ss << "(((" << type << "*)(inputs[" << arg_index << "])) + "
                        << ele_t->get_pool_offset() / et.size() << ")";
                     m_variable_name_map[ele_t->get_name()] = ss.str();
-                    m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INPUT;
+                    m_tensor_roles[ele_t->get_name()] = TensorRole::INPUT;
                 }
                 arg_index++;
             }
@@ -806,7 +814,7 @@ using namespace ngraph::runtime;
         {
             for (auto& ele : bufferID_to_tensorSets)
             {
-                if (ele.second.first == CPUTensorRole::INTERMEDIATE)
+                if (ele.second.first == TensorRole::INTERMEDIATE)
                 {
                     for (auto& ele_t : ele.second.second)
                     {
@@ -814,7 +822,7 @@ using namespace ngraph::runtime;
                         ss << "((" << ele_t->get_element_type().c_type_string()
                            << "*)(pool_base_ptr + " << ele_t->get_pool_offset() << "))";
                         m_variable_name_map[ele_t->get_name()] = ss.str();
-                        m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INTERMEDIATE;
+                        m_tensor_roles[ele_t->get_name()] = TensorRole::INTERMEDIATE;
                     }
                 }
             }
@@ -835,7 +843,7 @@ using namespace ngraph::runtime;
                 ss << "(((" << type << "*)(outputs[" << i << "])) + "
                    << ele_t->get_pool_offset() / et.size() << ")";
                 m_variable_name_map[ele_t->get_name()] = ss.str();
-                m_tensor_roles[ele_t->get_name()] = CPUTensorRole::OUTPUT;
+                m_tensor_roles[ele_t->get_name()] = TensorRole::OUTPUT;
             }
         }
 
@@ -1184,7 +1192,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass);
     REGISTER_KNOBBED_PASS(ReshapeElimination, false, ngraph::pass);
-    REGISTER_KNOBBED_PASS(CoreFusion, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(CoreFusion, true, ngraph::pass, ngraph::pass::ALL_FUSIONS);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
     REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass);
@@ -1220,7 +1229,7 @@ bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
     {
         auto& output_tensor = node->get_output_tensor(i);
         if (m_tensor_roles.find(output_tensor.get_name()) != m_tensor_roles.end() &&
-            m_tensor_roles[output_tensor.get_name()] == CPUTensorRole::OUTPUT)
+            m_tensor_roles[output_tensor.get_name()] == TensorRole::OUTPUT)
         {
             return true;
         }
@@ -1294,14 +1303,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         m_memory_buffer_sizes.push_back(m_function->get_temporary_pool_size());
         for (auto& ele : bufferID_to_tensorSets)
         {
-            if (ele.second.first == CPUTensorRole::INTERMEDIATE)
+            if (ele.second.first == TensorRole::INTERMEDIATE)
             {
                 for (auto& ele_t : ele.second.second)
                 {
                     m_buffer_indices[ele_t->get_name()] = buffer_index;
                     intermediates_offsets.emplace_back(m_buffer_indices[ele_t->get_name()],
                                                        ele_t->get_pool_offset());
-                    m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INTERMEDIATE;
+                    m_tensor_roles[ele_t->get_name()] = TensorRole::INTERMEDIATE;
                     buffer_index++;
                 }
             }
@@ -1323,7 +1332,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             for (auto& ele_t : tensor_set)
             {
                 NGRAPH_CHECK(ele_t->get_pool_offset() == 0, "no offset set for constants");
-                m_tensor_roles[ele_t->get_name()] = CPUTensorRole::CONSTANT;
+                m_tensor_roles[ele_t->get_name()] = TensorRole::CONSTANT;
                 if (ele_t->get_name() != output_tensor->get_name())
                 {
                     tensor_alias[ele_t->get_name()] = output_tensor->get_name();
@@ -1346,7 +1355,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             // process all tensors in the set containing the output tensor of the parameter
             for (auto& ele_t : tensor_set)
             {
-                m_tensor_roles[ele_t->get_name()] = CPUTensorRole::INPUT;
+                m_tensor_roles[ele_t->get_name()] = TensorRole::INPUT;
                 m_buffer_indices[ele_t->get_name()] = buffer_index;
                 function_input_index_offset.emplace_back(m_buffer_indices[ele_t->get_name()],
                                                          arg_index,
@@ -1368,7 +1377,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         // process all tensors in the set containing the output tensor of the result
         for (auto& ele_t : tensor_set)
         {
-            m_tensor_roles[ele_t->get_name()] = CPUTensorRole::OUTPUT;
+            m_tensor_roles[ele_t->get_name()] = TensorRole::OUTPUT;
             m_buffer_indices[ele_t->get_name()] = buffer_index;
             function_output_index_offset.emplace_back(
                 m_buffer_indices[ele_t->get_name()], i, ele_t->get_pool_offset());
@@ -1495,13 +1504,13 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     {
         string filename = file_util::path_join(s_debug_dir, m_function_name + "_debug.txt");
         std::stringstream strm;
-        auto find_role = [](CPUTensorRole tensor_role) -> string {
+        auto find_role = [](TensorRole tensor_role) -> string {
             switch (tensor_role)
             {
-            case CPUTensorRole::INPUT: return string("CPUTensorRole::INPUT");
-            case CPUTensorRole::INTERMEDIATE: return string("CPUTensorRole::INTERMEDIATE");
-            case CPUTensorRole::CONSTANT: return string("CPUTensorRole::CONSTANT");
-            case CPUTensorRole::OUTPUT: return string("CPUTensorRole::OUTPUT");
+            case TensorRole::INPUT: return string("TensorRole::INPUT");
+            case TensorRole::INTERMEDIATE: return string("TensorRole::INTERMEDIATE");
+            case TensorRole::CONSTANT: return string("TensorRole::CONSTANT");
+            case TensorRole::OUTPUT: return string("TensorRole::OUTPUT");
             }
             throw runtime_error("unhandled CPU tensor role");
         };
