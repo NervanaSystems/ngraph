@@ -276,7 +276,6 @@ TEST(serialize, constant_infinity_nan)
     auto f = make_shared<Function>(NodeVector{A, B, C, D}, ParameterVector{});
 
     string s = serialize(f, 4);
-    NGRAPH_INFO << s;
     shared_ptr<Function> g = deserialize(s);
 
     shared_ptr<op::Constant> a;
