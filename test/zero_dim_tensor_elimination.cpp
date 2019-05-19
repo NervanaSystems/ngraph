@@ -22,8 +22,6 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/argmax.hpp"
-#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -205,10 +203,8 @@ TEST(zero_dim_tensor_elimination, zero_argmin)
 {
     Shape zero_shape{0};
     auto A = std::make_shared<op::Parameter>(element::f32, zero_shape);
-    auto abs_node = std::make_shared<op::Abs>(A);
-    auto arg_node = std::make_shared<op::ArgMin>(abs_node, 0, element::i32);
-    auto constant = std::make_shared<op::Constant>(element::f32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{arg_node, constant}, ParameterVector{A});
+    auto arg_node = std::make_shared<op::ArgMin>(A, 0, element::i32);
+    auto f = std::make_shared<Function>(NodeVector{arg_node}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::VisualizeTree>("zero_argmin_before.png");
@@ -220,13 +216,41 @@ TEST(zero_dim_tensor_elimination, zero_argmin)
     shared_ptr<op::Constant> constant_node;
     for (shared_ptr<Node> node : f->get_ops())
     {
-        if (node->get_name() == "Constant")
+        if (node->description() == "Constant")
         {
-            NGRAPH_INFO;
             constant_node = static_pointer_cast<op::Constant>(node);
             break;
         }
     }
     ASSERT_NE(constant_node, nullptr);
     const float* values = constant_node->get_data_ptr<float>();
+    EXPECT_EQ(values[0], std::numeric_limits<float>::infinity());
+}
+
+TEST(zero_dim_tensor_elimination, zero_argmax)
+{
+    Shape zero_shape{0};
+    auto A = std::make_shared<op::Parameter>(element::f32, zero_shape);
+    auto arg_node = std::make_shared<op::ArgMax>(A, 0, element::i32);
+    auto f = std::make_shared<Function>(NodeVector{arg_node}, ParameterVector{A});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<pass::VisualizeTree>("zero_argmax_before.png");
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
+    pass_manager.register_pass<pass::VisualizeTree>("zero_argmax_after.png");
+    EXPECT_EQ(count_ops_of_type<op::ArgMax>(f), 1);
+    pass_manager.run_passes(f);
+    EXPECT_EQ(count_ops_of_type<op::ArgMax>(f), 0);
+    shared_ptr<op::Constant> constant_node;
+    for (shared_ptr<Node> node : f->get_ops())
+    {
+        if (node->description() == "Constant")
+        {
+            constant_node = static_pointer_cast<op::Constant>(node);
+            break;
+        }
+    }
+    ASSERT_NE(constant_node, nullptr);
+    const float* values = constant_node->get_data_ptr<float>();
+    EXPECT_EQ(values[0], -std::numeric_limits<float>::infinity());
 }
