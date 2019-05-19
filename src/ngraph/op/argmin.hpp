@@ -42,6 +42,13 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            /// \return The default value for op. Used for zero dimension tensor elimination.
+            virtual std::shared_ptr<Node> get_default_value() const override
+            {
+                auto type = get_input_element_type(0);
+                return ngraph::make_constant_from_string("INFINITY", type, get_shape());
+            }
         };
     }
 }
