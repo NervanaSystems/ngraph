@@ -319,8 +319,8 @@ OPTIONS
             if (visualize)
             {
                 shared_ptr<Function> f = deserialize(model);
-                auto model_file_name = ngraph::file_util::get_file_name(model) + std::string(".") +
-                                       (dot_file ? "dot" : pass::VisualizeTree::get_file_ext());
+                auto model_file_name = ngraph::file_util::get_file_name(model) +
+                                       (dot_file ? ".dot" : ngraph::file_util::get_file_ext(model));
 
                 pass::Manager pass_manager;
                 pass_manager.register_pass<pass::VisualizeTree>(model_file_name, nullptr, true);
