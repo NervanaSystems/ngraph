@@ -118,3 +118,8 @@ vector<runtime::PerformanceCounter> runtime::Executable::get_performance_data() 
 {
     return vector<PerformanceCounter>();
 }
+
+bool runtime::Executable::save(std::ostream& output_stream)
+{
+    return false;
+}
