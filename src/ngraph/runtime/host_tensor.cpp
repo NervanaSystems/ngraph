@@ -30,10 +30,53 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
                                 const Shape& shape,
                                 void* memory_pointer,
                                 const string& name)
-    : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
+    : HostTensor(nullptr, element_type, shape, memory_pointer, name)
+{
+}
+
+runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
+                                const Shape& shape,
+                                const string& name)
+    : HostTensor(nullptr, element_type, shape, nullptr, name)
+{
+}
+
+runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type, const Shape& shape)
+    : HostTensor(nullptr, element_type, shape, nullptr, "")
+{
+}
+
+runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
+                                const Shape& shape,
+                                void* memory_pointer)
+    : HostTensor(nullptr, element_type, shape, memory_pointer, "")
+{
+}
+
+runtime::HostTensor::HostTensor(const std::shared_ptr<ngraph::runtime::Backend>& backend,
+                                const ngraph::element::Type& element_type,
+                                const Shape& shape)
+    : HostTensor(backend, element_type, shape, nullptr, "")
+{
+}
+
+runtime::HostTensor::HostTensor(const std::shared_ptr<ngraph::runtime::Backend>& backend,
+                                const ngraph::element::Type& element_type,
+                                const Shape& shape,
+                                void* memory_pointer)
+    : HostTensor(backend, element_type, shape, memory_pointer, "")
+{
+}
+
+runtime::HostTensor::HostTensor(const std::shared_ptr<ngraph::runtime::Backend>& backend,
+                                const ngraph::element::Type& element_type,
+                                const Shape& shape,
+                                void* memory_pointer,
+                                const std::string& name)
+    : runtime::Tensor(backend,
+                      std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
     , m_allocated_buffer_pool(nullptr)
     , m_aligned_buffer_pool(nullptr)
-
 {
     m_descriptor->set_tensor_layout(
         std::make_shared<ngraph::descriptor::layout::DenseTensorLayout>(*m_descriptor));
@@ -55,25 +98,6 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
             m_aligned_buffer_pool += (alignment - mod);
         }
     }
-}
-
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
-                                const Shape& shape,
-                                const string& name)
-    : HostTensor(element_type, shape, nullptr, name)
-{
-}
-
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type, const Shape& shape)
-    : HostTensor(element_type, shape, nullptr, "")
-{
-}
-
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
-                                const Shape& shape,
-                                void* memory_pointer)
-    : HostTensor(element_type, shape, memory_pointer, "")
-{
 }
 
 runtime::HostTensor::~HostTensor()

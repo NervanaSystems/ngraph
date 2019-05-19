@@ -47,6 +47,14 @@ namespace ngraph
             {
             }
 
+            Tensor(const std::shared_ptr<ngraph::runtime::Backend>& backend,
+                   const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
+                : m_descriptor(descriptor)
+                , m_stale(true)
+                , m_backend{backend}
+            {
+            }
+
         public:
             virtual ~Tensor() {}
             Tensor& operator=(const Tensor&) = default;
@@ -130,6 +138,7 @@ namespace ngraph
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
             std::promise<void> m_promise;
+            std::shared_ptr<ngraph::runtime::Backend> m_backend;
         };
     }
 }

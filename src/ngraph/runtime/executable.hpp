@@ -93,25 +93,6 @@ protected:
     bool begin_execute_helper(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                               const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
-    class ReadWriteInfo
-    {
-    public:
-        ReadWriteInfo(void* p, size_t size, bool is_read)
-            : m_data{p}
-            , m_size_in_bytes{size}
-            , m_is_read{is_read}
-        {
-        }
-        bool is_read() const { return m_is_read; }
-        bool is_write() const { return !is_read(); }
-        void* get_ptr() const { return m_data; }
-        bool get_size_in_bytes() const { return m_size_in_bytes; }
-    private:
-        void* m_data;
-        size_t m_size_in_bytes;
-        bool m_is_read;
-    };
-
 private:
     ngraph::ParameterVector m_parameters;
     ngraph::ResultVector m_results;

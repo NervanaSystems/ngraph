@@ -100,11 +100,21 @@ void runtime::Tensor::copy_from(const ngraph::runtime::Tensor& source)
 
 future<void> runtime::Tensor::begin_write(const void* p, size_t n)
 {
-    using namespace std::placeholders;
-    auto f = m_promise.get_future();
-    auto bound_f = bind(&Tensor::write, this, _1, _2, _3);
-    async(bound_f, p, 0, n);
-    return f;
+    if (m_backend)
+    {
+        auto f = m_promise.get_future();
+        m_backend->post_write(p, n, m_promise);
+        return f;
+    }
+    else
+    {
+        throw runtime_error("Async operations not supported for this backend");
+    }
+    // using namespace std::placeholders;
+    // auto f = m_promise.get_future();
+    // auto bound_f = bind(&Tensor::write, this, _1, _2, _3);
+    // async(bound_f, p, 0, n);
+    // return f;
 }
 
 future<void> runtime::Tensor::begin_read(void* p, size_t n)

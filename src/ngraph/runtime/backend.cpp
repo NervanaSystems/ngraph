@@ -90,3 +90,11 @@ std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_strea
 {
     throw runtime_error("load opertion unimplemented.");
 }
+
+void runtime::Backend::post_write(const void* p, size_t size_in_bytes, std::promise<void>& promise)
+{
+}
+
+void runtime::Backend::post_read(void* p, size_t size_in_bytes, std::promise<void>& promise)
+{
+}

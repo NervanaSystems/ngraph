@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <future>
 #include <memory>
 
 #include "ngraph/function.hpp"
@@ -139,4 +140,28 @@ public:
     // \param op_name is the name of the backend specific op
     // \returns a shared pointer to the op if found, else nullptr
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
+
+protected:
+    friend class ngraph::runtime::Tensor;
+    void post_write(const void* p, size_t size_in_bytes, std::promise<void>& promise);
+    void post_read(void* p, size_t size_in_bytes, std::promise<void>& promise);
+
+    class ReadWriteInfo
+    {
+    public:
+        ReadWriteInfo(void* p, size_t size, bool is_read)
+            : m_data{p}
+            , m_size_in_bytes{size}
+            , m_is_read{is_read}
+        {
+        }
+        bool is_read() const { return m_is_read; }
+        bool is_write() const { return !is_read(); }
+        void* get_ptr() const { return m_data; }
+        bool get_size_in_bytes() const { return m_size_in_bytes; }
+    private:
+        void* m_data;
+        size_t m_size_in_bytes;
+        bool m_is_read;
+    };
 };
