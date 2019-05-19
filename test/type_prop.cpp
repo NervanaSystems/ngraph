@@ -9727,7 +9727,7 @@ TEST(type_prop, index_reduction_invalid_index_type)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 or i32");
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 nor i32");
     }
     catch (...)
     {
@@ -9748,7 +9748,7 @@ TEST(type_prop, index_reduction_partial_rank_dynamic_output_et_dynamic)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 or i32");
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 nor i32");
     }
     catch (...)
     {
@@ -9769,7 +9769,7 @@ TEST(type_prop, index_reduction_partial_rank_dynamic_output_et_invalid)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 or i32");
+        EXPECT_HAS_SUBSTRING(error.what(), "Index element is neither i64 nor i32");
     }
     catch (...)
     {
