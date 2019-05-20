@@ -32,19 +32,6 @@ void op::ShapeOf::validate_and_infer_types()
     set_output_type(0, element::i64, PartialShape{get_input_partial_shape(0).rank()});
 }
 
-std::vector<std::shared_ptr<op::Constant>> op::ShapeOf::as_constants() const
-{
-    if (get_input_partial_shape(0).is_static())
-    {
-        return {op::Constant::create(
-            element::i64, Shape{get_input_shape(0).size()}, get_input_shape(0))};
-    }
-    else
-    {
-        return {};
-    }
-}
-
 shared_ptr<Node> op::ShapeOf::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
