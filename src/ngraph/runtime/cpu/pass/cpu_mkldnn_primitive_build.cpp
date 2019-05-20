@@ -2487,17 +2487,18 @@ namespace ngraph
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedDot)
-                {
-                    construct_primitive_build_string_inner_product<QuantizedDot>(
-                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
-                }
-
-                template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     QuantizedDotBias)
                 {
                     construct_primitive_build_string_inner_product<QuantizedDotBias>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
+                void
+                    MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedMatmul)
+                {
+                    construct_primitive_build_string_inner_product<QuantizedMatmul>(
                         mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
             }
@@ -2587,9 +2588,10 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPoolBackprop>},
     {TI(Quantize), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Quantize>},
     {TI(Dequantize), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Dequantize>},
-    {TI(QuantizedDot), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedDot>},
     {TI(QuantizedDotBias),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedDotBias>},
+    {TI(QuantizedMatmul),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedMatmul>},
 };
 
 bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

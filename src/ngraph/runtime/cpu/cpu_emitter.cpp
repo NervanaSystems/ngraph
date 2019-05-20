@@ -2527,18 +2527,31 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedDot)
             {
+                if (shape_size(args[2].get_shape()) != 1)
+                {
+                    throw ngraph_error("Scale size should be 1 for QuantizedDot");
+                }
+                writer << "float dyn_scale = *(static_cast<float*>(" << args[2].get_name()
+                       << "));\n";
+
+                writer << "reference::dot(" << args[0].get_name() << ",\n";
+                writer << "            " << args[1].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            {" << join(args[0].get_shape()) << "},\n";
+                writer << "            {" << join(args[1].get_shape()) << "},\n";
+                writer << "            {" << join(out[0].get_shape()) << "},\n";
+                writer << "            1,\n";
+                writer << "            dyn_scale);\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedMatmul)
+            {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
-                    if (node->get_input_element_type(0) == element::u8 &&
-                        node->get_input_element_type(1) == element::u8)
-                    {
-                        throw ngraph_error(
-                            "Unsupported data types for QuantizedDot MKLDNN kernel.");
-                    }
-
                     size_t qip_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives<ngraph::op::QuantizedDot>(
+                    emit_build_primitives<ngraph::op::QuantizedMatmul>(
                         external_function, node, writer, qip_index, deps, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
@@ -2552,7 +2565,7 @@ namespace ngraph
                 }
                 else
                 {
-                    throw ngraph_error("unsupported parameters for QuantizedDot");
+                    throw ngraph_error("QuantizedMatmul is only supported with MKLDNN kernel.");
                 }
             }
 
