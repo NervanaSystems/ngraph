@@ -284,8 +284,9 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
 }
 
 template <>
-string
-    get_results_str(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results)
+string get_results_str(const std::vector<char>& ref_data,
+                       const std::vector<char>& actual_data,
+                       size_t max_results)
 {
     stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
@@ -302,6 +303,7 @@ string
     return ss.str();
 }
 
+#ifdef NGRAPH_JSON_ENABLE
 std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
@@ -310,3 +312,4 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     return func;
 }
+#endif

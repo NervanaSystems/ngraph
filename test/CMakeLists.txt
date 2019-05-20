@@ -39,12 +39,11 @@ set(SRC
     control_dependencies.cpp
     coordinate.cpp
     copy.cpp
-    core.cpp
     cpio.cpp
     cse.cpp
     element_type.cpp
-    event_tracing.cpp
     file_util.cpp
+    float16.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp
@@ -57,26 +56,26 @@ set(SRC
     pass_liveness.cpp
     pass_manager.cpp
     pass_memory_layout.cpp
-    pass_shape_specialization.cpp
+    pass_shape_relevance.cpp
     pattern.cpp
     provenance.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
-    serialize.cpp
     shape.cpp
     specialize_shapes.cpp
     tensor.cpp
     type_prop.cpp
+    type_prop_layers.cpp
     util.cpp
     zero_dim_tensor_elimination.cpp
 )
 
-if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
-    list(APPEND SRC tools.cpp)
+if(NGRAPH_JSON_ENABLE)
+    list(APPEND SRC core.cpp event_tracing.cpp serialize.cpp)
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND SRC distributed_setup.cpp)
+if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
+    list(APPEND SRC tools.cpp)
 endif()
 
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
@@ -133,7 +132,9 @@ add_subdirectory(util)
 # backend specific test files must meet the following requirements:
 # 1) The must be named <name>.in.cpp
 # 2) They must be in the test directory
-# 3) add the line `static string s_manifest = "${MANIFEST}";` to your cpp file
+# 3) Include "util/test_control.hpp" in your cpp file
+# 4) add the line `static string s_manifest = "${MANIFEST}";` to your cpp file
+# 5) Use the `NGRAPH_TEST` macro in place of `TEST`.
 # All such files are configured via cmake which replaces all instances of cmake variables
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
@@ -151,12 +152,14 @@ set(MULTI_TEST_SRC
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reshape.in.cpp
+    backend_scatter.in.cpp
     backend_sum.in.cpp
     backend_topk.in.cpp
     backend_arg_reduce.in.cpp
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
+    dynamic.in.cpp
 )
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
@@ -215,21 +218,11 @@ if(NGRAPH_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
-if(NGRAPH_DISTRIBUTED_ENABLE)
-    if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        target_link_libraries(unit-test PRIVATE libmlsl)
-    elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-        find_package(MPI REQUIRED)
-        target_include_directories(unit-test
-        SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-        target_link_libraries(unit-test PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-    else()
-            message(FATAL_ERROR "Distributed Library not supported/mentioned")
-    endif()
-endif()
-
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
-target_link_libraries(unit-test PRIVATE ngraph libgtest libjson)
+target_link_libraries(unit-test PRIVATE ngraph libgtest)
+if (NGRAPH_JSON_ENABLE)
+    target_link_libraries(unit-test PRIVATE libjson)
+endif()
 if(NOT WIN32)
     target_link_libraries(unit-test PRIVATE pthread)
 endif()

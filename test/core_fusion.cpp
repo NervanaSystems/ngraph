@@ -26,9 +26,11 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -37,7 +39,6 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "nlohmann/json.hpp"
 #include "util/all_close.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/matcher.hpp"
@@ -61,6 +62,7 @@ TEST(core_fusion, core_fusion_pass_basic)
     ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_argument(0)), nullptr);
 }
 
+#ifdef NGRAPH_JSON_ENABLE
 TEST(core_fusion, sigmoid_fprop_fusion)
 {
     pass::Manager pass_manager;
@@ -73,6 +75,20 @@ TEST(core_fusion, sigmoid_fprop_fusion)
     size_t ccg = count_ops_of_type<op::Sigmoid>(func);
     ASSERT_EQ(ccg, 1);
 }
+
+TEST(core_fusion, sigmoid_bprop_fusion)
+{
+    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
+    const string json_string = file_util::read_file_to_string(json_path);
+    stringstream ss(json_string);
+    shared_ptr<Function> func = ngraph::deserialize(ss);
+    auto df = autodiff::backprop_function(func);
+    auto backend = runtime::Backend::create("CPU");
+    backend->compile(df);
+    size_t ccg = count_ops_of_type<op::SigmoidBackprop>(df);
+    ASSERT_EQ(ccg, 1);
+}
+#endif
 
 TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast)
 {
@@ -119,19 +135,6 @@ TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast2)
     pass_manager.run_passes(func);
     size_t ccg = count_ops_of_type<op::Sigmoid>(func);
     ASSERT_EQ(ccg, 0);
-}
-
-TEST(core_fusion, sigmoid_bprop_fusion)
-{
-    const string json_path = file_util::path_join(SERIALIZED_ZOO, "mxnet/Graph_fprop_sigmoid.json");
-    const string json_string = file_util::read_file_to_string(json_path);
-    stringstream ss(json_string);
-    shared_ptr<Function> func = ngraph::deserialize(ss);
-    auto df = autodiff::backprop_function(func);
-    auto backend = runtime::Backend::create("CPU");
-    backend->compile(df);
-    size_t ccg = count_ops_of_type<op::SigmoidBackprop>(df);
-    ASSERT_EQ(ccg, 1);
 }
 
 TEST(core_fusion, reshape_broadcast)
@@ -360,6 +363,57 @@ TEST(core_fusion, conv_bias)
     }
 }
 
+TEST(core_fusion, conv_bias_bcast_reshape)
+{
+    // PaddlePaddle pattern
+    auto gen_f = [](bool with_fused_op) {
+        auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto weights = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+        auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+        if (with_fused_op)
+        {
+            return make_shared<Function>(make_shared<op::ConvolutionBias>(data, weights, bias),
+                                         ParameterVector{data, weights, bias});
+        }
+        else
+        {
+            auto conv = make_shared<op::Convolution>(data, weights);
+            auto bias_bcast = make_shared<op::Broadcast>(bias, Shape{2, 4, 12}, AxisSet{0, 2});
+            auto conv_bias =
+                conv + make_shared<op::Reshape>(bias_bcast, AxisVector{0, 1, 2}, conv->get_shape());
+            return make_shared<Function>(conv_bias, ParameterVector{data, weights, bias});
+        }
+    };
+
+    auto fused_f = gen_f(true);
+    auto decomp_f1 = gen_f(false);
+    auto decomp_f2 = gen_f(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.run_passes(decomp_f1);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBias>(decomp_f1), 1);
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : fused_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto fused_r = execute(fused_f, args, "INTERPRETER");
+    auto decomp_r1 = execute(decomp_f1, args, "INTERPRETER");
+    auto decomp_r2 = execute(decomp_f2, args, "INTERPRETER");
+
+    for (size_t i = 0; i < fused_r.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r1.at(i)));
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r2.at(i)));
+    }
+}
+
 TEST(core_fusion, conv_bias_add)
 {
     auto gen_f = [](bool with_fused_op) {
@@ -479,4 +533,60 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
         EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r1.at(i)));
         EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r2.at(i)));
     }
+}
+
+TEST(batch_fusion, group_convolution_fusion)
+{
+    Shape shape_a{1, 32, 2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{2, 16, 1, 1};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{1, 2, 2, 2};
+
+    auto a_slice0 = std::make_shared<op::Slice>(A, Coordinate{0, 0, 0, 0}, Coordinate{1, 16, 2, 2});
+    auto a_slice1 =
+        std::make_shared<op::Slice>(A, Coordinate{0, 16, 0, 0}, Coordinate{1, 32, 2, 2});
+
+    auto b_slice0 = std::make_shared<op::Slice>(B, Coordinate{0, 0, 0, 0}, Coordinate{1, 16, 1, 1});
+    auto b_slice1 = std::make_shared<op::Slice>(B, Coordinate{1, 0, 0, 0}, Coordinate{2, 16, 1, 1});
+
+    auto conv_lower = make_shared<op::Convolution>(a_slice0,
+                                                   b_slice0,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
+    auto conv_upper = make_shared<op::Convolution>(a_slice1,
+                                                   b_slice1,
+                                                   Strides{1, 1},
+                                                   Strides{1, 1},
+                                                   CoordinateDiff{0, 0},
+                                                   CoordinateDiff{0, 0},
+                                                   Strides{1, 1});
+
+    auto concat = make_shared<op::Concat>(NodeVector{conv_lower, conv_upper}, 1);
+
+    auto f = make_shared<Function>(NodeVector{concat}, ParameterVector{A, B});
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::BatchFusion>();
+    pass_manager.run_passes(f);
+    auto gc =
+        std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(gc);
+}
+
+TEST(core_fusion, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::CoreFusion>();
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}
+
+TEST(batch_fusion, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::BatchFusion>();
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }

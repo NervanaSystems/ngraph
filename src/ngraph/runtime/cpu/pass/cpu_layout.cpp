@@ -39,10 +39,10 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -64,11 +64,11 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
-#include "ngraph/runtime/cpu/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 
 using namespace std;
@@ -738,13 +738,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedDot)
+                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedMatmul)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        InnerProductLayout<ngraph::op::QuantizedDot, false>(node, i_mds, o_mds);
+                        InnerProductLayout<ngraph::op::QuantizedMatmul, false>(node, i_mds, o_mds);
 
                         auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 2, false, memory::format::x);
@@ -2394,8 +2394,8 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConcat>},
     {TI(ngraph::op::QuantizedDotBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedDotBias>},
-    {TI(ngraph::op::QuantizedDot),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedDot>},
+    {TI(ngraph::op::QuantizedMatmul),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMatmul>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

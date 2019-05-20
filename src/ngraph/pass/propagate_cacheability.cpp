@@ -20,7 +20,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
-#include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 
 using namespace std;
 using namespace ngraph;

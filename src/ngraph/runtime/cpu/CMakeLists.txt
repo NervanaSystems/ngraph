@@ -68,10 +68,13 @@ set(SRC
     builder/quantized_concat.cpp
     builder/quantized_dot.cpp
     builder/quantized_max_pool.cpp
+    builder/quantized_matmul.cpp
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
     builder/rnn.cpp
+    builder/scatter_add.cpp
+    builder/scatter_nd_add.cpp
     builder/select.cpp
     builder/sigmoid.cpp
     builder/slice.cpp
@@ -95,7 +98,6 @@ set(SRC
     op/conv_relu.cpp
     op/convert_layout.cpp
     op/deconv.cpp
-    op/group_conv.cpp
     op/group_conv_bias.cpp
     op/halide_op.cpp
     op/leaky_relu.cpp
@@ -103,6 +105,7 @@ set(SRC
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
+    op/quantized_matmul.cpp
     op/rnn.cpp
     op/sigmoid_mul.cpp
     op/update_slice.cpp
@@ -153,6 +156,9 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
+    if (NGRAPH_ENABLE_CPU_CONV_AUTO)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_ENABLE_CPU_CONV_AUTO")
+    endif()
     if(NGRAPH_TBB_ENABLE)
         set_source_files_properties(cpu_external_function.cpp
             PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
@@ -185,23 +191,11 @@ if (NGRAPH_CPU_ENABLE)
     endif()
     target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
 
-    if(NGRAPH_DISTRIBUTED_ENABLE)
-        if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-            target_include_directories(cpu_backend SYSTEM PRIVATE libmlsl)
-            target_link_libraries(cpu_backend PRIVATE libmlsl)
-        elseif(NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-            find_package(MPI REQUIRED)
-            target_include_directories(cpu_backend
-                SYSTEM PRIVATE ${MPI_C_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH})
-            target_link_libraries(cpu_backend
-                PRIVATE ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-        else()
-            message(FATAL_ERROR "Distributed Library not supported/mentioned")
-        endif()
-    endif()
-
     add_dependencies(cpu_backend libmkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libjson libtbb)
+    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
+    if (NGRAPH_JSON_ENABLE)
+        target_link_libraries(cpu_backend PUBLIC libjson)
+    endif()
     if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()

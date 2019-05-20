@@ -40,7 +40,9 @@ namespace ngraph
 
 bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
+#ifdef NGRAPH_JSON_ENABLE
 std::shared_ptr<ngraph::Function> make_function_from_file(const std::string& file_name);
+#endif
 
 template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)
@@ -52,7 +54,7 @@ void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
 {
-    if (ngraph::element::from<T>() != tv->get_tensor_layout()->get_element_type())
+    if (ngraph::element::from<T>() != tv->get_element_type())
     {
         throw std::invalid_argument("read_vector type must match Tensor type");
     }
@@ -220,8 +222,9 @@ std::vector<std::vector<TOUT>> execute(const std::shared_ptr<ngraph::Function>& 
 }
 
 template <typename T>
-std::string
-    get_results_str(std::vector<T>& ref_data, std::vector<T>& actual_data, size_t max_results = 16)
+std::string get_results_str(const std::vector<T>& ref_data,
+                            const std::vector<T>& actual_data,
+                            size_t max_results = 16)
 {
     std::stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());
@@ -238,8 +241,8 @@ std::string
 }
 
 template <>
-std::string get_results_str(std::vector<char>& ref_data,
-                            std::vector<char>& actual_data,
+std::string get_results_str(const std::vector<char>& ref_data,
+                            const std::vector<char>& actual_data,
                             size_t max_results);
 
 /// \brief      Reads a binary file to a vector.

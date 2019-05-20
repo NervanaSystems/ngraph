@@ -117,7 +117,7 @@ namespace ngraph
 
         inline std::shared_ptr<ngraph::Node>
             make_broadcast_node(const std::shared_ptr<ngraph::Node>& node,
-                                ngraph::Shape new_shape,
+                                const ngraph::Shape& new_shape,
                                 std::size_t start_match_axis)
         {
             return std::make_shared<ngraph::op::Broadcast>(

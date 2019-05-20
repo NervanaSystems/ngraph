@@ -21,7 +21,6 @@
 #include "ngraph/op/batch_norm.hpp"
 
 #include "ngraph/node.hpp"
-#include "ngraph/node_vector.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
 
@@ -38,6 +37,8 @@ namespace ngraph
                                            std::shared_ptr<Node> gamma,
                                            std::shared_ptr<Node> beta,
                                            std::shared_ptr<Node> input);
+
+                void validate_and_infer_types() override;
 
             protected:
                 virtual std::shared_ptr<Node>

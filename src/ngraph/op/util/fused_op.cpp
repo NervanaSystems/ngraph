@@ -27,6 +27,8 @@ op::util::FusedOp::FusedOp(const std::string& node_type, const NodeVector& args)
 
 void op::util::FusedOp::validate_and_infer_types()
 {
+    pre_validate_and_infer_types();
+
     auto subgraph_outputs = decompose_op();
     auto subgraph = extract_subgraph(subgraph_outputs, get_arguments());
     validate_nodes_and_infer_types(subgraph);
@@ -36,11 +38,16 @@ void op::util::FusedOp::validate_and_infer_types()
     {
         for (size_t j = 0; j < output_node->get_output_size(); j++, i++)
         {
-            set_output_size(i + 1);
+            if (i >= get_output_size())
+            {
+                set_output_size(i + 1);
+            }
             set_output_type(
                 i, output_node->get_output_element_type(j), output_node->get_output_shape(j));
         }
     }
+
+    post_validate_and_infer_types();
 }
 
 void op::util::FusedOp::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

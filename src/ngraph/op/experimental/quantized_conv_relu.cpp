@@ -24,14 +24,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Node>& data_batch,
-                                                       const std::shared_ptr<Node>& filters,
+op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const shared_ptr<Node>& data_batch,
+                                                       const shared_ptr<Node>& filters,
                                                        const Strides& window_movement_strides,
                                                        const Strides& window_dilation_strides,
                                                        const CoordinateDiff& padding_below,
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides,
-                                                       const std::shared_ptr<Node> scale)
+                                                       const shared_ptr<Node>& scale)
     : Op("QuantizedConvolutionRelu", check_single_output_args({data_batch, filters, scale}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
@@ -63,20 +63,19 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const std::shared_ptr<Nod
                                                          ));
 }
 
-std::shared_ptr<Node>
-    op::QuantizedConvolutionRelu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::QuantizedConvolutionRelu::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 3)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return std::shared_ptr<Node>(new QuantizedConvolutionRelu(new_args.at(0),
-                                                              new_args.at(1),
-                                                              get_window_movement_strides(),
-                                                              get_window_dilation_strides(),
-                                                              get_padding_below(),
-                                                              get_padding_above(),
-                                                              get_data_dilation_strides(),
-                                                              new_args.at(2)));
+    return shared_ptr<Node>(new QuantizedConvolutionRelu(new_args.at(0),
+                                                         new_args.at(1),
+                                                         get_window_movement_strides(),
+                                                         get_window_dilation_strides(),
+                                                         get_padding_below(),
+                                                         get_padding_above(),
+                                                         get_data_dilation_strides(),
+                                                         new_args.at(2)));
 }

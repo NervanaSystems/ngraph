@@ -112,13 +112,7 @@ void ngraph::LogPrintf(const char* fmt, ...)
     std::vsnprintf(buf.data(), buf.size(), fmt, args2);
 #pragma GCC diagnostic pop
     va_end(args2);
-
-#ifdef NGRAPH_DISTRIBUTED_ENABLE
-    ngraph::Distributed dist;
-    std::printf("%s [RANK: %d]: %s\n", get_timestamp().c_str(), dist.get_rank(), buf.data());
-#else
-    std::printf("%s %s\n", get_timestamp().c_str(), buf.data());
-#endif
+    get_distributed_interface()->log_print(get_timestamp(), buf);
 }
 
 // This function will be executed only once during startup (loading of the DSO)
