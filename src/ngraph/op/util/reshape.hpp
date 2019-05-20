@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include <cstddef>
+#include <vector>
+
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/util.hpp"
@@ -33,8 +36,7 @@ namespace ngraph
             ///
             /// \return     The node representing a Reshape operation.
             ///
-            std::shared_ptr<ngraph::Node> reshape(const std::shared_ptr<ngraph::Node>& node,
-                                                  const Shape& shape);
+            std::shared_ptr<Node> reshape(const std::shared_ptr<Node>& node, const Shape& shape);
 
             /// \brief Permute axes according to specified axes_order parameter.
             ///
@@ -42,15 +44,15 @@ namespace ngraph
             /// \param axes_order The permutation of node tensor axes.
             ///
             /// \return: New node with permuted axes.
-            std::shared_ptr<ngraph::Node> reorder_axes(const std::shared_ptr<ngraph::Node>& node,
-                                                       std::vector<std::size_t> axes_order);
+            std::shared_ptr<Node> reorder_axes(const std::shared_ptr<Node>& node,
+                                               std::vector<std::size_t> axes_order);
 
             /// \brief Return transposed tensor (with axes in reversed order).
             ///
             /// \param node Input tensor we want to transpose
             ///
             /// \return: New node with reversed dimensions.
-            std::shared_ptr<ngraph::Node> transpose(const std::shared_ptr<ngraph::Node>& node);
+            std::shared_ptr<Node> transpose(const std::shared_ptr<Node>& node);
 
             /// \brief Flatten the input tensor into a 2D matrix.
             ///
@@ -58,8 +60,8 @@ namespace ngraph
             /// \param axis The axis dividing shape.
             ///
             /// \return The new node being a 2D matrix representing flattened input node.
-            std::shared_ptr<ngraph::Node> flatten(const std::shared_ptr<ngraph::Node>& node,
-                                                  int axis);
+            std::shared_ptr<Node> flatten(const std::shared_ptr<Node>& node, int axis);
+
         } // namespace util
     }     // namespace  op
 } // namespace  ngraph
