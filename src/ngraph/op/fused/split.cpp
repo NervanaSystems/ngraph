@@ -23,8 +23,8 @@ using namespace ngraph;
 
 op::Split::Split(const shared_ptr<Node>& data, const int axis, const size_t num_split)
     : FusedOp("Split", {data})
-    , m_axis{axis}
     , m_split_evenly{true}
+    , m_axis{axis}
     , m_num_split{num_split}
 {
     constructor_validate_and_infer_types();
@@ -34,8 +34,8 @@ op::Split::Split(const std::shared_ptr<ngraph::Node>& data,
                  const int axis,
                  const std::vector<size_t>& splits)
     : FusedOp("Split", {data})
-    , m_axis{axis}
     , m_split_evenly{false}
+    , m_axis{axis}
     , m_splits{splits}
 {
     constructor_validate_and_infer_types();
