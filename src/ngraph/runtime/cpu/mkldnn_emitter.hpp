@@ -736,7 +736,6 @@ namespace ngraph
                         index = 1;
                     }
                     else if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
-                             std::is_same<OP, ngraph::op::QuantizedDot>() ||
                              std::is_same<OP, ngraph::op::QuantizedMatmul>() ||
                              std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
                     {
