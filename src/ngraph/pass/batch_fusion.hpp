@@ -25,8 +25,6 @@ namespace ngraph
         class BatchFusion : public ngraph::pass::FunctionPass
         {
         public:
-            typedef ngraph::pass::FusionType FusionType;
-            typedef ngraph::pass::FusionTypeMask FusionTypeMask;
             BatchFusion(FusionTypeMask type = FusionType::ALL_FUSIONS)
                 : FunctionPass()
                 , m_fusion_type(type)
