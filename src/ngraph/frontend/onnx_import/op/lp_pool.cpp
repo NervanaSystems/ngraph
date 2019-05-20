@@ -22,9 +22,9 @@
 #include "lp_pool.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"
+#include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/builder/split.hpp"
 #include "ngraph/util.hpp"
 #include "utils/common.hpp"
 

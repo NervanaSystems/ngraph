@@ -48,8 +48,7 @@ namespace ngraph
         ///
         /// \return     The vector containing multiple nodes we split input node into.
         ///
-        NodeVector split(const std::shared_ptr<ngraph::Node>& node,
-                         std::size_t split_parts,
-                         int axis = 0);
+        NodeVector
+            split(const std::shared_ptr<ngraph::Node>& node, std::size_t split_parts, int axis = 0);
     } // namespace builder
 } // namespace ngraph

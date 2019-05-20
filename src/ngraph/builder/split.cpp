@@ -37,17 +37,17 @@ namespace
         {
             std::size_t axis{axes.at(index)};
             lower_bounds.at(axis) =
-                    get_valid_array_index(starts.at(index), node->get_shape().at(axis));
+                get_valid_array_index(starts.at(index), node->get_shape().at(axis));
             upper_bounds.at(axis) =
-                    get_valid_array_index(ends.at(index), node->get_shape().at(axis));
+                get_valid_array_index(ends.at(index), node->get_shape().at(axis));
         }
         return std::make_shared<op::Slice>(node, lower_bounds, upper_bounds);
     }
 }
 
 NodeVector builder::split(const std::shared_ptr<ngraph::Node>& node,
-                           const std::vector<size_t>& length_parts,
-                           size_t axis)
+                          const std::vector<size_t>& length_parts,
+                          size_t axis)
 {
     size_t start_index{0};
     NodeVector outputs;

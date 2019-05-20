@@ -15,8 +15,8 @@
 //*****************************************************************************
 #include <numeric>
 
-#include "ngraph/op/fused/split.hpp"
 #include "ngraph/builder/split.hpp"
+#include "ngraph/op/fused/split.hpp"
 
 using namespace std;
 using namespace ngraph;
