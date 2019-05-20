@@ -2078,6 +2078,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Minimum:
     {
         auto tmp = dynamic_cast<const op::Minimum*>(&n);
+        node["autob"] = write_auto_broadcast(tmp->get_autob());
         break;
     }
     case OP_TYPEID::Multiply:
