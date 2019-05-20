@@ -302,12 +302,16 @@ set (SRC
     op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/lstm_cell.cpp
+    op/fused/lstm_cell.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize.cpp
     op/fused/normalize.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/rnn_cell_base.cpp
+    op/fused/rnn_cell_base.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
     op/fused/space_to_depth.cpp
@@ -320,6 +324,8 @@ set (SRC
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
     op/fused/unsqueeze.hpp
+    op/util/activation_functions.cpp
+    op/util/activation_functions.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
