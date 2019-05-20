@@ -27,7 +27,6 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -66,7 +65,7 @@
         }                                                                                          \
     }                                                                                              \
     writer << std::to_string(X[X.size() - 1]);                                                     \
-    writer << "}"
+    writer << "}, \n"
 
 using namespace ngraph;
 using namespace ngraph::op;
@@ -900,13 +899,10 @@ namespace ngraph
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + (descs.size() - 1)
                            << "],\n";
                     WRITE_MKLDNN_DIMS(strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(pad_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(pad_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "mkldnn::post_ops ops;\n";
                     if (std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
@@ -1137,13 +1133,10 @@ namespace ngraph
                     }
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(pad_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(pad_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "\nauto bwd_desc = "
                               "mkldnn::convolution_backward_weights::desc(\n";
@@ -1158,13 +1151,10 @@ namespace ngraph
                     }
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(pad_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(pad_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "\n// create forward primitive descriptor\n";
                     writer << "mkldnn::convolution_forward::primitive_desc fwd_pd{fwd_desc, "
@@ -1267,13 +1257,10 @@ namespace ngraph
                            << desc_index << "],\n";
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(pad_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(pad_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "\nauto bwd_desc = "
                               "mkldnn::convolution_backward_data::desc(\n";
@@ -1284,13 +1271,10 @@ namespace ngraph
                            << desc_index << "],\n";
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(pad_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(pad_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "\n// create forward primitive descriptor\n";
                     writer << "mkldnn::convolution_forward::primitive_desc fwd_pd{fwd_desc, "
@@ -1391,13 +1375,10 @@ namespace ngraph
                            << desc_index + 3 << "],\n";
 
                     WRITE_MKLDNN_DIMS(window_strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "\n// create forward primitive descriptor\n";
                     writer << "mkldnn::deconvolution_forward::primitive_desc dconv_pd{dconv_desc, "
@@ -1456,13 +1437,10 @@ namespace ngraph
                                             "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_shape);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "mkldnn::primitive* prim;\n";
                     writer << "prim = new mkldnn::pooling_forward({max_pool_desc, "
@@ -1524,13 +1502,10 @@ namespace ngraph
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_shape);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "mkldnn::primitive* prim;\n";
                     writer << "prim = new mkldnn::pooling_forward({avg_pool_desc, "
@@ -1606,13 +1581,10 @@ namespace ngraph
                                             "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_shape);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "\n// build primitive descriptor\n";
                     writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{pool_desc, "
@@ -1671,13 +1643,10 @@ namespace ngraph
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_shape);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "auto bwd_desc = "
                               "mkldnn::pooling_backward::desc(\n";
@@ -1687,13 +1656,10 @@ namespace ngraph
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_shape);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "\n// build primitive descriptor\n";
                     writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, "
@@ -1749,13 +1715,10 @@ namespace ngraph
                                                 "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_shape);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "\nauto bwd_desc = "
                               "mkldnn::pooling_backward::desc(\n"
@@ -1765,13 +1728,10 @@ namespace ngraph
                                                 "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_shape);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "\n// build primitive descriptor\n";
                     writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, "
@@ -1853,13 +1813,10 @@ namespace ngraph
                                                 "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_shape);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "auto bwd_desc = "
                               "mkldnn::pooling_backward::desc(\n"
@@ -1869,13 +1826,10 @@ namespace ngraph
                                                 "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(window_shape);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_below);
-                    writer << ", \n";
                     WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ", \nmkldnn::padding_kind::zero);\n";
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "\n// build primitive descriptor\n";
                     writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, "

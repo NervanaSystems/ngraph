@@ -2183,7 +2183,6 @@ namespace ngraph
                     writer << "                         {"
                            << join(convolution->get_data_dilation_strides()) << "}, \n";
                     writer << "                         dyn_scales[0]);\n";
-                    //throw ngraph_error("unsupported parameters for QuantizedConvolution");
                 }
             }
 
