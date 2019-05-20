@@ -37,7 +37,6 @@
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
@@ -61,6 +60,7 @@
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
@@ -790,7 +790,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedDot)
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedMatmul)
                 {
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
@@ -989,8 +989,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
     {TI(ngraph::op::QuantizedConcat),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConcat>},
-    {TI(ngraph::op::QuantizedDot),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedDot>},
+    {TI(ngraph::op::QuantizedMatmul),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedMatmul>},
     {TI(ngraph::op::QuantizedDotBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedDotBias>},
     {TI(ngraph::op::GetOutputElement),

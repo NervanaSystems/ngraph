@@ -33,8 +33,8 @@ set (SRC
     builder/quantization.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization/quantized_linear_dot.cpp
-    builder/quantization/quantized_linear_dot.hpp
+    builder/quantization/quantized_linear_matmul.cpp
+    builder/quantization/quantized_linear_matmul.hpp
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
@@ -312,6 +312,8 @@ set (SRC
     op/fused/space_to_depth.hpp
     op/fused/shuffle_channels.cpp
     op/fused/shuffle_channels.hpp
+    op/fused/squared_difference.cpp
+    op/fused/squared_difference.hpp
     op/fused/squeeze.cpp
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
@@ -390,8 +392,6 @@ set (SRC
     pass/serialize.hpp
     pass/shape_relevance.cpp
     pass/shape_relevance.hpp
-    pass/shape_specialization.cpp
-    pass/shape_specialization.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
     pass/visualize_tree.cpp
