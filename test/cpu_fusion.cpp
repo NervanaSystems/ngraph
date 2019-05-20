@@ -3206,7 +3206,7 @@ static std::shared_ptr<Function>
         auto dot = std::make_shared<op::Dot>(data_param_reshape, W_reshape);
         auto bias_broadcast = make_shared<op::Broadcast>(bias, dot->get_shape(), AxisSet{0});
         auto add_bias = std::make_shared<op::Add>(dot, bias_broadcast);
-        return add_bias;
+        return move(add_bias);
 
     };
 

@@ -16,20 +16,27 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include <memory>
+
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace op
     {
-        class ShapeSpecialization : public FunctionPass
+        class Squeeze : public ngraph::op::util::FusedOp
         {
         public:
-            ShapeSpecialization()
-                : FunctionPass()
-            {
-            }
-            virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
+            Squeeze(const std::shared_ptr<ngraph::Node>& data,
+                    const std::shared_ptr<ngraph::Node>& axes);
+
+            virtual NodeVector decompose_op() const override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
         };
     }
 }

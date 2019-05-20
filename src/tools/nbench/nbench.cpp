@@ -78,14 +78,14 @@ multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_
     for (const PerfShape& p : perf_data)
     {
         auto node = p.get_node();
-        string op = node->get_name().substr(0, node->get_name().find('_'));
+        string op = node->description();
         string shape_name = " {" + join(p.shape) + "} ";
         timing[op + shape_name] += p.microseconds();
         count[op + shape_name] += 1;
     }
 
     multimap<size_t, string> rc;
-    for (const pair<string, size_t>& t : timing)
+    for (auto& t : timing)
     {
         rc.insert({t.second, t.first + to_string(count[t.first])});
     }
@@ -98,12 +98,12 @@ multimap<size_t, string> aggregate_timing(const vector<PerfShape>& perf_data)
     for (const PerfShape& p : perf_data)
     {
         auto node = p.get_node();
-        string op = node->get_name().substr(0, node->get_name().find('_'));
+        string op = node->description();
         timing[op] += p.microseconds();
     }
 
     multimap<size_t, string> rc;
-    for (const pair<string, size_t>& t : timing)
+    for (auto& t : timing)
     {
         rc.insert({t.second, t.first});
     }
@@ -115,7 +115,7 @@ void print_times(const multimap<size_t, string>& timing)
     // set the column widths
     int name_width = 0;
     int time_width = 0;
-    for (const pair<size_t, string>& p : timing)
+    for (auto& p : timing)
     {
         name_width = max(name_width, static_cast<int>(p.second.size()));
         time_width = max(time_width, static_cast<int>(locale_string(p.first).size()));
@@ -355,8 +355,7 @@ OPTIONS
                         total_temporary_bytes += tensor->size();
                         total_temporary_count++;
                     }
-                    string name = node->get_name();
-                    string op_name = name.substr(0, name.find('_'));
+                    string op_name = node->description();
                     string shape_name = "{" + join(node->output(0).get_shape()) + "}";
                     op_list[op_name + shape_name]++;
                     auto et = get_op_element_type(*node);
@@ -411,7 +410,7 @@ OPTIONS
                     cout << "    " << type << "\n";
                 }
                 cout << "--\n";
-                for (const pair<string, size_t>& op_info : op_list)
+                for (auto& op_info : op_list)
                 {
                     cout << op_info.first << ": " << op_info.second << " ops" << endl;
                 }

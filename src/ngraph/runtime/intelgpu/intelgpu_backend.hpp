@@ -52,6 +52,10 @@ public:
 
     bool is_supported_property(const Property prop) const override;
 
+    bool is_supported(const Node& node) const override;
+
+    static bool is_supported_impl(const Node& node);
+
 private:
     std::shared_ptr<cldnn::engine> cldnn_engine;
     std::map<std::shared_ptr<Function>, std::shared_ptr<runtime::Executable>> cldnn_networks;
@@ -62,6 +66,6 @@ private:
     bool m_cldnn_graph_optimize = true;
     bool m_cldnn_dump_enable = false;
     bool m_function_cache_disabled = false;
-    bool m_disable_backend_optimizations = false;
+    long m_disable_backend_optimizations = 0;
     std::string m_cldnn_dump_dir = std::string("intelgpu_codegen");
 };
