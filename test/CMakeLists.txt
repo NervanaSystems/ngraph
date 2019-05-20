@@ -57,7 +57,6 @@ set(SRC
     pass_manager.cpp
     pass_memory_layout.cpp
     pass_shape_relevance.cpp
-    pass_shape_specialization.cpp
     pattern.cpp
     provenance.cpp
     reshape_elimination.cpp
@@ -153,6 +152,7 @@ set(MULTI_TEST_SRC
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reshape.in.cpp
+    backend_scatter.in.cpp
     backend_sum.in.cpp
     backend_topk.in.cpp
     backend_arg_reduce.in.cpp

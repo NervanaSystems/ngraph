@@ -502,7 +502,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
                                                            sconv->get_data_dilation_strides(),
                                                            n->get_arguments().size());
 
-    return new_conv;
+    return move(new_conv);
 }
 
 std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& n)

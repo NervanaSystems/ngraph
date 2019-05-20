@@ -126,6 +126,7 @@ public:
         construct_qconcat();
         construct_qconvb_add();
         construct_dq_q();
+        construct_quantized_matmul();
     }
 
 private:
@@ -135,4 +136,5 @@ private:
     void construct_qconcat();
     void construct_dq_q();
     void construct_qconvb_add();
+    void construct_quantized_matmul();
 };

@@ -66,14 +66,22 @@
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
+#include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/mvn.hpp"
+#include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/squared_difference.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -106,6 +114,8 @@
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/scatter_add.hpp"
+#include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
@@ -224,7 +234,7 @@ static json write_partial_shape(const PartialShape& s)
         {
             vals[i] = write_dimension(s[i]);
         }
-        return vals;
+        return move(vals);
     }
 }
 
@@ -491,10 +501,12 @@ static shared_ptr<ngraph::Function>
             {
                 args.push_back(node_map.at(name));
             }
+#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-            // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
             switch (get_typeid(node_op))
             {
             case OP_TYPEID::Abs:
@@ -648,6 +660,13 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Ceiling:
             {
                 node = make_shared<op::Ceiling>(args[0]);
+                break;
+            }
+            case OP_TYPEID::Clamp:
+            {
+                const auto clamp_min = node_js.at("min").get<float>();
+                const auto clamp_max = node_js.at("max").get<float>();
+                node = make_shared<op::Clamp>(args[0], clamp_min, clamp_max);
                 break;
             }
             case OP_TYPEID::Concat:
@@ -971,6 +990,12 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::GreaterEq>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::GRN:
+            {
+                auto bias = node_js.at("bias").get<float>();
+                node = make_shared<op::GRN>(args[0], bias);
+                break;
+            }
             case OP_TYPEID::HardSigmoid:
             {
                 auto alpha = node_js.at("alpha").get<float>();
@@ -1123,9 +1148,26 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Multiply>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::MVN:
+            {
+                auto normalize_variance = node_js.at("normalize_variance").get<bool>();
+                auto across_channels = node_js.at("across_channels").get<bool>();
+                auto eps = node_js.at("eps").get<double>();
+                node = make_shared<op::MVN>(args[0], normalize_variance, across_channels, eps);
+                break;
+            }
             case OP_TYPEID::Negative:
             {
                 node = make_shared<op::Negative>(args[0]);
+                break;
+            }
+            case OP_TYPEID::Normalize:
+            {
+                bool across_spatial = node_js.at("across_spatial").get<bool>();
+                bool channel_shared = node_js.at("channel_shared").get<bool>();
+                float eps = node_js.at("eps").get<float>();
+                node = make_shared<op::Normalize>(
+                    args[0], args[1], across_spatial, channel_shared, eps);
                 break;
             }
             case OP_TYPEID::NotEqual:
@@ -1338,6 +1380,21 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::ScalarConstantLike>(args[0], value);
                 break;
             }
+            case OP_TYPEID::ScaleShift:
+            {
+                node = make_shared<op::ScaleShift>(args[0], args[1], args[2]);
+                break;
+            }
+            case OP_TYPEID::ScatterAdd:
+            {
+                node = make_shared<op::ScatterAdd>(args[0], args[1], args[2]);
+                break;
+            }
+            case OP_TYPEID::ScatterNDAdd:
+            {
+                node = make_shared<op::ScatterNDAdd>(args[0], args[1], args[2]);
+                break;
+            }
             case OP_TYPEID::Select:
             {
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
@@ -1398,6 +1455,16 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Sqrt>(args[0]);
                 break;
             }
+            case OP_TYPEID::SquaredDifference:
+            {
+                node = make_shared<op::SquaredDifference>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::Squeeze:
+            {
+                node = make_shared<op::Squeeze>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::Subtract:
             {
                 node = make_shared<op::Subtract>(args[0], args[1]);
@@ -1443,6 +1510,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::StopGradient>(args[0]);
                 break;
             }
+            case OP_TYPEID::Unsqueeze:
+            {
+                node = make_shared<op::Unsqueeze>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::UnknownOp:
             {
                 stringstream ss;
@@ -1450,7 +1522,9 @@ static shared_ptr<ngraph::Function>
                 throw runtime_error(ss.str());
             }
             }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
 
             for (const string& name : control_deps_inputs)
             {
@@ -1567,10 +1641,12 @@ static json write(const Node& n, bool binary_constant_data)
     }
 
     string node_op = n.description();
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-    // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
     switch (get_typeid(node_op))
     {
     case OP_TYPEID::Abs: { break;
@@ -1671,6 +1747,13 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Ceiling: { break;
+    }
+    case OP_TYPEID::Clamp:
+    {
+        auto tmp = dynamic_cast<const op::Clamp*>(&n);
+        node["min"] = tmp->get_min();
+        node["max"] = tmp->get_max();
+        break;
     }
     case OP_TYPEID::Concat:
     {
@@ -1848,6 +1931,12 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::GreaterEq: { break;
     }
+    case OP_TYPEID::GRN:
+    {
+        auto tmp = dynamic_cast<const op::GRN*>(&n);
+        node["bias"] = tmp->get_bias();
+        break;
+    }
     case OP_TYPEID::HardSigmoid:
     {
         auto tmp = dynamic_cast<const op::HardSigmoid*>(&n);
@@ -1919,7 +2008,23 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Multiply: { break;
     }
+    case OP_TYPEID::MVN:
+    {
+        auto tmp = dynamic_cast<const op::MVN*>(&n);
+        node["normalize_variance"] = tmp->get_normalize_variance();
+        node["across_channels"] = tmp->get_across_channels();
+        node["eps"] = tmp->get_eps();
+        break;
+    }
     case OP_TYPEID::Negative: { break;
+    }
+    case OP_TYPEID::Normalize:
+    {
+        auto tmp = dynamic_cast<const op::Normalize*>(&n);
+        node["across_spatial"] = tmp->get_across_spatial();
+        node["channel_shared"] = tmp->get_channel_shared();
+        node["eps"] = tmp->get_eps();
+        break;
     }
     case OP_TYPEID::NotEqual: { break;
     }
@@ -2068,6 +2173,12 @@ static json write(const Node& n, bool binary_constant_data)
         node["element_type"] = write_element_type(constant->get_element_type());
         break;
     }
+    case OP_TYPEID::ScaleShift: { break;
+    }
+    case OP_TYPEID::ScatterAdd: { break;
+    }
+    case OP_TYPEID::ScatterNDAdd: { break;
+    }
     case OP_TYPEID::Select: { break;
     }
     case OP_TYPEID::ShapeOf: { break;
@@ -2098,6 +2209,10 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Sqrt: { break;
+    }
+    case OP_TYPEID::SquaredDifference: { break;
+    }
+    case OP_TYPEID::Squeeze: { break;
     }
     case OP_TYPEID::StopGradient: { break;
     }
@@ -2132,10 +2247,14 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Transpose: { break;
     }
+    case OP_TYPEID::Unsqueeze: { break;
+    }
     case OP_TYPEID::UnknownOp: { break;
     }
     }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
 
     return node;
 }

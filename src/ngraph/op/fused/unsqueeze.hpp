@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,17 +16,28 @@
 
 #pragma once
 
-#include "ngraph/coordinate_diff.hpp"
+#include <memory>
+
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
-    namespace builder
+    namespace op
     {
-        namespace quantization
+        class Unsqueeze : public ngraph::op::util::FusedOp
         {
-            std::shared_ptr<Node> QuantizedDotInteger(std::shared_ptr<Node> input,
-                                                      std::shared_ptr<Node> filter);
-        }
+        public:
+            Unsqueeze(const std::shared_ptr<ngraph::Node>& data,
+                      const std::shared_ptr<ngraph::Node>& axes);
+
+            virtual void pre_validate_and_infer_types() override;
+            virtual NodeVector decompose_op() const override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
     }
 }

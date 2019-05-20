@@ -53,7 +53,7 @@ namespace ngraph
             // Pass requires node shapes to be static
             REQUIRE_STATIC_SHAPE = 0x1,
             // Pass transformation will change the function's dynamic state
-            CHANGE_FUNCTION_STATE = 1 << 1
+            CHANGE_DYNAMIC_STATE = 1 << 1
         };
         typedef EnumMask<PassProperty> PassPropertyMask;
         constexpr PassPropertyMask all_pass_property_off;

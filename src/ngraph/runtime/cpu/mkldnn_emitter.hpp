@@ -54,6 +54,7 @@
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
+#include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
@@ -73,7 +74,7 @@ namespace ngraph
 
             // TODO (nbpatel) Templatize the return type when we have double scales
             template <typename OP>
-            static std::vector<float> extract_scale_value(const ngraph::Node* node, int index)
+            inline std::vector<float> extract_scale_value(const ngraph::Node* node, int index)
             {
                 auto qc = static_cast<const OP*>(node);
                 std::vector<float> scale_val = {1.0f};
@@ -835,7 +836,7 @@ namespace ngraph
                 {
                     size_t index = 0;
                     if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
-                        std::is_same<OP, ngraph::op::QuantizedDot>() ||
+                        std::is_same<OP, ngraph::op::QuantizedMatmul>() ||
                         std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
                     {
                         index = 2;
@@ -909,7 +910,7 @@ namespace ngraph
                 template <typename OP>
                 bool is_quantized_inner_product()
                 {
-                    if (std::is_same<OP, ngraph::op::QuantizedDot>() ||
+                    if (std::is_same<OP, ngraph::op::QuantizedMatmul>() ||
                         std::is_same<OP, ngraph::op::QuantizedDotBias>())
                     {
                         return true;
