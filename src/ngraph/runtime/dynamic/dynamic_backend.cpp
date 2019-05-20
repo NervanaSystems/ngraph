@@ -90,9 +90,10 @@ bool runtime::dynamic::DynamicExecutable::call(
     std::shared_ptr<Function> clone;
     {
         // We'll use AlignedBuffers to back the base pointers, storing them in this vector for RAII
-        // purposes. It seems we need to wrap them in unique_ptr rather than store them directly in
-        // the vector, because the move constructor is disabled. I don't think that is necessary,
-        // but whatever gogogogogogo.
+        // purposes.
+        // TODO(amprocte): For now we have to wrap these in unique_ptr, because AlignedBuffer does
+        // not have a move constructor. PR#2949 will address this; update to remove the unique_ptrs
+        // once #2949 is merged.
         std::vector<std::unique_ptr<AlignedBuffer>> arg_buffers(inputs.size());
         std::vector<void*> arg_value_base_pointers(inputs.size());
 

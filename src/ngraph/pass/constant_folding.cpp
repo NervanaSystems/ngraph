@@ -784,65 +784,45 @@ template <typename TI>
 shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
                                                        const element::Type& output_element_type)
 {
-    if (output_element_type == element::boolean)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+    switch (output_element_type.get_type_enum())
     {
+    case element::Type_t::undefined:
+        NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_convert");
+        break;
+    case element::Type_t::dynamic:
+        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_convert");
+        break;
+    case element::Type_t::boolean:
         return fold_constant_convert_helper1<TI, char>(constant, output_element_type);
-    }
-    else if (output_element_type == element::bf16)
-    {
+    case element::Type_t::bf16:
         return fold_constant_convert_helper1<TI, bfloat16>(constant, output_element_type);
-    }
-    else if (output_element_type == element::f16)
-    {
+    case element::Type_t::f16:
         return fold_constant_convert_helper1<TI, float16>(constant, output_element_type);
-    }
-    else if (output_element_type == element::f32)
-    {
+    case element::Type_t::f32:
         return fold_constant_convert_helper1<TI, float>(constant, output_element_type);
-    }
-    else if (output_element_type == element::f64)
-    {
+    case element::Type_t::f64:
         return fold_constant_convert_helper1<TI, double>(constant, output_element_type);
-    }
-    else if (output_element_type == element::i8)
-    {
+    case element::Type_t::i8:
         return fold_constant_convert_helper1<TI, int8_t>(constant, output_element_type);
-    }
-    else if (output_element_type == element::i16)
-    {
+    case element::Type_t::i16:
         return fold_constant_convert_helper1<TI, int16_t>(constant, output_element_type);
-    }
-    else if (output_element_type == element::i32)
-    {
+    case element::Type_t::i32:
         return fold_constant_convert_helper1<TI, int32_t>(constant, output_element_type);
-    }
-    else if (output_element_type == element::i64)
-    {
+    case element::Type_t::i64:
         return fold_constant_convert_helper1<TI, int64_t>(constant, output_element_type);
-    }
-    else if (output_element_type == element::u8)
-    {
+    case element::Type_t::u8:
         return fold_constant_convert_helper1<TI, uint8_t>(constant, output_element_type);
-    }
-    else if (output_element_type == element::u16)
-    {
+    case element::Type_t::u16:
         return fold_constant_convert_helper1<TI, uint16_t>(constant, output_element_type);
-    }
-    else if (output_element_type == element::u32)
-    {
+    case element::Type_t::u32:
         return fold_constant_convert_helper1<TI, uint32_t>(constant, output_element_type);
-    }
-    else if (output_element_type == element::u64)
-    {
+    case element::Type_t::u64:
         return fold_constant_convert_helper1<TI, uint64_t>(constant, output_element_type);
     }
-    else
-    {
-        NGRAPH_CHECK(false,
-                     "Unhandled output element type ",
-                     output_element_type,
-                     " in fold_constant_convert");
-    }
+#pragma GCC diagnostic pop
 }
 
 shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> constant,
@@ -855,65 +835,45 @@ shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> constant
         return constant;
     }
 
-    if (input_element_type == element::boolean)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+    switch (input_element_type.get_type_enum())
     {
+    case element::Type_t::undefined:
+        NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_convert");
+        break;
+    case element::Type_t::dynamic:
+        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_convert");
+        break;
+    case element::Type_t::boolean:
         return fold_constant_convert_helper0<char>(constant, output_element_type);
-    }
-    else if (input_element_type == element::bf16)
-    {
+    case element::Type_t::bf16:
         return fold_constant_convert_helper0<bfloat16>(constant, output_element_type);
-    }
-    else if (input_element_type == element::f16)
-    {
+    case element::Type_t::f16:
         return fold_constant_convert_helper0<float16>(constant, output_element_type);
-    }
-    else if (input_element_type == element::f32)
-    {
+    case element::Type_t::f32:
         return fold_constant_convert_helper0<float>(constant, output_element_type);
-    }
-    else if (input_element_type == element::f64)
-    {
+    case element::Type_t::f64:
         return fold_constant_convert_helper0<double>(constant, output_element_type);
-    }
-    else if (input_element_type == element::i8)
-    {
+    case element::Type_t::i8:
         return fold_constant_convert_helper0<int8_t>(constant, output_element_type);
-    }
-    else if (input_element_type == element::i16)
-    {
+    case element::Type_t::i16:
         return fold_constant_convert_helper0<int16_t>(constant, output_element_type);
-    }
-    else if (input_element_type == element::i32)
-    {
+    case element::Type_t::i32:
         return fold_constant_convert_helper0<int32_t>(constant, output_element_type);
-    }
-    else if (input_element_type == element::i64)
-    {
+    case element::Type_t::i64:
         return fold_constant_convert_helper0<int64_t>(constant, output_element_type);
-    }
-    else if (input_element_type == element::u8)
-    {
+    case element::Type_t::u8:
         return fold_constant_convert_helper0<uint8_t>(constant, output_element_type);
-    }
-    else if (input_element_type == element::u16)
-    {
+    case element::Type_t::u16:
         return fold_constant_convert_helper0<uint16_t>(constant, output_element_type);
-    }
-    else if (input_element_type == element::u32)
-    {
+    case element::Type_t::u32:
         return fold_constant_convert_helper0<uint32_t>(constant, output_element_type);
-    }
-    else if (input_element_type == element::u64)
-    {
+    case element::Type_t::u64:
         return fold_constant_convert_helper0<uint64_t>(constant, output_element_type);
     }
-    else
-    {
-        NGRAPH_CHECK(false,
-                     "Unhandled input element type ",
-                     input_element_type,
-                     " in fold_constant_convert");
-    }
+#pragma GCC diagnostic pop
 }
 
 void pass::ConstantFolding::construct_constant_convert()
