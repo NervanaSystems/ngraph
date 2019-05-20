@@ -17,36 +17,58 @@
 #include "dialect.hpp"
 #include "ops.hpp"
 #include "type.hpp"
-namespace ngraph
+
+using namespace ngraph::runtime::ngmlir;
+
+/// Register a dialect and its types
+/// Usage:
+/// mlir::registerDialect<ngraph::runtime::ngmlir::Dialect>();
+NGDialect::NGDialect(mlir::MLIRContext* ctx)
+    : mlir::Dialect("ng", ctx)
 {
-    using namespace runtime::ngmlir;
+    addTypes<NGTensorType>();
+    addTypes<NGIntegerType>();
+    addTypes<NGBoolType>();
+    addOperations<NG_AddOp>();
+    addOperations<NG_MatmulBiasOp>();
+    addOperations<NG_ReturnOp>();
+    addOperations<NG_FakeInput>();
+}
 
-    /// Register a dialect and its types
-    /// Usage:
-    /// mlir::registerDialect<ngraph::runtime::ngmlir::Dialect>();
-    NGDialect::NGDialect(mlir::MLIRContext* ctx)
-        : mlir::Dialect("ng", ctx)
+void NGDialect::printType(mlir::Type type, raw_ostream& os) const
+{
+    switch (type.getKind())
     {
-        addTypes<NGTensorType>();
-        addOperations<NG_AddOp>();
-        addOperations<NG_MatmulBiasOp>();
-        addOperations<NG_ReturnOp>();
-        addOperations<NG_FakeInput>();
+    case NG_TENSOR_TYPE_ID:
+    {
+        os << "tensor<";
+        auto tensor_ty = type.cast<NGTensorType>();
+        for (auto dim : tensor_ty.getShape())
+        {
+            os << dim << 'x';
+        }
+        os << tensor_ty.getElementType() << '>';
+        return;
     }
-
-    void NGDialect::printType(mlir::Type type, raw_ostream& os) const
+    case NG_I8_TYPE_ID:
+    case NG_I16_TYPE_ID:
+    case NG_I32_TYPE_ID:
+    case NG_I64_TYPE_ID:
+    case NG_U8_TYPE_ID:
+    case NG_U16_TYPE_ID:
+    case NG_U32_TYPE_ID:
+    case NG_U64_TYPE_ID:
     {
-        auto arrayTy = type.dyn_cast<NGTensorType>();
-        if (!arrayTy)
-        {
-            NGRAPH_ASSERT(0) << "Incorrect type to print?";
-        }
-        os << "tensor";
-        if (!arrayTy.getShape().empty())
-        {
-            os << "<";
-            mlir::interleaveComma(arrayTy.getShape(), os);
-            os << ">";
-        }
+        auto int_ty = type.cast<NGIntegerType>();
+        os << "i" << int_ty.getWidth();
+        return;
+    }
+    case NG_BOOL_TYPE_ID:
+    {
+        os << "bool";
+        return;
+    }
+    default: { NGRAPH_ASSERT(0) << "Incorrect type to print?";
+    }
     }
 }

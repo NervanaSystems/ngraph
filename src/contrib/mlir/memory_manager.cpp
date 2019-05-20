@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
 #include "memory_manager.hpp"
+#include <memory>
 #include "ngraph/ngraph_visibility.hpp"
 
 using namespace ngraph::runtime::ngmlir;

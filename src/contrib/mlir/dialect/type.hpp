@@ -15,6 +15,7 @@
 //*****************************************************************************
 #pragma once
 
+#include "assertion.hpp"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/Function.h"
 #include "mlir/IR/OpDefinition.h"
@@ -22,7 +23,6 @@
 #include "mlir/IR/StandardTypes.h"
 #include "mlir/IR/TypeSupport.h"
 #include "mlir/IR/Types.h"
-
 namespace ngraph
 {
     namespace runtime
@@ -36,9 +36,146 @@ namespace ngraph
                 // The enum starts at the range reserved for this dialect.
                 // These values are pre-defined in MLIR lib and not configurable from here.
                 NG_TYPE = mlir::Type::Kind::FIRST_PRIVATE_EXPERIMENTAL_0_TYPE,
-                TENSOR_TYPE_ID
+                // Element types that are added by the dialect.
+                // Other types are just re-use of std dialect types.
+                NG_FIRST_INT_TYPE_ID,
+                NG_I8_TYPE_ID = NG_FIRST_INT_TYPE_ID,
+                NG_I16_TYPE_ID,
+                NG_I32_TYPE_ID,
+                NG_I64_TYPE_ID,
+                NG_U8_TYPE_ID,
+                NG_U16_TYPE_ID,
+                NG_U32_TYPE_ID,
+                NG_U64_TYPE_ID,
+                NG_LAST_INT_TYPE_ID = NG_U64_TYPE_ID,
+                NG_BOOL_TYPE_ID,
+                // Tensor type
+                NG_TENSOR_TYPE_ID
             };
 
+            // reuse std float types as-is
+            using NGFloatType = mlir::FloatType;
+
+            /// Integer type. It represents an integer of width 8,16,32,64. Signed or not.
+            class NGIntegerType : public mlir::Type::TypeBase<NGIntegerType, mlir::Type>
+            {
+            public:
+                using Base::Base;
+
+                static NGIntegerType get(NGTypeKind kind, mlir::MLIRContext* context)
+                {
+                    NGRAPH_ASSERT(kindof(kind)) << "Not an integer kind.";
+                    return Base::get(context, kind);
+                }
+                /// Create signed Int8
+                static NGIntegerType getInt8(mlir::MLIRContext* ctx)
+                {
+                    return get(NGTypeKind::NG_I8_TYPE_ID, ctx);
+                }
+                /// Create signed Int16
+                static NGIntegerType getInt16(mlir::MLIRContext* ctx)
+                {
+                    return get(NGTypeKind::NG_I16_TYPE_ID, ctx);
+                }
+                /// Create signed Int32
+                static NGIntegerType getInt32(mlir::MLIRContext* ctx)
+                {
+                    return get(NGTypeKind::NG_I32_TYPE_ID, ctx);
+                }
+                /// Create signed Int64
+                static NGIntegerType getInt64(mlir::MLIRContext* ctx)
+                {
+                    return get(NGTypeKind::NG_I64_TYPE_ID, ctx);
+                }
+                /// Create unsigned Int8
+                static NGIntegerType getUInt8(mlir::MLIRContext* ctx)
+                {
+                    return get(NGTypeKind::NG_U8_TYPE_ID, ctx);
+                }
+                /// Create unsigned Int16
+                static NGIntegerType getUInt16(mlir::MLIRContext* ctx)
+                {
+                    return get(NGTypeKind::NG_U16_TYPE_ID, ctx);
+                }
+                /// Create unsigned Int32
+                static NGIntegerType getUInt32(mlir::MLIRContext* ctx)
+                {
+                    return get(NGTypeKind::NG_U32_TYPE_ID, ctx);
+                }
+                /// Create unsigned Int64
+                static NGIntegerType getUInt64(mlir::MLIRContext* ctx)
+                {
+                    return get(NGTypeKind::NG_U64_TYPE_ID, ctx);
+                }
+
+                /// RTTI support. So we can do obj->isa<NGIntegerType>()
+                static bool kindof(unsigned kind)
+                {
+                    return kind >= NGTypeKind::NG_FIRST_INT_TYPE_ID &&
+                           kind <= NGTypeKind::NG_LAST_INT_TYPE_ID;
+                }
+
+                /// Return the bitwidth of this integer type.
+                unsigned getWidth() const;
+
+                /// Convert to equivalent std type
+                /// std types are sign-agnostic.
+                mlir::Type toStdType() const
+                {
+                    return mlir::IntegerType::get(getWidth(), getContext());
+                }
+                /// Check if signed type
+                bool isSigned() const;
+
+                /// Check if Int8
+                bool isInt8() const { return getKind() == NG_I8_TYPE_ID; }
+                /// Check if UInt8
+                bool isUInt8() const { return getKind() == NG_U8_TYPE_ID; }
+                /// Check if Int16
+                bool isInt16() const { return getKind() == NG_I16_TYPE_ID; }
+                /// Check if UInt16
+                bool isUInt16() const { return getKind() == NG_U16_TYPE_ID; }
+                /// Check if Int32
+                bool isInt32() const { return getKind() == NG_I32_TYPE_ID; }
+                /// Check if UInt32
+                bool isUInt32() const { return getKind() == NG_U32_TYPE_ID; }
+                /// Check if Int64
+                bool isInt64() const { return getKind() == NG_I64_TYPE_ID; }
+                /// Check if UInt64
+                bool isUInt64() const { return getKind() == NG_U64_TYPE_ID; }
+                // Delete convenience methods inherited from MLIR Type class.
+                // This would avoid confusion if we do something like this and get false.
+                //
+                //      if (type->cast<NGIntegerType>()->isInteger(32)) {}
+                //
+                // Those helpers use type id, and since we have our own Integer type id, they
+                // don't apply.
+                bool isInteger(unsigned width) const = delete;
+                unsigned getIntOrFloatBitWidth() const = delete;
+                bool isIntOrIndex() const = delete;
+                bool isIntOrIndexOrFloat() const = delete;
+                bool isIntOrFloat() const = delete;
+            };
+
+            /// Boolean Type.
+            class NGBoolType : public mlir::Type::TypeBase<NGBoolType, mlir::Type>
+            {
+            public:
+                using Base::Base;
+                static NGBoolType get(NGTypeKind kind, mlir::MLIRContext* context)
+                {
+                    NGRAPH_ASSERT(kindof(kind)) << "Not a bool type.";
+                    return Base::get(context, kind);
+                }
+
+                static bool kindof(unsigned kind) { return kind == NGTypeKind::NG_BOOL_TYPE_ID; }
+                static NGBoolType get(mlir::MLIRContext* ctx) { return get(NG_BOOL_TYPE_ID, ctx); }
+                /// Convert to equivalent std type. Integer of width 1 in that case
+                mlir::Type toStdType() const { return mlir::IntegerType::get(1, getContext()); }
+            };
+
+            // Note that dialect types don't add new data members, so always possible
+            // to use NG or std types here
             using EltType = mlir::Type;
             // TODO: Can we use ngraph::shape here (given the hashing requirements)
             using Shape = llvm::ArrayRef<int64_t>;
@@ -86,6 +223,7 @@ namespace ngraph
                 Shape m_shape;
             };
 
+            /// NGraph Tensor Type
             class NGTensorType
                 : public mlir::Type::TypeBase<NGTensorType, mlir::Type, NGTensorTypeStorage>
             {
@@ -93,7 +231,9 @@ namespace ngraph
                 using Base::Base;
                 EltType getElementType() const { return getImpl()->getElementType(); }
                 Shape getShape() const { return getImpl()->getShape(); }
+                /// Tensor Rank. Static shape only for now
                 int getRank() { return getShape().size(); }
+                /// Computes tensor size in bytes
                 size_t getSizeInBytes()
                 {
                     size_t s = 1;
@@ -113,7 +253,7 @@ namespace ngraph
                 /// create a unique tensor type based on element type and shape.
                 static NGTensorType get(mlir::MLIRContext* context, EltType eltType, Shape shape);
                 /// for llvm RTTI
-                static bool kindof(unsigned kind) { return kind == NGTypeKind::TENSOR_TYPE_ID; }
+                static bool kindof(unsigned kind) { return kind == NGTypeKind::NG_TENSOR_TYPE_ID; }
             };
         }
     }

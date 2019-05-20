@@ -17,6 +17,8 @@
 #include "lowerer.hpp"
 #include <map>
 #include "compiler.hpp"
+#include "dialect/ops.hpp"
+#include "dialect/type.hpp"
 #include "llvm/ADT/DenseSet.h"
 #include "mlir/EDSC/Builders.h"
 #include "mlir/EDSC/Helpers.h"
@@ -25,8 +27,6 @@
 #include "mlir/IR/StandardTypes.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "ngraph/assertion.hpp"
-#include "dialect/ops.hpp"
-#include "dialect/type.hpp"
 
 using namespace ngraph::runtime::ngmlir;
 // anonymous namespace
@@ -272,6 +272,23 @@ namespace
         {
             return tensor.toMemref();
         }
+        // element type
+        if (auto type = t.dyn_cast<NGFloatType>())
+        {
+            // Float
+            // float types are already std type
+            return type;
+        }
+        if (auto type = t.dyn_cast<NGIntegerType>())
+        {
+            // map it to std type
+            return type.toStdType();
+        }
+        if (auto type = t.dyn_cast<NGBoolType>())
+        {
+            return type.toStdType();
+        }
+        NGRAPH_FAIL() << "Unsupported type to lower";
         return t;
     }
 

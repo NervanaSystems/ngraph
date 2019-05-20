@@ -148,21 +148,32 @@ namespace ngraph
         {
         case ngraph::element::Type_t::undefined:
         case ngraph::element::Type_t::dynamic:
-        case ngraph::element::Type_t::boolean:
-        case ngraph::element::Type_t::bf16:
-        default: NGRAPH_ASSERT(false) << "MLIR: Unsupported NGraph types"; break;
-        case ngraph::element::Type_t::f32: return mlir::FloatType::getF32(&m_context);
-        case ngraph::element::Type_t::f64: return mlir::FloatType::getF64(&m_context);
-        case ngraph::element::Type_t::i8:
-        case ngraph::element::Type_t::u8: return mlir::IntegerType::get(8, &m_context);
-        case ngraph::element::Type_t::i16:
-        case ngraph::element::Type_t::u16: return mlir::IntegerType::get(16, &m_context);
-        case ngraph::element::Type_t::i32:
-        case ngraph::element::Type_t::u32: return mlir::IntegerType::get(32, &m_context);
-        case ngraph::element::Type_t::i64:
-        case ngraph::element::Type_t::u64: return mlir::IntegerType::get(64, &m_context);
+        default: NGRAPH_FAIL() << "MLIR: Unsupported NGraph types"; break;
+
+        case ngraph::element::Type_t::bf16: return NGFloatType::getBF16(&m_context);
+
+        case ngraph::element::Type_t::f32: return NGFloatType::getF32(&m_context);
+
+        case ngraph::element::Type_t::f64: return NGFloatType::getF64(&m_context);
+
+        case ngraph::element::Type_t::i8: return NGIntegerType::getInt8(&m_context);
+
+        case ngraph::element::Type_t::u8:
+        case ngraph::element::Type_t::boolean: return NGIntegerType::getUInt8(&m_context);
+
+        case ngraph::element::Type_t::i16: return NGIntegerType::getInt16(&m_context);
+
+        case ngraph::element::Type_t::u16: return NGIntegerType::getInt16(&m_context);
+
+        case ngraph::element::Type_t::i32: return NGIntegerType::getInt32(&m_context);
+
+        case ngraph::element::Type_t::u32: return NGIntegerType::getUInt32(&m_context);
+
+        case ngraph::element::Type_t::i64: return NGIntegerType::getInt64(&m_context);
+
+        case ngraph::element::Type_t::u64: return NGIntegerType::getUInt64(&m_context);
         }
-        NGRAPH_ASSERT(false) << "Unreachable";
+        NGRAPH_FAIL(); // Unreachable
         return mlir::Type();
     }
 
@@ -378,8 +389,7 @@ namespace ngraph
         auto memRefType = type.dyn_cast<mlir::MemRefType>();
         if (!memRefType)
             return nullptr;
-        if (memRefType.getNumDynamicDims() != 0)
-            NGRAPH_FAIL();
+        NGRAPH_ASSERT(memRefType.getNumDynamicDims() == 0) << "No support for dynamic shapes";
 
         // We only use StaticFloatMemRef because that's what MLIR currently offers.
         // We should expand this with different types and dynamic MemRefs

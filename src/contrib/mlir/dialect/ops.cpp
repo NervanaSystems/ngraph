@@ -70,8 +70,8 @@ namespace ngraph
     }
 
     void runtime::ngmlir::NG_FakeInput::build(mlir::Builder* builder,
-                                           mlir::OperationState* state,
-                                           mlir::Type resultType)
+                                              mlir::OperationState* state,
+                                              mlir::Type resultType)
     {
         state->types.push_back(std::move(resultType));
     }
@@ -83,9 +83,9 @@ namespace ngraph
     }
 
     void runtime::ngmlir::NG_AddOp::build(mlir::Builder* builder,
-                                       mlir::OperationState* state,
-                                       mlir::Value* lhs,
-                                       mlir::Value* rhs)
+                                          mlir::OperationState* state,
+                                          mlir::Value* lhs,
+                                          mlir::Value* rhs)
     {
         state->types.push_back(lhs->getType());
         state->operands.push_back(lhs);
@@ -100,9 +100,9 @@ namespace ngraph
     }
 
     void runtime::ngmlir::NG_MatmulBiasOp::build(mlir::Builder* builder,
-                                              mlir::OperationState* state,
-                                              mlir::Value* lhs,
-                                              mlir::Value* rhs)
+                                                 mlir::OperationState* state,
+                                                 mlir::Value* lhs,
+                                                 mlir::Value* rhs)
     {
         state->types.push_back(lhs->getType());
         state->operands.push_back(lhs);
@@ -147,8 +147,8 @@ namespace ngraph
     }
 
     void runtime::ngmlir::NG_ReturnOp::build(mlir::Builder* builder,
-                                          mlir::OperationState* state,
-                                          std::vector<mlir::Value*> value_list)
+                                             mlir::OperationState* state,
+                                             std::vector<mlir::Value*> value_list)
     {
         for (auto value : value_list)
         {
