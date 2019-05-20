@@ -172,19 +172,19 @@ namespace ngraph
                 index = get<2>(external_function->get_primitive_build_tuple(node));
             }
 
+            template <typename OP>
             static void emit_build_primitives(CPU_ExternalFunction* external_function,
                                               const ngraph::Node* node,
                                               CodeWriter& writer,
                                               size_t& index,
                                               std::vector<std::size_t>& deps,
-                                              const std::vector<TensorViewWrapper>& args,
-                                              size_t scale_index,
-                                              size_t sum_scale_index = 0,
-                                              bool is_quantize_op = false)
+                                              const std::vector<TensorViewWrapper>& args)
             {
                 writer << "if (ctx->first_iteration)\n";
                 writer.block_begin();
 
+                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto scale_index = mkldnn_emitter->get_scale_index<OP>();
                 auto scales_size = shape_size(node->get_input_shape(scale_index));
                 writer << "std::vector<float> dyn_scales;\n";
                 writer << "dyn_scales.assign(" << args[scale_index].get_name() << ", "
@@ -192,7 +192,7 @@ namespace ngraph
                        << ");\n";
 
                 // for Quantize
-                if (is_quantize_op)
+                if (is_same<OP, ngraph::op::Quantize>())
                 {
                     writer << "for (size_t i = 0; i < " << std::to_string(scales_size)
                            << "; i++)\n";
@@ -202,13 +202,15 @@ namespace ngraph
                 }
 
                 // QuantizedConvolutionBiasAdd and QuantizedConvolutionBiasSignedAdd
-                if (sum_scale_index != 0)
+                if (is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
+                    is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
                 {
+                    auto sum_scale_index = 5;
                     auto sum_scales_size = shape_size(node->get_input_shape(sum_scale_index));
                     writer << "std::vector<float> dyn_post_op_scales;\n";
                     writer << "dyn_post_op_scales.assign(" << args[sum_scale_index].get_name()
                            << ", " << args[sum_scale_index].get_name() << " + "
-                           << std::to_string(scales_size) << ");\n";
+                           << std::to_string(sum_scales_size) << ");\n";
                 }
 
                 writer << "// quantize across first dim (mask=2^0) if dyn_scales is a "
@@ -2067,8 +2069,8 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(
-                        external_function, node, writer, conv_index, deps, args, 2 /*scale index*/);
+                    emit_build_primitives<ngraph::op::QuantizedConvolutionRelu>(
+                        external_function, node, writer, conv_index, deps, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2091,8 +2093,8 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(
-                        external_function, node, writer, conv_index, deps, args, 2 /*scale index*/);
+                    emit_build_primitives<ngraph::op::QuantizedConvolution>(
+                        external_function, node, writer, conv_index, deps, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2363,8 +2365,8 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(
-                        external_function, node, writer, conv_index, deps, args, 3 /*scale index*/);
+                    emit_build_primitives<ngraph::op::QuantizedConvolutionBias>(
+                        external_function, node, writer, conv_index, deps, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2390,14 +2392,8 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function,
-                                          node,
-                                          writer,
-                                          conv_index,
-                                          deps,
-                                          args,
-                                          4 /*scale index*/,
-                                          5 /*sum scale index*/);
+                    emit_build_primitives<ngraph::op::QuantizedConvolutionBiasAdd>(
+                        external_function, node, writer, conv_index, deps, args);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
                     writer.block_begin();
@@ -2428,14 +2424,8 @@ namespace ngraph
                 {
                     size_t conv_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function,
-                                          node,
-                                          writer,
-                                          conv_index,
-                                          deps,
-                                          args,
-                                          4 /*scale index*/,
-                                          5 /*sum scale index*/);
+                    emit_build_primitives<ngraph::op::QuantizedConvolutionBiasSignedAdd>(
+                        external_function, node, writer, conv_index, deps, args);
 
                     writer << "if (" << out[0].get_name() << " != " << args[3].get_name() << ")\n";
                     writer.block_begin();
@@ -2466,8 +2456,8 @@ namespace ngraph
                 {
                     size_t qip_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(
-                        external_function, node, writer, qip_index, deps, args, 3 /*scale index*/);
+                    emit_build_primitives<ngraph::op::QuantizedDotBias>(
+                        external_function, node, writer, qip_index, deps, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -2500,8 +2490,8 @@ namespace ngraph
 
                     size_t qip_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(
-                        external_function, node, writer, qip_index, deps, args, 2 /*scale index*/);
+                    emit_build_primitives<ngraph::op::QuantizedDot>(
+                        external_function, node, writer, qip_index, deps, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3880,13 +3870,8 @@ namespace ngraph
                 {
                     size_t dequantize_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function,
-                                          node,
-                                          writer,
-                                          dequantize_index,
-                                          deps,
-                                          args,
-                                          1 /*scale index*/);
+                    emit_build_primitives<ngraph::op::Dequantize>(
+                        external_function, node, writer, dequantize_index, deps, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -3917,15 +3902,8 @@ namespace ngraph
                 {
                     size_t quantize_index;
                     std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function,
-                                          node,
-                                          writer,
-                                          quantize_index,
-                                          deps,
-                                          args,
-                                          1 /*scale index*/,
-                                          0 /*no sum scale_index*/,
-                                          true /*Quantize op*/);
+                    emit_build_primitives<ngraph::op::Quantize>(
+                        external_function, node, writer, quantize_index, deps, args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";

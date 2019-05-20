@@ -33,6 +33,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
@@ -44,6 +45,7 @@
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -727,9 +729,14 @@ namespace ngraph
                 size_t get_scale_index()
                 {
                     size_t index = 0;
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
-                        std::is_same<OP, ngraph::op::QuantizedDot>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
+                    if (std::is_same<OP, ngraph::op::Quantize>() ||
+                        std::is_same<OP, ngraph::op::Dequantize>())
+                    {
+                        index = 1;
+                    }
+                    else if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
+                             std::is_same<OP, ngraph::op::QuantizedDot>() ||
+                             std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
                     {
                         index = 2;
                     }
