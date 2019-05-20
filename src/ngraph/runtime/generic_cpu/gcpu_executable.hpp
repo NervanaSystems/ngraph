@@ -21,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <ostream>
 
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/any.hpp"
@@ -138,6 +139,8 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
 
+using namespace std;
+
 namespace ngraph
 {
     namespace runtime
@@ -147,6 +150,21 @@ namespace ngraph
             class GCPUBackend;
             class GCPUExecutable;
         }
+    }
+}
+
+void print_tensor_value(const HostTensor& ht) {
+    const element::Type& type = tensor->get_element_type();
+    if (type == element::f32) {
+        const float* data = tensor->get_data_ptr<float>();
+        cerr << "HostTensor (data pointer = 0x" << std::hex << data << std::dec << ")" << endl;
+        cerr << " element count = " << tensor->get_element_count() << endl;
+        for (int i = 0; i < min(tensor->get_element_count(), 10); ++i) {
+            cerr << "   [" << i << "] = " << data[i] << endl;
+        }
+    }
+    else {
+        cerr << __PRETTY_FUNCTION__ << ": can't print this tensor element type" << endl;
     }
 }
 
@@ -189,6 +207,13 @@ private:
         const Node& node = node_wrapper.get_node();
         std::string node_op = node.description();
 
+
+        cerr << "node_op: " << node_op << endl;
+        cerr << "inputs:" << endl;
+        for (int i = 0; i < inputs.size(); ++i) {
+            cerr << endl;
+            print_tensor_value(inputs[i].get());
+        }
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
@@ -1313,6 +1338,11 @@ private:
         }
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
 #pragma GCC diagnostic pop
+        }
+        cerr << "outputs:" << endl;
+        for (int i = 0; i < outputs.size(); ++i) {
+            cerr << endl;
+            print_tensor_value(outputs[i].get());
         }
     }
 };
