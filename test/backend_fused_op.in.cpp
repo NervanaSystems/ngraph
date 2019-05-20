@@ -900,3 +900,20 @@ NGRAPH_TEST(${BACKEND_NAME}, squared_difference_broadcast)
     test_case.add_expected_output<int32_t>(Shape{2, 2}, {0, 0, 0, 0});
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, split_3_equal_parts)
+{
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{6});
+
+    const auto tested_op = make_shared<op::Split>(data, 0, 3);
+    const auto function = make_shared<Function>(tested_op->decompose_op(), ParameterVector{data});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<int32_t>({1, 2, 3, 4, 5, 6});
+
+    test_case.add_expected_output<int32_t>(Shape{2}, {1, 2});
+    test_case.add_expected_output<int32_t>(Shape{2}, {3, 4});
+    test_case.add_expected_output<int32_t>(Shape{2}, {5, 6});
+
+    test_case.run();
+}
