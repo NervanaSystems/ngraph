@@ -433,7 +433,7 @@ shared_ptr<runtime::Executable>
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
         pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-        pass_manager.register_pass<ngraph::pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+        pass_manager.register_pass<ngraph::pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
 
         // GetOutputElementElimination must be after CommonSubexpressionElimination
         pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();

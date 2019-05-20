@@ -25,7 +25,9 @@ namespace ngraph
         class BatchFusion : public ngraph::pass::FunctionPass
         {
         public:
-            BatchFusion(ngraph::pass::FusionType type = ngraph::pass::ALL_FUSIONS)
+            typedef ngraph::pass::FusionType FusionType;
+            typedef ngraph::pass::FusionTypeMask FusionTypeMask;
+            BatchFusion(FusionTypeMask type = FusionType::ALL_FUSIONS)
                 : FunctionPass()
                 , m_fusion_type(type)
             {
@@ -34,7 +36,7 @@ namespace ngraph
             virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
 
         private:
-            ngraph::pass::FusionType m_fusion_type;
+            FusionTypeMask m_fusion_type;
         };
     }
 }

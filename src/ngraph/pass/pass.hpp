@@ -47,7 +47,7 @@ namespace ngraph
             ALL_FUSIONS = 0xFFFFFFFF
         };
         typedef EnumMask<FusionType> FusionTypeMask;
-        
+
         enum class PassProperty : uint32_t
         {
             // Pass requires node shapes to be static
