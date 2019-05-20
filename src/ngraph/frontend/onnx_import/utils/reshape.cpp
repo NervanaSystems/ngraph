@@ -24,7 +24,6 @@
 
 #include "exceptions.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/reshape.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
