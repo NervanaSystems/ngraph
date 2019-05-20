@@ -38,6 +38,8 @@ set (SRC
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
+    builder/split.cpp
+    builder/split.hpp
     builder/tensor_mask.hpp
     check.hpp
     code_writer.hpp

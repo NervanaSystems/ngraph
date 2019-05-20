@@ -16,7 +16,7 @@
 #include <numeric>
 
 #include "ngraph/op/fused/split.hpp"
-#include "ngraph/op/util/reshape.hpp"
+#include "ngraph/builder/split.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -77,7 +77,7 @@ void op::Split::pre_validate_and_infer_types()
 
 NodeVector op::Split::decompose_op() const
 {
-    return op::util::split(get_argument(0), m_splits, m_axis);
+    return builder::split(get_argument(0), m_splits, m_axis);
 }
 
 shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const

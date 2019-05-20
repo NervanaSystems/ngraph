@@ -47,7 +47,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/util/reshape.hpp"
+#include "ngraph/builder/split.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -357,13 +357,13 @@ namespace ngraph
                         //           step.
                         // Ht_R    - Hidden state multiplied by weights tensor at current time step.
 
-                        NodeVector p_iof = ngraph::op::util::split(m_P, 3);
+                        NodeVector p_iof = ngraph::builder::split(m_P, 3);
                         const auto& p_i = p_iof.at(0);
                         const auto& p_o = p_iof.at(1);
                         const auto& p_f = p_iof.at(2);
                         NodeVector h_list;
 
-                        NodeVector b_W_R = ngraph::op::util::split(m_B, 2);
+                        NodeVector b_W_R = ngraph::builder::split(m_B, 2);
                         std::shared_ptr<ngraph::Node> bias = b_W_R.at(0) + b_W_R.at(1);
                         std::shared_ptr<ngraph::Node> H_t = m_initial_h;
                         std::shared_ptr<ngraph::Node> C_t = m_initial_c;
@@ -376,7 +376,7 @@ namespace ngraph
                         NodeVector in_seqs{};
                         if (m_X->get_shape().at(0) != 1)
                         {
-                            in_seqs = ngraph::op::util::split(m_X, m_X->get_shape().at(0));
+                            in_seqs = ngraph::builder::split(m_X, m_X->get_shape().at(0));
                         }
                         else
                         {
@@ -404,7 +404,7 @@ namespace ngraph
                             // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
                             auto gates = add(Xt_W, add(Ht_R, bias));
 
-                            NodeVector split_gates = ngraph::op::util::split(gates, 4, -1);
+                            NodeVector split_gates = ngraph::builder::split(gates, 4, -1);
                             auto i = split_gates.at(0);
                             auto o = split_gates.at(1);
                             auto f = split_gates.at(2);
@@ -604,17 +604,17 @@ namespace ngraph
                     {
                         // In bidirectional mode weights are stacked together, so we must split them.
                         NodeVector W{
-                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_W), 2)};
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_W), 2)};
                         NodeVector R{
-                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_R), 2)};
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_R), 2)};
                         NodeVector B{
-                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_B), 2)};
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_B), 2)};
                         NodeVector P{
-                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_P), 2)};
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_P), 2)};
                         NodeVector H{
-                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_H), 2)};
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_H), 2)};
                         NodeVector C{
-                            ngraph::op::util::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_C), 2)};
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_C), 2)};
 
                         LSTMForward lstm_fwd(input_map.at(LSTMInput::LSTM_INPUT_X),
                                              W.at(0),

@@ -24,7 +24,7 @@
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/util/reshape.hpp"
+#include "ngraph/builder/split.hpp"
 #include "ngraph/util.hpp"
 #include "utils/common.hpp"
 
@@ -46,7 +46,7 @@ namespace ngraph
                     ASSERT_VALID_ARGUMENT(node, p_norm >= 0)
                         << "Only positive (including zero) values are supported for 'p' attribute.";
 
-                    NodeVector slices = ngraph::op::util::split(data, channels_count, channel_axis);
+                    NodeVector slices = ngraph::builder::split(data, channels_count, channel_axis);
 
                     for (auto& slice : slices)
                     {
