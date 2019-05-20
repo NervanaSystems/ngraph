@@ -39,10 +39,10 @@ if (NGRAPH_MLIR_ENABLE)
    
     target_include_directories(mlir_backend PRIVATE ${LLVM_INCLUDE_DIRS})
     
-    message(STATUS "MLIR Headers at : ${MLIR_INCLUDE_PATH}")
+    message(STATUS "MLIR Headers at : ${MLIR_INCLUDE_PATHS}")
     message(STATUS "LLVM Headers at : ${MLIR_LLVM_INCLUDEPATH}")
 
-    target_include_directories(mlir_backend PRIVATE ${MLIR_INCLUDE_PATH}) 
+    target_include_directories(mlir_backend PRIVATE ${MLIR_INCLUDE_PATHS}) 
     
     llvm_map_components_to_libnames(llvm_libs support core irreader)
     
@@ -91,5 +91,26 @@ if (NGRAPH_MLIR_ENABLE)
 
     # Link ngraph 
     target_link_libraries(mlir_backend PUBLIC ngraph)
+
+    # table-gen dialect ops
+    # include table-gen helpers
+    include(${LLVM_DIR}/TableGen.cmake)
+
+    function(ngraph_tablegen ofn)
+        tablegen(MLIR ${ARGV} "-I${MLIR_SRC_INCLUDE_PATH}" "-I${MLIR_BIN_INCLUDE_PATH}")
+        set(TABLEGEN_OUTPUT ${TABLEGEN_OUTPUT} ${CMAKE_CURRENT_BINARY_DIR}/${ofn} PARENT_SCOPE)
+    endfunction()
+    
+
+    set(MLIR_TABLEGEN_EXE mlir-tblgen)
+
+    set(LLVM_TARGET_DEFINITIONS dialect/ops.td)
+    
+    ngraph_tablegen(ops.h.inc -gen-op-decls)
+    ngraph_tablegen(ops.cpp.inc -gen-op-defs)
+    
+    add_public_tablegen_target(ngraph_ops_gen)
+    add_dependencies(mlir_backend ngraph_ops_gen)
+    target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 endif()    

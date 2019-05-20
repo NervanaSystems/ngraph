@@ -29,8 +29,8 @@ public:\
     DialectLoweringPass& m_pass;\
 };
 
-DECL_OP_CONV(NG_AddOp)
-DECL_OP_CONV(NG_MatmulBiasOp)
-DECL_OP_CONV(NG_ReturnOp)
+DECL_OP_CONV(NGAddOp)
+DECL_OP_CONV(NGMatMulBiasOp)
+DECL_OP_CONV(NGReturnOp)
 
 #undef DECL_OP_CONV

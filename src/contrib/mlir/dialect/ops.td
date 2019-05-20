@@ -1,0 +1,115 @@
+//*****************************************************************************
+// Copyright 2017-2019 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
+//
+// This is the NGraph Dialect operation definition file.
+//
+//===----------------------------------------------------------------------===//
+
+include "mlir/IR/OpBase.td"
+
+// NGraph Dialect operations definitions
+//
+// This files declares NGraph operations that table-gen uses to create C++ code
+// For more information about tablegen. See https://llvm.org/docs/TableGen/index.html
+//
+// The output files are ops.h.inc and ops.cpp.inc and are generated at build time
+// The file declares base classes to ease opcode definitions and hoist common parts out.
+// Each class fixes a set of attributes. For example:
+// class NG_Unary_Arith_Op defines a base class for all unary arithmetic ops without side-effects
+//
+// An opcode is a record definition of the form
+//      def AbsOp      : NG_Unary_Arith_Op<"abs">;
+//
+// Each def will corresponding to a C++ class
+
+
+// NGraph Types
+// This defines records equivalent to NGraph types. It doesn't generate code.
+// This is used as a type in the DAG input/outputs.
+// Constraints (CPred) are used to type-check args/results of that type during op verification
+def NG_TensorType : Type<CPred<"{0}.isa<ngraph::runtime::ngmlir::NGTensorType>()">,
+                     "NGraph Tensor Type">;
+
+// NGraph operation base class.
+// Prepends "ng." to operation name
+class NG_Op<string mnemonic, list<OpTrait> traits = []> :
+    Op<!strconcat("ng.", mnemonic), traits> {}
+
+// Operations producing single result.
+// Will set OneResult trait based on Results out dag.
+class NG_OneResult_Op<string mnemonic, list<OpTrait> traits = []> :
+      NG_Op<mnemonic, traits>, Results<(outs NG_TensorType:$res)> {}
+
+// Operations producing no results
+class NG_ZeroResult_Op<string mnemonic, list<OpTrait> traits = []> :
+      NG_Op<mnemonic, traits>, Results<(outs)> {}
+
+// Arithmetic binary operations
+// Input and outputs have same type
+class NG_Unary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
+      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect, SameValueType], traits)>,
+      Arguments<(ins NG_TensorType:$arg)>
+{
+  // TODO: Implement
+  let parser = [{ NGRAPH_FAIL() << "No parser support"; return false; }];
+
+  let verifier = [{ return verifyUnaryArithOp(this); }];
+}
+
+// Arithmetic binary operations
+// Inputs and outputs have same type
+class NG_Binary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
+      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect, SameValueType], traits)>,
+      Arguments<(ins NG_TensorType:$lhs, NG_TensorType:$rhs)>
+{
+  // TODO: Implement
+  let parser = [{ NGRAPH_FAIL() << "No parser support"; return false; }];
+
+  let verifier = [{ return verifyBinaryArithOp(this); }];
+}
+
+// Base class for terminator operations.
+class NG_Terminator_Op<string mnemonic, list<OpTrait> traits = []> :
+    NG_Op<mnemonic, !listconcat(traits, [Terminator])>,
+    Arguments<(ins Variadic<NG_TensorType>:$args)>, Results<(outs)> {}
+
+// Unary Operations
+def NGAbsOp      : NG_Unary_Arith_Op<"abs">;
+def NGCeilOp     : NG_Unary_Arith_Op<"ceil">;
+def NGConvertOp  : NG_Unary_Arith_Op<"conv">;
+def NGExpOp      : NG_Unary_Arith_Op<"exp">;
+
+// Binary Operations
+def NGAddOp : NG_Binary_Arith_Op<"add", [Commutative]>;
+def NGAndOp : NG_Binary_Arith_Op<"and", [Commutative]>;
+def NGSubOp : NG_Binary_Arith_Op<"sub">;
+def NGDivOp : NG_Binary_Arith_Op<"div">;
+
+// Comparison
+def NGEqOp     : NG_OneResult_Op<"equal", [NoSideEffect]>;
+def NGNotEqOp  : NG_OneResult_Op<"not.equal", [NoSideEffect]>;
+
+// Matrix Multiply
+def NGMatMulBiasOp : NG_Binary_Arith_Op<"matmul.bias">
+{
+  let verifier=[{return verifyOp(this);}];
+}
+
+// Terminator Ops
+def NGReturnOp : NG_Terminator_Op<"return">;
+
+// Fake ops
+def NGFakeInputOp : NG_OneResult_Op<"fake.input", [NoSideEffect]>;

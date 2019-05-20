@@ -28,14 +28,13 @@
 #include "mlir/Transforms/DialectConversion.h"
 #include "ngraph/assertion.hpp"
 
-using namespace ngraph::runtime::ngmlir;
 // anonymous namespace
 // no need to expose any of the following outside of this file
 namespace
 {
     using namespace mlir;
     using namespace mlir::edsc;
-    using namespace ngraph::runtime::ngmlir;
+    using namespace ngraph::runtime;
 
     class DialectLoweringPass;
 #include "op_lowerers.inc"
@@ -56,9 +55,9 @@ namespace
         // Initialize the list of converters.
         llvm::DenseSet<DialectOpConversion*> initConverters(MLIRContext* context) override
         {
-            return ConversionListBuilder<NG_AddOpConversion,
-                                         NG_MatmulBiasOpConversion,
-                                         NG_ReturnOpConversion>::build(&allocator, context, m_pass);
+            return ConversionListBuilder<NGAddOpConversion,
+                                         NGMatMulBiasOpConversion,
+                                         NGReturnOpConversion>::build(&allocator, context, m_pass);
         }
 
     private:
@@ -70,7 +69,7 @@ namespace
     class DialectLoweringPass : public ModulePass<DialectLoweringPass>
     {
     public:
-        DialectLoweringPass(MLIRCompiler& compiler)
+        DialectLoweringPass(ngmlir::MLIRCompiler& compiler)
             : m_dialectLowerer(*this)
             , m_compiler(compiler)
         {
@@ -96,7 +95,7 @@ namespace
         std::map<Value*, unsigned> m_outputValueMap;
         // list of results values to add to func signature
         SmallVector<Value*, 4> m_loweredOutputValues;
-        MLIRCompiler& m_compiler;
+        ngmlir::MLIRCompiler& m_compiler;
     };
 
     void DialectLoweringPass::runOnModule()
@@ -132,7 +131,7 @@ namespace
 
         // we find out output values by looking at returned values
         // any return should return all outputs of the subgraph
-        f->walk<NG_ReturnOp>([this, &outputCount](NG_ReturnOp ret) {
+        f->walk<ngmlir::NGReturnOp>([this, &outputCount](ngmlir::NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
                 this->m_outputValueMap.insert(std::pair<Value*, unsigned>(ret.getOperand(i), i));
@@ -152,8 +151,8 @@ namespace
         // however, due to how DialectConversion framework works, new func is only
         // materialized after conversion is done (rewriter->getFunction, or even rewriter->getInsertionBlock()->getFunction()
         // will give you the original func). This makes it very convoluted to insert instructions at entry block.
-        auto op = rewriter->create<NG_FakeInput>(rewriter->getUnknownLoc(),
-                                                 IndexType::get(getModule().getContext()));
+        auto op = rewriter->create<ngmlir::NGFakeInputOp>(rewriter->getUnknownLoc(),
+                                                          IndexType::get(getModule().getContext()));
         // will be fixed later to read passed arg instead.
         m_memMgrDefs.push_back(op.getResult());
         return op.getResult();
@@ -172,7 +171,7 @@ namespace
             {
                 unsigned argId = (*it).second;
                 auto newResult = rewriter
-                                     .create<NG_FakeInput>(
+                                     .create<ngmlir::NGFakeInputOp>(
                                          op->getLoc(),
                                          m_dialectLowerer.convertType(
                                              origResult->getType()) /* convert to lowered type */
@@ -183,7 +182,7 @@ namespace
             }
             else
             {
-                auto tensorType = origResult->getType().cast<NGTensorType>();
+                auto tensorType = origResult->getType().cast<ngmlir::NGTensorType>();
                 auto callBackFunc = getCallDecl("__mlir_allocate",
                                                 {rewriter.getIndexType(), rewriter.getIndexType()},
                                                 {tensorType.toMemref()},
@@ -237,7 +236,8 @@ namespace
         for (auto value : m_loweredOutputValues)
         {
             auto op = value->getDefiningOp();
-            NGRAPH_ASSERT(op->isa<NG_FakeInput>()) << "output value not defined by fake output?";
+            NGRAPH_ASSERT(op->isa<ngmlir::NGFakeInputOp>())
+                << "output value not defined by fake output?";
             value->replaceAllUsesWith(entryBlock->getArgument(oldFuncType.getNumInputs() + i));
             op->erase();
             i++;
@@ -268,23 +268,23 @@ namespace
     // NGDialect converters
     Type DialectLowerer::convertType(Type t)
     {
-        if (auto tensor = t.dyn_cast<NGTensorType>())
+        if (auto tensor = t.dyn_cast<ngmlir::NGTensorType>())
         {
             return tensor.toMemref();
         }
         // element type
-        if (auto type = t.dyn_cast<NGFloatType>())
+        if (auto type = t.dyn_cast<ngmlir::NGFloatType>())
         {
             // Float
             // float types are already std type
             return type;
         }
-        if (auto type = t.dyn_cast<NGIntegerType>())
+        if (auto type = t.dyn_cast<ngmlir::NGIntegerType>())
         {
             // map it to std type
             return type.toStdType();
         }
-        if (auto type = t.dyn_cast<NGBoolType>())
+        if (auto type = t.dyn_cast<ngmlir::NGBoolType>())
         {
             return type.toStdType();
         }
@@ -293,11 +293,11 @@ namespace
     }
 
     // ADD
-    SmallVector<Value*, 4> NG_AddOpConversion::rewrite(Operation* op,
-                                                       ArrayRef<Value*> operands,
-                                                       FuncBuilder& rewriter) const
+    SmallVector<Value*, 4> NGAddOpConversion::rewrite(Operation* op,
+                                                      ArrayRef<Value*> operands,
+                                                      FuncBuilder& rewriter) const
     {
-        auto add = op->cast<NG_AddOp>();
+        auto add = op->cast<ngmlir::NGAddOp>();
         auto loc = add.getLoc();
         Value *origResult, *newResult;
 
@@ -330,15 +330,14 @@ namespace
         return {result};
     }
 
-    SmallVector<Value*, 4> NG_MatmulBiasOpConversion::rewrite(Operation* op,
-                                                              ArrayRef<Value*> operands,
-                                                              FuncBuilder& rewriter) const
+    SmallVector<Value*, 4> NGMatMulBiasOpConversion::rewrite(Operation* op,
+                                                             ArrayRef<Value*> operands,
+                                                             FuncBuilder& rewriter) const
     {
-        auto matmul = op->cast<NG_MatmulBiasOp>();
+        auto matmul = op->cast<ngmlir::NGMatMulBiasOp>();
         auto loc = matmul.getLoc();
 
-        NGRAPH_ASSERT(!matmul.getBias() && operands.size() == 2)
-            << "Bias is not supported yet in MatmulBias operation";
+        NGRAPH_ASSERT(operands.size() == 2) << "Bias is not supported yet in MatmulBias operation";
 
         // Retrieve/generate Values for operands and result.
         ScopedContext scope(rewriter, loc);
@@ -397,9 +396,9 @@ namespace
         return {result};
     }
 
-    SmallVector<Value*, 4> NG_ReturnOpConversion::rewrite(Operation* op,
-                                                          ArrayRef<Value*> operands,
-                                                          FuncBuilder& rewriter) const
+    SmallVector<Value*, 4> NGReturnOpConversion::rewrite(Operation* op,
+                                                         ArrayRef<Value*> operands,
+                                                         FuncBuilder& rewriter) const
     {
         rewriter.create<ReturnOp>(op->getLoc());
         return {};

@@ -29,10 +29,11 @@ NGDialect::NGDialect(mlir::MLIRContext* ctx)
     addTypes<NGTensorType>();
     addTypes<NGIntegerType>();
     addTypes<NGBoolType>();
-    addOperations<NG_AddOp>();
-    addOperations<NG_MatmulBiasOp>();
-    addOperations<NG_ReturnOp>();
-    addOperations<NG_FakeInput>();
+
+    addOperations<NGAddOp>();
+    addOperations<NGMatMulBiasOp>();
+    addOperations<NGReturnOp>();
+    addOperations<NGFakeInputOp>();
 }
 
 void NGDialect::printType(mlir::Type type, raw_ostream& os) const

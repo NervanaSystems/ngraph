@@ -28,104 +28,13 @@ namespace ngraph
     {
         namespace ngmlir
         {
-            // Fake instructions
-
-            /// Fake Input
-            /// Used as fake definitions during dialect conversion.
-            /// Used when we cannot insert the real definition once during lowering.
-            /// The are cleaned up after dialect lowering and replaced with real defintion.
-            class NG_FakeInput : public mlir::Op<NG_FakeInput,
-                                                 mlir::OpTrait::NOperands<0>::Impl,
-                                                 mlir::OpTrait::OneResult,
-                                                 mlir::OpTrait::HasNoSideEffect>
-            {
-            public:
-                static llvm::StringRef getOperationName() { return "ng.fake.output"; }
-                mlir::LogicalResult verify();
-                static void
-                    build(mlir::Builder* builder, mlir::OperationState* state, mlir::Type type);
-                /// Inherit constructor.
-                using Op::Op;
-            };
-
-            // Binary instructions
-            class NG_AddOp : public mlir::Op<NG_AddOp,
-                                             mlir::OpTrait::NOperands<2>::Impl,
-                                             mlir::OpTrait::OneResult,
-                                             mlir::OpTrait::HasNoSideEffect>
-            {
-            public:
-                static llvm::StringRef getOperationName() { return "ng.add"; }
-                /// custom verification
-                mlir::LogicalResult verify();
-                static void build(mlir::Builder* builder,
-                                  mlir::OperationState* state,
-                                  mlir::Value* lhs,
-                                  mlir::Value* rhs);
-
-                /// Convenience accessor for LHS of the expression.
-                mlir::Value* getLHS() { return getOperand(0); }
-                /// Convenience accessor for RHS of the expression.
-                mlir::Value* getRHS() { return getOperand(1); }
-                /// Inherit constructor.
-                using Op::Op;
-            };
-
-            // TODO(dcab): Doc
-            // TODO(dcab): Increase operands to 3 when supporting bias.
-            class NG_MatmulBiasOp : public mlir::Op<NG_MatmulBiasOp,
-                                                    mlir::OpTrait::NOperands<2>::Impl,
-                                                    mlir::OpTrait::OneResult,
-                                                    mlir::OpTrait::HasNoSideEffect>
-            {
-            public:
-                static llvm::StringRef getOperationName() { return "ng.matmul.bias"; }
-                /// Custom verification.
-                mlir::LogicalResult verify();
-                static void build(mlir::Builder* builder,
-                                  mlir::OperationState* state,
-                                  mlir::Value* lhs,
-                                  mlir::Value* rhs);
-
-                /// Convenience accessor for LHS of the expression.
-                mlir::Value* getLHS() { return getOperand(0); }
-                /// Convenience accessor for RHS of the expression.
-                mlir::Value* getRHS() { return getOperand(1); }
-                /// Convenience accessor for bias operand.
-                mlir::Value* getBias() { return nullptr; } // TODO
-                /// Inherit constructor.
-                using Op::Op;
-            };
-
-            /// Return operations terminate blocks (and functions as well). They take a
-            /// single argument and the type must match the function return type.
-            class NG_ReturnOp : public mlir::Op<NG_ReturnOp,
-                                                mlir::OpTrait::VariadicOperands,
-                                                mlir::OpTrait::ZeroResult,
-                                                mlir::OpTrait::IsTerminator>
-            {
-            public:
-                static llvm::StringRef getOperationName() { return "ng.return"; }
-                /// Operations can add custom verification beyond the traits they define.
-                mlir::LogicalResult verify();
-
-                /// Interface to mlir::Builder::create<PrintOp>(...)
-                /// This method populate the `state` that MLIR use to create operations.
-                /// The `toy.return` operation accepts an optional single array as an argument
-                /// and does not have any returned value.
-                static void build(mlir::Builder* builder,
-                                  mlir::OperationState* state,
-                                  std::vector<mlir::Value*> value_list);
-
-                /// Return true if there is a returned value.
-                bool hasOperand() { return 0 != getNumOperands(); }
-                /// Helper to return the optional operand. Caller must check if the operand
-                /// is present before calling this.
-                mlir::Value* getOperand() { return getOperation()->getOperand(0); }
-                mlir::Value* getOperand(unsigned i) { return getOperation()->getOperand(i); }
-                /// Inherit constructor.
-                using Op::Op;
-            };
+            // TODO: We shouldn't have this here, but we need to expose mlir types for the .inc file to use
+            // we cannot forward declare the mlir types since they rely on the Ops we are defining (see. Op<NGAddOp, ...>)
+            //
+            // Other ways to avoid namespace pollution ?
+            using namespace mlir;
+#define GET_OP_CLASSES
+#include "ops.h.inc"
         }
     }
 }

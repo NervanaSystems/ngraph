@@ -14,19 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 #include "compiler.hpp"
-
-#include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/node_vector.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/experimental/compiled_kernel.hpp"
-#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
-#include "ngraph/type/element_type.hpp"
-
-#include "dialect/dialect.hpp"
 #include "dialect/ops.hpp"
-#include "dialect/type.hpp"
-#include "lowerer.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/IR/Module.h>
@@ -44,6 +32,16 @@
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
 #include <mlir/Transforms/Passes.h>
+#include "dialect/dialect.hpp"
+#include "dialect/type.hpp"
+#include "lowerer.hpp"
+#include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/node_vector.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
+#include "ngraph/type/element_type.hpp"
 
 using llvm::SmallVector;
 using llvm::StringRef;
@@ -246,7 +244,7 @@ namespace ngraph
     template <>
     mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
     {
-        return compiler.create_binary_op<NG_AddOp>(ng_node);
+        return compiler.create_binary_op<NGAddOp>(ng_node);
     }
 
     template <>
@@ -257,7 +255,7 @@ namespace ngraph
         NGRAPH_ASSERT(ng_node->get_arguments().size() == 2)
             << "Bias is not supported in MatmulBias operation";
 
-        return compiler.create_binary_op<NG_MatmulBiasOp>(ng_node);
+        return compiler.create_binary_op<NGMatMulBiasOp>(ng_node);
     }
 
     const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
@@ -282,7 +280,7 @@ namespace ngraph
         {
             value_list.push_back(get_tensor_value(output->get_output_tensor_ptr().get()).m_value);
         }
-        m_builder->create<NG_ReturnOp>(mlir::UnknownLoc::get(&m_context), value_list);
+        m_builder->create<NGReturnOp>(mlir::UnknownLoc::get(&m_context), value_list);
     }
 
     void MLIRCompiler::bind_arguments()

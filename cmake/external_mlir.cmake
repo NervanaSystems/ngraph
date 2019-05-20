@@ -46,8 +46,9 @@ if (NINJA)
     # point find_package to the pre-built libs
     set(LLVM_DIR ${MLIR_LLVM_ROOT}/build/lib/cmake/llvm)
 
-    set(MLIR_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
-    set(MLIR_INCLUDE_PATH ${MLIR_INCLUDE_PATH};${MLIR_BUILD_DIR}/projects/mlir/include)
+    set(MLIR_SRC_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
+    set(MLIR_BIN_INCLUDE_PATH ${MLIR_BUILD_DIR}/projects/mlir/include)
+    set(MLIR_INCLUDE_PATHS  ${MLIR_SRC_INCLUDE_PATH};${MLIR_BIN_INCLUDE_PATH})
 else()
     message(FATAL_ERROR "Cannot find ninja. Cannot build with NGRAPH_MLIR_ENABLE=ON")
 endif()

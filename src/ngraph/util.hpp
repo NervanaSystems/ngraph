@@ -44,7 +44,6 @@ namespace ngraph
     namespace runtime
     {
         class Backend;
-        class Value;
     }
 
     std::string to_cplusplus_sourcecode_literal(bool val);

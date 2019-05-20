@@ -33,133 +33,81 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            // TODO:
+            // - Move verifiers and other OP helpers (e.g. getSomeAttribute()) to separate files
+            //
+            // - Op helpers: Since it is not possible to add arbitrary code (and would complicate the .td file)
+            // to Ops classes, we will add helper classes with static methods for each Op that needs it
+
+            // Additional verification methods
+            // Tensor type checks are already verified by the caller of these methods
             template <typename T>
-            static mlir::LogicalResult verifyBinOperands(T* op)
+            static mlir::LogicalResult verifyUnaryArithOp(T* op)
             {
-                if (!op->getOperand(0)->getType().template isa<NGTensorType>())
-                {
-                    std::string msg;
-                    raw_string_ostream os(msg);
-                    os << "expects a Tensor type for LHS, got " << op->getOperand(0)->getType();
-                    return op->emitOpError(os.str());
-                }
-                if (!op->getOperand(1)->getType().template isa<NGTensorType>())
-                {
-                    std::string msg;
-                    raw_string_ostream os(msg);
-                    os << "expects a Tensor type for RHS, got " << op->getOperand(0)->getType();
-                    return op->emitOpError(os.str());
-                }
+                // TODO: Check matching element types
+                return mlir::success();
+            }
+
+            // Additional verification methods
+            // Tensor type checks are already verified by the caller of these methods
+            template <typename T>
+            static mlir::LogicalResult verifyBinaryArithOp(T* op)
+            {
+                // TODO: Check matching element types
                 return mlir::success();
             }
 
             template <typename T>
-            static mlir::LogicalResult verifySingleOperand(T* op)
+            static mlir::LogicalResult verifyOp(T* op)
             {
-                if (!op->getOperand()->getType().template isa<NGTensorType>())
+                return op->emitOpError("Unsupported verifier for this operation");
+            }
+
+            // Per op specializations
+            template <>
+            mlir::LogicalResult verifyOp<NGMatMulBiasOp>(NGMatMulBiasOp* op)
+            {
+                // Verify that we have 3 operands
+                if (op->getNumOperands() != 3)
                 {
-                    std::string msg;
-                    raw_string_ostream os(msg);
-                    os << "expects a Tensor Type for its argument, got "
-                       << op->getOperand()->getType();
-                    return op->emitOpError(os.str());
+                    std::stringstream ss;
+                    ss << "Unexpected MatmulBiasOp with " << op->getNumOperands()
+                       << " operands. 3 operands expected";
+                    return op->emitOpError(ss.str());
                 }
+
+                // Bias operand must be null for now (not implemented).
+                if (op->getOperand(2) != nullptr)
+                {
+                    return op->emitOpError("Bias operand is not null in MatmulBiasOp");
+                }
+
+                // Verify that operand types are supported.
+                auto op0_tensor_ty = op->getOperand(0)->getType().cast<NGTensorType>();
+                auto op1_tensor_ty = op->getOperand(1)->getType().cast<NGTensorType>();
+
+                // Verify that operand shapes are supported.
+                if (op0_tensor_ty.getRank() == 2 && op1_tensor_ty.getRank() == 2)
+                {
+                    return op->emitOpError(
+                        "Unsupported number of dimensions. Only 2D tensors are supported in "
+                        "MatmulBiasOp");
+                }
+
+                // TODO(dcab): Improve verification: matching types, proper shapes, etc.
+
                 return mlir::success();
             }
         }
     }
 
-    void runtime::ngmlir::NG_FakeInput::build(mlir::Builder* builder,
-                                              mlir::OperationState* state,
-                                              mlir::Type resultType)
+    using namespace mlir;
+    namespace runtime
     {
-        state->types.push_back(std::move(resultType));
-    }
-
-    mlir::LogicalResult runtime::ngmlir::NG_FakeInput::verify()
-    {
-        // TODO: Verify returned tensor types must match function return type.
-        return mlir::success();
-    }
-
-    void runtime::ngmlir::NG_AddOp::build(mlir::Builder* builder,
-                                          mlir::OperationState* state,
-                                          mlir::Value* lhs,
-                                          mlir::Value* rhs)
-    {
-        state->types.push_back(lhs->getType());
-        state->operands.push_back(lhs);
-        state->operands.push_back(rhs);
-    }
-
-    mlir::LogicalResult runtime::ngmlir::NG_AddOp::verify()
-    {
-        // TODO: verify matching elt types
-        verifyBinOperands(this);
-        return mlir::success();
-    }
-
-    void runtime::ngmlir::NG_MatmulBiasOp::build(mlir::Builder* builder,
-                                                 mlir::OperationState* state,
-                                                 mlir::Value* lhs,
-                                                 mlir::Value* rhs)
-    {
-        state->types.push_back(lhs->getType());
-        state->operands.push_back(lhs);
-        state->operands.push_back(rhs);
-    }
-
-    mlir::LogicalResult runtime::ngmlir::NG_MatmulBiasOp::verify()
-    {
-        // Verify that we have 3 operands
-        if (getNumOperands() != 3)
+        namespace ngmlir
         {
-            std::stringstream ss;
-            ss << "Unexpected MatmulBiasOp with " << getNumOperands()
-               << " operands. 3 operands expected";
-            return emitOpError(ss.str());
+#define GET_OP_CLASSES
+#include "ops.cpp.inc"
         }
-
-        // Bias operand must be null for now (not implemented).
-        if (getOperand(2) != nullptr)
-        {
-            return emitOpError("Bias operand is not null in MatmulBiasOp");
-        }
-
-        // Verify that operand types are supported.
-        auto op0_tensor_ty = getOperand(0)->getType().dyn_cast<NGTensorType>();
-        auto op1_tensor_ty = getOperand(1)->getType().dyn_cast<NGTensorType>();
-        if (!op0_tensor_ty || !op1_tensor_ty)
-        {
-            return emitOpError("Unsupported non-tensor type in MatmulBiasOp");
-        }
-
-        // Verify that operand shapes are supported.
-        if (op0_tensor_ty.getRank() == 2 && op1_tensor_ty.getRank() == 2)
-        {
-            return emitOpError(
-                "Unsupported number of dimensions. Only 2D tensors are supported in MatmulBiasOp");
-        }
-
-        // TODO(dcab): Improve verification: matching types, proper shapes, etc.
-
-        return mlir::success();
-    }
-
-    void runtime::ngmlir::NG_ReturnOp::build(mlir::Builder* builder,
-                                             mlir::OperationState* state,
-                                             std::vector<mlir::Value*> value_list)
-    {
-        for (auto value : value_list)
-        {
-            if (value)
-                state->operands.push_back(value);
-        }
-    }
-
-    mlir::LogicalResult runtime::ngmlir::NG_ReturnOp::verify()
-    {
-        // TODO: Verify returned tensor types must match function return type.
-        return mlir::success();
     }
 }
