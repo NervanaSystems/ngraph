@@ -38,6 +38,10 @@ namespace mlir
 
 namespace ngraph
 {
+    namespace op
+    {
+        class CompiledKernel;
+    }
     namespace runtime
     {
         namespace ngmlir
@@ -51,12 +55,8 @@ namespace ngraph
                 using TensorList = std::vector<descriptor::Tensor*>;
                 using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
-                MLIRCompiler(const std::vector<const Node*>& sub_graph,
-                             const std::vector<void*>& external_tensors)
-                    : m_sub_graph(sub_graph.begin(), sub_graph.end())
-                    , m_external_tensors(external_tensors)
-                {
-                }
+                MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
+                             const std::vector<void*>& external_tensors);
 
                 /// Compiles and runs a subgraph in MLIR
                 void compile_and_run();
@@ -84,8 +84,6 @@ namespace ngraph
                 void execute();
                 void cleanup();
 
-                /// Collects input and output tensors to this sub-graph
-                void build_tensors_list();
                 mlir::Type get_mlir_type(const descriptor::Tensor* tensor);
                 mlir::Type get_mlir_type(const element::Type& type);
                 TensorInfo get_tensor_value(descriptor::Tensor* tensor);
@@ -122,15 +120,16 @@ namespace ngraph
                     std::function<mlir::Value*(MLIRCompiler& compiler, const ngraph::Node*)>;
                 using MLIRCompOpMap = std::unordered_map<std::type_index, MLIRCompOpFunction>;
 
-                llvm::SmallVector<const Node*, 4> m_sub_graph;
+                // Sub-graph to be compiled and executed with MLIR.
+                const ngraph::op::CompiledKernel* m_compiled_kernel;
+
+                // Pointers to externally allocated memory for sub-graph's input and output tensors.
                 const std::vector<void*>& m_external_tensors;
                 llvm::SmallVector<void*, 8> m_invoke_args;
 
                 // Maps tensor to the value it represents in the IR
                 // use for MLIR dialect gen
                 TensorToInfoMap m_tensor_to_value_map;
-                // List of input and output tensors in the graph
-                TensorList m_ip_tensors, m_op_tensors;
                 static const MLIRCompOpMap op_dispatcher;
 
                 // Memory manager for temp allocations inside JIT'ed code

@@ -403,12 +403,6 @@ namespace ngraph
                                 const std::vector<TensorViewWrapper>& out)
                 {
                 }
-
-                // TODO (dcab): Doc
-                static CPUKernelFunctor build_mlir_single_output_binary_op(const ngraph::Node* node,
-                                                                           void*& arg0_tensor,
-                                                                           void*& arg1_tensor,
-                                                                           void*& out_tensor);
             };
         }
     }

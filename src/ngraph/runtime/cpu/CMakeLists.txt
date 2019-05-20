@@ -143,6 +143,13 @@ if (NGRAPH_HALIDE)
         )
 endif()
 
+if (NGRAPH_MLIR_ENABLE)
+    set(SRC
+        ${SRC}
+        builder/mlir_cpu_compiled_kernel.cpp
+        )
+endif()
+
 if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 

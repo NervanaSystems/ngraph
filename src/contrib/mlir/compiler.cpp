@@ -19,6 +19,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -54,6 +55,16 @@ using namespace ngraph::runtime::ngmlir;
 
 namespace ngraph
 {
+    MLIRCompiler::MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
+                               const std::vector<void*>& external_tensors)
+        : m_compiled_kernel(compiled_kernel)
+        , m_external_tensors(external_tensors)
+    {
+        NGRAPH_ASSERT((m_compiled_kernel->get_arguments().size() +
+                       m_compiled_kernel->get_kernel_outputs().size()) == external_tensors.size())
+            << "Number of arguments and outputs doesn't match number of tensors";
+    }
+
     void MLIRCompiler::init_mlir()
     {
         mlir::registerDialect<NGDialect>();
@@ -77,18 +88,21 @@ namespace ngraph
         m_module = make_unique<mlir::Module>(&m_context);
 
         TypeList args_type_list, result_type_list;
-        build_tensors_list();
-        NGRAPH_ASSERT(m_ip_tensors.size() != 0) << "Cannot have empty inputs list";
-        NGRAPH_ASSERT(m_op_tensors.size() != 0) << "Cannot have empty outputs list";
 
-        for (auto tensor : m_ip_tensors)
+        // Retrieve input and output tensors.
+        const auto& kernel_inputs = m_compiled_kernel->get_arguments();
+        const auto& kernel_outputs = m_compiled_kernel->get_kernel_outputs();
+        NGRAPH_ASSERT(kernel_inputs.size() != 0) << "Cannot have empty inputs list";
+        NGRAPH_ASSERT(kernel_outputs.size() != 0) << "Cannot have empty outputs list";
+
+        for (auto input : kernel_inputs)
         {
-            args_type_list.push_back(get_mlir_type(tensor));
+            args_type_list.push_back(get_mlir_type(input->get_output_tensor_ptr().get()));
         }
 
-        for (auto tensor : m_op_tensors)
+        for (auto output : kernel_outputs)
         {
-            result_type_list.push_back(get_mlir_type(tensor));
+            result_type_list.push_back(get_mlir_type(output->get_output_tensor_ptr().get()));
         }
 
         auto func_type = mlir::FunctionType::get(args_type_list, result_type_list, &m_context);
@@ -98,11 +112,12 @@ namespace ngraph
 
         // populate Tensor->Value maps
         int i = 0;
-        for (auto tensor : m_ip_tensors)
+        for (auto input : kernel_inputs)
         {
             mlir::Value* arg = function->getArgument(i);
             TensorInfo tensor_info{arg};
-            m_tensor_to_value_map.insert(TensorToInfo(tensor, tensor_info));
+            m_tensor_to_value_map.insert(
+                TensorToInfo(input->get_output_tensor_ptr().get(), tensor_info));
             i++;
         }
 
@@ -113,59 +128,6 @@ namespace ngraph
         if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
         {
             m_module->dump();
-        }
-    }
-
-    void MLIRCompiler::build_tensors_list()
-    {
-        for (const auto node : m_sub_graph)
-        {
-            // get all nodes output tensors
-            // if an output has a use out of the subgraph, it is an output tensor, else a temp.
-            for (auto i = 0; i < node->get_output_size(); i++)
-            {
-                const std::set<descriptor::Input*>& inputs = node->get_output_inputs(i);
-                auto tensor = node->get_output_tensor_ptr(i);
-                for (auto ip : inputs)
-                {
-                    bool out_of_subgraph =
-                        (std::find(std::begin(m_sub_graph),
-                                   std::end(m_sub_graph),
-                                   ip->get_node().get()) == std::end(m_sub_graph));
-                    if (out_of_subgraph)
-                    {
-                        // we found a use out of subgraph, consider this an output tensor
-                        // those would be added as return value for the mlir func
-                        if (std::find(std::begin(m_op_tensors),
-                                      std::end(m_op_tensors),
-                                      tensor.get()) == std::end(m_op_tensors))
-                        {
-                            m_op_tensors.push_back(tensor.get());
-                        }
-                    }
-                }
-            }
-
-            // get over all input tensors
-            for (const auto arg : node->get_arguments())
-            {
-                bool out_of_subgraph =
-                    (std::find(std::begin(m_sub_graph), std::end(m_sub_graph), arg.get()) ==
-                     std::end(m_sub_graph));
-                if (out_of_subgraph)
-                {
-                    for (auto i = 0; i < arg->get_output_size(); i++)
-                    {
-                        auto tensor = arg->get_output_tensor_ptr(i);
-                        if (std::find(std::begin(m_ip_tensors),
-                                      std::end(m_ip_tensors),
-                                      tensor.get()) == std::end(m_ip_tensors))
-                        {
-                            m_ip_tensors.push_back(tensor.get());
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -249,27 +211,24 @@ namespace ngraph
 
     void MLIRCompiler::build_ng_dialect()
     {
-        // TODO: subgraph_topological_sort expects a list of shared_ptr. CPU BE has raw pointers.
-        // Fix this.
-        //for (auto node : subgraph_topological_sort(m_sub_graph))
-        NGRAPH_ASSERT(m_sub_graph.size() == 1) << "Supporting code-gen for a single node for now";
-        {
-            auto np = m_sub_graph[0];
+        const NodeVector& sub_graph = m_compiled_kernel->get_node_list();
+        NGRAPH_ASSERT(sub_graph.size() == 1) << "Supporting code-gen for a single node for now";
 
-            auto it = op_dispatcher.find(TI(*np));
-            if (it == op_dispatcher.end())
-            {
-                throw unsupported_op{
-                    std::string{"The MLIR backend doesn't currently implement the '"} +
-                    np->description() + "' operation"};
-            }
-            mlir::Value* mlir_value = it->second(*this, np);
-            // builders that have multiple result values will update the value map, and set their ret values to null
-            if (mlir_value)
-            {
-                update_tensor_value(np->get_output_tensor_ptr().get(), mlir_value);
-            }
+        auto np = sub_graph[0];
+
+        auto it = op_dispatcher.find(TI(*np));
+        if (it == op_dispatcher.end())
+        {
+            throw unsupported_op{std::string{"The MLIR backend doesn't currently implement the '"} +
+                                 np->description() + "' operation"};
         }
+        mlir::Value* mlir_value = it->second(*this, np.get());
+        // builders that have multiple result values will update the value map, and set their ret values to null
+        if (mlir_value)
+        {
+            update_tensor_value(np->get_output_tensor_ptr().get(), mlir_value);
+        }
+
         create_return();
     }
 
@@ -308,9 +267,9 @@ namespace ngraph
     void MLIRCompiler::create_return()
     {
         std::vector<mlir::Value*> value_list;
-        for (auto tensor : m_op_tensors)
+        for (auto output : m_compiled_kernel->get_kernel_outputs())
         {
-            value_list.push_back(get_tensor_value(tensor).m_value);
+            value_list.push_back(get_tensor_value(output->get_output_tensor_ptr().get()).m_value);
         }
         m_builder->create<NG_ReturnOp>(mlir::UnknownLoc::get(&m_context), value_list);
     }

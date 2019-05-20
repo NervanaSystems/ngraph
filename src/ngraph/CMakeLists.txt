@@ -493,6 +493,13 @@ set(SRC ${SRC}
     runtime/dynamic/dynamic_backend.hpp
     )
 
+# MLIR specific files
+set(SRC
+    ${SRC}
+    pass/mlir_subgraph_extraction.cpp
+    pass/mlir_subgraph_extraction.hpp
+    )
+
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
 endif()

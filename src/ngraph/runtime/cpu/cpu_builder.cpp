@@ -507,34 +507,3 @@ namespace ngraph
         }
     }
 }
-
-// TODO:
-// Get rid of the #ifdefs by moving MLIR hooks to separate files in cpu backend
-// we can then instead compile them conditionally based on NGRAPH_MLIR_ENABLE cmake flag
-#ifdef NGRAPH_MLIR_ENABLE
-using namespace ngraph::runtime::ngmlir;
-using namespace ngraph::runtime::cpu;
-
-CPUKernelFunctor Builder::build_mlir_single_output_binary_op(const ngraph::Node* node,
-                                                             void*& arg0_tensor,
-                                                             void*& arg1_tensor,
-                                                             void*& out_tensor)
-{
-    // TODO: Remove m_ip/op_list construction out of MLIRCompiler.
-
-    auto functor = [&, node](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-        std::vector<const Node*> nodelist = {node};
-
-        // MLIR requires a list of type-erased pointer to arguments. Our arguments
-        // are already pointers, so we need to pass a double pointer.
-        std::vector<void*> ptr_args = {arg0_tensor, arg1_tensor, out_tensor};
-
-        MLIRCompiler mlirc(nodelist, ptr_args);
-        // TODO: Decouple 'compile' and 'run' APIs. We want to be able to run the
-        // same jitted code on different arguments.
-        mlirc.compile_and_run();
-    };
-
-    return functor;
-}
-#endif
