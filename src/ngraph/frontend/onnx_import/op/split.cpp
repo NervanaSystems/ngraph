@@ -31,10 +31,9 @@ namespace ngraph
             {
                 NodeVector split(const Node& node)
                 {
-                    const std::shared_ptr<ngraph::Node> input = node.get_ng_inputs().at(0);
-                    const Shape input_shape = input->get_shape();
-                    const std::size_t count_outputs{node.get_output_names().size()};
-                    const int64_t axis{node.get_attribute_value<int64_t>("axis", 0)};
+                    const auto input = node.get_ng_inputs().at(0);
+                    const auto outputs_number = node.get_output_names().size();
+                    const auto axis = node.get_attribute_value<int64_t>("axis", 0);
 
                     try
                     {
@@ -42,12 +41,17 @@ namespace ngraph
                             node.get_attribute_value<std::vector<std::size_t>>("split");
                         const auto fused_split =
                             std::make_shared<ngraph::op::Split>(input, axis, length_parts);
+
                         return fused_split->decompose_op();
                     }
-                    catch (const std::exception&)
+                    catch (const error::node::UnknownAttribute&)
                     {
+                        // an exception will be caught if the input node does not contain
+                        // the 'split' attribute - this means we should split the input tensor
+                        // into same-length parts equal to the number of node outputs
                         const auto fused_split =
-                            std::make_shared<ngraph::op::Split>(input, axis, count_outputs);
+                            std::make_shared<ngraph::op::Split>(input, axis, outputs_number);
+
                         return fused_split->decompose_op();
                     }
                 }
