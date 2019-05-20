@@ -180,7 +180,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     // Fix input/output descriptors
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
 
-    
     {
         auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
             replacement->merge_provenance_tags_from(node);
