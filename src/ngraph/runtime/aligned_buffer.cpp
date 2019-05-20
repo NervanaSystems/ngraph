@@ -48,12 +48,9 @@ runtime::AlignedBuffer::AlignedBuffer(AlignedBuffer&& other)
     , m_aligned_buffer(other.m_aligned_buffer)
     , m_byte_size(other.m_byte_size)
 {
-    if (this != &other)
-    {
-        other.m_allocated_buffer = nullptr;
-        other.m_aligned_buffer = nullptr;
-        other.m_byte_size = 0;
-    }
+    other.m_allocated_buffer = nullptr;
+    other.m_aligned_buffer = nullptr;
+    other.m_byte_size = 0;
 }
 
 runtime::AlignedBuffer::~AlignedBuffer()
