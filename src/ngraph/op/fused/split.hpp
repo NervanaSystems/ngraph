@@ -65,12 +65,12 @@ namespace ngraph
             /// \return Returns a sum of parameters for negative axis value, or axis itself otherwise
             size_t adjust_axis_value(const int axis, const size_t input_tensor_rank) const;
 
-            bool
-                m_split_evenly; /// used internally for validation purposes, indicates which constructor was used
-            size_t m_axis;
+            /// used internally for validation purposes, indicates which constructor was used
+            bool m_split_evenly;
+            int m_axis;
             size_t m_num_split;
-            std::vector<size_t>
-                m_splits; /// contains lengths of chunks that the input tensor will be split to
+            /// contains lengths of chunks that the input tensor will be split to
+            std::vector<size_t> m_splits;
         };
     }
 }

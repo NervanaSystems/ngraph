@@ -23,38 +23,35 @@ using namespace ngraph;
 
 op::Split::Split(const shared_ptr<Node>& data, const int axis, const size_t num_split)
     : FusedOp("Split", {data})
+    , m_axis{axis}
     , m_split_evenly{true}
     , m_num_split{num_split}
 {
-    m_axis = adjust_axis_value(axis, data->get_shape().size());
-
     constructor_validate_and_infer_types();
-
-    m_splits.assign(m_num_split, data->get_shape().at(m_axis) / m_num_split);
 }
 
 op::Split::Split(const std::shared_ptr<ngraph::Node>& data,
                  const int axis,
                  const std::vector<size_t>& splits)
     : FusedOp("Split", {data})
+    , m_axis{axis}
     , m_split_evenly{false}
     , m_splits{splits}
 {
-    m_axis = adjust_axis_value(axis, data->get_shape().size());
-
     constructor_validate_and_infer_types();
 }
 
 void op::Split::pre_validate_and_infer_types()
 {
     const auto shape = get_argument(0)->get_shape();
-    const auto dimension_at_axis = shape.at(m_axis);
 
+    m_axis = adjust_axis_value(m_axis, shape.size());
     NODE_VALIDATION_CHECK(this,
                           m_axis >= 0 && m_axis < shape.size(),
                           "The 'axis' parameter for Split has to point to one of the "
                           "input tensor's shape dimensions.");
 
+    const auto dimension_at_axis = shape.at(m_axis);
     if (m_split_evenly)
     {
         NODE_VALIDATION_CHECK(this,
@@ -63,6 +60,8 @@ void op::Split::pre_validate_and_infer_types()
                               dimension_at_axis,
                               " has to be a multiple of the 'num_split' parameter value: ",
                               m_num_split);
+
+        m_splits.assign(m_num_split, dimension_at_axis / m_num_split);
     }
     else
     {
@@ -83,13 +82,8 @@ NodeVector op::Split::decompose_op() const
 
 shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Expected 1 element in new_args for the Split op but got " +
-                           std::to_string(new_args.size()));
-    }
-
-    return make_shared<Split>(new_args.at(0), m_axis, m_num_split);
+    check_new_args_count(this, new_args);
+    return make_shared<Split>(new_args.at(0), m_axis, m_splits);
 }
 
 size_t op::Split::adjust_axis_value(const int axis, const size_t input_tensor_rank) const
