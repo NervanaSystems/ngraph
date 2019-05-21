@@ -125,10 +125,11 @@ op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
                                           Shape{m_gates_count * get_hidden_size()},
                                           vector<float>(m_gates_count * get_hidden_size(), 0.f));
 
-    m_P = ngraph::op::Constant::create(element::f32,
-                                       Shape{m_peepholes_count * get_hidden_size()},
-                                       vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
-    m_p_iof = builder::split(m_P, m_peepholes_count);
+    const auto& peephole_weights =
+        ngraph::op::Constant::create(element::f32,
+                                     Shape{m_peepholes_count * get_hidden_size()},
+                                     vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
+    m_p_iof = builder::split(peephole_weights, m_peepholes_count);
     constructor_validate_and_infer_types();
 }
 
@@ -152,7 +153,6 @@ op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
     , m_R{R}
     , m_H_t{H_t}
     , m_C_t{C_t}
-    , m_P{P}
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
     , m_activation_h{get_activation_function(2)}
@@ -174,15 +174,16 @@ op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
         m_bias = b_W_R.at(0) + b_W_R.at(1);
     }
 
-    if (!m_P)
+    auto peephole_weights = P;
+    if (!peephole_weights)
     {
-        m_P =
+        peephole_weights =
             ngraph::op::Constant::create(element::f32,
                                          Shape{m_peepholes_count * get_hidden_size()},
                                          vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
     }
 
-    m_p_iof = builder::split(m_P, m_peepholes_count);
+    m_p_iof = builder::split(peephole_weights, m_peepholes_count);
     constructor_validate_and_infer_types();
 }
 

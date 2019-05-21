@@ -164,11 +164,6 @@ namespace ngraph
             ///
             std::shared_ptr<Node> m_C_t;
             ///
-            /// \brief      The weight tensor for peepholes with shape: [3*hidde_size] - 3 equals to
-            ///             only iof gates.
-            ///
-            std::shared_ptr<Node> m_P;
-            ///
             /// \brief The Activation function f.
             ///
             ActivationFunction m_activation_f;
@@ -189,6 +184,8 @@ namespace ngraph
             static constexpr std::size_t m_peepholes_count{3};
             ///
             /// \brief Peephole weights vector for respectively: input, output, and forget gates.
+            ///
+            /// Each peephole has shape [hidden_size].
             ///
             NodeVector m_p_iof;
             ///
