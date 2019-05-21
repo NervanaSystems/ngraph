@@ -45,7 +45,7 @@ namespace ngraph
                     call_seq,
                     external_function_name.c_str(),
                     node->get_name().c_str(),
-                    node->get_friendly_name().c_str(),
+                   // node->get_friendly_name().c_str(),
                     *(node->get_provenance_tags()).begin(),
                     count);
 
