@@ -240,8 +240,7 @@ namespace ngraph
                                          const std::shared_ptr<ngraph::Node>& seq_lengths,
                                          const LSTMAttributes& attributes)
                         : m_X{X}
-                        ,
-                        , // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
+                        // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
                         , m_W{reshape::squeeze(W)}
                         , m_R{reshape::squeeze(R)}
                         , m_B{reshape::squeeze(B)}
