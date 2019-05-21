@@ -26,7 +26,7 @@ namespace ngraph
         /// \brief      Split node on specified axis into multiple parts.
         ///
         /// \param[in]  node          The input node.
-        /// \param[in]  length_parts  The vector defining the lengts of each splitted part.
+        /// \param[in]  length_parts  The vector defining the lengths of each split part.
         /// \param[in]  axis          The axis we split input node on. Default value is zero axis.
         ///
         /// \return     The vector containing multiple nodes we split input node into.
@@ -44,7 +44,8 @@ namespace ngraph
         /// \param[in]  axis          The axis we split input node on. Default value is zero axis.
         ///
         /// \note       This implementation supports negative `axis` values (similar to NumPy
-        ///             indexing).
+        ///             indexing). This means that the axis to split on will be counted from
+        ///             the back of the tensor (negative values are subtracted from its rank).
         ///
         /// \return     The vector containing multiple nodes we split input node into.
         ///

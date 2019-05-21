@@ -60,6 +60,9 @@ namespace ngraph
         private:
             /// \brief Adjusts the axis for negative values
             ///
+            /// \note Negative values mean that the API consumer wants to point the axis location
+            ///       from the back of the tensor. This is similar to the way NumPy works.
+            ///
             /// \param axis - original axis value; negative values are accepted
             /// \param input_tensor_rank - rank of the input data tensor
             /// \return Returns a sum of parameters for negative axis value, or axis itself otherwise
@@ -69,7 +72,7 @@ namespace ngraph
             bool m_split_evenly;
             int m_axis;
             size_t m_num_split;
-            /// contains lengths of chunks that the input tensor will be split to
+            /// contains lengths of chunks that the input tensor will be split into
             std::vector<size_t> m_splits;
         };
     }
