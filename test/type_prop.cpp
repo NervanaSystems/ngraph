@@ -14559,7 +14559,8 @@ TEST(type_prop, split)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("has to be equal to the sum of splits passed to the op: 7"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("has to be equal to the sum of splits passed to the op: 7"));
     }
 
     try
@@ -14570,7 +14571,9 @@ TEST(type_prop, split)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("The 'axis' parameter for Split has to point to one of the input tensor's shape dimensions."));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("The 'axis' parameter for Split has to point to one of "
+                                         "the input tensor's shape dimensions."));
     }
 
     const auto split = make_shared<op::Split>(data, 1, 2);
