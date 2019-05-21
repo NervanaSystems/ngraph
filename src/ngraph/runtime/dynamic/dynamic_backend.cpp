@@ -91,10 +91,8 @@ bool runtime::dynamic::DynamicExecutable::call(
     {
         // We'll use AlignedBuffers to back the base pointers, storing them in this vector for RAII
         // purposes.
-        // TODO(amprocte): For now we have to wrap these in unique_ptr, because AlignedBuffer does
-        // not have a move constructor. PR#2956 will address this; update to remove the unique_ptrs
-        // once #2956 is merged.
-        std::vector<std::unique_ptr<AlignedBuffer>> arg_buffers(inputs.size());
+        std::vector<AlignedBuffer> arg_buffers;
+        arg_buffers.reserve(inputs.size());
         std::vector<void*> arg_value_base_pointers(inputs.size());
 
         size_t i = 0;
@@ -110,9 +108,8 @@ bool runtime::dynamic::DynamicExecutable::call(
                     NGRAPH_CHECK(dynamic_tensor->has_storage());
                 }
 
-                arg_buffers[i] = std::unique_ptr<AlignedBuffer>(
-                    new AlignedBuffer(input->get_size_in_bytes(), /*alignment=*/64));
-                arg_value_base_pointers[i] = arg_buffers[i]->get_ptr();
+                arg_buffers.emplace_back(input->get_size_in_bytes(), /*alignment=*/64);
+                arg_value_base_pointers[i] = arg_buffers[i].get_ptr();
 
                 // TODO(amprocte): For host-resident tensors we should be able to skip the read,
                 // but no API for that yet.
@@ -121,7 +118,6 @@ bool runtime::dynamic::DynamicExecutable::call(
             else
             {
                 arg_value_base_pointers[i] = nullptr;
-                arg_buffers[i] = nullptr;
             }
 
             if (auto dynamic_tensor =
