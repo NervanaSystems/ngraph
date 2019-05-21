@@ -46,6 +46,7 @@ namespace ngraph
                     external_function_name.c_str(),
                     node->get_name().c_str(),
                     node->get_friendly_name().c_str(),
+                    *(node->get_provenance_tags()).begin().c_str(),
                     count);
 
                 auto functor = [&, count, data_type, arg_buffer_index, out_buffer_index](
