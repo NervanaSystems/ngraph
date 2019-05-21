@@ -73,6 +73,9 @@ namespace ngraph
                                                                  float,
                                                                  float);
 
+        ///
+        /// \brief      Class representing activation function used in RNN cells.
+        ///
         class ActivationFunction
         {
         public:
@@ -80,13 +83,19 @@ namespace ngraph
             ActivationFunction(ActivationFunctionType f, float alpha);
             ActivationFunction(ActivationFunctionType f);
 
+            ///
+            /// \brief  Calls stored activation function with provided node argument.
+            ///
             std::shared_ptr<Node> operator()(const std::shared_ptr<Node>& arg) const;
 
             void set_alpha(float alpha) { m_alpha = alpha; }
             void set_beta(float beta) { m_beta = beta; }
         private:
+            /// \brief Activation function wrapper.
             ActivationFunctionType m_function;
+            /// \brief Activation function alpha parameter (may be unused).
             float m_alpha;
+            /// \brief Activation function beta parameter (may be unused).
             float m_beta;
         };
 

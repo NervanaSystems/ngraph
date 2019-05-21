@@ -17,6 +17,7 @@
 #include <cmath>
 #include <functional>
 #include <iterator>
+#include <memory>
 #include <unordered_map>
 
 #include "activation_functions.hpp"
