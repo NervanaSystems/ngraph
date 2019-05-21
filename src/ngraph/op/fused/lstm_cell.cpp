@@ -119,8 +119,6 @@ op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
     , m_activation_h{get_activation_function(2)}
     , m_input_forget{input_forget}
 {
-    constructor_validate_and_infer_types();
-
     // Normally we would split B onto Wb an Rb and add them, however here they are all zeros,
     // thus just initialize bias with appropriate shape and zeros.
     m_bias = ngraph::op::Constant::create(element::f32,
@@ -131,6 +129,7 @@ op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
                                        Shape{m_peepholes_count * get_hidden_size()},
                                        vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
     m_p_iof = builder::split(m_P, m_peepholes_count);
+    constructor_validate_and_infer_types();
 }
 
 op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
@@ -183,9 +182,8 @@ op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
                                          vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
     }
 
-    constructor_validate_and_infer_types();
-
     m_p_iof = builder::split(m_P, m_peepholes_count);
+    constructor_validate_and_infer_types();
 }
 
 void op::LSTMCell::pre_validate_and_infer_types()
