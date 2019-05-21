@@ -146,23 +146,23 @@ namespace ngraph
             ///
             /// \brief      The input data tensor. Shape: [batch_size, input_size].
             ///
-            const std::shared_ptr<Node>& m_X;
+            std::shared_ptr<Node> m_X;
             ///
             /// \brief      The weight tensor. Shape: [4*hidden_size, input_size].
             ///
-            const std::shared_ptr<Node>& m_W;
+            std::shared_ptr<Node> m_W;
             ///
             /// \brief      The recurrence weight tensor. Shape: [4*hidden_size, hidden_size].
             ///
-            const std::shared_ptr<Node>& m_R;
+            std::shared_ptr<Node> m_R;
             ///
             /// \brief      The hidden state tensor at current time step. Shape: [batch_size, hidden_size].
             ///
-            const std::shared_ptr<Node>& m_H_t;
+            std::shared_ptr<Node> m_H_t;
             ///
             /// \brief      The cell state tensor at current time step. Shape: [batch_size, hidden_size].
             ///
-            const std::shared_ptr<Node>& m_C_t;
+            std::shared_ptr<Node> m_C_t;
             ///
             /// \brief      The weight tensor for peepholes with shape: [3*hidde_size] - 3 equals to
             ///             only iof gates.

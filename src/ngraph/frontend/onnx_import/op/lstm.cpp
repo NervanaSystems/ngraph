@@ -230,7 +230,7 @@ namespace ngraph
                 class LSTMForward
                 {
                 public:
-                    explicit LSTMForward(std::shared_ptr<ngraph::Node> X,
+                    explicit LSTMForward(const std::shared_ptr<ngraph::Node>& X,
                                          const std::shared_ptr<ngraph::Node>& W,
                                          const std::shared_ptr<ngraph::Node>& R,
                                          const std::shared_ptr<ngraph::Node>& B,
@@ -417,13 +417,13 @@ namespace ngraph
                     }
 
                     std::shared_ptr<ngraph::Node> m_X;
-                    const std::shared_ptr<ngraph::Node>& m_W;
-                    const std::shared_ptr<ngraph::Node>& m_R;
-                    const std::shared_ptr<ngraph::Node>& m_B;
-                    const std::shared_ptr<ngraph::Node>& m_P;
-                    const std::shared_ptr<ngraph::Node>& m_initial_h;
-                    const std::shared_ptr<ngraph::Node>& m_initial_c;
-                    const std::shared_ptr<ngraph::Node>& m_seq_lengths;
+                    std::shared_ptr<ngraph::Node> m_W;
+                    std::shared_ptr<ngraph::Node> m_R;
+                    std::shared_ptr<ngraph::Node> m_B;
+                    std::shared_ptr<ngraph::Node> m_P;
+                    std::shared_ptr<ngraph::Node> m_initial_h;
+                    std::shared_ptr<ngraph::Node> m_initial_c;
+                    std::shared_ptr<ngraph::Node> m_seq_lengths;
                     const LSTMAttributes& m_attributes;
                 };
 
