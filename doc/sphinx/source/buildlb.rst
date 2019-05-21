@@ -58,7 +58,7 @@ the ``CMakeLists.txt`` file for other experimental options' details:
    -- NGRAPH_NOP_ENABLE:               ON
    -- NGRAPH_GPUH_ENABLE:              OFF
    -- NGRAPH_GENERIC_CPU_ENABLE:       OFF
-   -- NGRAPH_DEBUG_ENABLE:             OFF
+   -- NGRAPH_DEBUG_ENABLE:             OFF  # Set to "ON" to enable logging
    -- NGRAPH_ONNX_IMPORT_ENABLE:       OFF
    -- NGRAPH_DEX_ONLY:                 OFF
    -- NGRAPH_CODE_COVERAGE_ENABLE:     OFF

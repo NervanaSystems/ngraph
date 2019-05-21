@@ -13,12 +13,10 @@ For downloads formatted as ``.zip`` and ``tar.gz``, see https://github.com/Nerva
 Changelog 
 =========
 
-Stable / Verified
-
 0.19
 ----
 
-**Verified:** `0.19.0-rc2`_
+**Download** `0.19.0-rc.2`_
 
 + More dynamic shape preparation
 + Distributed interface factored out
@@ -39,7 +37,7 @@ Stable / Verified
 0.18
 ----
 
-**Verified** `0.18.1`_
+**Download** `0.18.1`_
 
 
 + Python formatting issue
@@ -54,7 +52,7 @@ Stable / Verified
 0.17
 ----
 
-**Verified** `0.17.0-rc1`_
+**Download** `0.17.0-rc.1`_
 
 + Allow negative padding in more places
 + Add code generation for some quantized ops
@@ -66,9 +64,9 @@ Stable / Verified
 0.16
 ----
 
-**Verified** `0.16.0-rc3`_
-**Verified** `0.16.0-rc2`_
-**Verified** `0.16.0-rc1`_
+* **Download**: `0.16.0-rc.3`_
+* **Download** `0.16.0-rc.2`_
+* **Download** `0.16.0-rc.1`_
 
 
 + NodeInput and NodeOutput classes prepare for simplifications of Node
@@ -79,9 +77,9 @@ Stable / Verified
 + Concat optimization
 + Doc updates
 
-.. _0.19.0-rc2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.19.0-rc.2_
+.. _0.19.0-rc.2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.19.0-rc.2_
 .. _0.18.1: https://github.com/NervanaSystems/ngraph/releases/tag/v0.18.1_
-.. _0.17.0-rc1: `https://github.com/NervanaSystems/ngraph/releases/tag/v0.17.0-rc.1
-.. _0.16.0-rc3: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.3
-.. _0.16.0-rc2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.2
-.. _0.16.0-rc1: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.1
+.. _0.17.0-rc.1: `https://github.com/NervanaSystems/ngraph/releases/tag/v0.17.0-rc.1
+.. _0.16.0-rc.3: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.3
+.. _0.16.0-rc.2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.2
+.. _0.16.0-rc.1: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.1

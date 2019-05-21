@@ -73,13 +73,6 @@ mini-batch training, one could train ResNet-50 with Imagenet-1k data to the
 `arxiv.org/abs/1709.05011`_.
 
 
-Future work
-===========
-
-More communication ops support is in the works. See also:  
-:doc:`../../core/passes/list-of-passes`. 
-
-
 
 .. _nGraph Bridge repo: https://github.com/tensorflow/ngraph-bridge
 .. _Intel HE_transformer: https://github.com/NervanaSystems/he-transformer
