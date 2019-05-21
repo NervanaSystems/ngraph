@@ -18,26 +18,33 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
+#include "ngraph/op/util/binary_elementwise_comparison.hpp"
+#include "ngraph/op/util/binary_elementwise_logical.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngraph::Node> node)
+template <typename optype>
+static bool broadcast_and_replace(std::shared_ptr<ngraph::Node>& node)
 {
-    bool modified = false;
-
-    if (auto op = std::dynamic_pointer_cast<ngraph::op::util::BinaryElementwiseArithmetic>(node))
+    if (auto op = std::dynamic_pointer_cast<optype>(node))
     {
         if (op->get_autob().type != op::AutoBroadcastType::NONE)
         {
-            auto new_args = explicit_broadcast<ngraph::op::util::BinaryElementwiseArithmetic>(op);
+            auto new_args = pass::explicit_broadcast<optype>(op);
             for (size_t i = 0; i < new_args.size(); i++)
             {
                 op->input(i).replace_source_output(new_args[i]->output(0));
             }
-            modified = true;
+            return true;
         };
     }
+    return false;
+}
 
-    return modified;
+bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngraph::Node> node)
+{
+    return broadcast_and_replace<op::util::BinaryElementwiseArithmetic>(node) ||
+           broadcast_and_replace<op::util::BinaryElementwiseComparison>(node) ||
+           broadcast_and_replace<op::util::BinaryElementwiseLogical>(node);
 }
