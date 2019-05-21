@@ -767,6 +767,9 @@ void pass::ConstantFolding::construct_constant_quantize()
         quantize_matcher, constant_quantize_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
+// Helper for mapping element::Types to runtime::reference::convert, which is templated in C++
+// data types. Used by fold_constant_convert and fold_constant_convert_helper0, which respectively
+// determine the appropriate C++ types for "TI" (input type) and "TO" (output type).
 template <typename TI, typename TO>
 shared_ptr<op::Constant> fold_constant_convert_helper1(shared_ptr<op::Constant> constant,
                                                        const element::Type& output_element_type)
@@ -780,6 +783,9 @@ shared_ptr<op::Constant> fold_constant_convert_helper1(shared_ptr<op::Constant> 
     return make_shared<op::Constant>(output_element_type, out_shape, out_vec);
 }
 
+// Helper for mapping element::Types to runtime::reference::convert, which is templated in C++
+// data types. Used by fold_constant_convert, which determines the appropriate C++ type for "TI"
+// (input type).
 template <typename TI>
 shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
                                                        const element::Type& output_element_type)
