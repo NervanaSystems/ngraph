@@ -24,18 +24,16 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -56,6 +54,18 @@
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
+
+#define WRITE_MKLDNN_DIMS(X)                                                                       \
+    writer << "mkldnn::memory::dims{";                                                             \
+    if (X.size() > 1)                                                                              \
+    {                                                                                              \
+        for (auto i = 0; i < X.size() - 1; i++)                                                    \
+        {                                                                                          \
+            writer << std::to_string(X[i]) << ", ";                                                \
+        }                                                                                          \
+    }                                                                                              \
+    writer << std::to_string(X[X.size() - 1]);                                                     \
+    writer << "}, \n"
 
 using namespace ngraph;
 using namespace ngraph::op;
@@ -410,7 +420,7 @@ namespace ngraph
                     writer << "\n// build batchnorm primitive descriptor\n";
                     if (use_global_stats)
                     {
-                        // Write memory descriptors to file;
+                        // Write memory descriptors to file
                         std::vector<mkldnn::memory::desc> descs = {
                             input_desc, *mean_desc, *variance_desc, weights_desc, result_desc};
                         auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
@@ -432,6 +442,7 @@ namespace ngraph
                                   "bn_attr, cg_ctx->global_cpu_engine);\n";
 
                         writer << "\n// build batchnorm primitive\n";
+
                         // batchnorm primitive
                         writer
                             << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
@@ -453,7 +464,7 @@ namespace ngraph
                     }
                     else
                     {
-                        // Write memory descriptors to file;
+                        // Write memory descriptors to file
                         std::vector<mkldnn::memory::desc> descs = {
                             input_desc, weights_desc, result_desc, *mean_desc, *variance_desc};
                         auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
@@ -474,6 +485,7 @@ namespace ngraph
                                   "bn_attr, cg_ctx->global_cpu_engine);\n";
 
                         writer << "\n// build batchnorm primitive\n";
+
                         // batchnorm primitive
                         writer
                             << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
@@ -581,7 +593,7 @@ namespace ngraph
 
                     CodeWriter writer;
 
-                    // Write memory descriptors to file;
+                    // Write memory descriptors to file
                     std::vector<mkldnn::memory::desc> descs = {weights_desc,
                                                                input_desc,
                                                                mean_desc,
@@ -629,10 +641,16 @@ namespace ngraph
                     construct_string = writer.get_code();
                 }
 
-                template <>
-                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Concat)
+                template <typename OP>
+                void construct_primitive_build_string_concat(
+                    ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                    ngraph::Node* node,
+                    std::string& construct_string,
+                    std::vector<size_t>& deps,
+                    size_t& index,
+                    std::ofstream& desc_file)
                 {
-                    auto concat = static_cast<const ngraph::op::Concat*>(node);
+                    auto concat = static_cast<OP*>(node);
                     size_t concat_dim = concat->get_concatenation_axis();
                     size_t nargs = node->get_inputs().size();
 
@@ -642,7 +660,7 @@ namespace ngraph
 
                     CodeWriter writer;
 
-                    // Write memory descriptors to file;
+                    // Write memory descriptors to file
                     std::vector<mkldnn::memory::desc> descs;
                     for (size_t i = 0; i < nargs; i++)
                     {
@@ -687,6 +705,13 @@ namespace ngraph
                 }
 
                 template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Concat)
+                {
+                    construct_primitive_build_string_concat<Concat>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(LRN)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
@@ -698,7 +723,7 @@ namespace ngraph
 
                     CodeWriter writer;
 
-                    // Write memory descriptors to file;
+                    // Write memory descriptors to file
                     std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
                     auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
@@ -733,17 +758,70 @@ namespace ngraph
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Slice)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Slice)
                 {
                     const auto& out = node->get_outputs();
                     const Slice* slice = static_cast<const Slice*>(node);
-                    auto out_shape = out[0].get_shape();
+                    auto result_shape = out[0].get_shape();
                     auto lower_bounds = slice->get_lower_bounds();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    return mkldnn_emitter.build_slice(
-                        input_desc, result_desc, lower_bounds, out_shape);
+                    // Slice needs 3 primitives: input, result, and reorder.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "\n// create memory primitive descriptors\n";
+                    // FIXME
+                    // clang generates 16 bytes aligned store with unaligned address,
+                    // which results in segmentation fault.
+                    // Workaround for now: Use push_back to avoid generating such store.
+                    writer << "mkldnn::memory::dims dims1;\n";
+                    for (auto i = 0; i < result_shape.size(); i++)
+                    {
+                        writer << "dims1.push_back(" << std::to_string(result_shape[i]) << ");\n";
+                    }
+
+                    writer << "\nmkldnn::memory::dims dims2;\n";
+                    for (auto i = 0; i < lower_bounds.size(); i++)
+                    {
+                        writer << "dims2.push_back(" << std::to_string(lower_bounds[i]) << ");\n";
+                    }
+
+                    writer << "mkldnn::memory::primitive_desc input_pd = "
+                              "mkldnn::memory::primitive_desc(*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], "
+                                            "cg_ctx->global_cpu_engine);\n";
+                    writer << "mkldnn::memory::primitive_desc result_pd = "
+                              "mkldnn::memory::primitive_desc(*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], "
+                                                "cg_ctx->global_cpu_engine);\n";
+
+                    writer
+                        << "auto view_pd = mkldnn::view::primitive_desc(input_pd, dims1, dims2);\n";
+
+                    writer << "\n// create reorder primitive descriptor\n";
+                    writer << "mkldnn::reorder::primitive_desc reorder_pd = "
+                              "mkldnn::reorder::primitive_desc(view_pd.dst_primitive_desc(), "
+                              "result_pd);\n";
+
+                    writer << "\n// build reorder primitives\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::reorder(reorder_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <typename OP>
@@ -819,50 +897,12 @@ namespace ngraph
                         writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 2 << "],\n";
                     }
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + (descs.size() - 1)
-                           << "],\n"
-                              "mkldnn::memory::dims{";
-                    if (strides.size() > 1)
-                    {
-                        for (auto i = 0; i < strides.size() - 1; i++)
-                        {
-                            writer << std::to_string(strides[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(strides[strides.size() - 1]);
-                    writer << "},\n"
-                              "mkldnn::memory::dims{";
-                    if (window_dilation_strides_adjusted.size() > 1)
-                    {
-                        for (auto i = 0; i < window_dilation_strides_adjusted.size() - 1; i++)
-                        {
-                            writer << std::to_string(window_dilation_strides_adjusted[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(
-                        window_dilation_strides_adjusted[window_dilation_strides_adjusted.size() -
-                                                         1]);
-                    writer << "},\n"
-                              "mkldnn::memory::dims{";
-                    if (pad_below.size() > 1)
-                    {
-                        for (auto i = 0; i < pad_below.size() - 1; i++)
-                        {
-                            writer << std::to_string(pad_below[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(pad_below[pad_below.size() - 1]);
-                    writer << "},\n"
-                              "mkldnn::memory::dims{";
-                    if (pad_above.size() > 1)
-                    {
-                        for (auto i = 0; i < pad_above.size() - 1; i++)
-                        {
-                            writer << std::to_string(pad_above[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(pad_above[pad_above.size() - 1]);
-                    writer << "},\n"
-                              "mkldnn::padding_kind::zero);\n";
+                           << "],\n";
+                    WRITE_MKLDNN_DIMS(strides);
+                    WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
+                    WRITE_MKLDNN_DIMS(pad_below);
+                    WRITE_MKLDNN_DIMS(pad_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "mkldnn::post_ops ops;\n";
                     if (std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
@@ -874,28 +914,6 @@ namespace ngraph
                     if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
                         std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
                     {
-                        auto sum_scales_size = shape_size(convolution->get_input_shape(5));
-                        const element::Type& et = node->get_input_element_type(5);
-                        std::string type = et.c_type_string();
-                        std::stringstream ss;
-                        writer << "std::vector<float> dyn_post_op_scales;\n";
-                        auto c = std::dynamic_pointer_cast<ngraph::op::Constant>(
-                            node->get_arguments()[5]);
-                        if (c)
-                        {
-                            auto sum_scale_val =
-                                extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node,
-                                                                                             5);
-                            writer << "dyn_post_op_scales.push_back("
-                                   << std::to_string(sum_scale_val[0]) << ");\n";
-                        }
-                        else
-                        {
-                            ss << "((" << type << "*)(pool_base_ptr + "
-                               << node->get_inputs()[5].get_tensor().get_pool_offset() << "))";
-                            writer << "dyn_post_op_scales.assign(" << ss.str() << ", " << ss.str()
-                                   << " + " << std::to_string(sum_scales_size) << ");\n";
-                        }
                         writer << "ops.append_sum(dyn_post_op_scales[0]);\n";
                     }
 
@@ -914,30 +932,6 @@ namespace ngraph
 
                     if (mkldnn_emitter.is_quantized_conv<OP>())
                     {
-                        auto scale_index = mkldnn_emitter.get_scale_index<OP>();
-                        auto c = std::dynamic_pointer_cast<ngraph::op::Constant>(
-                            node->get_arguments()[scale_index]);
-                        auto scales_size = shape_size(convolution->get_input_shape(scale_index));
-                        const element::Type& et = node->get_input_element_type(scale_index);
-                        std::string type = et.c_type_string();
-                        std::stringstream ss;
-                        if (c)
-                        {
-                            ss << "((" << type << "*)(" << c->get_data_ptr() << "))\n";
-                        }
-                        else
-                        {
-                            ss << "((" << type << "*)(pool_base_ptr + "
-                               << node->get_inputs()[scale_index].get_tensor().get_pool_offset()
-                               << "))";
-                        }
-                        writer << "std::vector<float> dyn_scales;\n";
-                        writer << "dyn_scales.assign(" << ss.str() << ", " << ss.str() << " + "
-                               << std::to_string(scales_size) << ");\n";
-                        writer << "// use conv channelwise (dim 1, mask=2^1) if dyn_scales is a "
-                                  "vector \n";
-                        writer << "const int mask = " << std::to_string(scales_size)
-                               << " == 1 ? 0 : 2;\n";
                         writer << "conv_attr.set_int_output_round_mode(mkldnn::round_mode::round_"
                                   "nearest);\n";
                         writer << "conv_attr.set_output_scales(mask, dyn_scales);\n";
@@ -1068,14 +1062,23 @@ namespace ngraph
                         mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
-                template <typename OpTy>
-                size_t build_convolution_backward(MKLDNNEmitter& mkldnn_emitter,
-                                                  const ngraph::Node* node)
+                template <typename OP>
+                void construct_primitive_build_string_conv_backward_filters(
+                    ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                    ngraph::Node* node,
+                    std::string& construct_string,
+                    std::vector<size_t>& deps,
+                    size_t& index,
+                    std::ofstream& desc_file)
                 {
-                    auto convolution = static_cast<const OpTy*>(node);
+                    auto has_bias = false;
+                    if (mkldnn_emitter.has_bias<OP>())
+                    {
+                        has_bias = true;
+                    }
+                    auto convolution = static_cast<const OP*>(node);
 
                     Strides window_dilation_strides_adjusted;
-
                     for (size_t s : convolution->get_window_dilation_strides_forward())
                     {
                         window_dilation_strides_adjusted.push_back(s - 1);
@@ -1085,78 +1088,318 @@ namespace ngraph
                     auto arg1_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto out0_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    if (std::is_same<OpTy, ngraph::op::ConvolutionBackpropData>())
-                    {
-                        // MKLDNN relies on named formats for kernel selection
-                        if (arg0_desc.data.format == mkldnn_nchw)
-                        {
-                            arg0_desc.data.format = mkldnn_oihw;
-                        }
-                        if (arg0_desc.data.format == mkldnn_ncdhw)
-                        {
-                            arg0_desc.data.format = mkldnn_oidhw;
-                        }
+                    auto strides = convolution->get_window_movement_strides_forward();
+                    auto pad_below = convolution->get_padding_below_forward();
+                    auto pad_above = convolution->get_padding_above_forward();
+                    mkldnn::algorithm conv_algo = mkldnn_utils::get_conv_algo();
+                    auto conv_algo_string = conv_algo == mkldnn::algorithm::convolution_auto
+                                                ? "mkldnn::algorithm::convolution_auto,\n"
+                                                : "mkldnn::algorithm::convolution_direct,\n";
 
-                        return mkldnn_emitter.build_convolution_backward_data(
-                            arg0_desc,
-                            arg1_desc,
-                            out0_desc,
-                            convolution->get_window_movement_strides_forward(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below_forward(),
-                            convolution->get_padding_above_forward());
-                    }
-                    if (std::is_same<OpTy, ngraph::op::ConvolutionBackpropFilters>())
+                    std::vector<mkldnn::memory::desc> descs = {arg0_desc, arg1_desc, out0_desc};
+                    // ConvolutionBackpropFilter needs 4 primitives: src, diff_dst, diff_weights,
+                    // and convolution_backward_weights.
+                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst, diff_weights,
+                    // diff_bias, and convolution_backward_weights.
+                    if (has_bias)
                     {
-                        return mkldnn_emitter.build_convolution_backward_weights(
-                            arg0_desc,
-                            arg1_desc,
-                            out0_desc,
-                            convolution->get_window_movement_strides_forward(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below_forward(),
-                            convolution->get_padding_above_forward());
-                    }
-                    if (std::is_same<OpTy, ngraph::op::ConvolutionBiasBackpropFiltersBias>())
-                    {
+                        index = mkldnn_emitter.reserve_primitive_space_cg(5);
                         auto out1_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
-                        return mkldnn_emitter.build_convolution_backward_weights_bias(
-                            arg0_desc,
-                            arg1_desc,
-                            out0_desc,
-                            out1_desc,
-                            convolution->get_window_movement_strides_forward(),
-                            window_dilation_strides_adjusted,
-                            convolution->get_padding_below_forward(),
-                            convolution->get_padding_above_forward());
+                        descs.push_back(out1_desc);
                     }
+                    else
+                    {
+                        index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    }
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
 
-                    throw ngraph_error(std::string("Unknown op ") + convolution->get_name());
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto fwd_desc = "
+                              "mkldnn::convolution_forward::desc(mkldnn::prop_kind::forward,\n";
+                    writer << conv_algo_string;
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2 << "],\n";
+                    if (has_bias)
+                    {
+                        writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 3 << "],\n";
+                    }
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1 << "],\n";
+                    WRITE_MKLDNN_DIMS(strides);
+                    WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
+                    WRITE_MKLDNN_DIMS(pad_below);
+                    WRITE_MKLDNN_DIMS(pad_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "\nauto bwd_desc = "
+                              "mkldnn::convolution_backward_weights::desc(\n";
+                    writer << conv_algo_string;
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2 << "],\n";
+                    if (has_bias)
+                    {
+                        writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 3 << "],\n";
+                    }
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1 << "],\n";
+                    WRITE_MKLDNN_DIMS(strides);
+                    WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
+                    WRITE_MKLDNN_DIMS(pad_below);
+                    WRITE_MKLDNN_DIMS(pad_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "\n// create forward primitive descriptor\n";
+                    writer << "mkldnn::convolution_forward::primitive_desc fwd_pd{fwd_desc, "
+                              "cg_ctx->global_cpu_engine};\n";
+
+                    writer << "\n// create backward primitive_descriptor\n";
+                    writer
+                        << "mkldnn::convolution_backward_weights::primitive_desc bwd_pd{bwd_desc, "
+                           "cg_ctx->global_cpu_engine, fwd_pd};\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::convolution_backward_weights(bwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]";
+                    if (has_bias)
+                    {
+                        writer << ", *cg_ctx->mkldnn_primitives[" << std::to_string(deps[3]) << "]";
+                    }
+                    writer << ");\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBackpropFilters)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    ConvolutionBackpropFilters)
                 {
-                    return build_convolution_backward<ConvolutionBackpropFilters>(mkldnn_emitter,
-                                                                                  node);
+                    construct_primitive_build_string_conv_backward_filters<
+                        ConvolutionBackpropFilters>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ConvolutionBackpropData)
-                {
-                    return build_convolution_backward<ConvolutionBackpropData>(mkldnn_emitter,
-                                                                               node);
-                }
-
-                template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     ConvolutionBiasBackpropFiltersBias)
                 {
-                    return build_convolution_backward<ConvolutionBiasBackpropFiltersBias>(
-                        mkldnn_emitter, node);
+                    construct_primitive_build_string_conv_backward_filters<
+                        ConvolutionBiasBackpropFiltersBias>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
-                template <typename OP, bool is_training>
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    ConvolutionBackpropData)
+                {
+                    auto convolution = static_cast<const ConvolutionBackpropData*>(node);
+
+                    Strides window_dilation_strides_adjusted;
+                    for (size_t s : convolution->get_window_dilation_strides_forward())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto arg0_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto arg1_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto out0_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    // MKLDNN relies on named formats for kernel selection
+                    if (arg0_desc.data.format == mkldnn_nchw)
+                    {
+                        arg0_desc.data.format = mkldnn_oihw;
+                    }
+                    if (arg0_desc.data.format == mkldnn_ncdhw)
+                    {
+                        arg0_desc.data.format = mkldnn_oidhw;
+                    }
+
+                    auto strides = convolution->get_window_movement_strides_forward();
+                    auto pad_below = convolution->get_padding_below_forward();
+                    auto pad_above = convolution->get_padding_above_forward();
+                    mkldnn::algorithm conv_algo = mkldnn_utils::get_conv_algo();
+                    auto conv_algo_string = conv_algo == mkldnn::algorithm::convolution_auto
+                                                ? "mkldnn::algorithm::convolution_auto,\n"
+                                                : "mkldnn::algorithm::convolution_direct,\n";
+
+                    std::vector<mkldnn::memory::desc> descs = {arg0_desc, arg1_desc, out0_desc};
+                    // ConvolutionBackpropData needs 4 primitives: weights, diff_dst, diff_src,
+                    // and convolution_backward_data.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto fwd_desc = "
+                              "mkldnn::convolution_forward::desc(mkldnn::prop_kind::forward,\n";
+                    writer << conv_algo_string;
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 2
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n";
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1 << "],\n";
+                    WRITE_MKLDNN_DIMS(strides);
+                    WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
+                    WRITE_MKLDNN_DIMS(pad_below);
+                    WRITE_MKLDNN_DIMS(pad_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "\nauto bwd_desc = "
+                              "mkldnn::convolution_backward_data::desc(\n";
+                    writer << conv_algo_string;
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 2
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n";
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1 << "],\n";
+                    WRITE_MKLDNN_DIMS(strides);
+                    WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
+                    WRITE_MKLDNN_DIMS(pad_below);
+                    WRITE_MKLDNN_DIMS(pad_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "\n// create forward primitive descriptor\n";
+                    writer << "mkldnn::convolution_forward::primitive_desc fwd_pd{fwd_desc, "
+                              "cg_ctx->global_cpu_engine};\n";
+
+                    writer << "\n// create backward primitive_descriptor\n";
+                    writer << "mkldnn::convolution_backward_data::primitive_desc bwd_pd{bwd_desc, "
+                              "cg_ctx->global_cpu_engine, fwd_pd};\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::convolution_backward_data(bwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]";
+                    writer << ");\n";
+
+                    construct_string = writer.get_code();
+                }
+
+                template <>
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    DeconvolutionBias)
+                {
+                    auto dconv = static_cast<const DeconvolutionBias*>(node);
+
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
+                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    Strides window_dilation_strides_adjusted;
+
+                    for (size_t s : dconv->get_window_dilation_strides_forward())
+                    {
+                        window_dilation_strides_adjusted.push_back(s - 1);
+                    }
+
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    // MKLDNN relies on named formats for kernel selection
+                    if (weights_desc.data.format == mkldnn_nchw)
+                        weights_desc.data.format = mkldnn_oihw;
+                    if (weights_desc.data.format == mkldnn_ncdhw)
+                        weights_desc.data.format = mkldnn_oidhw;
+
+                    auto window_strides = dconv->get_window_movement_strides_forward();
+                    auto padding_below = dconv->get_padding_below_forward();
+                    auto padding_above = dconv->get_padding_above_forward();
+
+                    CodeWriter writer;
+                    std::vector<mkldnn::memory::desc> descs = {
+                        weights_desc, delta_desc, bias_desc, result_desc};
+
+                    // DeconvolutionBias needs 5 primitives: weights, delta, bias, result,
+                    // and deconvolutionbias.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(5);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    if (dconv->with_relu())
+                    {
+                        writer << "mkldnn::post_ops pops;\n";
+                        writer << "const float ops_scale = 1.f;\n";
+                        writer << "const float ops_alpha = -0.f; // relu negative slope\n";
+                        writer << "const float ops_beta = 0.f;\n";
+
+                        writer << "pops.append_eltwise("
+                                  "ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, "
+                                  "ops_beta);\n";
+                    }
+                    else
+                    {
+                        writer << "mkldnn::post_ops pops = mkldnn::post_ops();\n";
+                    }
+
+                    writer << "mkldnn::primitive_attr dconv_attr;\n";
+                    writer << "dconv_attr.set_post_ops(pops);\n";
+
+                    writer << "\nauto dconv_desc = "
+                              "mkldnn::deconvolution_forward::desc(\n"
+                              "mkldnn::prop_kind::forward,\n"
+                              "mkldnn::algorithm::deconvolution_direct,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n"
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 0 << "],\n"
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2 << "],\n"
+
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 3 << "],\n";
+
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "\n// create forward primitive descriptor\n";
+                    writer << "mkldnn::deconvolution_forward::primitive_desc dconv_pd{dconv_desc, "
+                              "dconv_attr, cg_ctx->global_cpu_engine};\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::deconvolution_forward(dconv_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[3]) << "]);\n";
+
+                    construct_string = writer.get_code();
+                }
+
+                template <typename OP>
                 void construct_primitive_build_string_max_pool(
                     ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
                     ngraph::Node* node,
@@ -1166,28 +1409,16 @@ namespace ngraph
                     std::ofstream& desc_file)
                 {
                     auto pool = static_cast<const OP*>(node);
-                    CodeWriter writer;
-                    std::vector<mkldnn::memory::desc> descs = {};
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     auto window_shape = pool->get_window_shape();
                     auto window_strides = pool->get_window_movement_strides();
                     auto padding_below = pool->get_padding_below();
                     auto padding_above = pool->get_padding_above();
 
-                    if (is_training)
-                    {
-                        auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                        auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                        descs.push_back(diff_dst_desc);
-                        descs.push_back(diff_src_desc);
-                    }
-                    else
-                    {
-                        auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                        auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                        descs.push_back(input_desc);
-                        descs.push_back(result_desc);
-                    }
+                    CodeWriter writer;
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
 
                     index = mkldnn_emitter.reserve_primitive_space_cg(3);
                     deps = mkldnn_emitter.get_primitive_deps_cg(index);
@@ -1198,64 +1429,17 @@ namespace ngraph
 
                     writer << "\n// build Maxpool primitive descriptor\n";
                     writer << "auto max_pool_desc = ";
-                    if (is_training)
-                    {
-                        writer << "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_"
-                                  "training,\n";
-                    }
-                    else
-                    {
-                        writer << "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_"
-                                  "inference,\n";
-                    }
+                    writer << "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_"
+                              "inference,\n";
                     writer << "mkldnn::algorithm::pooling_max,\n"
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "],\n"
                                             "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
-                    writer << "mkldnn::memory::dims{";
-                    if (window_strides.size() > 1)
-                    {
-                        for (auto i = 0; i < window_strides.size() - 1; i++)
-                        {
-                            writer << std::to_string(window_strides[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(window_strides[window_strides.size() - 1]);
-                    writer << "},\n";
-
-                    writer << "mkldnn::memory::dims{";
-                    if (window_shape.size() > 1)
-                    {
-                        for (auto i = 0; i < window_shape.size() - 1; i++)
-                        {
-                            writer << std::to_string(window_shape[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(window_shape[window_shape.size() - 1]);
-                    writer << "},\n";
-
-                    writer << "mkldnn::memory::dims{";
-                    if (padding_below.size() > 1)
-                    {
-                        for (auto i = 0; i < padding_below.size() - 1; i++)
-                        {
-                            writer << std::to_string(padding_below[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(padding_below[padding_below.size() - 1]);
-                    writer << "},\n";
-
-                    writer << "mkldnn::memory::dims{";
-                    if (padding_above.size() > 1)
-                    {
-                        for (auto i = 0; i < padding_above.size() - 1; i++)
-                        {
-                            writer << std::to_string(padding_above[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(padding_above[padding_above.size() - 1]);
-                    writer << "},\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    WRITE_MKLDNN_DIMS(padding_above);
                     writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "mkldnn::primitive* prim;\n";
@@ -1270,7 +1454,7 @@ namespace ngraph
                     construct_string = writer.get_code();
                 }
 
-                template <typename OP, bool is_training>
+                template <typename OP>
                 void construct_primitive_build_string_avg_pool(
                     ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
                     ngraph::Node* node,
@@ -1303,16 +1487,8 @@ namespace ngraph
 
                     writer << "\n// build Avgpool primitive descriptor\n";
                     writer << "auto avg_pool_desc = ";
-                    if (is_training)
-                    {
-                        writer << "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_"
-                                  "training,\n";
-                    }
-                    else
-                    {
-                        writer << "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_"
-                                  "inference,\n";
-                    }
+                    writer << "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_"
+                              "inference,\n";
                     if (include_padding_in_avg_computation)
                     {
                         writer << "mkldnn::algorithm::pooling_avg_include_padding,\n";
@@ -1325,49 +1501,10 @@ namespace ngraph
                            << "],\n"
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
-                    writer << "mkldnn::memory::dims{";
-                    if (window_strides.size() > 1)
-                    {
-                        for (auto i = 0; i < window_strides.size() - 1; i++)
-                        {
-                            writer << std::to_string(window_strides[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(window_strides[window_strides.size() - 1]);
-                    writer << "},\n";
-
-                    writer << "mkldnn::memory::dims{";
-                    if (window_shape.size() > 1)
-                    {
-                        for (auto i = 0; i < window_shape.size() - 1; i++)
-                        {
-                            writer << std::to_string(window_shape[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(window_shape[window_shape.size() - 1]);
-                    writer << "},\n";
-
-                    writer << "mkldnn::memory::dims{";
-                    if (padding_below.size() > 1)
-                    {
-                        for (auto i = 0; i < padding_below.size() - 1; i++)
-                        {
-                            writer << std::to_string(padding_below[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(padding_below[padding_below.size() - 1]);
-                    writer << "},\n";
-
-                    writer << "mkldnn::memory::dims{";
-                    if (padding_above.size() > 1)
-                    {
-                        for (auto i = 0; i < padding_above.size() - 1; i++)
-                        {
-                            writer << std::to_string(padding_above[i]) << ", ";
-                        }
-                    }
-                    writer << std::to_string(padding_above[padding_above.size() - 1]);
-                    writer << "},\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    WRITE_MKLDNN_DIMS(padding_above);
                     writer << "mkldnn::padding_kind::zero);\n";
 
                     writer << "mkldnn::primitive* prim;\n";
@@ -1385,7 +1522,7 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(MaxPool)
                 {
-                    construct_primitive_build_string_max_pool<MaxPool, false>(
+                    construct_primitive_build_string_max_pool<MaxPool>(
                         mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
@@ -1393,14 +1530,14 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     QuantizedMaxPool)
                 {
-                    construct_primitive_build_string_max_pool<QuantizedMaxPool, false>(
+                    construct_primitive_build_string_max_pool<QuantizedMaxPool>(
                         mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(AvgPool)
                 {
-                    construct_primitive_build_string_avg_pool<AvgPool, false>(
+                    construct_primitive_build_string_avg_pool<AvgPool>(
                         mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
@@ -1408,84 +1545,319 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     QuantizedAvgPool)
                 {
-                    construct_primitive_build_string_avg_pool<QuantizedAvgPool, false>(
+                    construct_primitive_build_string_avg_pool<QuantizedAvgPool>(
                         mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolWithIndices)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    MaxPoolWithIndices)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto max_pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
+                    auto pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
+                    auto window_shape = pool->get_window_shape();
+                    auto window_strides = pool->get_window_movement_strides();
+                    auto padding_below = pool->get_padding_below();
+                    auto padding_above = pool->get_padding_above();
 
-                    return mkldnn_emitter.build_max_pooling_with_indices_forward(
-                        mkldnn::algorithm::pooling_max,
-                        input_desc,
-                        result_desc,
-                        max_pool->get_window_movement_strides(),
-                        max_pool->get_window_shape(),
-                        max_pool->get_padding_below(),
-                        max_pool->get_padding_above());
+                    // MaxPoolWithIndices needs 4 primitives: input, result, workspace, and pooling_forward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto pool_desc = "
+                              "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_training,\n"
+                              "mkldnn::algorithm::pooling_max,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n"
+                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "\n// build primitive descriptor\n";
+                    writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{pool_desc, "
+                              "cg_ctx->global_cpu_engine};\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[2])
+                           << "] = new mkldnn::memory({fwd_pd.workspace_primitive_desc().desc(), "
+                              "cg_ctx->global_cpu_engine}, nullptr);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::pooling_forward(fwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]";
+                    writer << ");\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(AvgPoolBackprop)
+                void
+                    MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(AvgPoolBackprop)
                 {
                     auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
+                    auto pool = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
+                    auto window_shape = pool->get_window_shape();
+                    auto window_strides = pool->get_window_movement_strides();
+                    auto padding_below = pool->get_padding_below();
+                    auto padding_above = pool->get_padding_above();
+                    auto algo_string = pool->get_include_padding_in_avg_computation()
+                                           ? "mkldnn::algorithm::pooling_avg_include_padding"
+                                           : "mkldnn::algorithm::pooling_avg_exclude_padding";
 
-                    return mkldnn_emitter.build_pooling_backward(
-                        (apb->get_include_padding_in_avg_computation()
-                             ? mkldnn::algorithm::pooling_avg_include_padding
-                             : mkldnn::algorithm::pooling_avg_exclude_padding),
-                        diff_dst_desc,
-                        diff_src_desc,
-                        apb->get_window_movement_strides(),
-                        apb->get_window_shape(),
-                        apb->get_padding_below(),
-                        apb->get_padding_above());
+                    // AvgPoolBackprop needs 3 primitives: diff_dst, diff_src, and pooling_backward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {diff_dst_desc, diff_src_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer
+                        << "auto fwd_desc = "
+                           "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_training,\n";
+                    writer << algo_string << ",\n";
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "auto bwd_desc = "
+                              "mkldnn::pooling_backward::desc(\n";
+                    writer << algo_string << ",\n";
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "\n// build primitive descriptor\n";
+                    writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, "
+                              "cg_ctx->global_cpu_engine};\n";
+                    writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, "
+                              "cg_ctx->global_cpu_engine, fwd_pd};\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::pooling_backward(bwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]";
+                    writer << ");\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolBackprop)
+                void
+                    MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(MaxPoolBackprop)
                 {
                     auto fprop_src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
+                    auto pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
+                    auto window_shape = pool->get_window_shape();
+                    auto window_strides = pool->get_window_movement_strides();
+                    auto padding_below = pool->get_padding_below();
+                    auto padding_above = pool->get_padding_above();
 
-                    return mkldnn_emitter.build_max_pooling_backward(
-                        mkldnn::algorithm::pooling_max,
-                        fprop_src_desc,
-                        diff_dst_desc,
-                        diff_src_desc,
-                        mpb->get_window_movement_strides(),
-                        mpb->get_window_shape(),
-                        mpb->get_padding_below(),
-                        mpb->get_padding_above());
+                    // MaxPoolBackprop needs 6 primitives: fprop_src, diff_dst, diff_src, workspace
+                    // pooling forward, and pooling_backward.
+                    // It needs a new workspace.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(6, true /* new workspace */);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {
+                        fprop_src_desc, diff_dst_desc, diff_src_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto fwd_desc = "
+                              "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_training,\n"
+                              "mkldnn::algorithm::pooling_max,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2 << "],\n"
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "\nauto bwd_desc = "
+                              "mkldnn::pooling_backward::desc(\n"
+                              "mkldnn::algorithm::pooling_max,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2 << "],\n"
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "\n// build primitive descriptor\n";
+                    writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, "
+                              "cg_ctx->global_cpu_engine};\n";
+                    writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, "
+                              "cg_ctx->global_cpu_engine, fwd_pd};\n";
+
+                    // This is implemented differently from cpu builder,
+                    // we only use one index and one deps here.
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[3])
+                           << "] = new mkldnn::memory({fwd_pd.workspace_primitive_desc().desc(), "
+                              "cg_ctx->global_cpu_engine}, nullptr);\n";
+                    writer << "auto workspace = "
+                              "(char*)malloc(fwd_pd.workspace_primitive_desc().get_size());"
+                              "\n";
+                    writer << "if (!workspace)\n";
+                    writer.block_begin();
+                    writer << "throw std::bad_alloc();\n";
+                    writer.block_end();
+                    writer << "cg_ctx->mkldnn_workspaces.push_back(workspace);\n";
+
+                    deps[5] = mkldnn_emitter.reserve_workspace();
+
+                    writer << "\n// build primitive\n";
+
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[4])
+                           << "] = new mkldnn::pooling_forward(fwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[3]) << "]";
+                    writer << ");\n";
+
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::pooling_backward(bwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[3]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]";
+                    writer << ");\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(MaxPoolWithIndicesBackprop)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    MaxPoolWithIndicesBackprop)
                 {
                     auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto mpb = static_cast<const ngraph::op::MaxPoolWithIndicesBackprop*>(node);
+                    auto pool = static_cast<const ngraph::op::MaxPoolWithIndices*>(node);
+                    auto window_shape = pool->get_window_shape();
+                    auto window_strides = pool->get_window_movement_strides();
+                    auto padding_below = pool->get_padding_below();
+                    auto padding_above = pool->get_padding_above();
 
-                    return mkldnn_emitter.build_max_pooling_with_indices_backward(
-                        mkldnn::algorithm::pooling_max,
-                        diff_dst_desc,
-                        diff_src_desc,
-                        mpb->get_window_movement_strides(),
-                        mpb->get_window_shape(),
-                        mpb->get_padding_below(),
-                        mpb->get_padding_above());
+                    // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace, diff_src
+                    // and pooling_backward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {diff_dst_desc, diff_src_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto fwd_desc = "
+                              "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_training,\n"
+                              "mkldnn::algorithm::pooling_max,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n"
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "auto bwd_desc = "
+                              "mkldnn::pooling_backward::desc(\n"
+                              "mkldnn::algorithm::pooling_max,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n"
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n";
+                    WRITE_MKLDNN_DIMS(window_strides);
+                    WRITE_MKLDNN_DIMS(window_shape);
+                    WRITE_MKLDNN_DIMS(padding_below);
+                    WRITE_MKLDNN_DIMS(padding_above);
+                    writer << "mkldnn::padding_kind::zero);\n";
+
+                    writer << "\n// build primitive descriptor\n";
+                    writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, "
+                              "cg_ctx->global_cpu_engine};\n";
+                    writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, "
+                              "cg_ctx->global_cpu_engine, fwd_pd};\n";
+                    // this is different from cpu builder because we do not write workspace desc to desc_file.
+                    // here workspace's mkldnn primitive index is in deps[2] in stead of deps[1].
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[2])
+                           << "] = new mkldnn::memory({fwd_pd.workspace_primitive_desc().desc(), "
+                              "cg_ctx->global_cpu_engine}, nullptr);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::pooling_backward(bwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]";
+                    writer << ");\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     ngraph::runtime::cpu::op::ConvertLayout)
                 {
                     const auto& args = node->get_inputs();
@@ -1528,70 +1900,303 @@ namespace ngraph
                             mkldnn::memory::format::goihw);
                     }
 
-                    return mkldnn_emitter.build_reorder(input_desc, result_desc);
+                    // ConvertLayout needs 3 primitives: input, result, and reorder.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "\n// build reorder primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::reorder("
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(ReluBackprop)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ReluBackprop)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    return mkldnn_emitter.build_relu_backward(input_desc, delta_desc, result_desc);
+                    // ReluBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, delta_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "const float negative_slope = 0.0f;\n";
+                    writer << "auto fwd_desc = "
+                              "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
+                              "mkldnn::algorithm::eltwise_relu, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], negative_slope);\n";
+                    writer << "auto bwd_desc = "
+                              "mkldnn::eltwise_backward::desc(mkldnn::algorithm::eltwise_relu, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], negative_slope);\n";
+
+                    writer << "\n// create forward relu primitive descriptor\n";
+                    writer
+                        << "auto relu_fwd_pd = mkldnn::eltwise_forward::primitive_desc(fwd_desc, "
+                           "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// create backward relu primitive_descriptor\n";
+                    writer << "auto relu_bwd_pd = "
+                              "mkldnn::eltwise_backward::primitive_desc(bwd_desc, "
+                              "cg_ctx->global_cpu_engine, relu_fwd_pd);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::eltwise_backward(relu_bwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Relu)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Relu)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    return mkldnn_emitter.build_relu_forward(input_desc, result_desc);
+
+                    // Relu needs 3 primitives: input, result, and eltwise_forward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "const float negative_slope = 0.0f;\n";
+                    writer << "auto relu_desc = "
+                              "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
+                              "mkldnn::algorithm::eltwise_relu, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], negative_slope);\n";
+                    writer << "\n// create relu primitive_descriptor\n";
+                    writer << "auto relu_pd = "
+                              "mkldnn::eltwise_forward::primitive_desc(relu_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::eltwise_forward(relu_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(LeakyRelu)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(LeakyRelu)
                 {
                     auto leaky_relu_node = static_cast<const ngraph::op::LeakyRelu*>(node);
                     float alpha = leaky_relu_node->get_alpha();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    return mkldnn_emitter.build_leaky_relu(input_desc, result_desc, alpha);
+                    // LeakyRelu needs 3 primitives: input, result, and eltwise_forward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "const float alpha = " << alpha << ";\n";
+                    writer << "auto relu_desc = "
+                              "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
+                              "mkldnn::algorithm::eltwise_relu, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], alpha, 0.0f);\n";
+                    writer << "\n// create relu primitive_descriptor\n";
+                    writer << "auto relu_pd = "
+                              "mkldnn::eltwise_forward::primitive_desc(relu_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::eltwise_forward(relu_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(BoundedRelu)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(BoundedRelu)
                 {
                     auto bounded_relu_node = static_cast<const ngraph::op::BoundedRelu*>(node);
                     float alpha = bounded_relu_node->get_alpha();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    return mkldnn_emitter.build_bounded_relu(input_desc, result_desc, alpha);
+                    // BoundedRelu needs 3 primitives: input, result, and eltwise_forward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "const float alpha = " << alpha << ";\n";
+                    writer << "auto relu_desc = "
+                              "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
+                              "mkldnn::algorithm::eltwise_bounded_relu, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], alpha, 0.0f);\n";
+                    writer << "\n// create relu primitive_descriptor\n";
+                    writer << "auto relu_pd = "
+                              "mkldnn::eltwise_forward::primitive_desc(relu_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::eltwise_forward(relu_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Sigmoid)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Sigmoid)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    return mkldnn_emitter.build_sigmoid_forward(input_desc, result_desc);
+
+                    // Sigmoid needs 3 primitives: input, result, and eltwise_forward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto sigmoid_desc = "
+                              "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward_training, "
+                              "mkldnn::algorithm::eltwise_logistic, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], 0, 0);\n";
+                    writer << "\n// create sigmoid primitive_descriptor\n";
+                    writer << "auto sigmoid_pd = "
+                              "mkldnn::eltwise_forward::primitive_desc(sigmoid_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::eltwise_forward(sigmoid_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(SigmoidBackprop)
+                void
+                    MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(SigmoidBackprop)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    return mkldnn_emitter.build_sigmoid_backward(
-                        input_desc, delta_desc, result_desc);
+                    // SigmoidBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, delta_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto fwd_desc = "
+                              "mkldnn::eltwise_forward::desc(mkldnn::prop_kind::forward, "
+                              "mkldnn::algorithm::eltwise_logistic, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], 0, 0);\n";
+                    writer << "auto bwd_desc = "
+                              "mkldnn::eltwise_backward::desc(mkldnn::algorithm::eltwise_logistic, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], 0, 0);\n";
+
+                    writer << "\n// create forward sigmoid primitive descriptor\n";
+                    writer << "auto sigmoid_fwd_pd = "
+                              "mkldnn::eltwise_forward::primitive_desc(fwd_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// create backward sigmoid primitive_descriptor\n";
+                    writer << "auto sigmoid_bwd_pd = "
+                              "mkldnn::eltwise_backward::primitive_desc(bwd_desc, "
+                              "cg_ctx->global_cpu_engine, sigmoid_fwd_pd);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::eltwise_backward(sigmoid_bwd_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[2]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Softmax)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Softmax)
                 {
                     auto softmax = static_cast<const ngraph::op::Softmax*>(node);
 
@@ -1604,56 +2209,251 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    return mkldnn_emitter.build_softmax_forward(
-                        input_desc, result_desc, softmax_axis);
+                    // Softmax needs 3 primitives: input, result, and softmax_forward.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "auto softmax_desc = "
+                              "mkldnn::softmax_forward::desc(mkldnn::prop_kind::forward_scoring, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], " << softmax_axis << ");\n";
+                    writer << "\n// create softmax primitive_descriptor\n";
+                    writer << "auto softmax_pd = "
+                              "mkldnn::softmax_forward::primitive_desc(softmax_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::softmax_forward(softmax_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Dequantize)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Quantize)
                 {
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    return mkldnn_emitter.build_dequantization(node, input_data_desc, result_desc);
+
+                    // Quantize needs 3 primitives: input, result, and reorder.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_output_scales(mask, dyn_scales);\n";
+                    writer
+                        << "attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);\n";
+
+                    writer << "\n// build reorder primitive\n";
+                    writer << "auto reorder_pd = "
+                              "mkldnn::reorder::primitive_desc({"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], cg_ctx->global_cpu_engine}, "
+                                            "{*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], cg_ctx->global_cpu_engine}, attr);\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::reorder(reorder_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(Quantize)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Dequantize)
                 {
-                    auto input_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto quantize = static_cast<const ngraph::op::Quantize*>(node);
-                    auto scale_const_op =
-                        std::dynamic_pointer_cast<Constant>(quantize->get_argument(1));
 
-                    if (scale_const_op == nullptr)
+                    // Dequantize needs 3 primitives: input, result, and reorder.
+                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_output_scales(mask, dyn_scales);\n";
+                    writer
+                        << "attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);\n";
+
+                    writer << "\n// build reorder primitive\n";
+                    writer << "auto reorder_pd = "
+                              "mkldnn::reorder::primitive_desc({"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "], cg_ctx->global_cpu_engine}, "
+                                            "{*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], cg_ctx->global_cpu_engine}, attr);\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::reorder(reorder_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]);\n";
+
+                    construct_string = writer.get_code();
+                }
+
+                template <>
+                void
+                    MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedConcat)
+                {
+                    construct_primitive_build_string_concat<QuantizedConcat>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
+
+                template <typename OP>
+                void construct_primitive_build_string_inner_product(
+                    ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                    ngraph::Node* node,
+                    std::string& construct_string,
+                    std::vector<size_t>& deps,
+                    size_t& index,
+                    std::ofstream& desc_file)
+                {
+                    auto has_bias = false;
+                    if (mkldnn_emitter.has_bias<OP>())
                     {
-                        throw ngraph_error("Quantize scale must be a constant");
+                        has_bias = true;
                     }
 
-                    auto scale = scale_const_op->get_vector<float>();
-                    std::vector<float> scales;
-                    scales.push_back(1.0 / scale[0]);
+                    auto data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
 
-                    return mkldnn_emitter.build_quantize_reorder(
-                        input_data_desc, result_desc, scales);
+                    // MKLDNN relies on named formats for kernel selection
+                    if (weights_desc.data.format == mkldnn_nchw)
+                    {
+                        weights_desc.data.format = mkldnn_oihw;
+                    }
+                    if (weights_desc.data.format == mkldnn_ncdhw)
+                    {
+                        weights_desc.data.format = mkldnn_oidhw;
+                    }
+                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+                    if (has_bias)
+                    {
+                        // QuantizedDotBias needs 5 primitives: input, weights, bias, result, and inner_product.
+                        index = mkldnn_emitter.reserve_primitive_space_cg(5);
+                    }
+                    else
+                    {
+                        // QuantizedDot needs 4 primitives: input, weights, result, and inner_product.
+                        index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                    }
+                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+
+                    CodeWriter writer;
+
+                    // Write memory descriptors to file
+                    std::vector<mkldnn::memory::desc> descs = {
+                        data_desc, weights_desc, result_desc};
+
+                    if (has_bias)
+                    {
+                        auto bias_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                        descs.push_back(bias_desc);
+                    }
+
+                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
+                    mkldnn_emitter.reserve_descriptor_space(descs.size());
+                    serialize_memory_descs(desc_file, descs, deps[0]);
+
+                    writer << "\n// build primitive descriptor\n";
+                    writer << "auto ip_desc = "
+                              "mkldnn::inner_product_forward::desc(mkldnn::prop_kind::forward,\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index << "],\n"
+                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "],\n";
+                    if (has_bias)
+                    {
+                        writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 3 << "],\n";
+                    }
+                    writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 2 << "]);\n";
+
+                    writer << "\nmkldnn::post_ops ops;\n";
+                    if (has_relu<OP>(node))
+                    {
+                        writer << "const float ops_scale = 1.f;\n";
+                        writer << "const float ops_alpha = -0.f; // relu negative slope\n";
+                        writer << "const float ops_beta = 0.f;\n";
+                        writer << "ops.append_eltwise("
+                                  "ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, "
+                                  "ops_beta);\n";
+                    }
+
+                    writer << "mkldnn::primitive_attr ip_attr;\n";
+                    writer << "ip_attr.set_post_ops(ops);\n";
+
+                    if (mkldnn_emitter.is_quantized_inner_product<OP>())
+                    {
+                        writer << "ip_attr.set_int_output_round_mode(mkldnn::round_mode::round_"
+                                  "nearest);\n";
+                        writer << "ip_attr.set_output_scales(mask, dyn_scales);\n";
+                    }
+
+                    writer << "auto ip_pd = "
+                              "mkldnn::inner_product_forward::primitive_desc(ip_desc, ip_attr, "
+                              "cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// build primitive\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::inner_product_forward(ip_pd, "
+                              "*cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[0]) << "]"
+                                                         ", *cg_ctx->mkldnn_primitives["
+                           << std::to_string(deps[1]) << "]";
+                    if (has_bias)
+                    {
+                        writer << ", *cg_ctx->mkldnn_primitives[" << std::to_string(deps[3]) << "]";
+                    }
+                    writer << ", *cg_ctx->mkldnn_primitives[" << std::to_string(deps[2]) << "]);\n";
+
+                    construct_string = writer.get_code();
                 }
 
                 template <>
-                size_t MKLDNNPrimitiveBuildPass::BUILD_PRIMITIVE_DECL(QuantizedConcat)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
+                    QuantizedDotBias)
                 {
-                    int args_size = node->get_inputs().size();
+                    construct_primitive_build_string_inner_product<QuantizedDotBias>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
+                }
 
-                    std::vector<mkldnn::memory::desc> inputs_data_desc;
-                    for (size_t i = 0; i < args_size; i++)
-                    {
-                        inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
-                    }
-
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    size_t concat_dim =
-                        (static_cast<const QuantizedConcat*>(node))->get_concatenation_axis();
-                    return mkldnn_emitter.build_concat(inputs_data_desc, result_desc, concat_dim);
+                template <>
+                void
+                    MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedMatmul)
+                {
+                    construct_primitive_build_string_inner_product<QuantizedMatmul>(
+                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
             }
         }
@@ -1664,43 +2464,12 @@ using namespace ngraph::runtime::cpu::pass;
 
 #define TI(x) std::type_index(typeid(x))
 
-static const PrimitiveBuildOpMap prim_build_dispatcher{
-    {TI(Convert), &MKLDNNPrimitiveBuildPass::build_primitive<Convert>},
-    {TI(runtime::cpu::op::ConvertLayout),
-     &MKLDNNPrimitiveBuildPass::build_primitive<runtime::cpu::op::ConvertLayout>},
-    {TI(AvgPool), &MKLDNNPrimitiveBuildPass::build_primitive<AvgPool>},
-    {TI(AvgPoolBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<AvgPoolBackprop>},
-    {TI(BoundedRelu), &MKLDNNPrimitiveBuildPass::build_primitive<BoundedRelu>},
-    {TI(ConvolutionBackpropData),
-     &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBackpropData>},
-    {TI(ConvolutionBackpropFilters),
-     &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBackpropFilters>},
-    {TI(MaxPoolWithIndices), &MKLDNNPrimitiveBuildPass::build_primitive<MaxPoolWithIndices>},
-    {TI(MaxPoolBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<MaxPoolBackprop>},
-    {TI(MaxPoolWithIndicesBackprop),
-     &MKLDNNPrimitiveBuildPass::build_primitive<MaxPoolWithIndicesBackprop>},
-    {TI(ConvolutionBiasBackpropFiltersBias),
-     &MKLDNNPrimitiveBuildPass::build_primitive<ConvolutionBiasBackpropFiltersBias>},
-    {TI(Relu), &MKLDNNPrimitiveBuildPass::build_primitive<Relu>},
-    {TI(ReluBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<ReluBackprop>},
-    {TI(LeakyRelu), &MKLDNNPrimitiveBuildPass::build_primitive<LeakyRelu>},
-    {TI(Sigmoid), &MKLDNNPrimitiveBuildPass::build_primitive<Sigmoid>},
-    {TI(SigmoidBackprop), &MKLDNNPrimitiveBuildPass::build_primitive<SigmoidBackprop>},
-    {TI(QuantizedMaxPool), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedMaxPool>},
-    {TI(QuantizedAvgPool), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedAvgPool>},
-    {TI(Softmax), &MKLDNNPrimitiveBuildPass::build_primitive<Softmax>},
-    {TI(Slice), &MKLDNNPrimitiveBuildPass::build_primitive<Slice>},
-    {TI(ReplaceSlice), &MKLDNNPrimitiveBuildPass::build_primitive<ReplaceSlice>},
-    {TI(UpdateSlice), &MKLDNNPrimitiveBuildPass::build_primitive<UpdateSlice>},
-    {TI(Quantize), &MKLDNNPrimitiveBuildPass::build_primitive<Quantize>},
-    {TI(Dequantize), &MKLDNNPrimitiveBuildPass::build_primitive<Dequantize>},
-    {TI(QuantizedConcat), &MKLDNNPrimitiveBuildPass::build_primitive<QuantizedConcat>},
-    {TI(GetOutputElement), &MKLDNNPrimitiveBuildPass::build_primitive<GetOutputElement>},
-};
-
 static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_dispatcher{
     {TI(Add), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Add>},
+    {TI(BoundedRelu), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BoundedRelu>},
     {TI(Concat), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Concat>},
+    {TI(runtime::cpu::op::ConvertLayout),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<runtime::cpu::op::ConvertLayout>},
     {TI(BatchNormInference),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormInference>},
     {TI(BatchNormTraining),
@@ -1711,8 +2480,11 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormTrainingRelu>},
     {TI(BatchNormTrainingBackprop),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormTrainingBackprop>},
+    {TI(LeakyRelu), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<LeakyRelu>},
     {TI(LRN), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<LRN>},
     {TI(Lstm), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Lstm>},
+    {TI(Relu), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Relu>},
+    {TI(ReluBackprop), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ReluBackprop>},
     {TI(Rnn), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Rnn>},
     {TI(Convolution), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Convolution>},
     {TI(ConvolutionRelu),
@@ -1738,82 +2510,49 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
     {TI(QuantizedConvolutionBiasSignedAdd),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<
          QuantizedConvolutionBiasSignedAdd>},
+    {TI(ConvolutionBackpropData),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ConvolutionBackpropData>},
+    {TI(ConvolutionBackpropFilters),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ConvolutionBackpropFilters>},
+    {TI(ConvolutionBiasBackpropFiltersBias),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<
+         ConvolutionBiasBackpropFiltersBias>},
+    {TI(DeconvolutionBias),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<DeconvolutionBias>},
+    {TI(QuantizedConcat),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedConcat>},
+    {TI(MaxPoolWithIndices),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPoolWithIndices>},
+    {TI(MaxPoolWithIndicesBackprop),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPoolWithIndicesBackprop>},
+    {TI(Sigmoid), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Sigmoid>},
+    {TI(SigmoidBackprop),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<SigmoidBackprop>},
+    {TI(Slice), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Slice>},
+    {TI(Softmax), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Softmax>},
     {TI(MaxPool), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPool>},
     {TI(QuantizedMaxPool),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedMaxPool>},
     {TI(AvgPool), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<AvgPool>},
     {TI(QuantizedAvgPool),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedAvgPool>},
+    {TI(AvgPoolBackprop),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<AvgPoolBackprop>},
+    {TI(MaxPoolBackprop),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPoolBackprop>},
+    {TI(Quantize), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Quantize>},
+    {TI(Dequantize), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Dequantize>},
+    {TI(QuantizedDotBias),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedDotBias>},
+    {TI(QuantizedMatmul),
+     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedMatmul>},
 };
-
-// Check if the node builds primitives at first iteration.
-// Needed during transition when there are two maps.
-static bool in_new_map(const std::shared_ptr<Node>& node)
-{
-    if (std::dynamic_pointer_cast<ngraph::op::Add>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Concat>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BatchNormInference>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BatchNormTraining>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BatchNormInferenceRelu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BatchNormTrainingRelu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::BatchNormTrainingBackprop>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::LRN>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Lstm>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Rnn>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::Convolution>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionRelu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionBias>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionBiasAdd>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::ConvolutionAdd>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolution>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionRelu>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBias>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasAdd>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedConvolutionBiasSignedAdd>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::MaxPool>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedMaxPool>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::AvgPool>(node) ||
-        std::dynamic_pointer_cast<ngraph::op::QuantizedAvgPool>(node))
-    {
-        return true;
-    }
-    return false;
-}
 
 bool MKLDNNPrimitiveBuildPass::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)
 {
-    for (const auto& shp_node : nodes)
-    {
-        if (in_new_map(shp_node))
-        {
-            continue;
-        }
-
-        Node* node = shp_node.get();
-
-        if (mkldnn_utils::use_mkldnn_kernel(node))
-        {
-            auto handler = prim_build_dispatcher.find(TI(*node));
-            NGRAPH_CHECK(handler != prim_build_dispatcher.end(),
-                         "Unsupported node '",
-                         node->description(),
-                         "' in MKLDNNPrimitiveBuildPass");
-
-            size_t primitive_idx = handler->second(m_mkldnn_emitter, node);
-            m_node_primitive_idx_map[node] = primitive_idx;
-        }
-    }
-
     std::ofstream desc_file(m_desc_filename, std::ios::out | std::ios::binary);
     for (const auto& shp_node : nodes)
     {
-        if (!in_new_map(shp_node))
-        {
-            continue;
-        }
-
         Node* node = shp_node.get();
 
         if (mkldnn_utils::use_mkldnn_kernel(node))

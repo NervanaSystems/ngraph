@@ -75,6 +75,8 @@ namespace ngraph
 
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
+    NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+
     template <typename T>
     std::list<std::shared_ptr<Node>> topological_sort(const T& nodes,
                                                       bool include_control_deps = false)

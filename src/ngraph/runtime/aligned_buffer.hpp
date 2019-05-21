@@ -36,12 +36,14 @@ public:
     AlignedBuffer();
     ~AlignedBuffer();
 
+    AlignedBuffer(AlignedBuffer&& other);
+    AlignedBuffer& operator=(AlignedBuffer&& other);
+
     size_t size() const { return m_byte_size; }
     void* get_ptr(size_t offset) const { return m_aligned_buffer + offset; }
     void* get_ptr() const { return m_aligned_buffer; }
 private:
     AlignedBuffer(const AlignedBuffer&) = delete;
-    AlignedBuffer(AlignedBuffer&&) = delete;
     AlignedBuffer& operator=(const AlignedBuffer&) = delete;
 
     char* m_allocated_buffer;
