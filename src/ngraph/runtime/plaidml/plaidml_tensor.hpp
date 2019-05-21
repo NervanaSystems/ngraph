@@ -35,8 +35,7 @@ namespace ngraph
 class ngraph::runtime::plaidml::PlaidML_Tensor final : public ngraph::runtime::Tensor
 {
 public:
-    PlaidML_Tensor(Backend* parent,
-                   Config* config,
+    PlaidML_Tensor(Config* config,
                    const ngraph::element::Type& element_type,
                    const ngraph::Shape& shape,
                    const std::string& name,
