@@ -88,20 +88,12 @@ namespace ngraph
                         {
                             vector<float> dyn_scales;
                             // Calculate the requantization scale
-                            for (size_t i = 0; i < scales_size; i++)
-                            {
-                                dyn_scales.push_back(
-                                    *(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
-                                      i) *
-                                    *(static_cast<float*>(ctx->buffer_data[arg4_buffer_index]) +
-                                      i) /
-                                    *(static_cast<float*>(ctx->buffer_data[arg6_buffer_index]) +
-                                      i));
-                            }
-                            std::cout << "SCALE " << dyn_scales[0] << std::endl;
+                            dyn_scales.push_back(
+                                *(static_cast<float*>(ctx->buffer_data[arg2_buffer_index])) *
+                                *(static_cast<float*>(ctx->buffer_data[arg4_buffer_index])) /
+                                *(static_cast<float*>(ctx->buffer_data[arg6_buffer_index])));
                             // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
-                            const int mask = scales_size == 1 ? 0 : 2;
-                            conv_attr.set_output_scales(mask, dyn_scales);
+                            conv_attr.set_output_scales(0, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<false>(
                                 ctx->mkldnn_primitives,
                                 conv_desc,

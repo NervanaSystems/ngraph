@@ -53,6 +53,8 @@ namespace ngraph
             auto filter_zero_point =
                 op::Constant::create(filters->get_element_type(), Shape{}, {0});
 
+            AxisSet quantization_axes;
+
             return make_shared<op::QuantizedConvolution>(
                 input,
                 filters,
@@ -67,7 +69,8 @@ namespace ngraph
                 filter_zero_point,
                 output_scale,
                 filter_zero_point, // output type will be same as filter
-                output_type);
+                output_type,
+                quantization_axes);
         }
     }
 }
