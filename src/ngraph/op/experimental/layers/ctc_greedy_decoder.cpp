@@ -31,13 +31,14 @@ op::CTCGreedyDecoder::CTCGreedyDecoder(const shared_ptr<Node>& input,
 void op::CTCGreedyDecoder::validate_and_infer_types()
 {
     auto input_et = get_input_element_type(0);
-    if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())
+    if (get_input_partial_shape(0).is_static())
     {
         Shape input_shape = get_input_partial_shape(0).to_shape();
         NODE_VALIDATION_CHECK(this,
                               input_shape.size() >= 3,
                               "CTCGreedyDecoder expects 3 or more dimensions for input. Got ",
                               input_shape.size());
+        // TODO: Add more validation checks for seq_len
 
         set_output_type(0, input_et, Shape{input_shape[1], input_shape[0], 1, 1});
     }
