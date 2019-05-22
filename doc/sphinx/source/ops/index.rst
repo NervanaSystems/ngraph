@@ -4,11 +4,11 @@
 List of Core ``ops``
 ####################
 
-Not currently a comprehensive list.  
+Not currently a comprehensive list.
 
 :ref:`more_about`
 
-.. hlist:: 
+.. hlist::
    :columns: 3
 
    * :doc:`abs`
@@ -41,6 +41,8 @@ Not currently a comprehensive list.
    * :doc:`equal`
    * :doc:`exp`
    * :doc:`floor`
+   * :doc:`gather`
+   * :doc:`gather_nd`
    * :doc:`get_output_element`
    * :doc:`greater_eq`
    * :doc:`greater`
@@ -49,7 +51,7 @@ Not currently a comprehensive list.
    * :doc:`log`
    * :doc:`max`
    * :doc:`maximum`
-   * :doc:`max_pool` 
+   * :doc:`max_pool`
    * :doc:`min`
    * :doc:`minimum`
    * :doc:`multiply`
@@ -65,6 +67,8 @@ Not currently a comprehensive list.
    * :doc:`quantize`
    * :doc:`relu`
    * :doc:`result`
+   * :doc:`scatter_add`
+   * :doc:`scatter_nd_add`
    * :doc:`shape_of`
    * :doc:`sigmoid`
    * :doc:`sign`
@@ -113,6 +117,8 @@ Not currently a comprehensive list.
    equal.rst
    exp.rst
    floor.rst
+   gather.rst
+   gather_nd.rst
    get_output_element.rst
    greater_eq.rst
    greater.rst
@@ -121,7 +127,7 @@ Not currently a comprehensive list.
    log.rst
    max.rst
    maximum.rst
-   max_pool.rst 
+   max_pool.rst
    min.rst
    minimum.rst
    multiply.rst
@@ -137,6 +143,8 @@ Not currently a comprehensive list.
    quantize.rst
    relu.rst
    result.rst
+   scatter_add.rst
+   scatter_nd_add.rst
    shape_of.rst
    sigmoid.rst
    sign.rst
@@ -151,45 +159,45 @@ Not currently a comprehensive list.
    transpose.rst
 
 
-.. _more_about: 
+.. _more_about:
 
 More about Core Ops
 -------------------
 
-An ``Op``'s primary role is to function as a node in a directed acyclic graph 
-dependency computation graph.  
+An ``Op``'s primary role is to function as a node in a directed acyclic graph
+dependency computation graph.
 
-*Core ops* are ops that are available and generally useful to all framework 
-bridges and that can be compiled by all transformers. A framework bridge may 
-define framework-specific ops to simplify graph construction, provided that the 
-bridge can enable every transformer to replace all such ops with equivalent 
-clusters or subgraphs composed of core ops. In a similar manner, transformers may define 
-transformer-specific ops to represent kernels or other intermediate operations. 
+*Core ops* are ops that are available and generally useful to all framework
+bridges and that can be compiled by all transformers. A framework bridge may
+define framework-specific ops to simplify graph construction, provided that the
+bridge can enable every transformer to replace all such ops with equivalent
+clusters or subgraphs composed of core ops. In a similar manner, transformers may define
+transformer-specific ops to represent kernels or other intermediate operations.
 
-If a framework supports extending the set of ops it offers, a bridge may even 
+If a framework supports extending the set of ops it offers, a bridge may even
 expose transformer-specific ops to the framework user.
 
 
 .. figure:: ../graphics/tablengraphops.png
     :width: 535px
-    :alt: Operations Available in the nGraph IR 
+    :alt: Operations Available in the nGraph IR
 
     Operations Available in the nGraph IR
 
 
-.. important:: Our design philosophy is that the graph is not a script for 
-   running kernels; rather, our compilation will match ``ops`` to appropriate 
-   kernels for the backend(s) in use. Thus, we expect that adding of new Core 
-   ops should be infrequent and that most functionality instead gets added with 
+.. important:: Our design philosophy is that the graph is not a script for
+   running kernels; rather, our compilation will match ``ops`` to appropriate
+   kernels for the backend(s) in use. Thus, we expect that adding of new Core
+   ops should be infrequent and that most functionality instead gets added with
    new functions that build sub-graphs from existing core ops.
 
-It is easiest to define a new op by adapting an existing op. Some of the tasks 
+It is easiest to define a new op by adapting an existing op. Some of the tasks
 that must be performed are:
 
 - Op constructor:
 
-  * Checking type-consistency of arguments 
-  * Specifying the result type for a call 
+  * Checking type-consistency of arguments
+  * Specifying the result type for a call
 
 - Serializer/Deserializer
 
