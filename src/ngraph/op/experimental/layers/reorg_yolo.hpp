@@ -36,6 +36,7 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            const Strides get_stride() const { return m_stride; }
         private:
             Strides m_stride;
         };
