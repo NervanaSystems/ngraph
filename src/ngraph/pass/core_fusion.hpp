@@ -29,10 +29,10 @@ namespace ngraph
 class ngraph::pass::CoreFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    CoreFusion(ngraph::pass::FusionType fusions = ngraph::pass::REGULAR_FUSIONS)
+    CoreFusion(FusionTypeMask fusions = FusionType::REGULAR_FUSIONS)
         : GraphRewrite()
     {
-        if (fusions & ngraph::pass::REGULAR_FUSIONS)
+        if (fusions.is_set(FusionType::REGULAR_FUSIONS))
         {
             construct_relu();
             construct_folded_batch_norm();
@@ -47,7 +47,7 @@ public:
         // be all supported by certain backends. In such a case, backends
         // can register a FusedOpDecomposition pass after CoreFusion that will
         // selectively decompose the unsupported ops back to the Core opset
-        if (fusions & ngraph::pass::FOP_FUSIONS)
+        if (fusions.is_set(FusionType::FOP_FUSIONS))
         {
             construct_conv_bias();
             construct_conv_bias_add();

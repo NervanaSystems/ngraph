@@ -339,7 +339,7 @@ TEST(core_fusion, conv_bias)
     auto decomp_f2 = gen_f(false);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
     pass_manager.run_passes(decomp_f1);
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBias>(decomp_f1), 1);
 
@@ -390,7 +390,7 @@ TEST(core_fusion, conv_bias_bcast_reshape)
     auto decomp_f2 = gen_f(false);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
     pass_manager.run_passes(decomp_f1);
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBias>(decomp_f1), 1);
 
@@ -442,7 +442,7 @@ TEST(core_fusion, conv_bias_add)
     auto decomp_f2 = gen_f(false);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
     pass_manager.run_passes(decomp_f1);
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(decomp_f1), 1);
 
@@ -511,7 +511,7 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
     auto decomp_f2 = gen_f(false);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
     pass_manager.run_passes(decomp_f1);
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasBackpropFiltersBias>(decomp_f1), 1);
 
