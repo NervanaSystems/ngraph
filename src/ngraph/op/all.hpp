@@ -29,6 +29,10 @@ namespace ngraph
         class All : public util::LogicalReduction
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs an "all" reduction operation.
+            All();
             /// \brief Constructs an "all" reduction operation.
             ///
             /// \param arg The tensor to be reduced.

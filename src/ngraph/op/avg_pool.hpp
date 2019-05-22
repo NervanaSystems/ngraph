@@ -29,6 +29,10 @@ namespace ngraph
         class AvgPool : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a batched average pooling operation.
+            AvgPool();
             /// \brief Constructs a batched average pooling operation.
             ///
             /// \param arg The node producing the input data batch tensor.<br>
@@ -81,19 +85,22 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
             /// \return The window shape.
-            const Shape& get_window_shape() const { return m_window_shape; }
+            const Shape& get_window_shape() const;
+            void set_window_shape(const Shape& window_shape);
             /// \return The window movement strides.
-            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
+            const Strides& get_window_movement_strides() const;
+            void set_window_movement_strides(const Strides& window_movement_strides);
             /// \return The below-padding shape.
-            const Shape& get_padding_below() const { return m_padding_below; }
+            const Shape& get_padding_below() const;
+            void set_padding_below(const Shape& padding_below);
             /// \return The above-padding shape.
-            const Shape& get_padding_above() const { return m_padding_above; }
-            bool get_include_padding_in_avg_computation() const
-            {
-                return m_include_padding_in_avg_computation;
-            }
+            const Shape& get_padding_above() const;
+            void set_padding_above(const Shape& padding_above);
+            bool get_include_padding_in_avg_computation() const;
+            void get_include_padding_in_avg_computation(bool include_padding_in_avg_computation);
             /// \return The pad type for pooling.
-            const PadType& get_pad_type() const { return m_pad_type; }
+            const PadType& get_pad_type() const;
+            void set_pad_type(const PadType& pad_type);
             /// \return The default value for AvgPool.
             virtual std::shared_ptr<Node> get_default_value() const override
             {
@@ -112,6 +119,9 @@ namespace ngraph
         class AvgPoolBackprop : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            AvgPoolBackprop();
             AvgPoolBackprop(const Shape& forward_arg_shape,
                             const std::shared_ptr<Node>& delta,
                             const Shape& window_shape,
@@ -125,15 +135,18 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            const Shape& get_forward_arg_shape() const { return m_forward_arg_shape; }
-            const Shape& get_window_shape() const { return m_window_shape; }
-            const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
-            const Shape& get_padding_below() const { return m_padding_below; }
-            const Shape& get_padding_above() const { return m_padding_above; }
-            bool get_include_padding_in_avg_computation() const
-            {
-                return m_include_padding_in_avg_computation;
-            }
+            const Shape& get_forward_arg_shape() const;
+            void set_forward_arg_shape(const Shape& forward_arg_shape);
+            const Shape& get_window_shape() const;
+            void set_window_shape(const Shape& window_shape);
+            const Strides& get_window_movement_strides() const;
+            void set_window_movement_strides(const Strides& window_movement_strides);
+            const Shape& get_padding_below() const;
+            void set_padding_below(const Shape& padding_below);
+            const Shape& get_padding_above() const;
+            void set_padding_above(const Shape& padding_abve);
+            bool get_include_padding_in_avg_computation() const;
+            void set_include_padding_in_avg_computation(bool include_padding_in_avg_computation);
 
         protected:
             Shape m_forward_arg_shape;

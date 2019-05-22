@@ -19,8 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Add::type_name("Add");
+
+op::Add::Add()
+{
+}
+
 op::Add::Add(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseArithmetic("Add", arg0, arg1)
+    : BinaryElementwiseArithmetic(arg0, arg1)
 {
     constructor_validate_and_infer_types();
 }

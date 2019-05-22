@@ -29,6 +29,11 @@ namespace ngraph
         class Atan : public util::UnaryElementwiseArithmetic
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs an arctan operation.
+            Atan();
+
             /// \brief Constructs an arctan operation.
             ///
             /// \param arg Node that produces the input tensor.<br>

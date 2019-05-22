@@ -19,8 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Any::type_name("Any");
+
+op::Any::Any()
+{
+}
+
 op::Any::Any(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : LogicalReduction("Any", arg, reduction_axes)
+    : LogicalReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }

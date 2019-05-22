@@ -29,6 +29,11 @@ namespace ngraph
         class And : public util::BinaryElementwiseLogical
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a logical-and operation.
+            And();
+
             /// \brief Constructs a logical-and operation.
             ///
             /// \param arg0 Node that produces the first input tensor.<br>
