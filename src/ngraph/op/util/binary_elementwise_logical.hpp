@@ -46,6 +46,15 @@ namespace ngraph
             class BinaryElementwiseLogical : public Op
             {
             public:
+                BinaryElementwiseLogical();
+
+                /// \brief Constructs a binary elementwise logical operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.
+                /// \param arg1 Node that produces the second input tensor.
+                BinaryElementwiseLogical(const std::shared_ptr<Node>& arg0,
+                                         const std::shared_ptr<Node>& arg1);
+
                 /// \brief Constructs a binary elementwise logical operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.

@@ -47,6 +47,16 @@ namespace ngraph
             {
             public:
                 /// \brief Constructs a binary elementwise comparison operation.
+                BinaryElementwiseComparison();
+
+                /// \brief Constructs a binary elementwise comparison operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.
+                /// \param arg1 Node that produces the second input tensor.
+                BinaryElementwiseComparison(const std::shared_ptr<Node>& arg0,
+                                            const std::shared_ptr<Node>& arg1);
+
+                /// \brief Constructs a binary elementwise comparison operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.

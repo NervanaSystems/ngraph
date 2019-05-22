@@ -33,9 +33,21 @@ descriptor::Input::Input(Node* node, size_t index, Output& output)
     output.add_input(this);
 }
 
+descriptor::Input::Input(Node* node, size_t index)
+    : m_node(node)
+    , m_index(index)
+    , m_output(nullptr)
+    , m_is_relevant_to_shape(false)
+    , m_is_relevant_to_value(true)
+{
+}
+
 void descriptor::Input::replace_output(Output& new_output)
 {
-    m_output->remove_input(this);
+    if (m_output != nullptr)
+    {
+        m_output->remove_input(this);
+    }
     new_output.add_input(this);
     m_output = &new_output;
     m_src_node = std::shared_ptr<Node>(new_output.get_node());

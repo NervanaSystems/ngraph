@@ -19,6 +19,16 @@
 using namespace std;
 using namespace ngraph;
 
+op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic()
+{
+}
+
+op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
+    const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1)
+    : Op(check_single_output_args({arg0, arg1}))
+{
+}
+
 op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
     const std::string& node_type,
     const std::shared_ptr<Node>& arg0,

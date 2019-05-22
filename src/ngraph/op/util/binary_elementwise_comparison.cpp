@@ -19,6 +19,16 @@
 using namespace std;
 using namespace ngraph;
 
+op::util::BinaryElementwiseComparison::BinaryElementwiseComparison()
+{
+}
+
+op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const shared_ptr<Node>& arg0,
+                                                                   const shared_ptr<Node>& arg1)
+    : Op(check_single_output_args({arg0, arg1}))
+{
+}
+
 op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
                                                                    const shared_ptr<Node>& arg0,
                                                                    const shared_ptr<Node>& arg1)

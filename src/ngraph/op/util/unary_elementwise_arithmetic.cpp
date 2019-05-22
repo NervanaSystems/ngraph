@@ -18,6 +18,15 @@
 
 using namespace ngraph;
 
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic()
+{
+}
+
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::shared_ptr<Node>& arg)
+    : Op(check_single_output_args({arg}))
+{
+}
+
 op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
                                                                  const std::shared_ptr<Node>& arg)
     : Op(node_type, check_single_output_args({arg}))

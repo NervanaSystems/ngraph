@@ -38,6 +38,7 @@ namespace ngraph
             /// \param index The position of this this tensor in all input tensors
             /// \param output The output that supplies a value for this input
             Input(Node* node, size_t index, Output& output);
+            Input(Node* node, size_t index);
 
             /// \return the node that this is an input of
             std::shared_ptr<Node> get_node() const;

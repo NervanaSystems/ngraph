@@ -48,6 +48,7 @@ namespace ngraph
 
     class Node;
     using NodeVector = std::vector<std::shared_ptr<Node>>;
+    using OutputVector = std::vector<Output<Node>>;
 
     class Function;
 
@@ -94,6 +95,28 @@ namespace ngraph
         friend class Output;
 
     protected:
+        template <typename A>
+        A& get_attribute_value(A& member)
+        {
+            return member;
+        }
+        template <typename A>
+        A& get_attribute_value(A& member) const
+        {
+            return member;
+        }
+        template <typename A, typename V>
+        void set_attribute_value(A& member, V value)
+        {
+            if (member != value)
+            {
+                notify_definition_changed();
+                member = value;
+            }
+        }
+
+        /// called when an input or attribute has been changed (stub for now)
+        void notify_definition_changed();
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
 
@@ -106,9 +129,25 @@ namespace ngraph
 
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
 
+        /// \brief Construct an unitialized Node
+        Node() {}
+        /// Constructor for Node subclasses that have metaclasses.
+        /// \param arguments The 0th output of node i will connect to input i
+        /// \param output_size Number of outputs for this node
+        Node(const NodeVector& arguments, size_t output_size = 1);
+
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
     public:
         virtual ~Node();
+
+        /// Sets/replaces the arguments with new arguments.
+        void set_arguments(const NodeVector& arguments);
+        void set_arguments(const OutputVector& arguments);
+        void set_argument(const Output<Node>& argument, size_t position);
+
+        /// Sets the number of outputs
+        void set_output_size(size_t output_size);
+
         void revalidate_and_infer_types() { validate_and_infer_types(); }
         // Called after transition
         void delayed_validate_and_infer_types();
@@ -116,8 +155,7 @@ namespace ngraph
         /// \brief Get the string name for the type of the node, such as `Add` or `Multiply`.
         ///        The class name, must not contain spaces as it is used for codegen.
         /// \returns A const reference to the node's type name
-        const std::string& description() const;
-
+        virtual const std::string& description() const;
         /// \brief Get the unique name of the node.
         /// \returns A const reference to the node's unique name.
         const std::string& get_name() const;
@@ -138,7 +176,7 @@ namespace ngraph
         /// graph against the graph.
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
-            return description() == node->description();
+            return &description() == &node->description();
         }
 
         /// \brief Marks an input as being relevant or irrelevant to the output shapes of this
@@ -349,16 +387,12 @@ namespace ngraph
         /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
         Output<const Node> output(size_t output_index) const;
 
-    protected:
-        void set_output_size(size_t n);
-
     private:
         std::set<std::shared_ptr<Node>> m_control_dependencies;
-
         const std::string m_node_type;
-        size_t m_instance_id;
+        size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
-        const std::string m_unique_name;
+        std::string m_unique_name;
         static std::atomic<size_t> m_next_instance_id;
         std::unordered_set<std::string> m_provenance_tags;
         std::deque<descriptor::Input> m_inputs;
@@ -404,6 +438,11 @@ namespace ngraph
         descriptor::Tensor& get_tensor() const
         {
             return m_node->m_inputs.at(m_index).get_output().get_tensor();
+        }
+        /// \return A reference to the tensor descriptor for this input.
+        std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
+        {
+            return m_node->m_inputs.at(m_index).get_output().get_tensor_ptr();
         }
         /// \return true if this input is relevant to its node's output shapes; else false.
         bool get_is_relevant_to_shapes() const
@@ -485,6 +524,11 @@ namespace ngraph
         descriptor::Tensor& get_tensor() const
         {
             return m_node->m_outputs.at(m_index).get_tensor();
+        }
+        /// \return A reference to the tensor ptr for this output.
+        std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
+        {
+            return m_node->m_outputs.at(m_index).get_tensor_ptr();
         }
         /// \return The element type of the output referred to by this output handle.
         const element::Type& get_element_type() const
