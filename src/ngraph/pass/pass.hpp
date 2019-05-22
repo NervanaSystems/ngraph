@@ -48,7 +48,7 @@ namespace ngraph
         };
         typedef EnumMask<FusionType> FusionTypeMask;
 
-        // These constants are for backward compatiability only, will deprecated soon.
+        // These constants are for backward compatibility only, will deprecate soon.
         NGRAPH_DEPRECATED("use FusionType enum class instead")
         constexpr FusionType DIFFERENTIABLE_FUSIONS = FusionType::DIFFERENTIABLE_FUSIONS;
         NGRAPH_DEPRECATED("use FusionType enum class instead")
