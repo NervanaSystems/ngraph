@@ -29,116 +29,126 @@ namespace ngraph
     {
         namespace cpu
         {
+            namespace
+            {
+                template <typename T>
+                CPUKernelFunctor prepare_functor(const Node* node,
+                                                 const vector<TensorViewWrapper>& args,
+                                                 const vector<TensorViewWrapper>& out,
+                                                 CPU_ExternalFunction* external_function)
+                {
+                    const ngraph::op::Gather* gather = static_cast<const ngraph::op::Gather*>(node);
+                    auto params_buffer_index =
+                        external_function->get_buffer_index(args[0].get_name());
+                    auto indices_buffer_index =
+                        external_function->get_buffer_index(args[1].get_name());
+                    auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
+
+                    bool is_int64 = args[1].get_element_type() == element::i64;
+                    auto axis = gather->get_axis();
+                    auto params_shape = args[0].get_shape();
+                    auto indices_shape = args[1].get_shape();
+                    auto out_shape = out[0].get_shape();
+
+                    if (is_int64)
+                    {
+                        return
+                            [&,
+                             params_shape,
+                             indices_shape,
+                             out_shape,
+                             axis,
+                             params_buffer_index,
+                             indices_buffer_index,
+                             out_buffer_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                ngraph::runtime::reference::gather<T, int64_t>(
+                                    static_cast<T*>(ctx->buffer_data[params_buffer_index]),
+                                    static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
+                                    static_cast<T*>(ctx->buffer_data[out_buffer_index]),
+                                    params_shape,
+                                    indices_shape,
+                                    out_shape,
+                                    axis);
+                            };
+                    }
+                    else
+                    {
+                        return
+                            [&,
+                             params_shape,
+                             indices_shape,
+                             out_shape,
+                             axis,
+                             params_buffer_index,
+                             indices_buffer_index,
+                             out_buffer_index](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                ngraph::runtime::reference::gather<T, int32_t>(
+                                    static_cast<T*>(ctx->buffer_data[params_buffer_index]),
+                                    static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
+                                    static_cast<T*>(ctx->buffer_data[out_buffer_index]),
+                                    params_shape,
+                                    indices_shape,
+                                    out_shape,
+                                    axis);
+                            };
+                    }
+                }
+            } // namespace
+
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Gather)
             {
                 auto& functors = external_function->get_functors();
-                const ngraph::op::Gather* gather = static_cast<const ngraph::op::Gather*>(node);
                 CPUKernelFunctor functor;
-
-                auto params_buffer_index = external_function->get_buffer_index(args[0].get_name());
-                auto indices_buffer_index = external_function->get_buffer_index(args[1].get_name());
-                auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 if (args[1].get_element_type() != element::i64 &&
                     args[1].get_element_type() != element::i32)
                 {
                     throw ngraph_error("Unsupported index element type");
                 }
-                bool is_int64 = args[1].get_element_type() == element::i64;
-                auto axis = gather->get_axis();
-                auto params_shape = args[0].get_shape();
-                auto indices_shape = args[1].get_shape();
-                auto out_shape = out[0].get_shape();
                 auto element_type = args[0].get_element_type();
                 if (element_type == element::f32)
                 {
-                    if (is_int64)
-                    {
-                        functor = [&,
-                                   params_shape,
-                                   indices_shape,
-                                   out_shape,
-                                   axis,
-                                   params_buffer_index,
-                                   indices_buffer_index,
-                                   out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::gather<float, int64_t>(
-                                static_cast<float*>(ctx->buffer_data[params_buffer_index]),
-                                static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
-                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
-                                params_shape,
-                                indices_shape,
-                                out_shape,
-                                axis);
-                        };
-                    }
-                    else
-                    {
-                        functor = [&,
-                                   params_shape,
-                                   indices_shape,
-                                   out_shape,
-                                   axis,
-                                   params_buffer_index,
-                                   indices_buffer_index,
-                                   out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::gather<float, int32_t>(
-                                static_cast<float*>(ctx->buffer_data[params_buffer_index]),
-                                static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
-                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
-                                params_shape,
-                                indices_shape,
-                                out_shape,
-                                axis);
-                        };
-                    }
+                    functor = prepare_functor<float>(node, args, out, external_function);
                 }
                 else if (element_type == element::f64)
                 {
-                    if (is_int64)
-                    {
-                        functor = [&,
-                                   params_shape,
-                                   indices_shape,
-                                   out_shape,
-                                   axis,
-                                   params_buffer_index,
-                                   indices_buffer_index,
-                                   out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::gather<double, int64_t>(
-                                static_cast<double*>(ctx->buffer_data[params_buffer_index]),
-                                static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
-                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
-                                params_shape,
-                                indices_shape,
-                                out_shape,
-                                axis);
-                        };
-                    }
-                    else
-                    {
-                        functor = [&,
-                                   params_shape,
-                                   indices_shape,
-                                   out_shape,
-                                   axis,
-                                   params_buffer_index,
-                                   indices_buffer_index,
-                                   out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::gather<double, int32_t>(
-                                static_cast<double*>(ctx->buffer_data[params_buffer_index]),
-                                static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
-                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
-                                params_shape,
-                                indices_shape,
-                                out_shape,
-                                axis);
-                        };
-                    }
+                    functor = prepare_functor<double>(node, args, out, external_function);
+                }
+                else if (element_type == element::i8)
+                {
+                    functor = prepare_functor<int8_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::i16)
+                {
+                    functor = prepare_functor<int16_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::i32)
+                {
+                    functor = prepare_functor<int32_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::i64)
+                {
+                    functor = prepare_functor<int64_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::u8)
+                {
+                    functor = prepare_functor<uint8_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::u16)
+                {
+                    functor = prepare_functor<uint16_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::u32)
+                {
+                    functor = prepare_functor<uint32_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::u64)
+                {
+                    functor = prepare_functor<uint64_t>(node, args, out, external_function);
+                }
+                else if (element_type == element::boolean)
+                {
+                    functor = prepare_functor<char>(node, args, out, external_function);
                 }
                 else
                 {
@@ -149,6 +159,6 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(Gather);
-        }
-    }
-}
+        } // namespace cpu
+    }     // namespace runtime
+} // namespace ngraph
