@@ -259,8 +259,8 @@ static PartialShape read_partial_shape(const json& j)
 static json write_auto_broadcast(const op::AutoBroadcastSpec& autob)
 {
     json j;
-    j["type"] = autob.type;
-    j["axis"] = autob.axis;
+    j["type"] = autob.m_type;
+    j["axis"] = autob.m_axis;
     return j;
 }
 
@@ -1699,7 +1699,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Add:
     {
         auto tmp = dynamic_cast<const op::Add*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::ArgMin:
@@ -1727,7 +1730,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::And:
     {
         auto tmp = dynamic_cast<const op::And*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::Any:
@@ -1921,7 +1927,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Divide:
     {
         auto tmp = dynamic_cast<const op::Divide*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::Dot:
@@ -1945,7 +1954,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Equal:
     {
         auto tmp = dynamic_cast<const op::Equal*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::Erf: { break;
@@ -1989,13 +2001,19 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Greater:
     {
         auto tmp = dynamic_cast<const op::Greater*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::GreaterEq:
     {
         auto tmp = dynamic_cast<const op::GreaterEq*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::GRN:
@@ -2026,13 +2044,19 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Less:
     {
         auto tmp = dynamic_cast<const op::Less*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::LessEq:
     {
         auto tmp = dynamic_cast<const op::LessEq*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::Log: { break;
@@ -2074,7 +2098,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Maximum:
     {
         auto tmp = dynamic_cast<const op::Maximum*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::Min:
@@ -2086,13 +2113,19 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Minimum:
     {
         auto tmp = dynamic_cast<const op::Minimum*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::Multiply:
     {
         auto tmp = dynamic_cast<const op::Multiply*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::MVN:
@@ -2116,7 +2149,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::NotEqual:
     {
         auto tmp = dynamic_cast<const op::NotEqual*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::Not: { break;
@@ -2131,7 +2167,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Or:
     {
         auto tmp = dynamic_cast<const op::Or*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::Pad:
@@ -2178,7 +2217,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Power:
     {
         auto tmp = dynamic_cast<const op::Power*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::Quantize:
@@ -2325,7 +2367,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Subtract:
     {
         auto tmp = dynamic_cast<const op::Subtract*>(&n);
-        node["autob"] = write_auto_broadcast(tmp->get_autob());
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
         break;
     }
     case OP_TYPEID::Sum:

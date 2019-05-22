@@ -29,7 +29,7 @@ static bool broadcast_and_replace(std::shared_ptr<ngraph::Node>& node)
 {
     if (auto op = std::dynamic_pointer_cast<optype>(node))
     {
-        if (op->get_autob().type != op::AutoBroadcastType::NONE)
+        if (op->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             auto new_args = pass::explicit_broadcast<optype>(op);
             for (size_t i = 0; i < new_args.size(); i++)

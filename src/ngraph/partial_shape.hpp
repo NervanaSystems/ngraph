@@ -208,7 +208,7 @@ namespace ngraph
         /// \brief Try to merge one shape into another along with implicit broadcasting
         static bool broadcast_merge_into(PartialShape& dst,
                                          const PartialShape& src,
-                                         const op::AutoBroadcastSpec autob);
+                                         const op::AutoBroadcastSpec& autob);
 
     private:
         // Private constructor for PartialShape::dynamic().

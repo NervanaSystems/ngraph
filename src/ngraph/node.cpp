@@ -472,7 +472,7 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
 }
 
 std::tuple<element::Type, PartialShape>
-    Node::validate_and_infer_elementwise_args(const op::AutoBroadcastSpec autob)
+    Node::validate_and_infer_elementwise_args(const op::AutoBroadcastSpec& autob)
 {
     element::Type element_type = get_input_element_type(0);
     PartialShape pshape = get_input_partial_shape(0);
@@ -486,13 +486,13 @@ std::tuple<element::Type, PartialShape>
                 element::Type::merge(element_type, element_type, get_input_element_type(i)),
                 "Argument element types are inconsistent.");
 
-            if (autob.type == op::AutoBroadcastType::NONE)
+            if (autob.m_type == op::AutoBroadcastType::NONE)
             {
                 NODE_VALIDATION_CHECK(this,
                                       PartialShape::merge_into(pshape, get_input_partial_shape(i)),
                                       "Argument shapes are inconsistent.");
             }
-            else if (autob.type == op::AutoBroadcastType::NUMPY)
+            else if (autob.m_type == op::AutoBroadcastType::NUMPY)
             {
                 NODE_VALIDATION_CHECK(
                     this,
@@ -509,7 +509,7 @@ std::tuple<element::Type, PartialShape>
     return std::make_tuple(element_type, pshape);
 }
 
-void Node::validate_and_infer_elementwise_arithmetic(const op::AutoBroadcastSpec autob)
+void Node::validate_and_infer_elementwise_arithmetic(const op::AutoBroadcastSpec& autob)
 {
     auto args_et_pshape = validate_and_infer_elementwise_args(autob);
     element::Type& args_et = std::get<0>(args_et_pshape);
@@ -524,7 +524,7 @@ void Node::validate_and_infer_elementwise_arithmetic(const op::AutoBroadcastSpec
     set_output_type(0, args_et, args_pshape);
 }
 
-void Node::validate_and_infer_elementwise_logical(const op::AutoBroadcastSpec autob)
+void Node::validate_and_infer_elementwise_logical(const op::AutoBroadcastSpec& autob)
 {
     auto args_et_pshape = validate_and_infer_elementwise_args(autob);
     element::Type& args_et = std::get<0>(args_et_pshape);

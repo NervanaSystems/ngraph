@@ -60,7 +60,7 @@ namespace ngraph
 
                 void validate_and_infer_types() override;
 
-                AutoBroadcastSpec get_autob() const { return m_autob; }
+                const AutoBroadcastSpec& get_autob() const { return m_autob; }
             private:
                 AutoBroadcastSpec m_autob;
             };

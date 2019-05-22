@@ -52,32 +52,55 @@ namespace ngraph
             NOTSET = EXPLICIT
         };
 
+        /// \brief Specifies the algorithm to use for implicit broadcasting of a tensor
+        ///        to align with another tensor
+        ///
+        /// NONE  - No implicit broadcasting of tensor
+        /// NUMPY - Numpy-style implicit broadcasting
+        ///         (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
+        ///         Right-align dimensions of the two tensors, with missing dimensions
+        ///         treated as size 1 dimensions. After alignment, for each dimension,
+        ///         their sizes should either match or one of them should be of size 1.
+        ///         Size 1 dimension will be implicitly broadcast to match the other
+        ///         size.
+        ///
+        ///         E.g.,
+        ///              A: Shape(2, 1, 6)
+        ///              B: Shape(   3, 1)
+        ///         Result: Shape(2, 3, 6)
+        ///
+        ///              A: Shape(2, 1, 6)
+        ///              B: Shape(   3, 1)
+        ///         Result: Shape(2, 3, 6)
+        ///
+        /// TODO: Add more implicit broadcast modes used by frameworks
         enum class AutoBroadcastType
         {
             NONE = 0,
             NUMPY
         };
 
+        /// \brief Implicit broadcast specification
         struct AutoBroadcastSpec
         {
             AutoBroadcastSpec()
-                : type(AutoBroadcastType::NONE)
-                , axis(0)
+                : m_type(AutoBroadcastType::NONE)
+                , m_axis(0)
             {
             }
-            AutoBroadcastSpec(AutoBroadcastType t)
-                : type(t)
-                , axis(0)
+            AutoBroadcastSpec(AutoBroadcastType type)
+                : m_type(type)
+                , m_axis(0)
             {
             }
-            AutoBroadcastSpec(AutoBroadcastType t, size_t s)
-                : type(t)
-                , axis(s)
+            AutoBroadcastSpec(AutoBroadcastType type, size_t axis)
+                : m_type(type)
+                , m_axis(axis)
             {
             }
 
-            AutoBroadcastType type;
-            size_t axis;
+            AutoBroadcastType m_type; // Implicit broadcasting algorithm
+            size_t m_axis;            // Axis to start alignment on
         };
     }
 }

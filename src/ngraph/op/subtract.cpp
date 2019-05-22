@@ -36,7 +36,7 @@ shared_ptr<Node> op::Subtract::copy_with_new_args(const NodeVector& new_args) co
 
 void op::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    if (get_autob().type != op::AutoBroadcastType::NONE)
+    if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
         throw ngraph_error("Autodiff not supported with auto broadcasting");
     }

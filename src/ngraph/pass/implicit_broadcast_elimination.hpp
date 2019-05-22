@@ -26,11 +26,11 @@ namespace ngraph
         template <typename T>
         NodeVector static explicit_broadcast(std::shared_ptr<T>& node)
         {
-            if (node->get_autob().type == op::AutoBroadcastType::NONE)
+            if (node->get_autob().m_type == op::AutoBroadcastType::NONE)
             {
                 return node->get_arguments();
             }
-            else if (node->get_autob().type == op::AutoBroadcastType::NUMPY)
+            else if (node->get_autob().m_type == op::AutoBroadcastType::NUMPY)
             {
                 return op::numpy_style_broadcast(node->get_arguments());
             }
