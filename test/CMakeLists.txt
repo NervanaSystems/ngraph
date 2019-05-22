@@ -42,6 +42,7 @@ set(SRC
     copy.cpp
     cpio.cpp
     cse.cpp
+    dyn_elimination.cpp
     element_type.cpp
     file_util.cpp
     float16.cpp
@@ -63,7 +64,7 @@ set(SRC
     reshape_elimination.cpp
     reshape_sinking.cpp
     shape.cpp
-    specialize_shapes.cpp
+    specialize_function.cpp
     tensor.cpp
     type_prop.cpp
     type_prop_layers.cpp
