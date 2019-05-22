@@ -384,15 +384,6 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
 // Moved set_or_check_if_same and fuse_group_convolution to core pass batch_fusion
 
-static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv)
-{
-    Strides stride_1{1, 1};
-    CoordinateDiff pad_0{0, 0};
-    return conv->get_window_dilation_strides() == stride_1 ||
-           conv->get_data_dilation_strides() == stride_1 || conv->get_padding_above() == pad_0 ||
-           conv->get_padding_below() == pad_0;
-}
-
 std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& n)
 {
     const int num_op_branches = 2;
