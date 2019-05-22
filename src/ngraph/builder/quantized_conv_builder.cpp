@@ -49,22 +49,25 @@ namespace ngraph
 
             // TODO: Check for this later
             // For Builders the zero point is assumed to be zero (for now)
-            auto zero_point = op::Constant::create(output_type, Shape{}, {0});
+            auto input_zero_point = op::Constant::create(input->get_element_type(), Shape{}, {0});
+            auto filter_zero_point =
+                op::Constant::create(filters->get_element_type(), Shape{}, {0});
 
-            return make_shared<op::QuantizedConvolution>(input,
-                                                         filters,
-                                                         window_movement_strides,
-                                                         window_dilation_strides,
-                                                         padding_below,
-                                                         padding_above,
-                                                         data_dilation_strides,
-                                                         input_scale,
-                                                         zero_point,
-                                                         filter_scale,
-                                                         zero_point,
-                                                         output_scale,
-                                                         zero_point,
-                                                         output_type);
+            return make_shared<op::QuantizedConvolution>(
+                input,
+                filters,
+                window_movement_strides,
+                window_dilation_strides,
+                padding_below,
+                padding_above,
+                data_dilation_strides,
+                input_scale,
+                input_zero_point,
+                filter_scale,
+                filter_zero_point,
+                output_scale,
+                filter_zero_point, // output type will be same as filter
+                output_type);
         }
     }
 }

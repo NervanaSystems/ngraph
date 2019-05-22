@@ -43,7 +43,7 @@ namespace ngraph
             /// \param output_zero_point Zero point used for mapping
             /// \param output_type Output element type
             ///
-            QuantizedConvolution(const std::shared_ptr<Node>& data_batch,
+            QuantizedConvolution(const std::shared_ptr<Node>& input,
                                  const std::shared_ptr<Node>& filters,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
@@ -65,7 +65,7 @@ namespace ngraph
             std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
             const ngraph::element::Type& get_output_type() const { return m_output_type; }
-            //            void validate_and_infer_types() override;
+            void validate_and_infer_types() override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
