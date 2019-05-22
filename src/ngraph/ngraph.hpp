@@ -108,6 +108,7 @@
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"

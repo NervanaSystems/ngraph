@@ -38,6 +38,8 @@ set (SRC
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
+    builder/split.cpp
+    builder/split.hpp
     builder/tensor_mask.hpp
     check.hpp
     code_writer.hpp
@@ -310,6 +312,8 @@ set (SRC
     op/fused/scale_shift.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
+    op/fused/split.cpp
+    op/fused/split.hpp
     op/fused/squared_difference.cpp
     op/fused/squared_difference.hpp
     op/fused/squeeze.cpp
