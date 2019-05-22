@@ -773,6 +773,8 @@ void pass::CoreFusion::construct_conv_bias()
     auto callback = [pbcast_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
                      << m.get_match_root()->get_name();
+        std::cout << "In callback for construct_conv_bias against node = "
+                  << m.get_match_root()->get_name() << std::endl;
         auto pattern_map = m.get_pattern_map();
 
         auto conv_m = dynamic_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
@@ -784,6 +786,10 @@ void pass::CoreFusion::construct_conv_bias()
 
         if (conv_m->get_shape().size() > 5 || conv_m->get_element_type() != element::f32)
         {
+            if (conv_m->get_element_type() != element::f32)
+            {
+                std::cout << "not f32, no fusion\n";
+            }
             // Most backends are unlikely to efficiently support these convolutions. Skip fusion
             return false;
         }
@@ -816,6 +822,7 @@ void pass::CoreFusion::construct_conv_bias()
             auto conv_bias = shared_ptr<Node>(new op::ConvolutionBias(conv_m, bias));
             replace_node(m.get_match_root(), conv_bias);
         }
+        std::cout << "done fusion.\n";
         return true;
     };
 
