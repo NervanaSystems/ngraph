@@ -352,6 +352,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     this->add_matcher(m, callback);
 }
 
+#if 0
 static bool
     zero_padded_conv_consistency_check(const std::shared_ptr<ngraph::Node>& match_root,
                                        const std::shared_ptr<ngraph::op::Constant>& pad_value_op,
@@ -641,6 +642,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_zero_padded_conv_backprop_
                                                         "CPUFusion.ZeroPaddedConvBackpropFilters");
     this->add_matcher(m, callback);
 }
+#endif
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
 {

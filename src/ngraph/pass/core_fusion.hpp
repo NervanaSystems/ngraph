@@ -42,6 +42,9 @@ public:
             construct_optimized_strided_conv();
             construct_reshape_broadcast();
             construct_reshape_softmax_reshape();
+            construct_zero_padded_reshaped_conv();
+            construct_zero_padded_conv();
+            construct_zero_padded_conv_backprop_filters();
         }
         // Patterns under FOP_FUSIONS create ops (FusedOps) that might not
         // be all supported by certain backends. In such a case, backends
@@ -50,7 +53,7 @@ public:
         if (fusions & ngraph::pass::FOP_FUSIONS)
         {
             construct_conv_bias();
-            //construct_conv_bias_add();
+            construct_conv_bias_add();
         }
     }
     void construct_relu();
@@ -61,6 +64,9 @@ public:
     void construct_optimized_strided_conv();
     void construct_reshape_broadcast();
     void construct_reshape_softmax_reshape();
+    void construct_zero_padded_reshaped_conv();
+    void construct_zero_padded_conv();
+    void construct_zero_padded_conv_backprop_filters();
     void construct_conv_bias();
     void construct_conv_bias_add();
 };
