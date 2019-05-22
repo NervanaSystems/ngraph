@@ -480,10 +480,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     // Build mkldnn primitives for codegen.
     pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
-        m_desc_filename,
-        *m_mkldnn_emitter,
-        m_node_primitive_idx_map,
-        m_node_primitive_string_deps_index_map);
+        m_desc_filename, *m_mkldnn_emitter, m_node_primitive_string_deps_index_map);
 
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
@@ -746,16 +743,20 @@ using namespace ngraph::runtime;
         writer << "extern \"C\" void " << current_function->get_name() << func_params << "\n";
         writer << "{\n";
         writer.indent++;
-        writer << "std::ifstream desc_file (\"" << m_desc_filename << "\", std::ios::binary);\n";
 
         //deserialize and build mkldnn primitives
-        writer << "if (ctx->first_iteration)\n";
-        writer.block_begin();
-        writer << "// read in memory descriptors and build mkldnn primitives\n";
-        writer << "deserialize_memory_descs_and_build_memory_primitives(" << m_desc_filename
-               << ", cg_ctx, " << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size())
-               << ");\n";
-        writer.block_end();
+        if (m_mkldnn_emitter->get_mkldnn_descriptors_size() > 0)
+        {
+            writer << "if (ctx->first_iteration)\n";
+            writer.block_begin();
+            writer << "// read in memory descriptors and build mkldnn primitives\n";
+            writer << "std::ifstream desc_file (\"" << m_desc_filename
+                   << "\", std::ios::binary);\n";
+            writer << "deserialize_memory_descs_and_build_memory_primitives(" << m_desc_filename
+                   << ", cg_ctx, " << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size())
+                   << ");\n";
+            writer.block_end();
+        }
 
         // Execution tracing support
         if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
