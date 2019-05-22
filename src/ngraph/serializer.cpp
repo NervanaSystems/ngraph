@@ -78,6 +78,7 @@
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/split.hpp"
@@ -1282,6 +1283,25 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Product>(args[0], reduction_axes);
                 break;
             }
+            case OP_TYPEID::RNNCell:
+            {
+                auto hidden_size = node_js.at("hidden_size").get<size_t>();
+                auto clip = node_js.at("clip").get<float>();
+                auto activations = node_js.at("activations").get<vector<string>>();
+                auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
+                auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
+                node = make_shared<op::RNNCell>(args[0],
+                                                args[1],
+                                                args[2],
+                                                args[3],
+                                                hidden_size,
+                                                args[4],
+                                                activations,
+                                                activation_alpha,
+                                                activation_beta,
+                                                clip);
+                break;
+            }
             case OP_TYPEID::Quantize:
             {
                 auto type = read_element_type(node_js.at("type"));
@@ -2124,6 +2144,16 @@ static json write(const Node& n, bool binary_constant_data)
         break;
     }
     case OP_TYPEID::Power: { break;
+    }
+    case OP_TYPEID::RNNCell:
+    {
+        auto tmp = dynamic_cast<const op::RNNCell*>(&n);
+        node["hidden_size"] = tmp->get_hidden_size();
+        node["clip"] = tmp->get_clip();
+        node["activations"] = tmp->get_activations();
+        node["activation_alpha"] = tmp->get_activation_alpha();
+        node["activation_beta"] = tmp->get_activation_beta();
+        break;
     }
     case OP_TYPEID::Quantize:
     {
