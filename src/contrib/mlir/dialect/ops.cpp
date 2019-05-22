@@ -67,8 +67,9 @@ namespace ngraph
             template <>
             mlir::LogicalResult verifyOp<NGMatMulBiasOp>(NGMatMulBiasOp* op)
             {
-                // Verify that we have 3 operands
-                if (op->getNumOperands() != 3)
+                // Verify that we have 2 operands
+                // Bias operand must be null for now (not implemented)
+                if (op->getNumOperands() != 2)
                 {
                     std::stringstream ss;
                     ss << "Unexpected MatmulBiasOp with " << op->getNumOperands()
@@ -76,18 +77,12 @@ namespace ngraph
                     return op->emitOpError(ss.str());
                 }
 
-                // Bias operand must be null for now (not implemented).
-                if (op->getOperand(2) != nullptr)
-                {
-                    return op->emitOpError("Bias operand is not null in MatmulBiasOp");
-                }
-
                 // Verify that operand types are supported.
                 auto op0_tensor_ty = op->getOperand(0)->getType().cast<NGTensorType>();
                 auto op1_tensor_ty = op->getOperand(1)->getType().cast<NGTensorType>();
 
                 // Verify that operand shapes are supported.
-                if (op0_tensor_ty.getRank() == 2 && op1_tensor_ty.getRank() == 2)
+                if (op0_tensor_ty.getRank() != 2 || op1_tensor_ty.getRank() != 2)
                 {
                     return op->emitOpError(
                         "Unsupported number of dimensions. Only 2D tensors are supported in "

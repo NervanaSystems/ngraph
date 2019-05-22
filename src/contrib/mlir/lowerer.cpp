@@ -170,13 +170,14 @@ namespace
             if (it != outputMap.end())
             {
                 unsigned argId = (*it).second;
-                auto newResult = rewriter
-                                     .create<ngmlir::NGFakeInputOp>(
-                                         op->getLoc(),
-                                         m_dialectLowerer.convertType(
-                                             origResult->getType()) /* convert to lowered type */
-                                         )
-                                     .getResult();
+                auto fakeOp = rewriter.create<ngmlir::NGFakeInputOp>(
+                    op->getLoc(),
+                    m_dialectLowerer.convertType(
+                        origResult->getType()) /* convert to lowered type */
+                    );
+                // Fake instrution is short-lived. Verify here.
+                fakeOp.verify();
+                auto newResult = fakeOp.getResult();
                 newResults.push_back(newResult);
                 m_loweredOutputValues[argId] = newResult;
             }

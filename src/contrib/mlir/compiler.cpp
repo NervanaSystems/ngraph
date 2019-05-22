@@ -123,6 +123,10 @@ namespace ngraph
         m_builder = llvm::make_unique<mlir::FuncBuilder>(function.get());
         build_ng_dialect();
         m_module->getFunctions().push_back(function.release());
+        if (failed(m_module->verify()))
+        {
+            NGRAPH_FAIL() << "Invalid module after lowering to NG dialect";
+        }
         if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
         {
             m_module->dump();
@@ -197,8 +201,12 @@ namespace ngraph
         mlir::PassManager pm;
         pm.addPass(createDialectLoweringPass(this));
         pm.addPass(mlir::createCanonicalizerPass());
-
         pm.run(m_module.get());
+
+        if (failed(m_module->verify()))
+        {
+            NGRAPH_FAIL() << "Incorrect module after dialect lowering";
+        }
         if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
         {
             m_module->dump();

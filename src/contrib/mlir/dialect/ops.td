@@ -43,6 +43,9 @@ include "mlir/IR/OpBase.td"
 def NG_TensorType : Type<CPred<"{0}.isa<ngraph::runtime::ngmlir::NGTensorType>()">,
                      "NGraph Tensor Type">;
 
+// A generic un-typed MemRef. Used for Fake instructions inserted during dialect lowering
+def NG_MemRefType : Type<IsMemRefTypePred, "MemRef Type">;
+
 // NGraph operation base class.
 // Prepends "ng." to operation name
 class NG_Op<string mnemonic, list<OpTrait> traits = []> :
@@ -52,6 +55,10 @@ class NG_Op<string mnemonic, list<OpTrait> traits = []> :
 // Will set OneResult trait based on Results out dag.
 class NG_OneResult_Op<string mnemonic, list<OpTrait> traits = []> :
       NG_Op<mnemonic, traits>, Results<(outs NG_TensorType:$res)> {}
+
+// Base for fake instructions defining MemRef values
+class NG_MemRefDef_Op<string mnemonic, list<OpTrait> traits = []> :
+      NG_Op<mnemonic, traits>, Results<(outs NG_MemRefType:$res)> {}
 
 // Operations producing no results
 class NG_ZeroResult_Op<string mnemonic, list<OpTrait> traits = []> :
@@ -112,4 +119,4 @@ def NGMatMulBiasOp : NG_Binary_Arith_Op<"matmul.bias">
 def NGReturnOp : NG_Terminator_Op<"return">;
 
 // Fake ops
-def NGFakeInputOp : NG_OneResult_Op<"fake.input", [NoSideEffect]>;
+def NGFakeInputOp : NG_MemRefDef_Op<"fake.input", [NoSideEffect]>;
