@@ -913,7 +913,7 @@ void pass::ConstantFolding::construct_constant_convert()
 
     auto convert_matcher =
         make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantConvert");
-    this->add_matcher(convert_matcher, constant_convert_callback, {});
+    this->add_matcher(convert_matcher, constant_convert_callback, all_pass_property_off);
 }
 
 // ShapeOf is a bit of an odd duck: it doesn't matter if the input's value is
@@ -949,5 +949,5 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
     auto shape_of_matcher =
         make_shared<pattern::Matcher>(shape_of_op, "ConstantFolding.ConstantShapeOf");
-    this->add_matcher(shape_of_matcher, constant_shape_of_callback, {});
+    this->add_matcher(shape_of_matcher, constant_shape_of_callback, all_pass_property_off);
 }
