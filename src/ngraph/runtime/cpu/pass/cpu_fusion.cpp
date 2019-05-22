@@ -38,7 +38,6 @@
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
@@ -54,6 +53,7 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -2063,6 +2063,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
     this->add_matcher(m, callback);
 }
 
+#if 0
 // QuantizedConvolution + Dequantize + Relu -> QuantizedConvolutionRelu + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_bias)
 {
@@ -2182,6 +2183,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
     }
     this->add_matcher(m, callback);
 }
+#endif
 
 // Dequantize + AvgPool -> QuantizedAvgPool + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()

@@ -22,7 +22,6 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -37,30 +36,6 @@ namespace ngraph
     {
         namespace quantization
         {
-            shared_ptr<Node> QuantizedLinearConvolution(const shared_ptr<Node>& input,
-                                                        const shared_ptr<Node>& filter,
-                                                        const Strides& window_movement_strides,
-                                                        const Strides& window_dilation_strides,
-                                                        const CoordinateDiff& padding_below,
-                                                        const CoordinateDiff& padding_above,
-                                                        const Strides& data_dilation_strides,
-                                                        const shared_ptr<Node>& input_scale,
-                                                        const shared_ptr<Node>& filter_scale,
-                                                        const shared_ptr<Node>& output_scale)
-            {
-                // TODO: need to establish cross-nGraph view of scale (mult or div)
-                auto requantization_scale = (input_scale * filter_scale) / output_scale;
-
-                return make_shared<op::QuantizedConvolution>(input,
-                                                             filter,
-                                                             window_movement_strides,
-                                                             window_dilation_strides,
-                                                             padding_below,
-                                                             padding_above,
-                                                             data_dilation_strides,
-                                                             requantization_scale);
-            }
-
             // TODO: this codes is falling back to fp32 convolution
             //       need to make this the primary builder which means
             //       1) add support for zero point in QuantizeConvolution op API
@@ -145,26 +120,6 @@ namespace ngraph
                                                                  data_dilation_strides,
                                                                  requantization_scale,
                                                                  false);
-            }
-
-            shared_ptr<Node> QuantizedConvInteger(const shared_ptr<Node>& input,
-                                                  const shared_ptr<Node>& filter,
-                                                  const Strides& window_movement_strides,
-                                                  const Strides& window_dilation_strides,
-                                                  const CoordinateDiff& padding_below,
-                                                  const CoordinateDiff& padding_above,
-                                                  const Strides& data_dilation_strides)
-            {
-                auto output_scale = make_constant(element::f32, Shape{}, 1);
-                return make_shared<op::QuantizedConvolution>(input,
-                                                             filter,
-                                                             window_movement_strides,
-                                                             window_dilation_strides,
-                                                             padding_below,
-                                                             padding_above,
-                                                             data_dilation_strides,
-                                                             output_scale,
-                                                             false);
             }
         }
     }

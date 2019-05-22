@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
@@ -27,10 +27,6 @@ namespace ngraph
         class QuantizedConvolutionBias : public Op
         {
         public:
-            QuantizedConvolutionBias(const std::shared_ptr<op::QuantizedConvolution>& qconv,
-                                     const std::shared_ptr<Node>& bias,
-                                     const bool with_relu = false);
-
             QuantizedConvolutionBias(const std::shared_ptr<Node>& data_batch,
                                      const std::shared_ptr<Node>& filters,
                                      const std::shared_ptr<Node>& bias,

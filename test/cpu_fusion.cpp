@@ -31,7 +31,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -40,6 +39,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/sigmoid.hpp"
@@ -3265,6 +3265,7 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
     }
 }
 
+#if 0
 TEST(cpu_quant_fusion, qconv_relu)
 {
     auto make_function = []() {
@@ -3321,7 +3322,7 @@ TEST(cpu_quant_fusion, qconv_relu)
     // Expected output - [2, 2, ...]
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
-
+#endif
 TEST(cpu_quant_fusion, qconvb_relu)
 {
     auto make_function = []() {

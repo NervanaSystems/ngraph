@@ -21,7 +21,6 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
@@ -91,20 +90,6 @@ namespace ngraph
                                            const std::shared_ptr<Node>& max_filter,
                                            const std::shared_ptr<Node>& min_output,
                                            const std::shared_ptr<Node>& max_output);
-
-        std::shared_ptr<Node> ScaledQuantizedConvolution(const std::shared_ptr<Node>& input,
-                                                         const std::shared_ptr<Node>& filters,
-                                                         const Strides& window_movement_strides,
-                                                         const Strides& window_dilation_strides,
-                                                         const CoordinateDiff& padding_below,
-                                                         const CoordinateDiff& padding_above,
-                                                         const Strides& data_dilation_strides,
-                                                         const std::shared_ptr<Node>& min_input,
-                                                         const std::shared_ptr<Node>& max_input,
-                                                         const std::shared_ptr<Node>& min_filter,
-                                                         const std::shared_ptr<Node>& max_filter,
-                                                         const std::shared_ptr<Node>& min_output,
-                                                         const std::shared_ptr<Node>& max_output);
 
         std::shared_ptr<Node> ScaledQuantizedMaxPool(const std::shared_ptr<Node>& input,
                                                      const Shape& window_shape,
