@@ -301,7 +301,7 @@ namespace ngraph
                         ->get_max_pooling_backward_desc<ngraph::op::MaxPoolWithIndicesBackprop>(
                             node);
                 // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace,
-                // diff_dst, and pooling_backward.
+                // diff_src, and pooling_backward.
                 size_t max_pool_index = mkldnn_emitter->reserve_primitive_space(4);
                 auto& deps = mkldnn_emitter->get_primitive_deps(max_pool_index);
 
