@@ -358,6 +358,8 @@ set (SRC
     pass/cse.hpp
     pass/dump_sorted.cpp
     pass/dump_sorted.hpp
+    pass/dyn_elimination.cpp
+    pass/dyn_elimination.hpp
     pass/fused_op_decomposition.cpp
     pass/fused_op_decomposition.hpp
     pass/get_output_element_elimination.cpp
@@ -435,8 +437,8 @@ set (SRC
     shape.hpp
     shape_util.cpp
     shape_util.hpp
-    specialize_shapes.cpp
-    specialize_shapes.hpp
+    specialize_function.cpp
+    specialize_function.hpp
     state/rng_state.cpp
     strides.cpp
     strides.hpp

@@ -28,6 +28,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/partial_shape.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
@@ -457,13 +458,34 @@ void ngraph::check_fp_values_isnan(const char* name, const double* array, size_t
     }
 }
 
+bool ngraph::is_valid_permutation(ngraph::AxisVector permutation, ngraph::Rank rank)
+{
+    std::vector<bool> axis_occurs(permutation.size(), false);
+
+    for (auto& axis : permutation)
+    {
+        axis_occurs[axis] = true;
+    }
+
+    for (size_t axis = 0; axis < permutation.size(); axis++)
+    {
+        if (!axis_occurs[axis])
+        {
+            return false;
+        }
+    }
+
+    return (rank.is_dynamic() || permutation.size() == static_cast<size_t>(rank));
+}
+
 template <typename T>
 T ngraph::apply_permutation(T input, AxisVector order)
 {
-    if (input.size() != order.size())
-    {
-        throw "input and order sizes don't match!";
-    }
+    NGRAPH_CHECK(is_valid_permutation(order, input.size()),
+                 "Permutation ",
+                 order,
+                 " is not valid for ",
+                 input);
 
     T output(input.size());
 
@@ -484,6 +506,35 @@ template ngraph::CoordinateDiff
                                                       ngraph::AxisVector order);
 template ngraph::Strides ngraph::apply_permutation<ngraph::Strides>(ngraph::Strides input,
                                                                     ngraph::AxisVector order);
+
+namespace ngraph
+{
+    template <>
+    PartialShape apply_permutation(PartialShape input, AxisVector order)
+    {
+        NGRAPH_CHECK(is_valid_permutation(order, input.rank()),
+                     "Permutation ",
+                     order,
+                     " is not valid for ",
+                     input);
+
+        // Here's the special part: if AxisVector is a viable permutation of _some_ rank, and input
+        // has dynamic rank, we just stick with dynamic rank.
+        if (input.rank().is_dynamic())
+        {
+            return input;
+        }
+
+        PartialShape output{PartialShape::dynamic(order.size())};
+
+        for (size_t i = 0; i < order.size(); i++)
+        {
+            output[i] = input[order.at(i)];
+        }
+
+        return output;
+    }
+}
 
 AxisVector ngraph::get_default_order(const Shape& shape)
 {
