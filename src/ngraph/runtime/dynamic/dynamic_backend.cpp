@@ -109,7 +109,7 @@ bool runtime::dynamic::DynamicExecutable::call(
                 }
 
                 arg_buffers.emplace_back(input->get_size_in_bytes(), /*alignment=*/64);
-                arg_value_base_pointers[i] = arg_buffers[i].get_ptr();
+                arg_value_base_pointers[i] = arg_buffers.back().get_ptr();
 
                 // TODO(amprocte): For host-resident tensors we should be able to skip the read,
                 // but no API for that yet.
