@@ -307,7 +307,7 @@ NodeVector op::LSTMCell::decompose_op() const
     // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
     o_t = m_activation_f(clip(add(o_t, mul(p_o, C)), get_clip()));
     // ot (.) h(Ct)
-    auto H = mul(o_t, m_activation_h(C));
+    auto H = mul(o_t, m_activation_h(clip(C, get_clip())));
 
     return {H, C};
 }
