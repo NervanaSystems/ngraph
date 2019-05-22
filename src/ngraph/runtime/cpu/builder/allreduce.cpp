@@ -40,13 +40,14 @@ namespace ngraph
 
                 auto external_function_name = external_function->get_function_name();
                 NGRAPH_DEBUG_PRINT(
-                    "AllReduce Queued[%d]: Function: %s Node: %s %s %s Size: "
+                    "AllReduce Queued[%d]: Function: %s Node: %s %s Size: "
                     "%d",
                     call_seq,
                     external_function_name.c_str(),
                     node->get_name().c_str(),
-                    node->get_friendly_name().c_str(),
-                    node->get_provenance_tags().size() == 1 ? (*(node->get_provenance_tags()).begin()).c_str() : " "  ,
+                    node->get_provenance_tags().size() == 1 ? 
+                    (*(node->get_provenance_tags()).begin()).c_str() : 
+                    node->get_friendly_name().c_str()  ,
                     count);
 
                 auto functor = [&, count, data_type, arg_buffer_index, out_buffer_index](
