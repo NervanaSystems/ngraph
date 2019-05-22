@@ -17,7 +17,16 @@
 #include <memory>
 
 #include "fake_quantize.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/quantize.hpp"
+#include "ngraph/op/select.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 
@@ -30,7 +39,7 @@ op::FakeQuantize::FakeQuantize(const shared_ptr<Node>& data,
                                const shared_ptr<Node>& output_low,
                                const shared_ptr<Node>& output_high,
                                size_t levels)
-    : FusedOp("FakeQuantize", {data})
+    : FusedOp("FakeQuantize", {data, input_low, input_high, output_low, output_high})
     , m_levels(levels)
 {
     constructor_validate_and_infer_types();
@@ -47,11 +56,11 @@ void op::FakeQuantize::pre_validate_and_infer_types()
     if (data_pshape.is_static() && input_low_pshape.is_static() && input_high_pshape.is_static() &&
         output_low_pshape.is_static() && output_high_pshape.is_static())
     {
-        const Shape& data_shape{data_pshape.to_shape()};
-        const Shape& input_low_shape{input_low_pshape.to_shape()};
-        const Shape& input_high_shape{input_high_pshape.to_shape()};
-        const Shape& output_low_shape{output_low_pshape.to_shape()};
-        const Shape& output_high_shape{output_high_pshape.to_shape()};
+        const Shape data_shape{data_pshape.to_shape()};
+        const Shape input_low_shape{input_low_pshape.to_shape()};
+        const Shape input_high_shape{input_high_pshape.to_shape()};
+        const Shape output_low_shape{output_low_pshape.to_shape()};
+        const Shape output_high_shape{output_high_pshape.to_shape()};
 
         NODE_VALIDATION_CHECK(
             this,
@@ -100,36 +109,54 @@ NodeVector op::FakeQuantize::decompose_op() const
     input_high = broadcasted_nodes.at(2);
     output_low = broadcasted_nodes.at(3);
     output_high = broadcasted_nodes.at(4);
-    shared_ptr<Node> levels_minus_one =
-        Constant::create(element::i32,
-                         data->get_shape(),
-                         vector<size_t>(shape_size(data->get_shape()), m_levels - 1));
 
-    // TODO: arogowiec
-    //   Probably should use Quantize -> Dequantize pattern.
-    //   May use ngraph::builder::ScaledQuantize and ngraph::builder::ScaledDequantize.
-    //   For quantize we probably should change implementation of quantization_util::get_scale
-    //   to take levels value in to consideration.
+    const auto input_data_shape = data->get_shape();
+    const auto input_data_type = data->get_element_type();
 
-    // if x <= input_low:
-    //     output = output_low
-    // # round halfway cases away from zero
-    // round((x - input_low) / (input_high - input_low) * (levels-1)) /
-    //     (levels-1) * (output_high - output_low) + output_low
-    // elif x > input_high:
-    //     output = output_high
-    // else:
-    //     # input_low < x <= input_high
-    //
-    throw ngraph_error("Not yet implemented");
+    const auto levels_minus_one =
+        Constant::create(input_data_type,
+                         input_data_shape,
+                         vector<size_t>(shape_size(input_data_shape), m_levels - 1));
+    // map the number of quantization levels to the nGraph's quantization and dequantization scales
+    const auto quant_scale = (input_high - input_low) / levels_minus_one;
+    const auto dequant_scale = (output_high - output_low) / levels_minus_one;
+
+    // zero_point type needs to match the quantization output type
+    const auto zero_point = Constant::create(element::i32, data->get_shape(), {0.0});
+    const auto axes = get_default_order(input_data_shape);
+
+    const auto quantized_data =
+        make_shared<op::Quantize>(data,
+                                  quant_scale,
+                                  zero_point,
+                                  element::i32,
+                                  axes,
+                                  op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY);
+
+    // the output element type of dequantization is set to the output_low element type
+    // because of the first op::Select usage below where last 2 tensors must have matching types
+    shared_ptr<Node> dequantized_data = make_shared<op::Dequantize>(
+        quantized_data, dequant_scale, zero_point, output_low->get_element_type(), axes);
+
+    dequantized_data = dequantized_data + output_low;
+
+    // The input data (before quantization) should be clamped to the range defined by elements
+    // of output_low and output_high nodes. This is why those 2 masks are created on the input data.
+    // Clamping(clipping) will be done on the quantized_data node though.
+    const auto less_eq_than_input_low = make_shared<op::LessEq>(data, input_low);
+    const auto greater_than_input_high = make_shared<op::Greater>(data, input_high);
+
+    auto fake_quantize =
+        make_shared<op::Select>(less_eq_than_input_low, output_low, dequantized_data);
+
+    fake_quantize = make_shared<op::Select>(greater_than_input_high, output_high, fake_quantize);
+
+    return {fake_quantize};
 }
 
 shared_ptr<Node> op::FakeQuantize::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 5)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<FakeQuantize>(new_args.at(0), // X
                                      new_args.at(1), // input_low
                                      new_args.at(2), // input_high

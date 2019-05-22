@@ -760,41 +760,43 @@ NGRAPH_TEST(${BACKEND_NAME}, scale_shift)
 
 NGRAPH_TEST(${BACKEND_NAME}, fake_quantize)
 {
-    Shape data_shape{1, 2, 3, 4};
-    size_t levels = 4;
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
-    auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
-    auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
-    auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const Shape data_shape{1, 2, 3, 4};
+    const size_t levels = 4;
+    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
 
-    auto quantize =
+    const auto quantize =
         make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
-    auto function = make_shared<Function>(
+    const auto function = make_shared<Function>(
         NodeVector{quantize},
         ParameterVector{data, input_low, input_high, output_low, output_high});
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
-    size_t n_elements = shape_size(data_shape);
+    const size_t n_elements = shape_size(data_shape);
     vector<float> input_data(n_elements);
     iota(begin(input_data), end(input_data), 0);
 
     test_case.add_input<float>(input_data);
     // input_low
-    test_case.add_input<float>(vector<float>(n_elements, 0.f));
+    test_case.add_input<float>({0.0f});
     // input_high
-    test_case.add_input<float>(vector<float>(n_elements, 23.f));
+    test_case.add_input<float>({23.f});
     // output_low
-    test_case.add_input<float>(vector<float>(n_elements, 2.f));
+    test_case.add_input<float>({2.f});
     // output_high
-    test_case.add_input<float>(vector<float>(n_elements, 16.f));
+    test_case.add_input<float>({16.f});
 
     // expected result
     test_case.add_expected_output<float>(
-        data_shape, vector<float>{2.f,      2.f,      2.f,      2.f,      6.66667f, 6.66667f,
-                                  6.66667f, 6.66667f, 6.66667f, 6.66667f, 6.66667f, 6.66667f,
-                                  11.3333f, 11.3333f, 11.3333f, 11.3333f, 11.3333f, 11.3333f,
-                                  11.3333f, 11.3333f, 16.f,     16.f,     16.f,     16.f});
+        data_shape,
+        vector<float>{2.f,          2.f,          2.f,          2.f,          6.6666669f,
+                      6.6666669f,   6.6666669f,   6.6666669f,   6.6666669f,   6.6666669f,
+                      6.6666669f,   6.6666669f,   11.33333301f, 11.33333301f, 11.33333301f,
+                      11.33333301f, 11.33333301f, 11.33333301f, 11.33333301f, 11.33333301f,
+                      16.f,         16.f,         16.f,         16.f});
 
     test_case.run();
 }
