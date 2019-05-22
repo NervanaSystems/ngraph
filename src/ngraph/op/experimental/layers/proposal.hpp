@@ -62,7 +62,7 @@ namespace ngraph
             /// \param class_probs     Class probability scores
             /// \param class_logits    Class prediction logits
             /// \param image_shape     Shape of image
-            /// \param attrs
+            /// \param attrs           Proposal op attributes
             Proposal(const std::shared_ptr<Node>& class_probs,
                      const std::shared_ptr<Node>& class_logits,
                      const std::shared_ptr<Node>& image_shape,
