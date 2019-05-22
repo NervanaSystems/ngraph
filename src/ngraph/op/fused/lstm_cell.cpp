@@ -23,11 +23,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -35,46 +30,6 @@
 
 using namespace std;
 using namespace ngraph;
-
-// ------------- HELPER FUNCTIONS ---------------------------------------------
-
-static shared_ptr<Node> add(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
-{
-    auto args = op::numpy_style_broadcast({lhs, rhs});
-    return {make_shared<op::Add>(args.at(0), args.at(1))};
-}
-
-static shared_ptr<Node> sub(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
-{
-    auto args = op::numpy_style_broadcast({lhs, rhs});
-    return {make_shared<op::Subtract>(args.at(0), args.at(1))};
-}
-
-static shared_ptr<Node> mul(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
-{
-    auto args = op::numpy_style_broadcast({lhs, rhs});
-    return {make_shared<op::Multiply>(args.at(0), args.at(1))};
-}
-
-static shared_ptr<Node> clip(const shared_ptr<Node>& data, float threshold)
-{
-    if (threshold == 0.f)
-    {
-        return data;
-    }
-
-    float min_val = -threshold;
-    float max_val = threshold;
-    size_t size = shape_size(data->get_shape());
-    const shared_ptr<Node> min_val_node = op::Constant::create(
-        data->get_element_type(), data->get_shape(), vector<float>(size, min_val));
-    const shared_ptr<Node> max_val_node = op::Constant::create(
-        data->get_element_type(), data->get_shape(), vector<float>(size, max_val));
-
-    return make_shared<op::Minimum>(max_val_node, make_shared<op::Maximum>(data, min_val_node));
-}
-
-// ------------- LSTM_CELL ----------------------------------------------------
 
 op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
                        const shared_ptr<Node>& W,

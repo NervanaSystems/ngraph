@@ -17,7 +17,14 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/rnn_cell_base.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -59,4 +66,40 @@ op::ActivationFunction op::RNNCellBase::get_activation_function(size_t idx) cons
     }
 
     return afunc;
+}
+
+shared_ptr<Node> op::RNNCellBase::add(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
+{
+    auto args = op::numpy_style_broadcast({lhs, rhs});
+    return {make_shared<op::Add>(args.at(0), args.at(1))};
+}
+
+shared_ptr<Node> op::RNNCellBase::sub(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
+{
+    auto args = op::numpy_style_broadcast({lhs, rhs});
+    return {make_shared<op::Subtract>(args.at(0), args.at(1))};
+}
+
+shared_ptr<Node> op::RNNCellBase::mul(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
+{
+    auto args = op::numpy_style_broadcast({lhs, rhs});
+    return {make_shared<op::Multiply>(args.at(0), args.at(1))};
+}
+
+shared_ptr<Node> op::RNNCellBase::clip(const shared_ptr<Node>& data, const float threshold)
+{
+    if (threshold == 0.f)
+    {
+        return data;
+    }
+
+    float min_val = -threshold;
+    float max_val = threshold;
+    size_t size = shape_size(data->get_shape());
+    const shared_ptr<Node> min_val_node = op::Constant::create(
+        data->get_element_type(), data->get_shape(), vector<float>(size, min_val));
+    const shared_ptr<Node> max_val_node = op::Constant::create(
+        data->get_element_type(), data->get_shape(), vector<float>(size, max_val));
+
+    return make_shared<op::Minimum>(max_val_node, make_shared<op::Maximum>(data, min_val_node));
 }
