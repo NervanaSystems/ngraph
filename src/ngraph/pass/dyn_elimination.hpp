@@ -16,25 +16,20 @@
 
 #pragma once
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
     namespace pass
     {
-        class BatchFusion : public ngraph::pass::FunctionPass
+        class DynElimination : public GraphRewrite
         {
         public:
-            BatchFusion(FusionTypeMask type = FusionType::ALL_FUSIONS)
-                : FunctionPass()
-                , m_fusion_type(type)
-            {
-                set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
-            }
-            virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+            DynElimination();
 
         private:
-            FusionTypeMask m_fusion_type;
+            void construct_transpose();
         };
     }
 }

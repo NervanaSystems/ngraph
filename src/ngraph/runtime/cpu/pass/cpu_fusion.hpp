@@ -37,16 +37,18 @@ namespace ngraph
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    CPUFusion(ngraph::pass::FusionType fusions = ngraph::pass::ALL_FUSIONS)
+    typedef ngraph::pass::FusionType FusionType;
+    typedef ngraph::pass::FusionTypeMask FusionTypeMask;
+    CPUFusion(FusionTypeMask fusions = FusionType::ALL_FUSIONS)
         : GraphRewrite()
     {
-        if (fusions & ngraph::pass::DIFFERENTIABLE_FUSIONS)
+        if (fusions.is_set(FusionType::DIFFERENTIABLE_FUSIONS))
         {
             construct_conv_bias(); // DEPRECATED - Use CoreFusion
             construct_sigmoid_multiply();
         }
 
-        if (fusions & ngraph::pass::REGULAR_FUSIONS)
+        if (fusions.is_set(FusionType::REGULAR_FUSIONS))
         {
             construct_matmul();
             construct_matmulbias();
