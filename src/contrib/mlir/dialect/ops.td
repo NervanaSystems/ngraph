@@ -95,19 +95,45 @@ class NG_Terminator_Op<string mnemonic, list<OpTrait> traits = []> :
 
 // Unary Operations
 def NGAbsOp      : NG_Unary_Arith_Op<"abs">;
+def NGACosOp     : NG_Unary_Arith_Op<"acos">;
+def NGASinOp     : NG_Unary_Arith_Op<"asin">;
+def NGATanOp     : NG_Unary_Arith_Op<"atan">;
 def NGCeilOp     : NG_Unary_Arith_Op<"ceil">;
 def NGConvertOp  : NG_Unary_Arith_Op<"conv">;
+def NGCosOp      : NG_Unary_Arith_Op<"cos">;
+def NGCoshOp     : NG_Unary_Arith_Op<"cosh">;
 def NGExpOp      : NG_Unary_Arith_Op<"exp">;
+def NGFloorOp    : NG_Unary_Arith_Op<"floor">;
+def NGLogOp      : NG_Unary_Arith_Op<"log">;
+def NGNegOp      : NG_Unary_Arith_Op<"neg">;
+def NGNotOp      : NG_Unary_Arith_Op<"not">;
+def NGSignOp     : NG_Unary_Arith_Op<"sign">;
+def NGSinOp      : NG_Unary_Arith_Op<"sin">;
+def NGSinhOp     : NG_Unary_Arith_Op<"sinh">;
+def NGTanOp      : NG_Unary_Arith_Op<"tan">;
+def NGTanhOp     : NG_Unary_Arith_Op<"tanh">;
+def NGSqrtOp     : NG_Unary_Arith_Op<"sqrt">;
 
 // Binary Operations
 def NGAddOp : NG_Binary_Arith_Op<"add", [Commutative]>;
 def NGAndOp : NG_Binary_Arith_Op<"and", [Commutative]>;
 def NGSubOp : NG_Binary_Arith_Op<"sub">;
 def NGDivOp : NG_Binary_Arith_Op<"div">;
+def NGMaxOp : NG_Binary_Arith_Op<"max", [Commutative]>;
+def NGMinOp : NG_Binary_Arith_Op<"min", [Commutative]>;
+def NGMulOp : NG_Binary_Arith_Op<"mul", [Commutative]>;
+def NGPowOp : NG_Binary_Arith_Op<"pow">;
 
 // Comparison
-def NGEqOp     : NG_OneResult_Op<"equal", [NoSideEffect]>;
-def NGNotEqOp  : NG_OneResult_Op<"not.equal", [NoSideEffect]>;
+def NGEqOp        : NG_OneResult_Op<"equal",      [NoSideEffect]>;
+def NGGreaterOp   : NG_OneResult_Op<"greater",    [NoSideEffect]>;
+def NGGreaterEqOp : NG_OneResult_Op<"greater.eq", [NoSideEffect]>;
+def NGLessOp      : NG_OneResult_Op<"less",       [NoSideEffect]>;
+def NGLessEqOp    : NG_OneResult_Op<"less.eq",    [NoSideEffect]>;
+def NGNotEqOp     : NG_OneResult_Op<"not.equal",  [NoSideEffect]>;
+
+// Other
+def NGSelectOp    : NG_OneResult_Op<"select", [NoSideEffect]>;
 
 // Matrix Multiply
 def NGMatMulBiasOp : NG_Binary_Arith_Op<"matmul.bias">

@@ -30,10 +30,10 @@ NGDialect::NGDialect(mlir::MLIRContext* ctx)
     addTypes<NGIntegerType>();
     addTypes<NGBoolType>();
 
-    addOperations<NGAddOp>();
-    addOperations<NGMatMulBiasOp>();
-    addOperations<NGReturnOp>();
-    addOperations<NGFakeInputOp>();
+    addOperations<
+#define GET_OP_LIST
+#include "ops.cpp.inc"
+        >();
 }
 
 void NGDialect::printType(mlir::Type type, raw_ostream& os) const
