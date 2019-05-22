@@ -2063,14 +2063,18 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
     this->add_matcher(m, callback);
 }
 
-#if 0
 // QuantizedConvolution + Dequantize + Relu -> QuantizedConvolutionRelu + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_bias)
 {
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::u8, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::i8, shape);
+    auto input_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto filter_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto output_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto requantization_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+    auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
     auto dq_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto dq_zp = std::make_shared<pattern::op::Label>(element::i8, Shape{});
 
@@ -2098,7 +2102,14 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
                                                                    CoordinateDiff{0, 0},
                                                                    CoordinateDiff{0, 0},
                                                                    Strides{1, 1},
-                                                                   requantization_scale);
+                                                                   input_scale,
+                                                                   uint8_zero,
+                                                                   filter_scale,
+                                                                   int8_zero,
+                                                                   output_scale,
+                                                                   int8_zero,
+                                                                   element::i8,
+                                                                   AxisSet{});
     }
     auto dq =
         std::make_shared<ngraph::op::Dequantize>(qconv, dq_scale, dq_zp, element::f32, AxisSet{});
@@ -2154,6 +2165,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
         {
             auto qconv_m =
                 std::static_pointer_cast<ngraph::op::QuantizedConvolution>(dq_m->get_argument(0));
+            auto requantization_scale =
+                qconv_m->get_argument(2) * qconv_m->get_argument(4) / qconv_m->get_argument(6);
             qconv_n = std::make_shared<ngraph::op::QuantizedConvolutionRelu>(
                 qconv_m->get_argument(0),
                 qconv_m->get_argument(1),
@@ -2162,7 +2175,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
                 qconv_m->get_padding_below(),
                 qconv_m->get_padding_above(),
                 qconv_m->get_data_dilation_strides(),
-                qconv_m->get_argument(2));
+                requantization_scale);
         }
         auto zp =
             builder::make_constant<uint8_t>(element::u8, dq_m->get_argument(1)->get_shape(), 0);
@@ -2183,7 +2196,6 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
     }
     this->add_matcher(m, callback);
 }
-#endif
 
 // Dequantize + AvgPool -> QuantizedAvgPool + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()

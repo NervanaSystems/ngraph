@@ -3265,7 +3265,6 @@ TEST(cpu_fusion, rnn_input_fusion_inter_vs_cpu)
     }
 }
 
-#if 0
 TEST(cpu_quant_fusion, qconv_relu)
 {
     auto make_function = []() {
@@ -3284,7 +3283,6 @@ TEST(cpu_quant_fusion, qconv_relu)
             input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
         auto q_weights = std::make_shared<op::Quantize>(
             weights, weights_scale, int8_zero, element::i8, AxisSet{}, round_mode);
-        auto requant_scale = (input_scale * weights_scale) / output_scale;
         auto conv = std::make_shared<op::QuantizedConvolution>(q_input,
                                                                q_weights,
                                                                Strides{1, 1},
@@ -3292,7 +3290,14 @@ TEST(cpu_quant_fusion, qconv_relu)
                                                                CoordinateDiff{0, 0},
                                                                CoordinateDiff{0, 0},
                                                                Strides{1, 1},
-                                                               requant_scale);
+                                                               input_scale,
+                                                               uint8_zero,
+                                                               weights_scale,
+                                                               int8_zero,
+                                                               output_scale,
+                                                               int8_zero,
+                                                               element::i8,
+                                                               AxisSet{});
         auto dq = std::make_shared<op::Dequantize>(
             conv, output_scale, int8_zero, element::f32, AxisSet{});
         auto relu = std::make_shared<op::Relu>(dq);
@@ -3322,7 +3327,7 @@ TEST(cpu_quant_fusion, qconv_relu)
     // Expected output - [2, 2, ...]
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
-#endif
+
 TEST(cpu_quant_fusion, qconvb_relu)
 {
     auto make_function = []() {
