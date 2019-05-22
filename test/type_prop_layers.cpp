@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/experimental/layers/ctc_greedy_decoder.hpp"
 #include "ngraph/op/experimental/layers/detection_output.hpp"
 #include "ngraph/op/experimental/layers/interpolate.hpp"
 #include "ngraph/op/experimental/layers/prior_box.hpp"
@@ -30,6 +31,14 @@
 #include <memory>
 using namespace std;
 using namespace ngraph;
+
+TEST(type_prop_layers, ctc_greedy_decoder)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{88, 2, 48, 1});
+    auto seq_len = make_shared<op::Parameter>(element::f32, Shape{88, 2});
+    auto op = make_shared<op::CTCGreedyDecoder>(input, seq_len, false);
+    ASSERT_EQ(op->get_shape(), (Shape{2, 88, 1, 1}));
+}
 
 TEST(type_prop_layers, detection_output)
 {
