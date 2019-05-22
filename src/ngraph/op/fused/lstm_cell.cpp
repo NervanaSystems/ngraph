@@ -259,6 +259,16 @@ NodeVector op::LSTMCell::decompose_op() const
     // (.) - Denotes element-wise multiplication.
     // *   - Denotes dot product.
 
+    // ---- Equations ----
+    // f, g, h - are activation functions.
+    // it = f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
+    // ft = f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
+    // ct = g(Xt*(Wc^T) + Ht-1*(Rc^T) + Wbc + Rbc)
+    // Ct = ft (.) Ct-1 + it (.) ct
+    // ot = f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
+    // Ht = ot (.) h(Ct)
+    // --------------------
+
     const auto& p_i = m_p_iof.at(0);
     const auto& p_o = m_p_iof.at(1);
     const auto& p_f = m_p_iof.at(2);
@@ -271,32 +281,33 @@ NodeVector op::LSTMCell::decompose_op() const
     auto gates = add(Xt_W, add(Ht_R, m_bias));
 
     NodeVector split_gates = builder::split(gates, 4, -1);
-    auto i = split_gates.at(0);
-    auto o = split_gates.at(1);
-    auto f = split_gates.at(2);
-    auto c = split_gates.at(3);
+    auto i_t = split_gates.at(0);
+    auto o_t = split_gates.at(1);
+    auto f_t = split_gates.at(2);
+    auto c_t = split_gates.at(3);
 
     // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
-    i = m_activation_f(clip(add(i, mul(p_i, m_C_t)), get_clip()));
+    i_t = m_activation_f(clip(add(i_t, mul(p_i, m_C_t)), get_clip()));
     if (m_input_forget)
     {
-        // Couple input with forget gate: 1 - i
-        f = sub(ngraph::op::Constant::create(i->get_element_type(),
-                                             i->get_shape(),
-                                             std::vector<float>(shape_size(i->get_shape()), 1.f)),
-                i);
+        // Couple input with forget gate: 1 - i_t
+        f_t =
+            sub(ngraph::op::Constant::create(i_t->get_element_type(),
+                                             i_t->get_shape(),
+                                             std::vector<float>(shape_size(i_t->get_shape()), 1.f)),
+                i_t);
     }
     else
     {
         // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
-        f = m_activation_f(clip(add(f, mul(p_f, m_C_t)), get_clip()));
+        f_t = m_activation_f(clip(add(f_t, mul(p_f, m_C_t)), get_clip()));
     }
     // ft (.) Ct-1 + it (.) ct
-    auto C = add(mul(f, m_C_t), mul(i, m_activation_g(clip(c, get_clip()))));
+    auto C = add(mul(f_t, m_C_t), mul(i_t, m_activation_g(clip(c_t, get_clip()))));
     // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
-    o = m_activation_f(clip(add(o, mul(p_o, C)), get_clip()));
+    o_t = m_activation_f(clip(add(o_t, mul(p_o, C)), get_clip()));
     // ot (.) h(Ct)
-    auto H = mul(o, m_activation_h(C));
+    auto H = mul(o_t, m_activation_h(C));
 
     return {H, C};
 }
