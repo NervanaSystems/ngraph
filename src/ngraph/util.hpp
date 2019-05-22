@@ -196,6 +196,7 @@ namespace ngraph
     void ngraph_free(void*);
 
     size_t round_up(size_t size, size_t alignment);
+    bool is_valid_permutation(ngraph::AxisVector permutation, ngraph::Rank rank = Rank::dynamic());
     template <typename T>
     T apply_permutation(T input, ngraph::AxisVector order);
 
