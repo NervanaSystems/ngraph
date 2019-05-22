@@ -22,19 +22,8 @@
 #include "mlir/IR/StandardTypes.h"
 #include "mlir/Support/STLExtras.h"
 
-namespace ngraph
+namespace mlir
 {
-    namespace runtime
-    {
-        namespace ngmlir
-        {
-            // TODO: We shouldn't have this here, but we need to expose mlir types for the .inc file to use
-            // we cannot forward declare the mlir types since they rely on the Ops we are defining (see. Op<NGAddOp, ...>)
-            //
-            // Other ways to avoid namespace pollution ?
-            using namespace mlir;
 #define GET_OP_CLASSES
 #include "ops.h.inc"
-        }
-    }
 }

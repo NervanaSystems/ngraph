@@ -18,11 +18,8 @@
 #include "ops.hpp"
 #include "type.hpp"
 
-using namespace ngraph::runtime::ngmlir;
+using namespace mlir;
 
-/// Register a dialect and its types
-/// Usage:
-/// mlir::registerDialect<ngraph::runtime::ngmlir::Dialect>();
 NGDialect::NGDialect(mlir::MLIRContext* ctx)
     : mlir::Dialect("ng", ctx)
 {

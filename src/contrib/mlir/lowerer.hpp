@@ -16,9 +16,9 @@
 
 #pragma once
 
+#include "contrib/mlir/compiler.hpp"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Support/LLVM.h"
-
 namespace ngraph
 {
     namespace runtime
@@ -26,8 +26,10 @@ namespace ngraph
         namespace ngmlir
         {
             class MLIRCompiler;
-
-            mlir::Pass* createDialectLoweringPass(MLIRCompiler* compiler);
         }
     }
+}
+namespace mlir
+{
+    mlir::Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
 }

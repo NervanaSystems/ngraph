@@ -23,24 +23,17 @@
 #include "mlir/IR/TypeSupport.h"
 #include "mlir/IR/Types.h"
 #include "ngraph/assertion.hpp"
-
-namespace ngraph
+namespace mlir
 {
-    namespace runtime
+    class NGDialect : public mlir::Dialect
     {
-        namespace ngmlir
+    public:
+        explicit NGDialect(mlir::MLIRContext* ctx);
+        mlir::Type parseType(llvm::StringRef tyData, mlir::Location loc) const override
         {
-            class NGDialect : public mlir::Dialect
-            {
-            public:
-                explicit NGDialect(mlir::MLIRContext* ctx);
-                mlir::Type parseType(llvm::StringRef tyData, mlir::Location loc) const override
-                {
-                    NGRAPH_ASSERT(0) << "Unsupported type parsing.";
-                    return mlir::Type();
-                }
-                void printType(mlir::Type type, llvm::raw_ostream& os) const override;
-            };
+            NGRAPH_ASSERT(0) << "Unsupported type parsing.";
+            return mlir::Type();
         }
-    }
+        void printType(mlir::Type type, llvm::raw_ostream& os) const override;
+    };
 }

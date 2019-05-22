@@ -40,7 +40,7 @@ include "mlir/IR/OpBase.td"
 // This defines records equivalent to NGraph types. It doesn't generate code.
 // This is used as a type in the DAG input/outputs.
 // Constraints (CPred) are used to type-check args/results of that type during op verification
-def NG_TensorType : Type<CPred<"{0}.isa<ngraph::runtime::ngmlir::NGTensorType>()">,
+def NG_TensorType : Type<CPred<"{0}.isa<mlir::NGTensorType>()">,
                      "NGraph Tensor Type">;
 
 // A generic un-typed MemRef. Used for Fake instructions inserted during dialect lowering

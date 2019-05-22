@@ -22,7 +22,7 @@ class OP##Conversion : public mlir::DialectOpConversion \
 {\
 public:\
     explicit OP##Conversion(mlir::MLIRContext *context, DialectLoweringPass& pass)\
-    : mlir::DialectOpConversion(ngraph::runtime::ngmlir::OP::getOperationName(), 1, context),\
+    : mlir::DialectOpConversion(mlir::OP::getOperationName(), 1, context),\
       m_pass(pass)\
     {} \
     SmallVector<Value *, 4> rewrite(Operation *op, ArrayRef<Value *> operands, FuncBuilder &rewriter) const override; \
