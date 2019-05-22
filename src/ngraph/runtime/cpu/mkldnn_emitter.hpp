@@ -33,6 +33,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
+#include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
@@ -44,6 +45,7 @@
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -186,17 +188,6 @@ namespace ngraph
                     size_t conv_index,
                     const mkldnn::memory::desc& weights_desc);
 
-                size_t build_deconvolutionbias_forward(
-                    const mkldnn::memory::desc& input_data_desc,
-                    const mkldnn::memory::desc& weights_desc,
-                    const mkldnn::memory::desc& bias_desc,
-                    const mkldnn::memory::desc& result_desc,
-                    const ngraph::Strides& strides,
-                    const ngraph::Strides& dilation_strides,
-                    const ngraph::CoordinateDiff& padding_below,
-                    const ngraph::CoordinateDiff& padding_above,
-                    const mkldnn::post_ops& pops = mkldnn::post_ops());
-
                 template <typename OP>
                 size_t build_deconvolution(const ngraph::Node* node,
                                            const std::vector<TensorViewWrapper>& args,
@@ -323,29 +314,12 @@ namespace ngraph
                     const ngraph::CoordinateDiff& padding_below,
                     const ngraph::CoordinateDiff& padding_above);
 
-                size_t
-                    build_convolution_backward_weights(const mkldnn::memory::desc& input_desc,
-                                                       const mkldnn::memory::desc& delta_desc,
-                                                       const mkldnn::memory::desc& result_desc,
-                                                       const ngraph::Strides& strides,
-                                                       const ngraph::Strides& dilation_strides,
-                                                       const ngraph::CoordinateDiff& padding_below,
-                                                       const ngraph::CoordinateDiff& padding_above);
-
                 void build_convolution_backward_weights(
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,
                     const mkldnn::convolution_backward_weights::desc& bwd_desc,
                     const mkldnn::convolution_forward::desc& fwd_desc,
                     const std::vector<size_t>& deps,
                     size_t conv_index);
-
-                size_t build_convolution_backward_data(const mkldnn::memory::desc& weights_desc,
-                                                       const mkldnn::memory::desc& delta_desc,
-                                                       const mkldnn::memory::desc& result_desc,
-                                                       const ngraph::Strides& strides,
-                                                       const ngraph::Strides& dilation_strides,
-                                                       const ngraph::CoordinateDiff& padding_below,
-                                                       const ngraph::CoordinateDiff& padding_above);
 
                 void build_convolution_backward_data(
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,
@@ -357,16 +331,6 @@ namespace ngraph
                 /**
                  * Convolution + bias backprop for weights and bias
                  */
-                size_t build_convolution_backward_weights_bias(
-                    const mkldnn::memory::desc& in_data_desc,
-                    const mkldnn::memory::desc& in_delta_desc,
-                    const mkldnn::memory::desc& out_weights_delta_desc,
-                    const mkldnn::memory::desc& out_bias_delta_desc,
-                    const ngraph::Strides& ng_strides,
-                    const ngraph::Strides& ng_dilation_strides,
-                    const ngraph::CoordinateDiff& ng_padding_below,
-                    const ngraph::CoordinateDiff& ng_padding_above);
-
                 void build_convolution_backward_weights_bias(
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,
                     const mkldnn::convolution_backward_weights::desc& bwd_desc,
@@ -472,14 +436,6 @@ namespace ngraph
                                            const std::vector<size_t>& deps,
                                            size_t pool_index);
 
-                size_t build_pooling_backward(mkldnn::algorithm pooling_algorithm,
-                                              const mkldnn::memory::desc& diff_dst_desc,
-                                              const mkldnn::memory::desc& diff_src_desc,
-                                              const ngraph::Strides& window_strides,
-                                              const ngraph::Shape& window_shape,
-                                              const ngraph::Shape& padding_below,
-                                              const ngraph::Shape& padding_above);
-
                 template <typename OP>
                 mkldnn::pooling_backward::desc
                     get_avg_pooling_backward_desc(const ngraph::Node* node)
@@ -515,14 +471,6 @@ namespace ngraph
                                             const std::vector<size_t>& deps,
                                             size_t pool_index);
 
-                size_t build_max_pooling_with_indices_forward(mkldnn::algorithm pooling_algorithm,
-                                                              const mkldnn::memory::desc& src_desc,
-                                                              const mkldnn::memory::desc& dst_desc,
-                                                              const ngraph::Strides& window_strides,
-                                                              const ngraph::Shape& window_shape,
-                                                              const ngraph::Shape& padding_below,
-                                                              const ngraph::Shape& padding_above);
-
                 template <typename OP>
                 mkldnn::pooling_forward::desc
                     get_max_pooling_with_indices_forward_desc(const ngraph::Node* node)
@@ -554,15 +502,6 @@ namespace ngraph
                     const mkldnn::pooling_forward::desc& max_pool_desc,
                     const std::vector<size_t>& deps,
                     size_t max_pool_index);
-
-                size_t build_max_pooling_backward(mkldnn::algorithm pooling_algorithm,
-                                                  const mkldnn::memory::desc& fprop_src_desc,
-                                                  const mkldnn::memory::desc& diff_dst_desc,
-                                                  const mkldnn::memory::desc& diff_src_desc,
-                                                  const ngraph::Strides& window_strides,
-                                                  const ngraph::Shape& window_shape,
-                                                  const ngraph::Shape& padding_below,
-                                                  const ngraph::Shape& padding_above);
 
                 template <typename OP>
                 mkldnn::pooling_backward::desc
@@ -599,15 +538,6 @@ namespace ngraph
                                                 size_t fwd_pool_index,
                                                 size_t bwd_pool_index);
 
-                size_t build_max_pooling_with_indices_backward(
-                    mkldnn::algorithm pooling_algorithm,
-                    const mkldnn::memory::desc& diff_dst_desc,
-                    const mkldnn::memory::desc& diff_src_desc,
-                    const ngraph::Strides& window_strides,
-                    const ngraph::Shape& window_shape,
-                    const ngraph::Shape& padding_below,
-                    const ngraph::Shape& padding_above);
-
                 void build_max_pooling_with_indices_backward(
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,
                     const mkldnn::pooling_backward::desc& bwd_pool_desc,
@@ -631,19 +561,12 @@ namespace ngraph
                                        const std::vector<size_t>& deps,
                                        size_t lrn_index);
 
-                size_t build_relu_forward(const mkldnn::memory::desc& input_desc,
-                                          const mkldnn::memory::desc& result_desc);
-
                 mkldnn::eltwise_forward::desc get_relu_forward_desc(const ngraph::Node* node);
 
                 void build_relu_forward(std::vector<mkldnn::primitive*>& mkldnn_primitives,
                                         const mkldnn::eltwise_forward::desc& relu_desc,
                                         const std::vector<size_t>& deps,
                                         size_t relu_index);
-
-                size_t build_relu_backward(const mkldnn::memory::desc& input_desc,
-                                           const mkldnn::memory::desc& delta_desc,
-                                           const mkldnn::memory::desc& result_desc);
 
                 mkldnn::eltwise_backward::desc get_relu_backward_desc(const ngraph::Node* node);
 
@@ -653,9 +576,6 @@ namespace ngraph
                                          const std::vector<size_t>& deps,
                                          size_t relu_index);
 
-                size_t build_sigmoid_forward(const mkldnn::memory::desc& input_desc,
-                                             const mkldnn::memory::desc& result_desc);
-
                 mkldnn::eltwise_forward::desc get_sigmoid_forward_desc(const ngraph::Node* node,
                                                                        bool backward_op);
 
@@ -663,10 +583,6 @@ namespace ngraph
                                            const mkldnn::eltwise_forward::desc& sigmoid_desc,
                                            const std::vector<size_t>& deps,
                                            size_t sigmoid_index);
-
-                size_t build_sigmoid_backward(const mkldnn::memory::desc& input_desc,
-                                              const mkldnn::memory::desc& delta_desc,
-                                              const mkldnn::memory::desc& result_desc);
 
                 mkldnn::eltwise_backward::desc get_sigmoid_backward_desc(const ngraph::Node* node);
 
@@ -737,10 +653,6 @@ namespace ngraph
                                        std::vector<size_t>& deps,
                                        size_t rnn_idx);
 
-                size_t build_concat(const std::vector<mkldnn::memory::desc>& inputs_data_desc,
-                                    const mkldnn::memory::desc& result_desc,
-                                    const size_t concat_dim);
-
                 template <typename OP>
                 mkldnn::concat::primitive_desc get_concat_desc(const ngraph::Node* node,
                                                                size_t nargs)
@@ -769,11 +681,6 @@ namespace ngraph
                                   const std::vector<size_t>& deps,
                                   size_t concat_index);
 
-                size_t build_slice(const mkldnn::memory::desc& input_desc,
-                                   const mkldnn::memory::desc& result_desc,
-                                   const ngraph::Coordinate& lower_bounds,
-                                   const ngraph::Shape& result_shape);
-
                 void build_slice(std::vector<mkldnn::primitive*>& mkldnn_primitives,
                                  const mkldnn::memory::desc& input_desc,
                                  const mkldnn::memory::desc& result_desc,
@@ -782,10 +689,6 @@ namespace ngraph
                                  const std::vector<size_t>& deps,
                                  size_t slice_index);
 
-                size_t build_softmax_forward(const mkldnn::memory::desc& input_desc,
-                                             const mkldnn::memory::desc& result_desc,
-                                             int softmax_axis);
-
                 mkldnn::softmax_forward::desc get_softmax_forward_desc(const ngraph::Node* node);
 
                 void build_softmax_forward(std::vector<mkldnn::primitive*>& mkldnn_primitives,
@@ -793,20 +696,12 @@ namespace ngraph
                                            const std::vector<size_t>& deps,
                                            size_t softmax_index);
 
-                size_t build_leaky_relu(const mkldnn::memory::desc& input_desc,
-                                        const mkldnn::memory::desc& result_desc,
-                                        float alpha);
-
                 mkldnn::eltwise_forward::desc get_leaky_relu_desc(const ngraph::Node* node);
 
                 void build_leaky_relu(std::vector<mkldnn::primitive*>& mkldnn_primitives,
                                       const mkldnn::eltwise_forward::desc& leaky_relu_desc,
                                       const std::vector<size_t>& deps,
                                       size_t leaky_relu_index);
-
-                size_t build_bounded_relu(const mkldnn::memory::desc& input_desc,
-                                          const mkldnn::memory::desc& result_desc,
-                                          float alpha);
 
                 mkldnn::eltwise_forward::desc get_bounded_relu_desc(const ngraph::Node* node);
 
@@ -835,9 +730,14 @@ namespace ngraph
                 size_t get_scale_index()
                 {
                     size_t index = 0;
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
-                        std::is_same<OP, ngraph::op::QuantizedMatmul>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
+                    if (std::is_same<OP, ngraph::op::Quantize>() ||
+                        std::is_same<OP, ngraph::op::Dequantize>())
+                    {
+                        index = 1;
+                    }
+                    else if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
+                             std::is_same<OP, ngraph::op::QuantizedMatmul>() ||
+                             std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
                     {
                         index = 2;
                     }
@@ -1354,15 +1254,15 @@ namespace ngraph
                     {
                         weights_desc.data.format = mkldnn_oidhw;
                     }
-                    auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
 
                     return mkldnn::convolution_backward_data::desc(
                         convolution_algo,
-                        result_desc,
+                        diff_src_desc,
                         weights_desc,
-                        delta_desc,
+                        diff_dst_desc,
                         MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                         MKLDNN_DIMS(window_dilation_strides_adjusted),
                         MKLDNN_DIMS(convolution->get_padding_below_forward()),
@@ -1384,20 +1284,20 @@ namespace ngraph
                         window_dilation_strides_adjusted.push_back(s - 1);
                     }
 
-                    auto in_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto in_delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                    auto out_weights_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                    auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                    auto diff_weights_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
                     if (has_bias<OP>())
                     {
-                        auto out_bias_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
+                        auto diff_bias_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
 
                         return mkldnn::convolution_backward_weights::desc(
                             convolution_algo,
-                            in_data_desc,
-                            out_weights_delta_desc,
-                            out_bias_delta_desc,
-                            in_delta_desc,
+                            src_desc,
+                            diff_weights_desc,
+                            diff_bias_desc,
+                            diff_dst_desc,
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
@@ -1408,9 +1308,9 @@ namespace ngraph
                     {
                         return mkldnn::convolution_backward_weights::desc(
                             convolution_algo,
-                            in_data_desc,
-                            out_weights_delta_desc,
-                            in_delta_desc,
+                            src_desc,
+                            diff_weights_desc,
+                            diff_dst_desc,
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
@@ -1446,15 +1346,15 @@ namespace ngraph
                         {
                             weights_desc.data.format = mkldnn_oidhw;
                         }
-                        auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                        auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                        auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                        auto diff_src_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                         return mkldnn::convolution_forward::desc(
                             mkldnn::prop_kind::forward,
                             convolution_algo,
-                            result_desc,
+                            diff_src_desc,
                             weights_desc,
-                            delta_desc,
+                            diff_dst_desc,
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
@@ -1463,15 +1363,15 @@ namespace ngraph
                     }
                     else if (std::is_same<OP, ngraph::op::ConvolutionBackpropFilters>())
                     {
-                        auto in_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                        auto in_delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                        auto out_weights_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                        auto src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                        auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                        auto diff_weights_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
                         return mkldnn::convolution_forward::desc(
                             mkldnn::prop_kind::forward,
                             convolution_algo,
-                            in_data_desc,
-                            out_weights_delta_desc,
-                            in_delta_desc,
+                            src_desc,
+                            diff_weights_desc,
+                            diff_dst_desc,
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
@@ -1480,18 +1380,18 @@ namespace ngraph
                     }
                     else
                     {
-                        auto in_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                        auto in_delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
-                        auto out_weights_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                        auto out_bias_delta_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
+                        auto src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
+                        auto diff_dst_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
+                        auto diff_weights_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                        auto diff_bias_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
 
                         return mkldnn::convolution_forward::desc(
                             mkldnn::prop_kind::forward,
                             convolution_algo,
-                            in_data_desc,
-                            out_weights_delta_desc,
-                            out_bias_delta_desc,
-                            in_delta_desc,
+                            src_desc,
+                            diff_weights_desc,
+                            diff_bias_desc,
+                            diff_dst_desc,
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),

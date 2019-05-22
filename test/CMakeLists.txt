@@ -28,6 +28,7 @@ endif()
 
 set(SRC
     algebraic_simplification.cpp
+    aligned_buffer.cpp
     all_close_f.cpp
     assertion.cpp
     bfloat16.cpp

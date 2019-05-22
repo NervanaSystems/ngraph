@@ -2080,6 +2080,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScatterNDAdd:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::SpaceToDepth:
+        case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::StopGradient:
@@ -2180,6 +2181,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::PRelu:
     case OP_TYPEID::ScaleShift:
     case OP_TYPEID::SpaceToDepth:
+    case OP_TYPEID::Split:
     case OP_TYPEID::SquaredDifference:
     case OP_TYPEID::Squeeze:
     case OP_TYPEID::Unsqueeze: { return false;
