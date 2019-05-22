@@ -141,7 +141,7 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            bool get_input_forget() const { return m_input_forget; };
+            bool get_input_forget() const { return m_input_forget; }
         private:
             ///
             /// \brief      The input data tensor. Shape: [batch_size, input_size].
