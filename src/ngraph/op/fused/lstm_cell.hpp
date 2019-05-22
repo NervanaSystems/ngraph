@@ -127,8 +127,8 @@ namespace ngraph
                      const std::shared_ptr<Node>& H_t,
                      const std::shared_ptr<Node>& C_t,
                      std::size_t hidden_size,
-                     const std::shared_ptr<Node>& B = nullptr,
-                     const std::shared_ptr<Node>& P = nullptr,
+                     const std::shared_ptr<Node>& B,
+                     const std::shared_ptr<Node>& P,
                      const std::vector<std::string>& activations =
                          std::vector<std::string>{"sigmoid", "tanh", "tanh"},
                      const std::vector<float>& activation_alpha = {},

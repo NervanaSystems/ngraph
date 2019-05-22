@@ -158,48 +158,27 @@ op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
     , m_activation_h{get_activation_function(2)}
     , m_input_forget{input_forget}
 {
-    // Normally we would split B onto Wb an Rb and add them, however here they are all zeros,
-    // thus just initialize bias with appropriate shape and zeros.
-    if (!B)
-    {
-        m_bias =
-            ngraph::op::Constant::create(element::f32,
-                                         Shape{m_gates_count * get_hidden_size()},
-                                         vector<float>(m_gates_count * get_hidden_size(), 0.f));
-    }
-    // Split B onto Wb an Rb and add them.
-    else
-    {
-        NODE_VALIDATION_CHECK(this,
-                              (B->get_shape() == Shape{2 * m_gates_count * get_hidden_size()}),
-                              "Input tensor B must have shape (",
-                              8 * get_hidden_size(),
-                              "). Actual shape is:",
-                              B->get_shape(),
-                              ".");
+    // Split B onto Wb and Rb and add them.
+    NODE_VALIDATION_CHECK(this,
+                          (B->get_shape() == Shape{2 * m_gates_count * get_hidden_size()}),
+                          "Input tensor B must have shape (",
+                          8 * get_hidden_size(),
+                          "). Actual shape is:",
+                          B->get_shape(),
+                          ".");
 
-        NodeVector b_W_R = builder::split(B, 2);
-        m_bias = b_W_R.at(0) + b_W_R.at(1);
-    }
-
-    auto peephole_weights = P;
-    if (!peephole_weights)
-    {
-        peephole_weights =
-            ngraph::op::Constant::create(element::f32,
-                                         Shape{m_peepholes_count * get_hidden_size()},
-                                         vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
-    }
+    NodeVector b_W_R = builder::split(B, 2);
+    m_bias = b_W_R.at(0) + b_W_R.at(1);
 
     NODE_VALIDATION_CHECK(this,
-                          (P->get_shape() == Shape{3 * get_hidden_size()}),
+                          (P->get_shape() == Shape{m_peepholes_count * get_hidden_size()}),
                           "Input tensor P must have shape (",
-                          3 * get_hidden_size(),
+                          m_peepholes_count * get_hidden_size(),
                           "). Actual shape is:",
                           P->get_shape(),
                           ".");
 
-    m_p_iof = builder::split(peephole_weights, m_peepholes_count);
+    m_p_iof = builder::split(P, m_peepholes_count);
     constructor_validate_and_infer_types();
 }
 
