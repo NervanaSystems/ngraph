@@ -425,6 +425,8 @@ shared_ptr<runtime::Executable>
     {
         pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
             IntelGPUBackend::is_supported_impl);
+        pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
+            IntelGPUBackend::is_supported_impl);
     }
 
     if (m_disable_backend_optimizations < 1)
