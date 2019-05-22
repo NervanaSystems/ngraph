@@ -48,6 +48,16 @@ namespace ngraph
         };
         typedef EnumMask<FusionType> FusionTypeMask;
 
+        // These constants are for backward compatiability only, will deprecated soon.
+        NGRAPH_DEPRECATED("use FusionType enum class instead")
+        constexpr FusionType DIFFERENTIABLE_FUSIONS = FusionType::DIFFERENTIABLE_FUSIONS;
+        NGRAPH_DEPRECATED("use FusionType enum class instead")
+        constexpr FusionType REGULAR_FUSIONS = FusionType::REGULAR_FUSIONS;
+        NGRAPH_DEPRECATED("use FusionType enum class instead")
+        constexpr FusionType FOP_FUSIONS = FusionType::FOP_FUSIONS;
+        NGRAPH_DEPRECATED("use FusionType enum class instead")
+        constexpr FusionType ALL_FUSIONS = FusionType::ALL_FUSIONS;
+
         enum class PassProperty : uint32_t
         {
             // Pass requires node shapes to be static
