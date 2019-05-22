@@ -50,7 +50,7 @@ public:
         if (fusions & ngraph::pass::FOP_FUSIONS)
         {
             construct_conv_bias();
-            construct_conv_bias_add();
+            //construct_conv_bias_add();
         }
     }
     void construct_relu();
