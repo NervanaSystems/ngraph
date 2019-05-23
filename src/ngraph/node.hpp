@@ -143,7 +143,7 @@ namespace ngraph
         /// Sets/replaces the arguments with new arguments.
         void set_arguments(const NodeVector& arguments);
         void set_arguments(const OutputVector& arguments);
-        void set_argument(const Output<Node>& argument, size_t position);
+        void set_argument(size_t position, const Output<Node>& argument);
 
         /// Sets the number of outputs
         void set_output_size(size_t output_size);
@@ -388,6 +388,9 @@ namespace ngraph
         Output<const Node> output(size_t output_index) const;
 
     private:
+        descriptor::Input& get_input_descriptor(size_t position);
+        descriptor::Output& get_output_descriptor(size_t position);
+
         std::set<std::shared_ptr<Node>> m_control_dependencies;
         const std::string m_node_type;
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};

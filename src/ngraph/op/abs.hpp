@@ -29,6 +29,7 @@ namespace ngraph
         class Abs : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_HELPER_DLL_EXPORT
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an absolute value operation.

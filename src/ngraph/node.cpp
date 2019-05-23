@@ -72,22 +72,32 @@ void Node::set_arguments(const OutputVector& arguments)
     }
 }
 
-void Node::set_argument(const Output<Node>& argument, size_t position)
+descriptor::Input& Node::get_input_descriptor(size_t position)
+{
+    while (m_inputs.size() <= position)
+    {
+        m_inputs.emplace_back(this, m_inputs.size());
+    }
+    return m_inputs.at(position);
+}
+
+descriptor::Output& Node::get_output_descriptor(size_t position)
+{
+    while (m_outputs.size() <= position)
+    {
+        size_t i = m_outputs.size();
+        auto tensor_descriptor =
+            make_shared<descriptor::Tensor>(element::dynamic, PartialShape::dynamic(), this, i);
+        m_outputs.emplace_back(this, i, tensor_descriptor);
+    }
+    return m_outputs.at(position);
+}
+
+void Node::set_argument(size_t position, const Output<Node>& argument)
 {
     auto output_node = argument.get_node();
-    auto& output_descriptor = output_node->get_outputs().at(argument.get_index());
-    if (position < m_inputs.size())
-    {
-        m_inputs.at(position).replace_output(output_descriptor);
-    }
-    else
-    {
-        while (m_inputs.size() < position)
-        {
-            m_inputs.emplace_back(this, m_inputs.size());
-        }
-        m_inputs.emplace_back(this, position, output_descriptor);
-    }
+    auto& output_descriptor = output_node->get_output_descriptor(argument.get_index());
+    get_input_descriptor(position).replace_output(output_descriptor);
 }
 
 // While we are still doing validation and type inference in the constructor, this is true
@@ -141,7 +151,7 @@ void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
 
 void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
 {
-    m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
+    get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
