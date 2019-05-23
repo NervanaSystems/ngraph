@@ -36,6 +36,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -72,6 +73,7 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -1194,6 +1196,90 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
     };
 
     auto m = std::make_shared<pattern::Matcher>(padd, "CPUFusion.ConvBiasAdd");
+    this->add_matcher(m, callback);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
+{
+    Shape shape{8, 128, 768};
+    auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
+    
+    int seed =1234;
+    auto seed_label = std::make_shared<pattern::op::Label>(element::u32, Shape{0});
+
+    auto value_label = std::make_shared<pattern::op::Label>(element::f64, Shape{0});
+    
+    //auto value = ngraph::op::Constant::create(element::f32, Shape{}, {0.9}); // or f64 ?
+    double value = 0.9;// some number
+    //auto value_label = std::make_shared<pattern::op::Label>(value);
+
+    auto const1 = ngraph::op::Constant::create(x->get_element_type(), Shape{}, {1});
+    auto const1_label = std::make_shared<pattern::op::Label>(const1);
+
+
+    auto gen_mask = std::make_shared<op::GenerateMask>(const1, 
+                                                             x->get_shape(), 
+                                                             x->get_element_type(),
+                                                             seed,
+                                                             value);
+    auto genmask_label = std::make_shared<pattern::op::Label>(gen_mask);
+
+    auto mult = std::make_shared<ngraph::op::Multiply>(gen_mask, x); // TODO: how to check it works both ways x, gen_mask too ?
+    auto mult_label = std::make_shared<pattern::op::Label>(mult);
+
+    auto value_const = ngraph::op::Constant::create(element::f32, Shape{}, {0.9}); // or f64 ?
+    auto bcast = std::make_shared<ngraph::op::Broadcast>(value_const, x->get_shape(), AxisSet{0});
+    auto pdivide = std::make_shared<ngraph::op::Divide>(mult, bcast);
+
+    //----------
+    auto callback = [x_label, const1_label, seed_label, value_label, genmask_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_dropout against "
+                     << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+
+        auto m_div = std::static_pointer_cast<ngraph::op::Divide>(m.get_match_root());
+
+        //auto gm = static_cast<const ngraph::op::GenerateMask*>(pattern_map[genmask_label]);
+
+        auto const1_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[const1_label]);
+        if (!const1_ptr)
+        {
+            NGRAPH_DEBUG << "const1 must be a constant";
+            return false;
+        }
+        unsigned int const1 = *(reinterpret_cast<const unsigned int*>(const1_ptr->get_data_ptr()));
+
+
+        auto seed_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[seed_label]);
+        if (!seed_ptr)
+        {
+            NGRAPH_DEBUG << "seed must be a constant";
+            return false;
+        }
+        int seed = *(reinterpret_cast<const int*>(seed_ptr->get_data_ptr()));
+
+        auto value_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[value_label]);
+        if (!value_ptr)
+        {
+            NGRAPH_DEBUG << "Value must be a constant";
+            return false;
+        }
+        double value = *(reinterpret_cast<const double*>(value_ptr->get_data_ptr()));
+
+        // Check for rank 3D or 4D for now
+        auto dropout_n =
+            std::make_shared<ngraph::op::Dropout>(pattern_map[x_label], // Input Node of f32
+                                                  const1,       // int, u32
+                                                  seed,
+                                                  value
+                                                  );
+        ngraph::replace_node(m.get_match_root(), dropout_n);
+        return true;
+        //return false;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(pdivide, "CPUFusion.Dropout");
     this->add_matcher(m, callback);
 }
 

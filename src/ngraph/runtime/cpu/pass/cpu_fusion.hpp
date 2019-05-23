@@ -78,6 +78,7 @@ public:
                 construct_deconvolution_affine_folding();
                 construct_deconvolution_affine_folding_relu();
             }
+            construct_dropout();
         }
     }
 
@@ -109,6 +110,7 @@ private:
     void construct_fuse_lstm_recurrent_state();
     void construct_deconvolution_affine_folding();
     void construct_deconvolution_affine_folding_relu();
+    void construct_dropout();
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUQuantFusion : public ngraph::pass::GraphRewrite
