@@ -24,6 +24,8 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/subtract.hpp"
@@ -62,34 +64,34 @@ void op::FakeQuantize::pre_validate_and_infer_types()
         const Shape output_low_shape{output_low_pshape.to_shape()};
         const Shape output_high_shape{output_high_pshape.to_shape()};
 
-        NODE_VALIDATION_CHECK(
-            this,
-            (input_low_shape.size() == 0 ||
-             (input_low_shape.size() == 1 && input_low_shape.at(0) == data_shape.at(1))),
-            "Input low tensor shape: ",
-            input_low_shape,
-            ", must either be a scalar or a vector of size equal to number of channels.");
-        NODE_VALIDATION_CHECK(
-            this,
-            (input_high_shape.size() == 0 ||
-             (input_high_shape.size() == 1 && input_high_shape.at(0) == data_shape.at(1))),
-            "Input high tensor shape: ",
-            input_high_shape,
-            ", must either be a scalar or a vector of size equal to number of channels.");
-        NODE_VALIDATION_CHECK(
-            this,
-            (output_low_shape.size() == 0 ||
-             (output_low_shape.size() == 1 && output_low_shape.at(0) == data_shape.at(1))),
-            "Output low tensor shape: ",
-            output_low_shape,
-            ", must either be a scalar or a vector of size equal to number of channels.");
-        NODE_VALIDATION_CHECK(
-            this,
-            (output_high_shape.size() == 0 ||
-             (output_high_shape.size() == 1 && output_high_shape.at(0) == data_shape.at(1))),
-            "Output high tensor shape: ",
-            output_high_shape,
-            ", must either be a scalar or a vector of size equal to number of channels.");
+                NODE_VALIDATION_CHECK(
+                    this,
+                    (input_low_shape.size() == 0 ||
+                     (input_low_shape.size() == 1 && input_low_shape.at(0) == data_shape.at(1))),
+                    "Input low tensor shape: ",
+                    input_low_shape,
+                    ", must either be a scalar or a vector of size equal to number of channels.");
+                NODE_VALIDATION_CHECK(
+                    this,
+                    (input_high_shape.size() == 0 ||
+                     (input_high_shape.size() == 1 && input_high_shape.at(0) == data_shape.at(1))),
+                    "Input high tensor shape: ",
+                    input_high_shape,
+                    ", must either be a scalar or a vector of size equal to number of channels.");
+                NODE_VALIDATION_CHECK(
+                    this,
+                    (output_low_shape.size() == 0 ||
+                     (output_low_shape.size() == 1 && output_low_shape.at(0) == data_shape.at(1))),
+                    "Output low tensor shape: ",
+                    output_low_shape,
+                    ", must either be a scalar or a vector of size equal to number of channels.");
+                NODE_VALIDATION_CHECK(
+                    this,
+                    (output_high_shape.size() == 0 ||
+                     (output_high_shape.size() == 1 && output_high_shape.at(0) == data_shape.at(1))),
+                    "Output high tensor shape: ",
+                    output_high_shape,
+                    ", must either be a scalar or a vector of size equal to number of channels.");
     }
 }
 
@@ -117,6 +119,7 @@ NodeVector op::FakeQuantize::decompose_op() const
         Constant::create(input_data_type,
                          input_data_shape,
                          vector<size_t>(shape_size(input_data_shape), m_levels - 1));
+
     // map the number of quantization levels to the nGraph's quantization and dequantization scales
     const auto quant_scale = (input_high - input_low) / levels_minus_one;
     const auto dequant_scale = (output_high - output_low) / levels_minus_one;
@@ -125,8 +128,15 @@ NodeVector op::FakeQuantize::decompose_op() const
     const auto zero_point = Constant::create(element::i32, data->get_shape(), {0.0});
     const auto axes = get_default_order(input_data_shape);
 
+    // clip the input data to the range <input_low;input_high>
+    data =
+        std::make_shared<op::Minimum>(input_high, std::make_shared<op::Maximum>(input_low, data));
+
+    // shift the input data so that it contains only positive values (and zeros)
+    data = data - input_low;
+
     const auto quantized_data =
-        make_shared<op::Quantize>(data - input_low,
+        make_shared<op::Quantize>(data,
                                   quant_scale,
                                   zero_point,
                                   element::i32,
@@ -135,23 +145,10 @@ NodeVector op::FakeQuantize::decompose_op() const
 
     // the output element type of dequantization is set to the output_low element type
     // because of the first op::Select usage below where last 2 tensors must have matching types
-    shared_ptr<Node> dequantized_data = make_shared<op::Dequantize>(
+    const auto dequantized_data = make_shared<op::Dequantize>(
         quantized_data, dequant_scale, zero_point, output_low->get_element_type(), axes);
 
-    dequantized_data = dequantized_data + output_low;
-
-    // The input data (before quantization) should be clamped to the range defined by elements
-    // of output_low and output_high nodes. This is why those 2 masks are created on the input data.
-    // Clamping(clipping) will be done on the quantized_data node though.
-    const auto less_eq_than_input_low = make_shared<op::LessEq>(data, input_low);
-    const auto greater_than_input_high = make_shared<op::Greater>(data, input_high);
-
-    auto fake_quantize =
-        make_shared<op::Select>(less_eq_than_input_low, output_low, dequantized_data);
-
-    fake_quantize = make_shared<op::Select>(greater_than_input_high, output_high, fake_quantize);
-
-    return {fake_quantize};
+    return {dequantized_data + output_low};
 }
 
 shared_ptr<Node> op::FakeQuantize::copy_with_new_args(const NodeVector& new_args) const
