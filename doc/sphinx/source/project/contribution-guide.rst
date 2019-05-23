@@ -1,7 +1,7 @@
 .. contribution-guide:
 
 ##################
-Contribution Guide
+Contribution guide
 ##################
 
 License
