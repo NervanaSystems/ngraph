@@ -4,6 +4,8 @@ About backends
 ##############
 
 * :ref:`what_is_backend`
+* :ref:`how_to_use`
+
 
 .. _what_is_backend:
 
@@ -28,6 +30,8 @@ section on :doc:`plaidml-ng-api/index`.
    NVIDIA\* CUDA (GPUs), Yes, Some 
    AMD\* GPUs, Yes, Some
 
+
+.. _how_to_use:
 
 How to use?
 -----------
