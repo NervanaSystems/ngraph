@@ -49,14 +49,7 @@ void op::DynReshape::validate_and_infer_types()
     set_input_is_relevant_to_shape(1);
     if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(1)))
     {
-        // TODO: replace with const_shape->get_shapes_val()
-        auto out_shape = const_shape->get_vector<int64_t>();
-        Shape output_shape(shape_size(const_shape->get_shape()));
-        std::transform(out_shape.begin(),
-                       out_shape.end(),
-                       output_shape.begin(),
-                       [&](const int64_t& v) { return max(v, int64_t(0)); });
-        set_output_type(0, get_input_element_type(0), output_shape);
+        set_output_type(0, get_input_element_type(0), const_shape->get_shape_val());
     }
     else
     {

@@ -16,6 +16,7 @@
 
 #include <fstream>
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -347,25 +348,15 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     return ss.str();
 }
 
-string pass::VisualizeTree::get_file_ext()
-{
-    const char* format = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT");
-    if (!format)
-    {
-        format = "dot";
-    }
-
-    if (format[0] == '.')
-    {
-        format += 1;
-    }
-
-    return string(format);
-}
-
 void pass::VisualizeTree::render() const
 {
-    auto dot_file = m_name + ".dot";
+    string ext = file_util::get_file_ext(m_name);
+    string output_format = ext.substr(1);
+    string dot_file = m_name;
+    if (to_lower(ext) != ".dot")
+    {
+        dot_file += ".dot";
+    }
     ofstream out(dot_file);
     if (out)
     {
@@ -374,12 +365,11 @@ void pass::VisualizeTree::render() const
         out << "}\n";
         out.close();
 
-        if (!m_dot_only && get_file_ext() != "dot")
+        if (!m_dot_only && to_lower(ext) != ".dot")
         {
 #ifndef _WIN32
             stringstream ss;
-            ss << "dot -T" << get_file_ext() << " " << dot_file << " -o" << m_name << "."
-               << get_file_ext();
+            ss << "dot -T" << output_format << " " << dot_file << " -o" << m_name;
             auto cmd = ss.str();
             auto stream = popen(cmd.c_str(), "r");
             if (stream)

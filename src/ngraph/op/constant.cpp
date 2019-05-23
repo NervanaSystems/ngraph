@@ -171,6 +171,54 @@ Strides op::Constant::get_strides_val() const
     return output_strides;
 }
 
+Coordinate op::Constant::get_coordinate_val() const
+{
+    NGRAPH_CHECK(m_element_type == element::i64);
+    std::vector<int64_t> out_coordinate = get_vector<int64_t>();
+    Coordinate output_coordinate(shape_size(m_shape));
+    std::transform(out_coordinate.begin(),
+                   out_coordinate.end(),
+                   output_coordinate.begin(),
+                   [&](const int64_t& v) { return (v > 0) ? v : 0; });
+    return output_coordinate;
+}
+
+CoordinateDiff op::Constant::get_coordinate_diff_val() const
+{
+    NGRAPH_CHECK(m_element_type == element::i64);
+    std::vector<int64_t> out_coordinate_diff = get_vector<int64_t>();
+    CoordinateDiff output_coordinate_diff(shape_size(m_shape));
+    std::transform(out_coordinate_diff.begin(),
+                   out_coordinate_diff.end(),
+                   output_coordinate_diff.begin(),
+                   [&](const int64_t& v) { return (v > 0) ? v : 0; });
+    return output_coordinate_diff;
+}
+
+AxisVector op::Constant::get_axis_vector_val() const
+{
+    NGRAPH_CHECK(m_element_type == element::i64);
+    std::vector<int64_t> out_axis_vector = get_vector<int64_t>();
+    AxisVector output_axis_vector(shape_size(m_shape));
+    std::transform(out_axis_vector.begin(),
+                   out_axis_vector.end(),
+                   output_axis_vector.begin(),
+                   [&](const int64_t& v) { return (v > 0) ? v : 0; });
+    return output_axis_vector;
+}
+
+AxisSet op::Constant::get_axis_set_val() const
+{
+    NGRAPH_CHECK(m_element_type == element::i64);
+    std::vector<int64_t> out_axis_set = get_vector<int64_t>();
+    AxisSet output_axis_set;
+    for (auto& axis : get_vector<int64_t>())
+    {
+        output_axis_set.insert(axis > 0 ? axis : 0);
+    }
+    return output_axis_set;
+}
+
 shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
