@@ -72,6 +72,7 @@
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/fake_quantize.hpp"
 #include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -79,6 +80,10 @@
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/split.hpp"
+#include "ngraph/op/fused/squared_difference.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -498,10 +503,12 @@ static shared_ptr<ngraph::Function>
             {
                 args.push_back(node_map.at(name));
             }
+#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-            // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
             switch (get_typeid(node_op))
             {
             case OP_TYPEID::Abs:
@@ -992,6 +999,12 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::GreaterEq>(args[0], args[1]);
                 break;
             }
+            case OP_TYPEID::GRN:
+            {
+                auto bias = node_js.at("bias").get<float>();
+                node = make_shared<op::GRN>(args[0], bias);
+                break;
+            }
             case OP_TYPEID::HardSigmoid:
             {
                 auto alpha = node_js.at("alpha").get<float>();
@@ -1446,9 +1459,26 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::SpaceToDepth>(args[0], block_size);
                 break;
             }
+            case OP_TYPEID::Split:
+            {
+                const auto axis = node_js.at("axis").get<size_t>();
+                const auto splits = node_js.at("splits").get<vector<size_t>>();
+                node = make_shared<op::Split>(args[0], axis, splits);
+                break;
+            }
             case OP_TYPEID::Sqrt:
             {
                 node = make_shared<op::Sqrt>(args[0]);
+                break;
+            }
+            case OP_TYPEID::SquaredDifference:
+            {
+                node = make_shared<op::SquaredDifference>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::Squeeze:
+            {
+                node = make_shared<op::Squeeze>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::Subtract:
@@ -1496,6 +1526,11 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::StopGradient>(args[0]);
                 break;
             }
+            case OP_TYPEID::Unsqueeze:
+            {
+                node = make_shared<op::Unsqueeze>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::UnknownOp:
             {
                 stringstream ss;
@@ -1503,7 +1538,9 @@ static shared_ptr<ngraph::Function>
                 throw runtime_error(ss.str());
             }
             }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
 
             for (const string& name : control_deps_inputs)
             {
@@ -1620,10 +1657,12 @@ static json write(const Node& n, bool binary_constant_data)
     }
 
     string node_op = n.description();
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-    // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+// #pragma GCC diagnostic error "-Wimplicit-fallthrough"
+#endif
     switch (get_typeid(node_op))
     {
     case OP_TYPEID::Abs: { break;
@@ -1914,6 +1953,12 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::GreaterEq: { break;
     }
+    case OP_TYPEID::GRN:
+    {
+        auto tmp = dynamic_cast<const op::GRN*>(&n);
+        node["bias"] = tmp->get_bias();
+        break;
+    }
     case OP_TYPEID::HardSigmoid:
     {
         auto tmp = dynamic_cast<const op::HardSigmoid*>(&n);
@@ -2185,7 +2230,18 @@ static json write(const Node& n, bool binary_constant_data)
         node["block_size"] = tmp->get_block_size();
         break;
     }
+    case OP_TYPEID::Split:
+    {
+        auto tmp = dynamic_cast<const op::Split*>(&n);
+        node["axis"] = tmp->get_axis();
+        node["splits"] = tmp->get_splits();
+        break;
+    }
     case OP_TYPEID::Sqrt: { break;
+    }
+    case OP_TYPEID::SquaredDifference: { break;
+    }
+    case OP_TYPEID::Squeeze: { break;
     }
     case OP_TYPEID::StopGradient: { break;
     }
@@ -2220,10 +2276,14 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Transpose: { break;
     }
+    case OP_TYPEID::Unsqueeze: { break;
+    }
     case OP_TYPEID::UnknownOp: { break;
     }
     }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
 
     return node;
 }

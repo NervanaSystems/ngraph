@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,17 +16,20 @@
 
 #pragma once
 
-#include "ngraph/coordinate_diff.hpp"
-#include "ngraph/node.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
-    namespace builder
+    namespace pass
     {
-        namespace quantization
+        class DynElimination : public GraphRewrite
         {
-            std::shared_ptr<Node> QuantizedDotInteger(std::shared_ptr<Node> input,
-                                                      std::shared_ptr<Node> filter);
-        }
+        public:
+            DynElimination();
+
+        private:
+            void construct_transpose();
+        };
     }
 }
