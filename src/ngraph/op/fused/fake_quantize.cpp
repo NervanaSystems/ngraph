@@ -126,7 +126,7 @@ NodeVector op::FakeQuantize::decompose_op() const
     const auto axes = get_default_order(input_data_shape);
 
     const auto quantized_data =
-        make_shared<op::Quantize>(data,
+        make_shared<op::Quantize>(data - input_low,
                                   quant_scale,
                                   zero_point,
                                   element::i32,
