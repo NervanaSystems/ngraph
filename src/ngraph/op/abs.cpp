@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Abs::type_name("Abs");
+const string op::Abs::type_name = "Abs";
 
 op::Abs::Abs()
 {
