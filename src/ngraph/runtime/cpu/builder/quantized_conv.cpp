@@ -119,6 +119,13 @@ namespace ngraph
                         kernel;
                     kernel = runtime::cpu::kernel::convolution<uint8_t, uint8_t, uint8_t, int32_t>;
 
+                    auto arg3_buffer_index =
+                        external_function->get_buffer_index(args[3].get_name()); // input scale
+                    auto arg5_buffer_index =
+                        external_function->get_buffer_index(args[5].get_name()); // filter scale
+                    auto arg7_buffer_index =
+                        external_function->get_buffer_index(args[7].get_name()); // output scale
+
                     auto window_movement_strides = qconvolution->get_window_movement_strides();
                     auto window_dilation_strides = qconvolution->get_window_dilation_strides();
                     auto padding_below = qconvolution->get_padding_below();
@@ -132,6 +139,11 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
+                                    arg3_buffer_index,
+                                    arg4_buffer_index,
+                                    arg5_buffer_index,
+                                    arg6_buffer_index,
+                                    arg7_buffer_index,
                                     out0_buffer_index,
                                     result_shape,
                                     window_movement_strides,
@@ -156,7 +168,12 @@ namespace ngraph
                                padding_below,
                                padding_above,
                                data_dilation_strides,
-                               dyn_scales[0]);
+                               ctx->buffer_data[arg2_buffer_index],
+                               ctx->buffer_data[arg3_buffer_index],
+                               ctx->buffer_data[arg4_buffer_index],
+                               ctx->buffer_data[arg5_buffer_index],
+                               ctx->buffer_data[arg6_buffer_index],
+                               ctx->buffer_data[arg7_buffer_index]);
                     };
                     functors.emplace_back(functor);
                 }
