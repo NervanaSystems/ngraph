@@ -22,12 +22,11 @@
 #include "lp_pool.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"
+#include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/util.hpp"
 #include "utils/common.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -47,7 +46,7 @@ namespace ngraph
                     ASSERT_VALID_ARGUMENT(node, p_norm >= 0)
                         << "Only positive (including zero) values are supported for 'p' attribute.";
 
-                    NodeVector slices = reshape::split(data, channels_count, channel_axis);
+                    NodeVector slices = ngraph::builder::split(data, channels_count, channel_axis);
 
                     for (auto& slice : slices)
                     {
