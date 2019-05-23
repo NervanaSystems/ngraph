@@ -40,7 +40,7 @@ op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
 
 void op::util::ArithmeticReduction::set_reduction_axes(const AxisSet& reduction_axes)
 {
-    set_attribute_value(m_reduction_axes, reduction_axes);
+    m_reduction_axes = reduction_axes;
 }
 
 void op::util::ArithmeticReduction::validate_and_infer_types()

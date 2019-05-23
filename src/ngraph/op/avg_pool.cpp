@@ -111,62 +111,62 @@ op::AvgPool::AvgPool(const shared_ptr<Node>& arg, const Shape& window_shape)
 
 const Shape& op::AvgPool::get_window_shape() const
 {
-    return get_attribute_value(m_window_shape);
+    return m_window_shape;
 }
 
 void op::AvgPool::set_window_shape(const Shape& window_shape)
 {
-    set_attribute_value(m_window_shape, window_shape);
+    m_window_shape = window_shape;
 }
 
 const Strides& op::AvgPool::get_window_movement_strides() const
 {
-    return get_attribute_value(m_window_movement_strides);
+    return m_window_movement_strides;
 }
 
 void op::AvgPool::set_window_movement_strides(const Strides& window_movement_strides)
 {
-    set_attribute_value(m_window_movement_strides, window_movement_strides);
+    m_window_movement_strides = window_movement_strides;
 }
 
 const Shape& op::AvgPool::get_padding_below() const
 {
-    return get_attribute_value(m_padding_below);
+    return m_padding_below;
 }
 
 void op::AvgPool::set_padding_below(const Shape& padding_below)
 {
-    set_attribute_value(m_padding_below, padding_below);
+    m_padding_below = padding_below;
 }
 
 const Shape& op::AvgPool::get_padding_above() const
 {
-    return get_attribute_value(m_padding_above);
+    return m_padding_above;
 }
 
 void op::AvgPool::set_padding_above(const Shape& padding_above)
 {
-    set_attribute_value(m_padding_above, padding_above);
+    m_padding_above = padding_above;
 }
 
 bool op::AvgPool::get_include_padding_in_avg_computation() const
 {
-    return get_attribute_value(m_include_padding_in_avg_computation);
+    return m_include_padding_in_avg_computation;
 }
 
 void op::AvgPool::get_include_padding_in_avg_computation(bool include_padding_in_avg_computation)
 {
-    set_attribute_value(m_include_padding_in_avg_computation, include_padding_in_avg_computation);
+    m_include_padding_in_avg_computation = include_padding_in_avg_computation;
 }
 
 const op::PadType& op::AvgPool::get_pad_type() const
 {
-    return get_attribute_value(m_pad_type);
+    return m_pad_type;
 }
 
 void op::AvgPool::set_pad_type(const op::PadType& pad_type)
 {
-    set_attribute_value(m_pad_type, pad_type);
+    m_pad_type = pad_type;
 }
 
 shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) const
@@ -240,63 +240,63 @@ void op::AvgPoolBackprop::validate_and_infer_types()
 
 const Shape& op::AvgPoolBackprop::get_forward_arg_shape() const
 {
-    return get_attribute_value(m_forward_arg_shape);
+    return m_forward_arg_shape;
 }
 
 void op::AvgPoolBackprop::set_forward_arg_shape(const Shape& forward_arg_shape)
 {
-    set_attribute_value(m_forward_arg_shape, forward_arg_shape);
+    m_forward_arg_shape = forward_arg_shape;
 }
 
 const Shape& op::AvgPoolBackprop::get_window_shape() const
 {
-    return get_attribute_value(m_window_shape);
+    return m_window_shape;
 }
 
 void op::AvgPoolBackprop::set_window_shape(const Shape& window_shape)
 {
-    set_attribute_value(m_window_shape, window_shape);
+    m_window_shape = window_shape;
 }
 
 const Strides& op::AvgPoolBackprop::get_window_movement_strides() const
 {
-    return get_attribute_value(m_window_movement_strides);
+    return m_window_movement_strides;
 }
 
 void op::AvgPoolBackprop::set_window_movement_strides(const Strides& window_movement_strides)
 {
-    set_attribute_value(m_window_movement_strides, window_movement_strides);
+    m_window_movement_strides = window_movement_strides;
 }
 
 const Shape& op::AvgPoolBackprop::get_padding_below() const
 {
-    return get_attribute_value(m_padding_below);
+    return m_padding_below;
 }
 
 void op::AvgPoolBackprop::set_padding_below(const Shape& padding_below)
 {
-    set_attribute_value(m_padding_below, padding_below);
+    m_padding_below = padding_below;
 }
 
 const Shape& op::AvgPoolBackprop::get_padding_above() const
 {
-    return get_attribute_value(m_padding_above);
+    return m_padding_above;
 }
 
 void op::AvgPoolBackprop::set_padding_above(const Shape& padding_above)
 {
-    set_attribute_value(m_padding_above, padding_above);
+    m_padding_above = padding_above;
 }
 
 bool op::AvgPoolBackprop::get_include_padding_in_avg_computation() const
 {
-    return get_attribute_value(m_include_padding_in_avg_computation);
+    return m_include_padding_in_avg_computation;
 }
 
 void op::AvgPoolBackprop::set_include_padding_in_avg_computation(
     bool include_padding_in_avg_computation)
 {
-    set_attribute_value(m_include_padding_in_avg_computation, include_padding_in_avg_computation);
+    m_include_padding_in_avg_computation = include_padding_in_avg_computation;
 }
 
 shared_ptr<Node> op::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_args) const

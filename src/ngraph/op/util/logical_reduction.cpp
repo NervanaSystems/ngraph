@@ -40,12 +40,12 @@ op::util::LogicalReduction::LogicalReduction(const std::string& node_type,
 
 const AxisSet& op::util::LogicalReduction::get_reduction_axes() const
 {
-    return get_attribute_value(m_reduction_axes);
+    return m_reduction_axes;
 }
 
 void op::util::LogicalReduction::set_reduction_axes(const AxisSet& reduction_axes)
 {
-    set_attribute_value(m_reduction_axes, reduction_axes);
+    m_reduction_axes = reduction_axes;
 }
 
 void op::util::LogicalReduction::validate_and_infer_types()

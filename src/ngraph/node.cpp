@@ -120,18 +120,12 @@ void Node::delayed_validate_and_infer_types()
 }
 #undef IN_TRANSITION
 
-void Node::notify_definition_changed()
-{
-}
-
 void Node::set_output_size(size_t n)
 {
     NGRAPH_CHECK(n >= m_outputs.size(), "shrinking ", m_outputs.size(), " to ", n);
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
-        auto tensor_descriptor =
-            make_shared<descriptor::Tensor>(element::dynamic, PartialShape::dynamic(), this, i);
-        m_outputs.emplace_back(this, i, tensor_descriptor);
+        get_output_descriptor(i);
     }
 }
 

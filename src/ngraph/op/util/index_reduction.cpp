@@ -46,19 +46,19 @@ op::util::IndexReduction::IndexReduction(const std::string& node_type,
 
 size_t op::util::IndexReduction::get_reduction_axis() const
 {
-    return get_attribute_value(m_axis);
+    return m_axis;
 }
 void op::util::IndexReduction::set_reduction_axis(size_t value)
 {
-    set_attribute_value(m_axis, value);
+    m_axis = value;
 }
 element::Type op::util::IndexReduction::get_index_element_type() const
 {
-    return get_attribute_value(m_index_element_type);
+    return m_index_element_type;
 }
 void op::util::IndexReduction::set_index_element_type(const element::Type& index_element_type)
 {
-    set_attribute_value(m_index_element_type, index_element_type);
+    m_index_element_type = index_element_type;
 }
 
 void op::util::IndexReduction::validate_and_infer_types()

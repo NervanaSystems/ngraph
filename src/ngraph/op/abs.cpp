@@ -21,8 +21,13 @@
 using namespace std;
 using namespace ngraph;
 
-NGRAPH_HELPER_DLL_EXPORT
-const string op::Abs::type_name = "Abs";
+namespace ngraph
+{
+    namespace op
+    {
+        const string Abs::type_name = "Abs";
+    }
+}
 
 op::Abs::Abs()
 {

@@ -95,28 +95,6 @@ namespace ngraph
         friend class Output;
 
     protected:
-        template <typename A>
-        A& get_attribute_value(A& member)
-        {
-            return member;
-        }
-        template <typename A>
-        A& get_attribute_value(A& member) const
-        {
-            return member;
-        }
-        template <typename A, typename V>
-        void set_attribute_value(A& member, V value)
-        {
-            if (member != value)
-            {
-                notify_definition_changed();
-                member = value;
-            }
-        }
-
-        /// called when an input or attribute has been changed (stub for now)
-        void notify_definition_changed();
         /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
 
