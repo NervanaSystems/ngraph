@@ -18,114 +18,42 @@
 #include <vector>
 
 #include "exceptions.hpp"
+#include "ngraph/op/fused/split.hpp"
 #include "op/split.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        namespace error
-        {
-            namespace op
-            {
-                namespace split
-                {
-                    namespace detail
-                    {
-                        struct Error : ngraph_error
-                        {
-                            explicit Error(const std::string& name, const std::string& message)
-                                : ngraph_error{"Split node (" + name + "): " + message}
-                            {
-                            }
-                        };
-                    } // namespace detail
-
-                    struct OutOfRange : detail::Error
-                    {
-                        explicit OutOfRange(const std::string& name)
-                            : Error{name,
-                                    "provided split axis is out of input tensor dimensions range."}
-                        {
-                        }
-                    };
-
-                    struct Parts : detail::Error
-                    {
-                        explicit Parts(const std::string& name,
-                                       std::size_t parts,
-                                       std::size_t axis_length)
-                            : Error{name,
-                                    "tensor cannot be split into " + std::to_string(parts) +
-                                        " equal parts, along axis of length " +
-                                        std::to_string(axis_length)}
-                        {
-                        }
-                    };
-
-                    struct Sum : detail::Error
-                    {
-                        explicit Sum(const std::string& name, std::size_t parts, std::size_t axis)
-                            : Error{name,
-                                    "provided lengths of split parts does not sum up to "
-                                    "length of axis we split on: " +
-                                        std::to_string(parts) + " != " + std::to_string(axis)}
-                        {
-                        }
-                    };
-
-                } // namespace split
-
-            } // namespace op
-
-        } // namespace error
-
         namespace op
         {
             namespace set_1
             {
                 NodeVector split(const Node& node)
                 {
-                    std::shared_ptr<ngraph::Node> input = node.get_ng_inputs().at(0);
-                    auto input_shape = input->get_shape();
-                    std::size_t count_outputs{node.get_output_names().size()};
-                    int64_t axis{node.get_attribute_value<int64_t>("axis", 0)};
-                    std::size_t axis_to_split{static_cast<std::size_t>(axis)};
-                    if (axis < 0)
-                    {
-                        axis_to_split = input_shape.size() + axis;
-                    }
-                    else if (axis_to_split >= input_shape.size())
-                    {
-                        throw error::op::split::OutOfRange{node.get_name()};
-                    }
-                    std::size_t length_axis_to_split{input_shape.at(axis_to_split)};
-                    std::vector<std::size_t> length_parts;
+                    const auto input = node.get_ng_inputs().at(0);
+                    const auto outputs_number = node.get_output_names().size();
+                    const auto axis = node.get_attribute_value<int64_t>("axis", 0);
+
                     try
                     {
-                        length_parts = node.get_attribute_value<std::vector<std::size_t>>("split");
-                    }
-                    catch (const std::exception&)
-                    {
-                        if (length_axis_to_split % count_outputs)
-                        {
-                            throw error::op::split::Parts{
-                                node.get_name(), count_outputs, length_axis_to_split};
-                        }
-                        length_parts.assign(count_outputs, length_axis_to_split / count_outputs);
-                    }
+                        const auto length_parts =
+                            node.get_attribute_value<std::vector<std::size_t>>("split");
+                        const auto fused_split =
+                            std::make_shared<ngraph::op::Split>(input, axis, length_parts);
 
-                    std::size_t total_parts_length = 0;
-                    for (auto length : length_parts)
-                    {
-                        ASSERT_VALID_ARGUMENT(node, length > 0)
-                            << "Invalid value in 'split' attribute";
-                        total_parts_length += length;
+                        return fused_split->decompose_op();
                     }
-                    ASSERT_VALID_ARGUMENT(node, total_parts_length == input_shape.at(axis_to_split))
-                        << "Cannot split using values in 'split' attribute";
-                    return reshape::split(input, length_parts, axis_to_split);
+                    catch (const error::node::UnknownAttribute&)
+                    {
+                        // an exception will be caught if the input node does not contain
+                        // the 'split' attribute - this means we should split the input tensor
+                        // into same-length parts equal to the number of node outputs
+                        const auto fused_split =
+                            std::make_shared<ngraph::op::Split>(input, axis, outputs_number);
+
+                        return fused_split->decompose_op();
+                    }
                 }
 
             } // namespace set_1

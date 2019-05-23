@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/builder/quantization/quantized_linear_dot.hpp"
-#include "ngraph/builder/make_constant.hpp"
-#include "ngraph/builder/quantization.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <memory>
+
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
-    namespace builder
+    namespace op
     {
-        namespace quantization
+        class Unsqueeze : public ngraph::op::util::FusedOp
         {
-            shared_ptr<Node> QuantizedDotInteger(shared_ptr<Node> input, shared_ptr<Node> filter)
-            {
-                auto output_scale = make_constant(element::f32, Shape{}, 1);
-                return make_shared<op::QuantizedDot>(input, filter, output_scale, false, false);
-            }
-        }
+        public:
+            Unsqueeze(const std::shared_ptr<ngraph::Node>& data,
+                      const std::shared_ptr<ngraph::Node>& axes);
+
+            virtual void pre_validate_and_infer_types() override;
+            virtual NodeVector decompose_op() const override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
     }
 }

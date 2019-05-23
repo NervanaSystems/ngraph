@@ -113,22 +113,6 @@ namespace ngraph
         // Called after transition
         void delayed_validate_and_infer_types();
 
-        /// \brief Produce a vector of constant nodes (one for each of this node's outputs) that
-        ///        can replace this node's outputs. May return an empty vector to signal that
-        ///        conversion to constants is not possible or not supported.
-        /// \returns If conversion is successful, a vector of op::Constant nodes, corresponding
-        ///          to this node's outputs in order. If unsuccessful, an empty vector.
-        ///
-        /// Conversion does not have to be complete. That means that subclasses *may* override
-        /// as_constants, but do not have to. It is allowed for as_constants to return an empty
-        /// vector even in cases where the output values are statically computable. Thus, any user
-        /// of as_constants must allow for the possibility that conversion will fail (i.e.,
-        /// as_constants will return {}).
-        ///
-        /// Conversion must be sound. That means that if as_constants returns a non-empty vector,
-        /// the value of each constant in the vector must be exactly the value that would have
-        /// been returned for the corresponding output at runtime.
-        virtual std::vector<std::shared_ptr<op::Constant>> as_constants() const { return {}; }
         /// \brief Get the string name for the type of the node, such as `Add` or `Multiply`.
         ///        The class name, must not contain spaces as it is used for codegen.
         /// \returns A const reference to the node's type name

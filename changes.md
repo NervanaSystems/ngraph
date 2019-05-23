@@ -2,6 +2,7 @@
 
 ## Passes
 * `LikeReplacement` pass must be run by all transformers.
+* `ngraph::pass::FusionType` is now an enum class. Constant values defined by `FusionType` are created for backward compatibility and will be removed in future releases.
 
 ## Nodes, Parameters
 

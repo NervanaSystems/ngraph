@@ -82,6 +82,7 @@
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -89,6 +90,7 @@
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -431,7 +433,7 @@ shared_ptr<runtime::Executable>
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
         pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-        pass_manager.register_pass<ngraph::pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+        pass_manager.register_pass<ngraph::pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
 
         // GetOutputElementElimination must be after CommonSubexpressionElimination
         pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
@@ -453,9 +455,11 @@ shared_ptr<runtime::Executable>
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
+#endif
         switch (op_type_id)
         {
         case OP_TYPEID::Parameter:
@@ -1249,7 +1253,7 @@ shared_ptr<runtime::Executable>
             do_universal_unary(topology,
                                op,
                                "max(" + zero_const + ", " + convert_to_type + "(input_var))",
-                               activation_relu);
+                               activation_relu_negative_slope);
             break;
         }
         case OP_TYPEID::Sigmoid:
@@ -2052,6 +2056,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
         case OP_TYPEID::GenerateMask:
+        case OP_TYPEID::GRN:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::MVN:
         case OP_TYPEID::Normalize:
@@ -2073,16 +2078,21 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScatterNDAdd:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::SpaceToDepth:
+        case OP_TYPEID::Split:
+        case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::StopGradient:
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
+        case OP_TYPEID::Unsqueeze:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
         }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
         }
     }
 
@@ -2163,11 +2173,16 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::DepthToSpace:
     case OP_TYPEID::Elu:
     case OP_TYPEID::Gemm:
+    case OP_TYPEID::GRN:
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
+    case OP_TYPEID::ScaleShift:
     case OP_TYPEID::SpaceToDepth:
-    case OP_TYPEID::Squeeze: { return false;
+    case OP_TYPEID::Split:
+    case OP_TYPEID::SquaredDifference:
+    case OP_TYPEID::Squeeze:
+    case OP_TYPEID::Unsqueeze: { return false;
     }
     default: { return true;
     }
