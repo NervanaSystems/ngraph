@@ -294,13 +294,11 @@ void runtime::interpreter::INTExecutable::perform_nan_check(
     }
 }
 
-bool runtime::interpreter::INTExecutable::save(ostream& out)
+void runtime::interpreter::INTExecutable::save(ostream& out)
 {
     cpio::Writer writer(out);
     string si = "INTERPRETER Save File 1.0";
     writer.write("save_info", si.data(), si.size());
     string model = serialize(m_function, 0);
     writer.write("model", model.data(), model.size());
-
-    return true;
 }

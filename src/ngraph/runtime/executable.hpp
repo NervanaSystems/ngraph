@@ -71,8 +71,8 @@ public:
 
     /// \brief Save this compiled Executable to an output stream.
     ///    Saved stream may be read with Backend::load
-    /// \returns true if successful, false otherwise.
-    virtual bool save(std::ostream& output_stream);
+    /// \returns throws an exception on error
+    virtual void save(std::ostream& output_stream);
 
 protected:
     /// \brief Called at the end of compile to the values to be returned by get_parameters

@@ -111,7 +111,7 @@ public:
 
     /// \brief Loads a previously saved Executable object from a stream.
     /// \param input_stream the opened input stream containing the saved Executable
-    /// \returns A compiled function or nullptr on failure
+    /// \returns A compiled function or throws an exception on error
     virtual std::shared_ptr<Executable> load(std::istream& input_stream);
 
     /// \brief Test if a backend is capable of supporting an op

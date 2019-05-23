@@ -57,7 +57,7 @@ TEST(backend_api, save_load)
     {
         ofstream file("test.interpreter_save");
         auto handle = backend->compile(f);
-        ASSERT_TRUE(handle->save(file));
+        handle->save(file);
     }
     {
         ifstream file("test.interpreter_save");

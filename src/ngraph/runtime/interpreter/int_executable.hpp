@@ -169,7 +169,7 @@ public:
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& intputs) override;
 
-    virtual bool save(std::ostream& output_stream) override;
+    virtual void save(std::ostream& output_stream) override;
 
     void set_nan_check(bool enable);
 
