@@ -1352,8 +1352,16 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = (" << result_element_type.c_type_string()
-                       << ")(" << args[0].get_name() << "[i]);\n";
+                writer << out[0].get_name() << "[i] = (";
+                if (result_element_type == element::boolean)
+                {
+                    writer << "bool";
+                }
+                else
+                {
+                    writer << result_element_type.c_type_string();
+                }
+                writer << ")(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
                 writer.block_end();
             }

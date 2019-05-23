@@ -53,9 +53,6 @@ public:
             construct_matmul();
             construct_matmulbias();
             construct_fprop_bn();
-            construct_zero_padded_reshaped_conv();
-            construct_zero_padded_conv();
-            construct_zero_padded_conv_backprop_filters();
             construct_conv_bias_bprop();
             construct_conv_bias_folded_batch_norm();
             construct_conv_bias_affine_folding();
@@ -90,9 +87,6 @@ private:
     void construct_conv_bias_bprop();
     void construct_fprop_bn();
     void construct_sigmoid_multiply();
-    void construct_zero_padded_reshaped_conv();
-    void construct_zero_padded_conv();
-    void construct_zero_padded_conv_backprop_filters();
     void construct_batch_norm_relu();
     void construct_batch_norm_relu_global_stats();
     void construct_conv_relu();
