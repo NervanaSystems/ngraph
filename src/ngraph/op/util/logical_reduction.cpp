@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/util/logical_reduction.hpp"
+#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -22,13 +23,28 @@ using namespace ngraph;
 op::util::LogicalReduction::LogicalReduction(const std::string& node_type,
                                              const std::shared_ptr<Node>& arg,
                                              const AxisSet& reduction_axes)
-    : Op(node_type, check_single_output_args({arg}))
-    , m_reduction_axes(reduction_axes)
+    : Op(node_type,
+         check_single_output_args({arg,
+                                   op::Constant::create(element::i64,
+                                                        Shape{reduction_axes.size()},
+                                                        reduction_axes.to_vector())}))
+{
+}
+
+op::util::LogicalReduction::LogicalReduction(const std::string& node_type,
+                                             const std::shared_ptr<Node>& arg,
+                                             const std::shared_ptr<Node>& reduction_axes)
+    : Op(node_type, check_single_output_args({arg, reduction_axes}))
 {
 }
 
 void op::util::LogicalReduction::validate_and_infer_types()
 {
+    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    {
+        m_reduction_axes = const_op->get_axis_set_val();
+    }
+
     auto input_shape = get_input_partial_shape(0);
     auto input_rank = input_shape.rank();
 

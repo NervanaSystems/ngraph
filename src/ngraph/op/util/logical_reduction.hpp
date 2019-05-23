@@ -37,6 +37,14 @@ namespace ngraph
                                  const std::shared_ptr<Node>& arg,
                                  const AxisSet& reduction_axes);
 
+                /// \brief Constructs a 'dynamic' logical reduction operation.
+                ///
+                /// \param arg Node that produces the first input tensor.
+                /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                LogicalReduction(const std::string& node_type,
+                                 const std::shared_ptr<Node>& arg,
+                                 const std::shared_ptr<Node>& reduction_axes);
+
                 void validate_and_infer_types() override;
 
                 /// \return The axis positions (0-based) to be eliminated through reduction.

@@ -80,6 +80,8 @@ namespace ngraph
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
             Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 
+            Sum(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& reduction_axes);
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

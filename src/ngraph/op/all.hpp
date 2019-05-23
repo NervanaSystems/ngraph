@@ -35,6 +35,12 @@ namespace ngraph
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
             All(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
 
+            /// \brief Constructs an "all" reduction operation.
+            ///
+            /// \param arg The tensor to be reduced.
+            /// \param reduction_axes The axis positions (0-based) to be eliminated.
+            All(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& reduction_axes);
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
