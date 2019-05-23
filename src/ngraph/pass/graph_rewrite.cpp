@@ -151,7 +151,11 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
 {
     bool changed = false;
     size_t i = 0;
-    bool is_dynamic_function = f->is_dynamic();
+    // This check is very expensive and is only needed for experimental features, so we will hide
+    // it behind an environment variable for now.
+    static bool s_rerun_dynamic_check =
+        (std::getenv("NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK") != nullptr);
+    bool is_dynamic_function = s_rerun_dynamic_check && f->is_dynamic();
     do
     {
         for (auto node : f->get_ops())
@@ -173,7 +177,7 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
                     if (matcher->process_match())
                     {
                         changed = true;
-                        is_dynamic_function = f->is_dynamic();
+                        is_dynamic_function = s_rerun_dynamic_check && f->is_dynamic();
                         goto next_fusion;
                     }
                 }
