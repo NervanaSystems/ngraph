@@ -46,7 +46,6 @@ public:
                   bool dot_only = false);
     bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
-    static std::string get_file_ext();
     void set_ops_to_details(const visualize_tree_ops_map_t& ops_map) { m_ops_to_details = ops_map; }
 private:
     std::string add_attributes(std::shared_ptr<Node> node);

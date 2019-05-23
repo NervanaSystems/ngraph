@@ -127,6 +127,9 @@ public:
     DynamicTensor(const element::Type& element_type,
                   const PartialShape& shape,
                   const std::shared_ptr<runtime::Backend>& wrapped_backend);
+    virtual ngraph::Strides get_strides() const override;
+    virtual size_t get_size_in_bytes() const override;
+    virtual size_t get_element_count() const override;
     virtual const element::Type& get_element_type() const override;
     virtual const ngraph::Shape& get_shape() const override;
     virtual void write(const void* p, size_t offset, size_t n) override;
