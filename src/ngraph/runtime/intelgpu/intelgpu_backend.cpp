@@ -434,7 +434,7 @@ shared_ptr<runtime::Executable>
         pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
         pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
         pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
-        pass_manager.register_pass<ngraph::pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+        pass_manager.register_pass<ngraph::pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
 
         // GetOutputElementElimination must be after CommonSubexpressionElimination
         pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
@@ -2080,6 +2080,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SpaceToDepth:
+        case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::StopGradient:
@@ -2181,6 +2182,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::ScaleShift:
     case OP_TYPEID::ShuffleChannels:
     case OP_TYPEID::SpaceToDepth:
+    case OP_TYPEID::Split:
     case OP_TYPEID::SquaredDifference:
     case OP_TYPEID::Squeeze:
     case OP_TYPEID::Unsqueeze: { return false;

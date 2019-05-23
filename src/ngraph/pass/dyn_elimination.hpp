@@ -14,26 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-// This collection contains one entry for each fused op.
-//
+#pragma once
 
-NGRAPH_OP(Clamp, ngraph::op)
-NGRAPH_OP(ConvolutionBias, ngraph::op)
-NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
-NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
-NGRAPH_OP(DepthToSpace, ngraph::op)
-NGRAPH_OP(Elu, ngraph::op)
-NGRAPH_OP(GRN, ngraph::op)
-NGRAPH_OP(Gemm, ngraph::op)
-NGRAPH_OP(GroupConvolution, ngraph::op)
-NGRAPH_OP(HardSigmoid, ngraph::op)
-NGRAPH_OP(MVN, ngraph::op)
-NGRAPH_OP(Normalize, ngraph::op)
-NGRAPH_OP(PRelu, ngraph::op)
-NGRAPH_OP(ScaleShift, ngraph::op)
-NGRAPH_OP(SpaceToDepth, ngraph::op)
-NGRAPH_OP(ShuffleChannels, ngraph::op)
-NGRAPH_OP(SquaredDifference, ngraph::op)
-NGRAPH_OP(Squeeze, ngraph::op)
-NGRAPH_OP(Split, ngraph::op)
-NGRAPH_OP(Unsqueeze, ngraph::op)
+#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/util.hpp"
+
+namespace ngraph
+{
+    namespace pass
+    {
+        class DynElimination : public GraphRewrite
+        {
+        public:
+            DynElimination();
+
+        private:
+            void construct_transpose();
+        };
+    }
+}
