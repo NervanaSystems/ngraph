@@ -3,6 +3,11 @@
 Release Notes
 #############
 
+
+
+|version|
+|release|
+
 For downloads formatted as ``.zip`` and ``tar.gz``, see https://github.com/NervanaSystems/ngraph/releases; 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  

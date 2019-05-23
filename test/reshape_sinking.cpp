@@ -275,3 +275,10 @@ TEST(reshape_sinking, concat)
     size_t before_after = count_ops_of_type<op::Reshape>(f);
     ASSERT_LE(before_after, before_count);
 }
+
+TEST(reshape_sinking, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::ReshapeSinking>();
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}
