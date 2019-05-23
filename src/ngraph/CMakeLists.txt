@@ -33,11 +33,13 @@ set (SRC
     builder/quantization.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization/quantized_linear_dot.cpp
-    builder/quantization/quantized_linear_dot.hpp
+    builder/quantization/quantized_linear_matmul.cpp
+    builder/quantization/quantized_linear_matmul.hpp
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
+    builder/split.cpp
+    builder/split.hpp
     builder/tensor_mask.hpp
     check.hpp
     code_writer.hpp
@@ -310,6 +312,10 @@ set (SRC
     op/fused/scale_shift.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
+    op/fused/split.cpp
+    op/fused/split.hpp
+    op/fused/squared_difference.cpp
+    op/fused/squared_difference.hpp
     op/fused/squeeze.cpp
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
@@ -352,6 +358,8 @@ set (SRC
     pass/cse.hpp
     pass/dump_sorted.cpp
     pass/dump_sorted.hpp
+    pass/dyn_elimination.cpp
+    pass/dyn_elimination.hpp
     pass/fused_op_decomposition.cpp
     pass/fused_op_decomposition.hpp
     pass/get_output_element_elimination.cpp
@@ -388,8 +396,6 @@ set (SRC
     pass/serialize.hpp
     pass/shape_relevance.cpp
     pass/shape_relevance.hpp
-    pass/shape_specialization.cpp
-    pass/shape_specialization.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
     pass/visualize_tree.cpp
@@ -431,8 +437,8 @@ set (SRC
     shape.hpp
     shape_util.cpp
     shape_util.hpp
-    specialize_shapes.cpp
-    specialize_shapes.hpp
+    specialize_function.cpp
+    specialize_function.hpp
     state/rng_state.cpp
     strides.cpp
     strides.hpp

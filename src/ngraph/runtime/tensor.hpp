@@ -58,7 +58,7 @@ namespace ngraph
 
             /// \brief Get tensor strides
             /// \return Strides
-            ngraph::Strides get_strides() const;
+            virtual ngraph::Strides get_strides() const;
 
             /// \brief Get tensor element type
             /// \return element::Type
@@ -66,11 +66,11 @@ namespace ngraph
 
             /// \brief Get number of elements in the tensor
             /// \return number of elements in the tensor
-            size_t get_element_count() const;
+            virtual size_t get_element_count() const;
 
             /// \brief Get the size in bytes of the tensor
             /// \return number of bytes in tensor's allocation
-            size_t get_size_in_bytes() const;
+            virtual size_t get_size_in_bytes() const;
 
             /// \brief Get tensor's unique name
             /// \return tensor's name

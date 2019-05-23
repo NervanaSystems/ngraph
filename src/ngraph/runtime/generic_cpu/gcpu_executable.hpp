@@ -194,10 +194,12 @@ private:
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-        // #pragma GCC diagnostic error "-Wcovered-switch-default"
+// #pragma GCC diagnostic error "-Wcovered-switch-default"
+#endif
         switch (node_wrapper.get_typeid())
         {
         case OP_TYPEID::Abs:
@@ -1374,7 +1376,9 @@ private:
             break;
         }
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
         }
     }
 };

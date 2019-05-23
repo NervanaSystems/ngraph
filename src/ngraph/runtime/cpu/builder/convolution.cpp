@@ -402,8 +402,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropData>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropData>(node);
-                    // ConvolutionBackpropData needs 4 primitives: weights, delta, result,
-                    // and convolution_backward.
+                    // ConvolutionBackpropData needs 4 primitives: weights, diff_dst, diff_src,
+                    // and convolution_backward_data.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -502,7 +502,7 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropFilters>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropFilters>(node);
-                    // ConvolutionBackpropFilter needs 4 primitives: input, delta, weights_delta,
+                    // ConvolutionBackpropFilter needs 4 primitives: src, diff_dst, diff_weights,
                     // and convolution_backward_weights.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -598,8 +598,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
-                    // ConvolutionBiasBackpropFilter needs 5 primitives: input, delta, weights_delta,
-                    // bias_delta, and convolution_backward_weights.
+                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst, diff_weights,
+                    // diff_bias, and convolution_backward_weights.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
