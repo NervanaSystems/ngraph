@@ -33,6 +33,15 @@ descriptor::Input::Input(Node* node, size_t index, Output& output)
     output.add_input(this);
 }
 
+descriptor::Input::~Input()
+{
+    if (nullptr != m_output)
+    {
+        m_output->remove_input(this);
+        m_output = nullptr;
+    }
+}
+
 void descriptor::Input::replace_output(Output& new_output)
 {
     m_output->remove_input(this);

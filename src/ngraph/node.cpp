@@ -206,10 +206,6 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 
 Node::~Node()
 {
-    for (auto& input : m_inputs)
-    {
-        input.get_output().remove_input(&input);
-    }
 }
 
 NodeVector Node::get_arguments() const
