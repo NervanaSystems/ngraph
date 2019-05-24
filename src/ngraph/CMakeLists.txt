@@ -302,6 +302,8 @@ set (SRC
     op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/leaky_relu.cpp
+    op/fused/leaky_relu.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize.cpp

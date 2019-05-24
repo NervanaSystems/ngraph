@@ -314,6 +314,121 @@ TEST(core_fusion, reshape_softmax_reshape)
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 }
 
+TEST(core_fusion, zero_padded_reshaped_conv)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 1});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 1, 0, 0}, CoordinateDiff{0, 0, 1, 0});
+
+    auto reshape = make_shared<op::Reshape>(pad, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
+
+    auto conv = make_shared<op::Convolution>(reshape,
+                                             F,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+}
+
+TEST(core_fusion, zero_padded_conv)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
+
+    auto conv = make_shared<op::Convolution>(pad,
+                                             F,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+}
+
+TEST(core_fusion, non_zero_padded_conv)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{1.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
+
+    auto conv = make_shared<op::Convolution>(pad,
+                                             F,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+}
+
+TEST(core_fusion, zero_padded_conv_backprop_filters)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
+
+    auto conv = make_shared<op::ConvolutionBackpropFilters>(pad,
+                                                            Shape{1, 1, 2, 2},
+                                                            F,
+                                                            Strides{1, 1},
+                                                            Strides{1, 1},
+                                                            CoordinateDiff{0, 0},
+                                                            CoordinateDiff{0, 0},
+                                                            Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+}
+
 TEST(core_fusion, conv_bias)
 {
     auto gen_f = [](bool with_fused_op) {
