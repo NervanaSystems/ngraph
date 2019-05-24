@@ -26,6 +26,7 @@ namespace ngraph
         class AllReduce : public Op
         {
         public:
+            NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             AllReduce();

@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::AvgPool::type_name("AvgPool");
+const string op::AvgPool::type_name{"AvgPool"};
 
 op::AvgPool::AvgPool()
 {

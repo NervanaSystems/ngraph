@@ -30,7 +30,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Atan::type_name("Atan");
+const string op::Atan::type_name{"Atan"};
 
 op::Atan::Atan()
 {

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ArgMax::type_name("ArgMax");
+const string op::ArgMax::type_name{"ArgMax"};
 
 op::ArgMax::ArgMax()
 {

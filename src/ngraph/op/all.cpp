@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::All::type_name("All");
+const string op::All::type_name{"All"};
 
 op::All::All()
 {

@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Any::type_name("Any");
+const string op::Any::type_name{"Any"};
 
 op::Any::Any()
 {

@@ -31,7 +31,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Asin::type_name("Asin");
+const string op::Asin::type_name{"Asin"};
 
 op::Asin::Asin()
 {

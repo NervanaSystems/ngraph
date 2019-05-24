@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Add::type_name("Add");
+const string op::Add::type_name{"Add"};
 
 op::Add::Add()
 {

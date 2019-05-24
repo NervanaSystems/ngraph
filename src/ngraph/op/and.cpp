@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::And::type_name("And");
+const string op::And::type_name{"And"};
 
 op::And::And()
 {

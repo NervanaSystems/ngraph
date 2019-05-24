@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ArgMin::type_name("ArgMin");
+const string op::ArgMin::type_name{"ArgMin"};
 
 op::ArgMin::ArgMin()
 {
