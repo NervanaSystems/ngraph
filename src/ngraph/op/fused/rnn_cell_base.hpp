@@ -108,11 +108,11 @@ namespace ngraph
             std::shared_ptr<Node> clip(const std::shared_ptr<Node>& data) const;
 
         private:
-            std::size_t m_hidden_size = 0.f;
-            float m_clip = 0.f;
-            std::vector<std::string> m_activations;
-            std::vector<float> m_activation_alpha;
-            std::vector<float> m_activation_beta;
+            const std::size_t m_hidden_size = 0.f;
+            const float m_clip = 0.f;
+            const std::vector<std::string> m_activations;
+            const std::vector<float> m_activation_alpha;
+            const std::vector<float> m_activation_beta;
         };
     }
 }
