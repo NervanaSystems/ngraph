@@ -485,9 +485,9 @@ std::tuple<element::Type, PartialShape> Node::validate_and_infer_elementwise_arg
                 element::Type::merge(element_type, element_type, get_input_element_type(i)),
                 "Argument element types are inconsistent.");
 
-            NODE_VALIDATION_CHECK(this,
+/*            NODE_VALIDATION_CHECK(this,
                                   PartialShape::merge_into(pshape, get_input_partial_shape(i)),
-                                  "Argument shapes are inconsistent.");
+                                  "Argument shapes are inconsistent.");*/
         }
     }
 
