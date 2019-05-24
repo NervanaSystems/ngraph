@@ -64,8 +64,7 @@ namespace ngraph
                     break;
                     case 1 /*Logistic|Tanh*/:
                     {
-                        auto c = (in0.exp() * ((in1 * 2.f).exp() - 1.f)) /
-                                 ((in0.exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
+                        auto c = (in0.exp() * in1.tanh()) / (in0.exp() + 1.f);
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
@@ -79,23 +78,21 @@ namespace ngraph
                     break;
                     case 3 /*Tanh|Logistic*/:
                     {
-                        auto c = (((in0 * 2.f).exp() - 1.f) * in1.exp()) /
-                                 (((in0 * 2.f).exp() + 1.f) * (in1.exp() + 1.f));
+                        auto c = (in0.tanh() * in1.exp()) / (in1.exp() + 1.f);
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     case 4 /*Tanh|Tanh*/:
                     {
-                        auto c = (((in0 * 2.f).exp() - 1.f) * ((in1 * 2.f).exp() - 1.f)) /
-                                 (((in0 * 2.f).exp() + 1.f) * ((in1 * 2.f).exp() + 1.f));
+                        auto c = in0.tanh() * in1.tanh();
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
                     case 5 /*Tanh|Identity*/:
                     {
-                        auto c = (((in0 * 2.f).exp() - 1.f) * in1) / ((in0 * 2.f).exp() + 1.f);
+                        auto c = in0.tanh() * in1;
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
@@ -109,7 +106,7 @@ namespace ngraph
                     break;
                     case 7 /*Identity|Tanh*/:
                     {
-                        auto c = (in0 * ((in1 * 2.f).exp() - 1.f)) / ((in1 * 2.f).exp() + 1.f);
+                        auto c = in0 * in1.tanh();
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
