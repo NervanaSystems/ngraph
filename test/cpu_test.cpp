@@ -40,6 +40,7 @@
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
+#include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close.hpp"
@@ -1346,4 +1347,385 @@ TEST(cpu_test, gauss_error_function_erf_int32)
     auto result_values = read_vector<int>(result);
     auto expected_values = expected_result_nd_array.get_vector();
     ASSERT_EQ(result_values, expected_values);
+}
+
+TEST(cpu_test, max_pool_with_indices_2d_2channel_2image)
+{
+    Shape shape_a{2, 2, 5, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto max_pool = make_shared<op::MaxPoolWithIndices>(
+        A, window_shape, window_movement_strides, padding_below, padding_above);
+    Shape shape_r{2, 2, 4, 3};
+    auto data = make_shared<op::Result>(make_shared<op::GetOutputElement>(max_pool, 0));
+    auto indices = make_shared<op::Result>(make_shared<op::GetOutputElement>(max_pool, 1));
+    auto f = make_shared<Function>(ResultVector{data, indices}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}},
+
+                                        {{0, 0, 0, 2, 0}, // img 0 chan 1
+                                         {0, 2, 3, 0, 1},
+                                         {2, 0, 1, 0, 2},
+                                         {3, 1, 0, 0, 0},
+                                         {2, 0, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1, 0}, // img 1 chan 0
+                                         {0, 0, 2, 0, 1},
+                                         {0, 0, 1, 2, 3},
+                                         {2, 0, 0, 3, 0},
+                                         {0, 0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0, 1}, // img 1 chan 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
+                  .get_vector());
+    auto result_data = backend->create_tensor(element::f32, shape_r);
+    auto result_indices = backend->create_tensor(element::i32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result_data, result_indices}, {a});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{3, 3, 2}, // img 0 chan 0
+                                                              {3, 3, 2},
+                                                              {2, 1, 2},
+                                                              {2, 2, 2}},
+
+                                                             {{3, 3, 3}, // img 0 chan 1
+                                                              {3, 3, 3},
+                                                              {3, 1, 2},
+                                                              {3, 1, 0}}},
+
+                                                            {{{2, 2, 2}, // img 1 chan 0
+                                                              {2, 2, 3},
+                                                              {2, 3, 3},
+                                                              {2, 3, 3}},
+
+                                                             {{2, 2, 1}, // img 1 chan 1
+                                                              {2, 2, 2},
+                                                              {2, 2, 2},
+                                                              {1, 1, 2}}}})
+                                       .get_vector()),
+                                  read_vector<float>(result_data),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+
+    EXPECT_TRUE(test::all_close((test::NDArray<int, 4>({{{{4, 3, 1}, // img 0 chan 0
+                                                          {1, 0, 0},
+                                                          {0, 4, 5},
+                                                          {0, 3, 2}},
+
+                                                         {{5, 4, 3}, // img 0 chan 1
+                                                          {2, 1, 0},
+                                                          {3, 1, 2},
+                                                          {0, 0, 0}}},
+
+                                                        {{{1, 0, 3}, // img 1 chan 0
+                                                          {2, 1, 5},
+                                                          {3, 5, 2},
+                                                          {0, 2, 1}},
+
+                                                         {{0, 3, 2}, // img 1 chan 1
+                                                          {1, 0, 3},
+                                                          {2, 1, 0},
+                                                          {0, 0, 5}}}})
+                                     .get_vector()),
+                                read_vector<int>(result_indices)));
+}
+
+TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
+{
+    Shape shape_a{2, 2, 5, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_i{2, 2, 4, 3};
+    auto indices = make_shared<op::Parameter>(element::i32, shape_i);
+    auto delta = make_shared<op::Parameter>(element::f32, shape_i);
+
+    auto max_pool_bprop = make_shared<op::MaxPoolWithIndicesBackprop>(
+        A, delta, indices, window_shape, window_movement_strides, padding_below, padding_above);
+
+    auto f = make_shared<Function>(max_pool_bprop, ParameterVector{A, delta, indices});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}},
+
+                                        {{0, 0, 0, 2, 0}, // img 0 chan 1
+                                         {0, 2, 3, 0, 1},
+                                         {2, 0, 1, 0, 2},
+                                         {3, 1, 0, 0, 0},
+                                         {2, 0, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1, 0}, // img 1 chan 0
+                                         {0, 0, 2, 0, 1},
+                                         {0, 0, 1, 2, 3},
+                                         {2, 0, 0, 3, 0},
+                                         {0, 0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0, 1}, // img 1 chan 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
+                  .get_vector());
+
+    auto i = backend->create_tensor(element::i32, shape_i);
+    copy_data(i,
+              test::NDArray<int, 4>({{{{4, 3, 1}, // img 0 chan 0
+                                       {1, 0, 0},
+                                       {0, 4, 5},
+                                       {0, 3, 2}},
+
+                                      {{5, 4, 3}, // img 0 chan 1
+                                       {2, 1, 0},
+                                       {3, 1, 2},
+                                       {0, 0, 0}}},
+
+                                     {{{1, 0, 3}, // img 1 chan 0
+                                       {2, 1, 5},
+                                       {3, 5, 2},
+                                       {0, 2, 1}},
+
+                                      {{0, 3, 2}, // img 1 chan 1
+                                       {1, 0, 3},
+                                       {2, 1, 0},
+                                       {0, 0, 5}}}})
+                  .get_vector());
+
+    auto d = backend->create_tensor(element::f32, shape_i);
+    copy_data(d,
+              test::NDArray<float, 4>({{{{0.3, 0.3, 0.2}, // img 0 chan 0
+                                         {0.3, 0.3, 0.2},
+                                         {0.2, 0.1, 0.2},
+                                         {0.2, 0.2, 0.2}},
+
+                                        {{0.3, 0.3, 0.3}, // img 0 chan 1
+                                         {0.3, 0.3, 0.3},
+                                         {0.3, 0.1, 0.2},
+                                         {0.3, 0.1, 0.4}}},
+
+                                       {{{0.2, 0.2, 0.2}, // img 1 chan 0
+                                         {0.2, 0.2, 0.3},
+                                         {0.2, 0.3, 0.3},
+                                         {0.2, 0.3, 0.3}},
+
+                                        {{0.2, 0.2, 0.1}, // img 1 chan 1
+                                         {0.2, 0.2, 0.2},
+                                         {0.2, 0.2, 0.2},
+                                         {0.1, 0.1, 0.2}}}})
+                  .get_vector());
+
+    auto result = backend->create_tensor(element::f32, shape_a);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, d, i});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{0, 0, 0, 0.2, 0}, // img 0 chan 0
+                                                              {0, 1.2, 0.2, 0, 0},
+                                                              {0.2, 0, 0, 0, 0},
+                                                              {0.2, 0, 0.1, 0, 0.4},
+                                                              {0, 0.2, 0, 0, 0}},
+
+                                                             {{0, 0, 0, 0, 0}, // img 0 chan 1
+                                                              {0, 0, 1.8, 0, 0},
+                                                              {0, 0, 0.1, 0, 0.2},
+                                                              {0.6, 0.1, 0.4, 0, 0},
+                                                              {0, 0, 0, 0, 0}}},
+
+                                                            {{{0, 0.4, 0, 0, 0}, // img 1 chan 0
+                                                              {0, 0, 0.6, 0, 0},
+                                                              {0, 0, 0, 0, 0.6},
+                                                              {0.4, 0, 0, 0.9, 0},
+                                                              {0, 0, 0, 0, 0}},
+
+                                                             {{0.2, 0, 0, 0, 0.1}, // img 1 chan 1
+                                                              {0, 0.6, 0, 0, 0},
+                                                              {0, 0, 0.8, 0, 0},
+                                                              {0.1, 0.1, 0, 0, 0},
+                                                              {0, 0, 0, 0, 0.2}}}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, max_pool_bprop_2d_2channel_2image)
+{
+    Shape shape_a{2, 2, 5, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_i{2, 2, 4, 3};
+    auto delta = make_shared<op::Parameter>(element::f32, shape_i);
+
+    auto max_pool_bprop = make_shared<op::MaxPoolBackprop>(
+        A, delta, window_shape, window_movement_strides, padding_below, padding_above);
+
+    auto f = make_shared<Function>(max_pool_bprop, ParameterVector{A, delta});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a,
+              test::NDArray<float, 4>({{{{0, 1, 0, 2, 1}, // img 0 chan 0
+                                         {0, 3, 2, 0, 0},
+                                         {2, 0, 0, 0, 1},
+                                         {2, 0, 1, 1, 2},
+                                         {0, 2, 1, 0, 0}},
+
+                                        {{0, 0, 0, 2, 0}, // img 0 chan 1
+                                         {0, 2, 3, 0, 1},
+                                         {2, 0, 1, 0, 2},
+                                         {3, 1, 0, 0, 0},
+                                         {2, 0, 0, 0, 0}}},
+
+                                       {{{0, 2, 1, 1, 0}, // img 1 chan 0
+                                         {0, 0, 2, 0, 1},
+                                         {0, 0, 1, 2, 3},
+                                         {2, 0, 0, 3, 0},
+                                         {0, 0, 0, 0, 0}},
+
+                                        {{2, 1, 0, 0, 1}, // img 1 chan 1
+                                         {0, 2, 0, 0, 0},
+                                         {1, 1, 2, 0, 2},
+                                         {1, 1, 1, 0, 1},
+                                         {1, 0, 0, 0, 2}}}})
+                  .get_vector());
+
+    auto d = backend->create_tensor(element::f32, shape_i);
+    copy_data(d,
+              test::NDArray<float, 4>({{{{0.3, 0.3, 0.2}, // img 0 chan 0
+                                         {0.3, 0.3, 0.2},
+                                         {0.2, 0.1, 0.2},
+                                         {0.2, 0.2, 0.2}},
+
+                                        {{0.3, 0.3, 0.3}, // img 0 chan 1
+                                         {0.3, 0.3, 0.3},
+                                         {0.3, 0.1, 0.2},
+                                         {0.3, 0.1, 0.4}}},
+
+                                       {{{0.2, 0.2, 0.2}, // img 1 chan 0
+                                         {0.2, 0.2, 0.3},
+                                         {0.2, 0.3, 0.3},
+                                         {0.2, 0.3, 0.3}},
+
+                                        {{0.2, 0.2, 0.1}, // img 1 chan 1
+                                         {0.2, 0.2, 0.2},
+                                         {0.2, 0.2, 0.2},
+                                         {0.1, 0.1, 0.2}}}})
+                  .get_vector());
+
+    auto result = backend->create_tensor(element::f32, shape_a);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, d});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 4>({{{{0, 0, 0, 0.2, 0}, // img 0 chan 0
+                                                              {0, 1.2, 0.2, 0, 0},
+                                                              {0.2, 0, 0, 0, 0},
+                                                              {0.2, 0, 0.1, 0, 0.4},
+                                                              {0, 0.2, 0, 0, 0}},
+
+                                                             {{0, 0, 0, 0, 0}, // img 0 chan 1
+                                                              {0, 0, 1.8, 0, 0},
+                                                              {0, 0, 0.1, 0, 0.2},
+                                                              {0.6, 0.1, 0.4, 0, 0},
+                                                              {0, 0, 0, 0, 0}}},
+
+                                                            {{{0, 0.4, 0, 0, 0}, // img 1 chan 0
+                                                              {0, 0, 0.6, 0, 0},
+                                                              {0, 0, 0, 0, 0.6},
+                                                              {0.4, 0, 0, 0.9, 0},
+                                                              {0, 0, 0, 0, 0}},
+
+                                                             {{0.2, 0, 0, 0, 0.1}, // img 1 chan 1
+                                                              {0, 0.6, 0, 0, 0},
+                                                              {0, 0, 0.8, 0, 0},
+                                                              {0.1, 0.1, 0, 0, 0},
+                                                              {0, 0, 0, 0, 0.2}}}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, avg_pool_bprop_2d_2channel_2image)
+{
+    Shape shape_a{2, 2, 3, 3};
+    Shape window_shape{2, 2};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    Shape shape_d{2, 2, 2, 2};
+    auto delta = make_shared<op::Parameter>(element::f32, shape_d);
+
+    auto avg_pool_bprop = make_shared<op::AvgPoolBackprop>(
+        shape_a, delta, window_shape, window_movement_strides, padding_below, padding_above, false);
+
+    auto f = make_shared<Function>(avg_pool_bprop, ParameterVector{delta});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto d = backend->create_tensor(element::f32, shape_d);
+    copy_data(d,
+              test::NDArray<float, 4>({{{{0.3, 0.3}, // img 0 chan 0
+                                         {0.3, 0.3}},
+
+                                        {{0.2, 0.2}, // img 0 chan 1
+                                         {0.2, 0.2}}},
+
+                                       {{{0.1, 0.1}, // img 1 chan 0
+                                         {0.1, 0.1}},
+
+                                        {{0.4, 0.4}, // img 1 chan 1
+                                         {0.4, 0.4}}}})
+                  .get_vector());
+
+    auto result = backend->create_tensor(element::f32, shape_a);
+
+    float denom = 2 * 2;
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {d});
+    EXPECT_TRUE(test::all_close_f(
+        (test::NDArray<float, 4>({{{{0.3f / denom, 0.6f / denom, 0.3f / denom}, // img 0 chan 0
+                                    {0.6f / denom, 1.2f / denom, 0.6f / denom},
+                                    {0.3f / denom, 0.6f / denom, 0.3f / denom}},
+
+                                   {{0.2f / denom, 0.4f / denom, 0.2f / denom}, // img 0 chan 1
+                                    {0.4f / denom, 0.8f / denom, 0.4f / denom},
+                                    {0.2f / denom, 0.4f / denom, 0.2f / denom}}},
+
+                                  {{{0.1f / denom, 0.2f / denom, 0.1f / denom}, // img 1 chan 0
+                                    {0.2f / denom, 0.4f / denom, 0.2f / denom},
+                                    {0.1f / denom, 0.2f / denom, 0.1f / denom}},
+
+                                   {{0.4f / denom, 0.8f / denom, 0.4f / denom}, // img 1 chan 1
+                                    {0.8f / denom, 1.6f / denom, 0.8f / denom},
+                                    {0.4f / denom, 0.8f / denom, 0.4f / denom}}}})
+             .get_vector()),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }

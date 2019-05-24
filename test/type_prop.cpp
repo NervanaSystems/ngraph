@@ -12442,6 +12442,39 @@ TEST(type_prop, transpose_arg_static_input_order_static_ok)
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
 }
 
+TEST(type_prop, transpose_arg_static_input_order_constant_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = op::Constant::create(element::i64, Shape{4}, vector<int64_t>{2, 1, 0, 3});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{6, 4, 2, 8}));
+}
+
+TEST(type_prop, transpose_arg_static_input_order_constant_invalid_perm)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = op::Constant::create(element::i64, Shape{4}, vector<int64_t>{2, 9, 0, 3});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect invalid permutation";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Permutation AxisVector{2, 9, 0, 3} is not valid for input shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_static_ok)
 {
     auto arg = make_shared<op::Parameter>(
@@ -14545,4 +14578,41 @@ TEST(type_prop, squared_difference)
     const auto clamp = make_shared<op::SquaredDifference>(x1, x3);
     EXPECT_EQ(clamp->get_element_type(), element::f64);
     EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
+}
+
+TEST(type_prop, split)
+{
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 6});
+
+    try
+    {
+        const std::vector<size_t> splits = {1, 6}; // should sum up to 6
+        const auto split = make_shared<op::Split>(data, 1, splits);
+        FAIL() << "Split node was created with incorrect data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("has to be equal to the sum of splits passed to the op: 7"));
+    }
+
+    try
+    {
+        const std::vector<size_t> splits = {4, 2};
+        const auto split = make_shared<op::Split>(data, -5, splits); //invalid axis
+        FAIL() << "Split node was created with incorrect data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("The 'axis' parameter for Split has to point to one of "
+                                         "the input tensor's shape dimensions."));
+    }
+
+    const auto split = make_shared<op::Split>(data, 1, 2);
+    EXPECT_EQ(split->outputs().size(), 2);
+    EXPECT_EQ(split->output(0).get_shape(), (Shape{2, 3}));
+    EXPECT_EQ(split->output(1).get_shape(), (Shape{2, 3}));
+    EXPECT_EQ(split->output(0).get_element_type(), element::i32);
+    EXPECT_EQ(split->output(1).get_element_type(), element::i32);
 }
