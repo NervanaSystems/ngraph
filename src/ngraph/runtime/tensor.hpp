@@ -50,23 +50,27 @@ namespace ngraph
 
             /// \brief Get tensor shape
             /// \return const reference to a Shape
-            const ngraph::Shape& get_shape() const;
+            virtual const ngraph::Shape& get_shape() const;
+
+            /// \brief Get tensor partial shape
+            /// \return const reference to a PartialShape
+            const ngraph::PartialShape& get_partial_shape() const;
 
             /// \brief Get tensor strides
             /// \return Strides
-            ngraph::Strides get_strides() const;
+            virtual ngraph::Strides get_strides() const;
 
             /// \brief Get tensor element type
             /// \return element::Type
-            const element::Type& get_element_type() const;
+            virtual const element::Type& get_element_type() const;
 
             /// \brief Get number of elements in the tensor
             /// \return number of elements in the tensor
-            size_t get_element_count() const;
+            virtual size_t get_element_count() const;
 
             /// \brief Get the size in bytes of the tensor
             /// \return number of bytes in tensor's allocation
-            size_t get_size_in_bytes() const;
+            virtual size_t get_size_in_bytes() const;
 
             /// \brief Get tensor's unique name
             /// \return tensor's name

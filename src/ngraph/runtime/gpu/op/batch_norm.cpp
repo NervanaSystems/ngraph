@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/gpu/op/batch_norm.hpp"
+#include "ngraph/validation_util.hpp"
 
 ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
     double eps,
@@ -23,13 +24,32 @@ ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(
     std::shared_ptr<ngraph::Node> input)
     : ngraph::op::BatchNormTraining(eps, gamma, beta, input)
 {
-    auto output_index = get_output_size();
-    set_output_size(output_index + 2);
-    Shape channel_shape{input->get_shape()[1]};
+    constructor_validate_and_infer_types();
+}
+
+void ngraph::op::gpu::BatchNormTrainingWithStats::validate_and_infer_types()
+{
+    element::Type result_et;
+    PartialShape result_batch_shape;
+    PartialShape result_channel_shape;
+
+    set_output_size(5);
+    std::tie(result_et, result_batch_shape, result_channel_shape) =
+        infer_batch_norm_forward(this,
+                                 get_input_element_type(INPUT_DATA),
+                                 get_input_element_type(INPUT_GAMMA),
+                                 get_input_element_type(INPUT_BETA),
+                                 get_input_partial_shape(INPUT_DATA),
+                                 get_input_partial_shape(INPUT_GAMMA),
+                                 get_input_partial_shape(INPUT_BETA));
+
+    set_output_type(0, result_et, result_batch_shape);
+    set_output_type(1, result_et, result_channel_shape);
+    set_output_type(2, result_et, result_channel_shape);
     // saved batch mean
-    set_output_type(output_index++, input->get_element_type(), channel_shape);
+    set_output_type(3, result_et, result_channel_shape);
     // saved batch inverse variance
-    set_output_type(output_index++, input->get_element_type(), channel_shape);
+    set_output_type(4, result_et, result_channel_shape);
 }
 
 std::shared_ptr<ngraph::Node> ngraph::op::gpu::BatchNormTrainingWithStats::copy_with_new_args(

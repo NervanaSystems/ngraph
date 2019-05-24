@@ -113,17 +113,6 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
-                /// Returns the index of the mkldnn primitive previously created for \p node.
-                size_t get_primitive_index(const Node* node) const
-                {
-                    auto it = m_node_primitive_idx_map.find(node);
-                    NGRAPH_CHECK(it != m_node_primitive_idx_map.end(),
-                                 "Primitive not found for node ",
-                                 node->description());
-
-                    return it->second;
-                }
-
                 // Return the tuple including the string to create mkldnn primitive, the deps and the index in CODEGEN
                 const std::tuple<std::string, std::vector<size_t>, size_t>&
                     get_primitive_build_tuple(const Node* node) const
@@ -263,7 +252,7 @@ namespace ngraph
                 std::unordered_map<std::string, std::pair<std::size_t, std::size_t>>
                     m_variable_output_index_offset_map;
 
-                std::unordered_map<std::string, ngraph::CPUTensorRole> m_tensor_roles;
+                std::unordered_map<std::string, ngraph::TensorRole> m_tensor_roles;
 
                 LayoutDescriptorPtrs parameter_layout_descriptors;
                 LayoutDescriptorPtrs result_layout_descriptors;
@@ -286,12 +275,12 @@ namespace ngraph
                 std::unordered_map<std::string, bool> tensor_stale;
                 // Each tensor is put into one buffer set.
                 // All the tensors in the same buffer set share the same memory buffer.
-                // bufferID_to_tensorSets maps bufferID to the pair of CPUTensorRole and buffer set.
-                // CPUTensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE,
+                // bufferID_to_tensorSets maps bufferID to the pair of TensorRole and buffer set.
+                // TensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE,
                 // which tells from where the memory buffer comes.
                 std::unordered_map<
                     size_t,
-                    std::pair<ngraph::CPUTensorRole, std::unordered_set<descriptor::Tensor*>>>
+                    std::pair<ngraph::TensorRole, std::unordered_set<descriptor::Tensor*>>>
                     bufferID_to_tensorSets;
                 // tensor_to_bufferID maps tensor to the ID of the buffer set it belongs to.
                 std::unordered_map<descriptor::Tensor*, size_t> tensor_to_bufferID;
@@ -327,8 +316,6 @@ namespace ngraph
                 std::unordered_map<std::string, size_t> subgraph_param_indices;
 #endif
 
-                /// Map each node with mkldnn implementation to its mkldnn primitive index.
-                std::unordered_map<const Node*, size_t> m_node_primitive_idx_map;
                 /// Map each node with mkldnn implementation to its mkldnn primitive creating string, deps, and mkldnn primitive index.
                 std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>
                     m_node_primitive_string_deps_index_map;

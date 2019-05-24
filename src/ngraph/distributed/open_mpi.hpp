@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cstdio>
 #include <iostream>
 
 #include "ngraph/distributed.hpp"
@@ -37,20 +38,21 @@ namespace ngraph
             {
                 int flag = 0;
                 MPI_Initialized(&flag);
-                if (!flag)
+                if (!flag && !m_initialized_mpi)
                 {
                     MPI_Init(NULL, NULL);
+                    m_initialized_mpi = true;
                 }
             }
 
             ~OpenMPIDistributedInterface() override
             {
-                int flag = 0;
-                MPI_Initialized(&flag);
-
-                if (flag)
+                int is_mpi_finalized = 0;
+                MPI_Finalized(&is_mpi_finalized);
+                if (!is_mpi_finalized && m_initialized_mpi)
                 {
                     MPI_Finalize();
+                    m_initialized_mpi = false;
                 }
             }
 
@@ -67,6 +69,12 @@ namespace ngraph
                 int rank;
                 MPI_Comm_rank(MPI_COMM_WORLD, &rank);
                 return rank;
+            }
+
+            void log_print(const std::string& timestamp, const std::vector<char>& buf) override
+            {
+                std::printf(
+                    "%s [OpenMPI RANK: %d]: %s\n", timestamp.c_str(), get_rank(), buf.data());
             }
 
             void
@@ -108,6 +116,7 @@ namespace ngraph
 
         protected:
             std::string m_name;
+            bool m_initialized_mpi = false;
         };
     }
 }

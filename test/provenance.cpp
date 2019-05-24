@@ -217,21 +217,26 @@ TEST(provenance, provenance)
     //         |   |
     //        C{tag_c}
     //
+    //
     // Replacement:
     //
-    //        D{}
-    //         |
-    //   C -> E{}
+    //   A{tag_a}  B{tag_b}
+    //         |      |
+    //       E{tag_e} |
+    //           |    |
+    //     C -> D{tag_d}
+    //
     //
     // After:
     //
-    //   D{tag_a,tag_b,tag_c}
-    //   |
-    //   E{tag_a,tag_b,tag_c}
+    //   A{tag_a}  B{tag_b}
+    //         |      |
+    //       E{tag_e} |
+    //           |    |
+    //          D{tag_c, tag_d}
     //
     // Comment:
-    //   * E is the replacement root, and its insertion kills A, B, and C.
-    //   * D is post-dominated by E, so the tags inherited by E should also be taken on by D.
+    //   * D is the replacement root replacing C and creating a new argument node E
     //
     {
         auto x = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
@@ -246,11 +251,12 @@ TEST(provenance, provenance)
 
         auto f = make_shared<Function>(c, ParameterVector{x, y});
 
-        auto d = make_zero(element::i32, Shape{2, 3, 4});
-        auto e = make_shared<op::Negative>(d);
-        replace_node(c, e);
+        auto e = make_shared<op::Subtract>(a, x);
+        auto d = make_shared<op::Subtract>(e, b);
+        d->add_provenance_tag("tag_d");
 
-        EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));
-        EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_a", "tag_b", "tag_c"}));
+        replace_node(c, d);
+
+        EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
     }
 }

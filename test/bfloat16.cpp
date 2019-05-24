@@ -225,3 +225,36 @@ TEST(benchmark, bfloat16)
                     << "ms";
     }
 }
+
+TEST(bfloat16, assigns)
+{
+    bfloat16 bf16;
+    bf16 = 2.0;
+    EXPECT_EQ(bf16, float16(2.0));
+
+    std::vector<float> f32vec{1.0, 2.0, 4.0};
+    std::vector<bfloat16> bf16vec;
+    std::copy(f32vec.begin(), f32vec.end(), std::back_inserter(bf16vec));
+    for (int i = 0; i < f32vec.size(); ++i)
+    {
+        EXPECT_EQ(f32vec.at(i), bf16vec.at(i));
+    }
+
+    f32vec = {-1.0, -2.0, -3.0};
+    for (int i = 0; i < f32vec.size(); ++i)
+    {
+        bf16vec[i] = f32vec[i];
+    }
+    for (int i = 0; i < f32vec.size(); ++i)
+    {
+        EXPECT_EQ(f32vec.at(i), bf16vec.at(i));
+    }
+
+    float f32arr[] = {1.0, 2.0, 4.0};
+    bfloat16 bf16arr[sizeof(f32arr)];
+    for (int i = 0; i < sizeof(f32arr) / sizeof(f32arr[0]); ++i)
+    {
+        bf16arr[i] = f32arr[i];
+        EXPECT_EQ(f32arr[i], bf16arr[i]);
+    }
+}

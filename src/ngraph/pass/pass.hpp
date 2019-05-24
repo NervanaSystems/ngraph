@@ -35,7 +35,7 @@ namespace ngraph
         class NodePass;
         class CallGraphPass;
         class Manager;
-        enum FusionType
+        enum class FusionType : uint32_t
         {
             //`DIFFERENTIABLE_FUSIONS` produce ops that support autodiff
             // i.e. implement `generate_adjoints`
@@ -46,13 +46,27 @@ namespace ngraph
             FOP_FUSIONS = 0x4,
             ALL_FUSIONS = 0xFFFFFFFF
         };
+        typedef EnumMask<FusionType> FusionTypeMask;
+
+        // These constants are for backward compatibility only, will deprecate soon.
+        NGRAPH_DEPRECATED("use FusionType enum class instead")
+        constexpr FusionType DIFFERENTIABLE_FUSIONS = FusionType::DIFFERENTIABLE_FUSIONS;
+        NGRAPH_DEPRECATED("use FusionType enum class instead")
+        constexpr FusionType REGULAR_FUSIONS = FusionType::REGULAR_FUSIONS;
+        NGRAPH_DEPRECATED("use FusionType enum class instead")
+        constexpr FusionType FOP_FUSIONS = FusionType::FOP_FUSIONS;
+        NGRAPH_DEPRECATED("use FusionType enum class instead")
+        constexpr FusionType ALL_FUSIONS = FusionType::ALL_FUSIONS;
+
         enum class PassProperty : uint32_t
         {
-            REGULAR_FUSIONS = 1 << 1,
-            REQUIRE_STATIC_SHAPE = 1 << 2,
-            CHANGE_FUNCTION_STATE = 1 << 3
+            // Pass requires node shapes to be static
+            REQUIRE_STATIC_SHAPE = 0x1,
+            // Pass transformation will change the function's dynamic state
+            CHANGE_DYNAMIC_STATE = 1 << 1
         };
         typedef EnumMask<PassProperty> PassPropertyMask;
+        constexpr PassPropertyMask all_pass_property_off;
     }
 }
 

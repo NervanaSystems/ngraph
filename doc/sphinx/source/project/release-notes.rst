@@ -3,26 +3,42 @@
 Release Notes
 #############
 
-The latest |version| download below
+|version|
 
-* `Format .zip`_ 
-* `Format tar.gz`_ 
+For downloads formatted as ``.zip`` and ``tar.gz``, see https://github.com/NervanaSystems/ngraph/releases; 
 
-See also: https://github.com/NervanaSystems/ngraph/releases for previous versions. 
-
-
-CHANGELOG |release|
-===================
-
-+ Add graph visualization tools to doc
-+ Update doxygen to be friendlier to frontends
+.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
 
 
 Changelog 
 =========
 
-nGraph v0.18.1
---------------
+0.19
+----
+
+**Download** `0.19.0-rc.2`_
+
++ More dynamic shape preparation
++ Distributed interface factored out
++ fp16 and bfloat16 types
++ codegen execution parameterized by context
++ NodeMap, NodeVector, ParameterVector, ResultVector now vectors
+  
+  - ``node_vector.hpp`` replaced by ``node.hpp``
+  - ``op/parameter_vector.hpp`` replaced by ``op/parameter.hpp``
+  - ``op/result_vector.hpp`` replaced by ``op/result.hpp``
+
++ Additional ONNX ops
++ Add graph visualization tools to doc
++ Update doxygen to be friendlier to frontends
+
+
+
+0.18
+----
+
+**Download** `0.18.1`_
+
 
 + Python formatting issue
 + mkl-dnn work-around
@@ -33,22 +49,25 @@ nGraph v0.18.1
 + More fusions
 
 
-nGraph v0.17.0-rc.0
--------------------
+0.17
+----
+
+**Download** `0.17.0-rc.1`_
 
 + Allow negative padding in more places
 + Add code generation for some quantized ops
 + Preliminary dynamic shape support
 + initial distributed ops
-
-Recent API Changes
-~~~~~~~~~~~~~~~~~~
-
 + Pad op takes CoordinateDiff instead of Shape pad values to allow for negative padding.
 
 
-nGraph v0.16.0-rc.3
--------------------
+0.16
+----
+
+* **Download**: `0.16.0-rc.3`_
+* **Download** `0.16.0-rc.2`_
+* **Download** `0.16.0-rc.1`_
+
 
 + NodeInput and NodeOutput classes prepare for simplifications of Node
 + Test improvements
@@ -58,6 +77,9 @@ nGraph v0.16.0-rc.3
 + Concat optimization
 + Doc updates
 
-
-.. _Format .zip: https://github.com/NervanaSystems/ngraph/archive/v0.19.0-rc.0.zip
-.. _Format tar.gz: https://github.com/NervanaSystems/ngraph/archive/v0.19.0-rc.0.tar.gz
+.. _0.19.0-rc.2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.19.0-rc.2_
+.. _0.18.1: https://github.com/NervanaSystems/ngraph/releases/tag/v0.18.1_
+.. _0.17.0-rc.1: `https://github.com/NervanaSystems/ngraph/releases/tag/v0.17.0-rc.1
+.. _0.16.0-rc.3: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.3
+.. _0.16.0-rc.2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.2
+.. _0.16.0-rc.1: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.1

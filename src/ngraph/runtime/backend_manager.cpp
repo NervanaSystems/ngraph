@@ -38,13 +38,13 @@ using namespace ngraph;
 #define DLSYM(a, b) dlsym(a, b)
 #endif
 
-unordered_map<string, runtime::new_backend_t>& runtime::BackendManager::get_registry()
+unordered_map<string, runtime::BackendConstructor*>& runtime::BackendManager::get_registry()
 {
-    static unordered_map<string, new_backend_t> s_registered_backend;
+    static unordered_map<string, BackendConstructor*> s_registered_backend;
     return s_registered_backend;
 }
 
-void runtime::BackendManager::register_backend(const string& name, new_backend_t new_backend)
+void runtime::BackendManager::register_backend(const string& name, BackendConstructor* new_backend)
 {
     get_registry()[name] = new_backend;
 }
@@ -66,9 +66,9 @@ vector<string> runtime::BackendManager::get_registered_backends()
     return rc;
 }
 
-unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
+shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
 {
-    runtime::Backend* backend = nullptr;
+    shared_ptr<runtime::Backend> backend;
     string type = config;
 
     // strip off attributes, IE:CPU becomes IE
@@ -82,8 +82,8 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     auto it = registry.find(type);
     if (it != registry.end())
     {
-        new_backend_t new_backend = it->second;
-        backend = new_backend(config.c_str());
+        BackendConstructor* new_backend = it->second;
+        backend = new_backend->create(config);
     }
     else
     {
@@ -97,26 +97,32 @@ unique_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 #endif
             throw runtime_error(ss.str());
         }
-        function<const char*()> get_ngraph_version_string =
-            reinterpret_cast<const char* (*)()>(DLSYM(handle, "get_ngraph_version_string"));
-        if (!get_ngraph_version_string)
-        {
-            CLOSE_LIBRARY(handle);
-            throw runtime_error("Backend '" + type +
-                                "' does not implement get_ngraph_version_string");
-        }
 
-        function<runtime::Backend*(const char*)> new_backend =
-            reinterpret_cast<runtime::Backend* (*)(const char*)>(DLSYM(handle, "new_backend"));
-        if (!new_backend)
+#ifndef _WIN32
+        dlerror(); // Clear any pending errors
+#endif
+        function<runtime::BackendConstructor*()> get_backend_constructor_pointer =
+            reinterpret_cast<runtime::BackendConstructor* (*)()>(
+                DLSYM(handle, "get_backend_constructor_pointer"));
+        if (get_backend_constructor_pointer)
         {
-            CLOSE_LIBRARY(handle);
-            throw runtime_error("Backend '" + type + "' does not implement new_backend");
+            backend = get_backend_constructor_pointer()->create(config);
         }
-
-        backend = new_backend(config.c_str());
+        else
+        {
+            string error;
+#ifndef _WIN32
+            const char* err = dlerror();
+            error = (err ? err : "");
+#endif
+            CLOSE_LIBRARY(handle);
+            throw runtime_error(
+                "Failed to find symbol 'get_backend_constructor_pointer' in backend "
+                "library.\nError='" +
+                error + "'");
+        }
     }
-    return unique_ptr<runtime::Backend>(backend);
+    return backend;
 }
 
 // This doodad finds the full path of the containing shared library
@@ -156,12 +162,23 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     string library_name = lib_prefix + to_lower(type) + "_backend" + lib_suffix;
     string my_directory = file_util::get_directory(find_my_file());
     string library_path = file_util::path_join(my_directory, library_name);
+    string error;
 #ifdef _WIN32
     SetDllDirectory((LPCSTR)my_directory.c_str());
     handle = LoadLibrary(library_path.c_str());
 #else
+    dlerror(); // Clear any pending errors
     handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+    const char* err = dlerror();
+    error = (err ? err : "");
 #endif
+    if (!handle)
+    {
+        stringstream ss;
+        ss << "Unable to find backend '" << type << "' as file '" << library_path << "'";
+        ss << "\nOpen error message '" << error << "'";
+        throw runtime_error(ss.str());
+    }
     return handle;
 }
 

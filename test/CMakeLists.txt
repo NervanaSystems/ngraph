@@ -28,6 +28,7 @@ endif()
 
 set(SRC
     algebraic_simplification.cpp
+    aligned_buffer.cpp
     all_close_f.cpp
     assertion.cpp
     bfloat16.cpp
@@ -41,6 +42,7 @@ set(SRC
     copy.cpp
     cpio.cpp
     cse.cpp
+    dyn_elimination.cpp
     element_type.cpp
     file_util.cpp
     float16.cpp
@@ -57,13 +59,12 @@ set(SRC
     pass_manager.cpp
     pass_memory_layout.cpp
     pass_shape_relevance.cpp
-    pass_shape_specialization.cpp
     pattern.cpp
     provenance.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
     shape.cpp
-    specialize_shapes.cpp
+    specialize_function.cpp
     tensor.cpp
     type_prop.cpp
     type_prop_layers.cpp
@@ -133,7 +134,9 @@ add_subdirectory(util)
 # backend specific test files must meet the following requirements:
 # 1) The must be named <name>.in.cpp
 # 2) They must be in the test directory
-# 3) add the line `static string s_manifest = "${MANIFEST}";` to your cpp file
+# 3) Include "util/test_control.hpp" in your cpp file
+# 4) add the line `static string s_manifest = "${MANIFEST}";` to your cpp file
+# 5) Use the `NGRAPH_TEST` macro in place of `TEST`.
 # All such files are configured via cmake which replaces all instances of cmake variables
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
@@ -151,12 +154,14 @@ set(MULTI_TEST_SRC
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reshape.in.cpp
+    backend_scatter.in.cpp
     backend_sum.in.cpp
     backend_topk.in.cpp
     backend_arg_reduce.in.cpp
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
+    dynamic.in.cpp
 )
 
 if(NGRAPH_DISTRIBUTED_ENABLE)

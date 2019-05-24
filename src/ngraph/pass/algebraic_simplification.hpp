@@ -33,9 +33,7 @@ public:
     AlgebraicSimplification()
         : FunctionPass()
     {
-        PassPropertyMask property{PassProperty::REGULAR_FUSIONS,
-                                  PassProperty::REQUIRE_STATIC_SHAPE};
-        set_property(property, true);
+        set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
     }
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };

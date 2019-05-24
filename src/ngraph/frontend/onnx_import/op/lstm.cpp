@@ -31,6 +31,7 @@
 #include "lstm.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/make_constant.hpp"
+#include "ngraph/builder/split.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/concat.hpp"
@@ -258,6 +259,12 @@ namespace ngraph
                         , m_activations{to_lower_case(
                               node.get_attribute_value<std::vector<std::string>>(
                                   "activations", {"sigmoid", "tanh", "tanh"}))}
+                        // Default values for activation functions are same as for corresponding
+                        // ONNX operator.
+                        , m_activation_alpha{node.get_attribute_value<std::vector<float>>(
+                              "activation_alpha", std::vector<float>{})}
+                        , m_activation_beta{node.get_attribute_value<std::vector<float>>(
+                              "activation_beta", std::vector<float>{})}
                         , m_input_forget{static_cast<bool>(
                               node.get_attribute_value<std::int64_t>("input_forget", 0))}
                     {
@@ -276,6 +283,8 @@ namespace ngraph
                     std::int64_t m_hidden_size;
                     float m_clip_threshold;
                     std::vector<std::string> m_activations;
+                    std::vector<float> m_activation_alpha;
+                    std::vector<float> m_activation_beta;
                     bool m_input_forget;
                 };
 
@@ -348,13 +357,13 @@ namespace ngraph
                         //           step.
                         // Ht_R    - Hidden state multiplied by weights tensor at current time step.
 
-                        NodeVector p_iof = reshape::split(m_P, 3);
+                        NodeVector p_iof = ngraph::builder::split(m_P, 3);
                         const auto& p_i = p_iof.at(0);
                         const auto& p_o = p_iof.at(1);
                         const auto& p_f = p_iof.at(2);
                         NodeVector h_list;
 
-                        NodeVector b_W_R = reshape::split(m_B, 2);
+                        NodeVector b_W_R = ngraph::builder::split(m_B, 2);
                         std::shared_ptr<ngraph::Node> bias = b_W_R.at(0) + b_W_R.at(1);
                         std::shared_ptr<ngraph::Node> H_t = m_initial_h;
                         std::shared_ptr<ngraph::Node> C_t = m_initial_c;
@@ -367,7 +376,7 @@ namespace ngraph
                         NodeVector in_seqs{};
                         if (m_X->get_shape().at(0) != 1)
                         {
-                            in_seqs = reshape::split(m_X, m_X->get_shape().at(0));
+                            in_seqs = ngraph::builder::split(m_X, m_X->get_shape().at(0));
                         }
                         else
                         {
@@ -395,7 +404,7 @@ namespace ngraph
                             // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
                             auto gates = add(Xt_W, add(Ht_R, bias));
 
-                            NodeVector split_gates = reshape::split(gates, 4, -1);
+                            NodeVector split_gates = ngraph::builder::split(gates, 4, -1);
                             auto i = split_gates.at(0);
                             auto o = split_gates.at(1);
                             auto f = split_gates.at(2);
@@ -534,6 +543,25 @@ namespace ngraph
                     float m_clip_threshold;
                 };
 
+                rnn::ActivationFunction get_activation_function(const LSTMAttributes& attributes,
+                                                                std::size_t idx)
+                {
+                    rnn::ActivationFunction afunc =
+                        rnn::get_activation_func_by_name(attributes.m_activations.at(idx));
+
+                    // Set activation functions parameters (if any)
+                    if (attributes.m_activation_alpha.size() > idx)
+                    {
+                        afunc.set_alpha(attributes.m_activation_alpha.at(idx));
+                    }
+                    if (attributes.m_activation_beta.size() > idx)
+                    {
+                        afunc.set_beta(attributes.m_activation_beta.at(idx));
+                    }
+
+                    return afunc;
+                }
+
             } // anonymous namespace
 
             namespace set_1
@@ -543,12 +571,13 @@ namespace ngraph
                     LSTMNgInputMap input_map{node};
                     LSTMAttributes attributes{node};
 
-                    rnn::ActivationFunction activation_f =
-                        rnn::get_activation_func_by_name(attributes.m_activations.at(0));
-                    rnn::ActivationFunction activation_g =
-                        rnn::get_activation_func_by_name(attributes.m_activations.at(1));
-                    rnn::ActivationFunction activation_h =
-                        rnn::get_activation_func_by_name(attributes.m_activations.at(2));
+                    // Get activation functions.
+                    const rnn::ActivationFunction& activation_f =
+                        get_activation_function(attributes, 0);
+                    const rnn::ActivationFunction& activation_g =
+                        get_activation_function(attributes, 1);
+                    const rnn::ActivationFunction& activation_h =
+                        get_activation_function(attributes, 2);
 
                     NodeVector results;
 
@@ -574,12 +603,18 @@ namespace ngraph
                     if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
                     {
                         // In bidirectional mode weights are stacked together, so we must split them.
-                        NodeVector W{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_W), 2)};
-                        NodeVector R{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_R), 2)};
-                        NodeVector B{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_B), 2)};
-                        NodeVector P{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_P), 2)};
-                        NodeVector H{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_H), 2)};
-                        NodeVector C{reshape::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_C), 2)};
+                        NodeVector W{
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_W), 2)};
+                        NodeVector R{
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_R), 2)};
+                        NodeVector B{
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_B), 2)};
+                        NodeVector P{
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_P), 2)};
+                        NodeVector H{
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_H), 2)};
+                        NodeVector C{
+                            ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_INIT_C), 2)};
 
                         LSTMForward lstm_fwd(input_map.at(LSTMInput::LSTM_INPUT_X),
                                              W.at(0),

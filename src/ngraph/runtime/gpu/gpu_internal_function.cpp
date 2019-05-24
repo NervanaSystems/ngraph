@@ -259,8 +259,8 @@ void runtime::gpu::GPUInternalFunction::build_functions()
                 string type = et.c_type_string();
                 stringstream ss;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";
-                m_variable_name_map[tv->get_name()] = std::make_tuple(
-                    runtime::gpu::GPUTensorWrapper::TensorType::INPUT, arg_index, ss.str());
+                m_variable_name_map[tv->get_name()] =
+                    std::make_tuple(TensorRole::INPUT, arg_index, ss.str());
                 // propagate_in_place_input(&param->get_outputs().at(i), ss.str());
                 arg_index++;
             }
@@ -274,8 +274,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
             string type = tv->get_element_type().c_type_string();
             stringstream ss;
             ss << "((" << type << "*)(outputs[" << i << "]))";
-            m_variable_name_map[tv->get_name()] =
-                std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::OUTPUT, i, ss.str());
+            m_variable_name_map[tv->get_name()] = std::make_tuple(TensorRole::OUTPUT, i, ss.str());
 
             auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
             //keep assigning different outputs to a result descriptor
@@ -287,8 +286,8 @@ void runtime::gpu::GPUInternalFunction::build_functions()
                 shared_ptr<descriptor::Tensor> itv =
                     res->get_inputs().at(0).get_output().get_tensor_ptr();
                 auto output_name = ss.str();
-                m_variable_name_map[itv->get_name()] = std::make_tuple(
-                    runtime::gpu::GPUTensorWrapper::TensorType::OUTPUT, i, ss.str());
+                m_variable_name_map[itv->get_name()] =
+                    std::make_tuple(TensorRole::OUTPUT, i, ss.str());
                 //propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
             }
         }
@@ -310,7 +309,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
                 for (descriptor::Tensor* tensor : node->liveness_new_list)
                 {
                     m_variable_name_map[tensor->get_name()] =
-                        std::make_tuple(runtime::gpu::GPUTensorWrapper::TensorType::INTERMEDIATE,
+                        std::make_tuple(TensorRole::INTERMEDIATE,
                                         tensor->get_pool_offset(),
                                         current_function->get_name());
                 }
@@ -323,8 +322,8 @@ void runtime::gpu::GPUInternalFunction::build_functions()
             if (auto c = std::dynamic_pointer_cast<op::Constant>(node))
             {
                 shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
-                m_variable_name_map[tv->get_name()] = std::make_tuple(
-                    runtime::gpu::GPUTensorWrapper::TensorType::CONSTANT, 0, node->get_name());
+                m_variable_name_map[tv->get_name()] =
+                    std::make_tuple(TensorRole::CONSTANT, 0, node->get_name());
             }
         }
 

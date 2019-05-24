@@ -314,6 +314,121 @@ TEST(core_fusion, reshape_softmax_reshape)
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 }
 
+TEST(core_fusion, zero_padded_reshaped_conv)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 1});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 1, 0, 0}, CoordinateDiff{0, 0, 1, 0});
+
+    auto reshape = make_shared<op::Reshape>(pad, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
+
+    auto conv = make_shared<op::Convolution>(reshape,
+                                             F,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+}
+
+TEST(core_fusion, zero_padded_conv)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
+
+    auto conv = make_shared<op::Convolution>(pad,
+                                             F,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+}
+
+TEST(core_fusion, non_zero_padded_conv)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{1.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
+
+    auto conv = make_shared<op::Convolution>(pad,
+                                             F,
+                                             Strides{1, 1},
+                                             Strides{1, 1},
+                                             CoordinateDiff{0, 0},
+                                             CoordinateDiff{0, 0},
+                                             Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+}
+
+TEST(core_fusion, zero_padded_conv_backprop_filters)
+{
+    auto X = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
+
+    auto pad_value = op::Constant::create<float>(element::f32, Shape{}, std::vector<float>{0.0f});
+
+    auto pad =
+        make_shared<op::Pad>(X, pad_value, CoordinateDiff{0, 0, 0, 1}, CoordinateDiff{0, 0, 1, 0});
+
+    auto conv = make_shared<op::ConvolutionBackpropFilters>(pad,
+                                                            Shape{1, 1, 2, 2},
+                                                            F,
+                                                            Strides{1, 1},
+                                                            Strides{1, 1},
+                                                            CoordinateDiff{0, 0},
+                                                            CoordinateDiff{0, 0},
+                                                            Strides{1, 1});
+
+    auto func = make_shared<Function>(conv, ParameterVector{X, F});
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 1);
+
+    auto backend = runtime::Backend::create("CPU");
+    backend->compile(func);
+
+    ASSERT_EQ(count_ops_of_type<op::Pad>(func), 0);
+}
+
 TEST(core_fusion, conv_bias)
 {
     auto gen_f = [](bool with_fused_op) {
@@ -339,7 +454,58 @@ TEST(core_fusion, conv_bias)
     auto decomp_f2 = gen_f(false);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
+    pass_manager.run_passes(decomp_f1);
+    ASSERT_EQ(count_ops_of_type<op::ConvolutionBias>(decomp_f1), 1);
+
+    test::Uniform<float> rng(0.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : fused_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto fused_r = execute(fused_f, args, "INTERPRETER");
+    auto decomp_r1 = execute(decomp_f1, args, "INTERPRETER");
+    auto decomp_r2 = execute(decomp_f2, args, "INTERPRETER");
+
+    for (size_t i = 0; i < fused_r.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r1.at(i)));
+        EXPECT_TRUE(test::all_close(fused_r.at(i), decomp_r2.at(i)));
+    }
+}
+
+TEST(core_fusion, conv_bias_bcast_reshape)
+{
+    // PaddlePaddle pattern
+    auto gen_f = [](bool with_fused_op) {
+        auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto weights = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+        auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+        if (with_fused_op)
+        {
+            return make_shared<Function>(make_shared<op::ConvolutionBias>(data, weights, bias),
+                                         ParameterVector{data, weights, bias});
+        }
+        else
+        {
+            auto conv = make_shared<op::Convolution>(data, weights);
+            auto bias_bcast = make_shared<op::Broadcast>(bias, Shape{2, 4, 12}, AxisSet{0, 2});
+            auto conv_bias =
+                conv + make_shared<op::Reshape>(bias_bcast, AxisVector{0, 1, 2}, conv->get_shape());
+            return make_shared<Function>(conv_bias, ParameterVector{data, weights, bias});
+        }
+    };
+
+    auto fused_f = gen_f(true);
+    auto decomp_f1 = gen_f(false);
+    auto decomp_f2 = gen_f(false);
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
     pass_manager.run_passes(decomp_f1);
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBias>(decomp_f1), 1);
 
@@ -391,7 +557,7 @@ TEST(core_fusion, conv_bias_add)
     auto decomp_f2 = gen_f(false);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
     pass_manager.run_passes(decomp_f1);
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(decomp_f1), 1);
 
@@ -460,7 +626,7 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
     auto decomp_f2 = gen_f(false);
 
     pass::Manager pass_manager;
-    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::ALL_FUSIONS);
+    pass_manager.register_pass<pass::CoreFusion>(ngraph::pass::FusionType::ALL_FUSIONS);
     pass_manager.run_passes(decomp_f1);
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasBackpropFiltersBias>(decomp_f1), 1);
 
@@ -524,4 +690,18 @@ TEST(batch_fusion, group_convolution_fusion)
     auto gc =
         std::dynamic_pointer_cast<op::GroupConvolution>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(gc);
+}
+
+TEST(core_fusion, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::CoreFusion>();
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+}
+
+TEST(batch_fusion, pass_property)
+{
+    auto pass = std::make_shared<ngraph::pass::BatchFusion>();
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
+    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }

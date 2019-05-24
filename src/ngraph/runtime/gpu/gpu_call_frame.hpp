@@ -32,8 +32,6 @@ namespace ngraph
             class GPUCallFrame
             {
             public:
-                using TensorType = GPUTensorWrapper::TensorType;
-
                 GPUCallFrame(const size_t& num_inputs, const size_t& num_outputs);
                 void resolve_reservations(
                     const GPUCompiledFunction* compiled_function,
@@ -43,7 +41,7 @@ namespace ngraph
                 std::vector<void*> get_tensor_io(const std::vector<GPUTensorWrapper>& tensors);
 
             private:
-                void* get_pointer(const TensorType& type,
+                void* get_pointer(const TensorRole& type,
                                   const size_t& offset,
                                   const std::string& name = "");
 

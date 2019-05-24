@@ -117,7 +117,13 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
                     continue;
                 }
                 bool function_modified = function_pass->run_on_function(f);
-                f_pair.second = (function_modified == true) ? f->is_dynamic() : f_pair.second;
+                // If the pass may change the function's is_dynamic property, we need to
+                // update the cached value.
+                if (function_modified &&
+                    function_pass->get_property(PassProperty::CHANGE_DYNAMIC_STATE))
+                {
+                    f_pair.second = f->is_dynamic();
+                }
             }
         }
         else if (node_pass)
@@ -160,19 +166,18 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
             std::string index_str = std::to_string(index);
             index_str = std::string(num_digits_in_pass_index - index_str.length(), '0') + index_str;
             auto base_filename = f_array.at(0)->get_name() + std::string("_") + index_str +
-                                 std::string("_") + m_pass_names.at(index) + std::string(".");
+                                 std::string("_") + m_pass_names.at(index);
 
             if (m_visualize)
             {
-                pass::VisualizeTree vt(base_filename + pass::VisualizeTree::get_file_ext());
+                pass::VisualizeTree vt(base_filename);
                 vt.set_ops_to_details(get_state().get_visualize_tree_ops_map());
                 vt.run_on_module(f_array);
             }
 
             if (m_serialize)
             {
-                // no "." in the extension
-                pass::Serialization st(base_filename + "json");
+                pass::Serialization st(base_filename + ".json");
                 st.run_on_module(f_array);
             }
         }
