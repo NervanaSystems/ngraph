@@ -1429,7 +1429,6 @@ TEST(builder, dynamic_scaled_QD_with_bias)
               read_vector<uint8_t>(f_requantize_relu_r));
 }
 
-#if 0
 TEST(builder, scaled_QC_u8u8)
 {
     Shape shape_a{1, 1, 3, 4};                                     // input shape
@@ -1439,7 +1438,10 @@ TEST(builder, scaled_QC_u8u8)
     vector<uint8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};          //{0, -1, 0, -2, -3, 5, 0, 2, 1};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::u8, shape_b);
-    auto scale = op::Constant::create(element::f32, Shape{}, {2});
+    auto input_scale = op::Constant::create(element::f32, Shape{}, {2});
+    auto filter_scale = op::Constant::create(element::f32, Shape{}, {2});
+    auto output_scale = op::Constant::create(element::f32, Shape{}, {2});
+    auto u8_zero = op::Constant::create(element::u8, Shape{}, {0});
     auto CV = make_shared<ngraph::op::QuantizedConvolution>(A,
                                                             B,
                                                             Strides{1, 1},        // move_strides
@@ -1447,8 +1449,14 @@ TEST(builder, scaled_QC_u8u8)
                                                             CoordinateDiff{1, 1}, // below_pads
                                                             CoordinateDiff{1, 1}, // above_pads
                                                             Strides{1, 1},        // data_dilation
-                                                            scale,
-                                                            false);
+                                                            input_scale,
+                                                            u8_zero,
+                                                            filter_scale,
+                                                            u8_zero,
+                                                            output_scale,
+                                                            u8_zero,
+                                                            element::u8,
+                                                            AxisSet{});
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B});
     constant_fold(f);
 
@@ -1475,7 +1483,6 @@ TEST(builder, scaled_QC_u8u8)
                                39 * 2} /*{1, 28, -3, 16, -7, -14, 3, -7, -3}*/),
               read_vector<uint8_t>(result));
 }
-#endif
 
 TEST(builder, scaled_QDot_u8u8)
 {
