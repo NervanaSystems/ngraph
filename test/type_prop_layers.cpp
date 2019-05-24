@@ -82,98 +82,69 @@ TEST(type_prop_layers, dyn_interpolate)
 
 TEST(type_prop_layers, prior_box1)
 {
+    op::PriorBoxAttrs attrs;
+    attrs.min_sizes = {2.0f, 3.0f};
+    attrs.aspect_ratios = {1.0f, 2.0f, 0.5f};
+
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {32, 32});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
-    auto pb = make_shared<op::PriorBox>(layer_shape,
-                                        image_shape,
-                                        std::vector<float>{2.0f, 3.0f},
-                                        std::vector<float>{},
-                                        std::vector<float>{1.0f, 2.0f, 0.5f},
-                                        false,
-                                        false,
-                                        1.0f,
-                                        0.5f,
-                                        std::vector<float>{1.0f, 0.0f, 0.0f, 2.0f},
-                                        false);
+    auto pb = make_shared<op::PriorBox>(layer_shape, image_shape, attrs);
     ASSERT_EQ(pb->get_shape(), (Shape{2, 16384}));
 }
 
 TEST(type_prop_layers, prior_box2)
 {
+    op::PriorBoxAttrs attrs;
+    attrs.min_sizes = {2.0f, 3.0f};
+    attrs.aspect_ratios = {1.0f, 2.0f, 0.5f};
+    attrs.flip = true;
+
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {32, 32});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
-    auto pb = make_shared<op::PriorBox>(layer_shape,
-                                        image_shape,
-                                        std::vector<float>{2.0f, 3.0f},
-                                        std::vector<float>{},
-                                        std::vector<float>{1.0f, 2.0f, 0.5f},
-                                        false,
-                                        true,
-                                        1.0f,
-                                        0.5f,
-                                        std::vector<float>{1.0f, 0.0f, 0.0f, 2.0f},
-                                        false);
+    auto pb = make_shared<op::PriorBox>(layer_shape, image_shape, attrs);
     ASSERT_EQ(pb->get_shape(), (Shape{2, 28672}));
 }
 
 TEST(type_prop_layers, prior_box3)
 {
+    op::PriorBoxAttrs attrs;
+    attrs.min_sizes = {256.0f};
+    attrs.max_sizes = {315.0f};
+    attrs.aspect_ratios = {2.0f};
+    attrs.flip = true;
+    attrs.scale_all = true;
+
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 1});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
-    auto pb = make_shared<op::PriorBox>(layer_shape,
-                                        image_shape,
-                                        std::vector<float>{256.0f},
-                                        std::vector<float>{315.0f},
-                                        std::vector<float>{2.0f},
-                                        false,
-                                        true,
-                                        1.0f,
-                                        0.5f,
-                                        std::vector<float>{1.0f, 0.0f, 0.0f, 2.0f},
-                                        true);
+    auto pb = make_shared<op::PriorBox>(layer_shape, image_shape, attrs);
     ASSERT_EQ(pb->get_shape(), (Shape{2, 16}));
 }
 
 TEST(type_prop_layers, prior_box_clustered)
 {
+    op::PriorBoxClusteredAttrs attrs;
+    attrs.num_priors = 3;
+    attrs.widths = {4.0f, 2.0f, 3.2f};
+    attrs.heights = {1.0f, 2.0f, 1.1f};
+
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {19, 19});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
-    auto pbc = make_shared<op::PriorBoxClustered>(layer_shape,
-                                                  image_shape,
-                                                  3,
-                                                  std::vector<float>{4.0f, 2.0f, 3.2f},
-                                                  std::vector<float>{1.0f, 2.0f, 1.1f},
-                                                  false,
-                                                  1.0f,
-                                                  2.0f,
-                                                  0.0f,
-                                                  std::vector<float>{1.0f, 0.0f, 0.0f, 2.0f});
+    auto pbc = make_shared<op::PriorBoxClustered>(layer_shape, image_shape, attrs);
     // Output shape - 4 * 19 * 19 * 3 (num_priors)
     ASSERT_EQ(pbc->get_shape(), (Shape{2, 4332}));
 }
 
 TEST(type_prop_layers, proposal)
 {
+    op::ProposalAttrs attrs;
+    attrs.base_size = 1;
+    attrs.pre_nms_topn = 20;
+    attrs.post_nms_topn = 200;
+
     auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 12, 34, 62});
     auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 24, 34, 62});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 6});
-    auto op = make_shared<op::Proposal>(class_probs,
-                                        class_logits,
-                                        image_shape,
-                                        1,
-                                        20,
-                                        200,
-                                        0.0f,
-                                        1,
-                                        1,
-                                        std::vector<float>{},
-                                        std::vector<float>{},
-                                        false,
-                                        false,
-                                        false,
-                                        0.1f,
-                                        0.1f,
-                                        std::string{""});
+    auto op = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
     ASSERT_EQ(op->get_shape(), (Shape{200, 5}));
 }
 
