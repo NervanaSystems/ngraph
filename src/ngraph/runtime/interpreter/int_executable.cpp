@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/op/convert.hpp"
@@ -28,6 +29,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -37,21 +39,34 @@ using descriptor::layout::DenseTensorLayout;
 
 runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
                                                    bool enable_performance_collection)
-    : m_performance_counters_enabled{enable_performance_collection}
+    : m_is_compiled{true}
+    , m_performance_counters_enabled{enable_performance_collection}
 {
-    m_is_compiled = true;
+    m_function = clone_function(*function);
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
-    pass_manager.run_passes(function);
+    pass_manager.run_passes(m_function);
 
-    for (const shared_ptr<Node>& node : function->get_ordered_ops())
+    for (const shared_ptr<Node>& node : m_function->get_ordered_ops())
     {
         m_wrapped_nodes.emplace_back(node);
     }
-    set_parameters_and_results(*function);
+    set_parameters_and_results(*m_function);
+}
+
+runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_string)
+    : m_is_compiled{true}
+    , m_performance_counters_enabled{false}
+{
+    m_function = deserialize(model_string);
+    for (const shared_ptr<Node>& node : m_function->get_ordered_ops())
+    {
+        m_wrapped_nodes.emplace_back(node);
+    }
+    set_parameters_and_results(*m_function);
 }
 
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
@@ -277,4 +292,13 @@ void runtime::interpreter::INTExecutable::perform_nan_check(
         }
         arg_number++;
     }
+}
+
+void runtime::interpreter::INTExecutable::save(ostream& out)
+{
+    cpio::Writer writer(out);
+    string si = "INTERPRETER Save File 1.0";
+    writer.write("save_info", si.data(), si.size());
+    string model = serialize(m_function, 0);
+    writer.write("model", model.data(), model.size());
 }
