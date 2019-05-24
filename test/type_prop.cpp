@@ -14528,6 +14528,15 @@ TEST(type_prop, fused_clamp)
     EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
 }
 
+TEST(type_prop, leaky_relu)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto alpha = make_shared<op::Parameter>(element::f32, Shape{});
+    auto leaky_relu_func = make_shared<op::LeakyRelu>(data, alpha);
+    EXPECT_EQ(leaky_relu_func->get_element_type(), element::f32);
+    EXPECT_EQ(leaky_relu_func->get_shape(), (Shape{3, 6}));
+}
+
 TEST(type_prop, unsqueeze)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{4, 1, 4, 1, 8});
