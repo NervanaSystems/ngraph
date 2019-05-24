@@ -288,6 +288,41 @@ string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
     return rc;
 }
 
+static std::string pretty_partial_shape(const PartialShape& shape)
+{
+    std::stringstream ss;
+
+    if (shape.rank().is_dynamic())
+    {
+        ss << "?";
+    }
+    else
+    {
+        bool first = true;
+
+        ss << "[";
+        for (size_t i = 0; i < size_t(shape.rank()); i++)
+        {
+            if (!first)
+            {
+                ss << ",";
+            }
+            if (shape[i].is_dynamic())
+            {
+                ss << "?";
+            }
+            else
+            {
+                ss << size_t(shape[i]);
+            }
+            first = false;
+        }
+        ss << "]";
+    }
+
+    return ss.str();
+}
+
 string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 {
     vector<string> attributes;
@@ -313,8 +348,9 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
         {
             // The shapes of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
-            label << " " << (node->get_output_size() != 1 ? string("[skipped]")
-                                                          : vector_to_string(node->get_shape()));
+            label << " " << (node->get_output_size() != 1
+                                 ? string("[skipped]")
+                                 : pretty_partial_shape(node->get_output_partial_shape(0)));
         }
 
         static const char* nvtot = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
