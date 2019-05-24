@@ -2827,8 +2827,8 @@ TEST(cpu_fusion, fuse_leaky_relu)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(no_fuse1);
     pass_manager.run_passes(no_fuse2);
-    EXPECT_EQ(0, count_ops_of_type<op::LeakyRelu>(no_fuse1));
-    EXPECT_EQ(0, count_ops_of_type<op::LeakyRelu>(no_fuse2));
+    EXPECT_EQ(0, count_ops_of_type<op::CPULeakyRelu>(no_fuse1));
+    EXPECT_EQ(0, count_ops_of_type<op::CPULeakyRelu>(no_fuse2));
 
     // non-mkldnn kernel
     auto cpu_f1 = make_function(Shape{1, 2, 3}, std::vector<float>(6, 0.1f));
@@ -2840,11 +2840,11 @@ TEST(cpu_fusion, fuse_leaky_relu)
     std::vector<float> expected_result{-0.1f, -0.2f, 0.0f, 1.0f, 2.0f, 3.0f};
 
     auto cpu1_results = execute(cpu_f1, args, "CPU");
-    EXPECT_EQ(1, count_ops_of_type<op::LeakyRelu>(cpu_f1));
+    EXPECT_EQ(1, count_ops_of_type<op::CPULeakyRelu>(cpu_f1));
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), expected_result));
 
     auto cpu2_results = execute(cpu_f2, args, "CPU");
-    EXPECT_EQ(1, count_ops_of_type<op::LeakyRelu>(cpu_f2));
+    EXPECT_EQ(1, count_ops_of_type<op::CPULeakyRelu>(cpu_f2));
     EXPECT_TRUE(test::all_close(cpu2_results.at(0), expected_result));
 }
 

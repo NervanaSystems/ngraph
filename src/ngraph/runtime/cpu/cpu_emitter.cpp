@@ -3258,7 +3258,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LeakyRelu)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CPULeakyRelu)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -3276,7 +3276,7 @@ namespace ngraph
                 }
                 else
                 {
-                    auto leaky_relu_node = static_cast<const ngraph::op::LeakyRelu*>(node);
+                    auto leaky_relu_node = static_cast<const ngraph::op::CPULeakyRelu*>(node);
                     float alpha = leaky_relu_node->get_alpha();
                     writer << "#pragma omp parallel for\n";
                     writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";

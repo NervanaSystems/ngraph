@@ -109,6 +109,11 @@ public:
                                                 ngraph::pass::PassConfig& pass_config,
                                                 bool enable_performance_data = false);
 
+    /// \brief Loads a previously saved Executable object from a stream.
+    /// \param input_stream the opened input stream containing the saved Executable
+    /// \returns A compiled function or throws an exception on error
+    virtual std::shared_ptr<Executable> load(std::istream& input_stream);
+
     /// \brief Test if a backend is capable of supporting an op
     /// \param node is the op to test.
     /// \returns true if the op is supported, false otherwise.
