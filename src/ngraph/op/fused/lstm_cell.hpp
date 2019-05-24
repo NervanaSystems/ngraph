@@ -164,6 +164,15 @@ namespace ngraph
             ///
             std::shared_ptr<Node> m_C_t;
             ///
+            /// \brief      The bias tensor for the gates. Shape: [2 * gates_count * hidden_size].
+            /// \note       Concatenation of `[Wb[zrh], Rb[zrh]]`.
+            ///
+            std::shared_ptr<Node> m_B;
+            ///
+            /// \brief Peephole weights for iof gates. Shape: [3 * hidden_size]
+            ///
+            std::shared_ptr<Node> m_P;
+            ///
             /// \brief The Activation function f.
             ///
             ActivationFunction m_activation_f;
@@ -182,18 +191,6 @@ namespace ngraph
 
             static constexpr std::size_t m_gates_count{4};
             static constexpr std::size_t m_peepholes_count{3};
-            ///
-            /// \brief Peephole weights vector for respectively: input, output, and forget gates.
-            ///
-            /// Each peephole has shape [hidden_size].
-            ///
-            NodeVector m_p_iof;
-            ///
-            /// \brief Sum of biases (weight and recurrence) for input, output, forget, and cell gates.
-            ///
-            /// Sum of `[Wb, Rb]`.
-            ///
-            std::shared_ptr<Node> m_bias;
         };
     }
 }
