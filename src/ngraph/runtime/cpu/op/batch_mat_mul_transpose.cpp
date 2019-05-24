@@ -94,10 +94,8 @@ void op::BatchMatMulTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
 {
     auto delta = deltas.at(0); // NxIxK
 
-    auto arg0 =
-        inputs().at(0).get_source_output().get_node_shared_ptr(); // NxIxJ (maybe transposed)
-    auto arg1 =
-        inputs().at(1).get_source_output().get_node_shared_ptr(); // NxJxK (maybe transposed)
+    auto arg0 = input(0).get_source_output().get_node_shared_ptr(); // NxIxJ (maybe transposed)
+    auto arg1 = input(1).get_source_output().get_node_shared_ptr(); // NxJxK (maybe transposed)
 
     // If arg1 is already transposed, it does not need to be transposed again
     auto delta_dot_arg1 =

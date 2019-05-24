@@ -84,7 +84,7 @@ namespace ngraph
                         output_zero_point->get_element_type(),
                         axes,
                         op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
-                    return q_dot;
+                    return move(q_dot);
                 }
             }
 
