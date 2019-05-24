@@ -23,23 +23,9 @@ using namespace ngraph;
 
 op::PriorBoxClustered::PriorBoxClustered(const shared_ptr<Node>& layer_shape,
                                          const shared_ptr<Node>& image_shape,
-                                         const size_t num_priors,
-                                         const std::vector<float>& widths,
-                                         const std::vector<float>& heights,
-                                         const bool clip,
-                                         const float step_widths,
-                                         const float step_heights,
-                                         const float offset,
-                                         const std::vector<float>& variances)
+                                         const PriorBoxClusteredAttrs& attrs)
     : Op("PriorBoxClustered", check_single_output_args({layer_shape, image_shape}))
-    , m_num_priors(num_priors)
-    , m_widths(widths)
-    , m_heights(heights)
-    , m_clip(clip)
-    , m_step_widths(step_widths)
-    , m_step_heights(step_heights)
-    , m_offset(offset)
-    , m_variances(variances)
+    , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
 }
@@ -69,18 +55,18 @@ void op::PriorBoxClustered::validate_and_infer_types()
                           image_shape_rank);
 
     NODE_VALIDATION_CHECK(this,
-                          m_widths.size() == m_num_priors,
+                          m_attrs.widths.size() == m_attrs.num_priors,
                           "Num_priors ",
-                          m_num_priors,
+                          m_attrs.num_priors,
                           " doesn't match size of widths vector ",
-                          m_widths.size());
+                          m_attrs.widths.size());
 
     NODE_VALIDATION_CHECK(this,
-                          m_heights.size() == m_num_priors,
+                          m_attrs.heights.size() == m_attrs.num_priors,
                           "Num_priors ",
-                          m_num_priors,
+                          m_attrs.num_priors,
                           " doesn't match size of heights vector ",
-                          m_heights.size());
+                          m_attrs.heights.size());
 
     set_input_is_relevant_to_shape(0);
 
@@ -94,7 +80,7 @@ void op::PriorBoxClustered::validate_and_infer_types()
         auto layer_shape = const_shape->get_shape_val();
         // {Prior boxes, variances-adjusted prior boxes}
         set_output_type(
-            0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * m_num_priors});
+            0, element::f32, Shape{2, 4 * layer_shape[0] * layer_shape[1] * m_attrs.num_priors});
     }
     else
     {
@@ -105,14 +91,5 @@ void op::PriorBoxClustered::validate_and_infer_types()
 shared_ptr<Node> op::PriorBoxClustered::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<PriorBoxClustered>(new_args.at(0),
-                                          new_args.at(1),
-                                          m_num_priors,
-                                          m_widths,
-                                          m_heights,
-                                          m_clip,
-                                          m_step_widths,
-                                          m_step_heights,
-                                          m_offset,
-                                          m_variances);
+    return make_shared<PriorBoxClustered>(new_args.at(0), new_args.at(1), m_attrs);
 }

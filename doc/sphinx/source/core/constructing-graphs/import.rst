@@ -26,8 +26,7 @@ usually named ``<some_model>.onnx`` or ``<some_model>.onnx.pb``. These
    an ``.onnx.pb`` formatted file, you should be able to run the inference without
    needing to dig into anything from the "Frameworks" sections. You will, however, 
    need to have completed the steps outlined in our :doc:`../../buildlb` guide.  
-   If you intend to build nGraph for distributed-training, you will need 
-   to follow instructions on the documentation for :doc:`../../distr/index`.
+
 
 To demonstrate functionality, we'll use an already-serialized CIFAR10 model 
 trained via ResNet20. Remember that this model has already been trained and 

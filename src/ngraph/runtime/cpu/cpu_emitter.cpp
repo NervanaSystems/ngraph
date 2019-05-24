@@ -1352,8 +1352,16 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = (" << result_element_type.c_type_string()
-                       << ")(" << args[0].get_name() << "[i]);\n";
+                writer << out[0].get_name() << "[i] = (";
+                if (result_element_type == element::boolean)
+                {
+                    writer << "bool";
+                }
+                else
+                {
+                    writer << result_element_type.c_type_string();
+                }
+                writer << ")(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
                 writer.block_end();
             }
@@ -3250,7 +3258,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LeakyRelu)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CPULeakyRelu)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -3268,7 +3276,7 @@ namespace ngraph
                 }
                 else
                 {
-                    auto leaky_relu_node = static_cast<const ngraph::op::LeakyRelu*>(node);
+                    auto leaky_relu_node = static_cast<const ngraph::op::CPULeakyRelu*>(node);
                     float alpha = leaky_relu_node->get_alpha();
                     writer << "#pragma omp parallel for\n";
                     writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
