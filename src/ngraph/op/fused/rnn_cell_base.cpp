@@ -86,15 +86,15 @@ shared_ptr<Node> op::RNNCellBase::mul(const shared_ptr<Node>& lhs, const shared_
     return {make_shared<op::Multiply>(args.at(0), args.at(1))};
 }
 
-shared_ptr<Node> op::RNNCellBase::clip(const shared_ptr<Node>& data, const float threshold)
+shared_ptr<Node> op::RNNCellBase::clip(const shared_ptr<Node>& data) const
 {
-    if (threshold == 0.f)
+    if (m_clip == 0.f)
     {
         return data;
     }
 
-    float min_val = -threshold;
-    float max_val = threshold;
+    float min_val = -m_clip;
+    float max_val = m_clip;
     size_t size = shape_size(data->get_shape());
     const shared_ptr<Node> min_val_node = op::Constant::create(
         data->get_element_type(), data->get_shape(), vector<float>(size, min_val));

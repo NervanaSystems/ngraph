@@ -182,7 +182,7 @@ NodeVector op::RNNCell::decompose_op() const
     auto i_t = add(Xt_W, add(Ht_R, m_bias));
 
     // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Wbi + Rbi)
-    i_t = m_activation_f(clip(i_t, get_clip()));
+    i_t = m_activation_f(clip(i_t));
 
     return {i_t};
 }

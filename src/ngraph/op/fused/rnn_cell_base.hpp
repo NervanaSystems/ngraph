@@ -101,13 +101,11 @@ namespace ngraph
             ///
             /// \brief      Creates node with element-wise clip operation with numpy broadcasting.
             ///
-            /// \param[in]  lhs   The left hand side argument node.
-            /// \param[in]  rhs   The right hand side argument node.
+            /// \param[in]  data   The input tensor for clipping.
             ///
             /// \return     Node with element-wise clip operation.
             ///
-            static std::shared_ptr<Node> clip(const std::shared_ptr<Node>& data,
-                                              const float threshold);
+            std::shared_ptr<Node> clip(const std::shared_ptr<Node>& data) const;
 
         private:
             std::size_t m_hidden_size = 0.f;

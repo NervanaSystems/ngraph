@@ -242,7 +242,7 @@ NodeVector op::LSTMCell::decompose_op() const
     auto c_t = split_gates.at(3);
 
     // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
-    i_t = m_activation_f(clip(add(i_t, mul(p_i, m_C_t)), get_clip()));
+    i_t = m_activation_f(clip(add(i_t, mul(p_i, m_C_t))));
     if (m_input_forget)
     {
         // Couple input with forget gate: 1 - i_t
@@ -255,14 +255,14 @@ NodeVector op::LSTMCell::decompose_op() const
     else
     {
         // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
-        f_t = m_activation_f(clip(add(f_t, mul(p_f, m_C_t)), get_clip()));
+        f_t = m_activation_f(clip(add(f_t, mul(p_f, m_C_t))));
     }
     // ft (.) Ct-1 + it (.) ct
-    auto C = add(mul(f_t, m_C_t), mul(i_t, m_activation_g(clip(c_t, get_clip()))));
+    auto C = add(mul(f_t, m_C_t), mul(i_t, m_activation_g(clip(c_t))));
     // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
-    o_t = m_activation_f(clip(add(o_t, mul(p_o, C)), get_clip()));
+    o_t = m_activation_f(clip(add(o_t, mul(p_o, C))));
     // ot (.) h(Ct)
-    auto H = mul(o_t, m_activation_h(clip(C, get_clip())));
+    auto H = mul(o_t, m_activation_h(clip(C)));
 
     return {H, C};
 }
