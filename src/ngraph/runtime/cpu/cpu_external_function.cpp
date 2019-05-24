@@ -193,9 +193,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
 
-#ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler.hpp"
-#endif
 
 using namespace std;
 using namespace ngraph;
@@ -1399,14 +1396,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
 
     // After processing inputs, outputs, constants, and intermediates, set the buffer size.
     m_buffer_size = buffer_index;
-
-#ifdef NGRAPH_MLIR_ENABLE
-    if (std::getenv("NGRAPH_MLIR") != nullptr)
-    {
-        // Initialize MLIR compiler
-        ngmlir::MLIRCompiler::init_mlir();
-    }
-#endif
 
     for (shared_ptr<Node> node : m_function->get_ordered_ops())
     {

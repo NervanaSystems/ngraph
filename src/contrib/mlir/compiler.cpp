@@ -32,6 +32,7 @@
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
 #include <mlir/Transforms/Passes.h>
+#include <mutex>
 #include "dialect/dialect.hpp"
 #include "dialect/type.hpp"
 #include "lowerer.hpp"
@@ -63,9 +64,19 @@ MLIRCompiler::MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
 
 void MLIRCompiler::init_mlir()
 {
-    mlir::registerDialect<mlir::NGDialect>();
-    // Register any LLVM command line options
-    llvm::cl::ParseEnvironmentOptions("ngraph", "MLIR_LLVM_OPTIONS", "");
+    // Mutex to safely initialize MLIR.
+    static std::mutex mlir_init_mutex;
+    static bool initialized = false;
+
+    std::unique_lock<std::mutex> lock(mlir_init_mutex);
+
+    if (!initialized)
+    {
+        mlir::registerDialect<mlir::NGDialect>();
+        // Register any LLVM command line options
+        llvm::cl::ParseEnvironmentOptions("ngraph", "MLIR_LLVM_OPTIONS", "");
+        initialized = true;
+    }
 }
 
 void MLIRCompiler::compile_and_run()
