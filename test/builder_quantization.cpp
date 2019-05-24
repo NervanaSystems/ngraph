@@ -174,7 +174,8 @@ TEST(builder, scaled_QC)
                                                            F,
                                                            G,
                                                            H,
-                                                           element::i8);
+                                                           element::i8,
+                                                           AxisSet{});
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B});
     constant_fold(f);
 
@@ -254,7 +255,8 @@ TEST(builder, dynamic_scaled_QC)
                                                            F,
                                                            G,
                                                            H,
-                                                           element::i8);
+                                                           element::i8,
+                                                           AxisSet{});
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output

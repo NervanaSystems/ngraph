@@ -39,7 +39,8 @@ namespace ngraph
                                                      const shared_ptr<Node>& max_filter,
                                                      const shared_ptr<Node>& min_output,
                                                      const shared_ptr<Node>& max_output,
-                                                     const ngraph::element::Type& output_type)
+                                                     const ngraph::element::Type& output_type,
+                                                     const ngraph::AxisSet& axes)
         {
             auto input_scale =
                 quantization_scale::get_scale(min_input, max_input, input->get_element_type());
@@ -52,8 +53,6 @@ namespace ngraph
             auto input_zero_point = op::Constant::create(input->get_element_type(), Shape{}, {0});
             auto filter_zero_point =
                 op::Constant::create(filters->get_element_type(), Shape{}, {0});
-
-            AxisSet quantization_axes;
 
             return make_shared<op::QuantizedConvolution>(
                 input,
@@ -70,7 +69,7 @@ namespace ngraph
                 output_scale,
                 filter_zero_point, // output type will be same as filter
                 output_type,
-                quantization_axes);
+                axes);
         }
     }
 }
