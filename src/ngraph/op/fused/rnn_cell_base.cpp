@@ -19,6 +19,7 @@
 
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/fused/clamp.hpp"
 #include "ngraph/op/fused/rnn_cell_base.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -93,13 +94,5 @@ shared_ptr<Node> op::RNNCellBase::clip(const shared_ptr<Node>& data) const
         return data;
     }
 
-    float min_val = -m_clip;
-    float max_val = m_clip;
-    size_t size = shape_size(data->get_shape());
-    const shared_ptr<Node> min_val_node = op::Constant::create(
-        data->get_element_type(), data->get_shape(), vector<float>(size, min_val));
-    const shared_ptr<Node> max_val_node = op::Constant::create(
-        data->get_element_type(), data->get_shape(), vector<float>(size, max_val));
-
-    return make_shared<op::Minimum>(max_val_node, make_shared<op::Maximum>(data, min_val_node));
+    return make_shared<op::Clamp>(data, -m_clip, m_clip);
 }
