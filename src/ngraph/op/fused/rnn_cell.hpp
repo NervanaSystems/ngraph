@@ -53,10 +53,10 @@ namespace ngraph
             /// \param[in]  hidden_size  The number of hidden units for recurrent cell.
             ///
             RNNCell(const std::shared_ptr<Node>& X,
-                     const std::shared_ptr<Node>& W,
-                     const std::shared_ptr<Node>& R,
-                     const std::shared_ptr<Node>& H_t,
-                     std::size_t hidden_size);
+                    const std::shared_ptr<Node>& W,
+                    const std::shared_ptr<Node>& R,
+                    const std::shared_ptr<Node>& H_t,
+                    std::size_t hidden_size);
 
             ///
             /// \brief      Constructs RNNCell node.
@@ -78,14 +78,14 @@ namespace ngraph
             ///                               input of activation functions.
             ///
             RNNCell(const std::shared_ptr<Node>& X,
-                     const std::shared_ptr<Node>& W,
-                     const std::shared_ptr<Node>& R,
-                     const std::shared_ptr<Node>& H_t,
-                     std::size_t hidden_size,
-                     const std::vector<std::string>& activations,
-                     const std::vector<float>& activation_alpha,
-                     const std::vector<float>& activation_beta,
-                     float clip);
+                    const std::shared_ptr<Node>& W,
+                    const std::shared_ptr<Node>& R,
+                    const std::shared_ptr<Node>& H_t,
+                    std::size_t hidden_size,
+                    const std::vector<std::string>& activations,
+                    const std::vector<float>& activation_alpha,
+                    const std::vector<float>& activation_beta,
+                    float clip);
 
             ///
             /// \brief      Constructs RNNCell node.
@@ -108,16 +108,15 @@ namespace ngraph
             ///                               input of activation functions.
             ///
             RNNCell(const std::shared_ptr<Node>& X,
-                     const std::shared_ptr<Node>& W,
-                     const std::shared_ptr<Node>& R,
-                     const std::shared_ptr<Node>& H_t,
-                     std::size_t hidden_size,
-                     const std::shared_ptr<Node>& B,
-                     const std::vector<std::string>& activations =
-                         std::vector<std::string>{"tanh"},
-                     const std::vector<float>& activation_alpha = {},
-                     const std::vector<float>& activation_beta = {},
-                     float clip = 0.f);
+                    const std::shared_ptr<Node>& W,
+                    const std::shared_ptr<Node>& R,
+                    const std::shared_ptr<Node>& H_t,
+                    std::size_t hidden_size,
+                    const std::shared_ptr<Node>& B,
+                    const std::vector<std::string>& activations = std::vector<std::string>{"tanh"},
+                    const std::vector<float>& activation_alpha = {},
+                    const std::vector<float>& activation_beta = {},
+                    float clip = 0.f);
 
             virtual void pre_validate_and_infer_types() override;
             virtual NodeVector decompose_op() const override;
@@ -142,17 +141,16 @@ namespace ngraph
             ///
             std::shared_ptr<Node> m_H_t;
             ///
+            /// \brief      The bias tensor for the gates. Shape: [2 * gates_count * hidden_size].
+            /// \note       Concatenation of `[Wb[i], Rb[i]]`.
+            ///
+            std::shared_ptr<Node> m_B;
+            ///
             /// \brief The Activation function f.
             ///
             ActivationFunction m_activation_f;
 
             static constexpr std::size_t m_gates_count{1};
-            ///
-            /// \brief Sum of biases (weight and recurrence) for input gate.
-            ///
-            /// Sum of `[Wb, Rb]`.
-            ///
-            std::shared_ptr<Node> m_bias;
         };
     }
 }
