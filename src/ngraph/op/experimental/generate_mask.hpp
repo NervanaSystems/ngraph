@@ -29,7 +29,7 @@ namespace ngraph
         class GenerateMask : public op::Op
         {
         public:
-            /// \brief Constructs a GenerateMask node with a given shape, sed,
+            /// \brief Constructs a GenerateMask node with a given shape, seed,
             /// probability and training/inference mode
             GenerateMask(const std::shared_ptr<Node>& training,
                          const Shape& shape,

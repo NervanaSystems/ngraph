@@ -23,25 +23,9 @@ using namespace ngraph;
 
 op::PriorBox::PriorBox(const shared_ptr<Node>& layer_shape,
                        const shared_ptr<Node>& image_shape,
-                       const std::vector<float>& min_sizes,
-                       const std::vector<float>& max_sizes,
-                       const std::vector<float>& aspect_ratios,
-                       const bool clip,
-                       const bool flip,
-                       const float step,
-                       const float offset,
-                       const std::vector<float>& variances,
-                       const bool scale_all)
+                       const PriorBoxAttrs& attrs)
     : Op("PriorBox", check_single_output_args({layer_shape, image_shape}))
-    , m_min_sizes(min_sizes)
-    , m_max_sizes(max_sizes)
-    , m_aspect_ratios(aspect_ratios)
-    , m_clip(clip)
-    , m_flip(flip)
-    , m_step(step)
-    , m_offset(offset)
-    , m_variances(variances)
-    , m_scale_all(scale_all)
+    , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
 }
@@ -82,14 +66,16 @@ void op::PriorBox::validate_and_infer_types()
         auto layer_shape = const_shape->get_shape_val();
         size_t num_priors = 0;
         // {Prior boxes, Variance-adjusted prior boxes}
-        if (m_scale_all)
+        if (m_attrs.scale_all)
         {
-            num_priors = ((m_flip ? 2 : 1) * m_aspect_ratios.size() + 1) * m_min_sizes.size() +
-                         m_max_sizes.size();
+            num_priors = ((m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratios.size() + 1) *
+                             m_attrs.min_sizes.size() +
+                         m_attrs.max_sizes.size();
         }
         else
         {
-            num_priors = (m_flip ? 2 : 1) * m_aspect_ratios.size() + m_min_sizes.size() - 1;
+            num_priors = (m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratios.size() +
+                         m_attrs.min_sizes.size() - 1;
         }
 
         set_output_type(
@@ -104,15 +90,5 @@ void op::PriorBox::validate_and_infer_types()
 shared_ptr<Node> op::PriorBox::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<PriorBox>(new_args.at(0),
-                                 new_args.at(1),
-                                 m_min_sizes,
-                                 m_max_sizes,
-                                 m_aspect_ratios,
-                                 m_clip,
-                                 m_flip,
-                                 m_step,
-                                 m_offset,
-                                 m_variances,
-                                 m_scale_all);
+    return make_shared<PriorBox>(new_args.at(0), new_args.at(1), m_attrs);
 }

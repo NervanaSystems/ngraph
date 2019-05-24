@@ -21,9 +21,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::ReorgYolo::ReorgYolo(const shared_ptr<Node>& input, const Strides& stride)
+op::ReorgYolo::ReorgYolo(const shared_ptr<Node>& input, const Strides& strides)
     : Op("ReorgYolo", check_single_output_args({input}))
-    , m_stride(stride)
+    , m_strides(strides)
 {
     constructor_validate_and_infer_types();
 }
@@ -38,8 +38,8 @@ void op::ReorgYolo::validate_and_infer_types()
 
         for (size_t i = 2; i < input_shape.size(); i++)
         {
-            output_shape.push_back(input_shape[i] / m_stride[0]);
-            output_shape[1] *= m_stride[0];
+            output_shape.push_back(input_shape[i] / m_strides[0]);
+            output_shape[1] *= m_strides[0];
         }
         set_output_type(0, input_et, output_shape);
     }
@@ -52,5 +52,5 @@ void op::ReorgYolo::validate_and_infer_types()
 shared_ptr<Node> op::ReorgYolo::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<ReorgYolo>(new_args.at(0), m_stride);
+    return make_shared<ReorgYolo>(new_args.at(0), m_strides);
 }

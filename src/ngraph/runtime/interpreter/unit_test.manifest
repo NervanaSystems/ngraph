@@ -1,2 +1,4 @@
 # Quantized convolution is not supported on interpreter
 model_quant_conv_linear
+model_qlinear_matmul
+model_qlinear_matmul_3d
