@@ -28,6 +28,11 @@ const Shape& runtime::Tensor::get_shape() const
     return m_descriptor->get_shape();
 }
 
+const PartialShape& runtime::Tensor::get_partial_shape() const
+{
+    return m_descriptor->get_partial_shape();
+}
+
 Strides runtime::Tensor::get_strides() const
 {
     return m_descriptor->get_tensor_layout()->get_strides();

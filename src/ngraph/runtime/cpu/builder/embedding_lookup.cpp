@@ -112,6 +112,68 @@ namespace ngraph
                             "Unsupported index type in CPU Builder for EmbeddingLookup");
                     }
                 }
+                else if (element_type == element::f64)
+                {
+                    if (index_element_type == element::f32)
+                    {
+                        functor = [&,
+                                   in_shape,
+                                   element_count,
+                                   arg0_buffer_index,
+                                   arg1_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+
+                            ngraph::runtime::reference::embedding<double, float>(
+                                static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
+                                static_cast<double*>(ctx->buffer_data[arg1_buffer_index]),
+                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
+                                element_count,
+                                in_shape);
+                        };
+                    }
+                    else if (index_element_type == element::i32)
+                    {
+                        functor = [&,
+                                   in_shape,
+                                   element_count,
+                                   arg0_buffer_index,
+                                   arg1_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+
+                            ngraph::runtime::reference::embedding<double, int>(
+                                static_cast<int*>(ctx->buffer_data[arg0_buffer_index]),
+                                static_cast<double*>(ctx->buffer_data[arg1_buffer_index]),
+                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
+                                element_count,
+                                in_shape);
+                        };
+                    }
+                    else if (index_element_type == element::i64)
+                    {
+                        functor = [&,
+                                   in_shape,
+                                   element_count,
+                                   arg0_buffer_index,
+                                   arg1_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+
+                            ngraph::runtime::reference::embedding<double, int64_t>(
+                                static_cast<int64_t*>(ctx->buffer_data[arg0_buffer_index]),
+                                static_cast<double*>(ctx->buffer_data[arg1_buffer_index]),
+                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
+                                element_count,
+                                in_shape);
+                        };
+                    }
+                    else
+                    {
+                        throw ngraph_error(
+                            "Unsupported index type in CPU Builder for EmbeddingLookup");
+                    }
+                }
                 else if (element_type == element::i32)
                 {
                     if (index_element_type == element::f32)

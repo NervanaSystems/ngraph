@@ -284,8 +284,9 @@ void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
 }
 
 template <>
-string
-    get_results_str(std::vector<char>& ref_data, std::vector<char>& actual_data, size_t max_results)
+string get_results_str(const std::vector<char>& ref_data,
+                       const std::vector<char>& actual_data,
+                       size_t max_results)
 {
     stringstream ss;
     size_t num_results = std::min(static_cast<size_t>(max_results), ref_data.size());

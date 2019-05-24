@@ -75,7 +75,7 @@ void op::Proposal::validate_and_infer_types()
                               "Layer shape must have rank 2",
                               const_shape->get_shape());
 
-        auto image_shape = static_cast<const int64_t*>(const_shape->get_data_ptr());
+        auto image_shape = const_shape->get_shape_val();
 
         set_output_type(0, element::f32, Shape{image_shape[0] * m_post_nms_topn, 5});
     }

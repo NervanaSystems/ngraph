@@ -135,6 +135,36 @@ void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
     }
 }
 
+NodeVector ngraph::find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+{
+    std::unordered_set<std::shared_ptr<Node>> target_args;
+
+    auto compute_target_args = [&target_args](const std::shared_ptr<Node> node) {
+        target_args.insert(node);
+    };
+
+    traverse_nodes({target}, compute_target_args, false, NodeVector{});
+
+    std::unordered_set<std::shared_ptr<Node>> replacement_args;
+
+    auto compute_replacement_args = [&replacement_args](const std::shared_ptr<Node> node) {
+        replacement_args.insert(node);
+    };
+
+    traverse_nodes({replacement}, compute_replacement_args, false, NodeVector{});
+
+    NodeVector common_args;
+    for (auto e : target_args)
+    {
+        if (replacement_args.count(e) > 0)
+        {
+            common_args.push_back(e);
+        }
+    }
+
+    return common_args;
+}
+
 void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
 {
     if (target->is_output())
@@ -156,16 +186,8 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             replacement->merge_provenance_tags_from(node);
         };
 
-        traverse_nodes({target}, set_replacement_prov, false, replacement->get_arguments());
-
-        auto propagate_replacement_prov = [replacement](std::shared_ptr<Node> node) {
-            if (is_post_dominated(node.get(), replacement.get()))
-            {
-                node->merge_provenance_tags_from(replacement);
-            }
-        };
-
-        traverse_nodes({replacement}, propagate_replacement_prov, false);
+        traverse_nodes(
+            {target}, set_replacement_prov, false, ngraph::find_common_args(target, replacement));
     }
 
     // For each of target's output O with replacement output O_rep:
