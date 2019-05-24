@@ -22,7 +22,7 @@ using namespace std;
 using namespace ngraph;
 
 
-op::Dropout::Dropout(std::shared_ptr<Node> input, unsigned int gm_const,
+op::Dropout::Dropout(const std::shared_ptr<Node>& input, unsigned int gm_const,
                     int seed, double value)
                     : Op("Dropout", check_single_output_args({input}))
                     , m_gm_const1(gm_const)
@@ -36,17 +36,13 @@ op::Dropout::Dropout(std::shared_ptr<Node> input, unsigned int gm_const,
 
 shared_ptr<Node> op::Dropout::copy_with_new_args(const NodeVector& new_args) const
 {
-    // keep getting compile errors, will come back to this
-    throw ngraph_error("Not yet implemented");
-
     if (new_args.size() != 1)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    
-    /*return make_shared<Dropout>(new_args.at(0)),
-                                m_gm_const1, //m_gm_const,
+    return make_shared<Dropout>(new_args.at(0),
+                                m_gm_const1,
                                 m_seed,
-                                m_value);*/
+                                m_value);
 }

@@ -1201,50 +1201,61 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 {
-    Shape shape{8, 128, 768};
+    Shape shape{1, 1, 2, 2};
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
-    
+
     int seed =1234;
     auto seed_label = std::make_shared<pattern::op::Label>(element::u32, Shape{0});
 
-    auto value_label = std::make_shared<pattern::op::Label>(element::f64, Shape{0});
-    
-    //auto value = ngraph::op::Constant::create(element::f32, Shape{}, {0.9}); // or f64 ?
     double value = 0.9;// some number
-    //auto value_label = std::make_shared<pattern::op::Label>(value);
+    auto value_const = ngraph::op::Constant::create(element::f32, Shape{}, {value}); // or f64 ?
+    auto value_label = std::make_shared<pattern::op::Label>(value_const);
 
     auto const1 = ngraph::op::Constant::create(x->get_element_type(), Shape{}, {1});
     auto const1_label = std::make_shared<pattern::op::Label>(const1);
 
 
-    auto gen_mask = std::make_shared<op::GenerateMask>(const1, 
+    auto genmask = std::make_shared<op::GenerateMask>(const1_label, 
                                                              x->get_shape(), 
                                                              x->get_element_type(),
                                                              seed,
                                                              value);
-    auto genmask_label = std::make_shared<pattern::op::Label>(gen_mask);
+    auto genmask_label = std::make_shared<pattern::op::Label>(genmask);
 
-    auto mult = std::make_shared<ngraph::op::Multiply>(gen_mask, x); // TODO: how to check it works both ways x, gen_mask too ?
-    auto mult_label = std::make_shared<pattern::op::Label>(mult);
+    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x); // TODO: how to check it works both ways x, gen_mask too ?
 
-    auto value_const = ngraph::op::Constant::create(element::f32, Shape{}, {0.9}); // or f64 ?
-    auto bcast = std::make_shared<ngraph::op::Broadcast>(value_const, x->get_shape(), AxisSet{0});
+    auto bcast = std::make_shared<ngraph::op::Broadcast>(value_label, x->get_shape(), AxisSet{0, 1, 2,3});
     auto pdivide = std::make_shared<ngraph::op::Divide>(mult, bcast);
 
     //----------
     auto callback = [x_label, const1_label, seed_label, value_label, genmask_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_dropout against "
                      << m.get_match_root()->get_name();
+        std::cout << "in callback for construct_dropout, name = " << m.get_match_root()->get_name() << "\n";
         auto pattern_map = m.get_pattern_map();
 
         auto m_div = std::static_pointer_cast<ngraph::op::Divide>(m.get_match_root());
 
-        //auto gm = static_cast<const ngraph::op::GenerateMask*>(pattern_map[genmask_label]);
+        auto gm = std::static_pointer_cast<ngraph::op::GenerateMask>(pattern_map[genmask_label]);
+        auto temp_val = gm->get_probability();
+        std::cout << "got value %f" << temp_val << "\n";
+        auto temp_seed = gm->get_seed();
+        std::cout << "got seed %d" << temp_seed <<"\n";
+
+        /*auto value_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[value_label]);
+        if (!value_ptr)
+        {
+            std::cout << "value must be a constant; it is not\n";
+            NGRAPH_DEBUG << "Value must be a constant";
+            return false;
+        }
+        double value = *(reinterpret_cast<const double*>(value_ptr->get_data_ptr()));
 
         auto const1_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[const1_label]);
         if (!const1_ptr)
         {
+            std::cout << "const1 must be a constant; it is not\n";
             NGRAPH_DEBUG << "const1 must be a constant";
             return false;
         }
@@ -1254,29 +1265,22 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
         auto seed_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[seed_label]);
         if (!seed_ptr)
         {
+            std::cout << "seed must be a constant; it is not\n";
             NGRAPH_DEBUG << "seed must be a constant";
             return false;
         }
-        int seed = *(reinterpret_cast<const int*>(seed_ptr->get_data_ptr()));
+        int seed = *(reinterpret_cast<const int*>(seed_ptr->get_data_ptr()));*/
 
-        auto value_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[value_label]);
-        if (!value_ptr)
-        {
-            NGRAPH_DEBUG << "Value must be a constant";
-            return false;
-        }
-        double value = *(reinterpret_cast<const double*>(value_ptr->get_data_ptr()));
-
+        std::cout << " replacing the node\n";
         // Check for rank 3D or 4D for now
         auto dropout_n =
             std::make_shared<ngraph::op::Dropout>(pattern_map[x_label], // Input Node of f32
-                                                  const1,       // int, u32
-                                                  seed,
-                                                  value
+                                                  1,
+                                                  temp_seed,
+                                                  temp_val
                                                   );
         ngraph::replace_node(m.get_match_root(), dropout_n);
         return true;
-        //return false;
     };
 
     auto m = std::make_shared<pattern::Matcher>(pdivide, "CPUFusion.Dropout");

@@ -26,7 +26,7 @@ namespace ngraph
         class Dropout : public Op
         {
         public:
-            Dropout(std::shared_ptr<Node> input,
+            Dropout(const std::shared_ptr<Node>& input,
                     unsigned int gm_const,
                     int seed,
                     double value); // value = 1 - dropout_prob
