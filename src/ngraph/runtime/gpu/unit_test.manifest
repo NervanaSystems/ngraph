@@ -128,6 +128,8 @@ model_quantize_linear_axis_negative
 model_quant_conv_linear
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d
+model_qlinear_matmul
+model_qlinear_matmul_3d
 
 # This should be implemented
 create_tensor_2_input

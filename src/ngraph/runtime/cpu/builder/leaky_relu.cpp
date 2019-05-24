@@ -30,7 +30,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::LeakyRelu)
+            void Builder::BUILDER_DECL(ngraph::op::CPULeakyRelu)
             {
                 auto& functors = external_function->get_functors();
 
@@ -38,13 +38,13 @@ namespace ngraph
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 size_t count = out[0].get_size();
 
-                auto alpha = static_cast<const ngraph::op::LeakyRelu*>(node)->get_alpha();
+                auto alpha = static_cast<const ngraph::op::CPULeakyRelu*>(node)->get_alpha();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto leaky_relu_desc = mkldnn_emitter->get_leaky_relu_desc(node);
-                    // LeakyRelu needs 3 primitives: input, result, and eltwise_forward.
+                    // CPULeakyRelu needs 3 primitives: input, result, and eltwise_forward.
                     auto leaky_relu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(leaky_relu_index);
 
@@ -85,7 +85,7 @@ namespace ngraph
                     functors.emplace_back(functor);
                 }
             }
-            REGISTER_OP_BUILDER(LeakyRelu);
+            REGISTER_OP_BUILDER(CPULeakyRelu);
         }
     }
 }
