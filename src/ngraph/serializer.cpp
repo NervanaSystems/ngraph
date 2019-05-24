@@ -73,6 +73,7 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -997,6 +998,27 @@ static shared_ptr<ngraph::Function>
             {
                 auto bias = node_js.at("bias").get<float>();
                 node = make_shared<op::GRN>(args[0], bias);
+                break;
+            }
+            case OP_TYPEID::GRUCell:
+            {
+                auto hidden_size = node_js.at("hidden_size").get<size_t>();
+                auto clip = node_js.at("clip").get<float>();
+                auto activations = node_js.at("activations").get<vector<string>>();
+                auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
+                auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
+                auto linear_before_reset = node_js.at("linear_before_reset").get<bool>();
+                node = make_shared<op::GRUCell>(args[0],
+                                                args[1],
+                                                args[2],
+                                                args[3],
+                                                hidden_size,
+                                                args[4],
+                                                activations,
+                                                activation_alpha,
+                                                activation_beta,
+                                                clip,
+                                                linear_before_reset);
                 break;
             }
             case OP_TYPEID::HardSigmoid:
@@ -1987,6 +2009,17 @@ static json write(const Node& n, bool binary_constant_data)
     {
         auto tmp = dynamic_cast<const op::GRN*>(&n);
         node["bias"] = tmp->get_bias();
+        break;
+    }
+    case OP_TYPEID::GRUCell:
+    {
+        auto tmp = dynamic_cast<const op::GRUCell*>(&n);
+        node["hidden_size"] = tmp->get_hidden_size();
+        node["clip"] = tmp->get_clip();
+        node["activations"] = tmp->get_activations();
+        node["activation_alpha"] = tmp->get_activation_alpha();
+        node["activation_beta"] = tmp->get_activation_beta();
+        node["linear_before_reset"] = tmp->get_linear_before_reset();
         break;
     }
     case OP_TYPEID::HardSigmoid:
