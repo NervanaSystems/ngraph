@@ -1299,14 +1299,24 @@ static shared_ptr<ngraph::Function>
                 auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
                 auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
                 auto data_dilation_strides = node_js["data_dilation_strides"];
-                node =
-                    make_shared<op::Convolution>(args[0],
-                                                 args[1],
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides.get<std::vector<size_t>>());
+                auto output_type = read_element_type(node_js.at("output_type"));
+                auto axes = node_js.at("axes").get<set<size_t>>();
+                node = make_shared<op::QuantizedConvolution>(
+                    args[0],
+                    args[1],
+                    window_movement_strides,
+                    window_dilation_strides,
+                    padding_below,
+                    padding_above,
+                    data_dilation_strides.get<std::vector<size_t>>(),
+                    args[2],
+                    args[3],
+                    args[4],
+                    args[5],
+                    args[6],
+                    args[7],
+                    output_type,
+                    axes);
                 break;
             }
             case OP_TYPEID::QuantizedDotBias: { break;
@@ -2116,6 +2126,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["axes"] = tmp->get_axes();
         break;
     }
     case OP_TYPEID::QuantizedDotBias: { break;
