@@ -20,6 +20,7 @@
 #include "cpu_tensor_view.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -151,5 +152,43 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
     {
         const char* source = get_data_ptr();
         memcpy(target, &source[tensor_offset], n);
+    }
+}
+
+void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& source)
+{
+    if (get_element_count() != source.get_element_count())
+    {
+        throw invalid_argument("runtime::cpu::CPUTensorView::copy_from element count must match");
+    }
+
+    if (get_element_type() != source.get_element_type())
+    {
+        throw invalid_argument("runtime::cpu::CPUTensorView::copy_from element types must match");
+    }
+
+    if (auto cpu_source = dynamic_cast<const runtime::cpu::CPUTensorView*>(&source))
+    {
+        if (cpu_source->get_tensor_layout() == this->get_tensor_layout())
+        {
+            // Direct copy
+            memcpy(get_data_ptr(), cpu_source->get_data_ptr(), get_size_in_bytes());
+        }
+        else
+        {
+            // Read from source tensor pointer. Might involve layout conversions
+            source.read(get_data_ptr(), 0, get_size_in_bytes());
+            m_descriptor->set_tensor_layout(cpu_source->get_tensor_layout());
+        }
+    }
+    else
+    {
+        auto size = get_size_in_bytes();
+        AlignedBuffer buffer{size, 64};
+        source.read(buffer.get_ptr(), 0, size);
+        write(buffer.get_ptr(), 0, size);
+        // Set default layout
+        m_descriptor->set_tensor_layout(
+            std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
     }
 }

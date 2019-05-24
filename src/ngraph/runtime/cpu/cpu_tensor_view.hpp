@@ -54,6 +54,10 @@ namespace ngraph
                 /// \param n Number of bytes to read, must be integral number of elements.
                 void read(void* p, size_t tensor_offset, size_t n) const override;
 
+                /// \brief copy bytes directly from source to this tensor
+                /// \param source The source tensor
+                void copy_from(const ngraph::runtime::Tensor& source) override;
+
                 static constexpr int BufferAlignment = NGRAPH_CPU_ALIGNMENT;
 
             private:
