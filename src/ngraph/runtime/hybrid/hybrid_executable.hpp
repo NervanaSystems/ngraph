@@ -53,7 +53,7 @@ public:
         return std::dynamic_pointer_cast<T>(m_executable);
     }
 
-private:
+protected:
     std::shared_ptr<ngraph::Function> m_function;
     std::shared_ptr<Executable> m_executable;
     std::unordered_map<std::shared_ptr<ngraph::op::Parameter>, std::shared_ptr<ngraph::op::Result>>
