@@ -1083,12 +1083,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
         }
 
         auto cg =
-            std::shared_ptr<Node>(new ngraph::op::LeakyRelu(pattern_map[input], alpha_vec[0]));
+            std::shared_ptr<Node>(new ngraph::op::CPULeakyRelu(pattern_map[input], alpha_vec[0]));
         ngraph::replace_node(m.get_match_root(), cg);
         return true;
     };
 
-    auto m = std::make_shared<pattern::Matcher>(leaky_relu, "CPUFusion.LeakyRelu");
+    auto m = std::make_shared<pattern::Matcher>(leaky_relu, "CPUFusion.CPULeakyRelu");
     this->add_matcher(m, callback);
 }
 void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
