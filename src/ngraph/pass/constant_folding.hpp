@@ -38,7 +38,9 @@ public:
         DEQUANTIZE,
         UNARY,
         BINARY,
-        QUANTIZE
+        QUANTIZE,
+        CONVERT,
+        SHAPE_OF
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -52,6 +54,8 @@ public:
         construct_constant_binary();
         construct_constant_quantize();
         construct_constant_dequantize();
+        construct_constant_convert();
+        construct_constant_shape_of();
     }
 
     //this allows to specify the order in which matchers will be run
@@ -72,6 +76,8 @@ public:
             case CFTransformations::BINARY: construct_constant_binary(); break;
             case CFTransformations::DEQUANTIZE: construct_constant_dequantize(); break;
             case CFTransformations::QUANTIZE: construct_constant_quantize(); break;
+            case CFTransformations::CONVERT: construct_constant_convert(); break;
+            case CFTransformations::SHAPE_OF: construct_constant_shape_of(); break;
             }
         }
     }
@@ -84,6 +90,8 @@ private:
     void construct_constant_binary();
     void construct_constant_quantize();
     void construct_constant_dequantize();
+    void construct_constant_convert();
+    void construct_constant_shape_of();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };

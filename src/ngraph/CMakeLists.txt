@@ -38,6 +38,8 @@ set (SRC
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
+    builder/split.cpp
+    builder/split.hpp
     builder/tensor_mask.hpp
     check.hpp
     code_writer.hpp
@@ -166,6 +168,8 @@ set (SRC
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    op/experimental/layers/ctc_greedy_decoder.cpp
+    op/experimental/layers/ctc_greedy_decoder.hpp
     op/experimental/layers/detection_output.cpp
     op/experimental/layers/detection_output.hpp
     op/experimental/layers/interpolate.cpp
@@ -300,6 +304,8 @@ set (SRC
     op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/leaky_relu.cpp
+    op/fused/leaky_relu.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize.cpp
@@ -310,6 +316,8 @@ set (SRC
     op/fused/scale_shift.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
+    op/fused/split.cpp
+    op/fused/split.hpp
     op/fused/squared_difference.cpp
     op/fused/squared_difference.hpp
     op/fused/squeeze.cpp
@@ -354,6 +362,8 @@ set (SRC
     pass/cse.hpp
     pass/dump_sorted.cpp
     pass/dump_sorted.hpp
+    pass/dyn_elimination.cpp
+    pass/dyn_elimination.hpp
     pass/fused_op_decomposition.cpp
     pass/fused_op_decomposition.hpp
     pass/get_output_element_elimination.cpp
@@ -431,8 +441,8 @@ set (SRC
     shape.hpp
     shape_util.cpp
     shape_util.hpp
-    specialize_shapes.cpp
-    specialize_shapes.hpp
+    specialize_function.cpp
+    specialize_function.hpp
     state/rng_state.cpp
     strides.cpp
     strides.hpp

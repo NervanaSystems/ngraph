@@ -261,9 +261,9 @@ TEST(serialize, passthrough)
 
 TEST(serialize, constant_infinity_nan)
 {
-    vector<float> a_data{123, 456, INFINITY, -INFINITY, NAN};
-    vector<float> b_data{5, 5, 5, 5, 5, 5};
-    vector<float> c_data{0.05, 0.05, 0.05, 0.05, 0.05, 0.05001, 0.05};
+    vector<float> a_data{123.f, 456.f, INFINITY, -INFINITY, NAN};
+    vector<float> b_data{5.f, 5.f, 5.f, 5.f, 5.f, 5.f};
+    vector<float> c_data{0.05f, 0.05f, 0.05f, 0.05f, 0.05f, 0.05001f, 0.05f};
     vector<int64_t> d_data{-100, -10, -1, 0, 50, 5000000000001};
     auto A = make_shared<op::Constant>(element::f32, Shape{5}, a_data);
     auto B = make_shared<op::Constant>(element::f32, Shape{6}, b_data);

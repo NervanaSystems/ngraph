@@ -74,11 +74,13 @@
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
@@ -1030,6 +1032,11 @@ static shared_ptr<ngraph::Function>
                                                          pad_type);
                 break;
             }
+            case OP_TYPEID::LeakyRelu:
+            {
+                node = make_shared<op::LeakyRelu>(args[0], args[1]);
+                break;
+            }
             case OP_TYPEID::Less:
             {
                 node = make_shared<op::Less>(args[0], args[1]);
@@ -1448,6 +1455,13 @@ static shared_ptr<ngraph::Function>
             {
                 auto block_size = node_js.at("block_size").get<size_t>();
                 node = make_shared<op::SpaceToDepth>(args[0], block_size);
+                break;
+            }
+            case OP_TYPEID::Split:
+            {
+                const auto axis = node_js.at("axis").get<size_t>();
+                const auto splits = node_js.at("splits").get<vector<size_t>>();
+                node = make_shared<op::Split>(args[0], axis, splits);
                 break;
             }
             case OP_TYPEID::Sqrt:
@@ -1956,6 +1970,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["pad_type"] = tmp->get_pad_type();
         break;
     }
+    case OP_TYPEID::LeakyRelu: { break;
+    }
     case OP_TYPEID::Less: { break;
     }
     case OP_TYPEID::LessEq: { break;
@@ -2206,6 +2222,13 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::SpaceToDepth*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
         node["block_size"] = tmp->get_block_size();
+        break;
+    }
+    case OP_TYPEID::Split:
+    {
+        auto tmp = dynamic_cast<const op::Split*>(&n);
+        node["axis"] = tmp->get_axis();
+        node["splits"] = tmp->get_splits();
         break;
     }
     case OP_TYPEID::Sqrt: { break;
