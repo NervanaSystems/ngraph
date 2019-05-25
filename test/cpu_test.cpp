@@ -1516,25 +1516,25 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
 
     auto d = backend->create_tensor(element::f32, shape_i);
     copy_data(d,
-              test::NDArray<float, 4>({{{{0.3, 0.3, 0.2}, // img 0 chan 0
-                                         {0.3, 0.3, 0.2},
-                                         {0.2, 0.1, 0.2},
-                                         {0.2, 0.2, 0.2}},
+              test::NDArray<float, 4>({{{{0.3f, 0.3f, 0.2f}, // img 0 chan 0
+                                         {0.3f, 0.3f, 0.2f},
+                                         {0.2f, 0.1f, 0.2f},
+                                         {0.2f, 0.2f, 0.2f}},
 
-                                        {{0.3, 0.3, 0.3}, // img 0 chan 1
-                                         {0.3, 0.3, 0.3},
-                                         {0.3, 0.1, 0.2},
-                                         {0.3, 0.1, 0.4}}},
+                                        {{0.3f, 0.3f, 0.3f}, // img 0 chan 1
+                                         {0.3f, 0.3f, 0.3f},
+                                         {0.3f, 0.1f, 0.2f},
+                                         {0.3f, 0.1f, 0.4f}}},
 
-                                       {{{0.2, 0.2, 0.2}, // img 1 chan 0
-                                         {0.2, 0.2, 0.3},
-                                         {0.2, 0.3, 0.3},
-                                         {0.2, 0.3, 0.3}},
+                                       {{{0.2f, 0.2f, 0.2f}, // img 1 chan 0
+                                         {0.2f, 0.2f, 0.3f},
+                                         {0.2f, 0.3f, 0.3f},
+                                         {0.2f, 0.3f, 0.3f}},
 
-                                        {{0.2, 0.2, 0.1}, // img 1 chan 1
-                                         {0.2, 0.2, 0.2},
-                                         {0.2, 0.2, 0.2},
-                                         {0.1, 0.1, 0.2}}}})
+                                        {{0.2f, 0.2f, 0.1f}, // img 1 chan 1
+                                         {0.2f, 0.2f, 0.2f},
+                                         {0.2f, 0.2f, 0.2f},
+                                         {0.1f, 0.1f, 0.2f}}}})
                   .get_vector());
 
     auto result = backend->create_tensor(element::f32, shape_a);

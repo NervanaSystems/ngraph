@@ -50,14 +50,14 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_no_axis)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 2.0, 2.1, 3.0, 3.1});
+    copy_data(p, vector<float>{1.0f, 1.1f, 2.0f, 2.1f, 3.0f, 3.1f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0, 1, 1, 2});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f((vector<float>{1.0, 1.1, 2.0, 2.1, 2.0, 2.1, 3.0, 3.1}),
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.0f, 1.1f, 2.0f, 2.1f, 2.0f, 2.1f, 3.0f, 3.1f}),
                                   read_vector<float>(result),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
@@ -76,7 +76,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices_no_axis)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 2.0, 2.1, 3.0, 3.1});
+    copy_data(p, vector<float>{1.0f, 1.1f, 2.0f, 2.1f, 3.0f, 3.1f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{1});
     auto result = backend->create_tensor(element::f32, out_shape);
@@ -84,7 +84,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices_no_axis)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close_f(
-        (vector<float>{2.0, 2.1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        (vector<float>{2.0f, 2.1f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather)
@@ -101,14 +101,14 @@ NGRAPH_TEST(${BACKEND_NAME}, gather)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 2.0, 2.1, 2.2, 3.0, 3.1, 3.2});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f, 3.0f, 3.1f, 3.2f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0, 2});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f((vector<float>{1.0, 1.2, 2.0, 2.2, 3.0, 3.2}),
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.0f, 1.2f, 2.0f, 2.2f, 3.0f, 3.2f}),
                                   read_vector<float>(result),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
@@ -127,7 +127,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 2.0, 2.1, 2.2, 3.0, 3.1, 3.2});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f, 3.0f, 3.1f, 3.2f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0});
     auto result = backend->create_tensor(element::f32, out_shape);
@@ -135,7 +135,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.0, 2.0, 3.0}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        (vector<float>{1.0f, 2.0f, 3.0f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_single_indices)
@@ -152,7 +152,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_single_indices)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f, 1.4f, 1.5f, 1.6f, 1.7f, 1.8f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{1, 2});
     auto result = backend->create_tensor(element::f32, out_shape);
@@ -160,7 +160,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_single_indices)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.5}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        (vector<float>{1.5f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_scalar_from_2d)
@@ -177,7 +177,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_scalar_from_2d)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0, 0, 1, 1});
     auto result = backend->create_tensor(element::f32, out_shape);
@@ -185,7 +185,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_scalar_from_2d)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.0, 1.3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        (vector<float>{1.0f, 1.3f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_1d_from_2d)
@@ -202,15 +202,16 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_1d_from_2d)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{1, 0});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.2, 1.3, 1.0, 1.1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.2f, 1.3f, 1.0f, 1.1f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_scalar_from_3d)
@@ -227,7 +228,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_scalar_from_3d)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3, 2.0, 2.1, 2.2, 2.3});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f, 2.0f, 2.1f, 2.2f, 2.3f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0, 0, 1, 1, 0, 1});
     auto result = backend->create_tensor(element::f32, out_shape);
@@ -235,7 +236,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_scalar_from_3d)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.1, 2.1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        (vector<float>{1.1f, 2.1f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_1d_from_3d)
@@ -252,15 +253,16 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_1d_from_3d)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3, 2.0, 2.1, 2.2, 2.3});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f, 2.0f, 2.1f, 2.2f, 2.3f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0, 1, 1, 0});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.2, 1.3, 2.0, 2.1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.2f, 1.3f, 2.0f, 2.1f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_2d_from_3d)
@@ -277,15 +279,16 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_2d_from_3d)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3, 2.0, 2.1, 2.2, 2.3});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f, 2.0f, 2.1f, 2.2f, 2.3f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{1});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{2.0, 2.1, 2.2, 2.3}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f((vector<float>{2.0f, 2.1f, 2.2f, 2.3f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_scalar_from_2d)
@@ -302,7 +305,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_scalar_from_2d)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0, 0, 0, 1});
     auto result = backend->create_tensor(element::f32, out_shape);
@@ -310,7 +313,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_scalar_from_2d)
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
     EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.0, 1.1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        (vector<float>{1.0f, 1.1f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_1d_from_2d)
@@ -327,15 +330,16 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_1d_from_2d)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{1, 0});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.2, 1.3, 1.0, 1.1}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.2f, 1.3f, 1.0f, 1.1f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_scalar_from_3d)
@@ -352,15 +356,16 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_scalar_from_3d)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3, 2.0, 2.1, 2.2, 2.3});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f, 2.0f, 2.1f, 2.2f, 2.3f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1.1, 2.1, 1.3, 2.2}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.1f, 2.1f, 1.3f, 2.2f}),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_1d_from_3d)
@@ -377,14 +382,14 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_1d_from_3d)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3, 2.0, 2.1, 2.2, 2.3});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f, 2.0f, 2.1f, 2.2f, 2.3f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{0, 1, 1, 0, 0, 0, 1, 1});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f((vector<float>{1.2, 1.3, 2.0, 2.1, 1.0, 1.1, 2.2, 2.3}),
+    EXPECT_TRUE(test::all_close_f((vector<float>{1.2f, 1.3f, 2.0f, 2.1f, 1.0f, 1.1f, 2.2f, 2.3f}),
                                   read_vector<float>(result),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
@@ -403,14 +408,14 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_nd_batch_2d_from_3d)
 
     // Create some tensors for input/output
     auto p = backend->create_tensor(element::f32, params_shape);
-    copy_data(p, vector<float>{1.0, 1.1, 1.2, 1.3, 2.0, 2.1, 2.2, 2.3});
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 1.3f, 2.0f, 2.1f, 2.2f, 2.3f});
     auto i = backend->create_tensor(element::i32, indices_shape);
     copy_data(i, vector<int32_t>{1, 0});
     auto result = backend->create_tensor(element::f32, out_shape);
 
     auto c = backend->compile(f);
     c->call_with_validate({result}, {p, i});
-    EXPECT_TRUE(test::all_close_f((vector<float>{2.0, 2.1, 2.2, 2.3, 1.0, 1.1, 1.2, 1.3}),
+    EXPECT_TRUE(test::all_close_f((vector<float>{2.0f, 2.1f, 2.2f, 2.3f, 1.0f, 1.1f, 1.2f, 1.3f}),
                                   read_vector<float>(result),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
