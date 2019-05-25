@@ -56,7 +56,8 @@ Node::~Node()
             if (input.get_output().get_node().use_count() == 2)
             {
                 // Don't want to trigger a deep recursive delete
-                NodeVector nodes;
+                NodeVector nodes{input.get_output().get_node()};
+                input.remove_output();
                 safe_delete(nodes, true);
                 return;
             }
@@ -168,6 +169,7 @@ void Node::set_output_size(size_t n)
     NGRAPH_CHECK(n >= m_outputs.size(), "shrinking ", m_outputs.size(), " to ", n);
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
+        // create the descriptors
         get_output_descriptor(i);
     }
 }

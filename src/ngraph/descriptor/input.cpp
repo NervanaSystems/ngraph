@@ -82,6 +82,7 @@ void descriptor::Input::remove_output()
     if (m_output != nullptr)
     {
         m_output->remove_input(this);
+        m_src_node = nullptr;
         m_output = nullptr;
     }
 }

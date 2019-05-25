@@ -109,7 +109,7 @@ namespace ngraph
 
         /// \brief Construct an unitialized Node
         Node() {}
-        /// Constructor for Node subclasses that have metaclasses.
+        /// \brief Constructor for Node subclasses that have metaclasses.
         /// \param arguments The 0th output of node i will connect to input i
         /// \param output_size Number of outputs for this node
         Node(const NodeVector& arguments, size_t output_size = 1);
