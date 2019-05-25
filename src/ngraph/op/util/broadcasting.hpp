@@ -34,6 +34,16 @@ namespace ngraph
         /// \return Numpy-style broadcasted list of nodes.
         NodeVector numpy_style_broadcast(const NodeVector& inputs);
 
+        /// \brief Cast shape of an input node to the requested output shape using NumPy's broadcasting rules
+        ///
+        /// \param input_node original input node
+        /// \param shape requested output shape
+        ///
+        /// \return Broadcast node.
+        std::shared_ptr<ngraph::Node>
+            numpy_style_broadcast(const std::shared_ptr<ngraph::Node>& input_node,
+                                  const Shape& shape);
+
         /// \brief Cast shape of two nodes to make them compatible for an element-wise binary operation.
         ///
         /// If necessary the right-hand-side argument will be broadcast to match the shape
@@ -56,7 +66,7 @@ namespace ngraph
 
         /// \brief      Broadcast shape of two nodes to make them compatible for a matrix multiplication.
         ///
-        /// \note       This function is reflecting broadcasting behaviour of NumPys' `matmul` operation
+        /// \note       This function is reflecting broadcasting behaviour of NumPy's `matmul` operation
         ///             \link https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html
         ///             This mean that only \"stack of matrices\" axes are bidirectionally broadcasted.
         ///             The last two dimension are left untouched.

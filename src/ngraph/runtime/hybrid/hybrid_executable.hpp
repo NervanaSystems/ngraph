@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/executable.hpp"
 
 namespace ngraph
@@ -53,7 +54,11 @@ public:
         return std::dynamic_pointer_cast<T>(m_executable);
     }
 
-private:
+    /// Allow overriding the configuration of the pass manager. If you overload this method
+    /// you must define all passes.
+    virtual void configure_passes(ngraph::pass::Manager& pass_manager);
+
+protected:
     std::shared_ptr<ngraph::Function> m_function;
     std::shared_ptr<Executable> m_executable;
     std::unordered_map<std::shared_ptr<ngraph::op::Parameter>, std::shared_ptr<ngraph::op::Result>>
