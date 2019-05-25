@@ -42,6 +42,15 @@ descriptor::Input::Input(Node* node, size_t index)
 {
 }
 
+descriptor::Input::~Input()
+{
+    if (nullptr != m_output)
+    {
+        m_output->remove_input(this);
+        m_output = nullptr;
+    }
+}
+
 void descriptor::Input::replace_output(Output& new_output)
 {
     if (m_output != nullptr)
@@ -66,6 +75,15 @@ void descriptor::Input::replace_output(Output& new_output)
 void descriptor::Input::replace_output(std::shared_ptr<Node> node, size_t i)
 {
     replace_output(node->m_outputs.at(i));
+}
+
+void descriptor::Input::remove_output()
+{
+    if (m_output != nullptr)
+    {
+        m_output->remove_input(this);
+        m_output = nullptr;
+    }
 }
 
 std::shared_ptr<Node> descriptor::Input::get_node() const

@@ -47,6 +47,49 @@ Node::Node(const NodeVector& arguments, size_t output_size)
     set_output_size(output_size);
 }
 
+Node::~Node()
+{
+    for (auto& input : m_inputs)
+    {
+        if (input.has_output())
+        {
+            if (input.get_output().get_node().use_count() == 2)
+            {
+                // Don't want to trigger a deep recursive delete
+                NodeVector nodes;
+                safe_delete(nodes, true);
+                return;
+            }
+            input.remove_output();
+        }
+    }
+}
+
+void Node::safe_delete(NodeVector& nodes, bool recurse)
+{
+    for (auto& input : m_inputs)
+    {
+        if (input.has_output())
+        {
+            auto node = input.get_output().get_node();
+            if (node.use_count() == 2)
+            {
+                nodes.push_back(node);
+            }
+            input.remove_output();
+        }
+    }
+    if (recurse)
+    {
+        while (nodes.size() > 0)
+        {
+            auto node = nodes.back();
+            nodes.pop_back();
+            node->safe_delete(nodes, false);
+        }
+    }
+}
+
 void Node::set_arguments(const NodeVector& arguments)
 {
     OutputVector outputs;
@@ -254,14 +297,6 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
                      " has multiple outputs");
     }
     return m_inputs.at(index).get_output().get_node();
-}
-
-Node::~Node()
-{
-    for (auto& input : m_inputs)
-    {
-        input.get_output().remove_input(&input);
-    }
 }
 
 NodeVector Node::get_arguments() const

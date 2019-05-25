@@ -39,6 +39,7 @@ namespace ngraph
             /// \param output The output that supplies a value for this input
             Input(Node* node, size_t index, Output& output);
             Input(Node* node, size_t index);
+            ~Input();
 
             /// \return the node that this is an input of
             std::shared_ptr<Node> get_node() const;
@@ -51,6 +52,7 @@ namespace ngraph
             const Output& get_output() const { return *m_output; }
             /// \return the connected output
             Output& get_output() { return *m_output; }
+            bool has_output() const { return m_output != nullptr; }
             /// \return the tensor of the connected output
             const Tensor& get_tensor() const;
 
@@ -59,6 +61,7 @@ namespace ngraph
 
             void replace_output(std::shared_ptr<Node> node, size_t i);
             void replace_output(Output& output);
+            void remove_output();
 
             /// \return true if the value of this input is relevant to the output shapes of the
             ///         corresponding node. (Usually this is false.)
