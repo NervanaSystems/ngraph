@@ -113,7 +113,7 @@ bool runtime::dynamic::DynamicExecutable::call(
 
                 // TODO(amprocte): For host-resident tensors we should be able to skip the read,
                 // but no API for that yet.
-                input->read(arg_value_base_pointers[i], 0, input->get_size_in_bytes());
+                input->read(arg_value_base_pointers[i], input->get_size_in_bytes());
             }
             else
             {
@@ -225,18 +225,18 @@ const ngraph::Shape& runtime::dynamic::DynamicTensor::get_shape() const
     return m_wrapped_tensor->get_shape();
 }
 
-void runtime::dynamic::DynamicTensor::write(const void* p, size_t offset, size_t n)
+void runtime::dynamic::DynamicTensor::write(const void* p, size_t n)
 {
     NGRAPH_CHECK(m_wrapped_tensor != nullptr,
                  "tried to write to a dynamic tensor with no allocated storage");
-    m_wrapped_tensor->write(p, offset, n);
+    m_wrapped_tensor->write(p, n);
 }
 
-void runtime::dynamic::DynamicTensor::read(void* p, size_t offset, size_t n) const
+void runtime::dynamic::DynamicTensor::read(void* p, size_t n) const
 {
     NGRAPH_CHECK(m_wrapped_tensor != nullptr,
                  "tried to read from a dynamic tensor with no allocated storage");
-    m_wrapped_tensor->read(p, offset, n);
+    m_wrapped_tensor->read(p, n);
 }
 
 void runtime::dynamic::DynamicTensor::copy_from(const ngraph::runtime::Tensor& source)
