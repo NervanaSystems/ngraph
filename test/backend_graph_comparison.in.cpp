@@ -382,10 +382,10 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
         random_init(data.get(), engine);
         auto ref_tensor = ref->create_tensor(param->get_element_type(), param->get_shape());
         auto bk_tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
-        ref_tensor->write(
-            data->get_data_ptr(), 0, data->get_element_count() * data->get_element_type().size());
-        bk_tensor->write(
-            data->get_data_ptr(), 0, data->get_element_count() * data->get_element_type().size());
+        ref_tensor->write(data->get_data_ptr(),
+                          data->get_element_count() * data->get_element_type().size());
+        bk_tensor->write(data->get_data_ptr(),
+                         data->get_element_count() * data->get_element_type().size());
         ref_args.push_back(ref_tensor);
         bk_args.push_back(bk_tensor);
     }
@@ -459,8 +459,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
                 auto bk_tensor =
                     backend->create_tensor(param->get_element_type(), param->get_shape());
                 size_t size_in_bytes = ref_tensor->get_size_in_bytes();
-                ref_tensor->read(data->get_data_ptr(), 0, size_in_bytes);
-                bk_tensor->write(data->get_data_ptr(), 0, size_in_bytes);
+                ref_tensor->read(data->get_data_ptr(), size_in_bytes);
+                bk_tensor->write(data->get_data_ptr(), size_in_bytes);
                 bk_args.push_back(bk_tensor);
             }
         }
