@@ -91,10 +91,44 @@ std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_strea
     throw runtime_error("load opertion unimplemented.");
 }
 
-void runtime::Backend::post_write(const void* p, size_t size_in_bytes, std::promise<void>& promise)
+runtime::Backend::AsyncEvent::AsyncEvent(Type type, void* p, size_t size_in_bytes)
+    : m_type{type}
+    , m_data{p}
+    , m_size_in_bytes{size_in_bytes}
+    , m_executable{nullptr}
+    , m_outputs{nullptr}
+    , m_inputs{nullptr}
 {
 }
 
-void runtime::Backend::post_read(void* p, size_t size_in_bytes, std::promise<void>& promise)
+runtime::Backend::AsyncEvent::AsyncEvent(const shared_ptr<Executable>& executable,
+                                         const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                         const vector<shared_ptr<runtime::Tensor>>& inputs)
+    : m_type{Type::EXECUTE}
+    , m_data{nullptr}
+    , m_size_in_bytes{0}
+    , m_executable{executable}
+    , m_outputs{&outputs}
+    , m_inputs{&inputs}
+{
+}
+
+void runtime::Backend::post_async_read_event(void* p,
+                                             size_t size_in_bytes,
+                                             std::promise<void>& promise)
+{
+}
+
+void runtime::Backend::post_async_write_event(const void* p,
+                                              size_t size_in_bytes,
+                                              std::promise<void>& promise)
+{
+}
+
+void runtime::Backend::post_async_execute_event(
+    const std::shared_ptr<Executable>& executable,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
+    const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
+    std::promise<void>& promise)
 {
 }

@@ -103,7 +103,7 @@ future<void> runtime::Tensor::begin_write(const void* p, size_t n)
     if (m_backend)
     {
         auto f = m_promise.get_future();
-        m_backend->post_write(p, n, m_promise);
+        m_backend->post_async_write_event(p, n, m_promise);
         return f;
     }
     else
