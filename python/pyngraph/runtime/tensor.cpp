@@ -29,7 +29,7 @@ void regclass_pyngraph_runtime_Tensor(py::module m)
                                                                                          "Tensor");
     tensor.doc() = "ngraph.impl.runtime.Tensor wraps ngraph::runtime::Tensor";
     tensor.def("write",
-               (void (ngraph::runtime::Tensor::*)(const void*, size_t, size_t)) &
+               (void (ngraph::runtime::Tensor::*)(const void*, size_t)) &
                    ngraph::runtime::Tensor::write);
     tensor.def("read", &ngraph::runtime::Tensor::read);
 
