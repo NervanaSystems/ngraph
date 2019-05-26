@@ -119,16 +119,20 @@ namespace ngraph
             /// \brief Write bytes into the tensor. The data buffer pointed to by `p` must
             ///     be kept live until after the future is signaled complete
             /// \param p Pointer to source of data
-            /// \param n Number of bytes to write, must be integral number of elements.
+            /// \param size_in_bytes Number of bytes to write, must be integral number of elements.
+            /// \param buffer_number For double-buffering, which buffer to write.
             /// \return std::future to track the operation
-            virtual std::future<void> begin_write(const void* p, size_t n);
+            virtual std::future<void>
+                begin_write(const void* p, size_t size_in_bytes, size_t buffer_number);
 
             /// \brief Read bytes from the tensor. The data buffer pointed to by `p` must
             ///     be kept live until after the future is signaled complete
             /// \param p Pointer to destination for data
-            /// \param n Number of bytes to read, must be integral number of elements.
+            /// \param size_in_bytes Number of bytes to read, must be integral number of elements.
+            /// \param buffer_number For double-buffering, which buffer to read.
             /// \return std::future to track the operation
-            virtual std::future<void> begin_read(void* p, size_t n);
+            virtual std::future<void>
+                begin_read(void* p, size_t size_in_bytes, size_t buffer_number);
 
             /// \brief copy bytes directly from source to this tensor
             /// \param source The source tensor

@@ -91,8 +91,12 @@ std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_strea
     throw runtime_error("load opertion unimplemented.");
 }
 
-runtime::Backend::AsyncEvent::AsyncEvent(Type type, void* p, size_t size_in_bytes)
+runtime::Backend::AsyncEvent::AsyncEvent(Type type,
+                                         size_t buffer_number,
+                                         void* p,
+                                         size_t size_in_bytes)
     : m_type{type}
+    , m_buffer_number{buffer_number}
     , m_data{p}
     , m_size_in_bytes{size_in_bytes}
     , m_executable{nullptr}
@@ -101,10 +105,12 @@ runtime::Backend::AsyncEvent::AsyncEvent(Type type, void* p, size_t size_in_byte
 {
 }
 
-runtime::Backend::AsyncEvent::AsyncEvent(const shared_ptr<Executable>& executable,
+runtime::Backend::AsyncEvent::AsyncEvent(size_t buffer_number,
+                                         const shared_ptr<Executable>& executable,
                                          const vector<shared_ptr<runtime::Tensor>>& outputs,
                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
     : m_type{Type::EXECUTE}
+    , m_buffer_number{buffer_number}
     , m_data{nullptr}
     , m_size_in_bytes{0}
     , m_executable{executable}
@@ -115,12 +121,14 @@ runtime::Backend::AsyncEvent::AsyncEvent(const shared_ptr<Executable>& executabl
 
 void runtime::Backend::post_async_read_event(void* p,
                                              size_t size_in_bytes,
+                                             size_t buffer_number,
                                              std::promise<void>& promise)
 {
 }
 
 void runtime::Backend::post_async_write_event(const void* p,
                                               size_t size_in_bytes,
+                                              size_t buffer_number,
                                               std::promise<void>& promise)
 {
 }
@@ -129,6 +137,7 @@ void runtime::Backend::post_async_execute_event(
     const std::shared_ptr<Executable>& executable,
     const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
+    size_t buffer_number,
     std::promise<void>& promise)
 {
 }

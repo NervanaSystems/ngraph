@@ -163,11 +163,13 @@ protected:
         }
         const std::vector<std::shared_ptr<runtime::Tensor>>* get_inputs() const { return m_inputs; }
     private:
-        AsyncEvent(Type, void* p, size_t size_in_bytes);
-        AsyncEvent(const std::shared_ptr<Executable>& m_executable,
+        AsyncEvent(Type type, size_t buffer_number, void* p, size_t size_in_bytes);
+        AsyncEvent(size_t buffer_number,
+                   const std::shared_ptr<Executable>& m_executable,
                    const std::vector<std::shared_ptr<runtime::Tensor>>& m_outputs,
                    const std::vector<std::shared_ptr<runtime::Tensor>>& m_inputs);
         const Type m_type;
+        size_t m_buffer_number;
         void* m_data;
         const size_t m_size_in_bytes;
         std::shared_ptr<Executable> m_executable;
@@ -175,10 +177,17 @@ protected:
         const std::vector<std::shared_ptr<runtime::Tensor>>* m_inputs;
     };
 
-    void post_async_read_event(void* p, size_t size_in_bytes, std::promise<void>& promise);
-    void post_async_write_event(const void* p, size_t size_in_bytes, std::promise<void>& promise);
+    void post_async_read_event(void* p,
+                               size_t size_in_bytes,
+                               size_t buffer_number,
+                               std::promise<void>& promise);
+    void post_async_write_event(const void* p,
+                                size_t size_in_bytes,
+                                size_t buffer_number,
+                                std::promise<void>& promise);
     void post_async_execute_event(const std::shared_ptr<Executable>& executable,
                                   const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                                   const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
+                                  size_t buffer_number,
                                   std::promise<void>& promise);
 };

@@ -70,9 +70,9 @@ TEST(async, tensor_read_write)
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
     shared_ptr<runtime::Tensor> r = backend->create_tensor(element::f32, shape);
 
-    auto future_a = a->begin_write(data.data(), data.size() * sizeof(float));
-    auto future_b = b->begin_write(data.data(), data.size() * sizeof(float));
-    auto future_r = r->begin_read(data_r.data(), data_r.size() * sizeof(float));
+    auto future_a = a->begin_write(data.data(), data.size() * sizeof(float), 0);
+    auto future_b = b->begin_write(data.data(), data.size() * sizeof(float), 0);
+    auto future_r = r->begin_read(data_r.data(), data_r.size() * sizeof(float), 0);
     ASSERT_TRUE(future_a.valid());
     ASSERT_TRUE(future_b.valid());
     ASSERT_TRUE(future_r.valid());

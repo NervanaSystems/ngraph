@@ -98,12 +98,12 @@ void runtime::Tensor::copy_from(const ngraph::runtime::Tensor& source)
     write(buffer.get_ptr(), 0, size);
 }
 
-future<void> runtime::Tensor::begin_write(const void* p, size_t n)
+future<void> runtime::Tensor::begin_write(const void* p, size_t size_in_bytes, size_t buffer_number)
 {
     if (m_backend)
     {
         auto f = m_promise.get_future();
-        m_backend->post_async_write_event(p, n, m_promise);
+        m_backend->post_async_write_event(p, size_in_bytes, buffer_number, m_promise);
         return f;
     }
     else
@@ -117,11 +117,21 @@ future<void> runtime::Tensor::begin_write(const void* p, size_t n)
     // return f;
 }
 
-future<void> runtime::Tensor::begin_read(void* p, size_t n)
+future<void> runtime::Tensor::begin_read(void* p, size_t size_in_bytes, size_t buffer_number)
 {
-    using namespace std::placeholders;
-    auto f = m_promise.get_future();
-    auto bound_f = bind(&Tensor::read, this, _1, _2, _3);
-    async(bound_f, p, 0, n);
-    return f;
+    if (m_backend)
+    {
+        auto f = m_promise.get_future();
+        m_backend->post_async_read_event(p, size_in_bytes, buffer_number, m_promise);
+        return f;
+    }
+    else
+    {
+        throw runtime_error("Async operations not supported for this backend");
+    }
+    // using namespace std::placeholders;
+    // auto f = m_promise.get_future();
+    // auto bound_f = bind(&Tensor::read, this, _1, _2, _3);
+    // async(bound_f, p, 0, n);
+    // return f;
 }
