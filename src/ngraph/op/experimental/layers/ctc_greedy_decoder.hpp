@@ -16,30 +16,32 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise Maximum(arg, arg * alpha) operation
-        ///        alpha > 0
-        ///
-        class CPULeakyRelu : public ngraph::op::util::UnaryElementwiseArithmetic
+        class CTCGreedyDecoder : public Op
         {
         public:
-            /// \brief Constructs a CPULeakyRelu operation.
+            /// \brief Constructs a CTCGreedyDecoder operation
             ///
-            /// \param arg Node input to the Relu.
-            CPULeakyRelu(std::shared_ptr<ngraph::Node> arg, float alpha);
-            float get_alpha() const { return m_alpha; }
+            /// \param input              Logits on which greedy decoding is performed
+            /// \param seq_len            Sequence lengths
+            /// \param ctc_merge_repeated Whether to merge repeated labels
+            CTCGreedyDecoder(const std::shared_ptr<Node>& input,
+                             const std::shared_ptr<Node>& seq_len,
+                             const bool ctc_merge_repeated);
+
+            void validate_and_infer_types() override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            bool get_ctc_merge_repeated() const { return m_ctc_merge_repeated; }
         private:
-            float m_alpha;
+            bool m_ctc_merge_repeated;
         };
     }
 }

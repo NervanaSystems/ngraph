@@ -16,30 +16,27 @@
 
 #pragma once
 
+#include <memory>
+
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise Maximum(arg, arg * alpha) operation
-        ///        alpha > 0
-        ///
-        class CPULeakyRelu : public ngraph::op::util::UnaryElementwiseArithmetic
+        class LeakyRelu : public ngraph::op::util::FusedOp
         {
         public:
-            /// \brief Constructs a CPULeakyRelu operation.
-            ///
-            /// \param arg Node input to the Relu.
-            CPULeakyRelu(std::shared_ptr<ngraph::Node> arg, float alpha);
-            float get_alpha() const { return m_alpha; }
+            LeakyRelu(const std::shared_ptr<ngraph::Node>& data,
+                      const std::shared_ptr<ngraph::Node>& alpha);
+
+            virtual NodeVector decompose_op() const override;
+
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-
-        private:
-            float m_alpha;
         };
     }
 }
