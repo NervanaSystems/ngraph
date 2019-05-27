@@ -119,25 +119,24 @@ runtime::Backend::AsyncEvent::AsyncEvent(size_t buffer_number,
 {
 }
 
-void runtime::Backend::post_async_read_event(void* p,
-                                             size_t size_in_bytes,
-                                             size_t buffer_number,
-                                             std::promise<void>& promise)
+future<void>
+    runtime::Backend::post_async_read_event(void* p, size_t size_in_bytes, size_t buffer_number)
+{
+    auto event = make_shared<AsyncEvent>(AsyncEvent::Type::READ, buffer_number, p, size_in_bytes);
+    m_event_queue.post_event(event);
+    return event->get_future();
+}
+
+future<void> runtime::Backend::post_async_write_event(const void* p,
+                                                      size_t size_in_bytes,
+                                                      size_t buffer_number)
 {
 }
 
-void runtime::Backend::post_async_write_event(const void* p,
-                                              size_t size_in_bytes,
-                                              size_t buffer_number,
-                                              std::promise<void>& promise)
-{
-}
-
-void runtime::Backend::post_async_execute_event(
+future<void> runtime::Backend::post_async_execute_event(
     const std::shared_ptr<Executable>& executable,
     const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
     const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
-    size_t buffer_number,
-    std::promise<void>& promise)
+    size_t buffer_number)
 {
 }
