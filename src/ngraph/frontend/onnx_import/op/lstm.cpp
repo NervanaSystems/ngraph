@@ -241,14 +241,14 @@ namespace ngraph
                                          const LSTMAttributes& attributes)
                         : m_X{X}
                         // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
-                        , m_W{reshape::squeeze(W)}
-                        , m_R{reshape::squeeze(R)}
-                        , m_B{reshape::squeeze(B)}
-                        , m_P{reshape::squeeze(P)}
-                        , m_initial_h{reshape::squeeze(initial_h)}
-                        , m_initial_c{reshape::squeeze(initial_c)}
-                        , m_seq_lengths{seq_lengths}
-                        , m_attributes{attributes}
+                        , m_W(reshape::squeeze(W))
+                        , m_R(reshape::squeeze(R))
+                        , m_B(reshape::squeeze(B))
+                        , m_P(reshape::squeeze(P))
+                        , m_initial_h(reshape::squeeze(initial_h))
+                        , m_initial_c(reshape::squeeze(initial_c))
+                        , m_seq_lengths(seq_lengths)
+                        , m_attributes(attributes)
                     {
                     }
 
@@ -302,7 +302,7 @@ namespace ngraph
                         std::int32_t time_step{1};
                         for (const auto& in_x : in_seqs)
                         {
-                            const std::shared_ptr<ngraph::Node>& lstm_cell =
+                            std::shared_ptr<ngraph::Node> lstm_cell =
                                 std::make_shared<ngraph::op::LSTMCell>(
                                     in_x,
                                     m_W,
@@ -318,10 +318,8 @@ namespace ngraph
                                     m_attributes.m_clip_threshold,
                                     m_attributes.m_input_forget);
 
-                            const std::shared_ptr<ngraph::Node>& H =
-                                get_output_element(lstm_cell, 0);
-                            const std::shared_ptr<ngraph::Node>& C =
-                                get_output_element(lstm_cell, 1);
+                            std::shared_ptr<ngraph::Node> H = get_output_element(lstm_cell, 0);
+                            std::shared_ptr<ngraph::Node> C = get_output_element(lstm_cell, 1);
 
                             // Expand tensors with empty outermost dim, so we can later concatenate
                             // them.
