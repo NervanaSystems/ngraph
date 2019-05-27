@@ -164,7 +164,7 @@ protected:
                    const std::vector<std::shared_ptr<runtime::Tensor>>& m_outputs,
                    const std::vector<std::shared_ptr<runtime::Tensor>>& m_inputs);
         void* get_data() const { return m_data; }
-        bool get_size_in_bytes() const { return m_size_in_bytes; }
+        size_t get_size_in_bytes() const { return m_size_in_bytes; }
         Type get_type() const { return m_type; }
         size_t get_buffer_number() const { return m_buffer_number; }
         std::shared_ptr<Executable> get_executable() const { return m_executable; }
@@ -175,6 +175,7 @@ protected:
         }
         const std::vector<std::shared_ptr<runtime::Tensor>>& get_inputs() const { return m_inputs; }
         std::future<void> get_future() { return m_promise.get_future(); }
+        void signal_result() { m_promise.set_value(); }
     private:
         const Type m_type;
         size_t m_buffer_number;

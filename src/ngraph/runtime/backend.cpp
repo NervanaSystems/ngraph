@@ -114,6 +114,8 @@ runtime::Backend::AsyncEvent::AsyncEvent(Type type,
     , m_outputs{nullptr}
     , m_inputs{nullptr}
 {
+    NGRAPH_INFO << "AsyncEvent " << m_size_in_bytes;
+    NGRAPH_INFO << get_size_in_bytes();
 }
 
 runtime::Backend::AsyncEvent::AsyncEvent(const shared_ptr<Executable>& executable,
@@ -139,8 +141,6 @@ future<void> runtime::Backend::post_async_read_event(const shared_ptr<Tensor>& t
         make_shared<AsyncEvent>(AsyncEvent::Type::READ, tensor, p, size_in_bytes, buffer_number);
     unique_lock<std::mutex> lock(m_event_queue_mutex);
     m_event_queue.push_back(event);
-    NGRAPH_INFO << "read";
-    NGRAPH_INFO << "m_event_queue_condition " << &m_event_queue_condition;
     m_event_queue_condition.notify_all();
     return event->get_future();
 }
@@ -154,8 +154,6 @@ future<void> runtime::Backend::post_async_write_event(const shared_ptr<Tensor>& 
         AsyncEvent::Type::WRITE, tensor, const_cast<void*>(p), size_in_bytes, buffer_number);
     unique_lock<std::mutex> lock(m_event_queue_mutex);
     m_event_queue.push_back(event);
-    NGRAPH_INFO << "write";
-    NGRAPH_INFO << "m_event_queue_condition " << &m_event_queue_condition;
     m_event_queue_condition.notify_all();
     return event->get_future();
 }
@@ -168,8 +166,6 @@ future<void> runtime::Backend::post_async_execute_event(
     auto event = make_shared<AsyncEvent>(executable, outputs, inputs);
     unique_lock<std::mutex> lock(m_event_queue_mutex);
     m_event_queue.push_back(event);
-    NGRAPH_INFO << "execute";
-    NGRAPH_INFO << "m_event_queue_condition " << &m_event_queue_condition;
     m_event_queue_condition.notify_all();
     return event->get_future();
 }
@@ -202,16 +198,19 @@ void runtime::Backend::async_thread_process(const shared_ptr<AsyncEvent>& event)
     switch (event->get_type())
     {
     case AsyncEvent::Type::READ:
-        NGRAPH_INFO << "process read";
+        NGRAPH_INFO << "process read " << event->get_size_in_bytes();
         event->get_tensor()->read(event->get_data(), 0, event->get_size_in_bytes());
+        event->signal_result();
         break;
     case AsyncEvent::Type::WRITE:
-        NGRAPH_INFO << "process write";
+        NGRAPH_INFO << "process write " << event->get_size_in_bytes();
         event->get_tensor()->write(event->get_data(), 0, event->get_size_in_bytes());
+        event->signal_result();
         break;
     case AsyncEvent::Type::EXECUTE:
         NGRAPH_INFO << "process execute";
         event->get_executable()->call(event->get_outputs(), event->get_inputs());
+        event->signal_result();
         break;
     }
 }

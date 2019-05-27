@@ -100,6 +100,7 @@ void runtime::Tensor::copy_from(const ngraph::runtime::Tensor& source)
 
 future<void> runtime::Tensor::begin_write(const void* p, size_t size_in_bytes, size_t buffer_number)
 {
+    NGRAPH_INFO << size_in_bytes;
     if (m_backend)
     {
         // auto f = m_promise.get_future();
@@ -119,6 +120,7 @@ future<void> runtime::Tensor::begin_write(const void* p, size_t size_in_bytes, s
 
 future<void> runtime::Tensor::begin_read(void* p, size_t size_in_bytes, size_t buffer_number)
 {
+    NGRAPH_INFO << size_in_bytes;
     if (m_backend)
     {
         // auto f = m_promise.get_future();
