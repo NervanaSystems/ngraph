@@ -130,7 +130,6 @@ void runtime::HostTensor::write(const void* source, size_t tensor_offset, size_t
 
 void runtime::HostTensor::read(void* target, size_t tensor_offset, size_t n) const
 {
-    NGRAPH_INFO << "read " << n;
     if (tensor_offset + n > m_buffer_size)
     {
         throw out_of_range("read access past end of tensor");
