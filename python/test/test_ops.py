@@ -662,7 +662,7 @@ def test_onehot():
     element_type = Type.i32
     A = Parameter(element_type, Shape([3]))
     parameter_list = [A]
-    function = Function([OneHot(A, Shape([3, 3]))], parameter_list, 'test')
+    function = Function([OneHot(A, Shape([3, 3]), 0)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([3]))
