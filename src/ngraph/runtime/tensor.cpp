@@ -104,7 +104,7 @@ future<void> runtime::Tensor::begin_write(const void* p, size_t size_in_bytes, s
     {
         // auto f = m_promise.get_future();
         return m_backend->post_async_write_event(
-            const_cast<void*>(p), size_in_bytes, buffer_number);
+            shared_from_this(), p, size_in_bytes, buffer_number);
     }
     else
     {
@@ -122,7 +122,8 @@ future<void> runtime::Tensor::begin_read(void* p, size_t size_in_bytes, size_t b
     if (m_backend)
     {
         // auto f = m_promise.get_future();
-        return m_backend->post_async_read_event(p, size_in_bytes, buffer_number);
+        return m_backend->post_async_read_event(
+            shared_from_this(), p, size_in_bytes, buffer_number);
     }
     else
     {

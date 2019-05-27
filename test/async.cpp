@@ -54,6 +54,7 @@ TEST(async, execute)
 
 TEST(async, tensor_read_write)
 {
+    chrono::milliseconds ten_ms(100);
     Shape shape{100000};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
@@ -72,16 +73,16 @@ TEST(async, tensor_read_write)
 
     auto future_a = a->begin_write(data.data(), data.size() * sizeof(float), 0);
     auto future_b = b->begin_write(data.data(), data.size() * sizeof(float), 0);
-    auto future_r = r->begin_read(data_r.data(), data_r.size() * sizeof(float), 0);
     ASSERT_TRUE(future_a.valid());
     ASSERT_TRUE(future_b.valid());
-    ASSERT_TRUE(future_r.valid());
-
-    chrono::milliseconds ten_ms(100);
-    EXPECT_EQ(future_r.wait_for(ten_ms), future_status::timeout);
 
     auto future = handle->begin_execute({r}, {a, b});
+
+    // get() waits for the result to be ready
     future.get();
+
+    auto future_r = r->begin_read(data_r.data(), data_r.size() * sizeof(float), 0);
+    ASSERT_TRUE(future_r.valid());
 
     EXPECT_EQ(future_a.wait_for(ten_ms), future_status::ready);
     EXPECT_EQ(future_b.wait_for(ten_ms), future_status::ready);

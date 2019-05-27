@@ -17,6 +17,7 @@
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/util.hpp"
@@ -25,6 +26,11 @@ using namespace std;
 using namespace ngraph;
 
 runtime::Executable::Executable()
+{
+}
+
+runtime::Executable::Executable(const shared_ptr<Backend>& backend)
+    : m_backend{backend}
 {
 }
 
@@ -139,10 +145,15 @@ bool runtime::Executable::begin_execute_helper(const vector<shared_ptr<runtime::
     return rc;
 }
 
-future<bool> runtime::Executable::begin_execute(const vector<shared_ptr<runtime::Tensor>>& outputs,
+future<void> runtime::Executable::begin_execute(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                 const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    using namespace std::placeholders;
-    auto bound_f = bind(&Executable::begin_execute_helper, this, _1, _2);
-    return async(bound_f, outputs, inputs);
+    if (m_backend)
+    {
+        return m_backend->post_async_execute_event(shared_from_this(), outputs, inputs);
+    }
+    else
+    {
+        throw runtime_error("Async operations not supported for this backend");
+    }
 }

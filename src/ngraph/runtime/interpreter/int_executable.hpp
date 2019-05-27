@@ -62,6 +62,7 @@
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
@@ -163,7 +164,8 @@ class ngraph::runtime::interpreter::INTExecutable : public Executable
     friend class INTBackend;
 
 public:
-    INTExecutable(const std::shared_ptr<Function>& function,
+    INTExecutable(const std::shared_ptr<runtime::Backend>& backend,
+                  const std::shared_ptr<Function>& function,
                   bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,

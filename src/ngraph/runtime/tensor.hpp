@@ -36,7 +36,7 @@ namespace ngraph
 
     namespace runtime
     {
-        class Tensor
+        class Tensor : public std::enable_shared_from_this<Tensor>
         {
             friend class Executable;
 
