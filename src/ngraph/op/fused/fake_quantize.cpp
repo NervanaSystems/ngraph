@@ -64,34 +64,34 @@ void op::FakeQuantize::pre_validate_and_infer_types()
         const Shape output_low_shape{output_low_pshape.to_shape()};
         const Shape output_high_shape{output_high_pshape.to_shape()};
 
-                NODE_VALIDATION_CHECK(
-                    this,
-                    (input_low_shape.size() == 0 ||
-                     (input_low_shape.size() == 1 && input_low_shape.at(0) == data_shape.at(1))),
-                    "Input low tensor shape: ",
-                    input_low_shape,
-                    ", must either be a scalar or a vector of size equal to number of channels.");
-                NODE_VALIDATION_CHECK(
-                    this,
-                    (input_high_shape.size() == 0 ||
-                     (input_high_shape.size() == 1 && input_high_shape.at(0) == data_shape.at(1))),
-                    "Input high tensor shape: ",
-                    input_high_shape,
-                    ", must either be a scalar or a vector of size equal to number of channels.");
-                NODE_VALIDATION_CHECK(
-                    this,
-                    (output_low_shape.size() == 0 ||
-                     (output_low_shape.size() == 1 && output_low_shape.at(0) == data_shape.at(1))),
-                    "Output low tensor shape: ",
-                    output_low_shape,
-                    ", must either be a scalar or a vector of size equal to number of channels.");
-                NODE_VALIDATION_CHECK(
-                    this,
-                    (output_high_shape.size() == 0 ||
-                     (output_high_shape.size() == 1 && output_high_shape.at(0) == data_shape.at(1))),
-                    "Output high tensor shape: ",
-                    output_high_shape,
-                    ", must either be a scalar or a vector of size equal to number of channels.");
+        NODE_VALIDATION_CHECK(
+            this,
+            (input_low_shape.size() == 0 ||
+             (input_low_shape.size() == 1 && input_low_shape.at(0) == data_shape.at(1))),
+            "Input low tensor shape: ",
+            input_low_shape,
+            ", must either be a scalar or a vector of size equal to number of channels.");
+        NODE_VALIDATION_CHECK(
+            this,
+            (input_high_shape.size() == 0 ||
+             (input_high_shape.size() == 1 && input_high_shape.at(0) == data_shape.at(1))),
+            "Input high tensor shape: ",
+            input_high_shape,
+            ", must either be a scalar or a vector of size equal to number of channels.");
+        NODE_VALIDATION_CHECK(
+            this,
+            (output_low_shape.size() == 0 ||
+             (output_low_shape.size() == 1 && output_low_shape.at(0) == data_shape.at(1))),
+            "Output low tensor shape: ",
+            output_low_shape,
+            ", must either be a scalar or a vector of size equal to number of channels.");
+        NODE_VALIDATION_CHECK(
+            this,
+            (output_high_shape.size() == 0 ||
+             (output_high_shape.size() == 1 && output_high_shape.at(0) == data_shape.at(1))),
+            "Output high tensor shape: ",
+            output_high_shape,
+            ", must either be a scalar or a vector of size equal to number of channels.");
     }
 }
 
