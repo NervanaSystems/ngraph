@@ -64,7 +64,11 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
     const size_t NUM_TRIES = 10;
     size_t tries = NUM_TRIES;
     vector<MatchClosure> original_matchers{m_matchers};
-    bool is_dyn_func = f->is_dynamic();
+    // This check is very expensive and is only needed for experimental features, so we will hide
+    // it behind an environment variable for now. TODO: Find a less expensive way to handle this.
+    static bool s_rerun_dynamic_check =
+        (std::getenv("NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK") != nullptr);
+    bool is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
     do
     {
         rewritten = false;
@@ -98,7 +102,7 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
                         // update the cached value.
                         if (closure.property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
                         {
-                            is_dyn_func = f->is_dynamic();
+                            is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
                         }
                         break;
                     }
@@ -198,8 +202,13 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
     bool changed = false;
     size_t i = 0;
 
+    // This check is very expensive and is only needed for experimental features, so we will hide
+    // it behind an environment variable for now. TODO: Find a less expensive way to handle this.
+    static bool s_rerun_dynamic_check =
+        (std::getenv("NGRAPH_GRAPH_REWRITE_RERUN_DYNAMIC_CHECK") != nullptr);
+
     auto run_matchers = [&]() -> bool {
-        bool is_dyn_func = f->is_dynamic();
+        bool is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
         for (auto node : f->get_ops())
         {
             for (auto& closure : m_matchers)
@@ -223,7 +232,7 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
                         // update the cached value.
                         if (closure.property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
                         {
-                            is_dyn_func = f->is_dynamic();
+                            is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
                         }
                         return true;
                     }

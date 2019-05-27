@@ -255,7 +255,7 @@ namespace ngraph
                 auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
                 auto arg3_buffer_index = external_function->get_buffer_index(args[3].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                size_t arg3_size = node->get_inputs()[3].get_tensor().size();
+                size_t arg3_size = node->input(3).get_tensor().size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -324,7 +324,7 @@ namespace ngraph
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                size_t arg2_size = node->get_inputs()[2].get_tensor().size();
+                size_t arg2_size = node->input(2).get_tensor().size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {

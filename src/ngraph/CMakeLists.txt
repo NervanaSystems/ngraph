@@ -168,6 +168,8 @@ set (SRC
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    op/experimental/layers/ctc_greedy_decoder.cpp
+    op/experimental/layers/ctc_greedy_decoder.hpp
     op/experimental/layers/detection_output.cpp
     op/experimental/layers/detection_output.hpp
     op/experimental/layers/interpolate.cpp
@@ -302,6 +304,8 @@ set (SRC
     op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/leaky_relu.cpp
+    op/fused/leaky_relu.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
     op/fused/mvn.cpp
