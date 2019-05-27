@@ -2018,14 +2018,14 @@ namespace ngraph
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(LeakyRelu)
+                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(CPULeakyRelu)
                 {
-                    auto leaky_relu_node = static_cast<const ngraph::op::LeakyRelu*>(node);
+                    auto leaky_relu_node = static_cast<const ngraph::op::CPULeakyRelu*>(node);
                     float alpha = leaky_relu_node->get_alpha();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    // LeakyRelu needs 3 primitives: input, result, and eltwise_forward.
+                    // CPULeakyRelu needs 3 primitives: input, result, and eltwise_forward.
                     index = mkldnn_emitter.reserve_primitive_space_cg(3);
                     deps = mkldnn_emitter.get_primitive_deps_cg(index);
 
@@ -2480,7 +2480,7 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormTrainingRelu>},
     {TI(BatchNormTrainingBackprop),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormTrainingBackprop>},
-    {TI(LeakyRelu), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<LeakyRelu>},
+    {TI(CPULeakyRelu), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<CPULeakyRelu>},
     {TI(LRN), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<LRN>},
     {TI(Lstm), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Lstm>},
     {TI(Relu), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Relu>},

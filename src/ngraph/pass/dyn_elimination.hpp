@@ -16,30 +16,20 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
-#include "ngraph/op/op.hpp"
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace pass
     {
-        /// \brief Elementwise Maximum(arg, arg * alpha) operation
-        ///        alpha > 0
-        ///
-        class CPULeakyRelu : public ngraph::op::util::UnaryElementwiseArithmetic
+        class DynElimination : public GraphRewrite
         {
         public:
-            /// \brief Constructs a CPULeakyRelu operation.
-            ///
-            /// \param arg Node input to the Relu.
-            CPULeakyRelu(std::shared_ptr<ngraph::Node> arg, float alpha);
-            float get_alpha() const { return m_alpha; }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            DynElimination();
 
         private:
-            float m_alpha;
+            void construct_transpose();
         };
     }
 }

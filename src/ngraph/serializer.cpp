@@ -75,6 +75,7 @@
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
@@ -1053,6 +1054,11 @@ static shared_ptr<ngraph::Function>
                                                          data_dilation_strides,
                                                          groups,
                                                          pad_type);
+                break;
+            }
+            case OP_TYPEID::LeakyRelu:
+            {
+                node = make_shared<op::LeakyRelu>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::Less:
@@ -2040,6 +2046,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["groups"] = tmp->get_groups();
         node["pad_type"] = tmp->get_pad_type();
         break;
+    }
+    case OP_TYPEID::LeakyRelu: { break;
     }
     case OP_TYPEID::Less: { break;
     }

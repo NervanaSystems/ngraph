@@ -13,29 +13,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/runtime/cpu/op/leaky_relu.hpp"
-#include "ngraph/util.hpp"
+
+#include "ngraph/op/fused/leaky_relu.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::CPULeakyRelu::CPULeakyRelu(shared_ptr<Node> arg, float alpha)
-    : UnaryElementwiseArithmetic("CPULeakyRelu", {arg})
-    , m_alpha(alpha)
+op::LeakyRelu::LeakyRelu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
+    : FusedOp("LeakyRelu", {data, alpha})
 {
     constructor_validate_and_infer_types();
-    if (alpha < 0)
-    {
-        throw ngraph_error("Leaky Relu expects non-negative alpha");
-    }
-    set_output_type(0, arg->get_element_type(), arg->get_shape());
 }
 
-shared_ptr<Node> op::CPULeakyRelu::copy_with_new_args(const NodeVector& new_args) const
+NodeVector op::LeakyRelu::decompose_op() const
 {
-    if (new_args.size() != 1)
+    auto data = get_argument(0);
+    auto alpha_node = get_argument(1);
+
+    alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data->get_shape());
+    return {std::make_shared<ngraph::op::Maximum>(data * alpha_node, data)};
+}
+
+shared_ptr<Node> op::LeakyRelu::copy_with_new_args(const NodeVector& new_args) const
+{
+    if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<CPULeakyRelu>(new_args.at(0), m_alpha);
+    return make_shared<LeakyRelu>(new_args.at(0), new_args.at(1));
 }
