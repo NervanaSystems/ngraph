@@ -70,9 +70,9 @@ namespace ngraph
         private:
             std::size_t m_hidden_size = 0.f;
             float m_clip = 0.f;
-            std::vector<std::string> m_activations;
-            std::vector<float> m_activation_alpha;
-            std::vector<float> m_activation_beta;
+            const std::vector<std::string> m_activations;
+            const std::vector<float> m_activation_alpha;
+            const std::vector<float> m_activation_beta;
         };
     }
 }
