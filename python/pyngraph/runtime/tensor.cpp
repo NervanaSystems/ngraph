@@ -28,11 +28,8 @@ void regclass_pyngraph_runtime_Tensor(py::module m)
     py::class_<ngraph::runtime::Tensor, std::shared_ptr<ngraph::runtime::Tensor>> tensor(m,
                                                                                          "Tensor");
     tensor.doc() = "ngraph.impl.runtime.Tensor wraps ngraph::runtime::Tensor";
-    tensor.def("write",
-               (void (ngraph::runtime::Tensor::*)(const void*, size_t)) &
-                   ngraph::runtime::Tensor::write);
-    tensor.def("read",
-               (void (ngraph::runtime::Tensor::*)(void*, size_t)) & ngraph::runtime::Tensor::read);
+    tensor.def("write", py::overload_cast<const void*, size_t>(&ngraph::runtime::Tensor::write));
+    tensor.def("read", py::overload_cast<void*, size_t>(&ngraph::runtime::Tensor::read));
 
     tensor.def_property_readonly("shape", &ngraph::runtime::Tensor::get_shape);
     tensor.def_property_readonly("element_count", &ngraph::runtime::Tensor::get_element_count);
