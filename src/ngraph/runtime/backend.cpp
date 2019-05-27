@@ -27,6 +27,9 @@ using namespace ngraph;
 
 runtime::Backend::~Backend()
 {
+    NGRAPH_INFO;
+    async_thread_stop();
+    NGRAPH_INFO;
 }
 
 std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string& op_name, ...)
@@ -103,6 +106,7 @@ runtime::Backend::AsyncEvent::AsyncEvent(Type type,
     , m_outputs{nullptr}
     , m_inputs{nullptr}
 {
+    (void)m_buffer_number;
 }
 
 runtime::Backend::AsyncEvent::AsyncEvent(size_t buffer_number,
@@ -117,6 +121,7 @@ runtime::Backend::AsyncEvent::AsyncEvent(size_t buffer_number,
     , m_outputs{&outputs}
     , m_inputs{&inputs}
 {
+    (void)m_buffer_number;
 }
 
 future<void>
