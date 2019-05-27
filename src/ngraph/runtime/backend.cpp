@@ -25,9 +25,14 @@
 using namespace std;
 using namespace ngraph;
 
+runtime::Backend::Backend()
+{
+    async_thread_start();
+}
+
 runtime::Backend::~Backend()
 {
-    NGRAPH_INFO;
+    NGRAPH_INFO << "m_event_queue_condition " << &m_event_queue_condition;
     async_thread_stop();
     NGRAPH_INFO;
 }
@@ -127,22 +132,24 @@ runtime::Backend::AsyncEvent::AsyncEvent(size_t buffer_number,
 future<void>
     runtime::Backend::post_async_read_event(void* p, size_t size_in_bytes, size_t buffer_number)
 {
-    async_thread_start();
     auto event = make_shared<AsyncEvent>(AsyncEvent::Type::READ, buffer_number, p, size_in_bytes);
     unique_lock<std::mutex> lock(m_event_queue_mutex);
     m_event_queue.push_back(event);
-    m_event_queue_condition.notify_one();
+    NGRAPH_INFO << "read";
+    NGRAPH_INFO << "m_event_queue_condition " << &m_event_queue_condition;
+    m_event_queue_condition.notify_all();
     return event->get_future();
 }
 
 future<void>
     runtime::Backend::post_async_write_event(void* p, size_t size_in_bytes, size_t buffer_number)
 {
-    async_thread_start();
     auto event = make_shared<AsyncEvent>(AsyncEvent::Type::WRITE, buffer_number, p, size_in_bytes);
     unique_lock<std::mutex> lock(m_event_queue_mutex);
     m_event_queue.push_back(event);
-    m_event_queue_condition.notify_one();
+    NGRAPH_INFO << "write";
+    NGRAPH_INFO << "m_event_queue_condition " << &m_event_queue_condition;
+    m_event_queue_condition.notify_all();
     return event->get_future();
 }
 
@@ -152,11 +159,12 @@ future<void> runtime::Backend::post_async_execute_event(
     const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
     size_t buffer_number)
 {
-    async_thread_start();
     auto event = make_shared<AsyncEvent>(buffer_number, executable, outputs, inputs);
     unique_lock<std::mutex> lock(m_event_queue_mutex);
     m_event_queue.push_back(event);
-    m_event_queue_condition.notify_one();
+    NGRAPH_INFO << "execute";
+    NGRAPH_INFO << "m_event_queue_condition " << &m_event_queue_condition;
+    m_event_queue_condition.notify_all();
     return event->get_future();
 }
 
@@ -175,9 +183,9 @@ void runtime::Backend::async_thread_stop()
     if (m_event_queue_active)
     {
         {
-            unique_lock<std::mutex> lk(m_event_queue_mutex);
+            unique_lock<std::mutex> lock(m_event_queue_mutex);
             m_event_queue_active = false;
-            m_event_queue_condition.notify_one();
+            m_event_queue_condition.notify_all();
         }
         m_event_queue_thread->join();
     }
@@ -191,10 +199,10 @@ void runtime::Backend::async_thread_process(const shared_ptr<AsyncEvent>& event)
 void runtime::Backend::async_thread_entry()
 {
     NGRAPH_INFO << "******************** inside thread";
-    unique_lock<std::mutex> lk(m_event_queue_mutex);
+    unique_lock<std::mutex> lock(m_event_queue_mutex);
     while (m_event_queue_active)
     {
-        m_event_queue_condition.wait(lk);
+        m_event_queue_condition.wait(lock);
         while (!m_event_queue.empty())
         {
             async_thread_process(m_event_queue.front());

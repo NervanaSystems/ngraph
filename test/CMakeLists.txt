@@ -31,7 +31,6 @@ set(SRC
     aligned_buffer.cpp
     all_close_f.cpp
     assertion.cpp
-    async.cpp
     bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp
@@ -86,6 +85,7 @@ set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
 
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
+        async.cpp
         backend_debug_api.cpp
         builder.cpp
         backend_api.cpp)

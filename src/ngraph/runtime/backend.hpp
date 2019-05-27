@@ -41,6 +41,7 @@ namespace ngraph
 class ngraph::runtime::Backend
 {
 public:
+    Backend();
     virtual ~Backend();
     /// \brief Create a new Backend object
     /// \param type The name of a registered backend, such as "CPU" or "GPU".

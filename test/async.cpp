@@ -77,15 +77,7 @@ TEST(async, tensor_read_write)
     ASSERT_TRUE(future_b.valid());
     ASSERT_TRUE(future_r.valid());
 
-    chrono::milliseconds ten_ms(10);
-    EXPECT_EQ(future_a.wait_for(ten_ms), future_status::timeout);
-    EXPECT_EQ(future_b.wait_for(ten_ms), future_status::timeout);
-    EXPECT_EQ(future_r.wait_for(ten_ms), future_status::timeout);
-
-    this_thread::sleep_for(chrono::milliseconds(500));
-
-    EXPECT_EQ(future_a.wait_for(ten_ms), future_status::timeout);
-    EXPECT_EQ(future_b.wait_for(ten_ms), future_status::timeout);
+    chrono::milliseconds ten_ms(100);
     EXPECT_EQ(future_r.wait_for(ten_ms), future_status::timeout);
 
     auto future = handle->begin_execute({r}, {a, b});
