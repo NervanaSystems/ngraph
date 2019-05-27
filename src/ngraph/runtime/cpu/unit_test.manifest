@@ -4,10 +4,10 @@ shape_of_matrix
 shape_of_5d
 sum_stable_acc_double
 
-#failing in CI build but passing on local machine
+# failing in CI build but passing on local machine
 max_3d_to_scalar_int32
 
-#Not implemented
+# Not implemented
 erf
 zero_sized_erf
-fake_quantize_with_clip_across_channels
+

@@ -1057,7 +1057,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip)
 
 NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_across_channels)
 {
-    Shape data_shape{1, 2, 3, 4};
+    Shape data_shape{1, 2, 5, 5};
     size_t levels = 5;
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     auto input_low = make_shared<op::Parameter>(element::f32, Shape{2});
@@ -1078,19 +1078,20 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_across_channels)
 
     test_case.add_input<float>(input_data);
     // input_low
-    test_case.add_input<float>(vector<float>{3.f, 5.f});
+    test_case.add_input<float>(vector<float>{5.f, 30.f});
     // input_high
-    test_case.add_input<float>(vector<float>{17.f, 12.f});
+    test_case.add_input<float>(vector<float>{10.f, 40.f});
     // output_low
-    test_case.add_input<float>(vector<float>{2.f, 22.f});
+    test_case.add_input<float>(vector<float>{0.f, 50.f});
     // output_high
-    test_case.add_input<float>(vector<float>{16.f, 32.f});
+    test_case.add_input<float>(vector<float>{20.f, 70.f});
 
     // expected result
     test_case.add_expected_output<float>(
         data_shape,
-        vector<float>{2.f,   22.f, 2.f,   22.f, 2.f,  22.f, 5.5f, 24.5f, 5.5f, 27.f, 9.f,  29.5f,
-                      12.5f, 32.f, 12.5f, 32.f, 16.f, 32.f, 16.f, 32.f,  16.f, 32.f, 16.f, 32.f});
+        vector<float>{0, 0, 0, 0, 0, 0, 5, 10, 10, 15, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
+                      20, 20, 20, 20, 20, 50, 50, 50, 50, 50, 50, 50, 55, 55, 60, 60, 60, 65, 65,
+                      70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70});
 
     test_case.run();
 }
