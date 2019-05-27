@@ -37,6 +37,7 @@ namespace
     using namespace ngraph::runtime;
 
     class DialectLoweringPass;
+
 #include "op_lowerers.inc"
 
     /// Use Dialect Converson Framework
@@ -53,11 +54,10 @@ namespace
 
     protected:
         // Initialize the list of converters.
-        llvm::DenseSet<DialectOpConversion*> initConverters(MLIRContext* context) override
+        void initConverters(OwningRewritePatternList& patterns, MLIRContext* mlirContext) override
         {
-            return ConversionListBuilder<NGAddOpConversion,
-                                         NGMatMulBiasOpConversion,
-                                         NGReturnOpConversion>::build(&allocator, context, m_pass);
+            RewriteListBuilder<NGAddOpConversion, NGMatMulBiasOpConversion, NGReturnOpConversion>::
+                build(patterns, mlirContext, m_pass);
         }
 
     private:
@@ -75,24 +75,22 @@ namespace
         {
         }
         void runOnModule() override;
-        std::map<Value*, unsigned>& getOutputValueMap() { return m_outputValueMap; };
-        SmallVector<Value*, 4> buildOutputDefs(Operation* op, FuncBuilder& rewriter);
+        SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
 
     private:
         mlir::Function* getCallDecl(StringRef name,
                                     ArrayRef<Type> args,
                                     ArrayRef<Type> output,
-                                    FuncBuilder& rewriter);
+                                    PatternRewriter& rewriter);
         void findOutputValues();
         void processFakeInstrs();
-        Value* insertMemMgrDef(FuncBuilder* rewriter = nullptr);
+        Value* insertMemMgrDef(PatternRewriter* rewriter = nullptr);
 
     private:
         DialectLowerer m_dialectLowerer;
         // Value holding mem manager passed pointer
         SmallVector<Value*, 4> m_memMgrDefs;
-        // maps output ng dialect values to args pos
-        std::map<Value*, unsigned> m_outputValueMap;
+
         // list of results values to add to func signature
         SmallVector<Value*, 4> m_loweredOutputValues;
         ngmlir::MLIRCompiler& m_compiler;
@@ -134,7 +132,10 @@ namespace
         f->walk<NGReturnOp>([this, &outputCount](NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
-                this->m_outputValueMap.insert(std::pair<Value*, unsigned>(ret.getOperand(i), i));
+                auto outputValue = ret.getOperand(i);
+                auto op = outputValue->getDefiningOp();
+                op->setAttr("graphOutputIdx",
+                            mlir::IntegerAttr::get(IntegerType::get(8, op->getContext()), i));
             }
             NGRAPH_ASSERT(outputCount == 0 || outputCount == ret.getNumOperands())
                 << "Inconsistent returns in function";
@@ -145,7 +146,7 @@ namespace
     }
 
     /// Inserts a fake def for Mem Mgr pointer at converted func start
-    Value* DialectLoweringPass::insertMemMgrDef(FuncBuilder* rewriter)
+    Value* DialectLoweringPass::insertMemMgrDef(PatternRewriter* rewriter)
     {
         // it would be nice to insert one fake def at the start of the new func
         // however, due to how DialectConversion framework works, new func is only
@@ -159,17 +160,15 @@ namespace
     }
 
     SmallVector<Value*, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
-                                                                FuncBuilder& rewriter)
+                                                                PatternRewriter& rewriter)
     {
-        auto& outputMap = getOutputValueMap();
         SmallVector<Value*, 4> newResults;
         for (auto origResult : op->getResults())
         {
-            auto it = outputMap.find(origResult);
             // create output def if this operation produces any sub-graph outputs
-            if (it != outputMap.end())
+            if (IntegerAttr attr = op->getAttrOfType<IntegerAttr>("graphOutputIdx"))
             {
-                unsigned argId = (*it).second;
+                unsigned argId = (int)attr.getInt();
                 auto fakeOp = rewriter.create<NGFakeInputOp>(
                     op->getLoc(),
                     m_dialectLowerer.convertType(
@@ -237,7 +236,7 @@ namespace
         for (auto value : m_loweredOutputValues)
         {
             auto op = value->getDefiningOp();
-            NGRAPH_ASSERT(op->isa<NGFakeInputOp>()) << "output value not defined by fake output?";
+            NGRAPH_ASSERT(isa<NGFakeInputOp>(op)) << "output value not defined by fake output?";
             value->replaceAllUsesWith(entryBlock->getArgument(oldFuncType.getNumInputs() + i));
             op->erase();
             i++;
@@ -252,7 +251,7 @@ namespace
     mlir::Function* DialectLoweringPass::getCallDecl(StringRef name,
                                                      ArrayRef<Type> args,
                                                      ArrayRef<Type> output,
-                                                     FuncBuilder& rewriter)
+                                                     PatternRewriter& rewriter)
     {
         auto callBackFuncPtr = getModule().getNamedFunction(name);
         if (callBackFuncPtr == nullptr)
@@ -292,12 +291,15 @@ namespace
         return t;
     }
 
+#define REWRITER(OP)                                                                               \
+    void OP##Conversion::rewrite(                                                                  \
+        Operation* op, ArrayRef<Value*> operands, PatternRewriter& rewriter) const
+
     // ADD
-    SmallVector<Value*, 4> NGAddOpConversion::rewrite(Operation* op,
-                                                      ArrayRef<Value*> operands,
-                                                      FuncBuilder& rewriter) const
+    REWRITER(NGAddOp)
+
     {
-        auto add = op->cast<NGAddOp>();
+        auto add = cast<NGAddOp>(op);
         auto loc = add.getLoc();
         Value *origResult, *newResult;
 
@@ -323,18 +325,19 @@ namespace
         auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
-
-        LoopNestBuilder(pivs, lbs, ubs, steps)({// single stmt body
-                                                iRes(ivs) = iLHS(ivs) + iRHS(ivs)});
-        // return result memref
-        return {result};
+        // clang-format off
+        LoopNestBuilder(pivs, lbs, ubs, steps)( 
+            // single stmt body
+            [&] {
+                    iRes(ivs) = iLHS(ivs) + iRHS(ivs);
+                });
+        // clang-format on
+        rewriter.replaceOp(op, {result});
     }
 
-    SmallVector<Value*, 4> NGMatMulBiasOpConversion::rewrite(Operation* op,
-                                                             ArrayRef<Value*> operands,
-                                                             FuncBuilder& rewriter) const
+    REWRITER(NGMatMulBiasOp)
     {
-        auto matmul = op->cast<NGMatMulBiasOp>();
+        auto matmul = cast<NGMatMulBiasOp>(op);
         auto loc = matmul.getLoc();
 
         NGRAPH_ASSERT(operands.size() == 2) << "Bias is not supported yet in MatmulBias operation";
@@ -382,27 +385,26 @@ namespace
         ValueHandle zero_init(rewriter.create<ConstantOp>(loc, rewriter.getZeroAttr(elem_ty)));
 
         // clang-format off
-        LoopBuilder(&n, n_lb, n_ub, n_step)({
-            LoopBuilder(&k, k_lb, k_ub, k_step)({
-                i_res(n, k) = zero_init,
-                LoopBuilder(&m, m_lb, m_ub, m_step)({
-                    i_res(n, k) += i_lhs(n, m) * i_rhs(m, k)
-                })
-            }),
-        });
+        LoopBuilder(&n, n_lb, n_ub, n_step)(
+            [&]{
+                LoopBuilder(&k, k_lb, k_ub, k_step)(
+                    [&]{
+                        i_res(n, k) = zero_init;
+                        LoopBuilder(&m, m_lb, m_ub, m_step)(
+                            [&]{
+                                i_res(n, k) += i_lhs(n, m) * i_rhs(m, k);
+                            }
+                        );
+                    }
+                );
+            }
+        );
         // clang-format on
-
-        // Return result memref.
-        return {result};
+        rewriter.replaceOp(op, {result});
     }
 
-    SmallVector<Value*, 4> NGReturnOpConversion::rewrite(Operation* op,
-                                                         ArrayRef<Value*> operands,
-                                                         FuncBuilder& rewriter) const
-    {
-        rewriter.create<ReturnOp>(op->getLoc());
-        return {};
-    }
+    REWRITER(NGReturnOp) { rewriter.replaceOpWithNewOp<ReturnOp>(op); }
+#undef REWRITER
 }
 
 namespace mlir

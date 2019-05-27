@@ -36,11 +36,19 @@ include "mlir/IR/OpBase.td"
 // Each def will corresponding to a C++ class
 
 
+def NG_Dialect : Dialect {
+  let name = "ng";
+  // TODO: Have the dialect under its own mlir::ngraph namespace
+  // At mlir top-level for now
+  let cppNamespace = "";
+}
+
+
 // NGraph Types
 // This defines records equivalent to NGraph types. It doesn't generate code.
 // This is used as a type in the DAG input/outputs.
 // Constraints (CPred) are used to type-check args/results of that type during op verification
-def NG_TensorType : Type<CPred<"{0}.isa<mlir::NGTensorType>()">,
+def NG_TensorType : Type<CPred<"$_self.isa<mlir::NGTensorType>()">,
                      "NGraph Tensor Type">;
 
 // A generic un-typed MemRef. Used for Fake instructions inserted during dialect lowering
@@ -49,7 +57,7 @@ def NG_MemRefType : Type<IsMemRefTypePred, "MemRef Type">;
 // NGraph operation base class.
 // Prepends "ng." to operation name
 class NG_Op<string mnemonic, list<OpTrait> traits = []> :
-    Op<!strconcat("ng.", mnemonic), traits> {}
+    Op<NG_Dialect, mnemonic, traits> {}
 
 // Operations producing single result.
 // Will set OneResult trait based on Results out dag.
@@ -71,7 +79,7 @@ class NG_Unary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
       Arguments<(ins NG_TensorType:$arg)>
 {
   // TODO: Implement
-  let parser = [{ NGRAPH_FAIL() << "No parser support"; return false; }];
+  let parser = [{ NGRAPH_FAIL() << "No parser support"; return mlir::failure(); }];
 
   let verifier = [{ return verifyUnaryArithOp(this); }];
 }
@@ -83,7 +91,7 @@ class NG_Binary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
       Arguments<(ins NG_TensorType:$lhs, NG_TensorType:$rhs)>
 {
   // TODO: Implement
-  let parser = [{ NGRAPH_FAIL() << "No parser support"; return false; }];
+  let parser = [{ NGRAPH_FAIL() << "No parser support"; return mlir::failure(); }];
 
   let verifier = [{ return verifyBinaryArithOp(this); }];
 }

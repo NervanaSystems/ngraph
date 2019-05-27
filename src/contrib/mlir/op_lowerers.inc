@@ -18,14 +18,14 @@
 // Add new dialect ops lowerers to this file
 
 #define DECL_OP_CONV(OP) \
-class OP##Conversion : public mlir::DialectOpConversion \
+class OP##Conversion : public mlir::DialectConversionPattern \
 {\
 public:\
     explicit OP##Conversion(mlir::MLIRContext *context, DialectLoweringPass& pass)\
-    : mlir::DialectOpConversion(mlir::OP::getOperationName(), 1, context),\
+    : mlir::DialectConversionPattern(mlir::OP::getOperationName(), 1, context),\
       m_pass(pass)\
     {} \
-    SmallVector<Value *, 4> rewrite(Operation *op, ArrayRef<Value *> operands, FuncBuilder &rewriter) const override; \
+    void rewrite(Operation *op, ArrayRef<Value *> operands, PatternRewriter &rewriter) const override; \
     DialectLoweringPass& m_pass;\
 };
 
