@@ -143,8 +143,6 @@ NodeVector op::FakeQuantize::decompose_op() const
                                   axes,
                                   op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY);
 
-    // the output element type of dequantization is set to the output_low element type
-    // because of the first op::Select usage below where last 2 tensors must have matching types
     const auto dequantized_data = make_shared<op::Dequantize>(
         quantized_data, dequant_scale, zero_point, output_low->get_element_type(), axes);
 
