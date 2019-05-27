@@ -180,11 +180,21 @@ protected:
     };
 
     std::future<void> post_async_read_event(void* p, size_t size_in_bytes, size_t buffer_number);
-    std::future<void>
-        post_async_write_event(const void* p, size_t size_in_bytes, size_t buffer_number);
+    std::future<void> post_async_write_event(void* p, size_t size_in_bytes, size_t buffer_number);
     std::future<void>
         post_async_execute_event(const std::shared_ptr<Executable>& executable,
                                  const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                                  const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
                                  size_t buffer_number);
+
+    void async_thread_start();
+    void async_thread_stop();
+    void async_thread_process(const std::shared_ptr<AsyncEvent>& event);
+    void async_thread_entry();
+
+    std::deque<std::shared_ptr<AsyncEvent>> m_event_queue;
+    std::mutex m_event_queue_mutex;
+    std::condition_variable m_event_queue_condition;
+    std::unique_ptr<std::thread> m_event_queue_thread;
+    bool m_event_queue_active = false;
 };
