@@ -28,16 +28,17 @@ namespace ngraph
             /// \brief Constructs a ReorgYolo operation
             ///
             /// \param input          Input
-            /// \param stride         Stride to reorganize input by
-            ReorgYolo(const std::shared_ptr<Node>& input, const Strides& stride);
+            /// \param strides        Stride to reorganize input by
+            ReorgYolo(const std::shared_ptr<Node>& input, const Strides& strides);
 
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            const Strides get_strides() const { return m_strides; }
         private:
-            Strides m_stride;
+            Strides m_strides;
         };
     }
 }

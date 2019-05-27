@@ -107,7 +107,8 @@ public:
     void open(const std::string& filename);
     void close();
     const std::vector<FileInfo>& get_file_info();
-    void read(const std::string& file_name, void* data, size_t size_in_bytes);
+    bool read(const std::string& file_name, void* data, size_t size_in_bytes);
+    std::vector<char> read(const FileInfo& info);
 
 private:
     std::istream* m_stream;
