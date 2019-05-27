@@ -103,16 +103,19 @@ NodeVector op::FakeQuantize::decompose_op() const
     shared_ptr<Node> output_low{get_argument(3)};
     shared_ptr<Node> output_high{get_argument(4)};
 
-
-    if (input_low->get_shape().size() == 0) {
-        NodeVector broadcasted_nodes = numpy_style_broadcast(NodeVector{data, input_low, input_high, output_low, output_high});
+    if (input_low->get_shape().size() == 0)
+    {
+        NodeVector broadcasted_nodes =
+            numpy_style_broadcast(NodeVector{data, input_low, input_high, output_low, output_high});
 
         data = broadcasted_nodes.at(0);
         input_low = broadcasted_nodes.at(1);
         input_high = broadcasted_nodes.at(2);
         output_low = broadcasted_nodes.at(3);
         output_high = broadcasted_nodes.at(4);
-    } else {
+    }
+    else
+    {
         input_low = legacy_style_broadcast_for_binary_operation(data, input_low, 1).at(1);
         input_high = legacy_style_broadcast_for_binary_operation(data, input_high, 1).at(1);
         output_low = legacy_style_broadcast_for_binary_operation(data, output_low, 1).at(1);
