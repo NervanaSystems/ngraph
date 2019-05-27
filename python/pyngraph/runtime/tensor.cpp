@@ -31,7 +31,8 @@ void regclass_pyngraph_runtime_Tensor(py::module m)
     tensor.def("write",
                (void (ngraph::runtime::Tensor::*)(const void*, size_t)) &
                    ngraph::runtime::Tensor::write);
-    tensor.def("read", &ngraph::runtime::Tensor::read);
+    tensor.def("read",
+               (void (ngraph::runtime::Tensor::*)(void*, size_t)) & ngraph::runtime::Tensor::read);
 
     tensor.def_property_readonly("shape", &ngraph::runtime::Tensor::get_shape);
     tensor.def_property_readonly("element_count", &ngraph::runtime::Tensor::get_element_count);
