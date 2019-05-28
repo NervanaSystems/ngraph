@@ -422,7 +422,7 @@ namespace ngraph
         {
             return m_node->m_inputs.at(m_index).get_output().get_tensor();
         }
-        /// \return A reference to the tensor descriptor for this input.
+        /// \return A shared pointer to the tensor descriptor for this input.
         std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
         {
             return m_node->m_inputs.at(m_index).get_output().get_tensor_ptr();
