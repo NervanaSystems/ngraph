@@ -14826,10 +14826,10 @@ TEST(type_prop, gru_cell)
     const size_t gates_count = 3;
 
     const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
-    const auto W = make_shared<op::Parameter>(element::f32,
-                                              Shape{gates_count * hidden_size, input_size});
-    const auto R = make_shared<op::Parameter>(element::f32,
-                                              Shape{gates_count * hidden_size, hidden_size});
+    const auto W =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+    const auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
     const auto gru_cell = make_shared<op::GRUCell>(X, W, R, H_t, hidden_size);
@@ -14845,8 +14845,8 @@ TEST(type_prop, gru_cell_invalid_input)
     const size_t gates_count = 3;
 
     const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
-    auto R = make_shared<op::Parameter>(element::f32,
-                                        Shape{gates_count * hidden_size, hidden_size});
+    auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
     // Invalid W tensor shape.
