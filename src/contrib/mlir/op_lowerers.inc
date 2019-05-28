@@ -30,7 +30,7 @@ public:\
 };
 
 DECL_OP_CONV(NGAddOp)
-DECL_OP_CONV(NGMatMulBiasOp)
+DECL_OP_CONV(NGDotOp)
 DECL_OP_CONV(NGReturnOp)
 
 #undef DECL_OP_CONV

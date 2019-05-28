@@ -56,33 +56,16 @@ static mlir::LogicalResult verifyOp(T* op)
     return op->emitOpError("Unsupported verifier for this operation");
 }
 
-// Per op specializations
 template <>
-mlir::LogicalResult verifyOp<NGMatMulBiasOp>(NGMatMulBiasOp* op)
+mlir::LogicalResult verifyOp(NGDotOp* op)
 {
-    // Verify that we have 2 operands
-    // Bias operand must be null for now (not implemented)
-    if (op->getNumOperands() != 2)
+    mlir::LogicalResult result = verifyBinaryArithOp(op);
+    if (failed(result))
     {
-        std::stringstream ss;
-        ss << "Unexpected MatmulBiasOp with " << op->getNumOperands()
-           << " operands. 3 operands expected";
-        return op->emitOpError(ss.str());
+        return result;
     }
 
-    // Verify that operand types are supported.
-    auto op0_tensor_ty = op->getOperand(0)->getType().cast<NGTensorType>();
-    auto op1_tensor_ty = op->getOperand(1)->getType().cast<NGTensorType>();
-
-    // Verify that operand shapes are supported.
-    if (op0_tensor_ty.getRank() != 2 || op1_tensor_ty.getRank() != 2)
-    {
-        return op->emitOpError(
-            "Unsupported number of dimensions. Only 2D tensors are supported in "
-            "MatmulBiasOp");
-    }
-
-    // TODO(dcab): Improve verification: matching types, proper shapes, etc.
+    // TODO(dcab): Improve verification: proper shapes, etc.
 
     return mlir::success();
 }

@@ -56,8 +56,8 @@ namespace
         // Initialize the list of converters.
         void initConverters(OwningRewritePatternList& patterns, MLIRContext* mlirContext) override
         {
-            RewriteListBuilder<NGAddOpConversion, NGMatMulBiasOpConversion, NGReturnOpConversion>::
-                build(patterns, mlirContext, m_pass);
+            RewriteListBuilder<NGAddOpConversion, NGDotOpConversion, NGReturnOpConversion>::build(
+                patterns, mlirContext, m_pass);
         }
 
     private:
@@ -335,19 +335,17 @@ namespace
         rewriter.replaceOp(op, {result});
     }
 
-    REWRITER(NGMatMulBiasOp)
+    REWRITER(NGDotOp)
     {
-        auto matmul = cast<NGMatMulBiasOp>(op);
-        auto loc = matmul.getLoc();
-
-        NGRAPH_ASSERT(operands.size() == 2) << "Bias is not supported yet in MatmulBias operation";
+        auto dot = cast<NGDotOp>(op);
+        auto loc = dot.getLoc();
 
         // Retrieve/generate Values for operands and result.
         ScopedContext scope(rewriter, loc);
         Value* lhs = operands[0];
         Value* rhs = operands[1];
         Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_ASSERT(lhs && rhs && result) << "Unexpected null values in MatmulBiasOp";
+        NGRAPH_ASSERT(lhs && rhs && result) << "Unexpected null values in DotOp";
 
         auto result_ty = result->getType().dyn_cast<MemRefType>();
         auto lhs_ty = lhs->getType().dyn_cast<MemRefType>();
@@ -358,7 +356,7 @@ namespace
 
         Type elem_ty = result_ty.getElementType();
         NGRAPH_ASSERT(elem_ty == lhs_ty.getElementType() && elem_ty == rhs_ty.getElementType())
-            << "Types mismatch in MatmulBiasOp";
+            << "Types mismatch in DotOp";
 
         // Create the following loop nest for matmul operation:
         //   for(n, N, 1)
@@ -371,7 +369,7 @@ namespace
         IndexedValue i_res(result), i_lhs(lhs), i_rhs(rhs);
 
         NGRAPH_ASSERT(v_lhs.rank() == 2 && v_rhs.rank() == 2 && v_res.rank() == 2)
-            << "MatmulBias operation is only supported for 2D tensors";
+            << "Dot operation is only supported for 2D tensors";
 
         // Induction variables, lower bounds, upper bounds and steps of the loop nest.
         IndexHandle n, m, k;
@@ -384,22 +382,14 @@ namespace
         IndexedValue ires(result), ilhs(lhs), irhs(rhs);
         ValueHandle zero_init(rewriter.create<ConstantOp>(loc, rewriter.getZeroAttr(elem_ty)));
 
-        // clang-format off
-        LoopBuilder(&n, n_lb, n_ub, n_step)(
-            [&]{
-                LoopBuilder(&k, k_lb, k_ub, k_step)(
-                    [&]{
-                        i_res(n, k) = zero_init;
-                        LoopBuilder(&m, m_lb, m_ub, m_step)(
-                            [&]{
-                                i_res(n, k) += i_lhs(n, m) * i_rhs(m, k);
-                            }
-                        );
-                    }
-                );
-            }
-        );
-        // clang-format on
+        LoopBuilder(&n, n_lb, n_ub, n_step)([&] {
+            LoopBuilder(&k, k_lb, k_ub, k_step)([&] {
+                i_res(n, k) = zero_init;
+                LoopBuilder(&m, m_lb, m_ub, m_step)(
+                    [&] { i_res(n, k) += i_lhs(n, m) * i_rhs(m, k); });
+            });
+        });
+
         rewriter.replaceOp(op, {result});
     }
 

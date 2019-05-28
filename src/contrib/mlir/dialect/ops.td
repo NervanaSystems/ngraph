@@ -144,9 +144,10 @@ def NGNotEqOp     : NG_OneResult_Op<"not.equal",  [NoSideEffect]>;
 def NGSelectOp    : NG_OneResult_Op<"select", [NoSideEffect]>;
 
 // Matrix Multiply
-def NGMatMulBiasOp : NG_Binary_Arith_Op<"matmul.bias">
+def NGDotOp : NG_Binary_Arith_Op<"dot">
 {
-  let verifier=[{return verifyOp(this);}];
+  // TODO: Add reduction axis attribute when needed.
+  let verifier = [{ return verifyOp(this); }];
 }
 
 // Terminator Ops

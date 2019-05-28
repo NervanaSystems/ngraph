@@ -29,7 +29,6 @@
 #include "contrib/mlir/compiler.hpp"
 #endif
 
-
 using namespace ngraph;
 using namespace std;
 

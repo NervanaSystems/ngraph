@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 #include "compiler.hpp"
-#include "dialect/ops.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/IR/Module.h>
@@ -34,12 +33,14 @@
 #include <mlir/Transforms/Passes.h>
 #include <mutex>
 #include "dialect/dialect.hpp"
+#include "dialect/ops.hpp"
 #include "dialect/type.hpp"
 #include "lowerer.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node_vector.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -266,19 +267,15 @@ mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
 }
 
 template <>
-mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::MatmulBias)
+mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
 {
-    // TODO(dcab): Implement all the variants of a Matmul/MatmulBias op.
-    // Keeping it simple for now.
-    NGRAPH_ASSERT(ng_node->get_arguments().size() == 2)
-        << "Bias is not supported in MatmulBias operation";
-
-    return compiler.create_binary_op<mlir::NGMatMulBiasOp>(ng_node);
+    NGRAPH_ASSERT(ng_node->get_arguments().size() == 2) << "Expected two operands in Dot operation";
+    return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
 }
 
 const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
     {TI(ngraph::op::Add), &MLIRCompiler::create_op<ngraph::op::Add>},
-    {TI(ngraph::op::MatmulBias), &MLIRCompiler::create_op<ngraph::op::MatmulBias>}};
+    {TI(ngraph::op::Dot), &MLIRCompiler::create_op<ngraph::op::Dot>}};
 
 template <typename BinOp>
 mlir::Value* MLIRCompiler::create_binary_op(const ngraph::Node* ng_node)
