@@ -21,40 +21,38 @@ using namespace std;
 using namespace ngraph;
 
 op::ShuffleChannels::ShuffleChannels(const shared_ptr<Node>& data,
-                                     const int axis,
+                                     const int64_t axis,
                                      const size_t groups)
     : FusedOp("ShuffleChannels", {data})
+    , m_axis{axis}
     , m_groups{groups}
 {
-    if (axis < 0)
-    {
-        m_axis = axis + data->get_shape().size();
-    }
-    else
-    {
-        m_axis = axis;
-    }
-
     constructor_validate_and_infer_types();
 }
 
 void op::ShuffleChannels::pre_validate_and_infer_types()
 {
-    const auto shape = get_argument(0)->get_shape();
+    const auto& partial_shape = get_input_partial_shape(0);
+    if (partial_shape.is_static())
+    {
+        const auto shape = partial_shape.to_shape();
 
-    NODE_VALIDATION_CHECK(
-        this, shape.size() >= 1, "The input tensor's shape is expected to be at least 1D.");
+        NODE_VALIDATION_CHECK(
+            this, shape.size() >= 1, "The input tensor's shape is expected to be at least 1D.");
 
-    NODE_VALIDATION_CHECK(this,
-                          m_axis >= 0 && m_axis < shape.size(),
-                          "The 'axis' parameter for ShuffleChannels has to point to one of the "
-                          "input tensor's shape dimensions.");
+        const auto adjusted_axis = get_shuffle_axis();
 
-    const auto channel_dim_size = shape.at(m_axis);
-    NODE_VALIDATION_CHECK(
-        this,
-        channel_dim_size % m_groups == 0,
-        "The channel dimension size has to be a multiple of the groups parameter value.");
+        NODE_VALIDATION_CHECK(this,
+                              adjusted_axis >= 0 && adjusted_axis < shape.size(),
+                              "The 'axis' parameter for ShuffleChannels has to point to one of the "
+                              "input tensor's shape dimensions.");
+
+        const auto channel_dim_size = shape.at(adjusted_axis);
+        NODE_VALIDATION_CHECK(
+            this,
+            channel_dim_size % m_groups == 0,
+            "The channel dimension size has to be a multiple of the groups parameter value.");
+    }
 }
 
 NodeVector op::ShuffleChannels::decompose_op() const
@@ -82,6 +80,7 @@ shared_ptr<Node> op::ShuffleChannels::copy_with_new_args(const NodeVector& new_a
 Shape op::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
 {
     const Shape& ds = data_shape;
+    const auto adjusted_axis = get_shuffle_axis();
 
     // in general the resulting shape should contain the following values:
     // [0]: ds[0] * ds[1] * ... * ds[m_axis-1] (or 1 if m_axis == 0)
@@ -90,18 +89,30 @@ Shape op::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
     // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem of ds)
     Shape res(4, 1);
 
-    for (size_t i = 0; i < m_axis; ++i)
+    for (size_t i = 0; i < adjusted_axis; ++i)
     {
         res[0] *= ds[i];
     }
 
     res[1] = m_groups;
-    res[2] = ds[m_axis] / m_groups;
+    res[2] = ds[adjusted_axis] / m_groups;
 
-    for (size_t i = m_axis + 1; i < ds.size(); ++i)
+    for (size_t i = adjusted_axis + 1; i < ds.size(); ++i)
     {
         res[3] *= ds[i];
     }
 
     return res;
+}
+
+int64_t op::ShuffleChannels::get_shuffle_axis() const
+{
+    if (m_axis < 0)
+    {
+        return m_axis + get_argument(0)->get_shape().size();
+    }
+    else
+    {
+        return m_axis;
+    }
 }
