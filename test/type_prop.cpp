@@ -14626,7 +14626,7 @@ TEST(type_prop, split)
     EXPECT_EQ(split->output(1).get_element_type(), element::i32);
 }
 
-TEST(type_prop, DISABLED_fake_quantize)
+TEST(type_prop, fake_quantize)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
@@ -14641,7 +14641,7 @@ TEST(type_prop, DISABLED_fake_quantize)
     EXPECT_EQ(fake_quantize->get_shape(), (Shape{1, 2, 3, 4}));
 }
 
-TEST(type_prop, DISABLED_fake_quantize_invalid_rank)
+TEST(type_prop, fake_quantize_invalid_rank)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto input_low = make_shared<op::Parameter>(element::f32, Shape{3});
