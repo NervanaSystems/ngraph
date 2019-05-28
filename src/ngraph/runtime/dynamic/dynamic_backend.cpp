@@ -16,9 +16,11 @@
 
 #include "ngraph/runtime/dynamic/dynamic_backend.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
-#include "ngraph/specialize_shapes.hpp"
+#include "ngraph/specialize_function.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -79,30 +81,73 @@ bool runtime::dynamic::DynamicExecutable::call(
     // (1) all shapes;
     // (2) all values of shape-relevant input tensors.
 
+    NGRAPH_CHECK(m_wrapped_function->get_parameters().size() == inputs.size());
+
     std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
     std::vector<element::Type> arg_element_types;
     std::vector<PartialShape> arg_shapes;
 
-    for (auto& input : inputs)
+    std::shared_ptr<Function> clone;
     {
-        if (auto dynamic_tensor = std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
+        // We'll use AlignedBuffers to back the base pointers, storing them in this vector for RAII
+        // purposes.
+        std::vector<AlignedBuffer> arg_buffers;
+        arg_buffers.reserve(inputs.size());
+        std::vector<void*> arg_value_base_pointers(inputs.size());
+
+        size_t i = 0;
+
+        for (auto& input : inputs)
         {
-            NGRAPH_CHECK(dynamic_tensor->has_storage());
-            arg_element_types.push_back(dynamic_tensor->get_wrapped_tensor()->get_element_type());
-            arg_shapes.push_back(dynamic_tensor->get_wrapped_tensor()->get_shape());
-            wrapped_inputs.push_back(dynamic_tensor->get_wrapped_tensor());
+            if (m_wrapped_function->get_parameters()[i]->is_relevant_to_shapes())
+            {
+                // TODO(amprocte): Move has_storage() to runtime::Tensor?
+                if (auto dynamic_tensor =
+                        std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
+                {
+                    NGRAPH_CHECK(dynamic_tensor->has_storage());
+                }
+
+                arg_buffers.emplace_back(input->get_size_in_bytes(), /*alignment=*/64);
+                arg_value_base_pointers[i] = arg_buffers.back().get_ptr();
+
+                // TODO(amprocte): For host-resident tensors we should be able to skip the read,
+                // but no API for that yet.
+                input->read(arg_value_base_pointers[i], 0, input->get_size_in_bytes());
+            }
+            else
+            {
+                arg_value_base_pointers[i] = nullptr;
+            }
+
+            if (auto dynamic_tensor =
+                    std::dynamic_pointer_cast<runtime::dynamic::DynamicTensor>(input))
+            {
+                NGRAPH_CHECK(dynamic_tensor->has_storage());
+                arg_element_types.push_back(
+                    dynamic_tensor->get_wrapped_tensor()->get_element_type());
+                arg_shapes.push_back(dynamic_tensor->get_wrapped_tensor()->get_shape());
+                wrapped_inputs.push_back(dynamic_tensor->get_wrapped_tensor());
+            }
+            else
+            {
+                arg_element_types.push_back(input->get_element_type());
+                arg_shapes.push_back(input->get_shape());
+                wrapped_inputs.push_back(input);
+            }
+
+            i++;
         }
-        else
-        {
-            arg_element_types.push_back(input->get_element_type());
-            arg_shapes.push_back(input->get_shape());
-            wrapped_inputs.push_back(input);
-        }
+
+        clone = specialize_function(
+            m_wrapped_function, arg_element_types, arg_shapes, arg_value_base_pointers);
     }
 
-    // TODO: specialize_shapes needs to fill in values of shape-relevant params.
-    auto clone = specialize_shapes(m_wrapped_function, arg_element_types, arg_shapes);
-    // TODO: run constant folding and de-dynification on clone.
+    pass::Manager passes;
+    passes.register_pass<pass::ConstantFolding>();
+    passes.register_pass<pass::DynElimination>();
+    passes.run_passes(clone);
+
     const ResultVector& results = clone->get_results();
     NGRAPH_CHECK(results.size() == outputs.size());
 
@@ -138,6 +183,27 @@ runtime::dynamic::DynamicTensor::DynamicTensor(
     , m_wrapped_tensor(nullptr)
     , m_wrapped_backend(wrapped_backend)
 {
+}
+
+Strides runtime::dynamic::DynamicTensor::get_strides() const
+{
+    NGRAPH_CHECK(m_wrapped_tensor != nullptr,
+                 "asked for strides of a dynamic tensor with no allocated storage");
+    return ngraph::row_major_strides(m_wrapped_tensor->get_shape());
+}
+
+size_t runtime::dynamic::DynamicTensor::get_size_in_bytes() const
+{
+    NGRAPH_CHECK(m_wrapped_tensor != nullptr,
+                 "asked for size in bytes of a dynamic tensor with no allocated storage");
+    return get_element_count() * get_element_type().size();
+}
+
+size_t runtime::dynamic::DynamicTensor::get_element_count() const
+{
+    NGRAPH_CHECK(m_wrapped_tensor != nullptr,
+                 "asked for element count of a dynamic tensor with no allocated storage");
+    return shape_size(m_wrapped_tensor->get_shape());
 }
 
 const element::Type& runtime::dynamic::DynamicTensor::get_element_type() const

@@ -54,7 +54,7 @@ public:
     bool is_supported(const ngraph::Node& node) const override;
 
     void set_debug_enabled(bool flag) { m_debug_enabled = flag; }
-private:
+protected:
     std::vector<std::shared_ptr<runtime::Backend>> m_backend_list;
     bool m_debug_enabled = false;
 };

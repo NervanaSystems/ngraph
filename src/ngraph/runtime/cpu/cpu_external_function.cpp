@@ -424,7 +424,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
     {TI(ngraph::op::And), &runtime::cpu::CPU_Emitter::emit<op::And>},
     {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
-    {TI(ngraph::op::LeakyRelu), &runtime::cpu::CPU_Emitter::emit<op::LeakyRelu>},
+    {TI(ngraph::op::CPULeakyRelu), &runtime::cpu::CPU_Emitter::emit<op::CPULeakyRelu>},
     {TI(ngraph::runtime::cpu::op::LoopKernel),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
@@ -1195,7 +1195,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass);
     REGISTER_KNOBBED_PASS(ReshapeElimination, false, ngraph::pass);
-    REGISTER_KNOBBED_PASS_WITH_ARGS(CoreFusion, true, ngraph::pass, ngraph::pass::ALL_FUSIONS);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(
+        CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS);
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
     REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass);
