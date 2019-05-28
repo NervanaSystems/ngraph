@@ -1,14 +1,10 @@
 .. backend-support/index.rst
 
-
 About backends
 ##############
 
 * :ref:`what_is_backend`
-* :ref:`hybrid_transformer`
-* :ref:`cpu_backend`
-* :ref:`plaidml_backend`
-* :ref:`gpu_backend`
+* :ref:`how_to_use`
 
 
 .. _what_is_backend:
@@ -23,7 +19,7 @@ from a framework on a CPU or GPU; or it can be used with an *Interpreter* mode,
 which is primarily intended for testing, to analyze a program, or to help a 
 framework developer customize targeted solutions. Experimental APIs to support 
 current and future nGraph Backends are also available; see, for example, the 
-section on the :ref:`plaidml_backend`.
+section on :doc:`plaidml-ng-api/index`.
 
 .. csv-table::
    :header: "Backend", "Current nGraph support", "Future nGraph support"
@@ -35,39 +31,31 @@ section on the :ref:`plaidml_backend`.
    AMD\* GPUs, Yes, Some
 
 
-.. _hybrid_transformer:
+.. _how_to_use:
 
-Hybrid Transformer
-==================
+How to use?
+-----------
 
-More detail coming soon
+#. Create a ``Backend``; think of it as a compiler. 
+#. A ``Backend`` can then produce an ``Executable`` by calling ``compile``. 
+#. A single iteration of the executable is executed by calling the ``call``
+   method on the ``Executable`` object.
 
+.. figure:: ../graphics/execution-interface.png
+   :width: 650px
 
-.. _cpu_backend:
-
-CPU Backend
-===========
-
-More detail coming soon
-
-
-.. _gpu_backend:
-
-GPU Backend
-===========
-
-More detail coming soon 
+   The execution interface for nGraph 
 
 
-.. _plaidml_backend:
+The nGraph execution API for ``Executable`` objects is a simple, five-method 
+interface; each backend implements the following five functions:
 
-PlaidML Backend
-===============
 
-The nGraph ecosystem has recently added initial (experimental) support for `PlaidML`_,
-which is an advanced :abbr:`Machine Learning (ML)` library that can further
-accelerate training models built on GPUs. When you select the ``PlaidML`` option
-as a backend, it behaves as an advanced tensor compiler that can further speed up
-training with large data sets.
-
-.. _PlaidML: https://github.com/plaidml
+* The ``create_tensor()`` method allows the bridge to create tensor objects 
+  in host memory or an accelerator's memory.
+* The ``write()`` and ``read()`` methods are used to transfer raw data into 
+  and out of tensors that reside in off-host memory.
+* The ``compile()`` method instructs the backend to prepare an nGraph function 
+  for later execution.
+* And, finally, the ``call()`` method is used to invoke an nGraph function 
+  against a particular set of tensors.
