@@ -31,7 +31,7 @@ namespace ngraph
         {
             class IndexReduction : public Op
             {
-            public:
+            protected:
                 IndexReduction();
                 IndexReduction(const std::shared_ptr<Node>& arg,
                                size_t axis,
@@ -42,6 +42,7 @@ namespace ngraph
                                size_t axis,
                                const element::Type& index_element_type);
 
+            public:
                 size_t get_reduction_axis() const;
                 void set_reduction_axis(size_t value);
                 element::Type get_index_element_type() const;

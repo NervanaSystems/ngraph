@@ -28,7 +28,7 @@ namespace ngraph
             ///        are eliminated (reduced out) by repeated application of a particular binary arithmetic operation.
             class ArithmeticReduction : public Op
             {
-            public:
+            protected:
                 /// \brief Constructs an arithmetic reduction operation.
                 ArithmeticReduction();
 
@@ -47,6 +47,7 @@ namespace ngraph
                                     const std::shared_ptr<Node>& arg,
                                     const AxisSet& reduction_axes);
 
+            public:
                 void validate_and_infer_types() override;
 
                 /// \return The axis positions (0-based) to be eliminated through reduction.
