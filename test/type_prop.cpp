@@ -14591,7 +14591,7 @@ TEST(type_prop, shuffle_channels_negative_axis_calculation)
 
     const auto shuffle_channels = make_shared<op::ShuffleChannels>(data, -3, 2);
 
-    EXPECT_EQ(shuffle_channels->get_axis(), 1);
+    EXPECT_EQ(shuffle_channels->get_zero_based_axis(), 1);
 }
 
 TEST(type_prop, shuffle_channels_invalid_input_shape)
