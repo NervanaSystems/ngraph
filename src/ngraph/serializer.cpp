@@ -331,7 +331,7 @@ static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, s
 }
 #endif
 
-static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
+string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {
     json j;
     vector<json> functions;
