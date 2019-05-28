@@ -537,3 +537,74 @@ TEST(util, enum_mask_operators)
     EXPECT_EQ(false, n[Type::d]);
     EXPECT_EQ(true, n[Type::b]);
 }
+
+TEST(util, apply_permutation)
+{
+    ASSERT_EQ(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{2, 1, 0, 3}), (Shape{2, 1, 0, 3}));
+}
+
+TEST(util, apply_permutation_too_short_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2}), CheckFailure);
+}
+
+TEST(util, apply_permutation_too_long_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 3, 3}), CheckFailure);
+}
+
+TEST(util, apply_permutation_oob_axis_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 4}), CheckFailure);
+}
+
+TEST(util, apply_permutation_repeated_axis_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 2}), CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape)
+{
+    ASSERT_TRUE(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{2, 1, 0, 3})
+            .same_scheme(PartialShape{2, Dimension::dynamic(), 0, 3}));
+}
+
+TEST(util, apply_permutation_pshape_rank_dynamic)
+{
+    ASSERT_TRUE(apply_permutation(PartialShape::dynamic(), AxisVector{2, 1, 0, 3})
+                    .same_scheme(PartialShape::dynamic()));
+}
+
+TEST(util, apply_permutation_pshape_too_short_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_too_long_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 3, 3}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_oob_axis_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 4}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_repeated_axis_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 2}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_rank_dynamic_inviable_permutation_fails)
+{
+    ASSERT_THROW(apply_permutation(PartialShape::dynamic(), AxisVector{0, 1, 2, 2}), CheckFailure);
+}

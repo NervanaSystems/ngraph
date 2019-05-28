@@ -23,7 +23,7 @@ packages and prerequisites:
    :widths: 25, 15, 25, 20, 25
    :escape: ~
 
-   CentOS 7.4 64-bit, GCC 4.8, CMake 3.5.0, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
+   CentOS 7.4 64-bit, GCC 4.8, CMake 3.9.0, supported, ``wget zlib-devel ncurses-libs ncurses-devel patch diffutils gcc-c++ make git perl-Data-Dumper`` 
    Ubuntu 16.04 or 18.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool``
    Clear Linux\* OS for Intel® Architecture version 28880, Clang 8.0, CMake 3.14.2, experimental, bundles ``machine-learning-basic c-basic python-basic python-basic-dev dev-utils``
 
@@ -58,7 +58,7 @@ the ``CMakeLists.txt`` file for other experimental options' details:
    -- NGRAPH_NOP_ENABLE:               ON
    -- NGRAPH_GPUH_ENABLE:              OFF
    -- NGRAPH_GENERIC_CPU_ENABLE:       OFF
-   -- NGRAPH_DEBUG_ENABLE:             OFF
+   -- NGRAPH_DEBUG_ENABLE:             OFF  # Set to "ON" to enable logging
    -- NGRAPH_ONNX_IMPORT_ENABLE:       OFF
    -- NGRAPH_DEX_ONLY:                 OFF
    -- NGRAPH_CODE_COVERAGE_ENABLE:     OFF

@@ -86,35 +86,6 @@ namespace ngraph
             std::shared_ptr<ngraph::Node> expand_dims(const std::shared_ptr<ngraph::Node>& node,
                                                       std::size_t axis = 0);
 
-            /// \brief      Split node on specified axis into multiple parts.
-            ///
-            /// \param[in]  node          The input node.
-            /// \param[in]  length_parts  The vector defining the lengts of each splitted part.
-            /// \param[in]  axis          The axis we split input node on. Default value is zero axis.
-            ///
-            /// \return     The vector containing multiple nodes we split input node into.
-            ///
-            NodeVector split(const std::shared_ptr<ngraph::Node>& node,
-                             const std::vector<std::size_t>& length_parts,
-                             std::size_t axis = 0);
-
-            /// \brief      Split node on specified axis into multiple parts.
-            ///
-            /// \param[in]  node          The input node.
-            /// \param[in]  split_parts   The number of parts we want to split input node at given
-            ///                           axis. The length of the axis to split must be divisible by
-            ///                           this value.
-            /// \param[in]  axis          The axis we split input node on. Default value is zero axis.
-            ///
-            /// \note       This implementation supports negative `axis` values (similar to NumPy
-            ///             indexing).
-            ///
-            /// \return     The vector containing multiple nodes we split input node into.
-            ///
-            NodeVector split(const std::shared_ptr<ngraph::Node>& node,
-                             std::size_t split_parts,
-                             int axis = 0);
-
             /// \brief      Handle a node which represents a scalar value.
             ///
             /// \note       Some ONNX nodes, which should provide scalar values are given as

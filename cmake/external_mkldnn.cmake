@@ -18,10 +18,10 @@ include(ExternalProject)
 
 # Includes blas 3.8.0 in mkldnn
 set(NGRAPH_MKLDNN_SHORT_VERSION 0)
-set(NGRAPH_MKLDNN_FULL_VERSION 0.18.0.0)
-set(NGRAPH_MKLDNN_VERSION "v0.18")
-set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.3.20190220")
-set(NGRAPH_MKLDNN_GIT_TAG "v0.18")
+set(NGRAPH_MKLDNN_FULL_VERSION 0.19.0.0)
+set(NGRAPH_MKLDNN_VERSION "v0.19")
+set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.5.20190502")
+set(NGRAPH_MKLDNN_GIT_TAG "v0.19")
 
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
@@ -92,13 +92,13 @@ set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/${NGRAPH_MKLD
 set(MKLVERSION ${NGRAPH_MKLDNN_SUB_VERSION})
 if (LINUX)
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH b536cd3929ab9ff26a9adc903c92d006d142107b)
+    set(MKL_SHA1_HASH 6ab490f0b358124338d04ee9383c3cbc536969d8)
 elseif (APPLE)
     set(MKLPACKAGE "mklml_mac_${MKLVERSION}.tgz")
-    set(MKL_SHA1_HASH cb7ccbf73275d5bee19b4d5691c834bf894d1761)
+    set(MKL_SHA1_HASH a1c42af04f990b0e515a1c31946424b2e68fccc9)
 elseif (WIN32)
     set(MKLPACKAGE "mklml_win_${MKLVERSION}.zip")
-    set(MKL_SHA1_HASH 2f8ae6ef07452c3229bfb7c2aafbae71933d04e3)
+    set(MKL_SHA1_HASH 9d6ff4d5a486689338158093e96c43ee442b65f0)
 endif()
 set(MKL_LIBS ${MKLML_LIB} ${OMP_LIB})
 set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
