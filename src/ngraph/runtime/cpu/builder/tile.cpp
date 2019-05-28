@@ -30,9 +30,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Tile)
             {
-                auto tile = static_cast<const ngraph::op::Tile*>(node);
                 auto arg_shape = args[0].get_shape();
-                auto out_shape = out[0].get_shape();
                 auto arg_rank = arg_shape.size();
 
                 auto& functors = external_function->get_functors();
@@ -40,20 +38,59 @@ namespace ngraph
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                std::function<decltype(runtime::cpu::kernel::tile<float, 2>)> kernel;
-                SELECT_KERNEL_BY_RANK(
-                    kernel, out[0].get_element_type(), arg_rank, runtime::cpu::kernel::tile);
-                auto functor =
-                    [&, kernel, arg_shape, out_shape, arg_buffer_index, out_buffer_index](
+                auto out_shape = out[0].get_shape();
+
+                if (arg_rank == 0)
+                {
+                    size_t repeats = shape_size(out_shape);
+                    std::function<decltype(runtime::cpu::kernel::tile_rank_0<float>)> kernel;
+                    SELECT_KERNEL(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::tile_rank_0);
+                    auto functor = [&, kernel, repeats, arg_buffer_index, out_buffer_index](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(ctx->buffer_data[arg_buffer_index],
                                ctx->buffer_data[out_buffer_index],
-                               arg_shape,
-                               out_shape,
-                               ectx->arena);
+                               repeats);
                     };
 
-                functors.emplace_back(functor);
+                    functors.emplace_back(functor);
+                }
+                else if (arg_rank == 1)
+                {
+                    size_t out_element_count = shape_size(out_shape);
+                    size_t in_element_count = shape_size(arg_shape);
+                    auto repeats = out_element_count / in_element_count;
+                    std::function<decltype(runtime::cpu::kernel::tile_rank_1<float>)> kernel;
+                    SELECT_KERNEL(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::tile_rank_1);
+                    auto functor =
+                        [&, kernel, in_element_count, repeats, arg_buffer_index, out_buffer_index](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   in_element_count,
+                                   repeats);
+                        };
+
+                    functors.emplace_back(functor);
+                }
+                else
+                {
+                    std::function<decltype(runtime::cpu::kernel::tile<float, 2>)> kernel;
+                    SELECT_KERNEL_BY_RANK(
+                        kernel, out[0].get_element_type(), arg_rank, runtime::cpu::kernel::tile);
+                    auto functor =
+                        [&, kernel, arg_shape, out_shape, arg_buffer_index, out_buffer_index](
+                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   arg_shape,
+                                   out_shape,
+                                   ectx->arena);
+                        };
+
+                    functors.emplace_back(functor);
+                }
             }
 
             REGISTER_OP_BUILDER(Tile);

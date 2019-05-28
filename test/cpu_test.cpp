@@ -1733,7 +1733,7 @@ TEST(cpu_test, avg_pool_bprop_2d_2channel_2image)
 
 TEST(cpu_test, tile_1d_with_zero_repeats)
 {
-    Shape shape_a{3};
+    Shape shape_a{2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_re{1};
     auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{0});
@@ -1747,7 +1747,7 @@ TEST(cpu_test, tile_1d_with_zero_repeats)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{1, 2, 3});
+    copy_data(a, vector<float>{1, 2});
 
     auto result = backend->create_tensor(element::f32, shape_r);
 
@@ -1759,11 +1759,11 @@ TEST(cpu_test, tile_1d_with_zero_repeats)
 
 TEST(cpu_test, tile_1d)
 {
-    Shape shape_a{3};
+    Shape shape_a{2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_re{1};
-    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{3});
-    Shape shape_r{9};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2});
+    Shape shape_r{4};
 
     auto tile = make_shared<op::Tile>(A, repeats);
 
@@ -1773,42 +1773,14 @@ TEST(cpu_test, tile_1d)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{1, 2, 3});
+    copy_data(a, vector<float>{1, 2});
 
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{1, 2, 3, 1, 2, 3, 1, 2, 3},
-                                  read_vector<float>(result),
-                                  MIN_FLOAT_TOLERANCE_BITS));
-}
-
-TEST(cpu_test, tile_2d_1axis)
-{
-    Shape shape_a{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    Shape shape_re{2};
-    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2, 1});
-    Shape shape_r{4, 2};
-
-    auto tile = make_shared<op::Tile>(A, repeats);
-
-    auto f = make_shared<Function>(tile, ParameterVector{A});
-
-    auto backend = runtime::Backend::create("CPU");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{11, 12, 21, 22});
-
-    auto result = backend->create_tensor(element::f32, shape_r);
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{11, 12, 21, 22, 11, 12, 21, 22},
-                                  read_vector<float>(result),
-                                  MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{1, 2, 1, 2}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_test, tile_2d_with_zero_repeats)
@@ -1827,7 +1799,7 @@ TEST(cpu_test, tile_2d_with_zero_repeats)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{11, 12, 21, 22});
+    copy_data(a, vector<float>{1, 2, 3, 4});
 
     auto result = backend->create_tensor(element::f32, shape_r);
 
@@ -1837,13 +1809,13 @@ TEST(cpu_test, tile_2d_with_zero_repeats)
         test::all_close_f(vector<float>{}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, tile_2d_2axes)
+TEST(cpu_test, tile_2d_1axis)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_re{2};
-    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2, 2});
-    Shape shape_r{4, 4};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{3, 1});
+    Shape shape_r{6, 2};
 
     auto tile = make_shared<op::Tile>(A, repeats);
 
@@ -1853,16 +1825,44 @@ TEST(cpu_test, tile_2d_2axes)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{11, 12, 21, 22});
+    copy_data(a, vector<float>{1, 2, 3, 4});
 
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(
-        vector<float>{11, 12, 11, 12, 21, 22, 21, 22, 11, 12, 11, 12, 21, 22, 21, 22},
-        read_vector<float>(result),
-        MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4},
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_2d_2axes)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{2};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{3, 3});
+    Shape shape_r{6, 6};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(
+        test::all_close_f(vector<float>{1, 2, 1, 2, 1, 2, 3, 4, 3, 4, 3, 4, 1, 2, 1, 2, 1, 2,
+                                        3, 4, 3, 4, 3, 4, 1, 2, 1, 2, 1, 2, 3, 4, 3, 4, 3, 4},
+                          read_vector<float>(result),
+                          MIN_FLOAT_TOLERANCE_BITS));
 }
 
 TEST(cpu_test, tile_3d)
@@ -1870,8 +1870,8 @@ TEST(cpu_test, tile_3d)
     Shape shape_a{2, 1, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_re{3};
-    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{1, 2, 1});
-    Shape shape_r{2, 2, 3};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2, 2, 1});
+    Shape shape_r{4, 2, 3};
 
     auto tile = make_shared<op::Tile>(A, repeats);
 
@@ -1881,14 +1881,14 @@ TEST(cpu_test, tile_3d)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{111, 112, 113, 211, 212, 213});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
 
     auto result = backend->create_tensor(element::f32, shape_r);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(
-        test::all_close_f(vector<float>{111, 112, 113, 111, 112, 113, 211, 212, 213, 211, 212, 213},
-                          read_vector<float>(result),
-                          MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{1, 2, 3, 1, 2, 3, 4, 5, 6, 4, 5, 6, 1, 2, 3, 1, 2, 3, 4, 5, 6, 4, 5, 6},
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
 }

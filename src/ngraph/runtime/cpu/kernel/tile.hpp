@@ -31,6 +31,24 @@ namespace ngraph
         {
             namespace kernel
             {
+                template <typename ElementType>
+                void tile_rank_0(void* input, void* output, size_t repeats)
+                {
+                    auto data = (static_cast<ElementType*>(input))[0];
+                    memset(output, data, sizeof(ElementType) * repeats);
+                }
+
+                template <typename ElementType>
+                void tile_rank_1(void* input, void* output, size_t in_element_count, size_t repeats)
+                {
+                    auto size = sizeof(ElementType) * in_element_count;
+                    for (auto i = 0; i < repeats; i++)
+                    {
+                        memcpy(
+                            static_cast<ElementType*>(output) + in_element_count * i, input, size);
+                    }
+                }
+
                 template <typename ElementType, unsigned int Rank>
                 void tile(void* input,
                           void* output,
