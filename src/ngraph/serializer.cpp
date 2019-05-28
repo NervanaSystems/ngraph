@@ -196,8 +196,7 @@ static std::shared_ptr<ngraph::Function>
 
 static json write(const ngraph::Function&, bool binary_constant_data);
 static json write(const ngraph::Node&, bool binary_constant_data);
-static string
-    serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
+string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
 
 static json write_dimension(Dimension d)
 {
