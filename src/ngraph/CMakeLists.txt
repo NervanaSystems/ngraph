@@ -38,6 +38,8 @@ set (SRC
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
+    builder/reshape.cpp
+    builder/reshape.hpp
     builder/split.cpp
     builder/split.hpp
     builder/tensor_mask.hpp
@@ -314,6 +316,8 @@ set (SRC
     op/fused/prelu.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/shuffle_channels.cpp
+    op/fused/shuffle_channels.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp
@@ -340,7 +344,6 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
-    op/util/reshape.cpp
     op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
