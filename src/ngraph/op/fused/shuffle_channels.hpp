@@ -35,7 +35,7 @@ namespace ngraph
             /// \param axis - channel dimension index in the data tensor. A negative value means that the index should be calculated from the back of the input data shape.
             /// \param groups - number of groups the channel dimension specified by axis should be split into
             ShuffleChannels(const std::shared_ptr<ngraph::Node>& data,
-                            const int64_t axis = 1,
+                            const int axis = 1,
                             const size_t groups = 1UL);
 
             virtual void pre_validate_and_infer_types() override;
@@ -45,13 +45,8 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            int64_t get_axis() const { return m_axis; }
+            size_t get_axis() const { return m_axis; }
             size_t get_groups() const { return m_groups; }
-
-            /// \brief Returns an adjusted value of the axis parameter.
-            ///
-            /// \note For negative values the axis value is added to the input tensor's rank which means counting from the back.
-            int64_t get_shuffle_axis() const;
         private:
             /// \brief Generates a shape required to permute the data
             ///
@@ -59,7 +54,7 @@ namespace ngraph
             /// \return A 4D tensor to be used to reshape the input data before shuffling it
             Shape get_pre_shuffle_shape(const Shape& data_shape) const;
 
-            const int64_t m_axis;
+            size_t m_axis;
             const size_t m_groups;
         };
     }
