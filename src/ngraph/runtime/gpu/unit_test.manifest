@@ -176,3 +176,6 @@ gather_no_axis_uint16
 gather_no_axis_uint32
 gather_no_axis_uint64
 gather_no_axis_bool
+fake_quantize
+fake_quantize_with_clip
+fake_quantize_with_clip_across_channels

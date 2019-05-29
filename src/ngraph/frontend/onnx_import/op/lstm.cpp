@@ -31,6 +31,7 @@
 #include "lstm.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/make_constant.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
@@ -397,10 +398,10 @@ namespace ngraph
 
                             // Xt*(W^T) -- for [iofc] gates.
                             auto Xt_W = std::make_shared<ngraph::op::Dot>(
-                                in_x, ngraph::op::util::transpose(m_W));
+                                in_x, ngraph::builder::transpose(m_W));
                             // Ht-1*(R^T)  -- for [iofc] gates.
                             auto Ht_R = std::make_shared<ngraph::op::Dot>(
-                                H_t, ngraph::op::util::transpose(m_R));
+                                H_t, ngraph::builder::transpose(m_R));
                             // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
                             auto gates = add(Xt_W, add(Ht_R, bias));
 

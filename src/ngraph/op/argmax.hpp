@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace op
     {
-        // \brief Computes minimum index along a specified axis for a given tensor
+        /// \brief Computes minimum index along a specified axis for a given tensor
         class ArgMax : public op::util::IndexReduction
         {
         public:

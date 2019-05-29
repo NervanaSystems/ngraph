@@ -81,6 +81,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/fake_quantize.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -89,6 +90,7 @@
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
+#include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
@@ -2054,6 +2056,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Elu:
         case OP_TYPEID::EmbeddingLookup:
         case OP_TYPEID::Erf:
+        case OP_TYPEID::FakeQuantize:
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
         case OP_TYPEID::GenerateMask:
@@ -2079,6 +2082,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScatterAdd:
         case OP_TYPEID::ScatterNDAdd:
         case OP_TYPEID::ShapeOf:
+        case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
@@ -2174,6 +2178,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::HardSigmoid:
     case OP_TYPEID::DepthToSpace:
     case OP_TYPEID::Elu:
+    case OP_TYPEID::FakeQuantize:
     case OP_TYPEID::Gemm:
     case OP_TYPEID::GRN:
     case OP_TYPEID::LeakyRelu:
@@ -2181,6 +2186,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
     case OP_TYPEID::ScaleShift:
+    case OP_TYPEID::ShuffleChannels:
     case OP_TYPEID::SpaceToDepth:
     case OP_TYPEID::Split:
     case OP_TYPEID::SquaredDifference:
