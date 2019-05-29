@@ -74,7 +74,6 @@ shared_ptr<Node> op::ActivationFunction::operator()(const shared_ptr<Node>& arg)
 op::ActivationFunction op::get_activation_func_by_name(const string& func_name)
 {
     using ActivationFunctionMap = unordered_map<string, op::ActivationFunction>;
-    using namespace placeholders;
 
     static ActivationFunctionMap func_map{
         {"sigmoid", op::ActivationFunction{sigmoid}},
