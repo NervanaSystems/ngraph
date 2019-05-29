@@ -55,25 +55,6 @@ namespace ngraph
 
                     functors.emplace_back(functor);
                 }
-                else if (arg_rank == 1)
-                {
-                    size_t out_element_count = shape_size(out_shape);
-                    size_t in_element_count = shape_size(arg_shape);
-                    auto repeats = out_element_count / in_element_count;
-                    std::function<decltype(runtime::cpu::kernel::tile_rank_1<float>)> kernel;
-                    SELECT_KERNEL(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::tile_rank_1);
-                    auto functor =
-                        [&, kernel, in_element_count, repeats, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            kernel(ctx->buffer_data[arg_buffer_index],
-                                   ctx->buffer_data[out_buffer_index],
-                                   in_element_count,
-                                   repeats);
-                        };
-
-                    functors.emplace_back(functor);
-                }
                 else
                 {
                     std::function<decltype(runtime::cpu::kernel::tile<float, 2>)> kernel;

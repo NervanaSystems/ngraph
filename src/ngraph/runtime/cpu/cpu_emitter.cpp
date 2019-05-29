@@ -4042,20 +4042,6 @@ namespace ngraph
 
                     writer.block_end();
                 }
-                else if (arg_rank == 1)
-                {
-                    size_t out_element_count = shape_size(out_shape);
-                    size_t in_element_count = shape_size(arg_shape);
-                    auto repeats = out_element_count / in_element_count;
-
-                    writer.block_begin();
-                    writer << "cpu::kernel::tile_rank_1<" << et.c_type_string() << ">("
-                           << args[0].get_name() << ", " << out[0].get_name() << ", "
-                           << std::to_string(in_element_count) << ", " << std::to_string(repeats)
-                           << ");\n";
-
-                    writer.block_end();
-                }
                 else
                 {
                     writer.block_begin();
