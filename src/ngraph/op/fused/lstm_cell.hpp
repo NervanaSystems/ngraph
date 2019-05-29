@@ -146,16 +146,6 @@ namespace ngraph
             std::shared_ptr<Node> get_bias() const;
             NodeVector get_peephole_weigths() const;
 
-            ///
-            /// \brief      The bias tensor for the gates. Shape: [2 * gates_count * hidden_size].
-            /// \note       Concatenation of `[Wb[zrh], Rb[zrh]]`.
-            ///
-            std::shared_ptr<Node> m_B;
-            ///
-            /// \brief Peephole weights for iof gates. Shape: [3 * hidden_size]
-            ///
-            std::shared_ptr<Node> m_P;
-            ///
             /// \brief The Activation function f.
             ///
             ActivationFunction m_activation_f;

@@ -275,6 +275,42 @@ NodeVector op::LSTMCell::decompose_op() const
     return {H, C};
 }
 
+shared_ptr<Node> op::LSTMCell::get_bias() const
+{
+    shared_ptr<Node> bias;
+    if (get_input_size() == 7)
+    {
+        // Split B onto Wb an Rb and add them.
+        NodeVector b_W_R = builder::split(get_argument(5), 2);
+        bias = b_W_R.at(0) + b_W_R.at(1);
+    }
+    else
+    {
+        // As default bias is all zeros, thus just initialize it with appropriate shape and zeros.
+        bias = op::Constant::create(input(0).get_element_type(),
+                                    Shape{m_gates_count * get_hidden_size()},
+                                    vector<float>(m_gates_count * get_hidden_size(), 0.f));
+    }
+    return std::move(bias);
+}
+
+NodeVector op::LSTMCell::get_peephole_weigths() const
+{
+    shared_ptr<Node> P;
+    if (get_input_size() == 7)
+    {
+        P = get_argument(6);
+    }
+    else
+    {
+        P = op::Constant::create(input(0).get_element_type(),
+                                 Shape{m_peepholes_count * get_hidden_size()},
+                                 vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
+    }
+    return std::move(builder::split(P, m_peepholes_count));
+}
+
+
 shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
