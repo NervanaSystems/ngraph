@@ -243,6 +243,7 @@ namespace ngraph
 
             bool is_constant() const override { return true; }
             bool are_all_data_elements_bitwise_identical() const;
+            std::string convert_value_to_string(size_t index) const;
 
         protected:
             void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }
