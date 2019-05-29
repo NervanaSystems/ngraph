@@ -17,10 +17,10 @@
 #include <iterator>
 
 #include "ngraph/builder/norm.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "normalize.hpp"
 
 using namespace std;
@@ -94,7 +94,7 @@ NodeVector op::Normalize::decompose_op() const
     {
         Shape data_shape(4 - input_shape.size(), 1);
         copy(begin(input_shape), end(input_shape), back_inserter(data_shape));
-        data = util::reshape(data, data_shape);
+        data = builder::reshape(data, data_shape);
     }
 
     // Calculate norm over CHW axes.
@@ -128,7 +128,7 @@ NodeVector op::Normalize::decompose_op() const
     // get back original input tensor rank
     if (input_shape.size() != 4)
     {
-        data = util::reshape(data, input_shape);
+        data = builder::reshape(data, input_shape);
     }
 
     return {data};
