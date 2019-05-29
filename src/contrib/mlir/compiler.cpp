@@ -240,23 +240,22 @@ void MLIRCompiler::optimize()
 void MLIRCompiler::build_ng_dialect()
 {
     const NodeVector& sub_graph = m_compiled_kernel->get_node_list();
-    NGRAPH_ASSERT(sub_graph.size() == 1) << "Supporting code-gen for a single node for now";
 
-    auto np = sub_graph[0];
-
-    auto it = op_dispatcher.find(TI(*np));
-    if (it == op_dispatcher.end())
+    for(auto np : sub_graph)
     {
-        throw unsupported_op{std::string{"The MLIR backend doesn't currently implement the '"} +
-                             np->description() + "' operation"};
+        auto it = op_dispatcher.find(TI(*np));
+        if (it == op_dispatcher.end())
+        {
+            throw unsupported_op{std::string{"The MLIR backend doesn't currently implement the '"} +
+                                 np->description() + "' operation"};
+        }
+        mlir::Value* mlir_value = it->second(*this, np.get());
+        // builders that have multiple result values will update the value map, and set their ret values to null
+        if (mlir_value)
+        {
+            update_tensor_value(np->get_output_tensor_ptr().get(), mlir_value);
+        }
     }
-    mlir::Value* mlir_value = it->second(*this, np.get());
-    // builders that have multiple result values will update the value map, and set their ret values to null
-    if (mlir_value)
-    {
-        update_tensor_value(np->get_output_tensor_ptr().get(), mlir_value);
-    }
-
     create_return();
 }
 
