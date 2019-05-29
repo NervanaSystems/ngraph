@@ -284,7 +284,9 @@ mlir::Value* MLIRCompiler::create_binary_op(const ngraph::Node* ng_node)
     auto rhs = ng_node->get_argument(1)->get_output_tensor_ptr();
     auto lhs_v = get_tensor_value(lhs.get()).m_value;
     auto rhs_v = get_tensor_value(rhs.get()).m_value;
-    return m_builder->create<BinOp>(mlir::UnknownLoc::get(&m_context), lhs_v, rhs_v).getResult();
+    auto res_type = get_mlir_type(ng_node->get_output_tensor_ptr().get());
+    return m_builder->create<BinOp>(mlir::UnknownLoc::get(&m_context), res_type, lhs_v, rhs_v)
+        .getResult();
 }
 
 void MLIRCompiler::create_return()

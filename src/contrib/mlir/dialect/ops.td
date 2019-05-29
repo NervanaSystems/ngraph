@@ -84,10 +84,9 @@ class NG_Unary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
   let verifier = [{ return verifyUnaryArithOp(this); }];
 }
 
-// Arithmetic binary operations
-// Inputs and outputs have same type
+// Base class for arithmetic binary operations without side effects.
 class NG_Binary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
-      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect, SameValueType], traits)>,
+      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
       Arguments<(ins NG_TensorType:$lhs, NG_TensorType:$rhs)>
 {
   // TODO: Implement
@@ -123,14 +122,14 @@ def NGTanhOp     : NG_Unary_Arith_Op<"tanh">;
 def NGSqrtOp     : NG_Unary_Arith_Op<"sqrt">;
 
 // Binary Operations
-def NGAddOp : NG_Binary_Arith_Op<"add", [Commutative]>;
-def NGAndOp : NG_Binary_Arith_Op<"and", [Commutative]>;
-def NGSubOp : NG_Binary_Arith_Op<"sub">;
-def NGDivOp : NG_Binary_Arith_Op<"div">;
-def NGMaxOp : NG_Binary_Arith_Op<"max", [Commutative]>;
-def NGMinOp : NG_Binary_Arith_Op<"min", [Commutative]>;
-def NGMulOp : NG_Binary_Arith_Op<"mul", [Commutative]>;
-def NGPowOp : NG_Binary_Arith_Op<"pow">;
+def NGAddOp : NG_Binary_Arith_Op<"add", [SameValueType, Commutative]>;
+def NGAndOp : NG_Binary_Arith_Op<"and", [SameValueType, Commutative]>;
+def NGSubOp : NG_Binary_Arith_Op<"sub", [SameValueType]>;
+def NGDivOp : NG_Binary_Arith_Op<"div", [SameValueType]>;
+def NGMaxOp : NG_Binary_Arith_Op<"max", [SameValueType, Commutative]>;
+def NGMinOp : NG_Binary_Arith_Op<"min", [SameValueType, Commutative]>;
+def NGMulOp : NG_Binary_Arith_Op<"mul", [SameValueType, Commutative]>;
+def NGPowOp : NG_Binary_Arith_Op<"pow", [SameValueType]>;
 
 // Comparison
 def NGEqOp        : NG_OneResult_Op<"equal",      [NoSideEffect]>;

@@ -100,6 +100,7 @@ namespace ngraph
 
                 template <typename BinOp>
                 mlir::Value* create_binary_op(const ngraph::Node* ng_node);
+
                 void create_return();
 
                 /// Helper to create memref arguments for MLIR function signature

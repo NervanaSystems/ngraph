@@ -366,20 +366,24 @@ namespace
         // TODO (dcab): We currently generate a super naive loop nest. Improve loop nest layout.
 
         MemRefView v_res(result), v_lhs(lhs), v_rhs(rhs);
-        IndexedValue i_res(result), i_lhs(lhs), i_rhs(rhs);
 
         NGRAPH_ASSERT(v_lhs.rank() == 2 && v_rhs.rank() == 2 && v_res.rank() == 2)
             << "Dot operation is only supported for 2D tensors";
 
-        // Induction variables, lower bounds, upper bounds and steps of the loop nest.
+        // Create induction variables, lower bounds, upper bounds and steps of the loop nest.
+        // It's important to note that MemRefView priovides lb/ub/step info is "reverse order",
+        // i.e., fastest varying dimension is the last one, slowest varying dimention is the first
+        // one.
         IndexHandle n, m, k;
-        IndexHandle n_lb(v_lhs.lb(1)), m_lb(v_lhs.lb(0)), k_lb(v_rhs.lb(0));
-        IndexHandle n_ub(v_lhs.ub(1)), m_ub(v_lhs.ub(0)), k_ub(v_rhs.ub(0));
-        int64_t n_step = v_lhs.step(1), m_step = v_lhs.step(0), k_step = v_rhs.step(0);
-        // TODO (dcab): Assert on dims
+        unsigned n_dim = v_lhs.fastestVarying() - 1;
+        unsigned m_dim = v_rhs.fastestVarying();
+        unsigned k_dim = v_rhs.fastestVarying();
+        IndexHandle n_lb(v_lhs.lb(n_dim)), m_lb(v_lhs.lb(m_dim)), k_lb(v_rhs.lb(k_dim));
+        IndexHandle n_ub(v_lhs.ub(n_dim)), m_ub(v_lhs.ub(m_dim)), k_ub(v_rhs.ub(k_dim));
+        int64_t n_step = v_lhs.step(n_dim), m_step = v_lhs.step(m_dim), k_step = v_rhs.step(k_dim);
 
         // Constants, indexed values and indexes to be used inside the loop nest.
-        IndexedValue ires(result), ilhs(lhs), irhs(rhs);
+        IndexedValue i_res(result), i_lhs(lhs), i_rhs(rhs);
         ValueHandle zero_init(rewriter.create<ConstantOp>(loc, rewriter.getZeroAttr(elem_ty)));
 
         LoopBuilder(&n, n_lb, n_ub, n_step)([&] {
