@@ -1,9 +1,27 @@
 .. introduction:
 
-############
-Introduction
-############
+#######
+Summary
+#######
 
+nGraph is an open-source graph compiler for :abbr:`Artificial Neural Networks (ANNs)`. 
+The nGraph Compiler stack provides an inherently efficient graph-based compilation 
+infrastructure designed to be compatible with many upcoming 
+:abbr:`Application-Specific Integrated Circuits (ASICs)`, like the Intel® Nervana™ 
+Neural Network Processor (Intel® Nervana™ NNP), while also unlocking a massive 
+performance boost on any existing hardware targets for your neural network: both 
+GPUs and CPUs. Using its flexible infrastructure, you will find it becomes much 
+easier to create Deep Learning (DL) models that can adhere to the "write once, 
+run anywhere" mantra that enables your AI solutions to easily go from concept to 
+production to scale.
+
+Frameworks using nGraph to execute workloads have shown `up to 45X`_ performance 
+boost compared to native implementations. For a high-level overview, see the 
+:doc:`project/introduction` and our latest :doc:`project/release-notes`.
+
+
+Motivations
+===========
 
 Developers working to craft solutions with :abbr:`Artificial Intelligence (AI)`
 face a steep learning curve in taking their concepts from design to 
@@ -50,8 +68,6 @@ also addresses the scalability issue with kernel libraries, the current
 popular solution to accelerating deep learning performance. 
 
 
-Motivations
-===========
 
 The current state-of-the-art software solution for speeding up deep learning 
 computation is to integrate kernel libraries like Intel® Math Kernel Library 

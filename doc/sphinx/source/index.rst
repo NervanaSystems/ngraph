@@ -22,24 +22,110 @@ nGraph Compiler stack
 ######################
 
 
-nGraph is an open-source graph compiler for :abbr:`Artificial Neural Networks (ANNs)`. 
-The nGraph Compiler stack provides an inherently efficient graph-based compilation 
-infrastructure designed to be compatible with many upcoming 
-:abbr:`Application-Specific Integrated Circuits (ASICs)`, like the Intel® Nervana™ 
-Neural Network Processor (Intel® Nervana™ NNP), while also unlocking a massive 
-performance boost on any existing hardware targets for your neural network: both 
-GPUs and CPUs. Using its flexible infrastructure, you will find it becomes much 
-easier to create Deep Learning (DL) models that can adhere to the "write once, 
-run anywhere" mantra that enables your AI solutions to easily go from concept to 
-production to scale.
+.. _ngraph_home:
 
-Frameworks using nGraph to execute workloads have shown `up to 45X`_ performance 
-boost compared to native implementations. For a high-level overview, see the 
-:doc:`project/introduction` and our latest :doc:`project/release-notes`.
+.. only:: release
+
+  nGraph Compiler stack documentation for version |version|.
+
+   Documentation for the latest (master) development branch can be found 
+   at https://docs.ngraph.ai/
+
+.. only:: (development or daily)
+
+   nGraph Compiler stack documentation for the master tree under development 
+   (version |version|).
+
+For information about the changes and additions for releases, please
+consult the published :doc:`project/release-notes`.
+
+The nGraph Library and Compiler stack are provided under the `Apache 2.0 license`_ 
+(as found in the LICENSE file in the project's `GitHub repo`_). The nGraph 
+Library and Compiler stack may also import or reuse packages, scripts, and 
+other files that use other licensing.
+
+.. _Apache 2.0 license:
+   https://github.com/NervanaSystems/ngraph/blob/master/LICENSE
+
+.. _GitHub repo: https://github.com/NervanaSystems/ngraph
+
+
+   * :doc:`project/index` -- Introduction to the nGraph Compiler stack: Overview, Architecture, Features, and Licensing
+   * :doc:`getting-started/index` -- Getting Started Guides for framework users: find out how to ``pip install`` compatible bridges for various frameworks 
+   * :doc:`python_api/index` -- Python API 
+   * :doc:`backend-developers/index` -- Developer Guides: Documentation and APIs for backend developers building custom hardware or frameworks on nGraph Core. 
+
+
+
+.. raw:: html
+
+   <ul class="grid">
+       <li class="grid-item">
+      <a href="project/introduction.html">
+          <img alt="" src="logo.png"/>
+          <h2>Introduction</h2>
+      </a>
+      <p></p>
+       </li>
+       <li class="grid-item">
+   
+
+      <a href="getting_started/index.html">
+               
+          <h2>Getting Started Guides</h2>
+      </a>
+      <p>Follow this guide to build and test the nGraph Library's core ops.</p>
+       </li>
+       <li class="grid-item">
+   
+      <a href="contribute/index.html">
+               
+          <h2>Contribution Guidelines</h2>
+      </a>
+      <p>As an open-source project, we welcome and encourage the community
+           to submit patches directly to the project.</p>
+       </li>
+       <li class="grid-item">
+      <a href="samples/index.html">
+               
+          <h2>Samples and Demos</h2>
+      </a>
+      <p>A list of deep learning models tested and validated on nGraph</p>
+       </li>
+       <li class="grid-item">
+      <a href="frameworks/validated/index.html">
+               
+          <h2>API Reference</h2>
+      </a>
+      <p>API Documentation and Backend Developer Reference</p>
+       </li>
+       <li class="grid-item">
+      <a href="security/index.html">
+          <h2>APIs</h2>
+      </a>
+      <p>Requirements, processes, and developer guidelines for ensuring security is addressed within the Zephyr project.</p>
+       </li>
+       <li class="grid-item">
+      <a href="boards/index.html">
+               <span class="grid-icon fa fa-object-group"></span>
+          <h2>Supported Boards</h2>
+      </a>
+      <p>List of supported frameworks.</p>
+       </li>
+       <li class="grid-item">
+      <a href="guides/index.html">
+               <span class="grid-icon fa fa-puzzle-piece"></span>
+          <h2>User and Developer Guides</h2>
+      </a>
+      <p>User and Developer Guides, including tools and tips</p>
+       </li>
+   </ul>
+
+
 
 .. toctree::
    :maxdepth: 1
-   :caption: Connecting Frameworks
+   :caption: Getting Started
    
    frameworks/index.rst
    frameworks/validated/list.rst
@@ -66,10 +152,10 @@ boost compared to native implementations. For a high-level overview, see the
    
 .. toctree::
    :maxdepth: 1
-   :caption: Backend Support
+   :caption: Backend Developers
 
-   backend-support/index.rst
-   backend-support/cpp-api.rst
+   backend-developers/index.rst
+   backend-developers/cpp-api.rst
 
 
 .. toctree::
@@ -91,14 +177,10 @@ boost compared to native implementations. For a high-level overview, see the
    project/extras.rst 
    glossary.rst
 
+.. only:: html
+
 Indices and tables
 ==================
 
    * :ref:`search`
    * :ref:`genindex`
-
-
-
-
-.. nGraph: https://www.ngraph.ai
-.. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/

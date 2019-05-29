@@ -1,7 +1,7 @@
 .. frameworks/index.rst: 
 
-Current framework integrations  
-==============================
+Connect a framework  
+===================
 
 .. toctree::
    :maxdepth: 1
@@ -11,6 +11,9 @@ Current framework integrations
    onnx_integ.rst
    paddle_integ.rst
    validated/testing-latency.rst
+
+
+To get started with nGraph, we've provided a few possible paths depending on where in
 
 
 A framework is "supported" when there is a framework :term:`bridge` that can be 
