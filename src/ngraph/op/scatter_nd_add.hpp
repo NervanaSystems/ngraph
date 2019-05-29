@@ -26,9 +26,9 @@ namespace ngraph
         class ScatterNDAdd : public Op
         {
         public:
-            // \param inputs Tensor
-            // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-            // \param update Tensor: Must have same type as inputs
+            /// \param inputs Tensor
+            /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+            /// \param updates Tensor: Must have same type as inputs
             ScatterNDAdd(const std::shared_ptr<Node>& inputs,
                          const std::shared_ptr<Node>& indices,
                          const std::shared_ptr<Node>& updates)

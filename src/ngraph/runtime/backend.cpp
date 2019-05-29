@@ -92,3 +92,8 @@ bool runtime::Backend::is_device_memory(void* ptr)
     // device pinned memory or not
     return false;
 }
+
+std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_stream)
+{
+    throw runtime_error("load opertion unimplemented.");
+}

@@ -22,6 +22,28 @@ namespace ngraph
 {
     namespace op
     {
+        struct PriorBoxAttrs
+        {
+            // min_sizes      Desired min_sizes of prior boxes
+            // max_sizes      Desired max_sizes of prior boxes
+            // aspect_ratios  Aspect ratios of prior boxes
+            // clip           Clip output to [0,1]
+            // flip           Flip aspect ratios
+            // step           Distance between prior box centers
+            // offset         Box offset relative to top center of image
+            // variances      Values to adjust prior boxes with
+            // scale_all      Scale all sizes
+            std::vector<float> min_sizes;
+            std::vector<float> max_sizes;
+            std::vector<float> aspect_ratios;
+            bool clip = false;
+            bool flip = false;
+            float step = 1.0f;
+            float offset = 0.0f;
+            std::vector<float> variances;
+            bool scale_all = false;
+        };
+
         /// \brief Layer which generates prior boxes of specified sizes
         /// normalized to input image size
         class PriorBox : public Op
@@ -31,42 +53,19 @@ namespace ngraph
             ///
             /// \param layer_shape    Shape of layer for which prior boxes are computed
             /// \param image_shape    Shape of image to which prior boxes are scaled
-            /// \param min_sizes      Desired min_sizess of prior boxes
-            /// \param max_sizes      Desired max_sizess of prior boxes
-            /// \param aspect_ratios  Aspect ratios of prior boxes
-            /// \param clip           Clip output to [0,1]
-            /// \param flip           Flip aspect ratios
-            /// \param step           Distance between prior box centers
-            /// \param offset         Box offset relative to top center of image
-            /// \param variances      Values to adjust prior boxes with
-            /// \param scale_all      Scale all sizes
+            /// \param attrs          PriorBox attributes
             PriorBox(const std::shared_ptr<Node>& layer_shape,
                      const std::shared_ptr<Node>& image_shape,
-                     const std::vector<float>& min_sizes,
-                     const std::vector<float>& max_sizes,
-                     const std::vector<float>& aspect_ratios,
-                     const bool clip,
-                     const bool flip,
-                     const float step,
-                     const float offset,
-                     const std::vector<float>& variances,
-                     const bool scale_all);
+                     const PriorBoxAttrs& attrs);
 
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            const PriorBoxAttrs& get_attrs() const { return m_attrs; }
         private:
-            std::vector<float> m_min_sizes;
-            std::vector<float> m_max_sizes;
-            std::vector<float> m_aspect_ratios;
-            bool m_clip;
-            bool m_flip;
-            float m_step;
-            float m_offset;
-            std::vector<float> m_variances;
-            bool m_scale_all;
+            PriorBoxAttrs m_attrs;
         };
     }
 }

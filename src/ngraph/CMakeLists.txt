@@ -168,6 +168,8 @@ set (SRC
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    op/experimental/layers/ctc_greedy_decoder.cpp
+    op/experimental/layers/ctc_greedy_decoder.hpp
     op/experimental/layers/detection_output.cpp
     op/experimental/layers/detection_output.hpp
     op/experimental/layers/interpolate.cpp
@@ -312,6 +314,8 @@ set (SRC
     op/fused/prelu.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/shuffle_channels.cpp
+    op/fused/shuffle_channels.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp

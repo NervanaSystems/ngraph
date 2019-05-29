@@ -534,8 +534,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormTraining>(
-            m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
+        auto m_bn =
+            std::static_pointer_cast<ngraph::op::BatchNormTraining>(m.get_match_root()
+                                                                        ->get_argument(0)
+                                                                        ->input(0)
+                                                                        .get_source_output()
+                                                                        .get_node_shared_ptr());
 
         if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
@@ -603,7 +607,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
         auto pattern_map = m.get_pattern_map();
 
-        auto bn_match = m.get_match_root()->get_inputs().at(0).get_output().get_node();
+        auto bn_match = m.get_match_root()->input(0).get_source_output().get_node_shared_ptr();
         if (bn_match->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";

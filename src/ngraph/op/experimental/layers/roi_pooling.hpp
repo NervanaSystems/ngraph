@@ -43,6 +43,9 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            const Shape& get_output_size() const { return m_output_size; }
+            float get_spatial_scale() const { return m_spatial_scale; }
+            const std::string& get_kind() const { return m_kind; }
         private:
             Shape m_output_size;
             float m_spatial_scale;
