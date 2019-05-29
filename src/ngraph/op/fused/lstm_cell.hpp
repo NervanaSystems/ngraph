@@ -143,26 +143,9 @@ namespace ngraph
 
             bool get_input_forget() const { return m_input_forget; }
         private:
-            ///
-            /// \brief      The input data tensor. Shape: [batch_size, input_size].
-            ///
-            std::shared_ptr<Node> m_X;
-            ///
-            /// \brief      The weight tensor. Shape: [4*hidden_size, input_size].
-            ///
-            std::shared_ptr<Node> m_W;
-            ///
-            /// \brief      The recurrence weight tensor. Shape: [4*hidden_size, hidden_size].
-            ///
-            std::shared_ptr<Node> m_R;
-            ///
-            /// \brief      The hidden state tensor at current time step. Shape: [batch_size, hidden_size].
-            ///
-            std::shared_ptr<Node> m_H_t;
-            ///
-            /// \brief      The cell state tensor at current time step. Shape: [batch_size, hidden_size].
-            ///
-            std::shared_ptr<Node> m_C_t;
+            std::shared_ptr<Node> get_bias() const;
+            NodeVector get_peephole_weigths() const;
+
             ///
             /// \brief The Activation function f.
             ///
@@ -182,18 +165,6 @@ namespace ngraph
 
             static constexpr std::size_t m_gates_count{4};
             static constexpr std::size_t m_peepholes_count{3};
-            ///
-            /// \brief Peephole weights vector for respectively: input, output, and forget gates.
-            ///
-            /// Each peephole has shape [hidden_size].
-            ///
-            NodeVector m_p_iof;
-            ///
-            /// \brief Sum of biases (weight and recurrence) for input, output, forget, and cell gates.
-            ///
-            /// Sum of `[Wb, Rb]`.
-            ///
-            std::shared_ptr<Node> m_bias;
         };
     }
 }
