@@ -176,9 +176,11 @@ void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& sourc
         }
         else
         {
-            // Read from source tensor pointer. Might involve layout conversions
+            // This will copy the data in native/row-major layout
             source.read(get_data_ptr(), 0, get_size_in_bytes());
-            m_descriptor->set_tensor_layout(cpu_source->get_tensor_layout());
+            // Set default layout
+            m_descriptor->set_tensor_layout(
+                std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
         }
     }
     else

@@ -122,3 +122,13 @@ TEST(tensor, output_flag)
         EXPECT_TRUE(f0->get_output_op(i)->is_output());
     }
 }
+
+TEST(tensor, copy_from)
+{
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{2, 3});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
