@@ -1283,6 +1283,18 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_top_k)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_tile)
+{
+    auto function =
+        onnx_import::import_onnx_model(file_util::path_join(SERIALIZED_ZOO, "onnx/tile.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<std::int16_t>({0, 1, 2, 3, 4, 5});
+    test_case.add_input<std::int16_t>({2, 1});
+    test_case.add_expected_output<std::int16_t>(Shape{4, 3}, {0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5});
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_sinh)
 {
     auto function =
