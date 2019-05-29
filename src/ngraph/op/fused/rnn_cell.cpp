@@ -52,17 +52,8 @@ op::RNNCell::RNNCell(const shared_ptr<Node>& X,
                      float clip)
     : FusedOp("RNNCell", {X, W, R, H_t})
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
-    , m_X{X}
-    , m_W{W}
-    , m_R{R}
-    , m_H_t{H_t}
     , m_activation_f{get_activation_function(0)}
 {
-    // As default bias is all zeros, thus just initialize it with appropriate shape and zeros.
-    m_B = op::Constant::create(m_X->get_element_type(),
-                               Shape{2 * get_hidden_size()},
-                               vector<float>(2 * get_hidden_size(), 0.f));
-
     constructor_validate_and_infer_types();
 }
 
@@ -78,11 +69,6 @@ op::RNNCell::RNNCell(const shared_ptr<Node>& X,
                      float clip)
     : FusedOp("RNNCell", {X, W, R, H_t, B})
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
-    , m_X{X}
-    , m_W{W}
-    , m_R{R}
-    , m_H_t{H_t}
-    , m_B{B}
     , m_activation_f{get_activation_function(0)}
 {
     constructor_validate_and_infer_types();
@@ -98,7 +84,7 @@ void op::RNNCell::pre_validate_and_infer_types()
     NODE_VALIDATION_CHECK(this,
                           (x_pshape.is_static() || w_pshape.is_static() || r_pshape.is_static() ||
                            ht_pshape.is_static()),
-                          "GRUCell supports only static input tensors.");
+                          "RNNCell supports only static input tensors.");
 
     const Shape& x_shape{x_pshape.to_shape()};
 
@@ -137,12 +123,12 @@ void op::RNNCell::pre_validate_and_infer_types()
                           w_shape,
                           ".");
 
-    if (get_input_size() > 4)
+    if (get_input_size() == 5)
     {
         const auto& b_pshape = get_input_partial_shape(4);
 
         NODE_VALIDATION_CHECK(
-            this, b_pshape.is_static(), "GRUCell supports only static input tensors.");
+            this, b_pshape.is_static(), "RNNCell supports only static input tensors.");
 
         const Shape& b_shape{b_pshape.to_shape()};
 
@@ -164,10 +150,13 @@ NodeVector op::RNNCell::decompose_op() const
     // ------ ACRONYMS ------
     // i_t - input gate at current time step
     // t - time step (t-1 means previous time step)
-    // W  - W parameter weight matrix for input gate.
-    // R  - R recurrence weight matrix for input gate.
-    // Wb - W bias vectors for input gate.
-    // Rb - R bias vectors for input gate.
+    // X   - The input data tensor. Shape: [batch_size, input_size].
+    // W   - The weight tensor for input gate. Shape: [hidden_size, input_size].
+    // R   - The recurrence weight tensor for input gate. Shape: [hidden_size, hidden_size].
+    // H_t - The hidden state tensor at current time step. Shape: [batch_size, hidden_size].
+    // B   - The bias tensor for the input gate. Shape: [2 * hidden_size] Concatenation of `[Wb, Rb]`.
+    // Wb  - W bias vectors for input gate.
+    // Rb  - R bias vectors for input gate.
     // ------ VARIABLE NAMES ------
     // Xt_W    - Input sequence multiplied by weights tensor at current time step.
     // Ht_R    - Hidden state multiplied by weights tensor at current time step.
@@ -180,13 +169,19 @@ NodeVector op::RNNCell::decompose_op() const
     // Ht = f(Xt*(Wi^T) + Ht-1*(Ri^T) + Wbi + Rbi)
     // --------------------
 
-    NodeVector b_W_R = builder::split(m_B, 2);
+    std::shared_ptr<Node> X = get_argument(0);
+    std::shared_ptr<Node> W = get_argument(1);
+    std::shared_ptr<Node> R = get_argument(2);
+    std::shared_ptr<Node> H_t = get_argument(3);
+    std::shared_ptr<Node> B = get_bias();
+
+    NodeVector b_W_R = builder::split(B, 2);
     auto bias = b_W_R.at(0) + b_W_R.at(1);
 
     // Xt*(W^T)
-    auto Xt_W = std::make_shared<ngraph::op::Dot>(m_X, ngraph::op::util::transpose(m_W));
+    auto Xt_W = std::make_shared<ngraph::op::Dot>(X, ngraph::op::util::transpose(W));
     // Ht-1*(R^T)
-    auto Ht_R = std::make_shared<ngraph::op::Dot>(m_H_t, ngraph::op::util::transpose(m_R));
+    auto Ht_R = std::make_shared<ngraph::op::Dot>(H_t, ngraph::op::util::transpose(R));
     // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb
     auto i_t = add(Xt_W, add(Ht_R, bias));
 
@@ -194,6 +189,23 @@ NodeVector op::RNNCell::decompose_op() const
     i_t = m_activation_f(clip(i_t));
 
     return {i_t};
+}
+
+shared_ptr<Node> op::RNNCell::get_bias() const
+{
+    shared_ptr<Node> bias;
+    if (get_input_size() == 5)
+    {
+        bias = get_argument(4);
+    }
+    else
+    {
+        // As default bias is all zeros, thus just initialize it with appropriate shape and zeros.
+        bias = op::Constant::create(input(0).get_element_type(),
+                                    Shape{2 * get_hidden_size()},
+                                    vector<float>(2 * get_hidden_size(), 0.f));
+    }
+    return bias;
 }
 
 shared_ptr<Node> op::RNNCell::copy_with_new_args(const NodeVector& new_args) const

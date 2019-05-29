@@ -124,27 +124,8 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
-            ///
-            /// \brief      The input data tensor. Shape: [batch_size, input_size].
-            ///
-            std::shared_ptr<Node> m_X;
-            ///
-            /// \brief      The weight tensor. Shape: [hidden_size, input_size].
-            ///
-            std::shared_ptr<Node> m_W;
-            ///
-            /// \brief      The recurrence weight tensor. Shape: [hidden_size, hidden_size].
-            ///
-            std::shared_ptr<Node> m_R;
-            ///
-            /// \brief      The hidden state tensor at current time step. Shape: [batch_size, hidden_size].
-            ///
-            std::shared_ptr<Node> m_H_t;
-            ///
-            /// \brief      The bias tensor for the gates. Shape: [2 * gates_count * hidden_size].
-            /// \note       Concatenation of `[Wb[i], Rb[i]]`.
-            ///
-            std::shared_ptr<Node> m_B;
+            std::shared_ptr<Node> get_bias() const;
+
             ///
             /// \brief The Activation function f.
             ///

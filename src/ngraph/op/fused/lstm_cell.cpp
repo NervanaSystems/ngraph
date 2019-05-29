@@ -310,7 +310,6 @@ NodeVector op::LSTMCell::get_peephole_weigths() const
     return std::move(builder::split(P, m_peepholes_count));
 }
 
-
 shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
