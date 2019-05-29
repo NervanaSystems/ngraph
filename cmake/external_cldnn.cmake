@@ -22,7 +22,7 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 set(CLDNN_GIT_REPO_URL https://github.com/intel/clDNN.git)
-set(CLDNN_GIT_LABEL d5c22583f9c86dab8b6a60c60be6b2f83348d7fd)
+set(CLDNN_GIT_LABEL a05c9f29c5690a4beb9cd8c9f712cfb4399b2a6d)
 set(BOOST_VERSION 1.64.0)
 set(OUT_DIR ${EXTERNAL_PROJECTS_ROOT}/cldnn/out)
 
