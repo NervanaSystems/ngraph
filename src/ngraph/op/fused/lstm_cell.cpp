@@ -336,7 +336,7 @@ shared_ptr<Node> op::LSTMCell::get_bias() const
                                     Shape{m_gates_count * get_hidden_size()},
                                     vector<float>(m_gates_count * get_hidden_size(), 0.f));
     }
-    return std::move(bias);
+    return bias;
 }
 
 NodeVector op::LSTMCell::get_peephole_weigths() const
@@ -352,7 +352,7 @@ NodeVector op::LSTMCell::get_peephole_weigths() const
                                  Shape{m_peepholes_count * get_hidden_size()},
                                  vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
     }
-    return std::move(builder::split(P, m_peepholes_count));
+    return builder::split(P, m_peepholes_count);
 }
 
 shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) const
