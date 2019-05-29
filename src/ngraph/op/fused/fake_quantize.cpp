@@ -26,6 +26,7 @@
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/subtract.hpp"
@@ -145,7 +146,7 @@ NodeVector op::FakeQuantize::decompose_op() const
     // shift the input data so that it contains only positive values (and zeros)
     data = data - input_low;
 
-    const auto quantized_data =
+    shared_ptr<Node> quantized_data =
         make_shared<op::Quantize>(data,
                                   quant_scale,
                                   zero_point,
@@ -153,9 +154,12 @@ NodeVector op::FakeQuantize::decompose_op() const
                                   axes,
                                   op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY);
 
-    const auto dequantized_data = make_shared<op::Dequantize>(
-        quantized_data, dequant_scale, zero_point, output_low->get_element_type(), axes);
+    quantized_data = make_shared<op::Convert>(quantized_data, input_data_type);
 
+    // dequantization without using the Dequantize op (just a multiplication by the dequant_scale)
+    const auto dequantized_data = quantized_data * dequant_scale;
+
+    // shift the results so that they fall into the <output_low;output_high> range
     return {dequantized_data + output_low};
 }
 
