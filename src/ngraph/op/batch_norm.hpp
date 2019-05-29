@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "ngraph/deprecated.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
@@ -26,39 +27,40 @@ namespace ngraph
 {
     namespace op
     {
-        // \brief Batchnorm for training operation
+        /// \brief Batchnorm for training operation
         class BatchNormTraining : public Op
         {
         public:
-            // \param input Must have rank >= 2, [., C, ...]
-            // \param gamma gamma scaling for normalized value. [C]
-            // \param beta bias added to the scaled normalized value [C]
-            // \param epsilon Avoids divsion by 0 if input has 0 variance
+            /// \param input Must have rank >= 2, [., C, ...]
+            /// \param gamma gamma scaling for normalized value. [C]
+            /// \param beta bias added to the scaled normalized value [C]
+            /// \param epsilon Avoids divsion by 0 if input has 0 variance
             BatchNormTraining(std::shared_ptr<Node> input,
                               std::shared_ptr<Node> gamma,
                               std::shared_ptr<Node> beta,
                               double epsilon);
 
-            // \deprecated
-            // In this version of BatchNorm:
-            //
-            // MEAN AND VARIANCE: computed directly from the content of 'input'.
-            //
-            // OUTPUT VALUE: A tuple with the following structure:
-            //   [0] - The normalization of 'input'.
-            //   [1] - The per-channel means of (pre-normalized) 'input'.
-            //   [2] - The per-channel variances of (pre-normalized) 'input'.
-            //
-            // AUTODIFF SUPPORT: yes: 'generate_adjoints(...)' works as expected.
-            //
-            // SHAPE DETAILS:
-            //   gamma:     must have rank 1, with the same span as input's channel axis.
-            //   beta:      must have rank 1, with the same span as input's channel axis.
-            //   input:     must have rank >= 2.  The second dimension represents the channel axis
-            //              and must have a span of at least 1.
-            //   output[0]: shall have the same shape as 'input'.
-            //   output[1]: shall have rank 1, with the same span as input's channel axis.
-            //   output[2]: shall have rank 1, with the same span as input's channel axis.
+            NGRAPH_DEPRECATED_DOC
+            /// In this version of BatchNorm:
+            ///
+            /// MEAN AND VARIANCE: computed directly from the content of 'input'.
+            ///
+            /// OUTPUT VALUE: A tuple with the following structure:
+            ///   [0] - The normalization of 'input'.
+            ///   [1] - The per-channel means of (pre-normalized) 'input'.
+            ///   [2] - The per-channel variances of (pre-normalized) 'input'.
+            ///
+            /// AUTODIFF SUPPORT: yes: 'generate_adjoints(...)' works as expected.
+            ///
+            /// SHAPE DETAILS:
+            ///   gamma:     must have rank 1, with the same span as input's channel axis.
+            ///   beta:      must have rank 1, with the same span as input's channel axis.
+            ///   input:     must have rank >= 2.  The second dimension represents the channel axis
+            ///              and must have a span of at least 1.
+            ///   output[0]: shall have the same shape as 'input'.
+            ///   output[1]: shall have rank 1, with the same span as input's channel axis.
+            ///   output[2]: shall have rank 1, with the same span as input's channel axis.
+            NGRAPH_DEPRECATED("Use another constructor")
             BatchNormTraining(double eps,
                               std::shared_ptr<Node> gamma,
                               std::shared_ptr<Node> beta,
@@ -85,12 +87,12 @@ namespace ngraph
         class BatchNormInference : public Op
         {
         public:
-            // \param input [., C, ...]
-            // \param gamma gamma scaling for normalized value. [C]
-            // \param beta bias added to the scaled normalized value [C]
-            // \param mean value for mean normalization [C]
-            // \param variance value for variance normalization [C]
-            // \param epsilon Avoids divsion by 0 if input has 0 variance
+            /// \param input [., C, ...]
+            /// \param gamma gamma scaling for normalized value. [C]
+            /// \param beta bias added to the scaled normalized value [C]
+            /// \param mean value for mean normalization [C]
+            /// \param variance value for variance normalization [C]
+            /// \param epsilon Avoids divsion by 0 if input has 0 variance
             BatchNormInference(std::shared_ptr<ngraph::Node> input,
                                std::shared_ptr<ngraph::Node> gamma,
                                std::shared_ptr<ngraph::Node> beta,
@@ -98,24 +100,25 @@ namespace ngraph
                                std::shared_ptr<ngraph::Node> variance,
                                double epsilon);
 
-            // \deprecated
-            // In this version of BatchNorm:
-            //
-            // MEAN AND VARIANCE: provided by the 'mean' and 'variance' parameters.
-            //
-            // OUTPUT VALUE: a single tensor with the normalized value of 'input'.
-            //
-            // AUTODIFF SUPPORT:
-            //   - 'generate_adjoints(...) may throw an exception.
-            //
-            // SHAPE DETAILS:
-            //   gamma:    must have rank 1, with the same span as input's channel axis.
-            //   beta:     must have rank 1, with the same span as input's channel axis.
-            //   input:    must have rank >= 2. The second dimension represents the channel axis and
-            //             must have a span of at least 1.
-            //   mean:     must have rank 1, with the same span as input's channel axis.
-            //   variance: must have rank 1, with the same span as input's channel axis.
-            //   output:   shall have the same shape as 'input'.
+            NGRAPH_DEPRECATED_DOC
+            /// In this version of BatchNorm:
+            ///
+            /// MEAN AND VARIANCE: provided by the 'mean' and 'variance' parameters.
+            ///
+            /// OUTPUT VALUE: a single tensor with the normalized value of 'input'.
+            ///
+            /// AUTODIFF SUPPORT:
+            ///   - 'generate_adjoints(...) may throw an exception.
+            ///
+            /// SHAPE DETAILS:
+            ///   gamma:    must have rank 1, with the same span as input's channel axis.
+            ///   beta:     must have rank 1, with the same span as input's channel axis.
+            ///   input:    must have rank >= 2. The second dimension represents the channel axis and
+            ///             must have a span of at least 1.
+            ///   mean:     must have rank 1, with the same span as input's channel axis.
+            ///   variance: must have rank 1, with the same span as input's channel axis.
+            ///   output:   shall have the same shape as 'input'.
+            NGRAPH_DEPRECATED("Use another constructor")
             BatchNormInference(double eps,
                                std::shared_ptr<ngraph::Node> gamma,
                                std::shared_ptr<ngraph::Node> beta,
@@ -157,7 +160,8 @@ namespace ngraph
                                       std::shared_ptr<Node> delta,
                                       double epsilon);
 
-            // \deprecated
+            NGRAPH_DEPRECATED_DOC
+            NGRAPH_DEPRECATED("Use another constructor")
             BatchNormTrainingBackprop(double epsilon,
                                       std::shared_ptr<Node> gamma,
                                       std::shared_ptr<Node> beta,

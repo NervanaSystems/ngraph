@@ -314,6 +314,8 @@ set (SRC
     op/fused/prelu.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/shuffle_channels.cpp
+    op/fused/shuffle_channels.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp
