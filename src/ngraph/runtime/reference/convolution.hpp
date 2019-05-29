@@ -74,11 +74,11 @@ namespace ngraph
                                      size_t out_batch_axis,
                                      size_t out_channel_axis,
                                      const float* input_scale = nullptr,
-                                     INPUT* input_zero_point = nullptr,
+                                     const INPUT* input_zero_point = nullptr,
                                      const float* filter_scale = nullptr,
-                                     FILTER* filter_zero_point = nullptr,
+                                     const FILTER* filter_zero_point = nullptr,
                                      const float* output_scale = nullptr,
-                                     OUTPUT* output_zero_point = nullptr)
+                                     const OUTPUT* output_zero_point = nullptr)
             {
                 bool is_quantized = false;
                 if (input_scale && input_zero_point && filter_scale && filter_zero_point &&
@@ -227,8 +227,8 @@ namespace ngraph
                                 ACCUMULATION f_v = filter[filter_idx];
                                 if (is_quantized)
                                 {
-                                    in_v = in_v - *(input_zero_point);
-                                    f_v = f_v - *(filter_zero_point);
+                                    in_v = in_v - *input_zero_point;
+                                    f_v = f_v - *filter_zero_point;
                                 }
                                 result += in_v * f_v;
                                 in_idx += in_channel_stride;
@@ -240,9 +240,9 @@ namespace ngraph
                     }
                     if (is_quantized)
                     {
-                        float scale = ((*(input_scale)) * (*(filter_scale))) / (*(output_scale));
+                        float scale = *input_scale * *filter_scale / *output_scale;
                         out[out_transform.index(out_coord)] =
-                            static_cast<OUTPUT>((result * scale) + *(output_zero_point));
+                            static_cast<OUTPUT>(result * scale + *output_zero_point);
                     }
                     else
                     {
@@ -268,11 +268,11 @@ namespace ngraph
                              const CoordinateDiff& in_pad_above,
                              const Strides& in_dilation,
                              const float* input_scale = nullptr,
-                             INPUT* input_zero_point = nullptr,
+                             const INPUT* input_zero_point = nullptr,
                              const float* filter_scale = nullptr,
-                             FILTER* filter_zero_point = nullptr,
+                             const FILTER* filter_zero_point = nullptr,
                              const float* output_scale = nullptr,
-                             OUTPUT* output_zero_point = nullptr)
+                             const OUTPUT* output_zero_point = nullptr)
 
             {
                 general_convolution<INPUT, FILTER, OUTPUT, ACCUMULATION>(in,

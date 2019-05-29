@@ -63,11 +63,11 @@ namespace ngraph
                         padding_above,
                         data_dilation_strides,
                         static_cast<const float*>(input_scale),
-                        static_cast<INPUT*>(input_zero_point),
+                        static_cast<const INPUT*>(input_zero_point),
                         static_cast<const float*>(filter_scale),
-                        static_cast<FILTER*>(filter_zero_point),
+                        static_cast<const FILTER*>(filter_zero_point),
                         static_cast<const float*>(output_scale),
-                        static_cast<OUTPUT*>(output_zero_point));
+                        static_cast<const OUTPUT*>(output_zero_point));
                 }
 
                 template <typename ElementType>
