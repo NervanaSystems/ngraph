@@ -338,3 +338,33 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_qlinear_matmul_3d)
         std::vector<uint8_t>{168, 115, 255, 1, 66, 151, 168, 115, 255, 1, 66, 151}); // T3
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv_integer)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_integer.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<uint8_t>{2, 3, 4, 5, 6, 7, 8, 9, 10}); // x
+    test_case.add_input(std::vector<uint8_t>{1, 1, 1, 1});                 // w
+    test_case.add_input(std::vector<uint8_t>{1});                          // x_zero_point
+
+    test_case.add_expected_output({1, 1, 2, 2}, std::vector<uint8_t>{12, 16, 24, 28}); // y
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_conv_integer_pads)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/conv_integer_pads.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<uint8_t>{2, 3, 4, 5, 6, 7, 8, 9, 10}); // x
+    test_case.add_input(std::vector<uint8_t>{1, 1, 1, 1});                 // w
+    test_case.add_input(std::vector<uint8_t>{1});                          // x_zero_point
+
+    test_case.add_expected_output(
+        {1, 1, 4, 4},
+        std::vector<uint8_t>{1, 3, 5, 3, 5, 12, 16, 9, 11, 24, 28, 15, 7, 15, 17, 9}); // y
+    test_case.run();
+}
