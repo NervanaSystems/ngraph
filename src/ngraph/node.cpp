@@ -471,7 +471,8 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
     return args;
 }
 
-std::tuple<element::Type, PartialShape> Node::validate_and_infer_elementwise_args()
+std::tuple<element::Type, PartialShape>
+    Node::validate_and_infer_elementwise_args(const op::AutoBroadcastSpec& autob)
 {
     element::Type element_type = get_input_element_type(0);
     PartialShape pshape = get_input_partial_shape(0);
@@ -485,18 +486,32 @@ std::tuple<element::Type, PartialShape> Node::validate_and_infer_elementwise_arg
                 element::Type::merge(element_type, element_type, get_input_element_type(i)),
                 "Argument element types are inconsistent.");
 
-            NODE_VALIDATION_CHECK(this,
-                                  PartialShape::merge_into(pshape, get_input_partial_shape(i)),
-                                  "Argument shapes are inconsistent.");
+            if (autob.m_type == op::AutoBroadcastType::NONE)
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      PartialShape::merge_into(pshape, get_input_partial_shape(i)),
+                                      "Argument shapes are inconsistent.");
+            }
+            else if (autob.m_type == op::AutoBroadcastType::NUMPY)
+            {
+                NODE_VALIDATION_CHECK(
+                    this,
+                    PartialShape::broadcast_merge_into(pshape, get_input_partial_shape(i), autob),
+                    "Argument shapes are inconsistent.");
+            }
+            else
+            {
+                NODE_VALIDATION_CHECK(this, false, "Unsupported auto broadcast specification");
+            }
         }
     }
 
     return std::make_tuple(element_type, pshape);
 }
 
-void Node::validate_and_infer_elementwise_arithmetic()
+void Node::validate_and_infer_elementwise_arithmetic(const op::AutoBroadcastSpec& autob)
 {
-    auto args_et_pshape = validate_and_infer_elementwise_args();
+    auto args_et_pshape = validate_and_infer_elementwise_args(autob);
     element::Type& args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
@@ -509,9 +524,9 @@ void Node::validate_and_infer_elementwise_arithmetic()
     set_output_type(0, args_et, args_pshape);
 }
 
-void Node::validate_and_infer_elementwise_logical()
+void Node::validate_and_infer_elementwise_logical(const op::AutoBroadcastSpec& autob)
 {
-    auto args_et_pshape = validate_and_infer_elementwise_args();
+    auto args_et_pshape = validate_and_infer_elementwise_args(autob);
     element::Type& args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
