@@ -35,9 +35,13 @@ if(WIN32)
     )
 endif()
 
-# workaround for compile error
-# related: https://github.com/intel/mkl-dnn/issues/55
-set(GTEST_CXX_FLAGS -Wno-unused-result ${CMAKE_CXX_FLAGS})
+if(LINUX)
+    # workaround for compile error
+    # related: https://github.com/intel/mkl-dnn/issues/55
+    set(GTEST_CXX_FLAGS -Wno-unused-result ${CMAKE_CXX_FLAGS})
+else()
+    set(GTEST_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+endif()
 
 ExternalProject_Add(
     ext_gtest
