@@ -1,4 +1,4 @@
-.. ngraph/release-notes:
+.. project/release-notes.rst:
 
 Release Notes
 #############
