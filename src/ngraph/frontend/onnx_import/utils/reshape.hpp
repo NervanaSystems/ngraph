@@ -23,7 +23,6 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph

@@ -70,6 +70,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/fake_quantize.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -79,6 +80,7 @@
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
+#include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
@@ -940,6 +942,13 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Exp>(args[0]);
                 break;
             }
+            case OP_TYPEID::FakeQuantize:
+            {
+                size_t levels = node_js.at("levels").get<size_t>();
+                node = make_shared<op::FakeQuantize>(
+                    args[0], args[1], args[2], args[3], args[4], levels);
+                break;
+            }
             case OP_TYPEID::Floor:
             {
                 node = make_shared<op::Floor>(args[0]);
@@ -1412,6 +1421,13 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::ShapeOf>(args[0]);
                 break;
             }
+            case OP_TYPEID::ShuffleChannels:
+            {
+                const auto axis = node_js.at("axis").get<size_t>();
+                const auto groups = node_js.at("groups").get<size_t>();
+                node = make_shared<op::ShuffleChannels>(args[0], axis, groups);
+                break;
+            }
             case OP_TYPEID::Sigmoid:
             {
                 node = make_shared<op::Sigmoid>(args[0]);
@@ -1781,7 +1797,7 @@ static json write(const Node& n, bool binary_constant_data)
         if (tmp->are_all_data_elements_bitwise_identical())
         {
             vector<string> vs;
-            vs.push_back(tmp->get_value_strings()[0]);
+            vs.push_back(tmp->convert_value_to_string(0));
             node["value"] = vs;
         }
         else
@@ -1906,6 +1922,12 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Erf: { break;
     }
     case OP_TYPEID::Exp: { break;
+    }
+    case OP_TYPEID::FakeQuantize:
+    {
+        auto tmp = dynamic_cast<const op::FakeQuantize*>(&n);
+        node["levels"] = tmp->get_levels();
+        break;
     }
     case OP_TYPEID::Floor: { break;
     }
@@ -2198,6 +2220,13 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Select: { break;
     }
     case OP_TYPEID::ShapeOf: { break;
+    }
+    case OP_TYPEID::ShuffleChannels:
+    {
+        const auto tmp = dynamic_cast<const op::ShuffleChannels*>(&n);
+        node["axis"] = tmp->get_axis();
+        node["groups"] = tmp->get_groups();
+        break;
     }
     case OP_TYPEID::Sigmoid: { break;
     }
