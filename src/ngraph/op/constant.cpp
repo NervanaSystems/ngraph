@@ -49,6 +49,42 @@ op::Constant::~Constant()
 {
 }
 
+string op::Constant::convert_value_to_string(size_t index) const
+{
+    string rc;
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+    switch (get_element_type().get_type_enum())
+    {
+    case element::Type_t::boolean: rc = to_string(get_vector<char>()[index]); break;
+    case element::Type_t::bf16:
+        rc = to_cpp_string(static_cast<float>(get_vector<bfloat16>()[index]));
+        break;
+    case element::Type_t::f16:
+        rc = to_cpp_string(static_cast<float>(get_vector<float16>()[index]));
+        break;
+    case element::Type_t::f32: rc = to_cpp_string(get_vector<float>()[index]); break;
+    case element::Type_t::f64: rc = to_cpp_string(get_vector<double>()[index]); break;
+    case element::Type_t::i8: rc = to_string(get_vector<int8_t>()[index]); break;
+    case element::Type_t::i16: rc = to_string(get_vector<int16_t>()[index]); break;
+    case element::Type_t::i32: rc = to_string(get_vector<int32_t>()[index]); break;
+    case element::Type_t::i64: rc = to_string(get_vector<int64_t>()[index]); break;
+    case element::Type_t::u8: rc = to_string(get_vector<uint8_t>()[index]); break;
+    case element::Type_t::u16: rc = to_string(get_vector<uint16_t>()[index]); break;
+    case element::Type_t::u32: rc = to_string(get_vector<uint32_t>()[index]); break;
+    case element::Type_t::u64: rc = to_string(get_vector<uint64_t>()[index]); break;
+    case element::Type_t::undefined: throw runtime_error("unsupported type");
+    case element::Type_t::dynamic: throw runtime_error("unsupported type");
+    }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic pop
+#endif
+    return rc;
+}
+
 vector<string> op::Constant::get_value_strings() const
 {
     vector<string> rc;
