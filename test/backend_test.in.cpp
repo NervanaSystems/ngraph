@@ -7410,7 +7410,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_dynamic_offset)
 }
 
 #if NGRAPH_INTERPRETER_ENABLE
-TEST(${BACKEND_NAME}, batch_mat_mul_forward)
+NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
 {
     auto make_dot = [](ParameterVector& a_params, ParameterVector& b_params) {
         Shape shape_a{2, 3};
@@ -7418,7 +7418,7 @@ TEST(${BACKEND_NAME}, batch_mat_mul_forward)
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
         auto B = make_shared<op::Parameter>(element::f32, shape_b);
         a_params.push_back(A);
-        b_params.push_back(B)cd ;
+        b_params.push_back(B);
         return make_shared<op::Dot>(A, B);
     };
 
