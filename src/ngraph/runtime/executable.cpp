@@ -24,12 +24,25 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::Executable::Executable()
+runtime::Executable::Executable(const shared_ptr<runtime::Backend>& backend)
+    : m_backend{backend}
 {
 }
 
 runtime::Executable::~Executable()
 {
+}
+
+shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t index,
+                                                                     void* memory_pointer)
+{
+    throw runtime_error("Unimplemented");
+}
+
+shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t index,
+                                                                      void* memory_pointer)
+{
+    throw runtime_error("Unimplemented");
 }
 
 bool runtime::Executable::call_with_validate(const vector<shared_ptr<runtime::Tensor>>& outputs,

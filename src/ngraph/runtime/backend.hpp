@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "ngraph/deprecated.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/executable.hpp"
@@ -37,7 +38,7 @@ namespace ngraph
 /// \brief Interface to a generic backend.
 ///
 /// Backends are responsible for function execution and value allocation.
-class ngraph::runtime::Backend
+class ngraph::runtime::Backend : public std::enable_shared_from_this<runtime::Backend>
 {
 public:
     virtual ~Backend();
@@ -58,13 +59,16 @@ public:
     /// \returns A vector of all registered devices.
     static std::vector<std::string> get_registered_devices();
 
+    NGRAPH_DEPRECATED_DOC
     /// \brief Create a tensor specific to this backend
     /// \param element_type The type of the tensor element
     /// \param shape The shape of the tensor
     /// \returns shared_ptr to a new backend-specific tensor
+    NGRAPH_DEPRECATED("Use Execute::create_tensor_*() methods")
     virtual std::shared_ptr<ngraph::runtime::Tensor>
         create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
 
+    NGRAPH_DEPRECATED_DOC
     /// \brief Create a tensor specific to this backend
     /// \param element_type The type of the tensor element
     /// \param shape The shape of the tensor
@@ -72,12 +76,15 @@ public:
     ///     must be sufficient to contain the tensor. The lifetime of the buffer is the
     ///     responsibility of the caller.
     /// \returns shared_ptr to a new backend-specific tensor
+    NGRAPH_DEPRECATED("Use Execute::create_tensor_*() methods")
     virtual std::shared_ptr<ngraph::runtime::Tensor> create_tensor(
         const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer) = 0;
 
+    NGRAPH_DEPRECATED_DOC
     /// \brief Create a tensor of C type T specific to this backend
     /// \param shape The shape of the tensor
     /// \returns shared_ptr to a new backend specific tensor
+    NGRAPH_DEPRECATED("Use Execute::create_tensor_*() methods")
     template <typename T>
     std::shared_ptr<ngraph::runtime::Tensor> create_tensor(const Shape& shape)
     {

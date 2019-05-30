@@ -45,7 +45,7 @@ shared_ptr<runtime::Executable>
                                             bool enable_performance_collection)
 {
     return make_shared<HybridExecutable>(
-        m_backend_list, func, enable_performance_collection, m_debug_enabled);
+        shared_from_this(), m_backend_list, func, enable_performance_collection, m_debug_enabled);
 }
 
 bool runtime::hybrid::HybridBackend::is_supported(const Node& node) const

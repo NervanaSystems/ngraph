@@ -32,11 +32,13 @@ using namespace ngraph;
 using namespace std;
 
 runtime::hybrid::HybridExecutable::HybridExecutable(
+    const std::shared_ptr<runtime::Backend>& backend,
     const std::vector<std::shared_ptr<runtime::Backend>>& backend_list,
     const shared_ptr<Function>& func,
     bool enable_performance_collection,
     bool debug_enabled)
-    : m_function{clone_function(*func)}
+    : Executable{backend}
+    , m_function{clone_function(*func)}
     , m_backend_list{backend_list}
     , m_debug_enabled{debug_enabled}
 {
