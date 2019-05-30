@@ -47,9 +47,72 @@ void op::DynReshape::validate_and_infer_types()
     Rank output_rank = pattern_shape.rank().is_dynamic() ? Rank::dynamic() : pattern_shape[0];
 
     set_input_is_relevant_to_shape(1);
+
     if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(1)))
     {
-        set_output_type(0, get_input_element_type(0), const_shape->get_shape_val());
+        std::vector<int64_t> out_shape_val = const_shape->get_vector<int64_t>();
+        NODE_VALIDATION_CHECK(this,
+                              std::none_of(out_shape_val.begin(),
+                                           out_shape_val.end(),
+                                           [](int64_t v) { return v < -1; }),
+                              "Dim size cannot be less than -1 ",
+                              out_shape_val);
+
+        int zero_dims = std::count_if(
+            out_shape_val.begin(), out_shape_val.end(), [](int64_t v) { return v == 0; });
+        int negative_dims = std::count_if(
+            out_shape_val.begin(), out_shape_val.end(), [](int64_t v) { return v == -1; });
+        NODE_VALIDATION_CHECK(this,
+                              negative_dims <= 1,
+                              "More than one dimension has size of -1 (",
+                              negative_dims,
+                              ")");
+
+        if (!zero_dims && !negative_dims)
+        {
+            set_output_type(0, get_input_element_type(0), const_shape->get_shape_val());
+        }
+        else if (!get_input_partial_shape(0).is_static())
+        {
+            // We need input shape to determine output shape in the presence of
+            // zero and negative sized dims.
+            set_output_type(0, get_input_element_type(0), PartialShape::dynamic(output_rank));
+        }
+        else
+        {
+            auto input_shape = get_input_partial_shape(0).to_shape();
+            auto input_elements = shape_size(input_shape);
+
+            Shape output_shape(input_shape.size());
+            size_t output_elements = 1;
+            int negative_dim = -1;
+            for (size_t i = 0; i < input_shape.size(); i++)
+            {
+                if (out_shape_val[i] > 0)
+                {
+                    output_shape[i] = out_shape_val[i];
+                    output_elements *= output_shape[i];
+                }
+                else if (out_shape_val[i] == 0)
+                {
+                    output_shape[i] = input_shape[i];
+                    output_elements *= output_shape[i];
+                }
+                else
+                {
+                    NGRAPH_CHECK(negative_dim == -1);
+                    negative_dim = i;
+                }
+            }
+            if (negative_dim != -1)
+            {
+                // Infer size such that number of output elements matches
+                // input elements
+                NGRAPH_CHECK(input_elements % output_elements == 0);
+                output_shape[negative_dim] = input_elements / output_elements;
+            }
+            set_output_type(0, get_input_element_type(0), output_shape);
+        }
     }
     else
     {
