@@ -168,6 +168,7 @@ option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FAL
 option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
 option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
+option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph static library" FALSE)
 
 if (NGRAPH_CPU_ENABLE
         AND
