@@ -70,6 +70,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/fake_quantize.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -939,6 +940,13 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Exp:
             {
                 node = make_shared<op::Exp>(args[0]);
+                break;
+            }
+            case OP_TYPEID::FakeQuantize:
+            {
+                size_t levels = node_js.at("levels").get<size_t>();
+                node = make_shared<op::FakeQuantize>(
+                    args[0], args[1], args[2], args[3], args[4], levels);
                 break;
             }
             case OP_TYPEID::Floor:
@@ -1914,6 +1922,12 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Erf: { break;
     }
     case OP_TYPEID::Exp: { break;
+    }
+    case OP_TYPEID::FakeQuantize:
+    {
+        auto tmp = dynamic_cast<const op::FakeQuantize*>(&n);
+        node["levels"] = tmp->get_levels();
+        break;
     }
     case OP_TYPEID::Floor: { break;
     }

@@ -300,6 +300,8 @@ set (SRC
     op/fused/depth_to_space.hpp
     op/fused/elu.cpp
     op/fused/elu.hpp
+    op/fused/fake_quantize.cpp
+    op/fused/fake_quantize.hpp
     op/fused/gemm.cpp
     op/fused/gemm.hpp
     op/fused/grn.cpp
@@ -493,7 +495,11 @@ endif()
 
 configure_file(version.in.hpp version.hpp)
 
-add_library(ngraph SHARED ${SRC})
+if (NGRAPH_STATIC_LIB_ENABLE)
+    add_library(ngraph STATIC ${SRC})
+else()
+    add_library(ngraph SHARED ${SRC})
+endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
