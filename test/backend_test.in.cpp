@@ -37,10 +37,6 @@
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
-// clang-format off
-#define BACKEND_TEST_${BACKEND_NAME}
-// clang-format on
-
 using namespace std;
 using namespace ngraph;
 
@@ -7413,6 +7409,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_dynamic_offset)
               read_vector<output_c_type>(y));
 }
 
+#if NGRAPH_INTERPRETER_ENABLE
 TEST(${BACKEND_NAME}, batch_mat_mul_forward)
 {
     auto make_dot = [](ParameterVector& a_params, ParameterVector& b_params) {
@@ -7473,12 +7470,7 @@ TEST(${BACKEND_NAME}, batch_mat_mul_forward)
         EXPECT_TRUE(test::all_close(ref_results.at(i), backend_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
-
-// clang-format off
-#ifdef BACKEND_TEST_${BACKEND_NAME}
-#undef BACKEND_TEST_${BACKEND_NAME}
 #endif
-// clang-format on
 
 NGRAPH_TEST(${BACKEND_NAME}, validate_function_for_dynamic_shape)
 {
