@@ -22,8 +22,12 @@
 
 #include "cpu_fusion.hpp"
 #include "ngraph/builder/make_constant.hpp"
+
+#include "ngraph/descriptor/input.hpp"
+#include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -83,6 +87,7 @@
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/util.hpp"
+
 
 extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
                                                                        ngraph::AxisVector order);
@@ -1223,13 +1228,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
                                                              value);
     auto genmask_label = std::make_shared<pattern::op::Label>(genmask);
 
-    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x); // TODO: how to check it works both ways x, gen_mask too ?
+    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x_label); // TODO: how to check it works both ways x, gen_mask too ?
 
     auto bcast = std::make_shared<ngraph::op::Broadcast>(value_label, x->get_shape(), AxisSet{0, 1, 2,3});
     auto pdivide = std::make_shared<ngraph::op::Divide>(mult, bcast);
 
     //----------
-    auto callback = [x_label, const1_label, seed_label, value_label, genmask_label](pattern::Matcher& m) {
+    auto callback = [x_label, const1_label, seed_label, value_label,
+                        genmask_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_dropout against "
                      << m.get_match_root()->get_name();
         std::cout << "in callback for construct_dropout, name = " << m.get_match_root()->get_name() << "\n";
@@ -1242,6 +1248,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
         std::cout << "got value %f" << temp_val << "\n";
         auto temp_seed = gm->get_seed();
         std::cout << "got seed %d" << temp_seed <<"\n";
+
 
         /*auto value_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[value_label]);
         if (!value_ptr)
@@ -1271,6 +1278,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
         }
         int seed = *(reinterpret_cast<const int*>(seed_ptr->get_data_ptr()));*/
 
+
         std::cout << " replacing the node\n";
         // Check for rank 3D or 4D for now
         auto dropout_n =
@@ -1279,7 +1287,54 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
                                                   temp_seed,
                                                   temp_val
                                                   );
-        ngraph::replace_node(m.get_match_root(), dropout_n);
+        auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 0);
+        ngraph::replace_node(m.get_match_root(), goe1);
+
+        auto goe2 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 1);
+
+        for (auto genmask_user : pattern_map[genmask_label]->get_users())
+        {
+            std::cout << " get users of genmask_label\n";
+            if (std::dynamic_pointer_cast<op::Result>(genmask_user))
+            {
+                std::cout <<"  -- user of genmask is Result!\n";
+                // you can use this to change the input of a `result` node to a new node
+                auto genmask_result = std::dynamic_pointer_cast<op::Result>(genmask_user);
+
+                /*std::set<ngraph::descriptor::Input*> fop_users{
+                    begin(goe2->get_outputs().at(0).get_inputs()),
+                    end(goe2->get_outputs().at(0).get_inputs())};
+                for (auto input : fop_users)
+                {
+                    std::cout << " calling replace_output\n";
+                    //input.replace_output(dropout_n->get_outputs().at(1));
+                    input->replace_output(genmask_result->get_outputs().at(0));
+                }*/
+
+                int j = 0;
+                std::set<ngraph::descriptor::Input*> fop_users{
+                    begin(dropout_n->get_outputs().at(1).get_inputs()),
+                    end(dropout_n->get_outputs().at(1).get_inputs())};
+                for (auto input : fop_users)
+                {
+                    j++;
+                    if (j == 1) continue;
+                    std::cout << " calling replace_output\n";
+                    //input.replace_output(dropout_n->get_outputs().at(1));
+                    input->replace_output(genmask_result->get_outputs().at(0));
+                }
+
+                
+                    //mask_from_dropout.replace_output(genmask_result, 0);
+
+                /*for (descriptor::Input& input : genmask_result->get_inputs())
+                {
+                    std::cout << " calling replace_output\n";
+                    //input.replace_output(dropout_n->get_outputs().at(1));
+                    input.replace_output(dropout_n, 1);
+                }*/
+            }
+        }
         return true;
     };
 

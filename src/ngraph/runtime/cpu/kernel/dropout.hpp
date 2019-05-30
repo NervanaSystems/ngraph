@@ -30,9 +30,11 @@ namespace ngraph
         {
             namespace kernel
             {
+                // Note: this kernel is for doing upscale in train
                 template <typename T>
                 void generate_dropout(T* input,
-                                    T* out,
+                                    T* out0,
+                                    T* out1_mask,
                                     size_t count,
                                     const Shape& input_shape, // input shape is for future opt
                                     ngraph::RNGState* rng_state,
@@ -48,20 +50,20 @@ namespace ngraph
                         for (size_t i = 0; i < count; ++i)
                         {
                             if (static_cast<T>(bd(gen)) < dropout_prob) {
-                                //mask_data[i] = 0;
-                                out[i] = 0;
+                                out1_mask[i] = 0;
+                                out0[i] = 0;
                             } else {
-                                //mask_data[i] = 1; 
-                                // Note: this kernel is for doing upscale in train
-                                out[i] = input[i] / static_cast<T>(value);
+                                out1_mask[i] = 1; 
+                                out0[i] = input[i] / static_cast<T>(value);
                             }
                         }
                     }
                     else
                     {
+                        // this is inference, so, no need for mask output is not needed
                         for (size_t i = 0; i < count; i++)
                         {
-                            out[i] = static_cast<T>(1);
+                            out0[i] = static_cast<T>(1);
                         }
                     }
                 }
