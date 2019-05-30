@@ -16,6 +16,7 @@
 
 #include <iostream>
 
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 
 using namespace std;
@@ -43,7 +44,23 @@ void op::Transpose::validate_and_infer_types()
                           "Input order must have shape [n], where n is the rank of arg.");
 
     set_input_is_relevant_to_shape(1);
-    set_output_type(0, get_input_element_type(0), PartialShape::dynamic(arg_shape.rank()));
+
+    if (auto input_const = std::dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    {
+        auto permutation = input_const->get_axis_vector_val();
+        NODE_VALIDATION_CHECK(this,
+                              is_valid_permutation(permutation, arg_shape.rank()),
+                              "Permutation ",
+                              permutation,
+                              " is not valid for input shape ",
+                              arg_shape);
+        set_output_type(
+            0, get_input_element_type(0), ngraph::apply_permutation(arg_shape, permutation));
+    }
+    else
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic(arg_shape.rank()));
+    }
 }
 
 shared_ptr<Node> op::Transpose::copy_with_new_args(const NodeVector& new_args) const

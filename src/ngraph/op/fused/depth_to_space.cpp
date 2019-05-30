@@ -18,8 +18,8 @@
 #include <memory>
 
 #include "depth_to_space.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
@@ -71,9 +71,9 @@ NodeVector op::DepthToSpace::decompose_op() const
     // First we have to disperse the data from depth channel, then rearrange them
     // so as appropriate chunks of data where close to their destination place.
     // Finally squeeze data from respective dimensions.
-    shared_ptr<Node> flat_node = op::util::reshape(data, Shape{n, bs, bs, c_flat, h, w});
-    flat_node = op::util::reorder_axes(flat_node, {0, 3, 4, 1, 5, 2});
-    return NodeVector{op::util::reshape(flat_node, Shape{n, c_flat, h * bs, w * bs})};
+    shared_ptr<Node> flat_node = builder::reshape(data, Shape{n, bs, bs, c_flat, h, w});
+    flat_node = builder::reorder_axes(flat_node, {0, 3, 4, 1, 5, 2});
+    return NodeVector{builder::reshape(flat_node, Shape{n, c_flat, h * bs, w * bs})};
 }
 
 shared_ptr<Node> op::DepthToSpace::copy_with_new_args(const NodeVector& new_args) const

@@ -19,9 +19,9 @@
 #include "grn.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/norm.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
@@ -62,7 +62,7 @@ NodeVector op::GRN::decompose_op() const
     {
         Shape data_shape(4 - input_shape.size(), 1);
         copy(begin(input_shape), end(input_shape), back_inserter(data_shape));
-        data = util::reshape(data, data_shape);
+        data = builder::reshape(data, data_shape);
     }
 
     // Calculate l2 norm across channels.
@@ -74,7 +74,7 @@ NodeVector op::GRN::decompose_op() const
     // get back original input tensor rank
     if (input_shape.size() != 4)
     {
-        data = util::reshape(data, input_shape);
+        data = builder::reshape(data, input_shape);
     }
 
     return {data};
