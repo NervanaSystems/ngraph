@@ -203,6 +203,6 @@ will make life easier for many kinds of developers:
 #. New DL accelerator developers creating an end-to-end software stack from 
    a deep learning framework to their silicon.  
 
-
+.. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/
 .. _more transistors on denser and denser circuits: https://www.intel.com/content/www/us/en/silicon-innovations/moores-law-technology.html
 .. _Stripe: https://arxiv.org/abs/1903.06498

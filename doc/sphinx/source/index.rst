@@ -50,77 +50,12 @@ other files that use other licensing.
 .. _GitHub repo: https://github.com/NervanaSystems/ngraph
 
 
+
+
    * :doc:`project/index` -- Introduction to the nGraph Compiler stack: Overview, Architecture, Features, and Licensing
-   * :doc:`getting-started/index` -- Getting Started Guides for framework users: find out how to ``pip install`` compatible bridges for various frameworks 
+   * :doc:`frameworks/index` -- Getting Started with Frameworks
    * :doc:`python_api/index` -- Python API 
-   * :doc:`backend-developers/index` -- Developer Guides: Documentation and APIs for backend developers building custom hardware or frameworks on nGraph Core. 
-
-
-
-.. raw:: html
-
-   <ul class="grid">
-       <li class="grid-item">
-      <a href="project/introduction.html">
-          <img alt="" src="logo.png"/>
-          <h2>Introduction</h2>
-      </a>
-      <p></p>
-       </li>
-       <li class="grid-item">
-   
-
-      <a href="getting_started/index.html">
-               
-          <h2>Getting Started Guides</h2>
-      </a>
-      <p>Follow this guide to build and test the nGraph Library's core ops.</p>
-       </li>
-       <li class="grid-item">
-   
-      <a href="contribute/index.html">
-               
-          <h2>Contribution Guidelines</h2>
-      </a>
-      <p>As an open-source project, we welcome and encourage the community
-           to submit patches directly to the project.</p>
-       </li>
-       <li class="grid-item">
-      <a href="samples/index.html">
-               
-          <h2>Samples and Demos</h2>
-      </a>
-      <p>A list of deep learning models tested and validated on nGraph</p>
-       </li>
-       <li class="grid-item">
-      <a href="frameworks/validated/index.html">
-               
-          <h2>API Reference</h2>
-      </a>
-      <p>API Documentation and Backend Developer Reference</p>
-       </li>
-       <li class="grid-item">
-      <a href="security/index.html">
-          <h2>APIs</h2>
-      </a>
-      <p>Requirements, processes, and developer guidelines for ensuring security is addressed within the Zephyr project.</p>
-       </li>
-       <li class="grid-item">
-      <a href="boards/index.html">
-               <span class="grid-icon fa fa-object-group"></span>
-          <h2>Supported Boards</h2>
-      </a>
-      <p>List of supported frameworks.</p>
-       </li>
-       <li class="grid-item">
-      <a href="guides/index.html">
-               <span class="grid-icon fa fa-puzzle-piece"></span>
-          <h2>User and Developer Guides</h2>
-      </a>
-      <p>User and Developer Guides, including tools and tips</p>
-       </li>
-   </ul>
-
+   * :doc:`backends/index` -- Developer Guides: Documentation and APIs for backend developers building custom hardware or frameworks on nGraph Core. 
 
 
 .. toctree::

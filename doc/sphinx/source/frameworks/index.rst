@@ -12,10 +12,6 @@ Connect a framework
    paddle_integ.rst
    validated/testing-latency.rst
 
-
-To get started with nGraph, we've provided a few possible paths depending on where in
-
-
 A framework is "supported" when there is a framework :term:`bridge` that can be 
 cloned from one of our GitHub repos and built to connect to nGraph device 
 backends while maintaining the framework's programmatic or user interface. Bridges 
