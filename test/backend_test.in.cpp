@@ -7413,8 +7413,6 @@ NGRAPH_TEST(${BACKEND_NAME}, quantize_dynamic_offset)
               read_vector<output_c_type>(y));
 }
 
-#if defined(BACKEND_TEST_CPU) || defined(BACKEND_TEST_INTERPRETER)
-// XXX lfeng: remove backend check once all backends support this
 TEST(${BACKEND_NAME}, batch_mat_mul_forward)
 {
     auto make_dot = [](ParameterVector& a_params, ParameterVector& b_params) {
@@ -7423,7 +7421,7 @@ TEST(${BACKEND_NAME}, batch_mat_mul_forward)
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
         auto B = make_shared<op::Parameter>(element::f32, shape_b);
         a_params.push_back(A);
-        b_params.push_back(B);
+        b_params.push_back(B)cd ;
         return make_shared<op::Dot>(A, B);
     };
 
@@ -7475,8 +7473,6 @@ TEST(${BACKEND_NAME}, batch_mat_mul_forward)
         EXPECT_TRUE(test::all_close(ref_results.at(i), backend_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
-
-#endif
 
 // clang-format off
 #ifdef BACKEND_TEST_${BACKEND_NAME}
