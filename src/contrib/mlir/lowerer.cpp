@@ -185,7 +185,7 @@ namespace
                 auto tensorType = origResult->getType().cast<NGTensorType>();
                 auto callBackFunc = getCallDecl("__mlir_allocate",
                                                 {rewriter.getIndexType(), rewriter.getIndexType()},
-                                                {tensorType.toMemref()},
+                                                {m_dialectLowerer.convertType(tensorType)},
                                                 rewriter);
 
                 auto size = tensorType.getSizeInBytes();
@@ -265,30 +265,36 @@ namespace
         return callBackFuncPtr;
     }
     // NGDialect converters
-    Type DialectLowerer::convertType(Type t)
+    Type DialectLowerer::convertType(Type type)
     {
-        if (auto tensor = t.dyn_cast<NGTensorType>())
+        // We may need to refactor this code to a external utility if type conversion is needed
+        // outside of the lowering context since DialectLowerer is private.
+
+        if (auto tensor_type = type.dyn_cast<NGTensorType>())
         {
-            return tensor.toMemref();
+            // Convert NGTensorType to Std MemRefType directly instead of going to Std TensorType.
+            // This may change in the future.
+            return MemRefType::get(tensor_type.getShape(),
+                                   convertType(tensor_type.getElementType()),
+                                   {/* no map used */},
+                                   0);
         }
-        // element type
-        if (auto type = t.dyn_cast<NGFloatType>())
+        if (auto float_type = type.dyn_cast<NGFloatType>())
         {
-            // Float
-            // float types are already std type
-            return type;
+            // Float types are already std type.
+            return float_type;
         }
-        if (auto type = t.dyn_cast<NGIntegerType>())
+        if (auto int_type = type.dyn_cast<NGIntegerType>())
         {
-            // map it to std type
-            return type.toStdType();
+            return mlir::IntegerType::get(int_type.getWidth(), int_type.getContext());
         }
-        if (auto type = t.dyn_cast<NGBoolType>())
+        if (auto bool_type = type.dyn_cast<NGBoolType>())
         {
-            return type.toStdType();
+            return mlir::IntegerType::get(1 /* width */, bool_type.getContext());
         }
+
         NGRAPH_FAIL() << "Unsupported type to lower";
-        return t;
+        return type;
     }
 
 #define REWRITER(OP)                                                                               \

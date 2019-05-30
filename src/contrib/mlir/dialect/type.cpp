@@ -73,9 +73,3 @@ NGTensorType NGTensorType::get(MLIRContext* context, EltType eltType, Shape shap
 {
     return Base::get(context, NGTypeKind::NG_TENSOR_TYPE_ID, eltType, shape);
 }
-
-MemRefType NGTensorType::toMemref()
-{
-    auto memRefType = MemRefType::get(getShape(), getElementType(), {/* no map used */}, 0);
-    return memRefType;
-}

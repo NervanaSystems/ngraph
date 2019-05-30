@@ -114,9 +114,6 @@ namespace mlir
         /// Return the bitwidth of this integer type.
         unsigned getWidth() const;
 
-        /// Convert to equivalent std type
-        /// std types are sign-agnostic.
-        mlir::Type toStdType() { return mlir::IntegerType::get(getWidth(), getContext()); }
         /// Check if signed type
         bool isSigned() const;
 
@@ -163,8 +160,6 @@ namespace mlir
 
         static bool kindof(unsigned kind) { return kind == NGTypeKind::NG_BOOL_TYPE_ID; }
         static NGBoolType get(mlir::MLIRContext* ctx) { return get(NG_BOOL_TYPE_ID, ctx); }
-        /// Convert to equivalent std type. Integer of width 1 in that case
-        mlir::Type toStdType() { return mlir::IntegerType::get(1, getContext()); }
     };
 
     // Note that dialect types don't add new data members, so always possible
@@ -240,8 +235,6 @@ namespace mlir
             // Multiply times element size
             return s * llvm::divideCeil(getElementType().getIntOrFloatBitWidth(), 8);
         }
-        /// convert to memref native MLIR type. Used for lowering.
-        mlir::MemRefType toMemref();
         /// create a unique tensor type based on element type and shape.
         static NGTensorType get(mlir::MLIRContext* context, EltType eltType, Shape shape);
         /// for llvm RTTI
