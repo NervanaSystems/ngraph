@@ -241,10 +241,8 @@ namespace ngraph
                     if (is_quantized)
                     {
                         float scale = *input_scale * *filter_scale / *output_scale;
-                        float x = static_cast<float>(result) * scale;
-                        out[out_transform.index(out_coord)] =
-                            static_cast<OUTPUT>(x + *output_zero_point);
-                        std::cout<<std::setprecision(10)<<x << " + " <<unsigned(*output_zero_point) << " = "<< unsigned(static_cast<OUTPUT>(x + *output_zero_point))<<std::endl;
+                        out[out_transform.index(out_coord)] = static_cast<OUTPUT>(
+                            std::round(static_cast<float>(result) * scale) + *output_zero_point);
                     }
                     else
                     {
