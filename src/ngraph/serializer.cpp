@@ -70,15 +70,19 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
+#include "ngraph/op/fused/fake_quantize.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
+#include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
+#include "ngraph/op/fused/split.hpp"
 #include "ngraph/op/fused/squared_difference.hpp"
 #include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
@@ -938,6 +942,13 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Exp>(args[0]);
                 break;
             }
+            case OP_TYPEID::FakeQuantize:
+            {
+                size_t levels = node_js.at("levels").get<size_t>();
+                node = make_shared<op::FakeQuantize>(
+                    args[0], args[1], args[2], args[3], args[4], levels);
+                break;
+            }
             case OP_TYPEID::Floor:
             {
                 node = make_shared<op::Floor>(args[0]);
@@ -1028,6 +1039,11 @@ static shared_ptr<ngraph::Function>
                                                          data_dilation_strides,
                                                          groups,
                                                          pad_type);
+                break;
+            }
+            case OP_TYPEID::LeakyRelu:
+            {
+                node = make_shared<op::LeakyRelu>(args[0], args[1]);
                 break;
             }
             case OP_TYPEID::Less:
@@ -1405,6 +1421,13 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::ShapeOf>(args[0]);
                 break;
             }
+            case OP_TYPEID::ShuffleChannels:
+            {
+                const auto axis = node_js.at("axis").get<size_t>();
+                const auto groups = node_js.at("groups").get<size_t>();
+                node = make_shared<op::ShuffleChannels>(args[0], axis, groups);
+                break;
+            }
             case OP_TYPEID::Sigmoid:
             {
                 node = make_shared<op::Sigmoid>(args[0]);
@@ -1448,6 +1471,13 @@ static shared_ptr<ngraph::Function>
             {
                 auto block_size = node_js.at("block_size").get<size_t>();
                 node = make_shared<op::SpaceToDepth>(args[0], block_size);
+                break;
+            }
+            case OP_TYPEID::Split:
+            {
+                const auto axis = node_js.at("axis").get<size_t>();
+                const auto splits = node_js.at("splits").get<vector<size_t>>();
+                node = make_shared<op::Split>(args[0], axis, splits);
                 break;
             }
             case OP_TYPEID::Sqrt:
@@ -1767,7 +1797,7 @@ static json write(const Node& n, bool binary_constant_data)
         if (tmp->are_all_data_elements_bitwise_identical())
         {
             vector<string> vs;
-            vs.push_back(tmp->get_value_strings()[0]);
+            vs.push_back(tmp->convert_value_to_string(0));
             node["value"] = vs;
         }
         else
@@ -1893,6 +1923,12 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Exp: { break;
     }
+    case OP_TYPEID::FakeQuantize:
+    {
+        auto tmp = dynamic_cast<const op::FakeQuantize*>(&n);
+        node["levels"] = tmp->get_levels();
+        break;
+    }
     case OP_TYPEID::Floor: { break;
     }
     case OP_TYPEID::Gather:
@@ -1955,6 +1991,8 @@ static json write(const Node& n, bool binary_constant_data)
         node["groups"] = tmp->get_groups();
         node["pad_type"] = tmp->get_pad_type();
         break;
+    }
+    case OP_TYPEID::LeakyRelu: { break;
     }
     case OP_TYPEID::Less: { break;
     }
@@ -2183,6 +2221,13 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::ShapeOf: { break;
     }
+    case OP_TYPEID::ShuffleChannels:
+    {
+        const auto tmp = dynamic_cast<const op::ShuffleChannels*>(&n);
+        node["axis"] = tmp->get_axis();
+        node["groups"] = tmp->get_groups();
+        break;
+    }
     case OP_TYPEID::Sigmoid: { break;
     }
     case OP_TYPEID::SigmoidBackprop: { break;
@@ -2206,6 +2251,13 @@ static json write(const Node& n, bool binary_constant_data)
         auto tmp = dynamic_cast<const op::SpaceToDepth*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
         node["block_size"] = tmp->get_block_size();
+        break;
+    }
+    case OP_TYPEID::Split:
+    {
+        auto tmp = dynamic_cast<const op::Split*>(&n);
+        node["axis"] = tmp->get_axis();
+        node["splits"] = tmp->get_splits();
         break;
     }
     case OP_TYPEID::Sqrt: { break;

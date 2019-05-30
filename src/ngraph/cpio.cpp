@@ -263,8 +263,9 @@ const vector<cpio::FileInfo>& cpio::Reader::get_file_info()
     return m_file_info;
 }
 
-void cpio::Reader::read(const string& file_name, void* data, size_t size_in_bytes)
+bool cpio::Reader::read(const string& file_name, void* data, size_t size_in_bytes)
 {
+    bool rc = false;
     for (const FileInfo& info : get_file_info())
     {
         if (info.get_name() == file_name)
@@ -275,9 +276,18 @@ void cpio::Reader::read(const string& file_name, void* data, size_t size_in_byte
             }
             m_stream->seekg(info.get_offset(), ios_base::beg);
             m_stream->read(reinterpret_cast<char*>(data), size_in_bytes);
+            rc = true;
             break;
         }
     }
+    return rc;
+}
+
+vector<char> cpio::Reader::read(const FileInfo& info)
+{
+    vector<char> buffer(info.get_size());
+    read(info.get_name(), buffer.data(), info.get_size());
+    return buffer;
 }
 
 bool cpio::is_cpio(const string& path)

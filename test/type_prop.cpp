@@ -14,12 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 
-#include <memory>
 using namespace std;
 using namespace ngraph;
 
@@ -12442,6 +12442,39 @@ TEST(type_prop, transpose_arg_static_input_order_static_ok)
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
 }
 
+TEST(type_prop, transpose_arg_static_input_order_constant_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = op::Constant::create(element::i64, Shape{4}, vector<int64_t>{2, 1, 0, 3});
+
+    auto r = make_shared<op::Transpose>(arg, input_order);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{6, 4, 2, 8}));
+}
+
+TEST(type_prop, transpose_arg_static_input_order_constant_invalid_perm)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto input_order = op::Constant::create(element::i64, Shape{4}, vector<int64_t>{2, 9, 0, 3});
+
+    try
+    {
+        auto r = make_shared<op::Transpose>(arg, input_order);
+        FAIL() << "Did not detect invalid permutation";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Permutation AxisVector{2, 9, 0, 3} is not valid for input shape"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, transpose_arg_rank_static_dynamic_input_order_static_ok)
 {
     auto arg = make_shared<op::Parameter>(
@@ -14495,6 +14528,15 @@ TEST(type_prop, fused_clamp)
     EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
 }
 
+TEST(type_prop, leaky_relu)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto alpha = make_shared<op::Parameter>(element::f32, Shape{});
+    auto leaky_relu_func = make_shared<op::LeakyRelu>(data, alpha);
+    EXPECT_EQ(leaky_relu_func->get_element_type(), element::f32);
+    EXPECT_EQ(leaky_relu_func->get_shape(), (Shape{3, 6}));
+}
+
 TEST(type_prop, unsqueeze)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{4, 1, 4, 1, 8});
@@ -14526,6 +14568,65 @@ TEST(type_prop, scale_shift)
     EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
 }
 
+TEST(type_prop, shuffle_channels_axis_validation)
+{
+    try
+    {
+        const auto data = make_shared<op::Parameter>(element::f64, Shape{1, 2, 3, 4});
+        const auto shuffle_channels = make_shared<op::ShuffleChannels>(data, -5, 5);
+        FAIL() << "ShuffleChannels validation did not work. Op node was created with incorrect "
+                  "params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "The 'axis' parameter for ShuffleChannels has to point to one of the "
+                             "input tensor's shape dimensions");
+    }
+}
+
+TEST(type_prop, shuffle_channels_negative_axis_calculation)
+{
+    const auto data = make_shared<op::Parameter>(element::f64, Shape{1, 2, 3, 4});
+
+    const auto shuffle_channels = make_shared<op::ShuffleChannels>(data, -3, 2);
+
+    EXPECT_EQ(shuffle_channels->get_zero_based_axis(), 1);
+}
+
+TEST(type_prop, shuffle_channels_invalid_input_shape)
+{
+    try
+    {
+        const auto data = make_shared<op::Parameter>(element::f64, Shape{});
+        const auto shuffle_channels = make_shared<op::ShuffleChannels>(data, 0, 1);
+        FAIL() << "ShuffleChannels validation did not work. Op node was created with incorrect "
+                  "params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "The input tensor's shape is expected to be at least 1D.");
+    }
+}
+
+TEST(type_prop, shuffle_channels_invalid_groups_value)
+{
+    try
+    {
+        const auto data = make_shared<op::Parameter>(element::f64, Shape{1, 2, 3, 15});
+        const auto shuffle_channels = make_shared<op::ShuffleChannels>(data, -1, 2);
+        FAIL() << "ShuffleChannels validation did not work. Op node was created with incorrect "
+                  "params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "The channel dimension size has to be a multiple of the groups parameter value.");
+    }
+}
+
 TEST(type_prop, squared_difference)
 {
     const auto x1 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
@@ -14545,4 +14646,132 @@ TEST(type_prop, squared_difference)
     const auto clamp = make_shared<op::SquaredDifference>(x1, x3);
     EXPECT_EQ(clamp->get_element_type(), element::f64);
     EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
+}
+
+TEST(type_prop, split)
+{
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 6});
+
+    try
+    {
+        const std::vector<size_t> splits = {1, 6}; // should sum up to 6
+        const auto split = make_shared<op::Split>(data, 1, splits);
+        FAIL() << "Split node was created with incorrect data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("has to be equal to the sum of splits passed to the op: 7"));
+    }
+
+    try
+    {
+        const std::vector<size_t> splits = {4, 2};
+        const auto split = make_shared<op::Split>(data, -5, splits); //invalid axis
+        FAIL() << "Split node was created with incorrect data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("The 'axis' parameter for Split has to point to one of "
+                                         "the input tensor's shape dimensions."));
+    }
+
+    const auto split = make_shared<op::Split>(data, 1, 2);
+    EXPECT_EQ(split->outputs().size(), 2);
+    EXPECT_EQ(split->output(0).get_shape(), (Shape{2, 3}));
+    EXPECT_EQ(split->output(1).get_shape(), (Shape{2, 3}));
+    EXPECT_EQ(split->output(0).get_element_type(), element::i32);
+    EXPECT_EQ(split->output(1).get_element_type(), element::i32);
+}
+
+TEST(type_prop, fake_quantize)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const int levels = 5;
+
+    const auto fake_quantize =
+        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+    EXPECT_EQ(fake_quantize->get_element_type(), element::f32);
+    EXPECT_EQ(fake_quantize->get_shape(), (Shape{1, 2, 3, 4}));
+}
+
+TEST(type_prop, fake_quantize_invalid_rank)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto input_low = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const int levels = 5;
+
+    // Invalid input_low dimension
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
+
+    // Invalid input_high dimension
+    input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    input_high = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
+
+    // Invalid output_low dimension
+    input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    output_low = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
+
+    // Invalid output_high dimension
+    output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    output_high = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
 }

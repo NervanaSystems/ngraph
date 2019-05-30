@@ -78,7 +78,7 @@ multimap<size_t, string> aggregate_timing_details(const vector<PerfShape>& perf_
     for (const PerfShape& p : perf_data)
     {
         auto node = p.get_node();
-        string op = node->get_name().substr(0, node->get_name().find('_'));
+        string op = node->description();
         string shape_name = " {" + join(p.shape) + "} ";
         timing[op + shape_name] += p.microseconds();
         count[op + shape_name] += 1;
@@ -98,7 +98,7 @@ multimap<size_t, string> aggregate_timing(const vector<PerfShape>& perf_data)
     for (const PerfShape& p : perf_data)
     {
         auto node = p.get_node();
-        string op = node->get_name().substr(0, node->get_name().find('_'));
+        string op = node->description();
         timing[op] += p.microseconds();
     }
 
@@ -319,8 +319,8 @@ OPTIONS
             if (visualize)
             {
                 shared_ptr<Function> f = deserialize(model);
-                auto model_file_name = ngraph::file_util::get_file_name(model) + std::string(".") +
-                                       (dot_file ? "dot" : pass::VisualizeTree::get_file_ext());
+                auto model_file_name = ngraph::file_util::get_file_name(model) +
+                                       (dot_file ? ".dot" : ngraph::file_util::get_file_ext(model));
 
                 pass::Manager pass_manager;
                 pass_manager.register_pass<pass::VisualizeTree>(model_file_name, nullptr, true);
@@ -355,8 +355,7 @@ OPTIONS
                         total_temporary_bytes += tensor->size();
                         total_temporary_count++;
                     }
-                    string name = node->get_name();
-                    string op_name = name.substr(0, name.find('_'));
+                    string op_name = node->description();
                     string shape_name = "{" + join(node->output(0).get_shape()) + "}";
                     op_list[op_name + shape_name]++;
                     auto et = get_op_element_type(*node);

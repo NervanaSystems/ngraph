@@ -2,6 +2,7 @@
 
 ## Passes
 * `LikeReplacement` pass must be run by all transformers.
+* `ngraph::pass::FusionType` is now an enum class. Constant values defined by `FusionType` are created for backward compatibility and will be removed in future releases.
 
 ## Nodes, Parameters
 
@@ -67,3 +68,14 @@ make_shared<Function>(results, parameters);
 
 The runtime::Tensor methods to get_tensor<> and write<T>(std::vector&) have been removed
 to the unit test directory under utils/test_tool.hpp read_vector and write_vector.
+
+## Changes to reshape op utils
+
+Utility functions from `src/ngraph/op/util/reshape.hpp`, placed at namespace `ngraph::op::util`:
+
+  - `reshape`
+  - `reorder_axes`
+  - `transpose`
+  - `flatten`
+
+Are moved to new location: `src/ngraph/builder/reshape.hpp` to namespace `ngraph::builder`.

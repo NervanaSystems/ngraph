@@ -19,8 +19,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::LeakyRelu::LeakyRelu(shared_ptr<Node> arg, float alpha)
-    : UnaryElementwiseArithmetic("LeakyRelu", {arg})
+op::CPULeakyRelu::CPULeakyRelu(shared_ptr<Node> arg, float alpha)
+    : UnaryElementwiseArithmetic("CPULeakyRelu", {arg})
     , m_alpha(alpha)
 {
     constructor_validate_and_infer_types();
@@ -31,11 +31,11 @@ op::LeakyRelu::LeakyRelu(shared_ptr<Node> arg, float alpha)
     set_output_type(0, arg->get_element_type(), arg->get_shape());
 }
 
-shared_ptr<Node> op::LeakyRelu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::CPULeakyRelu::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 1)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<LeakyRelu>(new_args.at(0), m_alpha);
+    return make_shared<CPULeakyRelu>(new_args.at(0), m_alpha);
 }
