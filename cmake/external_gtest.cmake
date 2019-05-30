@@ -35,6 +35,10 @@ if(WIN32)
     )
 endif()
 
+# workaround for compile error
+# related: https://github.com/intel/mkl-dnn/issues/55
+set(GTEST_CXX_FLAGS -Wno-unused-result ${CMAKE_CXX_FLAGS})
+
 ExternalProject_Add(
     ext_gtest
     PREFIX gtest
@@ -48,7 +52,7 @@ ExternalProject_Add(
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
     CMAKE_ARGS
         ${NGRAPH_FORWARD_CMAKE_ARGS}
-        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+        -DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}
         ${GTEST_CMAKE_ARGS}
     BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
     EXCLUDE_FROM_ALL TRUE
