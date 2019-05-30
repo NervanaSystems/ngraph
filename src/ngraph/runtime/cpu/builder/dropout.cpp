@@ -46,7 +46,8 @@ namespace ngraph
                 unsigned int seed = static_cast<unsigned int> (drop->get_seed());
                 double value = drop->get_value();
                 auto index = external_function->add_state(
-                                ngraph::RNGState::create_rng_state(seed, value));
+                                ngraph::RNGUniformState::create_rng_state(seed, value));
+                                //ngraph::RNGState::create_rng_state(seed, value));
 
                 if (args[0].get_element_type() == element::f32)
                 {
@@ -63,7 +64,7 @@ namespace ngraph
                             static_cast<float*>(ctx->buffer_data[out1_buffer_index]),
                             element_count,
                             in_shape,
-                            static_cast<RNGState*>(ctx->states[index]),
+                            static_cast<RNGUniformState*>(ctx->states[index]),
                             training,
                             value);
                     };
@@ -82,7 +83,7 @@ namespace ngraph
                             static_cast<double*>(ctx->buffer_data[out1_buffer_index]),
                             element_count,
                             in_shape,
-                            static_cast<RNGState*>(ctx->states[index]),
+                            static_cast<RNGUniformState*>(ctx->states[index]),
                             training,
                             value);
                     };

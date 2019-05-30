@@ -29,3 +29,11 @@ void ngraph::RNGState::activate()
 void ngraph::RNGState::deactivate()
 {
 }
+
+void ngraph::RNGUniformState::activate()
+{
+}
+
+void ngraph::RNGUniformState::deactivate()
+{
+}

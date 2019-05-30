@@ -1208,7 +1208,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 {
     Shape shape{1, 1, 2, 2};
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
+    //auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
 
     int seed =1234;
     auto seed_label = std::make_shared<pattern::op::Label>(element::u32, Shape{0});
@@ -1221,20 +1221,21 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto const1_label = std::make_shared<pattern::op::Label>(const1);
 
 
-    auto genmask = std::make_shared<op::GenerateMask>(const1_label, 
+    auto genmask = std::make_shared<op::GenerateMask>(const1_label,
                                                              x->get_shape(), 
                                                              x->get_element_type(),
                                                              seed,
                                                              value);
     auto genmask_label = std::make_shared<pattern::op::Label>(genmask);
 
-    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x_label); // TODO: how to check it works both ways x, gen_mask too ?
+    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x); // TODO: how to check it works both ways x, gen_mask too ?
 
+    // Will this same fusion pattern work for 3D and 4D??
     auto bcast = std::make_shared<ngraph::op::Broadcast>(value_label, x->get_shape(), AxisSet{0, 1, 2,3});
     auto pdivide = std::make_shared<ngraph::op::Divide>(mult, bcast);
 
     //----------
-    auto callback = [x_label, const1_label, seed_label, value_label,
+    auto callback = [x, const1_label, seed_label, value_label,
                         genmask_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_dropout against "
                      << m.get_match_root()->get_name();
@@ -1245,44 +1246,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 
         auto gm = std::static_pointer_cast<ngraph::op::GenerateMask>(pattern_map[genmask_label]);
         auto temp_val = gm->get_probability();
-        std::cout << "got value %f" << temp_val << "\n";
         auto temp_seed = gm->get_seed();
+        std::cout << "got value %f" << temp_val << "\n";
         std::cout << "got seed %d" << temp_seed <<"\n";
-
-
-        /*auto value_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[value_label]);
-        if (!value_ptr)
-        {
-            std::cout << "value must be a constant; it is not\n";
-            NGRAPH_DEBUG << "Value must be a constant";
-            return false;
-        }
-        double value = *(reinterpret_cast<const double*>(value_ptr->get_data_ptr()));
-
-        auto const1_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[const1_label]);
-        if (!const1_ptr)
-        {
-            std::cout << "const1 must be a constant; it is not\n";
-            NGRAPH_DEBUG << "const1 must be a constant";
-            return false;
-        }
-        unsigned int const1 = *(reinterpret_cast<const unsigned int*>(const1_ptr->get_data_ptr()));
-
-
-        auto seed_ptr = std::dynamic_pointer_cast<ngraph::op::Constant>(pattern_map[seed_label]);
-        if (!seed_ptr)
-        {
-            std::cout << "seed must be a constant; it is not\n";
-            NGRAPH_DEBUG << "seed must be a constant";
-            return false;
-        }
-        int seed = *(reinterpret_cast<const int*>(seed_ptr->get_data_ptr()));*/
 
 
         std::cout << " replacing the node\n";
         // Check for rank 3D or 4D for now
         auto dropout_n =
-            std::make_shared<ngraph::op::Dropout>(pattern_map[x_label], // Input Node of f32
+            std::make_shared<ngraph::op::Dropout>(pattern_map[x], // Input Node of f32
                                                   1,
                                                   temp_seed,
                                                   temp_val
@@ -1291,7 +1263,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
         ngraph::replace_node(m.get_match_root(), goe1);
 
         auto goe2 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 1);
+        ngraph::replace_node(pattern_map[genmask_label], goe2);
 
+#if 0
         for (auto genmask_user : pattern_map[genmask_label]->get_users())
         {
             std::cout << " get users of genmask_label\n";
@@ -1324,7 +1298,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
                     input->replace_output(genmask_result->get_outputs().at(0));
                 }
 
-                
+            /*void add_input(Input* input);
+            void remove_input(Input* input);
+            const std::set<Input*>& get_inputs() const { return m_inputs; }
+            input->replace_output()*/
+
+
                     //mask_from_dropout.replace_output(genmask_result, 0);
 
                 /*for (descriptor::Input& input : genmask_result->get_inputs())
@@ -1335,6 +1314,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
                 }*/
             }
         }
+#endif
         return true;
     };
 
