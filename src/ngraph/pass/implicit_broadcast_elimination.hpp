@@ -26,18 +26,21 @@ namespace ngraph
         template <typename T>
         NodeVector static explicit_broadcast(std::shared_ptr<T>& node)
         {
+            NodeVector rc;
+
             if (node->get_autob().m_type == op::AutoBroadcastType::NONE)
             {
-                return node->get_arguments();
+                rc = node->get_arguments();
             }
             else if (node->get_autob().m_type == op::AutoBroadcastType::NUMPY)
             {
-                return op::numpy_style_broadcast(node->get_arguments());
+                rc = op::numpy_style_broadcast(node->get_arguments());
             }
             else
             {
                 throw ngraph_error("Unsupported implicit broadcast type");
             }
+            return rc;
         }
 
         class ImplicitBroadcastElimination : public NodePass
