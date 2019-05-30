@@ -25,6 +25,15 @@ op::util::IndexReduction::IndexReduction()
 {
 }
 
+op::util::IndexReduction::IndexReduction(const Output<Node>& arg,
+                                         size_t axis,
+                                         const element::Type& index_element_type)
+    : Op({arg})
+{
+    set_reduction_axis(axis);
+    set_index_element_type(index_element_type);
+}
+
 op::util::IndexReduction::IndexReduction(const std::shared_ptr<Node>& arg,
                                          size_t axis,
                                          const element::Type& index_element_type)

@@ -27,14 +27,14 @@ op::AvgPool::AvgPool()
 {
 }
 
-op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
+op::AvgPool::AvgPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
                      const Shape& padding_above,
                      bool include_padding_in_avg_computation,
                      const PadType& pad_type)
-    : Op(check_single_output_args({arg}))
+    : Op({arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -97,14 +97,14 @@ void op::AvgPool::validate_and_infer_types()
                                                   m_include_padding_in_avg_computation));
 }
 
-op::AvgPool::AvgPool(const shared_ptr<Node>& arg,
+op::AvgPool::AvgPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides)
     : AvgPool(arg, window_shape, window_movement_strides, Shape(), Shape(), false)
 {
 }
 
-op::AvgPool::AvgPool(const shared_ptr<Node>& arg, const Shape& window_shape)
+op::AvgPool::AvgPool(const Output<Node>& arg, const Shape& window_shape)
     : AvgPool(arg, window_shape, Strides(), Shape(), Shape(), false)
 {
 }

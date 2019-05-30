@@ -36,12 +36,12 @@ namespace ngraph
             Asin();
             /// \brief Constructs an arcsin operation.
             ///
-            /// \param arg Node that produces the input tensor.<br>
+            /// \param arg Output that produces the input tensor.<br>
             /// `[d1, ...]`
             ///
             /// Output `[d1, ...]`
             ///
-            Asin(const std::shared_ptr<Node>& arg);
+            Asin(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

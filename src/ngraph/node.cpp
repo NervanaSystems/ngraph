@@ -33,6 +33,12 @@ using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
+Node::Node(size_t output_size)
+    : Node()
+{
+    set_output_size(output_size);
+}
+
 Node::Node(const std::string& node_type, const NodeVector& arguments, size_t output_size)
     : m_node_type(node_type)
 {
@@ -41,6 +47,13 @@ Node::Node(const std::string& node_type, const NodeVector& arguments, size_t out
 }
 
 Node::Node(const NodeVector& arguments, size_t output_size)
+    : Node()
+{
+    set_arguments(arguments);
+    set_output_size(output_size);
+}
+
+Node::Node(const OutputVector& arguments, size_t output_size)
     : Node()
 {
     set_arguments(arguments);
@@ -529,18 +542,6 @@ std::string ngraph::node_validation_failure_loc_string(const Node* node)
     std::stringstream ss;
     ss << "While validating node '" << *node << "'";
     return ss.str();
-}
-
-void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
-{
-    NODE_VALIDATION_CHECK(node,
-                          new_args.size() == node->get_arguments().size(),
-                          "copy_with_new_args() expected ",
-                          node->get_arguments().size(),
-                          " argument",
-                          (node->get_arguments().size() == 1 ? "" : "s"),
-                          " but got ",
-                          new_args.size());
 }
 
 const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,

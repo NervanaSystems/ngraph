@@ -29,6 +29,12 @@ op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const shared_
 {
 }
 
+op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const Output<Node>& arg0,
+                                                                   const Output<Node>& arg1)
+    : Op({arg0, arg1})
+{
+}
+
 op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const string& node_type,
                                                                    const shared_ptr<Node>& arg0,
                                                                    const shared_ptr<Node>& arg1)

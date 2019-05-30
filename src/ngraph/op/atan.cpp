@@ -36,7 +36,7 @@ op::Atan::Atan()
 {
 }
 
-op::Atan::Atan(const shared_ptr<Node>& arg)
+op::Atan::Atan(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

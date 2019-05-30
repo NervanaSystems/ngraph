@@ -19,6 +19,12 @@
 using namespace ngraph;
 
 op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic()
+    : Op()
+{
+}
+
+op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const Output<Node>& arg)
+    : Op({arg})
 {
 }
 

@@ -25,7 +25,7 @@ op::All::All()
 {
 }
 
-op::All::All(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
+op::All::All(const Output<Node>& arg, const AxisSet& reduction_axes)
     : LogicalReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();

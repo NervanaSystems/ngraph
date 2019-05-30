@@ -30,6 +30,11 @@ op::Op::Op(const NodeVector& args)
 {
 }
 
+op::Op::Op(const OutputVector& args)
+    : Node(args)
+{
+}
+
 op::Op::Op(const std::string& node_type, const NodeVector& args)
     : Node(node_type, args)
 {

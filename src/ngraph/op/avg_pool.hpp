@@ -36,7 +36,7 @@ namespace ngraph
             AvgPool();
             /// \brief Constructs a batched average pooling operation.
             ///
-            /// \param arg The node producing the input data batch tensor.<br>
+            /// \param arg The output producing the input data batch tensor.<br>
             /// `[d1, dn]`
             /// \param window_shape The window shape.<br>
             /// `[n]`
@@ -49,7 +49,7 @@ namespace ngraph
             /// \param include_padding_in_avg_computation If true then averages include padding
             ///  elements, each treated as the number zero.  If false, padding elements are entirely
             ///  ignored when computing averages.
-            AvgPool(const std::shared_ptr<Node>& arg,
+            AvgPool(const Output<Node>& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
@@ -59,23 +59,23 @@ namespace ngraph
 
             /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding shapes are set to 0).
             ///
-            /// \param arg The node producing the input data batch tensor.<br>
+            /// \param arg The output producing the input data batch tensor.<br>
             /// `[d1, ..., dn]`
             /// \param window_shape The window shape.<br>
             /// `[n]`
             /// \param window_movement_strides The window movement strides.<br>
             /// `[n]`
-            AvgPool(const std::shared_ptr<Node>& arg,
+            AvgPool(const Output<Node>& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides);
 
             /// \brief Constructs an unstrided batched convolution operation (i.e., all window movement strides are 1 and all padding shapes are set to 0).
             ///
-            /// \param arg The node producing the input data batch tensor.<br>
+            /// \param arg The output producing the input data batch tensor.<br>
             /// `[d1, ..., dn]`
             /// \param window_shape The window shape.<br>
             /// `[n]`
-            AvgPool(const std::shared_ptr<Node>& arg, const Shape& window_shape);
+            AvgPool(const Output<Node>& arg, const Shape& window_shape);
 
             void validate_and_infer_types() override;
 

@@ -34,6 +34,12 @@ namespace ngraph
 
                 /// \brief Constructs an arithmetic reduction operation.
                 ///
+                /// \param arg Output that produces the first input tensor.
+                /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                ArithmeticReduction(const Output<Node>& arg, const AxisSet& reduction_axes);
+
+                /// \brief Constructs an arithmetic reduction operation.
+                ///
                 /// \param arg Node that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 ArithmeticReduction(const std::shared_ptr<Node>& arg,

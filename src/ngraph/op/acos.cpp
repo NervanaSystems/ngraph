@@ -38,7 +38,7 @@ op::Acos::Acos()
 {
 }
 
-op::Acos::Acos(const shared_ptr<Node>& arg)
+op::Acos::Acos(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

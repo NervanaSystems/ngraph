@@ -109,10 +109,19 @@ namespace ngraph
 
         /// \brief Construct an unitialized Node
         Node() {}
+        /// \brief Construct an unitialized Node
+        /// \param output_size Number of outputs for this node
+        Node(size_t output_size);
+
         /// \brief Constructor for Node subclasses that have metaclasses.
         /// \param arguments The 0th output of node i will connect to input i
         /// \param output_size Number of outputs for this node
         Node(const NodeVector& arguments, size_t output_size = 1);
+
+        /// \brief Constructor for Node subclasses that have metaclasses.
+        /// \param arguments Output i will connect to input i
+        /// \param output_size Number of outputs for this node
+        Node(const OutputVector& arguments, size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
         void safe_delete(NodeVector& nodes, bool recurse);
@@ -707,9 +716,23 @@ namespace ngraph
         const Node& m_node;
         bool m_is_short;
     };
-
-    void check_new_args_count(const Node* node, const NodeVector& new_args);
-} // namespace ngraph
-
+}
 #define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
     NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), (cond), ##__VA_ARGS__)
+
+namespace ngraph
+{
+    template <typename T>
+    void check_new_args_count(const Node* node, T new_args)
+    {
+        NODE_VALIDATION_CHECK(node,
+                              new_args.size() == node->get_arguments().size(),
+                              "copy_with_new_args() expected ",
+                              node->get_arguments().size(),
+                              " argument",
+                              (node->get_arguments().size() == 1 ? "" : "s"),
+                              " but got ",
+                              new_args.size());
+    }
+
+} // namespace ngraph

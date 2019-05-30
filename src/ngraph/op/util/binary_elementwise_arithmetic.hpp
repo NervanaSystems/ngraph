@@ -54,6 +54,12 @@ namespace ngraph
 
                 /// \brief Constructs a binary elementwise arithmetic operation.
                 ///
+                /// \param arg0 Output that produces the first input tensor.
+                /// \param arg1 Output that produces the second input tensor.
+                BinaryElementwiseArithmetic(const Output<Node>& arg0, const Output<Node>& arg1);
+
+                /// \brief Constructs a binary elementwise arithmetic operation.
+                ///
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
                 BinaryElementwiseArithmetic(const std::string& node_type,

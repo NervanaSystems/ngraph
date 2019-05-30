@@ -23,6 +23,12 @@ op::util::BinaryElementwiseLogical::BinaryElementwiseLogical()
 {
 }
 
+op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const Output<Node>& arg0,
+                                                             const Output<Node>& arg1)
+    : Op({arg0, arg1})
+{
+}
+
 op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const shared_ptr<Node>& arg0,
                                                              const shared_ptr<Node>& arg1)
     : Op(check_single_output_args({arg0, arg1}))

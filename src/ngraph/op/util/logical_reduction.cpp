@@ -23,6 +23,12 @@ op::util::LogicalReduction::LogicalReduction()
 {
 }
 
+op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg, const AxisSet& reduction_axes)
+    : Op({arg})
+{
+    set_reduction_axes(reduction_axes);
+}
+
 op::util::LogicalReduction::LogicalReduction(const std::shared_ptr<Node>& arg,
                                              const AxisSet& reduction_axes)
     : Op(check_single_output_args({arg}))

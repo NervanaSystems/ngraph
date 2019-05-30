@@ -25,7 +25,7 @@ op::And::And()
 {
 }
 
-op::And::And(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+op::And::And(const Output<Node>& arg0, const Output<Node>& arg1)
     : BinaryElementwiseLogical(arg0, arg1)
 {
     constructor_validate_and_infer_types();

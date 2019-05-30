@@ -37,7 +37,7 @@ op::Asin::Asin()
 {
 }
 
-op::Asin::Asin(const shared_ptr<Node>& arg)
+op::Asin::Asin(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

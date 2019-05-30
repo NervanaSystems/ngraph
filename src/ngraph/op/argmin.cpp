@@ -25,9 +25,7 @@ op::ArgMin::ArgMin()
 {
 }
 
-op::ArgMin::ArgMin(const std::shared_ptr<Node>& arg,
-                   size_t axis,
-                   const element::Type& index_element_type)
+op::ArgMin::ArgMin(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)
     : op::util::IndexReduction(arg, axis, index_element_type)
 {
     constructor_validate_and_infer_types();
