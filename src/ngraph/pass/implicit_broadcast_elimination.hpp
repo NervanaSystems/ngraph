@@ -16,21 +16,37 @@
 
 #pragma once
 
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
     namespace pass
     {
-        class ShapeSpecialization : public FunctionPass
+        template <typename T>
+        NodeVector static explicit_broadcast(std::shared_ptr<T>& node)
+        {
+            NodeVector rc;
+
+            if (node->get_autob().m_type == op::AutoBroadcastType::NONE)
+            {
+                rc = node->get_arguments();
+            }
+            else if (node->get_autob().m_type == op::AutoBroadcastType::NUMPY)
+            {
+                rc = op::numpy_style_broadcast(node->get_arguments());
+            }
+            else
+            {
+                throw ngraph_error("Unsupported implicit broadcast type");
+            }
+            return rc;
+        }
+
+        class ImplicitBroadcastElimination : public NodePass
         {
         public:
-            ShapeSpecialization()
-                : FunctionPass()
-            {
-                set_property(PassProperty::CHANGE_DYNAMIC_STATE, true);
-            }
-            virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
+            bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
         };
     }
 }

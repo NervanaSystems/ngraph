@@ -67,6 +67,11 @@ normalize_invalid_input_tensor_rank
 normalize_invalid_scale_rank
 normalize
 hardsigmoid
+model_erf
+model_erf_int32
+model_hardmax
+model_one_hot_with_axis
+model_softmax
 mvn_mean_normalization
 mvn_mean_normalization_split_channels
 mvn_mean_variance_normalization
@@ -88,3 +93,11 @@ gather_no_axis_uint16
 gather_no_axis_uint32
 gather_no_axis_uint64
 gather_no_axis_bool
+fake_quantize
+fake_quantize_with_clip
+fake_quantize_with_clip_across_channels
+
+# Not supported quant ops
+model_dequantize_linear_1d_zero_scale_int8
+model_dequantize_linear_1d_zero_scale_int8_4d
+model_quant_conv_linear

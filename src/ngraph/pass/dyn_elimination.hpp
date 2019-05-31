@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/builder/quantization/quantized_linear_dot.hpp"
-#include "ngraph/builder/make_constant.hpp"
-#include "ngraph/builder/quantization.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
-    namespace builder
+    namespace pass
     {
-        namespace quantization
+        class DynElimination : public GraphRewrite
         {
-            shared_ptr<Node> QuantizedDotInteger(shared_ptr<Node> input, shared_ptr<Node> filter)
-            {
-                auto output_scale = make_constant(element::f32, Shape{}, 1);
-                return make_shared<op::QuantizedDot>(input, filter, output_scale, false, false);
-            }
-        }
+        public:
+            DynElimination();
+
+        private:
+            void construct_transpose();
+        };
     }
 }

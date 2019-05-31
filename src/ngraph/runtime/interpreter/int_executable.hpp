@@ -160,6 +160,8 @@ namespace ngraph
 
 class ngraph::runtime::interpreter::INTExecutable : public Executable
 {
+    friend class INTBackend;
+
 public:
     INTExecutable(const std::shared_ptr<Function>& function,
                   bool enable_performance_collection = false);
@@ -167,15 +169,20 @@ public:
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& intputs) override;
 
+    virtual void save(std::ostream& output_stream) override;
+
     void set_nan_check(bool enable);
 
     std::vector<PerformanceCounter> get_performance_data() const override;
 
 private:
+    INTExecutable(const std::string& model_string);
+
     int get_alignment() const { return 64; }
     bool m_is_compiled = false;
     bool m_nan_check_enabled = false;
     bool m_performance_counters_enabled = false;
+    std::shared_ptr<Function> m_function;
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
     std::vector<NodeWrapper> m_wrapped_nodes;
     std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
@@ -199,10 +206,12 @@ private:
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
-        // #pragma GCC diagnostic error "-Wcovered-switch-default"
+// #pragma GCC diagnostic error "-Wcovered-switch-default"
+#endif
         switch (node_wrapper.get_typeid())
         {
         case OP_TYPEID::Abs:
@@ -1425,7 +1434,9 @@ private:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         default: throw unsupported_op("Unsupported op '" + node.description() + "'");
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
+#endif
         }
     }
 };

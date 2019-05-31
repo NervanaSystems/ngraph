@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -31,11 +32,11 @@ namespace ngraph
         class MaxPoolWithIndices : public Op
         {
         public:
-            MaxPoolWithIndices(const std::shared_ptr<Node>& arg,
-                               const Shape& window_shape,
-                               const Strides& window_movement_strides,
-                               const Shape& padding_below,
-                               const Shape& padding_above);
+            CPU_BACKEND_API MaxPoolWithIndices(const std::shared_ptr<Node>& arg,
+                                               const Shape& window_shape,
+                                               const Strides& window_movement_strides,
+                                               const Shape& padding_below,
+                                               const Shape& padding_above);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -64,13 +65,13 @@ namespace ngraph
         class MaxPoolWithIndicesBackprop : public Op
         {
         public:
-            MaxPoolWithIndicesBackprop(const std::shared_ptr<Node>& arg_forward,
-                                       const std::shared_ptr<Node>& delta,
-                                       const std::shared_ptr<Node>& indices,
-                                       const Shape& window_shape,
-                                       const Strides& window_movement_strides,
-                                       const Shape& padding_below,
-                                       const Shape& padding_above);
+            CPU_BACKEND_API MaxPoolWithIndicesBackprop(const std::shared_ptr<Node>& arg_forward,
+                                                       const std::shared_ptr<Node>& delta,
+                                                       const std::shared_ptr<Node>& indices,
+                                                       const Shape& window_shape,
+                                                       const Strides& window_movement_strides,
+                                                       const Shape& padding_below,
+                                                       const Shape& padding_above);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

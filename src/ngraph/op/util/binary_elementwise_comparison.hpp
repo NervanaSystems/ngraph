@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
@@ -25,8 +26,8 @@ namespace ngraph
         namespace util
         {
             /// \brief Abstract base class for elementwise binary comparison operations, i.e., operations where the same
-            ///        scalar binary comparison operation is applied to each corresponding pair of elements in two same-shaped
-            ///        input tensors.
+            ///        scalar binary comparison operation is applied to each corresponding pair of elements in two
+            ///        input tensors. Implicit broadcast of input tensors is supported through one of the AutoBroadcast modes
             ///
             /// For example, if the underlying comparison operation (determined by the subclass) is \f$\mathit{op}(x,y)\f$, the input tensors
             /// \f$[[x_0,y_0],[z_0,w_0]]\f$ and \f$[[x_1,y_1],[z_1,w_1]]\f$ will be mapped to \f$[[\mathit{op}(x_0,x_1),\mathit{op}(y_0,y_1)],[\mathit{op}(z_0,z_1),\mathit{op}(w_0,w_1)]]\f$.
@@ -37,6 +38,7 @@ namespace ngraph
             /// | ------ | --------------------------------- | ------------------------------------------------------ |
             /// | `arg0` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and element type.                |
             /// | `arg1` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same shape and element type as `arg0`. |
+            /// | `autob`| AutoBroadcastSpec                 | Auto broadcast specification.                                            |
             ///
             /// ## Output
             ///
@@ -50,11 +52,17 @@ namespace ngraph
                 ///
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
+                /// \param autob AutoBroadcast mode.
                 BinaryElementwiseComparison(const std::string& node_type,
                                             const std::shared_ptr<Node>& arg0,
-                                            const std::shared_ptr<Node>& arg1);
+                                            const std::shared_ptr<Node>& arg1,
+                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
                 void validate_and_infer_types() override;
+
+                const AutoBroadcastSpec& get_autob() const { return m_autob; }
+            private:
+                AutoBroadcastSpec m_autob;
             };
         }
     }

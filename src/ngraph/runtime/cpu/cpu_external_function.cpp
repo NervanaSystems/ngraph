@@ -136,6 +136,7 @@
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -172,6 +173,7 @@
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
+#include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
@@ -372,6 +374,7 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolutionBiasSignedAdd>},
     {TI(ngraph::op::QuantizedDotBias), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDotBias>},
     {TI(ngraph::op::QuantizedDot), &runtime::cpu::CPU_Emitter::emit<op::QuantizedDot>},
+    {TI(ngraph::op::QuantizedMatmul), &runtime::cpu::CPU_Emitter::emit<op::QuantizedMatmul>},
     {TI(ngraph::op::ConvolutionRelu), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionRelu>},
     {TI(ngraph::op::QuantizedConvolution),
      &runtime::cpu::CPU_Emitter::emit<op::QuantizedConvolution>},
@@ -421,7 +424,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
     {TI(ngraph::op::And), &runtime::cpu::CPU_Emitter::emit<op::And>},
     {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
-    {TI(ngraph::op::LeakyRelu), &runtime::cpu::CPU_Emitter::emit<op::LeakyRelu>},
+    {TI(ngraph::op::CPULeakyRelu), &runtime::cpu::CPU_Emitter::emit<op::CPULeakyRelu>},
     {TI(ngraph::runtime::cpu::op::LoopKernel),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
@@ -478,10 +481,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
     // Build mkldnn primitives for codegen.
     pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
-        m_desc_filename,
-        *m_mkldnn_emitter,
-        m_node_primitive_idx_map,
-        m_node_primitive_string_deps_index_map);
+        m_desc_filename, *m_mkldnn_emitter, m_node_primitive_string_deps_index_map);
 
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
@@ -744,16 +744,20 @@ using namespace ngraph::runtime;
         writer << "extern \"C\" void " << current_function->get_name() << func_params << "\n";
         writer << "{\n";
         writer.indent++;
-        writer << "std::ifstream desc_file (\"" << m_desc_filename << "\", std::ios::binary);\n";
 
         //deserialize and build mkldnn primitives
-        writer << "if (ctx->first_iteration)\n";
-        writer.block_begin();
-        writer << "// read in memory descriptors and build mkldnn primitives\n";
-        writer << "deserialize_memory_descs_and_build_memory_primitives(" << m_desc_filename
-               << ", cg_ctx, " << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size())
-               << ");\n";
-        writer.block_end();
+        if (m_mkldnn_emitter->get_mkldnn_descriptors_size() > 0)
+        {
+            writer << "if (ctx->first_iteration)\n";
+            writer.block_begin();
+            writer << "// read in memory descriptors and build mkldnn primitives\n";
+            writer << "std::ifstream desc_file (\"" << m_desc_filename
+                   << "\", std::ios::binary);\n";
+            writer << "deserialize_memory_descs_and_build_memory_primitives(" << m_desc_filename
+                   << ", cg_ctx, " << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size())
+                   << ");\n";
+            writer.block_end();
+        }
 
         // Execution tracing support
         if (runtime::cpu::IsTracingEnabled() && current_function->get_name() == m_function_name)
@@ -1178,6 +1182,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
+    REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass);
@@ -1190,7 +1195,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass);
     REGISTER_KNOBBED_PASS(ReshapeElimination, false, ngraph::pass);
-    REGISTER_KNOBBED_PASS_WITH_ARGS(CoreFusion, true, ngraph::pass, ngraph::pass::ALL_FUSIONS);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(
+        CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS);
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
     REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass);

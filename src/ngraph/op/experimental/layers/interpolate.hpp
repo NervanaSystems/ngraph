@@ -49,6 +49,7 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            const InterpolateAttrs& get_attrs() const { return m_attrs; }
         private:
             InterpolateAttrs m_attrs;
         };
@@ -71,6 +72,7 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            const InterpolateAttrs& get_attrs() const { return m_attrs; }
         private:
             InterpolateAttrs m_attrs;
         };
