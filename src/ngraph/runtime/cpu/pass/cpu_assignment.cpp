@@ -1014,6 +1014,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GetOutputElement>},
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::DeconvolutionBias>},
+    {TI(ngraph::op::ScatterAdd),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ScatterAdd>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

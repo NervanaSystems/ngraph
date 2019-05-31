@@ -31,21 +31,21 @@ namespace ngraph
         {
             namespace kernel
             {
-            // ScatterAdd is to update bunch of slices of the inputs. The rank of slice is 1 less than the rank of the inputs.
+                // ScatterAdd is to update bunch of slices of the inputs. The rank of slice is 1 less than the rank of the inputs.
 
-            // For Eigen slice op, both parameters (offsets and extents) need to have the same rank.
-            // Here *_indices and *_slice_dims have the same rank.
-            // Suppose the slice would have shape {3, 3} ignoring the leading 1s.
-            // And if the shape of *_indices has zeros at position 0, ..., rank - 1 - 2(rank of slice without leading 1s),
-            // the shape of *_slice_dimes should have ones at the same position.
-            // These works: {1, 1, 0, 0} and {1, 1, 3, 3}
-            //              {0, 0, 0, 0} and {1, 1, 3, 3}
-            //              {0, 0, 0} and {1, 3, 3}
-            //              {0, 0} and {3, 3}
-            // This does not work: {0, 0, 0, 0} and {1, 0, 3, 3}
-            // Change 0 to 1 at those positions:
-            // For in_slice_dims, we only need to check the its shape[0] since its rank is always the rank of slice without leading 1s + 1.
-            // For updates_slice_dims, we need to check its shape[0], ..., shape[rank of indices - 1] if indices is not scalar.
+                // For Eigen slice op, both parameters (offsets and extents) need to have the same rank.
+                // Here *_indices and *_slice_dims have the same rank.
+                // Suppose the slice would have shape {3, 3} ignoring the leading 1s.
+                // And if the shape of *_indices has zeros at position 0, ..., rank - 1 - 2(rank of slice without leading 1s),
+                // the shape of *_slice_dimes should have ones at the same position.
+                // These works: {1, 1, 0, 0} and {1, 1, 3, 3}
+                //              {0, 0, 0, 0} and {1, 1, 3, 3}
+                //              {0, 0, 0} and {1, 3, 3}
+                //              {0, 0} and {3, 3}
+                // This does not work: {0, 0, 0, 0} and {1, 0, 3, 3}
+                // Change 0 to 1 at those positions:
+                // For in_slice_dims, we only need to check the its shape[0] since its rank is always the rank of slice without leading 1s + 1.
+                // For updates_slice_dims, we need to check its shape[0], ..., shape[rank of indices - 1] if indices is not scalar.
                 template <typename ElementType, unsigned int Rank1, unsigned int Rank2>
                 void scatter_add_i64(void* inputs,
                                      void* indices,
