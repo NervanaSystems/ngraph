@@ -49,6 +49,13 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            size_t get_num_coords() const { return m_num_coords; }
+            size_t get_num_classes() const { return m_num_classes; }
+            size_t get_num_regions() const { return m_num_regions; }
+            bool get_do_softmax() const { return m_do_softmax; }
+            const std::vector<int64_t>& get_mask() const { return m_mask; }
+            int get_axis() const { return m_axis; }
+            int get_end_axis() const { return m_end_axis; }
         private:
             size_t m_num_coords;
             size_t m_num_classes;

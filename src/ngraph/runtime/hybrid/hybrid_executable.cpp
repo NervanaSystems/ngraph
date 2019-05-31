@@ -46,21 +46,25 @@ runtime::hybrid::HybridExecutable::HybridExecutable(
     }
     // Run placement pass
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::hybrid::pass::DefaultPlacement>(m_backend_list);
-    pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
-    pass_manager.register_pass<runtime::hybrid::pass::Liveness>();
-    pass_manager.register_pass<runtime::hybrid::pass::Dump>("graph.dump");
-    // pass_manager.register_pass<runtime::hybrid::pass::MemoryLayout>();
-    if (m_debug_enabled)
-    {
-        pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.png", node_modifiers);
-    }
+    configure_passes(pass_manager);
     pass_manager.run_passes(m_function);
 
     runtime::hybrid::rewrite_function(m_function, m_backend_list);
     m_executable = backend_list[0]->compile(m_function);
 
     set_parameters_and_results(*func);
+}
+
+void runtime::hybrid::HybridExecutable::configure_passes(ngraph::pass::Manager& pass_manager)
+{
+    pass_manager.register_pass<runtime::hybrid::pass::DefaultPlacement>(m_backend_list);
+    pass_manager.register_pass<runtime::hybrid::pass::FixGetOutputElement>();
+    pass_manager.register_pass<runtime::hybrid::pass::Liveness>();
+    pass_manager.register_pass<runtime::hybrid::pass::Dump>("graph.dump");
+    if (m_debug_enabled)
+    {
+        pass_manager.register_pass<ngraph::pass::VisualizeTree>("graph.dot", node_modifiers);
+    }
 }
 
 bool runtime::hybrid::HybridExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,

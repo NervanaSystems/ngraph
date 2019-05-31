@@ -91,6 +91,10 @@ namespace ngraph
         ///     returns `false`.
         static bool merge(Dimension& dst, const Dimension d1, const Dimension d2);
 
+        /// \brief Try to merge two Dimension objects together with implicit broadcasting
+        ///        of unit-sized dimension to non unit-sized dimension
+        static bool broadcast_merge(Dimension& dst, const Dimension d1, const Dimension d2);
+
         /// \brief Check whether this dimension is capable of being merged with the argument
         ///        dimension.
         /// \param d The dimension to compare this dimension with.

@@ -1050,7 +1050,7 @@ void MKLDNNEmitter::build_softmax_forward(std::vector<mkldnn::primitive*>& mkldn
 
 mkldnn::eltwise_forward::desc MKLDNNEmitter::get_leaky_relu_desc(const ngraph::Node* node)
 {
-    auto alpha = static_cast<const ngraph::op::LeakyRelu*>(node)->get_alpha();
+    auto alpha = static_cast<const ngraph::op::CPULeakyRelu*>(node)->get_alpha();
 
     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
 
