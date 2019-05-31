@@ -525,7 +525,7 @@ endif()
 
 if(NGRAPH_ADDRESS_SANITIZER)
     message(STATUS "Enable Address Sanitizer")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
+    add_compile_options(-g -fsanitize=address -fno-omit-frame-pointer)
 endif()
 
 add_subdirectory(codegen)
