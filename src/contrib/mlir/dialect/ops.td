@@ -181,6 +181,69 @@ def NGDotOp : NG_Binary_Op<"dot">
   let verifier = [{ return verifyOp(this); }];
 }
 
+class NG_Axis_Reduction_Op<string mnemonic, list<OpTrait> traits = []> :
+      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
+      Arguments<(ins NG_TensorType:$operand, I64ArrayAttr:$axes)>
+{
+  let summary = "Base class for reduction operations that perform a reduction "
+                "across the axes of a  single tensor.";
+  let description = "Axes are represented as an array of I64 attributes.";
+
+  let parser = [{ NGRAPH_FAIL() << "Parser not implemented"; return mlir::failure(); }];
+
+  // TODO
+  let verifier = [{ return verifyAxisReductionOp(this); }];
+}
+
+// Axis reduction operations.
+def NGSumRedOp : NG_Axis_Reduction_Op<"sum.red">
+{
+  let summary = "Axis sum reduction of a tensor.";
+  let verifier = [{ return verifyAxisReductionOp(this); }];
+}
+
+def NGProdRedOp : NG_Axis_Reduction_Op<"prod.red">
+{
+  let summary = "Axis product reduction of a tensor.";
+  let verifier = [{ return verifyAxisReductionOp(this); }];
+}
+
+def NGMinRedOp : NG_Axis_Reduction_Op<"min.red">
+{
+  let summary = "Axis minimum reduction of a tensor.";
+  let verifier = [{ return verifyAxisReductionOp(this); }];
+}
+
+def NGMaxRedOp : NG_Axis_Reduction_Op<"max.red">
+{
+  let summary = "Axis maximum reduction of a tensor.";
+  let verifier = [{ return verifyAxisReductionOp(this); }];
+}
+
+def NGArgMinRedOp : NG_Axis_Reduction_Op<"argmin.red">
+{
+  let summary = "Axis minimum index reduction of a tensor.";
+  let verifier = [{ return verifyIndexReductionOp(this); }];
+}
+
+def NGArgMaxRedOp : NG_Axis_Reduction_Op<"argmax.red">
+{
+  let summary = "Axis maximum index reduction of a tensor.";
+  let verifier = [{ return verifyIndexReductionOp(this); }];
+}
+
+def NGAllRedOp : NG_Axis_Reduction_Op<"all.red">
+{
+  let summary = "Axis logical AND reduction of a boolean tensor.";
+  let verifier = [{ return verifyLogicalReductionOp(this); }];
+}
+
+def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red">
+{
+  let summary = "Axis logical OR reduction of a boolean tensor.";
+  let verifier = [{ return verifyLogicalReductionOp(this); }];
+}
+
 // Terminator Ops
 def NGReturnOp : NG_Terminator_Op<"return">;
 

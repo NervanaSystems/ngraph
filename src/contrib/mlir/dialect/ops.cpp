@@ -81,6 +81,26 @@ static mlir::LogicalResult verifyBinaryArithOp(T* op)
 }
 
 template <typename T>
+static mlir::LogicalResult verifyAxisReductionOp(T* op)
+{
+    return mlir::failure();
+}
+
+template <typename T>
+static mlir::LogicalResult verifyLogicalReductionOp(T* op)
+{
+    // TODO: verifyAxisReductionOp(op) + input and return element type.
+    return mlir::failure();
+}
+
+template <typename T>
+static mlir::LogicalResult verifyIndexReductionOp(T* op)
+{
+    // TODO: verifyAxisReductionOp(op) + return element type + single axis.
+    return mlir::failure();
+}
+
+template <typename T>
 static mlir::LogicalResult verifyOp(T* op)
 {
     return op->emitOpError("Unsupported verifier for this operation");
