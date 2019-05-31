@@ -74,7 +74,7 @@ namespace ngraph
                                     size_t count,
                                     const Shape& input_shape, // input shape is for future opt
                                     ngraph::RNGUniformState* rng_state,
-                                    bool training,
+                                    const bool training,
                                     const double value)
                 {
                     auto& gen = rng_state->get_generator();

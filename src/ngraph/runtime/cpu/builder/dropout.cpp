@@ -36,7 +36,8 @@ namespace ngraph
                 auto drop = static_cast<const ngraph::op::Dropout*>(node);
                 CPUKernelFunctor functor;
 
-                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto out1_buffer_index = external_function->get_buffer_index(out[1].get_name());
 
@@ -44,48 +45,55 @@ namespace ngraph
                 size_t element_count = out[0].get_size();
 
                 unsigned int seed = static_cast<unsigned int> (drop->get_seed());
-                double value = drop->get_value();
+                double value = 0.9; //TODO: this is temp hardcoding, we don't need value for uniform //drop->get_value();
                 auto index = external_function->add_state(
                                 ngraph::RNGUniformState::create_rng_state(seed, value));
                                 //ngraph::RNGState::create_rng_state(seed, value));
 
                 if (args[0].get_element_type() == element::f32)
                 {
-                    functor = [&, index, element_count, arg_buffer_index, out0_buffer_index,
-                                 out1_buffer_index, in_shape, value]
+                    functor = [&, index, element_count, arg0_buffer_index, arg1_buffer_index,
+                                 out0_buffer_index,
+                                 out1_buffer_index, in_shape]
                                  (CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        bool training = true; //TODO:
-                        /*bool training = static_cast<bool>( 
-                            static_cast<float*>(ctx->buffer_data[arg_buffer_index])[0]);*/
+                        bool training = true; //TODO: check if the below works
+                        /*bool training = static_cast<bool>(
+                            static_cast<float*>(ctx->buffer_data[arg1_buffer_index])[0]);*/
 
+                        double one_minus_prob = static_cast<double>(
+                            static_cast<double*>(ctx->buffer_data[arg1_buffer_index])[0]);
                         runtime::cpu::kernel::generate_dropout(
-                            static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
+                            static_cast<float*>(ctx->buffer_data[arg0_buffer_index]),
                             static_cast<float*>(ctx->buffer_data[out0_buffer_index]),
                             static_cast<float*>(ctx->buffer_data[out1_buffer_index]),
                             element_count,
                             in_shape,
                             static_cast<RNGUniformState*>(ctx->states[index]),
                             training,
-                            value);
+                            one_minus_prob);
                     };
                 }
                 else if (args[0].get_element_type() == element::f64)
                 {
-                    functor = [&, index, element_count, arg_buffer_index, out0_buffer_index,
-                                out1_buffer_index, in_shape, value]
+                    functor = [&, index, element_count, arg0_buffer_index, arg1_buffer_index,
+                                out0_buffer_index,
+                                out1_buffer_index, in_shape]
                                 (CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         bool training = true;
-                        /*bool training = static_cast<bool>(
-                            static_cast<double*>(ctx->buffer_data[arg_buffer_index])[0]);*/
+                        /*bool training = static_cast<bool>( 
+                            static_cast<float*>(ctx->buffer_data[arg1_buffer_index])[0]);*/
+
+                        double one_minus_prob = static_cast<double>(
+                            static_cast<double*>(ctx->buffer_data[arg1_buffer_index])[0]);
                         runtime::cpu::kernel::generate_dropout(
-                            static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
+                            static_cast<double*>(ctx->buffer_data[arg0_buffer_index]),
                             static_cast<double*>(ctx->buffer_data[out0_buffer_index]),
                             static_cast<double*>(ctx->buffer_data[out1_buffer_index]),
                             element_count,
                             in_shape,
                             static_cast<RNGUniformState*>(ctx->states[index]),
                             training,
-                            value);
+                            one_minus_prob);
                     };
                 }
                 else
