@@ -47,6 +47,7 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
+#include "ngraph/op/scatter_add.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -516,6 +517,21 @@ namespace ngraph
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::UpdateSlice)
                 {
                     auto update_slice = static_cast<ngraph::op::UpdateSlice*>(node);
+
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    if (get_user_count(node->get_argument(0).get()) == 1)
+                    {
+                        // Safe to overwrite input
+                        op_annotations->add_in_place_oi_pair({0, 0, true});
+                    }
+                    update_slice->set_op_annotations(op_annotations);
+                }
+
+                template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::ScatterAdd)
+                {
+                    auto update_slice = static_cast<ngraph::op::ScatterAdd*>(node);
 
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
