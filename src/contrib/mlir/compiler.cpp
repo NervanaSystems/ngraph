@@ -241,7 +241,7 @@ void MLIRCompiler::build_ng_dialect()
 {
     const NodeVector& sub_graph = m_compiled_kernel->get_node_list();
 
-    for(auto np : sub_graph)
+    for (auto np : sub_graph)
     {
         auto it = op_dispatcher.find(TI(*np));
         if (it == op_dispatcher.end())
@@ -273,8 +273,9 @@ mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
 }
 
 const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
-    {TI(ngraph::op::Add), &MLIRCompiler::create_op<ngraph::op::Add>},
-    {TI(ngraph::op::Dot), &MLIRCompiler::create_op<ngraph::op::Dot>}};
+#define MLIR_OP(OP) {TI(ngraph::op::OP), &MLIRCompiler::create_op<ngraph::op::OP>},
+#include "ops_supported.inc"
+};
 
 template <typename BinOp>
 mlir::Value* MLIRCompiler::create_binary_op(const ngraph::Node* ng_node)

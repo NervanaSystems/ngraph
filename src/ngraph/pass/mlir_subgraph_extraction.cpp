@@ -15,8 +15,9 @@
 //*****************************************************************************
 
 #include "mlir_subgraph_extraction.hpp"
-
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
 
@@ -32,6 +33,10 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     NodeVector ck_ops;
     for (auto op : func->get_ordered_ops())
     {
+        // All ops must be supported by MLIR compiler
+        if (!is_supported_mlir_op(op))
+            return false;
+
         if (TI(Parameter) != TI(*op) && TI(Result) != TI(*op))
         {
             ck_ops.push_back(op);
@@ -45,7 +50,8 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     }
 
     NodeVector ck_outputs = std::move(get_subgraph_outputs(ck_ops, {} /*exclusions*/));
-    NGRAPH_ASSERT(ck_outputs.size() == 1) << "Unsupported subgraph with multiple outputs";
+    if (ck_outputs.size() != 1)
+        return false;
 
     auto ck = std::make_shared<CompiledKernel>(ck_ops, ck_outputs, ck_args);
 
@@ -68,3 +74,30 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
     return true;
 }
+
+#define TI(x) std::type_index(typeid(x))
+
+bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
+{
+    if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
+        return true;
+
+    // supported by backend ?
+    if (m_supported_ops.find(TI(*node)) == m_supported_ops.end())
+        return false;
+
+    // check on invariants expected by MLIR backend
+
+    // Dot is 2D only
+    if (TI(ngraph::op::Dot) == TI(*node))
+    {
+        if (node->get_input_shape(0).size() != 2 || node->get_input_shape(1).size() != 2)
+            return false;
+    }
+    return true;
+}
+
+const std::set<std::type_index> MLIRSubgraphExtractionPass::m_supported_ops{
+#define MLIR_OP(OP) TI(ngraph::op::OP),
+#include "contrib/mlir/ops_supported.inc"
+};

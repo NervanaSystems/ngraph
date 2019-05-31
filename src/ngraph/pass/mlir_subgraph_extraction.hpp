@@ -31,6 +31,12 @@ namespace ngraph
         public:
             MLIRSubgraphExtractionPass() {}
             bool run_on_function(std::shared_ptr<Function> func) override;
+            /// Checks if an ngraph node is supported by MLIR backend
+            /// Currently this check is only valid for CPU backend.
+            bool is_supported_mlir_op(std::shared_ptr<Node> node);
+
+        private:
+            static const std::set<std::type_index> m_supported_ops;
         };
     }
 }

@@ -64,7 +64,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_add)
     Shape shape_out{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_in1);
     auto B = make_shared<op::Parameter>(element::f32, shape_in2);
-    auto dot =  make_shared<op::Dot>(A, B);
+    auto dot = make_shared<op::Dot>(A, B);
     auto C = make_shared<op::Parameter>(element::f32, shape_out);
     auto add = make_shared<op::Add>(dot, C);
     auto f = make_shared<Function>(add, ParameterVector{A, B, C});
