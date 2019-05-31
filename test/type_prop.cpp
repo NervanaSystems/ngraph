@@ -12945,20 +12945,51 @@ TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_rank_dynamic_ok)
 
 TEST(type_prop, dynreshape_arg_rank_static_pattern_zero)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 8});
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 0, 2, 8});
+    auto dynamic_arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, 0, 32});
 
-    auto r = make_shared<op::DynReshape>(arg, pattern);
-    EXPECT_EQ(r->get_output_shape(0), (Shape{1, 2, 2, 32}));
+    auto r1 = make_shared<op::DynReshape>(arg, pattern);
+    EXPECT_EQ(r1->get_output_shape(0), (Shape{1, 2, 0, 32}));
+
+    auto r2 = make_shared<op::DynReshape>(arg, pattern, true /*zero_flag*/);
+    EXPECT_EQ(r2->get_output_shape(0), (Shape{1, 2, 2, 32}));
+
+    auto r3 = make_shared<op::DynReshape>(dynamic_arg, pattern, true /*zero_flag*/);
+    EXPECT_TRUE(
+        r3->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic(), 32}));
 }
 
 TEST(type_prop, dynreshape_arg_rank_static_pattern_negative)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 8});
-    auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, 0, -1});
+    auto dynamic_arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, 4, -1});
 
-    auto r = make_shared<op::DynReshape>(arg, pattern);
-    EXPECT_EQ(r->get_output_shape(0), (Shape{1, 2, 2, 32}));
+    auto r1 = make_shared<op::DynReshape>(arg, pattern);
+    EXPECT_EQ(r1->get_output_shape(0), (Shape{1, 2, 4, 16}));
+
+    auto r2 = make_shared<op::DynReshape>(dynamic_arg, pattern);
+    EXPECT_TRUE(
+        r2->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, 4, Dimension::dynamic()}));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_pattern_zero_negative)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 2, 0});
+    auto dynamic_arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = op::Constant::create(element::i64, Shape{2}, {0, -1});
+
+    auto r1 = make_shared<op::DynReshape>(arg, pattern);
+    auto r2 = make_shared<op::DynReshape>(arg, pattern, true);
+    EXPECT_EQ(r1->get_output_shape(0), (Shape{0, 0}));
+    EXPECT_EQ(r2->get_output_shape(0), (Shape{2, 0}));
+
+    auto r3 = make_shared<op::DynReshape>(dynamic_arg, pattern);
+    auto r4 = make_shared<op::DynReshape>(dynamic_arg, pattern, true);
+    EXPECT_TRUE(r3->get_output_partial_shape(0).same_scheme(PartialShape{0, Dimension::dynamic()}));
+    EXPECT_TRUE(r4->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic()}));
 }
 
 TEST(type_prop, dynreshape_arg_rank_static_pattern_negative_failure1)
