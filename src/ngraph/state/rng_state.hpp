@@ -63,8 +63,8 @@ namespace ngraph
         RNGUniformState(unsigned int seed, double probability)
             : State()
             , m_seed(seed)
-            , m_probability(probability) // don't really need this prob
-            , m_distribution(0,1)
+            , m_probability(probability)
+            , m_distribution(0, 1)
         {
             m_generator.seed(m_seed);
         }
@@ -73,7 +73,7 @@ namespace ngraph
         virtual ~RNGUniformState() override {}
         std::minstd_rand& get_generator() { return m_generator; }
         std::uniform_real_distribution<float>& get_distribution() { return m_distribution; }
-        double get_probability() {return m_probability; } ;
+        double get_probability() { return m_probability; };
     protected:
         double m_probability;
         unsigned int m_seed;

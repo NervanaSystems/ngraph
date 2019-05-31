@@ -88,7 +88,6 @@
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/util.hpp"
 
-
 extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
                                                                        ngraph::AxisVector order);
 
@@ -1210,36 +1209,32 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
 
-    int seed =1234;
+    int seed = 1234;
     auto seed_label = std::make_shared<pattern::op::Label>(element::u32, Shape{0});
 
-    double value = 0.9;// some number
-    auto value_const = ngraph::op::Constant::create(element::f32, Shape{1,1,2,2}, {value}); // or f64 ?
+    double value = 0.9; // some number
+    auto value_const =
+        ngraph::op::Constant::create(element::f32, Shape{1, 1, 2, 2}, {value}); // or f64 ?
     auto value_label = std::make_shared<pattern::op::Label>(value_const);
 
     auto const1 = ngraph::op::Constant::create(x->get_element_type(), Shape{}, {1});
     auto const1_label = std::make_shared<pattern::op::Label>(const1);
 
+    auto genmask = std::make_shared<op::GenerateMask>(
+        const1_label, x->get_shape(), x->get_element_type(), seed, value);
+    auto genmask_label =
+        std::make_shared<pattern::op::Label>(genmask, nullptr, NodeVector{genmask});
 
-    auto genmask = std::make_shared<op::GenerateMask>(const1_label,
-                                                             x->get_shape(), 
-                                                             x->get_element_type(),
-                                                             seed,
-                                                             value);
-    auto genmask_label = std::make_shared<pattern::op::Label>(genmask, nullptr, NodeVector{genmask});
+    auto mult = std::make_shared<ngraph::op::Multiply>(
+        genmask_label, x_label); // TODO: how to check it works both ways x, gen_mask too ?
 
-    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x_label); // TODO: how to check it works both ways x, gen_mask too ?
-
-    // Will this same fusion pattern work for 3D and 4D??
-    //auto bcast = std::make_shared<ngraph::op::Broadcast>(value_label, x->get_shape(), AxisSet{0, 1, 2,3});
     auto pdivide = std::make_shared<ngraph::op::Divide>(mult, value_label);
 
     //----------
-    auto callback = [x, const1_label, seed_label, value_label,
-                        genmask_label](pattern::Matcher& m) {
+    auto callback = [x, const1_label, seed_label, value_label, genmask_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_dropout against "
                      << m.get_match_root()->get_name();
-        std::cout << "in callback for construct_dropout, name = " << m.get_match_root()->get_name() << "\n";
+        //std::cout << "in callback for construct_dropout, name = " << m.get_match_root()->get_name() << "\n";
         auto pattern_map = m.get_pattern_map();
 
         auto m_div = std::static_pointer_cast<ngraph::op::Divide>(m.get_match_root());
@@ -1247,18 +1242,15 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
         auto gm = std::static_pointer_cast<ngraph::op::GenerateMask>(pattern_map[genmask_label]);
         auto temp_val = gm->get_probability();
         auto temp_seed = gm->get_seed();
-        std::cout << "got value %f" << temp_val << "\n";
-        std::cout << "got seed %d" << temp_seed <<"\n";
+        //std::cout << "got value %f" << temp_val << "\n";
+        //std::cout << "got seed %d" << temp_seed <<"\n";
 
-
-        std::cout << " replacing the node\n";
+        //std::cout << " replacing the node\n";
         // Check for rank 3D or 4D for now
-        auto dropout_n =
-            std::make_shared<ngraph::op::Dropout>(pattern_map[x], // Input Node of f32
-                                                  1,
-                                                  temp_seed,
-                                                  temp_val
-                                                  );
+        auto dropout_n = std::make_shared<ngraph::op::Dropout>(pattern_map[x], // Input Node of f32
+                                                               1,
+                                                               temp_seed,
+                                                               temp_val);
         auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 0);
         ngraph::replace_node(m.get_match_root(), goe1);
 

@@ -2928,37 +2928,36 @@ TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
 
 TEST(cpu_fusion, fuse_dropout)
 {
-    auto make_function = [](Shape input_shape, const unsigned int seed_val, float one_minus_prob, bool fuse ) {
-        auto input = std::make_shared<op::Parameter>(element::f32, input_shape); // also test for f64??
-        //auto seed = op::Constant::create(element::u32, Shape{0}, {seed_val});
-        auto value = op::Constant::create(element::f32, input_shape, {one_minus_prob});
-        auto const1 = op::Constant::create(input->get_element_type(), Shape{}, {1});
+    auto make_function =
+        [](Shape input_shape, const unsigned int seed_val, float one_minus_prob, bool fuse) {
+            auto input =
+                std::make_shared<op::Parameter>(element::f32, input_shape); // also test for f64??
+            //auto seed = op::Constant::create(element::u32, Shape{0}, {seed_val});
+            auto value = op::Constant::create(element::f32, input_shape, {one_minus_prob});
+            auto const1 = op::Constant::create(input->get_element_type(), Shape{}, {1});
 
-        auto gen_mask = std::make_shared<op::GenerateMask>(const1, 
-                                                            input->get_shape(), 
-                                                            input->get_element_type(),
-                                                            seed_val,
-                                                            (double)one_minus_prob);
-        //auto mask_result = std::make_shared<op::Result>(gen_mask);
+            auto gen_mask = std::make_shared<op::GenerateMask>(const1,
+                                                               input->get_shape(),
+                                                               input->get_element_type(),
+                                                               seed_val,
+                                                               (double)one_minus_prob);
 
-        auto mult = std::make_shared<op::Multiply>(gen_mask, input); // TODO: how to check it works both ways x, gen_mask too ?
+            auto mult = std::make_shared<op::Multiply>(
+                gen_mask, input); // TODO: how to check it works both ways x, gen_mask too ?
 
+            auto goe = std::make_shared<op::GetOutputElement>(mult, 0);
 
-        //auto bcast = std::make_shared<op::Broadcast>(value, input_shape, AxisSet{0, 1, 2, 3});
+            auto pdivide = fuse ? std::make_shared<op::Divide>(mult, value)
+                                : std::make_shared<op::Divide>(goe, value);
 
-        auto goe = std::make_shared<op::GetOutputElement>(mult, 0);
+            auto f = make_shared<Function>(NodeVector{pdivide, gen_mask}, ParameterVector{input});
 
-        auto pdivide = fuse ? std::make_shared<op::Divide>(mult, value):
-                              std::make_shared<op::Divide>(goe, value);
+            return f;
 
-        auto f =make_shared<Function>(NodeVector{pdivide, gen_mask}, ParameterVector{input/*, const1, seed, value*/});
+        };
 
-        return f;
-
-    };
-
-    auto fuse_func = make_function( Shape{2,2,256,256}, 1, 0.9, true);
-    auto nofuse_func = make_function( Shape{2,2,256,256}, 1, 0.9, false);
+    auto fuse_func = make_function(Shape{2, 2, 256, 256}, 1, 0.9, true);
+    auto nofuse_func = make_function(Shape{2, 2, 256, 256}, 1, 0.9, false);
     std::cout << "-------\n\n";
     {
         pass::Manager pass_manager;
@@ -2971,7 +2970,6 @@ TEST(cpu_fusion, fuse_dropout)
         std::cout << "Number of outputs of dropout = " << fuse_func->get_results().size() << "\n";
         auto dropout_goe_output =
             std::dynamic_pointer_cast<op::GetOutputElement>(fuse_func->get_results().at(0));
-        //auto dropout_mask_output = std::dynamic_pointer_cast<op::GetOutputElement>(fuse_func->get_results().at(1));
     }
 
     // Test values
@@ -2998,7 +2996,6 @@ TEST(cpu_fusion, fuse_dropout)
         timer.stop();
         cout.imbue(locale(""));
         cout << "fuse time: " << timer.get_milliseconds() << "ms" << endl;
-
 
         EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
         EXPECT_TRUE(test::all_close(fuse_results.at(1), nofuse_results.at(1)));

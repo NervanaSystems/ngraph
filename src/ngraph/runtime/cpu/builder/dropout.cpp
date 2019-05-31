@@ -43,17 +43,22 @@ namespace ngraph
                 auto in_shape = args[0].get_shape();
                 size_t element_count = out[0].get_size();
 
-                unsigned int seed = static_cast<unsigned int> (drop->get_seed());
+                unsigned int seed = static_cast<unsigned int>(drop->get_seed());
                 double value = drop->get_value();
                 auto index = external_function->add_state(
-                                ngraph::RNGUniformState::create_rng_state(seed, value));
-                                //ngraph::RNGState::create_rng_state(seed, value));
+                    ngraph::RNGUniformState::create_rng_state(seed, value));
+                //ngraph::RNGState::create_rng_state(seed, value));
 
                 if (args[0].get_element_type() == element::f32)
                 {
-                    functor = [&, index, element_count, arg_buffer_index, out0_buffer_index,
-                                 out1_buffer_index, in_shape, value]
-                                 (CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    functor = [&,
+                               index,
+                               element_count,
+                               arg_buffer_index,
+                               out0_buffer_index,
+                               out1_buffer_index,
+                               in_shape,
+                               value](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         bool training = true; //TODO:
                         /*bool training = static_cast<bool>( 
                             static_cast<float*>(ctx->buffer_data[arg_buffer_index])[0]);*/
@@ -71,9 +76,14 @@ namespace ngraph
                 }
                 else if (args[0].get_element_type() == element::f64)
                 {
-                    functor = [&, index, element_count, arg_buffer_index, out0_buffer_index,
-                                out1_buffer_index, in_shape, value]
-                                (CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    functor = [&,
+                               index,
+                               element_count,
+                               arg_buffer_index,
+                               out0_buffer_index,
+                               out1_buffer_index,
+                               in_shape,
+                               value](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         bool training = true;
                         /*bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg_buffer_index])[0]);*/
@@ -91,8 +101,7 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error(std::string("Unsupported type") +
-                                       args[0].get_element_type().c_type_string() +
-                                       "for Dropout");
+                                       args[0].get_element_type().c_type_string() + "for Dropout");
                 }
                 functors.emplace_back(functor);
             }
