@@ -41,10 +41,13 @@ namespace ngraph
             /// `[d0, ...]`
             /// \param arg1 Output that produces the second input tensor.<br>
             /// `[d0, ...]`
+            /// \param autob Auto broadcast specification
             ///
             /// Output `[d0, ...]`
             ///
-            Add(const Output<Node>& arg0, const Output<Node>& arg1);
+            Add(const Output<Node>& arg0,
+                const Output<Node>& arg1,
+                const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 

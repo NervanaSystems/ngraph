@@ -25,8 +25,8 @@ op::Add::Add()
 {
 }
 
-op::Add::Add(const Output<Node>& arg0, const Output<Node>& arg1)
-    : BinaryElementwiseArithmetic(arg0, arg1)
+op::Add::Add(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
+    : BinaryElementwiseArithmetic(arg0, arg1, autob)
 {
     constructor_validate_and_infer_types();
 }
@@ -34,11 +34,16 @@ op::Add::Add(const Output<Node>& arg0, const Output<Node>& arg1)
 shared_ptr<Node> op::Add::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Add>(new_args.at(0), new_args.at(1));
+    return make_shared<Add>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
 void op::Add::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    if (get_autob().m_type != op::AutoBroadcastType::NONE)
+    {
+        throw ngraph_error("Autodiff not supported with auto broadcasting");
+    }
+
     auto delta = deltas.at(0);
 
     auto x = get_argument(0);
