@@ -2484,6 +2484,41 @@ TEST(type_prop, or_bad_arguments)
         });
 }
 
+template <typename T>
+void test_binary_eltwise_numpy(const element::Type& et, const op::AutoBroadcastSpec& autob)
+{
+    auto param1 = make_shared<op::Parameter>(et, Shape{1, 3, 6});
+    auto param2 = make_shared<op::Parameter>(et, Shape{3, 1});
+    auto param3 = make_shared<op::Parameter>(et, Shape{2, 3, 6});
+    auto param4 = make_shared<op::Parameter>(et, Shape{6});
+    EXPECT_EQ(make_shared<T>(param1, param2, autob)->get_shape(), (Shape{1, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param1, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param4, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+
+    auto pp1 = make_shared<op::Parameter>(et, PartialShape{1, Dimension::dynamic(), 6});
+    auto pp2 = make_shared<op::Parameter>(et, PartialShape{3, 1});
+    EXPECT_EQ(make_shared<T>(pp1, pp2, autob)->get_shape(), (Shape{1, 3, 6}));
+}
+
+TEST(type_prop, eltwise_auto_bcast)
+{
+    test_binary_eltwise_numpy<op::Add>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::And>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Divide>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::GreaterEq>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Less>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::LessEq>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Maximum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Minimum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Multiply>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::NotEqual>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Or>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Power>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Subtract>(element::f32, op::AutoBroadcastType::NUMPY);
+}
+
 TEST(type_prop, embedding_lookup_non_matrix_weights)
 {
     auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
