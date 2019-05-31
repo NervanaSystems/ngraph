@@ -234,16 +234,14 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                     auto goe = make_shared<ngraph::op::GetOutputElement>(fc, i);
                     goe->set_placement_index(0);
 
-                    auto old_source = cluster_outputs[i];
-                    auto target = function_call_outputs[i];
+                    shared_ptr<Node> old_source = cluster_outputs[i];
+                    shared_ptr<Node> target = function_call_outputs[i];
 
                     std::vector<Input<Node>> target_inputs = get_inputs_from(*old_source, *target);
-                    NGRAPH_CHECK(target_inputs.size() == 1,
-                                 "rewrite_function encountered more than "
-                                 "one input between the old source node and the target node");
-                    auto& target_input = target_inputs[0];
-
-                    target_input.replace_source_output(goe->output(0));
+                    for (Input<Node> target_input : target_inputs)
+                    {
+                        target_input.replace_source_output(goe->output(0));
+                    }
                 }
             }
         }
