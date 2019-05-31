@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 #pragma once
 
 #include "contrib/mlir/compiler.hpp"
-#include "mlir/Pass/Pass.h"
-#include "mlir/Support/LLVM.h"
+
+#include <mlir/Pass/Pass.h>
+
 namespace ngraph
 {
     namespace runtime
@@ -29,6 +30,7 @@ namespace ngraph
         }
     }
 }
+
 namespace mlir
 {
     mlir::Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);

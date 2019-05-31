@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,25 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #include "compiler.hpp"
 
-#include <llvm/ADT/STLExtras.h>
-#include <llvm/IR/Module.h>
-#include <llvm/Support/ErrorOr.h>
-#include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Support/SourceMgr.h>
-#include <llvm/Support/TargetSelect.h>
-#include <memory>
-#include <mlir/ExecutionEngine/ExecutionEngine.h>
-#include <mlir/ExecutionEngine/MemRefUtils.h>
-#include <mlir/ExecutionEngine/OptUtils.h>
-#include <mlir/LLVMIR/LLVMDialect.h>
-#include <mlir/LLVMIR/Transforms.h>
-#include <mlir/Pass/PassManager.h>
-#include <mlir/Target/LLVMIR.h>
-#include <mlir/Transforms/DialectConversion.h>
-#include <mlir/Transforms/Passes.h>
-#include <mutex>
 #include "dialect/dialect.hpp"
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
@@ -44,6 +28,25 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/type/element_type.hpp"
+
+#include <llvm/ADT/STLExtras.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/ErrorOr.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/TargetSelect.h>
+#include <mlir/ExecutionEngine/ExecutionEngine.h>
+#include <mlir/ExecutionEngine/MemRefUtils.h>
+#include <mlir/ExecutionEngine/OptUtils.h>
+#include <mlir/LLVMIR/LLVMDialect.h>
+#include <mlir/LLVMIR/Transforms.h>
+#include <mlir/Pass/PassManager.h>
+#include <mlir/Target/LLVMIR.h>
+#include <mlir/Transforms/DialectConversion.h>
+#include <mlir/Transforms/Passes.h>
+
+#include <memory>
+#include <mutex>
 
 using llvm::SmallVector;
 using llvm::StringRef;

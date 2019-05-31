@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,18 +15,21 @@
 //*****************************************************************************
 
 #include "lowerer.hpp"
-#include <map>
+
 #include "compiler.hpp"
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
-#include "llvm/ADT/DenseSet.h"
-#include "mlir/EDSC/Builders.h"
-#include "mlir/EDSC/Helpers.h"
-#include "mlir/EDSC/Intrinsics.h"
-#include "mlir/IR/MLIRContext.h"
-#include "mlir/IR/StandardTypes.h"
-#include "mlir/Transforms/DialectConversion.h"
 #include "ngraph/assertion.hpp"
+
+#include <llvm/ADT/DenseSet.h>
+#include <mlir/EDSC/Builders.h>
+#include <mlir/EDSC/Helpers.h>
+#include <mlir/EDSC/Intrinsics.h>
+#include <mlir/IR/MLIRContext.h>
+#include <mlir/IR/StandardTypes.h>
+#include <mlir/Transforms/DialectConversion.h>
+
+#include <map>
 
 // anonymous namespace
 // no need to expose any of the following outside of this file

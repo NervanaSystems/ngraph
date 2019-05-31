@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,31 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #pragma once
 
-#include "lowerer.hpp"
 #include "memory_manager.hpp"
-#include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node.hpp"
 
-// TODO(dcab): Revisit and do fw decl when possible.
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
-#include <mlir/IR/Attributes.h>
+#include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/IR/Builders.h>
-#include <mlir/IR/Location.h>
-#include <mlir/IR/MLIRContext.h>
 #include <mlir/IR/Module.h>
-#include <mlir/IR/StandardTypes.h>
 #include <mlir/IR/Types.h>
-#include <mlir/StandardOps/Ops.h>
 
-namespace mlir
-{
-    struct StaticFloatMemRef;
-}
+#include <typeindex>
+#include <unordered_map>
+#include <vector>
 
 namespace ngraph
 {
+    namespace descriptor
+    {
+        class Tensor;
+    }
+    namespace element
+    {
+        class Type;
+    }
     namespace op
     {
         class CompiledKernel;
