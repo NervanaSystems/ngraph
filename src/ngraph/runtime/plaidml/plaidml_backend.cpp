@@ -23,7 +23,7 @@
 namespace vp = vertexai::plaidml;
 
 ngraph::runtime::plaidml::PlaidML_Backend::PlaidML_Backend(const char* configuration_string)
-    : m_config{parse_config_string(configuration_string)}
+    : m_config(parse_config_string(configuration_string))
     , m_compiler{&m_config}
 {
 }
