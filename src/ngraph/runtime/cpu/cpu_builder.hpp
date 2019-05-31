@@ -258,49 +258,13 @@
 
 // Per-type and ranks kernel macro
 #define SELECT_KERNEL_BY_2RANKS(KV, ET, R1, R2, K)                                                 \
-    if (ET == element::boolean)                                                                    \
-    {                                                                                              \
-        SELECT_2RANKS(KV, char, R1, R2, K);                                                        \
-    }                                                                                              \
-    else if (ET == element::f32)                                                                   \
+    if (ET == element::f32)                                                                        \
     {                                                                                              \
         SELECT_2RANKS(KV, float, R1, R2, K);                                                       \
     }                                                                                              \
     else if (ET == element::f64)                                                                   \
     {                                                                                              \
         SELECT_2RANKS(KV, double, R1, R2, K);                                                      \
-    }                                                                                              \
-    else if (ET == element::i8)                                                                    \
-    {                                                                                              \
-        SELECT_2RANKS(KV, int8_t, R1, R2, K);                                                      \
-    }                                                                                              \
-    else if (ET == element::i16)                                                                   \
-    {                                                                                              \
-        SELECT_2RANKS(KV, int16_t, R1, R2, K);                                                     \
-    }                                                                                              \
-    else if (ET == element::i32)                                                                   \
-    {                                                                                              \
-        SELECT_2RANKS(KV, int32_t, R1, R2, K);                                                     \
-    }                                                                                              \
-    else if (ET == element::i64)                                                                   \
-    {                                                                                              \
-        SELECT_2RANKS(KV, int64_t, R1, R2, K);                                                     \
-    }                                                                                              \
-    else if (ET == element::u8)                                                                    \
-    {                                                                                              \
-        SELECT_2RANKS(KV, uint8_t, R2, R2, K);                                                     \
-    }                                                                                              \
-    else if (ET == element::u16)                                                                   \
-    {                                                                                              \
-        SELECT_2RANKS(KV, uint16_t, R1, R2, K);                                                    \
-    }                                                                                              \
-    else if (ET == element::u32)                                                                   \
-    {                                                                                              \
-        SELECT_2RANKS(KV, uint32_t, R1, R2, K);                                                    \
-    }                                                                                              \
-    else if (ET == element::u64)                                                                   \
-    {                                                                                              \
-        SELECT_2RANKS(KV, uint64_t, R1, R2, K);                                                    \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \

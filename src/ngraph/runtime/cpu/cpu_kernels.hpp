@@ -224,6 +224,26 @@ namespace ngraph
 
                 template <typename ElementType>
                 void reference_erf(void* arg, void* out, size_t count);
+
+                template <typename ElementType, unsigned int Rank1, unsigned int Rank2>
+                void scatter_add_i64(void* inputs,
+                                     void* indices,
+                                     void* updates,
+                                     void* output,
+                                     const Shape& inputs_shape,
+                                     const Shape& indices_shape,
+                                     const Shape& updates_shape,
+                                     int arena);
+
+                template <typename ElementType, unsigned int Rank1, unsigned int Rank2>
+                void scatter_add_i32(void* inputs,
+                                     void* indices,
+                                     void* updates,
+                                     void* output,
+                                     const Shape& inputs_shape,
+                                     const Shape& indices_shape,
+                                     const Shape& updates_shape,
+                                     int arena);
             }
         }
     }
