@@ -170,7 +170,6 @@
 #include "ngraph/runtime/cpu/op/deconv.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
-#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -427,8 +426,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::And), &runtime::cpu::CPU_Emitter::emit<op::And>},
     {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
     {TI(ngraph::op::CPULeakyRelu), &runtime::cpu::CPU_Emitter::emit<op::CPULeakyRelu>},
-    {TI(ngraph::runtime::cpu::op::LoopKernel),
-     &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
+    {TI(ngraph::op::CompiledKernel), &runtime::cpu::CPU_Emitter::emit<op::CompiledKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
     {TI(ngraph::op::GenerateMask), &runtime::cpu::CPU_Emitter::emit<ngraph::op::GenerateMask>},
     {TI(ngraph::op::ConvolutionAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionAdd>},

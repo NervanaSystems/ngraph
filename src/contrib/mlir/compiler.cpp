@@ -22,7 +22,7 @@
 #include "lowerer.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/node_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"

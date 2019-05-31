@@ -38,14 +38,6 @@ namespace ngraph
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                // TODO: Quick hook for MLIR.
-                if (std::getenv("NGRAPH_MLIR") != nullptr)
-                {
-                    functors.emplace_back(build_mlir_single_output_binary_op(
-                        node, arg0_tensor, arg1_tensor, out0_tensor));
-                    return;
-                }
-
                 const ngraph::op::MatmulBias* mm = static_cast<const ngraph::op::MatmulBias*>(node);
 
                 const auto& arg0_shape = mm->get_a_shape();

@@ -15,11 +15,8 @@
 //*****************************************************************************
 
 #include "memory_manager.hpp"
-
 #include "ngraph/ngraph_visibility.hpp"
-
 #include <memory>
-
 
 using namespace ngraph::runtime::ngmlir;
 

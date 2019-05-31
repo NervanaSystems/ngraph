@@ -103,7 +103,6 @@
 #include "ngraph/runtime/cpu/kernel/subtract.hpp"
 #include "ngraph/runtime/cpu/kernel/tan.hpp"
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
-#include "ngraph/runtime/cpu/mlir/compiler.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/halide_op.hpp"
 #include "ngraph/type/element_type.hpp"

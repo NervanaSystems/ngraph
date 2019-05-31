@@ -20,6 +20,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/assertion.hpp"
 
 using namespace ngraph::descriptor;
 using namespace ngraph::op;
@@ -64,9 +65,9 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         auto& out_desc = output_descs[0];
 
         // 'replace_output' invalidates iterator of the original container. Use a copy instead.
-        std::set<Input*> input_descs{out_desc.get_inputs()};
+        const std::set<descriptor::Input*> input_descs = out_desc.get_inputs();
 
-        for (Input* in_desc : input_descs)
+        for (descriptor::Input* in_desc : input_descs)
         {
             in_desc->replace_output(ck, i);
         }
