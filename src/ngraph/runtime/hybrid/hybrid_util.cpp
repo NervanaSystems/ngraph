@@ -223,10 +223,8 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                 // we just added
                 auto sub_function = make_shared<Function>(cluster_outputs, cluster_inputs);
                 sub_function->set_placement(placement);
-                auto fc = make_shared<runtime::hybrid::op::FunctionCall>(function_call_outputs,
-                                                                         function_call_inputs,
-                                                                         *sub_function,
-                                                                         backend_list[placement]);
+                auto fc = make_shared<runtime::hybrid::op::FunctionCall>(
+                    cluster_outputs, function_call_inputs, *sub_function, backend_list[placement]);
                 fc->set_placement_index(0);
                 for (size_t i = 0; i < function_call_outputs.size(); i++)
                 {
@@ -234,8 +232,8 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                     auto goe = make_shared<ngraph::op::GetOutputElement>(fc, i);
                     goe->set_placement_index(0);
 
-                    shared_ptr<Node> old_source = cluster_outputs[i];
-                    shared_ptr<Node> target = function_call_outputs[i];
+                    auto old_source = cluster_outputs[i];
+                    auto target = function_call_outputs[i];
 
                     std::vector<Input<Node>> target_inputs = get_inputs_from(*old_source, *target);
                     for (Input<Node> target_input : target_inputs)
