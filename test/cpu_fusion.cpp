@@ -2928,15 +2928,13 @@ TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
 
 TEST(cpu_fusion, fuse_dropout)
 {
-    auto make_function = [](Shape input_shape, const unsigned int seed_val, float one_minus_prob,
-                            float training_val, bool fuse ) {
+    auto make_function = [](Shape input_shape, const unsigned int seed_val, float one_minus_prob, bool fuse ) {
         auto input = std::make_shared<op::Parameter>(element::f32, input_shape); // also test for f64??
-        auto training = op::Constant::create(element::f32, Shape{}, {training_val});
-        //auto training = std::make_shared<op::Parameter>(element::f32, Shape{});
         //auto seed = op::Constant::create(element::u32, Shape{0}, {seed_val});
         auto value = op::Constant::create(element::f32, Shape{}, {one_minus_prob});
+        auto const1 = op::Constant::create(input->get_element_type(), Shape{}, {1});
 
-        auto gen_mask = std::make_shared<op::GenerateMask>(training, 
+        auto gen_mask = std::make_shared<op::GenerateMask>(const1, 
                                                             input->get_shape(), 
                                                             input->get_element_type(),
                                                             seed_val,
@@ -2953,24 +2951,25 @@ TEST(cpu_fusion, fuse_dropout)
         auto pdivide = fuse ? std::make_shared<op::Divide>(mult, bcast):
                               std::make_shared<op::Divide>(mult, goe);
 
-        auto f =make_shared<Function>(NodeVector{pdivide, gen_mask}, ParameterVector{input, /*training, value*/});
+        auto f =make_shared<Function>(NodeVector{pdivide, gen_mask}, ParameterVector{input/*, const1, seed, value*/});
 
         return f;
+
     };
 
-    auto fuse_func = make_function( Shape{2,2,256,256}, 1, 0.9, 1, true);
-    auto nofuse_func = make_function( Shape{2,2,256,256}, 1, 0.9, 1, false);
+    auto fuse_func = make_function( Shape{2,2,256,256}, 1, 0.9, true);
+    auto nofuse_func = make_function( Shape{2,2,256,256}, 1, 0.9, false);
     std::cout << "-------\n\n";
     {
         pass::Manager pass_manager;
         pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
         pass_manager.run_passes(fuse_func);
         ASSERT_EQ(count_ops_of_type<op::Dropout>(fuse_func), 1);
-        //ASSERT_EQ(count_ops_of_type<op::Dropout>(nofuse_func), 0);
+        ASSERT_EQ(count_ops_of_type<op::Dropout>(nofuse_func), 0);
 
         std::cout << "Number of outputs of dropout = " << fuse_func->get_results().size() << "\n";
-        /*auto dropout_goe_output =
-            std::dynamic_pointer_cast<op::GetOutputElement>(fuse_func->get_results().at(0));*/
+        auto dropout_goe_output =
+            std::dynamic_pointer_cast<op::GetOutputElement>(fuse_func->get_results().at(0));
         //auto dropout_mask_output = std::dynamic_pointer_cast<op::GetOutputElement>(fuse_func->get_results().at(1));
     }
 
