@@ -85,15 +85,16 @@ void MLIRCompiler::init_mlir()
 
 void MLIRCompiler::compile_and_run()
 {
-    build_module(); // MLIR gen
-    lower_dialect();
+    build_ng_dialect_module();
+    lower_ng_dialect();
     optimize();
     bind_arguments();
     execute();
     cleanup();
 }
 
-void MLIRCompiler::build_module()
+// Creates an MLIR module and function with nGraph dialect ops from the input CompiledKernel.
+void MLIRCompiler::build_ng_dialect_module()
 {
     // initialize an empty module
     m_module = make_unique<mlir::Module>(&m_context);
@@ -146,6 +147,8 @@ void MLIRCompiler::build_module()
     }
 }
 
+// Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
+// element type.
 mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
 {
     SmallVector<int64_t, 4> shape;
@@ -157,6 +160,7 @@ mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
     return mlir::NGTensorType::get(&m_context, get_mlir_type(tensor->get_element_type()), shape);
 }
 
+// Converts an nGraph element type into an MLIR type.
 mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
 {
     switch (type.get_type_enum())
@@ -164,31 +168,20 @@ mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
     case ngraph::element::Type_t::undefined:
     case ngraph::element::Type_t::dynamic:
     default: NGRAPH_FAIL() << "MLIR: Unsupported NGraph types"; break;
-
     case ngraph::element::Type_t::bf16: return mlir::NGFloatType::getBF16(&m_context);
-
     case ngraph::element::Type_t::f32: return mlir::NGFloatType::getF32(&m_context);
-
     case ngraph::element::Type_t::f64: return mlir::NGFloatType::getF64(&m_context);
-
     case ngraph::element::Type_t::i8: return mlir::NGIntegerType::getInt8(&m_context);
-
     case ngraph::element::Type_t::u8:
     case ngraph::element::Type_t::boolean: return mlir::NGIntegerType::getUInt8(&m_context);
-
     case ngraph::element::Type_t::i16: return mlir::NGIntegerType::getInt16(&m_context);
-
     case ngraph::element::Type_t::u16: return mlir::NGIntegerType::getInt16(&m_context);
-
     case ngraph::element::Type_t::i32: return mlir::NGIntegerType::getInt32(&m_context);
-
     case ngraph::element::Type_t::u32: return mlir::NGIntegerType::getUInt32(&m_context);
-
     case ngraph::element::Type_t::i64: return mlir::NGIntegerType::getInt64(&m_context);
-
     case ngraph::element::Type_t::u64: return mlir::NGIntegerType::getUInt64(&m_context);
     }
-    NGRAPH_FAIL(); // Unreachable
+    NGRAPH_FAIL() << "Unreachable";
     return mlir::Type();
 }
 
@@ -209,7 +202,8 @@ MLIRCompiler::TensorInfo MLIRCompiler::get_tensor_value(descriptor::Tensor* tens
     return it->second;
 }
 
-void MLIRCompiler::lower_dialect()
+// Lowers nGraph dialect to affine dialect.
+void MLIRCompiler::lower_ng_dialect()
 {
     mlir::PassManager pm;
     pm.addPass(mlir::createDialectLoweringPass(this));
@@ -227,14 +221,16 @@ void MLIRCompiler::lower_dialect()
     }
 }
 
+// Receives affine dialect as input and applies affine and standard dialect based optimizations.
+// Lowering from affine dialect to standard dialect happens along the way. Output consists of
+// standard dialect only ops.
 void MLIRCompiler::optimize()
 {
     mlir::PassManager pm;
     // Lower affine ops
     pm.addPass(mlir::createLowerAffinePass());
     auto rr = pm.run(m_module.get());
-    (void)rr;
-    assert(succeeded(rr) && "affine loop lowering failed");
+    NGRAPH_ASSERT(succeeded(rr)) << "Affine loop lowering failed";
 }
 
 // MLIR builders
@@ -271,7 +267,6 @@ mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
 template <>
 mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
 {
-    NGRAPH_ASSERT(ng_node->get_arguments().size() == 2) << "Expected two operands in Dot operation";
     return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
 }
 
@@ -302,6 +297,8 @@ void MLIRCompiler::create_return()
     m_builder->create<mlir::NGReturnOp>(mlir::UnknownLoc::get(&m_context), value_list);
 }
 
+// Binds MLIR function arguments to the proper values. This includes externally allocated tensors
+// helpers to be used inside the function.
 void MLIRCompiler::bind_arguments()
 {
     NGRAPH_ASSERT(m_module && "MLIR module is not ready.");
@@ -338,6 +335,7 @@ void MLIRCompiler::bind_arguments()
     m_invoke_args.push_back(static_cast<void*>(mem_mgr_arg));
 }
 
+// Lowers standard dialect to LLVM dialect and uses the MLIR execution engine to execute the code.
 void MLIRCompiler::execute()
 {
     NGRAPH_ASSERT(m_module && "MLIR module is not ready.");

@@ -47,9 +47,13 @@ namespace ngraph
     {
         namespace ngmlir
         {
+            /// This class is the entry point to MLIR from nGraph. It drives the conversion of
+            /// nGraph sub-graphs, represented with CompiledKernel nodes, to MLIR nGraph dialect
+            /// and its lowering, optimization and execution using LLVM-based MLIR execution engine.
             class MLIRCompiler
             {
             public:
+                /// Initializes MLIR environment. It must be called only once per execution.
                 static void init_mlir();
 
             public:
@@ -59,12 +63,13 @@ namespace ngraph
                 MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
                              const std::vector<void*>& external_tensors);
 
-                /// Compiles and runs a subgraph in MLIR
+                /// Compiles and runs a subgraph in MLIR.
                 void compile_and_run();
 
-                /// Returns the memory manager used by this sub-graph compiler
+                /// Returns the memory manager used by this sub-graph compiler.
                 MLIRMemMgr& get_mem_mgr() { return m_mem_mgr; }
-                /// Returns memory manager pointer argument ID in call interface
+
+                /// Returns memory manager pointer argument ID in call interface.
                 unsigned get_mem_mgr_arg_id(mlir::Function* func)
                 {
                     return func->getNumArguments() - 1;
@@ -73,13 +78,13 @@ namespace ngraph
             private:
                 struct TensorInfo
                 {
-                    mlir::Value* m_value; /* mlir value this tensor maps to */
-                    // More info here ?
+                    // MLIR values this tensor maps to.
+                    mlir::Value* m_value;
                 };
 
             private:
-                void build_module();
-                void lower_dialect();
+                void build_ng_dialect_module();
+                void lower_ng_dialect();
                 void optimize();
                 void bind_arguments();
                 void execute();
@@ -111,7 +116,19 @@ namespace ngraph
                 mlir::StaticFloatMemRef* allocate_memref_descriptor(mlir::Type type);
 
             private:
+                // Sub-graph to be compiled and executed with MLIR.
+                const ngraph::op::CompiledKernel* m_compiled_kernel;
+
+                // Pointers to externally allocated memory for sub-graph's input and output tensors.
+                const std::vector<void*>& m_external_tensors;
+
+                // Arguments for the MLIR function generated for the nGraph sub-graph.
+                llvm::SmallVector<void*, 8> m_invoke_args;
+
+                // MLIR context that holds all the MLIR information related to the sub-graph
+                // compilation.
                 mlir::MLIRContext m_context;
+
                 std::unique_ptr<mlir::Module> m_module;
                 std::unique_ptr<mlir::FuncBuilder> m_builder;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
@@ -121,13 +138,6 @@ namespace ngraph
                 using MLIRCompOpFunction =
                     std::function<mlir::Value*(MLIRCompiler& compiler, const ngraph::Node*)>;
                 using MLIRCompOpMap = std::unordered_map<std::type_index, MLIRCompOpFunction>;
-
-                // Sub-graph to be compiled and executed with MLIR.
-                const ngraph::op::CompiledKernel* m_compiled_kernel;
-
-                // Pointers to externally allocated memory for sub-graph's input and output tensors.
-                const std::vector<void*>& m_external_tensors;
-                llvm::SmallVector<void*, 8> m_invoke_args;
 
                 // Maps tensor to the value it represents in the IR
                 // use for MLIR dialect gen
