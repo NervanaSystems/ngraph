@@ -62,3 +62,36 @@ namespace ngraph
     /// Option may be enabled by setting the environment variable NGRAPH_SERIALIZER_OUTPUT_SHAPES
     void set_serialize_output_shapes(bool enable);
 }
+
+#ifndef NGRAPH_JSON_ENABLE
+// Rather than making every reference to the serializer conditionally compile here we just
+// provide some null stubs to resolve link issues
+std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent)
+{
+    return "";
+}
+
+void ngraph::serialize(const std::string& path,
+                       std::shared_ptr<ngraph::Function> func,
+                       size_t indent)
+{
+}
+
+void ngraph::serialize(std::ostream& out, std::shared_ptr<ngraph::Function> func, size_t indent)
+{
+}
+
+std::shared_ptr<ngraph::Function> ngraph::deserialize(std::istream& in)
+{
+    return std::make_shared<Function>(NodeVector{}, ParameterVector{});
+}
+
+std::shared_ptr<ngraph::Function> ngraph::deserialize(const std::string& str)
+{
+    return std::make_shared<Function>(NodeVector{}, ParameterVector{});
+}
+
+void ngraph::set_serialize_output_shapes(bool enable)
+{
+}
+#endif

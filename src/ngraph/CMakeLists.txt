@@ -403,8 +403,6 @@ set (SRC
     pass/reshape_elimination.hpp
     pass/reshape_sinking.cpp
     pass/reshape_sinking.hpp
-    pass/serialize.cpp
-    pass/serialize.hpp
     pass/shape_relevance.cpp
     pass/shape_relevance.hpp
     pass/validate_graph.cpp
