@@ -66,32 +66,35 @@ namespace ngraph
 #ifndef NGRAPH_JSON_ENABLE
 // Rather than making every reference to the serializer conditionally compile here we just
 // provide some null stubs to resolve link issues
-std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent)
+// The `inline` is so we don't get multiple definitions of function
+std::string inline ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent)
 {
     return "";
 }
 
-void ngraph::serialize(const std::string& path,
-                       std::shared_ptr<ngraph::Function> func,
-                       size_t indent)
+void inline ngraph::serialize(const std::string& path,
+                              std::shared_ptr<ngraph::Function> func,
+                              size_t indent)
 {
 }
 
-void ngraph::serialize(std::ostream& out, std::shared_ptr<ngraph::Function> func, size_t indent)
+void inline ngraph::serialize(std::ostream& out,
+                              std::shared_ptr<ngraph::Function> func,
+                              size_t indent)
 {
 }
 
-std::shared_ptr<ngraph::Function> ngraph::deserialize(std::istream& in)
-{
-    return std::make_shared<Function>(NodeVector{}, ParameterVector{});
-}
-
-std::shared_ptr<ngraph::Function> ngraph::deserialize(const std::string& str)
+std::shared_ptr<ngraph::Function> inline ngraph::deserialize(std::istream& in)
 {
     return std::make_shared<Function>(NodeVector{}, ParameterVector{});
 }
 
-void ngraph::set_serialize_output_shapes(bool enable)
+std::shared_ptr<ngraph::Function> inline ngraph::deserialize(const std::string& str)
+{
+    return std::make_shared<Function>(NodeVector{}, ParameterVector{});
+}
+
+void inline ngraph::set_serialize_output_shapes(bool enable)
 {
 }
 #endif
