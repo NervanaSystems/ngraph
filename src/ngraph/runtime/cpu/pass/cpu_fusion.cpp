@@ -1208,13 +1208,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 {
     Shape shape{1, 1, 2, 2};
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
-    //auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
+    auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
 
     int seed =1234;
     auto seed_label = std::make_shared<pattern::op::Label>(element::u32, Shape{0});
 
     double value = 0.9;// some number
-    auto value_const = ngraph::op::Constant::create(element::f32, Shape{}, {value}); // or f64 ?
+    auto value_const = ngraph::op::Constant::create(element::f32, Shape{1,1,2,2}, {value}); // or f64 ?
     auto value_label = std::make_shared<pattern::op::Label>(value_const);
 
     auto const1 = ngraph::op::Constant::create(x->get_element_type(), Shape{}, {1});
@@ -1226,13 +1226,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
                                                              x->get_element_type(),
                                                              seed,
                                                              value);
-    auto genmask_label = std::make_shared<pattern::op::Label>(genmask);
+    auto genmask_label = std::make_shared<pattern::op::Label>(genmask, nullptr, NodeVector{genmask});
 
-    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x); // TODO: how to check it works both ways x, gen_mask too ?
+    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x_label); // TODO: how to check it works both ways x, gen_mask too ?
 
     // Will this same fusion pattern work for 3D and 4D??
-    auto bcast = std::make_shared<ngraph::op::Broadcast>(value_label, x->get_shape(), AxisSet{0, 1, 2,3});
-    auto pdivide = std::make_shared<ngraph::op::Divide>(mult, bcast);
+    //auto bcast = std::make_shared<ngraph::op::Broadcast>(value_label, x->get_shape(), AxisSet{0, 1, 2,3});
+    auto pdivide = std::make_shared<ngraph::op::Divide>(mult, value_label);
 
     //----------
     auto callback = [x, const1_label, seed_label, value_label,
@@ -1265,56 +1265,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
         auto goe2 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 1);
         ngraph::replace_node(pattern_map[genmask_label], goe2);
 
-#if 0
-        for (auto genmask_user : pattern_map[genmask_label]->get_users())
-        {
-            std::cout << " get users of genmask_label\n";
-            if (std::dynamic_pointer_cast<op::Result>(genmask_user))
-            {
-                std::cout <<"  -- user of genmask is Result!\n";
-                // you can use this to change the input of a `result` node to a new node
-                auto genmask_result = std::dynamic_pointer_cast<op::Result>(genmask_user);
-
-                /*std::set<ngraph::descriptor::Input*> fop_users{
-                    begin(goe2->get_outputs().at(0).get_inputs()),
-                    end(goe2->get_outputs().at(0).get_inputs())};
-                for (auto input : fop_users)
-                {
-                    std::cout << " calling replace_output\n";
-                    //input.replace_output(dropout_n->get_outputs().at(1));
-                    input->replace_output(genmask_result->get_outputs().at(0));
-                }*/
-
-                int j = 0;
-                std::set<ngraph::descriptor::Input*> fop_users{
-                    begin(dropout_n->get_outputs().at(1).get_inputs()),
-                    end(dropout_n->get_outputs().at(1).get_inputs())};
-                for (auto input : fop_users)
-                {
-                    j++;
-                    if (j == 1) continue;
-                    std::cout << " calling replace_output\n";
-                    //input.replace_output(dropout_n->get_outputs().at(1));
-                    input->replace_output(genmask_result->get_outputs().at(0));
-                }
-
-            /*void add_input(Input* input);
-            void remove_input(Input* input);
-            const std::set<Input*>& get_inputs() const { return m_inputs; }
-            input->replace_output()*/
-
-
-                    //mask_from_dropout.replace_output(genmask_result, 0);
-
-                /*for (descriptor::Input& input : genmask_result->get_inputs())
-                {
-                    std::cout << " calling replace_output\n";
-                    //input.replace_output(dropout_n->get_outputs().at(1));
-                    input.replace_output(dropout_n, 1);
-                }*/
-            }
-        }
-#endif
         return true;
     };
 

@@ -78,18 +78,18 @@ namespace ngraph
                                     const double value)
                 {
                     auto& gen = rng_state->get_generator();
-                    auto& bd = rng_state->get_distribution();
+                    auto& dist = rng_state->get_distribution();
 
                     if (training)
                     {
                         double dropout_prob = 1 - value;
                         for (size_t i = 0; i < count; ++i)
                         {
-                            if (static_cast<T>(bd(gen)) < dropout_prob) {
+                            if (static_cast<T>(dist(gen)) < dropout_prob) {
                                 out1_mask[i] = 0;
                                 out0[i] = 0;
                             } else {
-                                out1_mask[i] = 1; 
+                                out1_mask[i] = 1;
                                 out0[i] = input[i] / static_cast<T>(value);
                             }
                         }

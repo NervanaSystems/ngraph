@@ -73,6 +73,7 @@ namespace ngraph
         virtual ~RNGUniformState() override {}
         std::minstd_rand& get_generator() { return m_generator; }
         std::uniform_real_distribution<float>& get_distribution() { return m_distribution; }
+        double get_probability() {return m_probability; } ;
     protected:
         double m_probability;
         unsigned int m_seed;

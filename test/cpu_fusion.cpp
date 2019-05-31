@@ -2931,7 +2931,7 @@ TEST(cpu_fusion, fuse_dropout)
     auto make_function = [](Shape input_shape, const unsigned int seed_val, float one_minus_prob, bool fuse ) {
         auto input = std::make_shared<op::Parameter>(element::f32, input_shape); // also test for f64??
         //auto seed = op::Constant::create(element::u32, Shape{0}, {seed_val});
-        auto value = op::Constant::create(element::f32, Shape{}, {one_minus_prob});
+        auto value = op::Constant::create(element::f32, input_shape, {one_minus_prob});
         auto const1 = op::Constant::create(input->get_element_type(), Shape{}, {1});
 
         auto gen_mask = std::make_shared<op::GenerateMask>(const1, 
@@ -2944,12 +2944,12 @@ TEST(cpu_fusion, fuse_dropout)
         auto mult = std::make_shared<op::Multiply>(gen_mask, input); // TODO: how to check it works both ways x, gen_mask too ?
 
 
-        auto bcast = std::make_shared<op::Broadcast>(value, input_shape, AxisSet{0, 1, 2, 3});
+        //auto bcast = std::make_shared<op::Broadcast>(value, input_shape, AxisSet{0, 1, 2, 3});
 
-        auto goe = std::make_shared<op::GetOutputElement>(bcast, 0);
+        auto goe = std::make_shared<op::GetOutputElement>(mult, 0);
 
-        auto pdivide = fuse ? std::make_shared<op::Divide>(mult, bcast):
-                              std::make_shared<op::Divide>(mult, goe);
+        auto pdivide = fuse ? std::make_shared<op::Divide>(mult, value):
+                              std::make_shared<op::Divide>(goe, value);
 
         auto f =make_shared<Function>(NodeVector{pdivide, gen_mask}, ParameterVector{input/*, const1, seed, value*/});
 
@@ -2965,6 +2965,7 @@ TEST(cpu_fusion, fuse_dropout)
         pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
         pass_manager.run_passes(fuse_func);
         ASSERT_EQ(count_ops_of_type<op::Dropout>(fuse_func), 1);
+        ASSERT_EQ(count_ops_of_type<op::GenerateMask>(fuse_func), 0);
         ASSERT_EQ(count_ops_of_type<op::Dropout>(nofuse_func), 0);
 
         std::cout << "Number of outputs of dropout = " << fuse_func->get_results().size() << "\n";
@@ -3000,6 +3001,7 @@ TEST(cpu_fusion, fuse_dropout)
 
 
         EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
+        EXPECT_TRUE(test::all_close(fuse_results.at(1), nofuse_results.at(1)));
     }
 }
 

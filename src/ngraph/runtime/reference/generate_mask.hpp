@@ -44,10 +44,11 @@ namespace ngraph
             {
                 auto& gen = rng_state->get_generator();
                 auto& bd = rng_state->get_distribution();
-
+                auto prob = rng_state->get_probability();
                 for (size_t i = 0; i < count; i++)
                 {
-                    out[i] = training ? static_cast<T>(bd(gen)) : static_cast<T>(1);
+                    auto mask_val = (bd(gen) < (1-prob)) ? 0 : 1;
+                    out[i] = training ? static_cast<T>(mask_val) : static_cast<T>(1);
                 }
             }
         }
