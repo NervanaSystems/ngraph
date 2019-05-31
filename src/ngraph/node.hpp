@@ -169,7 +169,7 @@ namespace ngraph
         /// graph against the graph.
         bool is_same_op_type(const std::shared_ptr<Node>& node) const
         {
-            return &description() == &node->description();
+            return description() == node->description();
         }
 
         /// \brief Marks an input as being relevant or irrelevant to the output shapes of this
@@ -521,7 +521,7 @@ namespace ngraph
         {
             return m_node->m_outputs.at(m_index).get_tensor();
         }
-        /// \return A reference to the tensor ptr for this output.
+        /// \return A shared point to the tensor ptr for this output.
         std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
         {
             return m_node->m_outputs.at(m_index).get_tensor_ptr();

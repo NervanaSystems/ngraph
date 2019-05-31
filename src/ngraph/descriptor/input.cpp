@@ -44,11 +44,7 @@ descriptor::Input::Input(Node* node, size_t index)
 
 descriptor::Input::~Input()
 {
-    if (nullptr != m_output)
-    {
-        m_output->remove_input(this);
-        m_output = nullptr;
-    }
+    remove_output();
 }
 
 void descriptor::Input::replace_output(Output& new_output)

@@ -62,7 +62,7 @@ Node::Node(const OutputVector& arguments, size_t output_size)
 
 Node::~Node()
 {
-    for (auto& input : m_inputs)
+    for (descriptor::Input& input : m_inputs)
     {
         if (input.has_output())
         {

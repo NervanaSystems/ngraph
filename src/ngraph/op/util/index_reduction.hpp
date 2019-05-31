@@ -33,9 +33,11 @@ namespace ngraph
             {
             protected:
                 IndexReduction();
+
                 IndexReduction(const Output<Node>& arg,
                                size_t axis,
                                const element::Type& index_element_type);
+
                 IndexReduction(const std::shared_ptr<Node>& arg,
                                size_t axis,
                                const element::Type& index_element_type);
