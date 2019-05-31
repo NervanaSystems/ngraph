@@ -235,8 +235,18 @@ namespace mlir
             // Multiply times element size
             return s * llvm::divideCeil(getElementType().getIntOrFloatBitWidth(), 8);
         }
+
+        /// Checks if two tensors are compatible. Compatible means:
+        /// Exactly same element types
+        /// Compatible shapes: see isCompatibleShape.
+        bool isCompatible(NGTensorType& other) const;
+
+        /// Check if Shapes are of same rank and  matching dimensions unless one of them is dynamic.
+        bool isCompatibleShape(NGTensorType& other) const;
+
         /// create a unique tensor type based on element type and shape.
         static NGTensorType get(mlir::MLIRContext* context, EltType eltType, Shape shape);
+
         /// for llvm RTTI
         static bool kindof(unsigned kind) { return kind == NGTypeKind::NG_TENSOR_TYPE_ID; }
     };

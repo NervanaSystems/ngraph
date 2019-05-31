@@ -34,20 +34,50 @@ using namespace mlir;
 // to Ops classes, we will add helper classes with static methods for each Op that needs it
 // Additional verification methods
 // Tensor type checks are already verified by the caller of these methods
+
+/// Checks if all operands and results are of compatible shapes
 template <typename T>
-static mlir::LogicalResult verifyUnaryArithOp(T* op)
+static mlir::LogicalResult verifyCompatibleOperandsAndResults(T* op, bool checkResult = true)
 {
-    // TODO: Check matching element types
+    mlir::Type t0 = op->getOperation()->getOperand(0)->getType();
+    mlir::NGTensorType opType0 = t0.cast<NGTensorType>();
+
+    Operation* opr = op->getOperation();
+    auto i = 0;
+    for (auto operand : opr->getOperands())
+    {
+        if (i == 0)
+            continue;
+        mlir::Type t = operand->getType();
+        mlir::NGTensorType opType = t.cast<NGTensorType>();
+        if (!opType.isCompatible(opType0))
+            return op->emitOpError("Incompatible operand shape");
+        i++;
+    }
+
+    if (checkResult)
+    {
+        for (auto result : opr->getResults())
+        {
+            mlir::Type t = result->getType();
+            mlir::NGTensorType resType = t.cast<NGTensorType>();
+            if (!resType.isCompatible(opType0))
+                return op->emitOpError("Incompatible operand shape");
+        }
+    }
     return mlir::success();
 }
 
-// Additional verification methods
-// Tensor type checks are already verified by the caller of these methods
+template <typename T>
+static mlir::LogicalResult verifyUnaryArithOp(T* op)
+{
+    return verifyCompatibleOperandsAndResults(op);
+}
+
 template <typename T>
 static mlir::LogicalResult verifyBinaryArithOp(T* op)
 {
-    // TODO: Check matching element types
-    return mlir::success();
+    return verifyCompatibleOperandsAndResults(op);
 }
 
 template <typename T>
@@ -59,13 +89,54 @@ static mlir::LogicalResult verifyOp(T* op)
 template <>
 mlir::LogicalResult verifyOp(NGDotOp* op)
 {
-    mlir::LogicalResult result = verifyBinaryArithOp(op);
+    // TODO(dcab): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGSelectOp* op)
+{
+    mlir::Type t0 = op->getOperation()->getOperand(0)->getType();
+    mlir::Type t1 = op->getOperation()->getOperand(1)->getType();
+    mlir::Type t2 = op->getOperation()->getOperand(2)->getType();
+    mlir::Type r0 = op->getOperation()->getResult(0)->getType();
+
+    NGTensorType opType0 = t0.cast<NGTensorType>();
+    NGTensorType opType1 = t1.cast<NGTensorType>();
+    NGTensorType opType2 = t2.cast<NGTensorType>();
+    NGTensorType resType = r0.cast<NGTensorType>();
+
+    // arg1 arg2 of same shape and elt type
+    if (!opType1.isCompatible(opType2))
+        return op->emitOpError("Incompatible operand shapes or types for select op");
+    // arg0 of same shape and elt type is bool
+    if (!opType0.isCompatibleShape(opType1) || !opType0.getElementType().isa<NGBoolType>())
+        return op->emitOpError("Incompatible shape for arg0 of select op");
+    // result is of same shape and elt type as arg1/2
+    if (!resType.isCompatible(opType1))
+        return op->emitOpError("Incompatible result shape or type for select op");
+
+    return mlir::success();
+}
+
+template <typename T>
+static mlir::LogicalResult verifyCmpOp(T* op)
+{
+    mlir::LogicalResult result = verifyCompatibleOperandsAndResults(op, false /*checkResult*/);
     if (failed(result))
     {
         return result;
     }
 
-    // TODO(dcab): Improve verification: proper shapes, etc.
+    mlir::Type t0 = op->getOperation()->getOperand(0)->getType();
+    mlir::NGTensorType opType0 = t0.cast<NGTensorType>();
+
+    mlir::Type r0 = op->getOperation()->getResult(0)->getType();
+    NGTensorType resType = r0.cast<NGTensorType>();
+
+    // result of same shape as input and has bool type
+    if (!resType.isCompatibleShape(opType0) || !resType.getElementType().isa<NGBoolType>())
+        return op->emitOpError("Incompatible result shape or type for comparison op");
 
     return mlir::success();
 }

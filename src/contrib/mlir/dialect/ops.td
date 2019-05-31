@@ -72,10 +72,9 @@ class NG_MemRefDef_Op<string mnemonic, list<OpTrait> traits = []> :
 class NG_ZeroResult_Op<string mnemonic, list<OpTrait> traits = []> :
       NG_Op<mnemonic, traits>, Results<(outs)> {}
 
-// Arithmetic binary operations
-// Input and outputs have same type
+// Base class for arithmetic unary operations without side effects.
 class NG_Unary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
-      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect, SameValueType], traits)>,
+      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
       Arguments<(ins NG_TensorType:$arg)>
 {
   // TODO: Implement
@@ -85,8 +84,17 @@ class NG_Unary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
 }
 
 // Base class for arithmetic binary operations without side effects.
-class NG_Binary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
+class NG_Binary_Op<string mnemonic, list<OpTrait> traits = []> :
       NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
+      Arguments<(ins NG_TensorType:$lhs, NG_TensorType:$rhs)>
+{
+  // TODO: Implement
+  let parser = [{ NGRAPH_FAIL() << "No parser support"; return mlir::failure(); }];
+}
+
+// Base class for arithmetic binary operations with verifier.
+class NG_Binary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
+      NG_OneResult_Op<mnemonic, traits>,
       Arguments<(ins NG_TensorType:$lhs, NG_TensorType:$rhs)>
 {
   // TODO: Implement
@@ -94,6 +102,27 @@ class NG_Binary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
 
   let verifier = [{ return verifyBinaryArithOp(this); }];
 }
+
+// Base class for comparison operations with verifier.
+class NG_Cmp_Op<string mnemonic, list<OpTrait> traits = []> :
+      NG_OneResult_Op<mnemonic, traits>,
+      Arguments<(ins NG_TensorType:$lhs, NG_TensorType:$rhs)>
+{
+  // TODO: Implement
+  let parser = [{ NGRAPH_FAIL() << "No parser support"; return mlir::failure(); }];
+
+  let verifier = [{ return verifyCmpOp(this); }];
+}
+
+// Base class for ternary operations without side effects.
+class NG_Ternary_Op<string mnemonic, list<OpTrait> traits = []> :
+      NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
+      Arguments<(ins NG_TensorType:$op0, NG_TensorType:$op1, NG_TensorType:$op2)>
+{
+  // TODO: Implement
+  let parser = [{ NGRAPH_FAIL() << "No parser support"; return mlir::failure(); }];
+}
+
 
 // Base class for terminator operations.
 class NG_Terminator_Op<string mnemonic, list<OpTrait> traits = []> :
@@ -122,28 +151,31 @@ def NGTanhOp     : NG_Unary_Arith_Op<"tanh">;
 def NGSqrtOp     : NG_Unary_Arith_Op<"sqrt">;
 
 // Binary Operations
-def NGAddOp : NG_Binary_Arith_Op<"add", [SameValueType, Commutative]>;
-def NGAndOp : NG_Binary_Arith_Op<"and", [SameValueType, Commutative]>;
-def NGSubOp : NG_Binary_Arith_Op<"sub", [SameValueType]>;
-def NGDivOp : NG_Binary_Arith_Op<"div", [SameValueType]>;
-def NGMaxOp : NG_Binary_Arith_Op<"max", [SameValueType, Commutative]>;
-def NGMinOp : NG_Binary_Arith_Op<"min", [SameValueType, Commutative]>;
-def NGMulOp : NG_Binary_Arith_Op<"mul", [SameValueType, Commutative]>;
-def NGPowOp : NG_Binary_Arith_Op<"pow", [SameValueType]>;
+def NGAddOp      : NG_Binary_Arith_Op<"add", [Commutative]>;
+def NGAndOp      : NG_Binary_Arith_Op<"and", [Commutative]>;
+def NGSubOp      : NG_Binary_Arith_Op<"sub">;
+def NGDivOp      : NG_Binary_Arith_Op<"div">;
+def NGMaxOp      : NG_Binary_Arith_Op<"max", [Commutative]>;
+def NGMinOp      : NG_Binary_Arith_Op<"min", [Commutative]>;
+def NGMulOp      : NG_Binary_Arith_Op<"mul", [Commutative]>;
+def NGPowOp      : NG_Binary_Arith_Op<"pow">;
 
 // Comparison
-def NGEqOp        : NG_OneResult_Op<"equal",      [NoSideEffect]>;
-def NGGreaterOp   : NG_OneResult_Op<"greater",    [NoSideEffect]>;
-def NGGreaterEqOp : NG_OneResult_Op<"greater.eq", [NoSideEffect]>;
-def NGLessOp      : NG_OneResult_Op<"less",       [NoSideEffect]>;
-def NGLessEqOp    : NG_OneResult_Op<"less.eq",    [NoSideEffect]>;
-def NGNotEqOp     : NG_OneResult_Op<"not.equal",  [NoSideEffect]>;
+def NGEqOp        : NG_Cmp_Op<"equal">;
+def NGGreaterOp   : NG_Cmp_Op<"greater">;
+def NGGreaterEqOp : NG_Cmp_Op<"greater.eq">;
+def NGLessOp      : NG_Cmp_Op<"less">;
+def NGLessEqOp    : NG_Cmp_Op<"less.eq">;
+def NGNotEqOp     : NG_Cmp_Op<"not.equal">;
 
 // Other
-def NGSelectOp    : NG_OneResult_Op<"select", [NoSideEffect]>;
+def NGSelectOp    : NG_Ternary_Op<"select">
+{
+  let verifier = [{ return verifyOp(this); }];
+}
 
-// Matrix Multiply
-def NGDotOp : NG_Binary_Arith_Op<"dot">
+// Dot Product
+def NGDotOp : NG_Binary_Op<"dot">
 {
   // TODO: Add reduction axis attribute when needed.
   let verifier = [{ return verifyOp(this); }];
