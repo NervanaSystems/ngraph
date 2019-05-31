@@ -40,6 +40,7 @@ namespace ngraph
 
                 auto out_shape = out[0].get_shape();
 
+                // keep it here in case we want to support scalar input in the future.
                 if (arg_rank == 0)
                 {
                     size_t repeats = shape_size(out_shape);
