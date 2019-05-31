@@ -226,7 +226,7 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                 auto fc = make_shared<runtime::hybrid::op::FunctionCall>(
                     cluster_outputs, function_call_inputs, *sub_function, backend_list[placement]);
                 fc->set_placement_index(0);
-                for (size_t i = 0; i < function_call_outputs.size(); i++)
+                for (size_t i = 0; i < cluster_outputs.size(); i++)
                 {
                     // First add a GetOutputElement to the ith output of the FunctionCall
                     auto goe = make_shared<ngraph::op::GetOutputElement>(fc, i);
