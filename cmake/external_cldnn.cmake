@@ -26,15 +26,6 @@ set(CLDNN_GIT_LABEL a05c9f29c5690a4beb9cd8c9f712cfb4399b2a6d)
 set(BOOST_VERSION 1.64.0)
 set(OUT_DIR ${EXTERNAL_PROJECTS_ROOT}/cldnn/out)
 
-if(NOT WIN32)
-    set(COMPILE_FLAGS -fPIC)
-endif()
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (DEFINED NGRAPH_USE_CXX_ABI)
-        set(COMPILE_FLAGS "${COMPILE_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
-    endif()
-endif()
-
 ExternalProject_Add(
     ext_cldnn
     PREFIX cldnn
@@ -48,10 +39,12 @@ ExternalProject_Add(
     CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
     CMAKE_ARGS
                 ${NGRAPH_FORWARD_CMAKE_ARGS}
+                -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                 # -DCLDNN__OUTPUT_DIR=out/Debug
                 -DCLDNN__BOOST_VERSION=${BOOST_VERSION}
-                -DCLDNN__INCLUDE_TESTS=FALSE
-                -DCLDNN__INCLUDE_TUTORIAL=FALSE
+                -DCLDNN__INCLUDE_TESTS=OFF
+                -DCLDNN__INCLUDE_CORE_INTERNAL_TESTS=OFF
+                -DCLDNN__INCLUDE_TUTORIAL=OFF
     EXCLUDE_FROM_ALL TRUE
     )
 
