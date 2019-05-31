@@ -86,12 +86,16 @@ void inline ngraph::serialize(std::ostream& out,
 
 std::shared_ptr<ngraph::Function> inline ngraph::deserialize(std::istream& in)
 {
-    return std::make_shared<Function>(NodeVector{}, ParameterVector{});
+    NodeVector nv;
+    ParameterVector pv;
+    return std::make_shared<Function>(nv, pv);
 }
 
 std::shared_ptr<ngraph::Function> inline ngraph::deserialize(const std::string& str)
 {
-    return std::make_shared<Function>(NodeVector{}, ParameterVector{});
+    NodeVector nv;
+    ParameterVector pv;
+    return std::make_shared<Function>(nv, pv);
 }
 
 void inline ngraph::set_serialize_output_shapes(bool enable)
