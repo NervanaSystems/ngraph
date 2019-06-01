@@ -1851,15 +1851,15 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ScatterAdd)
             {
-                if (args[0].get_element_type() != element::f64 &&
-                    args[0].get_element_type() != element::f32)
+                if (args[1].get_element_type() != element::i64 &&
+                    args[1].get_element_type() != element::i32)
                 {
-                    throw ngraph_error("Unsupported input element type");
+                    throw ngraph_error("Unsupported index element type");
                 }
 
                 writer.block_begin();
-                if (args[1].get_element_type() == element::i64 ||
-                    args[1].get_element_type() == element::i32)
+                if (args[0].get_element_type() == element::f64 ||
+                    args[0].get_element_type() == element::f32)
                 {
                     writer << "cpu::kernel::scatter_add<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
