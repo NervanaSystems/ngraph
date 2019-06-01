@@ -24,6 +24,10 @@
 using namespace std;
 using namespace ngraph;
 
+runtime::Executable::Executable()
+{
+}
+
 runtime::Executable::Executable(const shared_ptr<runtime::Backend>& backend)
     : m_backend{backend}
 {
