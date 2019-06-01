@@ -46,15 +46,19 @@ namespace ngraph
                 // Change 0 to 1 at those positions:
                 // For in_slice_dims, we only need to check the its shape[0] since its rank is always the rank of slice without leading 1s + 1.
                 // For updates_slice_dims, we need to check its shape[0], ..., shape[rank of indices - 1] if indices is not scalar.
-                template <typename ElementType, unsigned int Rank1, unsigned int Rank2>
-                void scatter_add_i64(void* inputs,
-                                     void* indices,
-                                     void* updates,
-                                     void* output,
-                                     const Shape& inputs_shape,
-                                     const Shape& indices_shape,
-                                     const Shape& updates_shape,
-                                     int arena)
+
+                template <typename ElementType,
+                          typename IndicesType,
+                          unsigned int Rank1,
+                          unsigned int Rank2>
+                void scatter_add(void* inputs,
+                                 void* indices,
+                                 void* updates,
+                                 void* output,
+                                 const Shape& inputs_shape,
+                                 const Shape& indices_shape,
+                                 const Shape& updates_shape,
+                                 int arena)
                 {
                     Eigen::array<Eigen::Index, Rank1> in_dims, in_slice_dims, in_indices;
                     Eigen::array<Eigen::Index, Rank2> updates_dims, updates_slice_dims,
@@ -85,7 +89,7 @@ namespace ngraph
                             arena)) = in;
                     }
 
-                    auto indices_ptr = static_cast<int64_t*>(indices);
+                    auto indices_ptr = static_cast<IndicesType*>(indices);
                     auto size = indices_shape.size();
                     if (size == 0)
                     {
@@ -137,6 +141,26 @@ namespace ngraph
                 }
 
                 template <typename ElementType, unsigned int Rank1, unsigned int Rank2>
+                void scatter_add_i64(void* inputs,
+                                     void* indices,
+                                     void* updates,
+                                     void* output,
+                                     const Shape& inputs_shape,
+                                     const Shape& indices_shape,
+                                     const Shape& updates_shape,
+                                     int arena)
+                {
+                    scatter_add<ElementType, int64_t, Rank1, Rank2>(inputs,
+                                                                    indices,
+                                                                    updates,
+                                                                    output,
+                                                                    inputs_shape,
+                                                                    indices_shape,
+                                                                    updates_shape,
+                                                                    arena);
+                }
+
+                template <typename ElementType, unsigned int Rank1, unsigned int Rank2>
                 void scatter_add_i32(void* inputs,
                                      void* indices,
                                      void* updates,
@@ -146,84 +170,14 @@ namespace ngraph
                                      const Shape& updates_shape,
                                      int arena)
                 {
-                    Eigen::array<Eigen::Index, Rank1> in_dims, in_slice_dims, in_indices;
-                    Eigen::array<Eigen::Index, Rank2> updates_dims, updates_slice_dims,
-                        updates_indices;
-
-                    for (int i = 0; i < Rank1; i++)
-                    {
-                        in_slice_dims[i] = in_dims[i] = inputs_shape[i];
-                        in_indices[i] = 0;
-                    }
-                    for (int i = 0; i < Rank2; i++)
-                    {
-                        updates_slice_dims[i] = updates_dims[i] = updates_shape[i];
-                        updates_indices[i] = 0;
-                    }
-
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank1, Eigen::RowMajor>> out(
-                        static_cast<ElementType*>(output), in_dims);
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank1, Eigen::RowMajor>> in(
-                        static_cast<ElementType*>(inputs), in_dims);
-                    Eigen::TensorMap<Eigen::Tensor<ElementType, Rank2, Eigen::RowMajor>> up(
-                        static_cast<ElementType*>(updates), updates_dims);
-
-                    // copy if not in place.
-                    if (inputs != output)
-                    {
-                        out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                            arena)) = in;
-                    }
-
-                    auto indices_ptr = static_cast<int32_t*>(indices);
-                    auto size = indices_shape.size();
-                    if (size == 0)
-                    {
-                        in_slice_dims[0] = in_indices[0] = indices_ptr[0];
-                        // change to 1 if 0.
-                        in_slice_dims[0] = in_slice_dims[0] == 0 ? 1 : in_slice_dims[0];
-                        out.slice(in_indices, in_slice_dims)
-                            .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                arena)) = out.slice(in_indices, in_slice_dims) +
-                                          up.slice(updates_indices, updates_slice_dims);
-                    }
-                    else
-                    {
-                        // This is used to calculate the leading indices for updates_indices and updates_slice_dims
-                        // when size > 1.
-                        std::vector<int> ele_counts(size);
-                        ele_counts[size - 1] = 0;
-                        if (size > 1)
-                        {
-                            ele_counts[size - 2] = indices_shape[size - 1];
-                        }
-                        for (int j = size - 3; j >= 0; j--)
-                        {
-                            ele_counts[j] = indices_shape[j + 2] * indices_shape[j + 1];
-                        }
-                        for (int i = 0; i < shape_size(indices_shape); i++)
-                        {
-                            in_slice_dims[0] = in_indices[0] = indices_ptr[i];
-                            int k = i;
-                            for (int j = 0; j < size - 1; j++)
-                            {
-                                updates_slice_dims[j] = updates_indices[j] = k / ele_counts[j];
-                                // change to 1 if 0.
-                                updates_slice_dims[j] =
-                                    updates_slice_dims[j] == 0 ? 1 : updates_slice_dims[j];
-                                k = k % ele_counts[j];
-                            }
-                            updates_indices[size - 1] = k;
-                            // change to 1 if 0.
-                            in_slice_dims[0] = in_slice_dims[0] == 0 ? 1 : in_slice_dims[0];
-                            updates_slice_dims[size - 1] = k == 0 ? 1 : k;
-
-                            out.slice(in_indices, in_slice_dims)
-                                .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                    arena)) = out.slice(in_indices, in_slice_dims) +
-                                              up.slice(updates_indices, updates_slice_dims);
-                        }
-                    }
+                    scatter_add<ElementType, int32_t, Rank1, Rank2>(inputs,
+                                                                    indices,
+                                                                    updates,
+                                                                    output,
+                                                                    inputs_shape,
+                                                                    indices_shape,
+                                                                    updates_shape,
+                                                                    arena);
                 }
             }
         }

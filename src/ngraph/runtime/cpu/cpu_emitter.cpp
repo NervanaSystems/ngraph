@@ -1851,12 +1851,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ScatterAdd)
             {
-                if (args[1].get_element_type() != element::i64 &&
-                    args[1].get_element_type() != element::i32)
-                {
-                    throw ngraph_error("Unsupported index element type");
-                }
-
                 if (args[0].get_element_type() != element::f64 &&
                     args[0].get_element_type() != element::f32)
                 {
@@ -1864,9 +1858,11 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                if (args[1].get_element_type() == element::i64)
+                if (args[1].get_element_type() == element::i64 ||
+                    args[1].get_element_type() == element::i32)
                 {
-                    writer << "cpu::kernel::scatter_add_i64<" << args[0].get_type() << ", "
+                    writer << "cpu::kernel::scatter_add<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ", "
                            << args[0].get_shape().size() << ", " << args[2].get_shape().size()
                            << ">(" << args[0].get_name() << ",\n";
                     writer << "                   " << args[1].get_name() << ",\n";
@@ -1879,16 +1875,16 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "cpu::kernel::scatter_add_i32<" << args[0].get_type() << ", "
-                           << args[0].get_shape().size() << ", " << args[2].get_shape().size()
-                           << ">(" << args[0].get_name() << ",\n";
+                    writer << "reference::scatter_add<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ">("
+                           << args[0].get_name() << ",\n";
                     writer << "                   " << args[1].get_name() << ",\n";
                     writer << "                   " << args[2].get_name() << ",\n";
                     writer << "                   " << out[0].get_name() << ",\n";
                     writer << "                   {" << join(args[0].get_shape()) << "},\n";
                     writer << "                   {" << join(args[1].get_shape()) << "},\n";
                     writer << "                   {" << join(args[2].get_shape()) << "},\n";
-                    writer << "                   0);\n";
+                    writer << "                   {" << join(out[0].get_shape()) << "});\n";
                 }
                 writer.block_end();
             }
