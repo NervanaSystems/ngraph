@@ -113,11 +113,11 @@ namespace ngraph
             virtual void copy_from(const ngraph::runtime::Tensor& source);
 
             /// \return Get the graph node for this tensor
-            std::shared_ptr<Node> get_source_node() { return m_parent_node; }
+            std::shared_ptr<Node> get_source_node() { return m_source_node; }
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
-            std::shared_ptr<Node> m_parent_node;
+            std::shared_ptr<Node> m_source_node;
         };
 
         using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;

@@ -51,7 +51,7 @@ shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t inde
         shared_ptr<op::Parameter> parameter = parameters[index];
         tensor = m_backend->create_tensor(
             parameter->get_element_type(), parameter->get_shape(), memory_pointer);
-        tensor->m_parent_node = parameter;
+        tensor->m_source_node = parameter;
     }
     else
     {
@@ -74,7 +74,7 @@ shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t ind
         shared_ptr<op::Result> result = results[index];
         tensor = m_backend->create_tensor(
             result->get_element_type(), result->get_shape(), memory_pointer);
-        tensor->m_parent_node = result;
+        tensor->m_source_node = result;
     }
     else
     {
