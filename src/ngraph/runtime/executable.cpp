@@ -36,11 +36,53 @@ runtime::Executable::~Executable()
 shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t index,
                                                                      void* memory_pointer)
 {
-    throw runtime_error("Unimplemented");
+    shared_ptr<runtime::Tensor> tensor;
+    if (m_backend)
+    {
+        const ParameterVector& parameters = get_parameters();
+        if (index >= parameters.size())
+        {
+            throw runtime_error("create_tensor for input out of bounds");
+        }
+        shared_ptr<op::Parameter> parameter = parameters[index];
+        tensor = m_backend->create_tensor(
+            parameter->get_element_type(), parameter->get_shape(), memory_pointer);
+    }
+    else
+    {
+        throw runtime_error("Backend does not support Executable::create_tensor");
+    }
+    return tensor;
 }
 
 shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t index,
                                                                       void* memory_pointer)
+{
+    shared_ptr<runtime::Tensor> tensor;
+    if (m_backend)
+    {
+        const ResultVector& results = get_results();
+        if (index >= results.size())
+        {
+            throw runtime_error("create_tensor for input out of bounds");
+        }
+        shared_ptr<op::Result> result = results[index];
+        tensor = m_backend->create_tensor(
+            result->get_element_type(), result->get_shape(), memory_pointer);
+    }
+    else
+    {
+        throw runtime_error("Backend does not support Executable::create_tensor");
+    }
+    return tensor;
+}
+
+shared_ptr<runtime::Tensor> runtime::Executable::create_tensor(const op::Parameter& parameter)
+{
+    throw runtime_error("Unimplemented");
+}
+
+shared_ptr<runtime::Tensor> runtime::Executable::create_tensor(const op::Result& result)
 {
     throw runtime_error("Unimplemented");
 }

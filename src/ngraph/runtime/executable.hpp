@@ -49,6 +49,8 @@ public:
                                                                  void* memory_pointer = nullptr);
     virtual std::shared_ptr<runtime::Tensor> create_output_tensor(size_t index,
                                                                   void* memory_pointer = nullptr);
+    virtual std::shared_ptr<runtime::Tensor> create_tensor(const op::Parameter& parameter);
+    virtual std::shared_ptr<runtime::Tensor> create_tensor(const op::Result& result);
 
     /// \param outputs vector of runtime::Tensor used as outputs
     /// \param inputs vector of runtime::Tensor used as inputs
