@@ -35,8 +35,11 @@ namespace ngraph
 
     namespace runtime
     {
+        class Executable;
         class Tensor
         {
+            friend class runtime::Executable;
+
         protected:
             Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
                 : m_descriptor(descriptor)
@@ -109,9 +112,12 @@ namespace ngraph
             /// \param source The source tensor
             virtual void copy_from(const ngraph::runtime::Tensor& source);
 
+            /// \return Get the graph node for this tensor
+            std::shared_ptr<Node> get_source_node() { return m_parent_node; }
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
+            std::shared_ptr<Node> m_parent_node;
         };
 
         using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
