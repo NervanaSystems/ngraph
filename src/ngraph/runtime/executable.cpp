@@ -77,14 +77,27 @@ shared_ptr<runtime::Tensor> runtime::Executable::create_output_tensor(size_t ind
     return tensor;
 }
 
-shared_ptr<runtime::Tensor> runtime::Executable::create_tensor(const op::Parameter& parameter)
+shared_ptr<runtime::Tensor>
+    runtime::Executable::create_parameter_tensor(const op::Parameter& parameter)
 {
     throw runtime_error("Unimplemented");
 }
 
-shared_ptr<runtime::Tensor> runtime::Executable::create_tensor(const op::Result& result)
+shared_ptr<runtime::Tensor> runtime::Executable::create_result_tensor(const Node& result)
 {
     throw runtime_error("Unimplemented");
+}
+
+shared_ptr<runtime::Tensor>
+    runtime::Executable::create_parameter_tensor(const shared_ptr<op::Parameter>& parameter)
+{
+    return create_parameter_tensor(*parameter);
+}
+
+shared_ptr<runtime::Tensor>
+    runtime::Executable::create_result_tensor(const shared_ptr<Node>& result)
+{
+    return create_result_tensor(*result);
 }
 
 bool runtime::Executable::call_with_validate(const vector<shared_ptr<runtime::Tensor>>& outputs,
