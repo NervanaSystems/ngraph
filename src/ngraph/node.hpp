@@ -109,8 +109,6 @@ namespace ngraph
         void validate_and_infer_elementwise_logical(
             const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
 
-        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
-
         /// \brief Construct an unitialized Node
         Node() {}
         /// \brief Construct an unitialized Node
@@ -118,16 +116,20 @@ namespace ngraph
         Node(size_t output_size);
 
         /// \brief Constructor for Node subclasses that have metaclasses.
-        /// \param arguments The 0th output of node i will connect to input i
-        /// \param output_size Number of outputs for this node
-        Node(const NodeVector& arguments, size_t output_size = 1);
-
-        /// \brief Constructor for Node subclasses that have metaclasses.
         /// \param arguments Output i will connect to input i
         /// \param output_size Number of outputs for this node
         Node(const OutputVector& arguments, size_t output_size = 1);
 
+        /// \brief Construct a node with arguments. Will be deprecated.
+        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
+
+        /// \brief Constructor for Node subclasses that have metaclasses. Will be deprecated.
+        /// \param arguments The 0th output of node i will connect to input i
+        /// \param output_size Number of outputs for this node
+        Node(const NodeVector& arguments, size_t output_size = 1);
+
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
+        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
@@ -135,7 +137,9 @@ namespace ngraph
 
         /// Sets/replaces the arguments with new arguments.
         void set_arguments(const NodeVector& arguments);
+        /// Sets/replaces the arguments with new arguments.
         void set_arguments(const OutputVector& arguments);
+        /// Sets/replaces the arguments with new arguments.
         void set_argument(size_t position, const Output<Node>& argument);
 
         /// Sets the number of outputs
@@ -312,10 +316,11 @@ namespace ngraph
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
+        // Will be deprecated
         virtual NodeVector get_arguments() const;
-
+        // Will be deprecated
         std::shared_ptr<Node> get_argument(size_t index) const;
-
+        // Will be replaced with an OutputVector version
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
         virtual std::vector<std::shared_ptr<Function>> get_functions() const;

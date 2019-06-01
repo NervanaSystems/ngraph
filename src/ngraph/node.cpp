@@ -66,6 +66,7 @@ Node::~Node()
     {
         if (input.has_output())
         {
+            // This test adds 1 to the actual count, so a count of 2 means this input is the only reference to the node.
             if (input.get_output().get_node().use_count() == 2)
             {
                 // Don't want to trigger a deep recursive delete
@@ -85,9 +86,11 @@ void Node::safe_delete(NodeVector& nodes, bool recurse)
     {
         if (input.has_output())
         {
+            // This test adds 1 to the actual count, so a count of 2 means this input is the only reference to the node.
             auto node = input.get_output().get_node();
             if (node.use_count() == 2)
             {
+                // Move the node from the input to nodes so we don't trigger a deep recursive delete
                 nodes.push_back(node);
             }
             input.remove_output();
