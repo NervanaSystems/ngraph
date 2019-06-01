@@ -163,7 +163,8 @@ class ngraph::runtime::interpreter::INTExecutable : public Executable
     friend class INTBackend;
 
 public:
-    INTExecutable(const std::shared_ptr<Function>& function,
+    INTExecutable(const std::shared_ptr<Backend>& backend,
+                  const std::shared_ptr<Function>& function,
                   bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
@@ -176,7 +177,7 @@ public:
     std::vector<PerformanceCounter> get_performance_data() const override;
 
 private:
-    INTExecutable(const std::string& model_string);
+    INTExecutable(const std::shared_ptr<Backend>& backend, const std::string& model_string);
 
     int get_alignment() const { return 64; }
     bool m_is_compiled = false;

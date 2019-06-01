@@ -67,7 +67,7 @@ shared_ptr<runtime::Executable>
     runtime::interpreter::INTBackend::compile(shared_ptr<Function> function,
                                               bool enable_performance_collection)
 {
-    return make_shared<INTExecutable>(function, enable_performance_collection);
+    return make_shared<INTExecutable>(shared_from_this(), function, enable_performance_collection);
 }
 
 bool runtime::interpreter::INTBackend::is_supported(const Node& node) const
@@ -98,7 +98,8 @@ std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istr
             {
                 vector<char> buffer = reader.read(info);
                 string model_string = string(buffer.data(), buffer.size());
-                exec = shared_ptr<INTExecutable>(new INTExecutable(model_string));
+                exec =
+                    shared_ptr<INTExecutable>(new INTExecutable(shared_from_this(), model_string));
                 break;
             }
         }

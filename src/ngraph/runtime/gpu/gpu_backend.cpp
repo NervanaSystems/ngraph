@@ -135,15 +135,17 @@ shared_ptr<runtime::Executable> runtime::gpu::GPU_Backend::compile(shared_ptr<Fu
     }
     else
     {
-        rc = make_shared<GPU_Executable>(func, timing_enable);
+        rc = make_shared<GPU_Executable>(shared_from_this(), func, timing_enable);
         m_exec_map.insert({func, rc});
     }
     return rc;
 }
 
-runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Function> func, bool enable_timing)
-    : m_context(new GPU_Backend::BackendContext())
-
+runtime::gpu::GPU_Executable::GPU_Executable(shared_ptr<Backend> backend,
+                                             shared_ptr<Function> func,
+                                             bool enable_timing)
+    : Executable(backend)
+    , m_context(new GPU_Backend::BackendContext())
 {
     FunctionInstance& instance = m_function_instance;
     if (instance.m_compiled_function == nullptr)

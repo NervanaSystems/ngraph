@@ -68,13 +68,14 @@ static string convert_cldnn_names(shared_ptr<Function> func, const string& cldnn
     return result;
 }
 
-runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Function> func,
+runtime::intelgpu::IntelGPUExecutable::IntelGPUExecutable(shared_ptr<Backend> backend, shared_ptr<Function> func,
                                                           shared_ptr<cldnn::network> network,
                                                           bool enable_timing,
                                                           bool enable_profile,
                                                           double compilation_time,
                                                           double consumed_memory,
                                                           size_t profile_lines_limit_count)
+                                                          :Executable(backend)
 {
     m_function = func;
     m_cldnn_network = network;

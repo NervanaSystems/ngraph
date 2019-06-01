@@ -98,15 +98,18 @@ shared_ptr<runtime::Executable>
     }
     else
     {
-        rc = make_shared<CPU_Executable>(func, pass_config, performance_counters_enabled);
+        rc = make_shared<CPU_Executable>(
+            shared_from_this(), func, pass_config, performance_counters_enabled);
         m_exec_map.insert({func, rc});
     }
     return rc;
 }
 
-runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
+runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Backend> backend,
+                                             shared_ptr<Function> func,
                                              ngraph::pass::PassConfig& pass_config,
                                              bool performance_counters_enabled)
+    : Executable(backend)
 {
     FunctionInstance& instance = m_function_instance;
     if (instance.m_external_function == nullptr)

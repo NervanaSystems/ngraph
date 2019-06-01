@@ -34,7 +34,8 @@ namespace ngraph
 class ngraph::runtime::intelgpu::IntelGPUExecutable : public runtime::Executable
 {
 public:
-    IntelGPUExecutable(std::shared_ptr<Function> func,
+    IntelGPUExecutable(std::share_ptr<Backend> backend,
+                       std::shared_ptr<Function> func,
                        std::shared_ptr<cldnn::network> network,
                        bool enable_timing,
                        bool enable_profile,

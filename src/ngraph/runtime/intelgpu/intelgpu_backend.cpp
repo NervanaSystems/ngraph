@@ -2127,7 +2127,7 @@ shared_ptr<runtime::Executable>
         consumed_memory = runtime::intelgpu::get_max_memory_rss() - consumed_memory;
     }
 
-    rc = make_shared<IntelGPUExecutable>(func,
+    rc = make_shared<IntelGPUExecutable>(shared_from_this(), func,
                                          cldnn_network,
                                          enable_timing,
                                          m_profile_enable,

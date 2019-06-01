@@ -61,7 +61,8 @@ shared_ptr<runtime::Executable>
 runtime::dynamic::DynamicExecutable::DynamicExecutable(shared_ptr<Function> wrapped_function,
                                                        shared_ptr<runtime::Backend> wrapped_backend,
                                                        bool enable_performance_collection)
-    : m_wrapped_function(wrapped_function)
+    : Executable(wrapped_backend)
+    , m_wrapped_function(wrapped_function)
     , m_wrapped_backend(wrapped_backend)
     , m_enable_performance_collection(enable_performance_collection)
 {

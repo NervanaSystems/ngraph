@@ -37,9 +37,11 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
+runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Backend>& backend,
+                                                   const shared_ptr<Function>& function,
                                                    bool enable_performance_collection)
-    : m_is_compiled{true}
+    : Executable{backend}
+    , m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
     m_function = clone_function(*function);
@@ -57,8 +59,10 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     set_parameters_and_results(*m_function);
 }
 
-runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_string)
-    : m_is_compiled{true}
+runtime::interpreter::INTExecutable::INTExecutable(const std::shared_ptr<Backend>& backend,
+                                                   const std::string& model_string)
+    : Executable{backend}
+    , m_is_compiled{true}
     , m_performance_counters_enabled{false}
 {
     m_function = deserialize(model_string);

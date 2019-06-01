@@ -70,7 +70,8 @@ namespace ngraph
             class CPU_BACKEND_API CPU_Executable : public runtime::Executable
             {
             public:
-                CPU_Executable(std::shared_ptr<Function> func,
+                CPU_Executable(std::shared_ptr<Backend> backend,
+                               std::shared_ptr<Function> func,
                                ngraph::pass::PassConfig& pass_config,
                                bool performance_counters_enabled);
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
