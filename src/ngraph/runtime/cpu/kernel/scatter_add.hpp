@@ -97,29 +97,16 @@ namespace ngraph
                                 arena)) = out.slice(in_indices, in_slice_dims) +
                                           up.slice(updates_indices, updates_slice_dims);
                     }
-                    else if (size == 1)
-                    {
-                        for (int i = 0; i < shape_size(indices_shape); i++)
-                        {
-                            in_slice_dims[0] = in_indices[0] = indices_ptr[i];
-                            // change to 1 if 0.
-                            in_slice_dims[0] = in_slice_dims[0] == 0 ? 1 : in_slice_dims[0];
-                            updates_slice_dims[0] = updates_indices[0] = i;
-                            // change to 1 if 0.
-                            updates_slice_dims[0] =
-                                updates_slice_dims[0] == 0 ? 1 : updates_slice_dims[0];
-                            out.slice(in_indices, in_slice_dims)
-                                .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                    arena)) = out.slice(in_indices, in_slice_dims) +
-                                              up.slice(updates_indices, updates_slice_dims);
-                        }
-                    }
                     else
                     {
-                        // This is used to calculate the leading indices for updates_indices and updates_slice_dims.
+                        // This is used to calculate the leading indices for updates_indices and updates_slice_dims
+                        // when size > 1.
                         std::vector<int> ele_counts(size);
                         ele_counts[size - 1] = 0;
-                        ele_counts[size - 2] = indices_shape[size - 1];
+                        if (size > 1)
+                        {
+                            ele_counts[size - 2] = indices_shape[size - 1];
+                        }
                         for (int j = size - 3; j >= 0; j--)
                         {
                             ele_counts[j] = indices_shape[j + 2] * indices_shape[j + 1];
@@ -200,29 +187,16 @@ namespace ngraph
                                 arena)) = out.slice(in_indices, in_slice_dims) +
                                           up.slice(updates_indices, updates_slice_dims);
                     }
-                    else if (size == 1)
-                    {
-                        for (int i = 0; i < shape_size(indices_shape); i++)
-                        {
-                            in_slice_dims[0] = in_indices[0] = indices_ptr[i];
-                            // change to 1 if 0.
-                            in_slice_dims[0] = in_slice_dims[0] == 0 ? 1 : in_slice_dims[0];
-                            updates_slice_dims[0] = updates_indices[0] = i;
-                            // change to 1 if 0.
-                            updates_slice_dims[0] =
-                                updates_slice_dims[0] == 0 ? 1 : updates_slice_dims[0];
-                            out.slice(in_indices, in_slice_dims)
-                                .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                    arena)) = out.slice(in_indices, in_slice_dims) +
-                                              up.slice(updates_indices, updates_slice_dims);
-                        }
-                    }
                     else
                     {
-                        // This is used to calculate the leading indices for updates_indices and updates_slice_dims.
+                        // This is used to calculate the leading indices for updates_indices and updates_slice_dims
+                        // when size > 1.
                         std::vector<int> ele_counts(size);
                         ele_counts[size - 1] = 0;
-                        ele_counts[size - 2] = indices_shape[size - 1];
+                        if (size > 1)
+                        {
+                            ele_counts[size - 2] = indices_shape[size - 1];
+                        }
                         for (int j = size - 3; j >= 0; j--)
                         {
                             ele_counts[j] = indices_shape[j + 2] * indices_shape[j + 1];
