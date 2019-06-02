@@ -40,14 +40,16 @@ namespace ngraph
                                       bool training,
                                       const double value)
                 {
-                    auto& gen = rng_state->get_generator();
-                    auto& dist = rng_state->get_distribution();
 
                     if (training)
                     {
                         double dropout_prob = 1 - value;
+                        //#pragma omp parallel for
                         for (size_t i = 0; i < count; ++i)
                         {
+                            auto& gen = rng_state->get_generator();
+                            auto& dist = rng_state->get_distribution();
+
                             if (static_cast<T>(dist(gen)) < dropout_prob)
                             {
                                 out1_mask[i] = 0;
@@ -62,9 +64,10 @@ namespace ngraph
                     }
                     else
                     {
-                        // this is inference, so, no need for mask output is not needed
+                        // this is inference, ideally it should be optimized earlier
                         for (size_t i = 0; i < count; i++)
                         {
+                            out1_mask[i] = 1;
                             out0[i] = static_cast<T>(1);
                         }
                     }

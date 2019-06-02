@@ -37,6 +37,7 @@ namespace ngraph
                 CPUKernelFunctor functor;
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto out1_buffer_index = external_function->get_buffer_index(out[1].get_name());
 
@@ -55,13 +56,13 @@ namespace ngraph
                                index,
                                element_count,
                                arg_buffer_index,
+                               arg1_buffer_index,
                                out0_buffer_index,
                                out1_buffer_index,
                                in_shape,
                                value](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        bool training = true; //TODO:
-                        /*bool training = static_cast<bool>( 
-                            static_cast<float*>(ctx->buffer_data[arg_buffer_index])[0]);*/
+                        bool training = static_cast<bool>( 
+                            static_cast<float*>(ctx->buffer_data[arg1_buffer_index])[0]);
 
                         runtime::cpu::kernel::generate_dropout(
                             static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
@@ -80,13 +81,13 @@ namespace ngraph
                                index,
                                element_count,
                                arg_buffer_index,
+                               arg1_buffer_index,
                                out0_buffer_index,
                                out1_buffer_index,
                                in_shape,
                                value](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        bool training = true;
-                        /*bool training = static_cast<bool>(
-                            static_cast<double*>(ctx->buffer_data[arg_buffer_index])[0]);*/
+                        bool training = static_cast<bool>(
+                            static_cast<double*>(ctx->buffer_data[arg1_buffer_index])[0]);
                         runtime::cpu::kernel::generate_dropout(
                             static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
                             static_cast<double*>(ctx->buffer_data[out0_buffer_index]),

@@ -917,8 +917,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
     this->add_matcher(m, callback);
 }
 
+// This fuses the dropout pattern for training when upscale_in_train = true
+// for inference with upscale_in_train = true, there should be a dropout as out = input
+// for inference with upscale_in_train = false, then it is just multiply
 void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 {
+
     Shape shape{1, 1, 2, 2};
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
@@ -927,8 +931,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto seed_label = std::make_shared<pattern::op::Label>(element::u32, Shape{0});
 
     double value = 0.9; // some number
-    auto value_const =
-        ngraph::op::Constant::create(element::f32, Shape{1, 1, 2, 2}, {value}); // or f64 ?
+    auto value_const = ngraph::op::Constant::create(element::f32, Shape{1, 1, 2, 2}, {value});
     auto value_label = std::make_shared<pattern::op::Label>(value_const);
 
     auto const1 = ngraph::op::Constant::create(x->get_element_type(), Shape{}, {1});
@@ -948,21 +951,31 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto callback = [x, const1_label, seed_label, value_label, genmask_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_dropout against "
                      << m.get_match_root()->get_name();
-        //std::cout << "in callback for construct_dropout, name = " << m.get_match_root()->get_name() << "\n";
         auto pattern_map = m.get_pattern_map();
 
         auto m_div = std::static_pointer_cast<ngraph::op::Divide>(m.get_match_root());
 
         auto gm = std::static_pointer_cast<ngraph::op::GenerateMask>(pattern_map[genmask_label]);
+
+        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(gm->get_argument(0)))
+        {
+            NGRAPH_DEBUG << "training argument to GenerateMask must be constant";
+            std::cout << "training argument to GenerateMask must be constant\n";
+            return false;
+        }
+
         auto temp_val = gm->get_probability();
         auto temp_seed = gm->get_seed();
         //std::cout << "got value %f" << temp_val << "\n";
         //std::cout << "got seed %d" << temp_seed <<"\n";
 
+
+        auto training = gm->get_argument(0); //for training purpose this is always going to be 1
+
         //std::cout << " replacing the node\n";
         // Check for rank 3D or 4D for now
-        auto dropout_n = std::make_shared<ngraph::op::Dropout>(pattern_map[x], // Input Node of f32
-                                                               1,
+        auto dropout_n = std::make_shared<ngraph::op::Dropout>(pattern_map[x],
+                                                               training,
                                                                temp_seed,
                                                                temp_val);
         auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 0);
