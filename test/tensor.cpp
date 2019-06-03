@@ -123,12 +123,28 @@ TEST(tensor, output_flag)
     }
 }
 
-TEST(tensor, copy_from)
+TEST(tensor, copy_from_interpreter_to_cpu)
 {
+    // This test the copying of data between the tensor's having
+    // CPUtensorview and no CPUtensorview
     auto backend = runtime::Backend::create("CPU");
-    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto backend_ref = runtime::Backend::create("INTERPRETER");
+    auto a = backend_ref->create_tensor(element::f32, Shape{2, 3});
     auto b = backend->create_tensor(element::f32, Shape{2, 3});
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(tensor, copy_from_same_layout)
+{
+    // this test copying of data between two tensor having same
+    // layout
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{6});
+    auto b = backend->create_tensor(element::f32, Shape{6});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    copy_data(b, vector<float>{0, 0, 0, 0, 0, 0});
     b->copy_from(*a);
     ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
 }
