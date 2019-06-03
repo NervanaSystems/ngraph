@@ -112,7 +112,7 @@ namespace
                                                 "Error lowering dialect\n");
             signalPassFailure();
         }
-    
+
         processFakeInstrs();
     }
 

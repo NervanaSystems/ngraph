@@ -143,7 +143,6 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     dump_mlir_module("nGraph Dialect Dump:");
-
 }
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
