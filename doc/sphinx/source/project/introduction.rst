@@ -1,4 +1,4 @@
-.. project/introduction,rst:
+.. project/introduction.rst:
 
 #######
 Summary
