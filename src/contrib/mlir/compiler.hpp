@@ -114,6 +114,9 @@ namespace ngraph
                 /// Helper to allocate a mem ref object. Handles static shapes only for now.
                 mlir::StaticFloatMemRef* allocate_memref_descriptor(mlir::Type type);
 
+                /// Helper to dump MLIR module into llvm::dbgs prepended by the message \p msg.
+                void dump_mlir_module(const std::string msg);
+
             private:
                 // Sub-graph to be compiled and executed with MLIR.
                 const ngraph::op::CompiledKernel* m_compiled_kernel;
