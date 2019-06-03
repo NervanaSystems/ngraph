@@ -15,8 +15,9 @@ each of these briefly to get started.
 A framework bridge interfaces with the "frontend" Core API. A framework bridge 
 is a component that sits between a framework like TensorFlow or MXNet, and the
 nGraph Core frontend API. A framework bridge does two things: first, it 
-translates a framework's operations into graphs in nGraph’s in-memory :abbr:`Intermediary Representation (IR)`. Second, it executes the nGraph IR graphs via 
-the backend execution interface.
+translates a framework's operations into graphs in nGraph’s in-memory 
+:abbr:`Intermediary Representation (IR)`. Second, it executes the nGraph IR 
+graphs via the backend execution interface.
 
 The details of bridge implementation vary from framework to framework, but there 
 are some common patterns: a fairly typical example for a graph-based framework 
@@ -59,7 +60,6 @@ descriptions:
 .. csv-table::
    :header: "Namespace", "Description", "Location in Repo", "Docs"
    :widths: 23, 53, 13, 23
-   :escape: ~
 
    ``ngraph``, The Intel nGraph C++ API, `ngraph`_, Implicit namespace omitted from most API documentation
    ``builder``, "Convenience functions that create additional graph nodes to implement commonly-used recipes; for example, auto-broadcast", `builder`_, Coming Soon

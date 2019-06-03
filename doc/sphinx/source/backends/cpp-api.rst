@@ -1,4 +1,4 @@
-.. backend-support/cpp-api.rst:
+.. backends/cpp-api.rst:
 
 Backend APIs 
 ############
