@@ -49,15 +49,14 @@ namespace ngraph
 
                 for (const TensorViewWrapper& result : out)
                 {
-                    auto buffer_index = external_function->get_buffer_index(result.get_name()); 
+                    auto buffer_index = external_function->get_buffer_index(result.get_name());
                     buffer_indices.push_back(buffer_index);
                 }
 
                 // Create functor that will be executed to compile and run this CompiledKernel.
                 // Note that 'double_ptr_args' must be captured by value since it's a local var.
                 auto functor = [node, buffer_indices](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
-
+                                                      CPUExecutionContext* ectx) {
 
                     // MLIR requires a list of type-erased pointer to arguments. Tensors must have
                     // been allocated at this point so we can get rid of the extra reference.

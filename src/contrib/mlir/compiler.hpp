@@ -68,7 +68,6 @@ namespace ngraph
 
                 /// Returns the memory manager used by this sub-graph compiler.
                 MLIRMemMgr& get_mem_mgr() { return m_mem_mgr; }
-
                 /// Returns memory manager pointer argument ID in call interface.
                 unsigned get_mem_mgr_arg_id(mlir::Function* func)
                 {

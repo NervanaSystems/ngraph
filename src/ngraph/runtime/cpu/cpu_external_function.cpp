@@ -192,7 +192,6 @@
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
 #include "ngraph/runtime/cpu/pass/halide_subgraph_extraction.hpp"
 
-
 using namespace std;
 using namespace ngraph;
 
