@@ -21,7 +21,7 @@ to a system location.
 
 .. code-block:: console
    
-   pip install -U tensorflow==1.13.1
+   pip install -U tensorflow==1.14.1
    pip install -U ngraph-tensorflow-bridge
 
 That's it!  Now you can test the installation by running the following command:
@@ -93,22 +93,39 @@ the script above with the ``--use_prebuilt_tensorflow`` option doesn't work.
 
       git clone https://github.com/tensorflow/ngraph-bridge.git
       cd ngraph-bridge
+      git checkout v0.14.0
+      cd ../
 
-#. The script we need to run assumes you're running the ``pip`` implementation 
-   of ``virtualenv``, on Python3.5 or greater.  The quickest way to get this on 
-   your system is:
-
-   .. code-block:: console
-
-      python3 -m pip install virtualenv==16.0.0 --user
-
-
-#. Run the script 
+#. Install Bazel v `0.24.1`; Bazel is a TensorFlow dependency:
 
    .. code-block:: console
 
-      python3 build_ngtf.py
+      wget https://github.com/bazelbuild/bazel/releases/download/0.24.0/bazel-0.24.0-installer-linux-x86_64.sh      
+      chmod +x bazel-0.24.0-installer-linux-x86_64.sh
+      ./bazel-0.24.0-installer-linux-x86_64.sh --user
+      export PATH=$PATH:~/bin
+      source ~/.bashrc 
 
+#. Once the build finishes, a new virtualenv directory is created in the build_cmake/venv-tf-py3. The build 
+   artifact ``ngraph_tensorflow_bridge-<VERSION>-py2.py3-none-manylinux1_x86_64.whl`` is created in the 
+   ``build_cmake/artifacts`` directory. You can test the installation by running the following command:
+
+   .. code-block:: console
+
+      python3 test_ngtf.py
+
+   This command will run all the C++ and python unit tests from the ngraph-bridge source tree; it also 
+   runs various TensorFlow Python tests using nGraph.
+
+   .. code-block:: console
+
+      python3 test_ngtf.py
+
+   To use the ngraph-tensorflow bridge, activate this virtual environment to start using nGraph with TensorFlow.
+
+   .. code-block:: console
+
+      source build_cmake/venv-tf-py3/bin/activate
 
 
 
