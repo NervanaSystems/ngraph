@@ -204,6 +204,73 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
+#define SELECT_RANK1(KV, ET, R1, R2, K)                                                            \
+    if (R1 == 1)                                                                                   \
+        KV = K<ET, 1, R2>;                                                                         \
+    else if (R1 == 2)                                                                              \
+        KV = K<ET, 2, R2>;                                                                         \
+    else if (R1 == 3)                                                                              \
+        KV = K<ET, 3, R2>;                                                                         \
+    else if (R1 == 4)                                                                              \
+        KV = K<ET, 4, R2>;                                                                         \
+    else if (R1 == 5)                                                                              \
+        KV = K<ET, 5, R2>;                                                                         \
+    else if (R1 == 6)                                                                              \
+        KV = K<ET, 6, R2>;                                                                         \
+    else if (R1 == 7)                                                                              \
+        KV = K<ET, 7, R2>;                                                                         \
+    else                                                                                           \
+        throw ngraph_error("Unsupported first rank " + std::to_string(R1) + " for kernel " #K);
+
+#define SELECT_2RANKS(KV, ET, R1, R2, K)                                                           \
+    if (R2 == 1)                                                                                   \
+    {                                                                                              \
+        SELECT_RANK1(KV, ET, R1, 1, K);                                                            \
+    }                                                                                              \
+    else if (R2 == 2)                                                                              \
+    {                                                                                              \
+        SELECT_RANK1(KV, ET, R1, 2, K);                                                            \
+    }                                                                                              \
+    else if (R2 == 3)                                                                              \
+    {                                                                                              \
+        SELECT_RANK1(KV, ET, R1, 3, K);                                                            \
+    }                                                                                              \
+    else if (R2 == 4)                                                                              \
+    {                                                                                              \
+        SELECT_RANK1(KV, ET, R1, 4, K);                                                            \
+    }                                                                                              \
+    else if (R2 == 5)                                                                              \
+    {                                                                                              \
+        SELECT_RANK1(KV, ET, R1, 5, K);                                                            \
+    }                                                                                              \
+    else if (R2 == 6)                                                                              \
+    {                                                                                              \
+        SELECT_RANK1(KV, ET, R1, 6, K);                                                            \
+    }                                                                                              \
+    else if (R2 == 7)                                                                              \
+    {                                                                                              \
+        SELECT_RANK1(KV, ET, R1, 7, K);                                                            \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported second rank " + std::to_string(R2) + " for kernel " #K);   \
+    }
+
+// Per-type and ranks kernel macro
+#define SELECT_KERNEL_BY_2RANKS(KV, ET, R1, R2, K)                                                 \
+    if (ET == element::f32)                                                                        \
+    {                                                                                              \
+        SELECT_2RANKS(KV, float, R1, R2, K);                                                       \
+    }                                                                                              \
+    else if (ET == element::f64)                                                                   \
+    {                                                                                              \
+        SELECT_2RANKS(KV, double, R1, R2, K);                                                      \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
+    }
+
 // Helper macros for a partial set of element types and ranks
 // Useful for keeping compilation time and memory usage reasonable
 // when the computed expression is complex
