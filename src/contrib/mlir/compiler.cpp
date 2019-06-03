@@ -141,10 +141,9 @@ void MLIRCompiler::build_ng_dialect_module()
     {
         NGRAPH_FAIL() << "Invalid module after lowering to NG dialect";
     }
-    if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
-    {
-        m_module->dump();
-    }
+
+    dump_mlir_module("nGraph Dialect Dump:");
+
 }
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
@@ -215,10 +214,8 @@ void MLIRCompiler::lower_ng_dialect()
     {
         NGRAPH_FAIL() << "Incorrect module after dialect lowering";
     }
-    if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
-    {
-        m_module->dump();
-    }
+
+    dump_mlir_module("Affine Dialect Dump:");
 }
 
 // Receives affine dialect as input and applies affine and standard dialect based optimizations.
@@ -231,6 +228,8 @@ void MLIRCompiler::optimize()
     pm.addPass(mlir::createLowerAffinePass());
     auto rr = pm.run(m_module.get());
     NGRAPH_ASSERT(succeeded(rr)) << "Affine loop lowering failed";
+
+    dump_mlir_module("Standard Dialect Dump:");
 }
 
 // MLIR builders
@@ -346,6 +345,8 @@ void MLIRCompiler::execute()
     (void)r;
     NGRAPH_ASSERT(succeeded(r)) << "second conversion failed";
 
+    dump_mlir_module("LLVM-IR Dialect Dump:");
+
     // Initialize LLVM targets.
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
@@ -410,4 +411,14 @@ mlir::StaticFloatMemRef* MLIRCompiler::allocate_memref_descriptor(mlir::Type typ
         reinterpret_cast<mlir::StaticFloatMemRef*>(malloc(sizeof(mlir::StaticFloatMemRef)));
     descriptor->data = nullptr;
     return descriptor;
+}
+
+void MLIRCompiler::dump_mlir_module(const std::string msg)
+{
+    if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
+    {
+        llvm::dbgs() << "*** " << msg << " ***\n";
+        m_module->dump();
+        llvm::dbgs() << "\n\n";
+    }
 }

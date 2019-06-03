@@ -112,15 +112,8 @@ namespace
                                                 "Error lowering dialect\n");
             signalPassFailure();
         }
-        if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
-        {
-            getModule().dump();
-        }
+    
         processFakeInstrs();
-        if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
-        {
-            getModule().dump();
-        }
     }
 
     void DialectLoweringPass::findOutputValues()
