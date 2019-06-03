@@ -75,8 +75,8 @@ namespace ngraph
         std::uniform_real_distribution<float>& get_distribution() { return m_distribution; }
         double get_probability() { return m_probability; };
     protected:
-        double m_probability;
         unsigned int m_seed;
+        double m_probability;
         std::minstd_rand m_generator;
         std::uniform_real_distribution<float> m_distribution;
     };
