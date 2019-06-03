@@ -96,10 +96,12 @@ namespace ngraph
                         in_slice_dims[0] = in_indices[0] = indices_ptr[0];
                         // change to 1 if 0.
                         in_slice_dims[0] = in_slice_dims[0] == 0 ? 1 : in_slice_dims[0];
+
                         out.slice(in_indices, in_slice_dims)
                             .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                arena)) = out.slice(in_indices, in_slice_dims) +
-                                          up.slice(updates_indices, updates_slice_dims);
+                                arena)) =
+                            out.slice(in_indices, in_slice_dims) +
+                            up.slice(updates_indices, updates_slice_dims).reshape(in_slice_dims);
                     }
                     else
                     {
@@ -131,11 +133,11 @@ namespace ngraph
                             in_slice_dims[0] = in_slice_dims[0] == 0 ? 1 : in_slice_dims[0];
                             // change to 1 if 0.
                             updates_slice_dims[size - 1] = k == 0 ? 1 : k;
-
                             out.slice(in_indices, in_slice_dims)
                                 .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                                     arena)) = out.slice(in_indices, in_slice_dims) +
-                                              up.slice(updates_indices, updates_slice_dims);
+                                              up.slice(updates_indices, updates_slice_dims)
+                                                  .reshape(in_slice_dims);
                         }
                     }
                 }
