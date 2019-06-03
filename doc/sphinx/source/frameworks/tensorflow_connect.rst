@@ -50,6 +50,7 @@ To build your own bridge, follow these steps:
     .. code-block:: console
 
        git clone https://github.com/tensorflow/ngraph-bridge.git
+       cd ngraph-bridge
 
 #. The script we need to run assumes you're running the ``pip`` implementation 
    of ``virtualenv``, on Python3.5 or greater.  The quickest way to get this on 
@@ -79,6 +80,39 @@ To build your own bridge, follow these steps:
 That's it! Now you can take a look at and start experimenting with the detailed 
 located in the `ngraph_bridge examples`_ directory. 
 
+
+Building nGraph bridge from source
+----------------------------------
+
+The other way to build from source is to run without prebuilt options; try this if running 
+the script above with the ``--use_prebuilt_tensorflow`` option doesn't work.
+
+#. **Clone the nGraph-TensorFlow bridge repo**
+
+   .. code-block:: console
+
+      git clone https://github.com/tensorflow/ngraph-bridge.git
+      cd ngraph-bridge
+
+#. The script we need to run assumes you're running the ``pip`` implementation 
+   of ``virtualenv``, on Python3.5 or greater.  The quickest way to get this on 
+   your system is:
+
+   .. code-block:: console
+
+      python3 -m pip install virtualenv==16.0.0 --user
+
+
+#. Run the script 
+
+   .. code-block:: console
+
+      python3 build_ngtf.py
+
+
+
+
 .. _prebuilt nGraph-TensorFlow bridge: https://github.com/tensorflow/ngraph-bridge#option-1-use-a-pre-built-ngraph-tensorflow-bridge
 .. _Option 2: https://github.com/tensorflow/ngraph-bridge#option-2-build-ngraph-bridge-with-binary-tensorflow-installation
-.. _`ngraph_bridge examples: https://github.com/tensorflow/ngraph-bridge/blob/master/examples/README.md
+.. _ngraph_bridge examples: https://github.com/tensorflow/ngraph-bridge/blob/master/examples/README.md
+.. _
