@@ -136,6 +136,7 @@
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -1181,6 +1182,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
+    REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(LSTMFusion, true, runtime::cpu::pass);

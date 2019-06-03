@@ -14,12 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 
-#include <memory>
 using namespace std;
 using namespace ngraph;
 
@@ -2482,6 +2482,41 @@ TEST(type_prop, or_bad_arguments)
         "Or", [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
             return make_shared<op::Or>(x, y);
         });
+}
+
+template <typename T>
+void test_binary_eltwise_numpy(const element::Type& et, const op::AutoBroadcastSpec& autob)
+{
+    auto param1 = make_shared<op::Parameter>(et, Shape{1, 3, 6});
+    auto param2 = make_shared<op::Parameter>(et, Shape{3, 1});
+    auto param3 = make_shared<op::Parameter>(et, Shape{2, 3, 6});
+    auto param4 = make_shared<op::Parameter>(et, Shape{6});
+    EXPECT_EQ(make_shared<T>(param1, param2, autob)->get_shape(), (Shape{1, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param1, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param4, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+
+    auto pp1 = make_shared<op::Parameter>(et, PartialShape{1, Dimension::dynamic(), 6});
+    auto pp2 = make_shared<op::Parameter>(et, PartialShape{3, 1});
+    EXPECT_EQ(make_shared<T>(pp1, pp2, autob)->get_shape(), (Shape{1, 3, 6}));
+}
+
+TEST(type_prop, eltwise_auto_bcast)
+{
+    test_binary_eltwise_numpy<op::Add>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::And>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Divide>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::GreaterEq>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Less>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::LessEq>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Maximum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Minimum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Multiply>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::NotEqual>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Or>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Power>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Subtract>(element::f32, op::AutoBroadcastType::NUMPY);
 }
 
 TEST(type_prop, embedding_lookup_non_matrix_weights)
@@ -14683,4 +14718,95 @@ TEST(type_prop, split)
     EXPECT_EQ(split->output(1).get_shape(), (Shape{2, 3}));
     EXPECT_EQ(split->output(0).get_element_type(), element::i32);
     EXPECT_EQ(split->output(1).get_element_type(), element::i32);
+}
+
+TEST(type_prop, fake_quantize)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const int levels = 5;
+
+    const auto fake_quantize =
+        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+    EXPECT_EQ(fake_quantize->get_element_type(), element::f32);
+    EXPECT_EQ(fake_quantize->get_shape(), (Shape{1, 2, 3, 4}));
+}
+
+TEST(type_prop, fake_quantize_invalid_rank)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto input_low = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const int levels = 5;
+
+    // Invalid input_low dimension
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
+
+    // Invalid input_high dimension
+    input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    input_high = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
+
+    // Invalid output_low dimension
+    input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    output_low = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
+
+    // Invalid output_high dimension
+    output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    output_high = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
 }
