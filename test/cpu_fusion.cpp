@@ -2818,7 +2818,6 @@ TEST(cpu_fusion, fuse_dropout)
         [](Shape input_shape, const unsigned int seed_val, float one_minus_prob, bool fuse) {
             auto input =
                 std::make_shared<op::Parameter>(element::f32, input_shape); // also test for f64??
-            //auto seed = op::Constant::create(element::u32, Shape{0}, {seed_val});
             auto value = op::Constant::create(element::f32, input_shape, {one_minus_prob});
             auto const1 = op::Constant::create(input->get_element_type(), Shape{}, {1});
 
@@ -2828,8 +2827,7 @@ TEST(cpu_fusion, fuse_dropout)
                                                                seed_val,
                                                                (double)one_minus_prob);
 
-            auto mult = std::make_shared<op::Multiply>(
-                gen_mask, input); // TODO: how to check it works both ways x, gen_mask too ?
+            auto mult = std::make_shared<op::Multiply>(gen_mask, input);
 
             auto goe = std::make_shared<op::GetOutputElement>(mult, 0);
 
@@ -2845,16 +2843,13 @@ TEST(cpu_fusion, fuse_dropout)
     auto fuse_func = make_function(Shape{2, 2, 256, 256}, 1, 0.9, true);
     auto fuse_func2 = make_function(Shape{2, 2, 256, 256}, 1, 0.9, true);
     auto nofuse_func = make_function(Shape{2, 2, 256, 256}, 1, 0.9, false);
-    std::cout << "-------\n\n";
     {
         pass::Manager pass_manager;
         pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
         pass_manager.run_passes(fuse_func);
         ASSERT_EQ(count_ops_of_type<op::Dropout>(fuse_func), 1);
         ASSERT_EQ(count_ops_of_type<op::GenerateMask>(fuse_func), 0);
-        ASSERT_EQ(count_ops_of_type<op::Dropout>(nofuse_func), 0);
 
-        std::cout << "Number of outputs of dropout = " << fuse_func->get_results().size() << "\n";
         auto dropout_goe_output =
             std::dynamic_pointer_cast<op::GetOutputElement>(fuse_func->get_results().at(0));
     }
@@ -2870,24 +2865,16 @@ TEST(cpu_fusion, fuse_dropout)
             rng.initialize(tensor_val);
             args.push_back(tensor_val);
         }
-        stopwatch timer;
-        timer.start();
         auto nofuse_results = execute(nofuse_func, args, "CPU");
-        timer.stop();
-        cout.imbue(locale(""));
-        cout << "nofuse time: " << timer.get_milliseconds() << "ms" << endl;
 
         //stopwatch timer;
-        timer.start();
         auto fuse_results = execute(fuse_func, args, "CPU");
-        timer.stop();
-        cout.imbue(locale(""));
-        cout << "fuse time: " << timer.get_milliseconds() << "ms" << endl;
-
         auto fuse_results2 = execute(fuse_func2, args, "CPU");
         EXPECT_TRUE(test::all_close(fuse_results.at(0), fuse_results2.at(0)));
         EXPECT_TRUE(test::all_close(fuse_results.at(1), fuse_results2.at(1)));
 
+        // Since the RNG used in Dropout kernel is different than RNG used in GenerateMask kernel,
+        // we can't compare fuse_results and nofuse_results
         //EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
         //EXPECT_TRUE(test::all_close(fuse_results.at(1), nofuse_results.at(1)));
     }
