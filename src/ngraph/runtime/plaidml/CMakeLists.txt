@@ -16,6 +16,7 @@
 
 set(SRC
     plaidml_backend.cpp
+    plaidml_backend_constructor.cpp
     plaidml_builder.cpp
     plaidml_compilation_cache.cpp
     plaidml_compiler.cpp
