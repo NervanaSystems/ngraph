@@ -867,6 +867,65 @@ NGRAPH_TEST(${BACKEND_NAME}, scale_shift)
     test_case.run();
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_simple)
+{
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{1, 15, 2, 2});
+    auto tested_op = make_shared<op::ShuffleChannels>(data, 1, 5);
+    auto function = make_shared<Function>(tested_op, ParameterVector{data});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    std::vector<int32_t> input_data(60);
+    std::iota(std::begin(input_data), std::end(input_data), 0);
+    test_case.add_input(input_data);
+
+    test_case.add_expected_output<int32_t>(
+        Shape{1, 15, 2, 2},
+        {0, 1, 2,  3,  12, 13, 14, 15, 24, 25, 26, 27, 36, 37, 38, 39, 48, 49, 50, 51,
+         4, 5, 6,  7,  16, 17, 18, 19, 28, 29, 30, 31, 40, 41, 42, 43, 52, 53, 54, 55,
+         8, 9, 10, 11, 20, 21, 22, 23, 32, 33, 34, 35, 44, 45, 46, 47, 56, 57, 58, 59});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_negative_axis)
+{
+    // in this test the output is the same as in shuffle_channels_simple but
+    // the axis value is negative and the C(channels) value is in a different dimension(0) of the shape
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{15, 2, 1, 2});
+    auto tested_op = make_shared<op::ShuffleChannels>(data, -4, 5);
+    auto function = make_shared<Function>(tested_op, ParameterVector{data});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    std::vector<int32_t> input_data(60);
+    std::iota(std::begin(input_data), std::end(input_data), 0);
+    test_case.add_input(input_data);
+
+    test_case.add_expected_output<int32_t>(
+        Shape{15, 2, 1, 2},
+        {0, 1, 2,  3,  12, 13, 14, 15, 24, 25, 26, 27, 36, 37, 38, 39, 48, 49, 50, 51,
+         4, 5, 6,  7,  16, 17, 18, 19, 28, 29, 30, 31, 40, 41, 42, 43, 52, 53, 54, 55,
+         8, 9, 10, 11, 20, 21, 22, 23, 32, 33, 34, 35, 44, 45, 46, 47, 56, 57, 58, 59});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_float)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{6, 1, 1, 1});
+    auto tested_op = make_shared<op::ShuffleChannels>(data, 0, 2);
+    auto function = make_shared<Function>(tested_op, ParameterVector{data});
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input<float>({0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
+
+    test_case.add_expected_output<float>(Shape{6, 1, 1, 1}, {0.0f, 3.0f, 1.0f, 4.0f, 2.0f, 5.0f});
+
+    test_case.run();
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, squeeze)
 {
     const auto data_node = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
@@ -1306,4 +1365,130 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_activaction_functions)
         Shape{batch_size, hidden_size},
         {0.94656503f, 0.9527454f, 0.9706756f, 0.84206575f, 0.91898793f, 0.9127192f});
     ct_test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fake_quantize)
+{
+    const Shape data_shape{1, 2, 3, 4};
+    const size_t levels = 4;
+    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+
+    const auto quantize =
+        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+    const auto function = make_shared<Function>(
+        NodeVector{quantize},
+        ParameterVector{data, input_low, input_high, output_low, output_high});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    const size_t n_elements = shape_size(data_shape);
+    vector<float> input_data(n_elements);
+    iota(begin(input_data), end(input_data), 0);
+
+    test_case.add_input<float>(input_data);
+    // input_low
+    test_case.add_input<float>({0.0f});
+    // input_high
+    test_case.add_input<float>({23.f});
+    // output_low
+    test_case.add_input<float>({2.f});
+    // output_high
+    test_case.add_input<float>({16.f});
+
+    // expected result
+    test_case.add_expected_output<float>(
+        data_shape,
+        vector<float>{2.f,          2.f,          2.f,          2.f,          6.6666669f,
+                      6.6666669f,   6.6666669f,   6.6666669f,   6.6666669f,   6.6666669f,
+                      6.6666669f,   6.6666669f,   11.33333301f, 11.33333301f, 11.33333301f,
+                      11.33333301f, 11.33333301f, 11.33333301f, 11.33333301f, 11.33333301f,
+                      16.f,         16.f,         16.f,         16.f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip)
+{
+    const Shape data_shape{1, 2, 3, 4};
+    const size_t levels = 5;
+    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+
+    const auto quantize =
+        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+    const auto function = make_shared<Function>(
+        NodeVector{quantize},
+        ParameterVector{data, input_low, input_high, output_low, output_high});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    const size_t n_elements = shape_size(data_shape);
+    vector<float> input_data(n_elements);
+    iota(begin(input_data), end(input_data), 0);
+
+    test_case.add_input<float>(input_data);
+    // input_low
+    test_case.add_input<float>({3.f});
+    // input_high
+    test_case.add_input<float>({17.f});
+    // output_low
+    test_case.add_input<float>({2.f});
+    // output_high
+    test_case.add_input<float>({16.f});
+
+    // expected result
+    test_case.add_expected_output<float>(
+        data_shape,
+        vector<float>{2.f,   2.f,   2.f,   2.f,   2.f,  5.5f, 5.5f, 5.5f, 5.5f, 9.f,  9.f,  9.f,
+                      12.5f, 12.5f, 12.5f, 12.5f, 16.f, 16.f, 16.f, 16.f, 16.f, 16.f, 16.f, 16.f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_across_channels)
+{
+    Shape data_shape{1, 2, 5, 5};
+    size_t levels = 5;
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto input_low = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto input_high = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto output_low = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto output_high = make_shared<op::Parameter>(element::f32, Shape{2});
+
+    auto quantize =
+        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+    auto function = make_shared<Function>(
+        NodeVector{quantize},
+        ParameterVector{data, input_low, input_high, output_low, output_high});
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    size_t n_elements = shape_size(data_shape);
+    vector<float> input_data(n_elements);
+    iota(begin(input_data), end(input_data), 0);
+
+    test_case.add_input<float>(input_data);
+    // input_low
+    test_case.add_input<float>(vector<float>{5.f, 30.f});
+    // input_high
+    test_case.add_input<float>(vector<float>{10.f, 40.f});
+    // output_low
+    test_case.add_input<float>(vector<float>{0.f, 50.f});
+    // output_high
+    test_case.add_input<float>(vector<float>{20.f, 70.f});
+
+    // expected result
+    test_case.add_expected_output<float>(
+        data_shape,
+        vector<float>{0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  5.0f,  10.0f, 10.0f, 15.0f,
+                      20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 20.0f,
+                      20.0f, 20.0f, 20.0f, 20.0f, 20.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f,
+                      50.0f, 50.0f, 55.0f, 55.0f, 60.0f, 60.0f, 60.0f, 65.0f, 65.0f, 70.0f,
+                      70.0f, 70.0f, 70.0f, 70.0f, 70.0f, 70.0f, 70.0f, 70.0f, 70.0f, 70.0f});
+
+    test_case.run();
 }

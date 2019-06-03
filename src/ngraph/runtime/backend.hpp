@@ -132,11 +132,11 @@ public:
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
 
-    // \brief Return a backend specific op (that is not a core ngraph op).
-    //     The string op_name is the requested op, which a backend may or may not implement.
-    //     If unsupported, nullptr is returned, else a backend op is returned.
-    //     The variadic input is used to pass inputs that the op constructor might take
-    // \param op_name is the name of the backend specific op
-    // \returns a shared pointer to the op if found, else nullptr
+    /// \brief Return a backend specific op (that is not a core ngraph op).
+    ///     The string op_name is the requested op, which a backend may or may not implement.
+    ///     If unsupported, nullptr is returned, else a backend op is returned.
+    ///     The variadic input is used to pass inputs that the op constructor might take
+    /// \param op_name is the name of the backend specific op
+    /// \returns a shared pointer to the op if found, else nullptr
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
 };

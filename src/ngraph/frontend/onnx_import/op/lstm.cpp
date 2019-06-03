@@ -26,7 +26,7 @@
 #include "exceptions.hpp"
 #include "lstm.hpp"
 #include "ngraph/axis_set.hpp"
-
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -36,7 +36,6 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "utils/reshape.hpp"
