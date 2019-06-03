@@ -18,6 +18,7 @@
 #include <cmath>
 #include <functional>
 
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
@@ -28,7 +29,6 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -283,9 +283,9 @@ NodeVector op::LSTMCell::decompose_op() const
     const auto& p_f = p_iof.at(2);
 
     // Xt*(W^T) -- for [iofc] gates.
-    auto Xt_W = make_shared<op::Dot>(X, op::util::transpose(W));
+    auto Xt_W = make_shared<op::Dot>(X, builder::transpose(W));
     // Ht-1*(R^T)  -- for [iofc] gates.
-    auto Ht_R = make_shared<op::Dot>(H_t, op::util::transpose(R));
+    auto Ht_R = make_shared<op::Dot>(H_t, builder::transpose(R));
     // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
     auto gates = add(Xt_W, add(Ht_R, bias));
 
