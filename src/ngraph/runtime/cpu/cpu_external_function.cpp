@@ -33,6 +33,7 @@
 #include "ngraph/codegen/execution_engine.hpp"
 #endif
 
+#include "contrib/mlir/pass/mlir_subgraph_extraction.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/file_util.hpp"
@@ -141,7 +142,6 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/pass/mlir_subgraph_extraction.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
