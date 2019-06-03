@@ -41,7 +41,7 @@ minimizing this is good for performance.
 In the second phase, called translation, we cut out each cluster subgraph, 
 translate it into an nGraph Function, and replace the cluster subgraph with a 
 stand-in node called an "encapsulation node" that holds a pointer to the nGraph 
-``Function``. Later, at runtime, those funcgtions will be invoked when the 
+``Function``. Later, at runtime, those functions will be invoked when the 
 framework asks us to execute the encapsulation node.
 
 It’s worth noting that backends have total freedom to rewrite the nGraph 
