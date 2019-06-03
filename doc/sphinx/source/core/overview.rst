@@ -41,7 +41,7 @@ minimizing this is good for performance.
 In the second phase, called translation, we cut out each cluster subgraph, 
 translate it into an nGraph Function, and replace the cluster subgraph with a 
 stand-in node called an "encapsulation node" that holds a pointer to the nGraph 
-``Function``. Later, at runtime, those functions will be invoked when the 
+``Function``. Later, at runtime, those funcgtions will be invoked when the 
 framework asks us to execute the encapsulation node.
 
 It’s worth noting that backends have total freedom to rewrite the nGraph 
@@ -61,14 +61,13 @@ descriptions:
    :header: "Namespace", "Description", "Location in Repo", "Docs"
    :widths: 23, 53, 13, 23
 
-   ``ngraph``, The Intel nGraph C++ API, `ngraph`_, Implicit namespace omitted from most API documentation
+   ``ngraph``, The Intel nGraph C++ API, ngraph, Implicit namespace omitted from most API documentation
    ``builder``, "Convenience functions that create additional graph nodes to implement commonly-used recipes; for example, auto-broadcast", `builder`_, Coming Soon
    ``descriptor``, Descriptors are compile-time representations of objects that will appear at run-time, `descriptor`_, Coming Soon
    ``op``, Ops used in graph construction, `op`_, :doc:`../ops/index`
    ``runtime``, The objects and methods used for executing the graph, `runtime`_, :doc:`../backend-support/cpp-api`
 
 
-.. _ngraph: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph
 .. _builder: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/builder
 .. _descriptor: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/descriptor
 .. _op: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/op
