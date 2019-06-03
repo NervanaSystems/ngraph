@@ -49,10 +49,12 @@ runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment, Alloca
 }
 
 runtime::AlignedBuffer::AlignedBuffer(AlignedBuffer&& other)
-    : m_allocated_buffer(other.m_allocated_buffer)
+    : m_allocator(other.m_allocator)
+    , m_allocated_buffer(other.m_allocated_buffer)
     , m_aligned_buffer(other.m_aligned_buffer)
     , m_byte_size(other.m_byte_size)
 {
+    other.m_allocator = nullptr;
     other.m_allocated_buffer = nullptr;
     other.m_aligned_buffer = nullptr;
     other.m_byte_size = 0;
@@ -70,9 +72,11 @@ runtime::AlignedBuffer& runtime::AlignedBuffer::operator=(AlignedBuffer&& other)
 {
     if (this != &other)
     {
+        m_allocator = other.m_allocator;
         m_allocated_buffer = other.m_allocated_buffer;
         m_aligned_buffer = other.m_aligned_buffer;
         m_byte_size = other.m_byte_size;
+        other.m_allocator = nullptr;
         other.m_allocated_buffer = nullptr;
         other.m_aligned_buffer = nullptr;
         other.m_byte_size = 0;
