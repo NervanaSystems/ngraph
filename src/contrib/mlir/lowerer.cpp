@@ -303,7 +303,6 @@ namespace
     {
         auto add = cast<NGAddOp>(op);
         auto loc = add.getLoc();
-        Value *origResult, *newResult;
 
         auto result = m_pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_ASSERT(result->getType().isa<MemRefType>());
