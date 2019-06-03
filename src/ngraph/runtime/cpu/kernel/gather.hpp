@@ -108,15 +108,15 @@ namespace ngraph
                             Eigen::array<Eigen::Index, Rank1> in_slice_dims, in_indices;
                             Eigen::array<Eigen::Index, Rank2> out_slice_dims, out_indices;
 
-                            for (int i = 0; i < Rank1; i++)
+                            for (int r = 0; r < Rank1; r++)
                             {
-                                in_slice_dims[i] = inputs_shape[i];
-                                in_indices[i] = 0;
+                                in_slice_dims[r] = inputs_shape[r];
+                                in_indices[r] = 0;
                             }
-                            for (int i = 0; i < Rank2; i++)
+                            for (int r = 0; r < Rank2; r++)
                             {
-                                out_slice_dims[i] = output_shape[i];
-                                out_indices[i] = 0;
+                                out_slice_dims[r] = output_shape[r];
+                                out_indices[r] = 0;
                             }
 
                             in_slice_dims[0] = in_indices[0] = indices_ptr[i];
