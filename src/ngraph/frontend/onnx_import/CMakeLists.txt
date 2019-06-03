@@ -112,6 +112,8 @@ add_library(onnx_import STATIC
         op/lstm.hpp
         op/matmul.cpp
         op/matmul.hpp
+        op/matmul_integer.cpp
+        op/matmul_integer.hpp
         op/max_pool.cpp
         op/max_pool.hpp
         op/max.hpp

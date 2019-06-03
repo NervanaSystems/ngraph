@@ -70,6 +70,7 @@
 #include "op/lrn.hpp"
 #include "op/lstm.hpp"
 #include "op/matmul.hpp"
+#include "op/matmul_integer.hpp"
 #include "op/max.hpp"
 #include "op/max_pool.hpp"
 #include "op/mean.hpp"
@@ -273,6 +274,7 @@ namespace ngraph
             REGISTER_OPERATOR("LRN", 1, lrn);
             REGISTER_OPERATOR("LSTM", 1, lstm);
             REGISTER_OPERATOR("MatMul", 1, matmul);
+            REGISTER_OPERATOR("MatMulInteger", 1, matmul_integer);
             REGISTER_OPERATOR("MaxPool", 1, max_pool);
             REGISTER_OPERATOR("Max", 1, max);
             REGISTER_OPERATOR("Max", 8, max);
