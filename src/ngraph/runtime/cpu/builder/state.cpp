@@ -41,8 +41,8 @@ namespace ngraph
 
                 size_t element_count = out[0].get_size();
 
-                auto index = external_function->add_state(ngraph::RNGUniformState::create_rng_state(
-                    gm->get_seed(), gm->get_probability()));
+                auto index = external_function->add_state(
+                    ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
 
                 if (args[0].get_element_type() == element::f32)
                 {
@@ -53,7 +53,7 @@ namespace ngraph
                         reference::generate_mask(
                             static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                             element_count,
-                            static_cast<RNGUniformState*>(ctx->states[index]),
+                            static_cast<RNGState*>(ctx->states[index]),
                             training);
                     };
                 }
@@ -66,7 +66,7 @@ namespace ngraph
                         reference::generate_mask(
                             static_cast<double*>(ctx->buffer_data[out_buffer_index]),
                             element_count,
-                            static_cast<RNGUniformState*>(ctx->states[index]),
+                            static_cast<RNGState*>(ctx->states[index]),
                             training);
                     };
                 }

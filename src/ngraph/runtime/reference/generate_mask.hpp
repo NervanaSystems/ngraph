@@ -37,23 +37,6 @@ namespace ngraph
                     out[i] = training ? static_cast<T>(bd(gen)) : static_cast<T>(1);
                 }
             }
-
-            // TODO: If this works, add a 2nd template param for rng
-            template <typename T>
-            void generate_mask(T* out,
-                               size_t count,
-                               ngraph::RNGUniformState* rng_state,
-                               bool training)
-            {
-                auto& gen = rng_state->get_generator();
-                auto& bd = rng_state->get_distribution();
-                auto prob = rng_state->get_probability();
-                for (size_t i = 0; i < count; i++)
-                {
-                    auto mask_val = (bd(gen) < (1 - prob)) ? 0 : 1;
-                    out[i] = training ? static_cast<T>(mask_val) : static_cast<T>(1);
-                }
-            }
         }
     }
 }

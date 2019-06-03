@@ -35,30 +35,37 @@ namespace ngraph
                                       T* out0,
                                       T* out1_mask,
                                       size_t count,
-                                      const Shape& input_shape, // input shape is for future opt
-                                      ngraph::RNGUniformState* rng_state,
                                       bool training,
                                       const double value)
                 {
-
                     if (training)
                     {
                         double dropout_prob = 1 - value;
-                        //#pragma omp parallel for
-                        for (size_t i = 0; i < count; ++i)
-                        {
-                            auto& gen = rng_state->get_generator();
-                            auto& dist = rng_state->get_distribution();
+                        size_t nthr = 28, nelems = count;
+                        size_t chunk_size = (nelems + nthr - 1) / nthr;
 
-                            if (static_cast<T>(dist(gen)) < dropout_prob)
+#pragma omp parallel num_threads(nthr)
+                        {
+                            size_t tid = omp_get_thread_num();
+                            std::minstd_rand msr;
+                            msr.seed(tid);
+
+                            std::uniform_int_distribution<> gen(0, 1);
+
+                            size_t idx_start = tid * chunk_size;
+                            size_t idx_end = std::min(idx_start + chunk_size, nelems);
+                            for (size_t idx = idx_start; idx < idx_end; ++idx)
                             {
-                                out1_mask[i] = 0;
-                                out0[i] = 0;
-                            }
-                            else
-                            {
-                                out1_mask[i] = 1;
-                                out0[i] = input[i] / static_cast<T>(value);
+                                if (static_cast<T>(gen(msr)) < dropout_prob)
+                                {
+                                    out1_mask[idx] = 0;
+                                    out0[idx] = 0;
+                                }
+                                else
+                                {
+                                    out1_mask[idx] = 1;
+                                    out0[idx] = input[idx] / static_cast<T>(value);
+                                }
                             }
                         }
                     }

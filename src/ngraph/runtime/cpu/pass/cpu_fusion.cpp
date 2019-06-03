@@ -922,7 +922,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
 // for inference with upscale_in_train = false, then it is just multiply
 void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 {
-
     Shape shape{1, 1, 2, 2};
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
@@ -969,15 +968,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
         //std::cout << "got value %f" << temp_val << "\n";
         //std::cout << "got seed %d" << temp_seed <<"\n";
 
-
         auto training = gm->get_argument(0); //for training purpose this is always going to be 1
 
         //std::cout << " replacing the node\n";
         // Check for rank 3D or 4D for now
-        auto dropout_n = std::make_shared<ngraph::op::Dropout>(pattern_map[x],
-                                                               training,
-                                                               temp_seed,
-                                                               temp_val);
+        auto dropout_n =
+            std::make_shared<ngraph::op::Dropout>(pattern_map[x], training, temp_seed, temp_val);
         auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 0);
         ngraph::replace_node(m.get_match_root(), goe1);
 
