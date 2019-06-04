@@ -21,8 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::Abs::Abs(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Abs", arg)
+const string op::Abs::type_name{"Abs"};
+
+op::Abs::Abs()
+{
+}
+
+op::Abs::Abs(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
