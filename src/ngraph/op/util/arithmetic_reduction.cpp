@@ -20,6 +20,20 @@
 using namespace std;
 using namespace ngraph;
 
+op::util::ArithmeticReduction::ArithmeticReduction()
+{
+}
+
+op::util::ArithmeticReduction::ArithmeticReduction(const std::shared_ptr<Node>& arg,
+                                                   const AxisSet& reduction_axes)
+    : Op(check_single_output_args({arg,
+                                   op::Constant::create(element::i64,
+                                                        Shape{reduction_axes.size()},
+                                                        reduction_axes.to_vector())}))
+{
+    set_reduction_axes(reduction_axes);
+}
+
 op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
                                                    const std::shared_ptr<Node>& arg,
                                                    const AxisSet& reduction_axes)
@@ -36,6 +50,11 @@ op::util::ArithmeticReduction::ArithmeticReduction(const std::string& node_type,
                                                    const std::shared_ptr<Node>& reduction_axes)
     : Op(node_type, check_single_output_args({arg, reduction_axes}))
 {
+}
+
+void op::util::ArithmeticReduction::set_reduction_axes(const AxisSet& reduction_axes)
+{
+    m_reduction_axes = reduction_axes;
 }
 
 void op::util::ArithmeticReduction::validate_and_infer_types()

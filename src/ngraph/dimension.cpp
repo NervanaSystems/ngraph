@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -101,5 +102,34 @@ bool Dimension::merge(Dimension& dst, const Dimension d1, const Dimension d2)
     {
         dst = d1;
         return true;
+    }
+}
+
+bool Dimension::broadcast_merge(Dimension& dst, const Dimension d1, const Dimension d2)
+{
+    if (d1.is_dynamic() && d2.is_dynamic())
+    {
+        dst = d1;
+        return true;
+    }
+    else if (d1.is_dynamic() || d2.is_dynamic())
+    {
+        // One static. Set dst to static size if >1
+        auto ds = d1.is_dynamic() ? size_t(d2) : size_t(d1);
+        dst = (ds > 1) ? ds : Dimension::dynamic();
+        return true;
+    }
+    else
+    {
+        // Static sizes. Both match or one of them is 1.
+        if (size_t(d1) == size_t(d2) || size_t(d1) == 1 || size_t(d2) == 1)
+        {
+            dst = std::max(size_t(d1), size_t(d2));
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

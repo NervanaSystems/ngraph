@@ -85,10 +85,10 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
     const size_t OC_IN_OUTPUT = 1;
     const size_t IC = 1;
 
-    Shape weights_shape_groups{get_inputs().at(1).get_shape()};
+    Shape weights_shape_groups{get_input_shape(1)};
 
     weights_shape_groups.at(OC) = get_shape().at(OC_IN_OUTPUT) / get_groups();
-    weights_shape_groups.at(IC) = get_inputs().at(0).get_shape().at(IC) / get_groups();
+    weights_shape_groups.at(IC) = get_input_shape(0).at(IC) / get_groups();
 
     // push_front the number of groups
     weights_shape_groups.insert(weights_shape_groups.begin(), get_groups());

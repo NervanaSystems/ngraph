@@ -327,7 +327,7 @@ namespace ngraph
                     auto arg5_buffer_index =
                         external_function->get_buffer_index(args[5].get_name());
                     auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                    size_t arg3_size = node->get_inputs()[3].get_tensor().size();
+                    size_t arg3_size = node->input(3).get_tensor().size();
 
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
@@ -447,7 +447,7 @@ namespace ngraph
                     auto arg5_buffer_index =
                         external_function->get_buffer_index(args[5].get_name());
                     auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                    size_t arg3_size = node->get_inputs()[3].get_tensor().size();
+                    size_t arg3_size = node->input(3).get_tensor().size();
 
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());

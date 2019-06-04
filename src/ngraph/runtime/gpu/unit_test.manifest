@@ -128,6 +128,8 @@ model_quantize_linear_axis_negative
 model_quant_conv_linear
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d
+model_qlinear_matmul
+model_qlinear_matmul_3d
 
 # This should be implemented
 create_tensor_2_input
@@ -174,3 +176,6 @@ gather_no_axis_uint16
 gather_no_axis_uint32
 gather_no_axis_uint64
 gather_no_axis_bool
+fake_quantize
+fake_quantize_with_clip
+fake_quantize_with_clip_across_channels
