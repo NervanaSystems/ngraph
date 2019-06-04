@@ -16,41 +16,37 @@
 
 #pragma once
 
-#include <string>
-
-#include "ngraph/autodiff/adjoints.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/util/op_annotations.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace pass
     {
-        /// Root of all actual ops
-        class Op : public Node
+        template <typename T>
+        NodeVector static explicit_broadcast(std::shared_ptr<T>& node)
+        {
+            NodeVector rc;
+
+            if (node->get_autob().m_type == op::AutoBroadcastType::NONE)
+            {
+                rc = node->get_arguments();
+            }
+            else if (node->get_autob().m_type == op::AutoBroadcastType::NUMPY)
+            {
+                rc = op::numpy_style_broadcast(node->get_arguments());
+            }
+            else
+            {
+                throw ngraph_error("Unsupported implicit broadcast type");
+            }
+            return rc;
+        }
+
+        class ImplicitBroadcastElimination : public NodePass
         {
         public:
-            void set_op_annotations(std::shared_ptr<ngraph::op::util::OpAnnotations> op_annotations)
-            {
-                m_op_annotations = op_annotations;
-            }
-            std::shared_ptr<ngraph::op::util::OpAnnotations> get_op_annotations() const
-            {
-                return m_op_annotations;
-            }
-
-            virtual bool is_op() const override { return true; }
-        protected:
-            Op()
-                : Node()
-            {
-            }
-            Op(const NodeVector& arguments);
-            Op(const OutputVector& arguments);
-            Op(const std::string& node_type, const NodeVector& arguments);
-
-        private:
-            std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
+            bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
         };
     }
 }
