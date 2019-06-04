@@ -34,22 +34,21 @@ namespace ngraph
                 void generate_dropout(T* input,
                                       T* out0,
                                       T* out1_mask,
-                                      size_t count,
+                                      size_t nelems,
                                       bool training,
-                                      const double value)
+                                      const double value,
+                                      const std::vector<std::minstd_rand>& vmsr)
                 {
                     if (training)
                     {
                         double dropout_prob = 1 - value;
-                        size_t nthr = 28, nelems = count;
+                        size_t nthr = ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores();
                         size_t chunk_size = (nelems + nthr - 1) / nthr;
 
 #pragma omp parallel num_threads(nthr)
                         {
                             size_t tid = omp_get_thread_num();
-                            std::minstd_rand msr;
-                            msr.seed(tid);
-
+                            std::minstd_rand msr = vmsr[tid];
                             std::uniform_int_distribution<> gen(0, 1);
 
                             size_t idx_start = tid * chunk_size;
@@ -72,7 +71,7 @@ namespace ngraph
                     else
                     {
                         // this is inference, ideally it should be optimized earlier
-                        for (size_t i = 0; i < count; i++)
+                        for (size_t i = 0; i < nelems; i++)
                         {
                             out1_mask[i] = 1;
                             out0[i] = static_cast<T>(1);

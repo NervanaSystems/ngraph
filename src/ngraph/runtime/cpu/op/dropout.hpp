@@ -33,6 +33,8 @@ namespace ngraph
 
             int get_seed() const { return m_seed; }
             double get_value() const { return m_value; } // this value is 1- probability
+            void set_seed(int new_seed) {m_seed = new_seed;}
+            void set_value(double new_value) { m_value = new_value;}
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
