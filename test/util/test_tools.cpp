@@ -293,12 +293,12 @@ string get_results_str(const std::vector<char>& ref_data,
     ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        ss << "\n"
+        ss << std::endl
            << std::setw(4) << i << " ref: " << std::setw(16) << std::left
            << static_cast<int>(ref_data[i]) << "  actual: " << std::setw(16) << std::left
            << static_cast<int>(actual_data[i]);
     }
-    ss << "\n";
+    ss << std::endl;
 
     return ss.str();
 }
