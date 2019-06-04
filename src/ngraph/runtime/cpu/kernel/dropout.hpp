@@ -51,7 +51,6 @@ namespace ngraph
                         {
                             size_t tid = omp_get_thread_num();
 #else
-                        size_t nthr = 1;
                         size_t chunk_size = nelems;
                         {
                             size_t tid = 0;
