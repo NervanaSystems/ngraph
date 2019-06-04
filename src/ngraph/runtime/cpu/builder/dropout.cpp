@@ -43,7 +43,7 @@ namespace ngraph
 
                 size_t element_count = out[0].get_size();
 
-                unsigned int seed = static_cast<unsigned int>(drop->get_seed());
+                uint32_t seed = drop->get_seed();
                 double value = drop->get_value();
 
                 size_t nthr = ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores();
@@ -53,7 +53,7 @@ namespace ngraph
                 {
                     std::minstd_rand msr;
                     msr.seed(seed);
-                    msr.discard(i*chunk_size);
+                    msr.discard(i * chunk_size);
                     vmsr[i] = msr;
                 }
 

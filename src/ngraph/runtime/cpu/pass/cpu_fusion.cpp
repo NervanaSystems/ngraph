@@ -917,19 +917,16 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
     this->add_matcher(m, callback);
 }
 
-// This fuses the dropout pattern for training when upscale_in_train = true
-// for inference with upscale_in_train = true, there should be a dropout as out = input
-// for inference with upscale_in_train = false, then it is just multiply
 void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 {
     Shape shape{1, 1, 2, 2};
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
 
-    int seed = 1234;
+    uint32_t seed = 1234;
     auto seed_label = std::make_shared<pattern::op::Label>(element::u32, Shape{0});
 
-    double value = 0.9; // some number
+    double value = 0.9;
     auto value_const = ngraph::op::Constant::create(element::f32, Shape{1, 1, 2, 2}, {value});
     auto value_label = std::make_shared<pattern::op::Label>(value_const);
 
@@ -941,8 +938,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto genmask_label =
         std::make_shared<pattern::op::Label>(genmask, nullptr, NodeVector{genmask});
 
-    auto mult = std::make_shared<ngraph::op::Multiply>(
-        genmask_label, x_label); // TODO: how to check it works both ways x, gen_mask too ?
+    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x_label);
 
     auto pdivide = std::make_shared<ngraph::op::Divide>(mult, value_label);
 
@@ -959,21 +955,16 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
         if (!std::dynamic_pointer_cast<ngraph::op::Constant>(gm->get_argument(0)))
         {
             NGRAPH_DEBUG << "training argument to GenerateMask must be constant";
-            std::cout << "training argument to GenerateMask must be constant\n";
             return false;
         }
 
-        auto temp_val = gm->get_probability();
-        auto temp_seed = gm->get_seed();
-        //std::cout << "got value %f" << temp_val << "\n";
-        //std::cout << "got seed %d" << temp_seed <<"\n";
+        auto value = gm->get_probability();
+        auto seed = gm->get_seed();
 
         auto training = gm->get_argument(0); //for training purpose this is always going to be 1
 
-        //std::cout << " replacing the node\n";
-        // Check for rank 3D or 4D for now
         auto dropout_n =
-            std::make_shared<ngraph::op::Dropout>(pattern_map[x], training, temp_seed, temp_val);
+            std::make_shared<ngraph::op::Dropout>(pattern_map[x], training, seed, value);
         auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 0);
         ngraph::replace_node(m.get_match_root(), goe1);
 

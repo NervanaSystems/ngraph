@@ -42,12 +42,20 @@ namespace ngraph
                     if (training)
                     {
                         double dropout_prob = 1 - value;
-                        size_t nthr = ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores();
+#ifdef _OPENMP
+                        size_t nthr =
+                            ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores();
                         size_t chunk_size = (nelems + nthr - 1) / nthr;
 
 #pragma omp parallel num_threads(nthr)
                         {
                             size_t tid = omp_get_thread_num();
+#else
+                        size_t nthr = 1;
+                        size_t chunk_size = nelems;
+                        {
+                            size_t tid = 0;
+#endif
                             std::minstd_rand msr = vmsr[tid];
                             std::uniform_int_distribution<> gen(0, 1);
 

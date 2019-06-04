@@ -23,7 +23,7 @@ using namespace ngraph;
 
 op::Dropout::Dropout(const std::shared_ptr<Node>& input,
                      const std::shared_ptr<Node>& gm_const,
-                     int seed,
+                     uint32_t seed,
                      double value)
     : Op("Dropout", check_single_output_args({input, gm_const}))
     , m_seed(seed)

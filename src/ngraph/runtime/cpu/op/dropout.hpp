@@ -28,13 +28,13 @@ namespace ngraph
         public:
             Dropout(const std::shared_ptr<Node>& input,
                     const std::shared_ptr<Node>& gm_const,
-                    int seed,
+                    uint32_t seed,
                     double value); // value = 1 - dropout_prob
 
-            int get_seed() const { return m_seed; }
+            uint32_t get_seed() const { return m_seed; }
             double get_value() const { return m_value; } // this value is 1- probability
-            void set_seed(int new_seed) {m_seed = new_seed;}
-            void set_value(double new_value) { m_value = new_value;}
+            void set_seed(uint32_t new_seed) { m_seed = new_seed; }
+            void set_value(double new_value) { m_value = new_value; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -42,7 +42,7 @@ namespace ngraph
             //                               const NodeVector& deltas) override;
 
         private:
-            int m_seed;
+            uint32_t m_seed;
             double m_value;
         };
     }

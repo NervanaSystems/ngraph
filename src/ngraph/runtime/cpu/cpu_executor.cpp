@@ -133,7 +133,8 @@ namespace ngraph
                 {
                     static int num_thread_pools = GetNumThreadPools();
                     static int num_cores = GetNumCores();
-                    static CPUExecutor cpu_executor(num_thread_pools < 1 ? 1 : num_thread_pools, num_cores);
+                    static CPUExecutor cpu_executor(num_thread_pools < 1 ? 1 : num_thread_pools,
+                                                    num_cores);
                     return cpu_executor;
                 }
 

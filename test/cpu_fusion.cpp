@@ -2815,9 +2815,8 @@ TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
 TEST(cpu_fusion, fuse_dropout)
 {
     auto make_function =
-        [](Shape input_shape, const unsigned int seed_val, float one_minus_prob, bool fuse) {
-            auto input =
-                std::make_shared<op::Parameter>(element::f32, input_shape); // also test for f64??
+        [](Shape input_shape, const uint32_t seed_val, float one_minus_prob, bool fuse) {
+            auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
             auto value = op::Constant::create(element::f32, input_shape, {one_minus_prob});
             auto const1 = op::Constant::create(input->get_element_type(), Shape{}, {1});
 
