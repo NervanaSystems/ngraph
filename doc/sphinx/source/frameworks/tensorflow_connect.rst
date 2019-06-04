@@ -96,7 +96,7 @@ the script above with the ``--use_prebuilt_tensorflow`` option doesn't work.
       git checkout v0.14.0
       cd ../
 
-#. Install Bazel v `0.24.1`; Bazel is a TensorFlow dependency:
+#. Install Bazel v ``0.24.1``; Bazel is a TensorFlow dependency:
 
    .. code-block:: console
 
@@ -106,7 +106,7 @@ the script above with the ``--use_prebuilt_tensorflow`` option doesn't work.
       export PATH=$PATH:~/bin
       source ~/.bashrc 
 
-#. Once the build finishes, a new virtualenv directory is created in the build_cmake/venv-tf-py3. The build 
+#. Once the build finishes, a new virtualenv directory is created in the ``build_cmake/venv-tf-py3``. The build 
    artifact ``ngraph_tensorflow_bridge-<VERSION>-py2.py3-none-manylinux1_x86_64.whl`` is created in the 
    ``build_cmake/artifacts`` directory. You can test the installation by running the following command:
 
@@ -132,4 +132,3 @@ the script above with the ``--use_prebuilt_tensorflow`` option doesn't work.
 .. _prebuilt nGraph-TensorFlow bridge: https://github.com/tensorflow/ngraph-bridge#option-1-use-a-pre-built-ngraph-tensorflow-bridge
 .. _Option 2: https://github.com/tensorflow/ngraph-bridge#option-2-build-ngraph-bridge-with-binary-tensorflow-installation
 .. _ngraph_bridge examples: https://github.com/tensorflow/ngraph-bridge/blob/master/examples/README.md
-.. _
