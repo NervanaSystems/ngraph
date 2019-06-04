@@ -118,6 +118,7 @@ gather_scalar_indices_no_axis
 gather_scalar_indices
 gather_nd_single_indices
 gather_3d_indices_no_axis
+gather_4d_indices_no_axis
 scatter_add_2d_indices
 scatter_add_1d_indices
 scatter_add_scalar_indices
