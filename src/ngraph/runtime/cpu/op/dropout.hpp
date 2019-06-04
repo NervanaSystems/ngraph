@@ -31,8 +31,8 @@ namespace ngraph
                     int seed,
                     double value); // value = 1 - dropout_prob
 
-            int get_seed() const { return m_seed; };
-            double get_value() const { return m_value; }; // this value is 1- probability
+            int get_seed() const { return m_seed; }
+            double get_value() const { return m_value; } // this value is 1- probability
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

@@ -57,7 +57,6 @@ namespace ngraph
                                value](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg1_buffer_index])[0]);
-
                         runtime::cpu::kernel::generate_dropout(
                             static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
                             static_cast<float*>(ctx->buffer_data[out0_buffer_index]),
