@@ -2,3 +2,7 @@
 model_quant_conv_linear
 model_qlinear_matmul
 model_qlinear_matmul_3d
+
+fake_quantize
+fake_quantize_with_clip
+fake_quantize_with_clip_across_channels

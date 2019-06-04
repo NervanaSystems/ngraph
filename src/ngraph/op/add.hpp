@@ -29,19 +29,27 @@ namespace ngraph
         class Add : public util::BinaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs an unitialized addition operation
+            Add();
+
             /// \brief Constructs an addition operation.
             ///
-            /// \param arg0 Node that produces the first input tensor.<br>
+            /// \param arg0 Output that produces the first input tensor.<br>
             /// `[d0, ...]`
-            /// \param arg1 Node that produces the second input tensor.<br>
+            /// \param arg1 Output that produces the second input tensor.<br>
             /// `[d0, ...]`
+            /// \param autob Auto broadcast specification
             ///
             /// Output `[d0, ...]`
             ///
-            Add(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            Add(const Output<Node>& arg0,
+                const Output<Node>& arg1,
+                const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

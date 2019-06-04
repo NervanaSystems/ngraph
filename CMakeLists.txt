@@ -114,18 +114,32 @@ if (APPLE)
     endif()
 endif()
 
+set(NGRAPH_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD ${NGRAPH_CXX_STANDARD})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Create compilation database compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Setup CMAKE_ARGS to be forwarded to External Projects
+set(NGRAPH_FORWARD_CMAKE_ARGS
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_CXX_STANDARD:STRING=${CMAKE_CXX_STANDARD}
+    -DCMAKE_CXX_STANDARD_REQUIRED:BOOL=${CMAKE_CXX_STANDARD_REQUIRED}
+    -DCMAKE_CXX_EXTENSIONS:BOOL=${CMAKE_CXX_EXTENSIONS}
+    -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=${CMAKE_EXPORT_COMPILE_COMMANDS}
+    -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=${CMAKE_POSITION_INDEPENDENT_CODE}
+    )
+
 if (CMAKE_OSX_SYSROOT)
     set(NGRAPH_FORWARD_CMAKE_ARGS
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-        )
-else()
-    set(NGRAPH_FORWARD_CMAKE_ARGS
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        )
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+            )
 endif()
 
 if (NOT MSVS)
@@ -144,9 +158,6 @@ message(STATUS "NGRAPH_FORWARD_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
 
 ngraph_var(NGRAPH_USE_PREBUILT_LLVM DEFAULT "FALSE")
-
-# Create compilation database compile_commands.json
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
@@ -168,6 +179,7 @@ option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FAL
 option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
 option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
 option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
+option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph static library" FALSE)
 
 if (NGRAPH_CPU_ENABLE
         AND
@@ -302,10 +314,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
 endif()
 
 if (WIN32)
-    set (CMAKE_CXX_STANDARD 11)
     set(CMAKE_CXX_FLAGS "/W0 /EHsc /MP")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
     set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
     # These can be uncommented once we have visibility fully in place
@@ -417,6 +427,20 @@ if(NGRAPH_DEPRECATED_ENABLE)
     add_definitions(-DNGRAPH_DEPRECATED_ENABLE)
 endif()
 
+if(NGRAPH_JSON_ENABLE)
+    add_definitions(-DNGRAPH_JSON_ENABLE)
+endif()
+
+add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+#-----------------------------------------------------------------------------------------------
+# Print Global Options
+#-----------------------------------------------------------------------------------------------
+message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
+message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
+message(STATUS "CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
+
 #-----------------------------------------------------------------------------------------------
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
@@ -463,7 +487,6 @@ endif()
 
 include(cmake/external_gtest.cmake)
 if(NGRAPH_JSON_ENABLE)
-    add_definitions(-DNGRAPH_JSON_ENABLE)
     include(cmake/external_json.cmake)
 endif()
 if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
@@ -511,22 +534,9 @@ if (NGRAPH_HALIDE)
     include(cmake/external_halide.cmake)
 endif()
 
-add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
-
-message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
-message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}")
-message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
 add_subdirectory(src)
 
-if (NGRAPH_UNIT_TEST_ENABLE)
-    add_subdirectory(test)
-    message(STATUS "unit tests enabled")
-else()
-    add_subdirectory(test/models)
-    add_subdirectory(test/util)
-    message(STATUS "unit tests disabled")
-endif()
+add_subdirectory(test)
 
 if (NGRAPH_DOC_BUILD_ENABLE)
     add_subdirectory(doc)
