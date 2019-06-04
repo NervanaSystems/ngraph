@@ -1066,7 +1066,7 @@ void pass::CoreFusion::construct_conv_bias()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto conv_m = dynamic_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
+        auto conv_m = static_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(0));
 
         if (conv_m == nullptr)
         {
