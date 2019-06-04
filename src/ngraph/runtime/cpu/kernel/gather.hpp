@@ -31,6 +31,24 @@ namespace ngraph
         {
             namespace kernel
             {
+                static void
+                    get_leading_indices(const Shape& shape, int index, std::vector<int>& indices)
+                {
+                    auto rank = shape.size();
+                    std::vector<int> partial_sum(rank);
+
+                    partial_sum[rank - 1] = 1;
+                    for (int j = rank - 2; j >= 0; j--)
+                    {
+                        partial_sum[j] = partial_sum[j + 1] * shape[j + 1];
+                    }
+                    for (int j = 0; j < rank; j++)
+                    {
+                        indices[j] = index / partial_sum[j];
+                        index = index % partial_sum[j];
+                    }
+                }
+
                 template <typename ElementType,
                           typename IndicesType,
                           unsigned int Rank1,
@@ -61,81 +79,63 @@ namespace ngraph
                         static_cast<ElementType*>(inputs), in_dims);
 
                     auto indices_ptr = static_cast<IndicesType*>(indices);
-                    auto size = indices_shape.size();
+                    auto indices_rank = indices_shape.size();
 
-                    if (size == 0)
+                    if (indices_rank == 0)
                     {
-                        Eigen::array<Eigen::Index, Rank1> in_slice_dims, in_indices;
-                        Eigen::array<Eigen::Index, Rank2> out_slice_dims, out_indices;
+                        Eigen::array<Eigen::Index, Rank1> in_extents, in_offsets;
+                        Eigen::array<Eigen::Index, Rank2> out_extents, out_offsets;
 
                         for (int i = 0; i < Rank1; i++)
                         {
-                            in_slice_dims[i] = inputs_shape[i];
-                            in_indices[i] = 0;
+                            in_extents[i] = inputs_shape[i];
+                            in_offsets[i] = 0;
                         }
+                        in_extents[0] = 1;
+                        in_offsets[0] = indices_ptr[0];
                         for (int i = 0; i < Rank2; i++)
                         {
-                            out_slice_dims[i] = output_shape[i];
-                            out_indices[i] = 0;
+                            out_extents[i] = output_shape[i];
+                            out_offsets[i] = 0;
                         }
 
-                        in_slice_dims[0] = in_indices[0] = indices_ptr[0];
-                        // change to 1 if 0.
-                        in_slice_dims[0] = in_slice_dims[0] == 0 ? 1 : in_slice_dims[0];
-                        out.slice(out_indices, out_slice_dims)
+                        out.slice(out_offsets, out_extents)
                             .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                arena)) = in.slice(in_indices, in_slice_dims);
+                                arena)) = in.slice(in_offsets, in_extents).reshape(out_extents);
                     }
                     else
                     {
-                        // This is used to calculate the leading indices for out_indices and out_slice_dims
-                        // when size > 1.
-                        std::vector<int> ele_counts(size);
-                        ele_counts[size - 1] = 0;
-                        if (size > 1)
-                        {
-                            ele_counts[size - 2] = indices_shape[size - 1];
-                        }
-                        for (int j = size - 3; j >= 0; j--)
-                        {
-                            ele_counts[j] = indices_shape[j + 2] * indices_shape[j + 1];
-                        }
-
-                        //#pragma omp parallel for
+#pragma omp parallel for
                         for (int i = 0; i < shape_size(indices_shape); i++)
                         {
                             // Declare these inside the loop for omp parallel
-                            Eigen::array<Eigen::Index, Rank1> in_slice_dims, in_indices;
-                            Eigen::array<Eigen::Index, Rank2> out_slice_dims, out_indices;
+                            Eigen::array<Eigen::Index, Rank1> in_extents, in_offsets;
+                            Eigen::array<Eigen::Index, Rank2> out_extents, out_offsets;
+                            std::vector<int> leading_indices(indices_rank);
 
                             for (int r = 0; r < Rank1; r++)
                             {
-                                in_slice_dims[r] = inputs_shape[r];
-                                in_indices[r] = 0;
+                                in_extents[r] = inputs_shape[r];
+                                in_offsets[r] = 0;
                             }
+                            in_extents[0] = 1;
+                            in_offsets[0] = indices_ptr[i];
+
                             for (int r = 0; r < Rank2; r++)
                             {
-                                out_slice_dims[r] = output_shape[r];
-                                out_indices[r] = 0;
+                                out_extents[r] = output_shape[r];
+                                out_offsets[r] = 0;
                             }
-
-                            in_slice_dims[0] = in_indices[0] = indices_ptr[i];
-                            int k = i;
-                            for (int j = 0; j < size - 1; j++)
+                            get_leading_indices(indices_shape, i, leading_indices);
+                            for (int j = 0; j < indices_rank; j++)
                             {
-                                out_slice_dims[j] = out_indices[j] = k / ele_counts[j];
-                                // change to 1 if 0.
-                                out_slice_dims[j] = out_slice_dims[j] == 0 ? 1 : out_slice_dims[j];
-                                k = k % ele_counts[j];
+                                out_extents[j] = 1;
+                                out_offsets[j] = leading_indices[j];
                             }
-                            out_indices[size - 1] = k;
-                            in_slice_dims[0] = in_slice_dims[0] == 0 ? 1 : in_slice_dims[0];
-                            // change to 1 if 0.
-                            out_slice_dims[size - 1] = k == 0 ? 1 : k;
 
-                            out.slice(out_indices, out_slice_dims)
+                            out.slice(out_offsets, out_extents)
                                 .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                    arena)) = in.slice(in_indices, in_slice_dims);
+                                    arena)) = in.slice(in_offsets, in_extents).reshape(out_extents);
                         }
                     }
                 }
