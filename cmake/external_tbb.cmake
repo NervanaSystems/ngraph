@@ -19,7 +19,7 @@
 #------------------------------------------------------------------------------
 
 set(TBB_GIT_REPO_URL https://github.com/01org/tbb)
-set(NGRAPH_TBB_VERSION "2019_U3")
+set(NGRAPH_TBB_VERSION "2019_U7")
 
 if(NGRAPH_TBB_ENABLE)
     set(TBB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/tbb/tbb-src)
