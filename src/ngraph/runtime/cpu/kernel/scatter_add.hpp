@@ -102,8 +102,9 @@ namespace ngraph
                         in_offsets[0] = indices_ptr[0];
                         out.slice(in_offsets, in_extents)
                             .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                arena)) = out.slice(in_offsets, in_extents) +
-                                          up.slice(updates_offsets, updates_extents);
+                                arena)) =
+                            out.slice(in_offsets, in_extents) +
+                            up.slice(updates_offsets, updates_extents).reshape(in_extents);
                     }
                     else
                     {
@@ -119,8 +120,9 @@ namespace ngraph
                             }
                             out.slice(in_offsets, in_extents)
                                 .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                    arena)) = out.slice(in_offsets, in_extents) +
-                                              up.slice(updates_offsets, updates_extents);
+                                    arena)) =
+                                out.slice(in_offsets, in_extents) +
+                                up.slice(updates_offsets, updates_extents).reshape(in_extents);
                         }
                     }
                 }
