@@ -15,12 +15,12 @@
 //*****************************************************************************
 #include "ngraph/op/fused/gemm.hpp"
 
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/util/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -49,15 +49,15 @@ NodeVector op::Gemm::decompose_op() const
 
     if (m_transA)
     {
-        A = ngraph::op::util::transpose(A);
+        A = ngraph::builder::transpose(A);
     }
     if (m_transB)
     {
-        B = ngraph::op::util::transpose(B);
+        B = ngraph::builder::transpose(B);
     }
 
-    A = ngraph::op::util::flatten(A, 1);
-    B = ngraph::op::util::flatten(B, 1);
+    A = ngraph::builder::flatten(A, 1);
+    B = ngraph::builder::flatten(B, 1);
 
     // A' * B'
     std::shared_ptr<ngraph::Node> a_dot_b = std::make_shared<ngraph::op::Dot>(A, B);

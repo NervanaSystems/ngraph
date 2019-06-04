@@ -16,6 +16,11 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
@@ -26,13 +31,27 @@ namespace ngraph
         {
             class IndexReduction : public Op
             {
-            public:
-                size_t get_reduction_axis() const { return m_axis; }
-                element::Type get_index_element_type() const { return m_index_element_type; }
+            protected:
+                IndexReduction();
+
+                IndexReduction(const Output<Node>& arg,
+                               size_t axis,
+                               const element::Type& index_element_type);
+
+                IndexReduction(const std::shared_ptr<Node>& arg,
+                               size_t axis,
+                               const element::Type& index_element_type);
+
                 IndexReduction(const std::string& node_type,
                                const std::shared_ptr<Node>& arg,
                                size_t axis,
                                const element::Type& index_element_type);
+
+            public:
+                size_t get_reduction_axis() const;
+                void set_reduction_axis(size_t value);
+                element::Type get_index_element_type() const;
+                void set_index_element_type(const element::Type& index_element_type);
 
             protected:
                 size_t m_axis;
