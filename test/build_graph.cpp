@@ -97,11 +97,6 @@ TEST(build_graph, tensor)
     ASSERT_EQ(int32_0->get_shape(), ishape);
 }
 
-// Check argument inverses
-TEST(build_graph, arg_inverse)
-{
-}
-
 // Check functions with undeclared parameters
 TEST(build_graph, function_undeclared_parameters)
 {
@@ -130,4 +125,28 @@ TEST(build_graph, function_undeclared_parameters)
     {
         FAIL() << "Function construction failed for unexpected reason";
     }
+}
+
+// Check no-arg construction
+TEST(build_graph, no_arg_construction)
+{
+    // The ops
+    // Parameters aren't converted yet
+    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{7});
+    auto arg1 = make_shared<op::Parameter>(element::f32, Shape{7});
+    auto arg2 = make_shared<op::Parameter>(element::f32, Shape{7});
+    auto arg3 = make_shared<op::Parameter>(element::f32, Shape{7});
+    auto add0 = make_shared<op::Add>();
+    auto abs0 = make_shared<op::Abs>();
+    auto acos0 = make_shared<op::Acos>();
+    auto add1 = make_shared<op::Add>();
+    add0->set_argument(1, arg0);
+    add0->set_argument(0, arg1);
+    abs0->set_argument(0, add0);
+    acos0->set_argument(0, add0);
+    add1->set_argument(0, acos0);
+    add1->set_argument(1, abs0);
+    NodeVector ops{arg0, arg1, add0, abs0, acos0, add1};
+    validate_nodes_and_infer_types(ops);
+    ASSERT_EQ(add1->get_output_shape(0), Shape{7});
 }

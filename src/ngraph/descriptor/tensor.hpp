@@ -45,8 +45,12 @@ namespace ngraph
             Tensor(const element::Type& element_type,
                    const PartialShape& pshape,
                    const std::string& name);
+            Tensor(const element::Type& element_type,
+                   const PartialShape& pshape,
+                   Node* node,
+                   size_t node_output_number);
 
-            const std::string& get_name() const { return m_name; }
+            const std::string& get_name() const;
             void set_tensor_type(const element::Type& element_type, const PartialShape& pshape);
 
             const element::Type& get_element_type() const { return m_element_type; }
@@ -73,6 +77,8 @@ namespace ngraph
             //    should refactor so that get_shape returns by value.
             Shape m_shape;
             PartialShape m_partial_shape;
+            Node* m_node{nullptr};
+            size_t m_node_output_number{0};
 
             std::string m_name;
             std::shared_ptr<layout::TensorLayout> m_tensor_layout;
