@@ -169,7 +169,11 @@ void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& sourc
 
     if (auto cpu_source = dynamic_cast<const runtime::cpu::CPUTensorView*>(&source))
     {
-        if (cpu_source->get_tensor_layout() == this->get_tensor_layout())
+        auto this_tl =
+            dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(this->get_tensor_layout().get());
+        auto other_tl =
+            dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(source.get_tensor_layout().get());
+        if ((this_tl != NULL) && (other_tl != NULL) && (*this_tl == *other_tl))
         {
             // Direct copy
             memcpy(get_data_ptr(), cpu_source->get_data_ptr(), get_size_in_bytes());
@@ -186,9 +190,9 @@ void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& sourc
     else
     {
         auto size = get_size_in_bytes();
-        AlignedBuffer buffer{size, 64};
-        source.read(buffer.get_ptr(), 0, size);
-        write(buffer.get_ptr(), 0, size);
+        AlignedBuffer tmp_buffer{size, BufferAlignment};
+        source.read(tmp_buffer.get_ptr(), 0, size);
+        write(tmp_buffer.get_ptr(), 0, size);
         // Set default layout
         m_descriptor->set_tensor_layout(
             std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));

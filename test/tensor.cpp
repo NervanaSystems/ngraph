@@ -141,10 +141,21 @@ TEST(tensor, copy_from_same_layout)
     // this test copying of data between two tensor having same
     // layout
     auto backend = runtime::Backend::create("CPU");
-    auto a = backend->create_tensor(element::f32, Shape{6});
-    auto b = backend->create_tensor(element::f32, Shape{6});
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{2, 3});
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    copy_data(b, vector<float>{0, 0, 0, 0, 0, 0});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(tensor, copy_from_different_layout)
+{
+    // this test copying of data between two tensor having different
+    // layout
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{3, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     b->copy_from(*a);
     ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
 }
