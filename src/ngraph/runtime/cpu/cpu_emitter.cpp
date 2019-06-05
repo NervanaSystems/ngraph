@@ -1816,7 +1816,8 @@ namespace ngraph
 
                 writer.block_begin();
                 if ((args[0].get_element_type() == element::f64 ||
-                     args[0].get_element_type() == element::f32) &&
+                     args[0].get_element_type() == element::f32 ||
+                     args[0].get_element_type() == element::u8) &&
                     gather->get_axis() == 0)
                 {
                     writer << "cpu::kernel::gather<" << args[0].get_type() << ", "
