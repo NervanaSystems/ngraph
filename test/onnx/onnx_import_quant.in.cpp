@@ -355,6 +355,22 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_zero_point_zero)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<uint8_t>{11, 7, 3, 10, 6, 2, 9, 5, 1, 8, 4, 0}); // a
+    test_case.add_input(std::vector<uint8_t>{1, 4, 2, 5, 3, 6});                     // b
+    test_case.add_input(std::vector<uint8_t>{0});                                    // a_zero_point
+    test_case.add_input(std::vector<uint8_t>{0});                                    // b_zero_point
+
+    test_case.add_expected_output({4, 2},
+                                  std::vector<int32_t>{34, 97, 28, 82, 22, 67, 16, 52}); // y
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_no_zero_point)
 {
     auto function = onnx_import::import_onnx_model(
