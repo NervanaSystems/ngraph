@@ -190,7 +190,7 @@ void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& sourc
     else
     {
         auto size = get_size_in_bytes();
-        AlignedBuffer tmp_buffer{size, BufferAlignment};
+        AlignedBuffer tmp_buffer{size, static_cast<size_t>(BufferAlignment)};
         source.read(tmp_buffer.get_ptr(), 0, size);
         write(tmp_buffer.get_ptr(), 0, size);
         // Set default layout
