@@ -958,13 +958,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
             return false;
         }
 
-        auto value = gm->get_probability();
-        auto seed = gm->get_seed();
+        auto gm_value = gm->get_probability();
+        auto gm_seed = gm->get_seed();
 
         auto training = gm->get_argument(0); //for training purpose this is always going to be 1
 
         auto dropout_n =
-            std::make_shared<ngraph::op::Dropout>(pattern_map[x], training, seed, value);
+            std::make_shared<ngraph::op::Dropout>(pattern_map[x], training, gm_seed, gm_value);
         auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 0);
         ngraph::replace_node(m.get_match_root(), goe1);
 
