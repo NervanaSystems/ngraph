@@ -24,8 +24,11 @@
 using namespace std;
 using namespace ngraph;
 
-op::DynReshape::DynReshape(const shared_ptr<Node>& arg, const shared_ptr<Node>& pattern)
+op::DynReshape::DynReshape(const shared_ptr<Node>& arg,
+                           const shared_ptr<Node>& pattern,
+                           bool zero_flag)
     : Op("DynReshape", check_single_output_args({arg, pattern}))
+    , m_zero_flag(zero_flag)
 {
     constructor_validate_and_infer_types();
 }
@@ -47,9 +50,87 @@ void op::DynReshape::validate_and_infer_types()
     Rank output_rank = pattern_shape.rank().is_dynamic() ? Rank::dynamic() : pattern_shape[0];
 
     set_input_is_relevant_to_shape(1);
+
     if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(1)))
     {
-        set_output_type(0, get_input_element_type(0), const_shape->get_shape_val());
+        std::vector<int64_t> out_shape_val = const_shape->get_vector<int64_t>();
+        NODE_VALIDATION_CHECK(this,
+                              std::none_of(out_shape_val.begin(),
+                                           out_shape_val.end(),
+                                           [](int64_t v) { return v < -1; }),
+                              "Dim size cannot be less than -1 ");
+
+        int zero_dims = std::count_if(
+            out_shape_val.begin(), out_shape_val.end(), [](int64_t v) { return v == 0; });
+        int negative_dims = std::count_if(
+            out_shape_val.begin(), out_shape_val.end(), [](int64_t v) { return v == -1; });
+        NODE_VALIDATION_CHECK(this,
+                              negative_dims <= 1,
+                              "More than one dimension has size of -1 (",
+                              negative_dims,
+                              ")");
+
+        if (!(zero_dims && m_zero_flag) && !negative_dims)
+        {
+            set_output_type(0, get_input_element_type(0), const_shape->get_shape_val());
+        }
+        else
+        {
+            std::vector<Dimension> partial_shape(static_cast<size_t>(output_rank));
+            // Replace zeros and negatives with Dynamic dimensions as needed
+            std::transform(out_shape_val.begin(),
+                           out_shape_val.end(),
+                           partial_shape.begin(),
+                           [&](const int64_t& v) {
+                               return (v < 0)
+                                          ? Dimension()
+                                          : ((v == 0 && m_zero_flag) ? Dimension() : Dimension(v));
+                           });
+
+            if (get_input_partial_shape(0).is_static())
+            {
+                size_t output_elements = 1;
+                int negative_dim = -1;
+
+                auto input_shape = get_input_partial_shape(0).to_shape();
+                size_t input_elements = shape_size(input_shape);
+                for (size_t i = 0; i < static_cast<size_t>(output_rank); i++)
+                {
+                    if (out_shape_val[i] == 0 && m_zero_flag)
+                    {
+                        // Copy input_shape[i] for zero values
+                        NGRAPH_CHECK(i < input_shape.size());
+                        partial_shape[i] = Dimension(input_shape[i]);
+                        output_elements *= input_shape[i];
+                    }
+                    else if (out_shape_val[i] == -1)
+                    {
+                        negative_dim = i;
+                    }
+                    else
+                    {
+                        output_elements *= out_shape_val[i];
+                    }
+                }
+
+                if (negative_dim != -1)
+                {
+                    // Infer size such that number of output elements matches
+                    // input elements
+                    if (output_elements == 0)
+                    {
+                        NGRAPH_CHECK(input_elements == 0);
+                        partial_shape[negative_dim] = Dimension(0);
+                    }
+                    else
+                    {
+                        NGRAPH_CHECK(input_elements % output_elements == 0);
+                        partial_shape[negative_dim] = Dimension(input_elements / output_elements);
+                    }
+                }
+            }
+            set_output_type(0, get_input_element_type(0), PartialShape(partial_shape));
+        }
     }
     else
     {
@@ -60,7 +141,7 @@ void op::DynReshape::validate_and_infer_types()
 shared_ptr<Node> op::DynReshape::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<DynReshape>(new_args.at(0), new_args.at(1));
+    return make_shared<DynReshape>(new_args.at(0), new_args.at(1), m_zero_flag);
 }
 
 void op::DynReshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
