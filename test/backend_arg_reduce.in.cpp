@@ -55,6 +55,25 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial)
     EXPECT_EQ((vector<int>{3, 2, 1}), read_vector<int>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial_i32)
+{
+    Shape shape{4, 3};
+    Shape rshape{3};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 0, element::i32), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape);
+    copy_data(a, vector<int>{12, 2, 10, 9, 8, 4, 6, 1, 5, 3, 11, 7});
+    auto result = backend->create_tensor(element::i32, rshape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<int>{3, 2, 1}), read_vector<int>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3_i64)
 {
     Shape shape{2, 2, 5, 5}; // NCHW ->(0,1,2,3)

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,9 @@ namespace
 {
     using namespace mlir;
     using namespace mlir::edsc;
+    using namespace mlir::edsc::op;
     using namespace ngraph::runtime;
+    using namespace ngraph::runtime::ngmlir;
 
     class DialectLoweringPass;
 
@@ -59,8 +61,10 @@ namespace
         // Initialize the list of converters.
         void initConverters(OwningRewritePatternList& patterns, MLIRContext* mlirContext) override
         {
-            RewriteListBuilder<NGAddOpConversion, NGDotOpConversion, NGReturnOpConversion>::build(
-                patterns, mlirContext, m_pass);
+            RewriteListBuilder<NGAddOpConversion,
+                               NGArgMinRedOpConversion,
+                               NGDotOpConversion,
+                               NGReturnOpConversion>::build(patterns, mlirContext, m_pass);
         }
 
     private:
@@ -383,7 +387,7 @@ namespace
         IndexHandle n_ub(v_lhs.ub(n_dim)), m_ub(v_lhs.ub(m_dim)), k_ub(v_rhs.ub(k_dim));
         int64_t n_step = v_lhs.step(n_dim), m_step = v_lhs.step(m_dim), k_step = v_rhs.step(k_dim);
 
-        // Constants, indexed values and indexes to be used inside the loop nest.
+        // Constants and indexed values to be used inside the loop nest.
         IndexedValue i_res(result), i_lhs(lhs), i_rhs(rhs);
         ValueHandle zero_init(rewriter.create<ConstantOp>(loc, rewriter.getZeroAttr(elem_ty)));
 
@@ -392,6 +396,67 @@ namespace
                 i_res(n, k) = zero_init;
                 LoopBuilder(&m, m_lb, m_ub, m_step)(
                     [&] { i_res(n, k) += i_lhs(n, m) * i_rhs(m, k); });
+            });
+        });
+
+        rewriter.replaceOp(op, {result});
+    }
+
+    REWRITER(NGArgMinRedOp)
+    {
+        auto argmin = cast<NGArgMinRedOp>(op);
+        auto loc = argmin.getLoc();
+
+        NGRAPH_ASSERT(operands.size() == 1 && operands[0] != nullptr)
+            << "Expected one non-null operand in ArgMin op";
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* arg = operands[0];
+        auto arg_type = arg->getType().cast<MemRefType>();
+        NGRAPH_ASSERT(arg_type.getRank() == 2) << "Unsupported tensor type in ArgMin op";
+
+        //axis = op->getAttr();
+        //NGRAPH_ASSERT(axis == 0) << "Unsupported axis in ArgMin op";
+        Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
+        //NGRAPH_ASSERT(lhs && rhs && result) << "Unexpected null values in MatmulBiasOp";
+
+        // FIXME: Workaround to the integer to index conversion.
+        auto res_ty = result->getType().cast<MemRefType>();
+        Type res_elem_ty = res_ty.getElementType();
+        //result->setType(
+        //    MemRefType::get(res_ty.getShape(), IndexType::get(res_elem_ty.getContext())));
+
+        // Create the following loop nest for argmin operation:
+        //   for(i, I, 1)
+        //     for(j, J, 1) // Reduction dimention
+        //       res[j] = select((arg[i, j] < res[j]), i, res[j])
+
+        MemRefView v_res(result), v_arg(arg);
+        unsigned n_dim = v_arg.fastestVarying() - 1;
+        unsigned m_dim = v_arg.fastestVarying();
+
+        // Constants, indexed values and other vars to be used inside the loop nest.
+        IndexedValue i_res(result), i_arg(arg);
+
+        // Initialize result to zero.
+        IndexHandle m_init;
+        IndexHandle m_lb_init(v_arg.lb(m_dim));
+        IndexHandle m_ub_init(v_arg.ub(m_dim));
+        int64_t m_step = v_arg.step(m_dim);
+        LoopBuilder(&m_init, m_lb_init, m_ub_init, m_step)([&] { i_res(m_init) = m_lb_init; });
+
+        // Main loop nest for argmin
+        IndexHandle n, m;
+        IndexHandle n_lb(v_arg.lb(n_dim)), m_lb(v_arg.lb(m_dim));
+        IndexHandle n_ub(v_arg.ub(n_dim)), m_ub(v_arg.ub(m_dim));
+        ValueHandle curr_res(res_elem_ty);
+        int64_t n_step = v_arg.step(n_dim);
+
+        LoopBuilder(&n, n_lb, n_ub, n_step)([&] {
+            LoopBuilder(&m, m_lb, m_ub, m_step)([&] {
+                curr_res = i_res(m);
+                i_res(m) = edsc::intrinsics::select(i_arg(n, m) < i_arg(curr_res, m), n, curr_res);
             });
         });
 

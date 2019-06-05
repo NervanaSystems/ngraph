@@ -15,9 +15,11 @@
 //*****************************************************************************
 
 #include "mlir_subgraph_extraction.hpp"
+
 #include "ngraph/assertion.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
