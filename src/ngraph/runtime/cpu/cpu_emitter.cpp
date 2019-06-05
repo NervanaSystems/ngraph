@@ -121,6 +121,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
@@ -3928,6 +3929,45 @@ namespace ngraph
                 writer << "            " << out[0].get_name() << ",\n";
                 writer << "            " << out[0].get_size() << ",\n";
                 writer << "            state, training);\n";
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Dropout)
+            {
+                auto dropout = static_cast<const ngraph::op::Dropout*>(node);
+                if (out[0].get_element_type() != element::f64 &&
+                    out[0].get_element_type() != element::f32)
+                {
+                    throw ngraph_error("Unsupported element type");
+                }
+                size_t element_count = out[0].get_size();
+                size_t nthr = ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores();
+                size_t chunk_size = (element_count + nthr - 1) / nthr;
+
+                writer.block_begin();
+                writer << "uint32_t seed = " << to_string(dropout->get_seed()) << ";\n";
+                writer << "double value = " << to_string(dropout->get_value()) << ";\n";
+
+                writer << "std::vector<std::minstd_rand> vmsr(" << to_string(nthr) << ");\n";
+                writer << "for (size_t i = 0; i < " << to_string(nthr) << "; i++)\n\
+                {\n\
+                    std::minstd_rand msr;\n\
+                    msr.seed(seed);\n\
+                    msr.discard(i * "
+                       << to_string(chunk_size) << ");\n\
+                    vmsr[i] = msr;\n\
+                }\n";
+
+                writer << "bool training = static_cast<bool>(" << args[1].get_name() << "[0]);\n";
+                writer << "cpu::kernel::generate_dropout(";
+                writer << "            " << args[0].get_name() << ",\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            " << out[1].get_name() << ",\n";
+                writer << "            " << out[0].get_size() << ",\n";
+                writer << "             training,\n";
+                writer << "            " << to_string(dropout->get_value()) << ",\n";
+                writer << "             vmsr);\n";
                 writer.block_end();
             }
 

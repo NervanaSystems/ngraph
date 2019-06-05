@@ -18,6 +18,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <random>
+#include <vector>
 
 // CBLAS types and wrappers
 
@@ -224,6 +226,15 @@ namespace ngraph
 
                 template <typename ElementType>
                 void reference_erf(void* arg, void* out, size_t count);
+
+                template <typename T>
+                void generate_dropout(T* input,
+                                      T* out0,
+                                      T* out1_mask,
+                                      size_t nelems,
+                                      bool training,
+                                      const double value,
+                                      const std::vector<std::minstd_rand>& vmsr);
             }
         }
     }
