@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
+#include <cstdio>
 #include "ngraph/runtime/gpu/nvcc/kernels.hpp"
 using namespace ngraph;
 
