@@ -1,4 +1,4 @@
-.. backend-support/tensor-api/index.rst:
+.. backends/tensor-api/index.rst:
 
 
 Tensor

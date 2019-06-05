@@ -1,17 +1,73 @@
-.. ngraph/release-notes:
+.. project/release-notes.rst:
 
 Release Notes
 #############
 
-|version|
+nGraph is provided as source code, APIs, build scripts, and some binary formats for 
+various Compiler stack configurations and use cases. 
 
-For downloads formatted as ``.zip`` and ``tar.gz``, see https://github.com/NervanaSystems/ngraph/releases; 
+All project source code and documentation are maintained in a GitHub* repository.
+
+.. Begin release notes template
+   This is the `Release Notes` template for latest nGraph Compiler stack release versioning 
+
+We are pleased to announce the release of version |version|.
+
+
+What's new?
+-----------
+
+Additional functionality included with this release:
+
+
+
+
+What's updated?
+---------------
+
+The following sections provide detailed lists of major updates and removals by component:
+
+
+Core
+~~~~
+
+
+
+Frameworks
+~~~~~~~~~~
+
+
+
+Backends
+~~~~~~~~
+
+
+
+Visualization Tools
+~~~~~~~~~~~~~~~~~~~
+
+
+
+Other
+~~~~~
+
+
+.. ----------------------------------------------------------------------------
+   End release notes template 
+
+
+For downloads formatted as ``.zip`` and ``tar.gz``, see https://github.com/NervanaSystems/ngraph/releases.
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
 
 
-Changelog 
-=========
+Changelog on Previous Releases
+==============================
+
+
+
+
+
 
 0.19
 ----

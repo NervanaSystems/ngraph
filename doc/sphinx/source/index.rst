@@ -89,8 +89,8 @@ other files that use other licensing.
    :maxdepth: 1
    :caption: Backend Developers
 
-   backend-developers/index.rst
-   backend-developers/cpp-api.rst
+   backends/index.rst
+   backends/cpp-api.rst
 
 
 .. toctree::
