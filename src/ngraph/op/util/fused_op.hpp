@@ -44,6 +44,13 @@ namespace ngraph
                                        const NodeVector& deltas) override;
 
             protected:
+                FusedOp();
+
+                /// \brief Constructs a FusedOp
+                ///
+                /// \param args Nodes that produce the input tensors for the fused op
+                FusedOp(const NodeVector& args);
+
                 /// \brief Constructs a FusedOp
                 ///
                 /// \param args Nodes that produce the input tensors for the fused op
