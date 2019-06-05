@@ -54,7 +54,7 @@ namespace ngraph
                 void set_index_element_type(const element::Type& index_element_type);
 
             protected:
-                size_t m_axis;
+                size_t m_axis{0};
                 element::Type m_index_element_type;
 
                 void validate_and_infer_types() override;
