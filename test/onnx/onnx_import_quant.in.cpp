@@ -380,6 +380,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_scalar)
     test_case.add_input(std::vector<uint8_t>{12}); // a_zero_point
     test_case.add_input(std::vector<uint8_t>{12}); // b_zero_point
 
-    test_case.add_expected_output({4, 2}, std::vector<int32_t>{-1}); // y
+    test_case.add_expected_output({1, 1}, std::vector<int32_t>{-1}); // y
     test_case.run();
 }

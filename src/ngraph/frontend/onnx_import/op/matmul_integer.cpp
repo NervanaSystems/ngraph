@@ -15,8 +15,11 @@
 //*****************************************************************************
 
 #include "op/matmul_integer.hpp"
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization/quantized_linear_matmul.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
+
+using namespace ngraph::builder;
 
 namespace ngraph
 {
@@ -35,12 +38,20 @@ namespace ngraph
 
                     if (num_inputs == 2)
                     {
-                        return {
-                            builder::quantization::QuantizedLinearMatmulInteger(input_a, input_b)};
+                        return NodeVector{
+                            quantization::QuantizedLinearMatmulInteger(input_a, input_b)};
                     }
 
-                    throw error::NotSupported(
-                        "MatMulInteger operation with customized zero-points not supported.");
+                    auto input_a_zero_point = ng_inputs.at(2);
+                    auto input_b_zero_point =
+                        make_constant(input_b->get_element_type(), Shape{}, 0);
+                    if (num_inputs == 4)
+                    {
+                        input_b_zero_point = ng_inputs.at(3);
+                    }
+
+                    return NodeVector{quantization::QuantizedLinearMatmulInteger(
+                        input_a, input_b, input_a_zero_point, input_b_zero_point)};
                 }
             } // namespace set_1
 
