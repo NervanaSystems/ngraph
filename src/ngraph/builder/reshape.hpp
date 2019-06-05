@@ -29,7 +29,7 @@ namespace ngraph
     {
         /// \brief      Change shape of input tensor.
         ///
-        /// \param[in]  node   The node which shape will be used as input to Reshape.
+        /// \param[in]  node   The node producing the tensor to be reshaped.
         /// \param[in]  shape  The new shape for input tensor.
         ///
         /// \return     The node representing a Reshape operation.
@@ -57,7 +57,7 @@ namespace ngraph
         /// \param node The tensor to be flattened.
         /// \param axis The axis dividing shape.
         ///
-        /// \return The new node being a 2D matrix representing flattened input node.
+        /// \return The new node will be a 2D matrix representing the flattened input node.
         std::shared_ptr<Node> flatten(const std::shared_ptr<Node>& node, int axis);
     } // namespace  builder
 } // namespace  ngraph

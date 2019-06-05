@@ -45,6 +45,10 @@ static void visualize_layout_format(const Node& node, ostream& ss)
         {
             return;
         }
+        if (auto reshape = dynamic_cast<const op::Reshape*>(&node))
+        {
+            ss << "\ninput_order=" << reshape->get_input_order();
+        }
         ss << "\nin="
            << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
                   static_cast<mkldnn::memory::format>(in_tvl->get_mkldnn_md().data.format));
