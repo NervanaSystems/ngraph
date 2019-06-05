@@ -54,7 +54,6 @@ namespace ngraph
             const AxisSet& get_new_axis() const { return m_new_axis; }
             const AxisSet& get_shrink_axis() const { return m_shrink_axis; }
             const AxisSet& get_ellipsis_mask() const { return m_ellipsis_mask; }
-
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
