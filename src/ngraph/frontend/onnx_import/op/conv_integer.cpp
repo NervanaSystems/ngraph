@@ -15,9 +15,12 @@
 //*****************************************************************************
 
 #include "op/conv_integer.hpp"
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
+
+using namespace ngraph::builder;
 
 namespace ngraph
 {
@@ -30,6 +33,7 @@ namespace ngraph
                 NodeVector conv_integer(const Node& node)
                 {
                     const NodeVector& inputs = node.get_ng_inputs();
+                    auto num_inputs = inputs.size();
                     auto input = inputs.at(0);
                     auto filters = inputs.at(1);
 
@@ -43,17 +47,36 @@ namespace ngraph
                     auto paddings = convpool::get_pads(node);
                     const auto& padding_below = paddings.first;
                     const auto& padding_above = paddings.second;
-
                     const Strides default_data_dilation_strides(input->get_shape().size() - 2, 1);
 
-                    return {ngraph::builder::quantization::QuantizedConvInteger(
-                        input,
-                        filters,
-                        window_movement_strides,
-                        window_dilation_strides,
-                        padding_below,
-                        padding_above,
-                        default_data_dilation_strides)};
+                    if (num_inputs == 2)
+                    {
+                        return {quantization::QuantizedConvInteger(input,
+                                                                   filters,
+                                                                   window_movement_strides,
+                                                                   window_dilation_strides,
+                                                                   padding_below,
+                                                                   padding_above,
+                                                                   default_data_dilation_strides)};
+                    }
+
+                    auto input_zero_point = inputs.at(2);
+                    auto filters_zero_point =
+                        make_constant(filters->get_element_type(), Shape{}, 0);
+                    if (num_inputs == 4)
+                    {
+                        filters_zero_point = inputs.at(3);
+                    }
+
+                    return {quantization::QuantizedConvInteger(input,
+                                                               filters,
+                                                               window_movement_strides,
+                                                               window_dilation_strides,
+                                                               padding_below,
+                                                               padding_above,
+                                                               default_data_dilation_strides,
+                                                               input_zero_point,
+                                                               filters_zero_point)};
                 }
             } // namespace set_1
 

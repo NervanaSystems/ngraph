@@ -166,6 +166,68 @@ namespace ngraph
                                                              output_scale,
                                                              false);
             }
+
+            shared_ptr<Node> QuantizedConvInteger(const shared_ptr<Node>& input,
+                                                  const shared_ptr<Node>& filter,
+                                                  const Strides& window_movement_strides,
+                                                  const Strides& window_dilation_strides,
+                                                  const CoordinateDiff& padding_below,
+                                                  const CoordinateDiff& padding_above,
+                                                  const Strides& data_dilation_strides,
+                                                  const std::shared_ptr<Node>& input_zero_point,
+                                                  const std::shared_ptr<Node>& filter_zero_point)
+            {
+                // Check if zero points are constant and zero
+                if (ngraph::is_zero(input_zero_point) && ngraph::is_zero(filter_zero_point))
+                {
+                    return QuantizedConvInteger(input,
+                                                filter,
+                                                window_movement_strides,
+                                                window_dilation_strides,
+                                                padding_below,
+                                                padding_above,
+                                                data_dilation_strides);
+                }
+                else
+                {
+                    // Fall back to performing operation on dequantized floating-point values
+                    auto input_scale = make_constant(element::f32, Shape{}, 1);
+                    auto filter_scale = make_constant(element::f32, Shape{}, 1);
+                    auto output_scale = make_constant(element::f32, Shape{}, 1);
+                    auto output_zero_point = make_constant(element::i32, Shape{}, 0);
+                    AxisSet axes;
+
+                    auto dq_input = make_shared<op::Dequantize>(input,
+                                                                input_scale,
+                                                                input_zero_point,
+                                                                input_scale->get_element_type(),
+                                                                axes);
+
+                    auto dq_filter = make_shared<op::Dequantize>(filter,
+                                                                 filter_scale,
+                                                                 filter_zero_point,
+                                                                 filter_scale->get_element_type(),
+                                                                 axes);
+
+                    auto output = make_shared<op::Convolution>(dq_input,
+                                                               dq_filter,
+                                                               window_movement_strides,
+                                                               window_dilation_strides,
+                                                               padding_below,
+                                                               padding_above,
+                                                               data_dilation_strides);
+
+                    auto quantized_output = make_shared<op::Quantize>(
+                        output,
+                        output_scale,
+                        output_zero_point,
+                        output_zero_point->get_element_type(),
+                        axes,
+                        op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
+
+                    return move(quantized_output);
+                }
+            }
         }
     }
 }
