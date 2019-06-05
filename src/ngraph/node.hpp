@@ -35,6 +35,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/placement.hpp"
 #include "ngraph/strides.hpp"
 
@@ -48,6 +49,7 @@ namespace ngraph
 
     class Node;
     using NodeVector = std::vector<std::shared_ptr<Node>>;
+    using OutputVector = std::vector<Output<Node>>;
 
     class Function;
 
@@ -100,15 +102,49 @@ namespace ngraph
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
 
-        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args();
-        void validate_and_infer_elementwise_arithmetic();
-        void validate_and_infer_elementwise_logical();
+        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
+            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
+        void validate_and_infer_elementwise_arithmetic(
+            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
+        void validate_and_infer_elementwise_logical(
+            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
 
+        /// \brief Construct an unitialized Node
+        Node() {}
+        /// \brief Construct an unitialized Node
+        /// \param output_size Number of outputs for this node
+        Node(size_t output_size);
+
+        /// \brief Constructor for Node subclasses that have metaclasses.
+        /// \param arguments Output i will connect to input i
+        /// \param output_size Number of outputs for this node
+        Node(const OutputVector& arguments, size_t output_size = 1);
+
+        /// \brief Construct a node with arguments. Will be deprecated.
         Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
 
+        /// \brief Constructor for Node subclasses that have metaclasses. Will be deprecated.
+        /// \param arguments The 0th output of node i will connect to input i
+        /// \param output_size Number of outputs for this node
+        Node(const NodeVector& arguments, size_t output_size = 1);
+
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
+        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows on deep networks.
+        void safe_delete(NodeVector& nodes, bool recurse);
+
     public:
         virtual ~Node();
+
+        /// Sets/replaces the arguments with new arguments.
+        void set_arguments(const NodeVector& arguments);
+        /// Sets/replaces the arguments with new arguments.
+        void set_arguments(const OutputVector& arguments);
+        /// Sets/replaces the arguments with new arguments.
+        void set_argument(size_t position, const Output<Node>& argument);
+
+        /// Sets the number of outputs
+        void set_output_size(size_t output_size);
+
         void revalidate_and_infer_types() { validate_and_infer_types(); }
         // Called after transition
         void delayed_validate_and_infer_types();
@@ -116,8 +152,7 @@ namespace ngraph
         /// \brief Get the string name for the type of the node, such as `Add` or `Multiply`.
         ///        The class name, must not contain spaces as it is used for codegen.
         /// \returns A const reference to the node's type name
-        const std::string& description() const;
-
+        virtual const std::string& description() const;
         /// \brief Get the unique name of the node.
         /// \returns A const reference to the node's unique name.
         const std::string& get_name() const;
@@ -281,10 +316,11 @@ namespace ngraph
         std::unordered_set<descriptor::Tensor*> liveness_new_list;
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
+        // Will be deprecated
         virtual NodeVector get_arguments() const;
-
+        // Will be deprecated
         std::shared_ptr<Node> get_argument(size_t index) const;
-
+        // Will be replaced with an OutputVector version
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
         virtual std::vector<std::shared_ptr<Function>> get_functions() const;
@@ -349,16 +385,15 @@ namespace ngraph
         /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
         Output<const Node> output(size_t output_index) const;
 
-    protected:
-        void set_output_size(size_t n);
-
     private:
-        std::set<std::shared_ptr<Node>> m_control_dependencies;
+        descriptor::Input& get_input_descriptor(size_t position);
+        descriptor::Output& get_output_descriptor(size_t position);
 
+        std::set<std::shared_ptr<Node>> m_control_dependencies;
         const std::string m_node_type;
-        size_t m_instance_id;
+        size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
-        const std::string m_unique_name;
+        std::string m_unique_name;
         static std::atomic<size_t> m_next_instance_id;
         std::unordered_set<std::string> m_provenance_tags;
         std::deque<descriptor::Input> m_inputs;
@@ -404,6 +439,11 @@ namespace ngraph
         descriptor::Tensor& get_tensor() const
         {
             return m_node->m_inputs.at(m_index).get_output().get_tensor();
+        }
+        /// \return A shared pointer to the tensor descriptor for this input.
+        std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
+        {
+            return m_node->m_inputs.at(m_index).get_output().get_tensor_ptr();
         }
         /// \return true if this input is relevant to its node's output shapes; else false.
         bool get_is_relevant_to_shapes() const
@@ -485,6 +525,11 @@ namespace ngraph
         descriptor::Tensor& get_tensor() const
         {
             return m_node->m_outputs.at(m_index).get_tensor();
+        }
+        /// \return A shared point to the tensor ptr for this output.
+        std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const
+        {
+            return m_node->m_outputs.at(m_index).get_tensor_ptr();
         }
         /// \return The element type of the output referred to by this output handle.
         const element::Type& get_element_type() const
@@ -680,9 +725,23 @@ namespace ngraph
         const Node& m_node;
         bool m_is_short;
     };
-
-    void check_new_args_count(const Node* node, const NodeVector& new_args);
-} // namespace ngraph
-
+}
 #define NODE_VALIDATION_CHECK(node, cond, ...)                                                     \
     NGRAPH_CHECK_HELPER(::ngraph::NodeValidationFailure, (node), (cond), ##__VA_ARGS__)
+
+namespace ngraph
+{
+    template <typename T>
+    void check_new_args_count(const Node* node, T new_args)
+    {
+        NODE_VALIDATION_CHECK(node,
+                              new_args.size() == node->get_arguments().size(),
+                              "copy_with_new_args() expected ",
+                              node->get_arguments().size(),
+                              " argument",
+                              (node->get_arguments().size() == 1 ? "" : "s"),
+                              " but got ",
+                              new_args.size());
+    }
+
+} // namespace ngraph

@@ -31,6 +31,18 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
 {
 }
 
+descriptor::Tensor::Tensor(const element::Type& element_type,
+                           const PartialShape& pshape,
+                           Node* node,
+                           size_t node_output_number)
+    : m_element_type(element_type)
+    , m_shape(pshape.is_static() ? pshape.to_shape() : Shape{})
+    , m_partial_shape(pshape)
+    , m_node(node)
+    , m_node_output_number(node_output_number)
+{
+}
+
 void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
                                          const PartialShape& pshape)
 {
@@ -93,6 +105,16 @@ void descriptor::Tensor::set_tensor_layout(
         throw ngraph_error("Setting tensor's layout to a layout with a different element type.");
     }
     m_tensor_layout = tensor_layout;
+}
+
+const std::string& descriptor::Tensor::get_name() const
+{
+    if (m_name.empty() && m_node != nullptr)
+    {
+        const_cast<Tensor*>(this)->m_name =
+            m_node->get_name() + "_" + to_string(m_node_output_number);
+    }
+    return m_name;
 }
 
 ostream& operator<<(ostream& out, const descriptor::Tensor& tensor)

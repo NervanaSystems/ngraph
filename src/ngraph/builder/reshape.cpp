@@ -14,26 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
+#include <functional>
+#include <iterator>
 #include <numeric>
-#include <util.hpp>
 
-#include "ngraph/node.hpp"
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
-
-#include "reshape.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-shared_ptr<Node> op::util::reshape(const shared_ptr<Node>& node, const Shape& shape)
+shared_ptr<Node> builder::reshape(const shared_ptr<Node>& node, const Shape& shape)
 {
     return make_shared<op::Reshape>(node, get_default_order(node->get_shape().size()), shape);
 }
 
-shared_ptr<Node> op::util::reorder_axes(const shared_ptr<Node>& node,
-                                        vector<size_t> axes_order = {})
+shared_ptr<Node> builder::reorder_axes(const shared_ptr<Node>& node, vector<size_t> axes_order = {})
 {
     Shape out_shape = node->get_shape();
     if (axes_order.empty())
@@ -53,15 +52,15 @@ shared_ptr<Node> op::util::reorder_axes(const shared_ptr<Node>& node,
     return make_shared<op::Reshape>(node, axis_vector, out_shape);
 }
 
-shared_ptr<Node> op::util::transpose(const shared_ptr<Node>& node)
+shared_ptr<Node> builder::transpose(const shared_ptr<Node>& node)
 {
     vector<size_t> axes_order(node->get_shape().size());
     iota(begin(axes_order), end(axes_order), 0);
     reverse(begin(axes_order), end(axes_order));
-    return op::util::reorder_axes(node, axes_order);
+    return builder::reorder_axes(node, axes_order);
 }
 
-shared_ptr<Node> op::util::flatten(const shared_ptr<Node>& node, int axis)
+shared_ptr<Node> builder::flatten(const shared_ptr<Node>& node, int axis)
 {
     auto data_shape = node->get_shape();
 

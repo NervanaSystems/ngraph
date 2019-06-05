@@ -64,11 +64,8 @@ NodeVector op::Unsqueeze::decompose_op() const
 
     for (auto axis : axes)
     {
-        NODE_VALIDATION_CHECK(this,
-                              axis >= 0 && axis <= data_shape.size(),
-                              "provided 'axes' value ",
-                              axis,
-                              " is not valid.");
+        NODE_VALIDATION_CHECK(
+            this, axis <= data_shape.size(), "provided 'axes' value ", axis, " is not valid.");
 
         data_shape.insert(next(begin(data_shape), axis), 1);
     }
