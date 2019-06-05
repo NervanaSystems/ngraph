@@ -21,15 +21,53 @@
 using namespace std;
 using namespace ngraph;
 
+op::util::IndexReduction::IndexReduction()
+{
+}
+
+op::util::IndexReduction::IndexReduction(const Output<Node>& arg,
+                                         size_t axis,
+                                         const element::Type& index_element_type)
+    : Op({arg})
+{
+    set_reduction_axis(axis);
+    set_index_element_type(index_element_type);
+}
+
+op::util::IndexReduction::IndexReduction(const std::shared_ptr<Node>& arg,
+                                         size_t axis,
+                                         const element::Type& index_element_type)
+    : Op(check_single_output_args({arg}))
+{
+    set_reduction_axis(axis);
+    set_index_element_type(index_element_type);
+}
+
 op::util::IndexReduction::IndexReduction(const std::string& node_type,
                                          const std::shared_ptr<Node>& arg,
                                          size_t axis,
                                          const element::Type& index_element_type)
     : Op(node_type, check_single_output_args({arg}))
-    , m_axis(axis)
-    , m_index_element_type(index_element_type)
 {
-    constructor_validate_and_infer_types();
+    set_reduction_axis(axis);
+    set_index_element_type(index_element_type);
+}
+
+size_t op::util::IndexReduction::get_reduction_axis() const
+{
+    return m_axis;
+}
+void op::util::IndexReduction::set_reduction_axis(size_t value)
+{
+    m_axis = value;
+}
+element::Type op::util::IndexReduction::get_index_element_type() const
+{
+    return m_index_element_type;
+}
+void op::util::IndexReduction::set_index_element_type(const element::Type& index_element_type)
+{
+    m_index_element_type = index_element_type;
 }
 
 void op::util::IndexReduction::validate_and_infer_types()

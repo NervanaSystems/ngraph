@@ -47,7 +47,28 @@ namespace ngraph
             /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensors, and the element type `bool`. |
             class BinaryElementwiseComparison : public Op
             {
-            public:
+            protected:
+                /// \brief Constructs a binary elementwise comparison operation.
+                BinaryElementwiseComparison();
+
+                /// \brief Constructs a binary elementwise comparison operation.
+                ///
+                /// \param arg0 Node that produces the first input tensor.
+                /// \param arg1 Node that produces the second input tensor.
+                /// \param autob AutoBroadcast mode.
+                BinaryElementwiseComparison(const std::shared_ptr<Node>& arg0,
+                                            const std::shared_ptr<Node>& arg1,
+                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+
+                /// \brief Constructs a binary elementwise comparison operation.
+                ///
+                /// \param arg0 Output that produces the first input tensor.
+                /// \param arg1 Output that produces the second input tensor.
+                /// \param autob AutoBroadcast mode.
+                BinaryElementwiseComparison(const Output<Node>& arg0,
+                                            const Output<Node>& arg1,
+                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+
                 /// \brief Constructs a binary elementwise comparison operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.
@@ -58,9 +79,11 @@ namespace ngraph
                                             const std::shared_ptr<Node>& arg1,
                                             const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
+            public:
                 void validate_and_infer_types() override;
 
                 const AutoBroadcastSpec& get_autob() const { return m_autob; }
+                void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
             private:
                 AutoBroadcastSpec m_autob;
             };
