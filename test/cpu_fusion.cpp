@@ -2820,11 +2820,8 @@ TEST(cpu_fusion, fuse_dropout)
             auto value = op::Constant::create(element::f32, input_shape, {one_minus_prob});
             auto const1 = op::Constant::create(input->get_element_type(), Shape{}, {1});
 
-            auto gen_mask = std::make_shared<op::GenerateMask>(const1,
-                                                               input->get_shape(),
-                                                               input->get_element_type(),
-                                                               seed_val,
-                                                               one_minus_prob);
+            auto gen_mask = std::make_shared<op::GenerateMask>(
+                const1, input->get_shape(), input->get_element_type(), seed_val, one_minus_prob);
 
             auto mult = std::make_shared<op::Multiply>(gen_mask, input);
 
