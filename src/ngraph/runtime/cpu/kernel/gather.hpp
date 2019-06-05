@@ -107,6 +107,7 @@ namespace ngraph
                     {
 #ifdef _OPENMP
 #pragma omp parallel for
+#endif
                         for (int i = 0; i < shape_size(indices_shape); i++)
                         {
                             // Declare these inside the loop for omp parallel
@@ -137,35 +138,6 @@ namespace ngraph
                                 .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                                     arena)) = in.slice(in_offsets, in_extents).reshape(out_extents);
                         }
-#else
-                        Eigen::array<Eigen::Index, Rank1> in_extents, in_offsets;
-                        Eigen::array<Eigen::Index, Rank2> out_extents, out_offsets;
-                        std::vector<int> leading_indices(indices_rank);
-                        for (int r = 0; r < Rank1; r++)
-                        {
-                            in_extents[r] = inputs_shape[r];
-                            in_offsets[r] = 0;
-                        }
-                        in_extents[0] = 1;
-                        for (int r = 0; r < Rank2; r++)
-                        {
-                            out_extents[r] = output_shape[r];
-                            out_offsets[r] = 0;
-                        }
-                        for (int i = 0; i < shape_size(indices_shape); i++)
-                        {
-                            in_offsets[0] = indices_ptr[i];
-                            get_leading_indices(indices_shape, i, leading_indices);
-                            for (int j = 0; j < indices_rank; j++)
-                            {
-                                out_extents[j] = 1;
-                                out_offsets[j] = leading_indices[j];
-                            }
-                            out.slice(out_offsets, out_extents)
-                                .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                    arena)) = in.slice(in_offsets, in_extents).reshape(out_extents);
-                        }
-#endif
                     }
                 }
 

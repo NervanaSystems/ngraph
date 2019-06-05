@@ -157,6 +157,7 @@ gather_scalar_indices_no_axis
 gather_2d_indices_no_axis
 gather_3d_indices_no_axis
 gather_4d_indices_no_axis
+gather_4d_indices_no_axis_uint8
 gemm
 gemm_broadcast_input_C
 model_hardmax
