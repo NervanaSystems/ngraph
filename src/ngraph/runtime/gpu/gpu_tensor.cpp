@@ -68,12 +68,12 @@ runtime::gpu::GPUTensor::~GPUTensor()
     }
 }
 
-void runtime::gpu::GPUTensor::write(const void* source, size_t tensor_offset, size_t n_bytes)
+void runtime::gpu::GPUTensor::write(const void* source, size_t n_bytes)
 {
     runtime::gpu::cuda_memcpyHtD(m_allocated_buffer_pool, source, n_bytes);
 }
 
-void runtime::gpu::GPUTensor::read(void* target, size_t tensor_offset, size_t n_bytes) const
+void runtime::gpu::GPUTensor::read(void* target, size_t n_bytes) const
 {
     runtime::gpu::cuda_memcpyDtH(target, m_allocated_buffer_pool, n_bytes);
 }

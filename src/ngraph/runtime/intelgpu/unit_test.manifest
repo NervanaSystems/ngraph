@@ -40,6 +40,8 @@ pad_reflect_2d
 pad_reflect_2d_with_neg
 
 # Not implemented
+batch_mat_mul_forward
+backwards_batchmatmul_tensor2_tensor2
 erf
 gather_no_axis
 gather

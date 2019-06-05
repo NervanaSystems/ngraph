@@ -37,6 +37,7 @@ TEST(backend_api, invalid_name)
     ASSERT_ANY_THROW(ngraph::runtime::Backend::create("COMPLETELY-BOGUS-NAME"));
 }
 
+#ifdef NGRAPH_JSON_ENABLE
 TEST(backend_api, save_load)
 {
     Shape shape{2, 2};
@@ -67,3 +68,4 @@ TEST(backend_api, save_load)
         EXPECT_TRUE(test::all_close_f(read_vector<float>(result), {6.f, 8.f, 10.f, 12.f}));
     }
 }
+#endif
