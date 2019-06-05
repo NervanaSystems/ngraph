@@ -1858,16 +1858,34 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                writer << "reference::scatter_add<" << args[0].get_type() << ", "
-                       << args[1].get_element_type().c_type_string() << ">(" << args[0].get_name()
-                       << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
-                writer << "                   " << args[2].get_name() << ",\n";
-                writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   {" << join(args[0].get_shape()) << "},\n";
-                writer << "                   {" << join(args[1].get_shape()) << "},\n";
-                writer << "                   {" << join(args[2].get_shape()) << "},\n";
-                writer << "                   {" << join(out[0].get_shape()) << "});\n";
+                if (args[0].get_element_type() == element::f64 ||
+                    args[0].get_element_type() == element::f32)
+                {
+                    writer << "cpu::kernel::scatter_add<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ", "
+                           << args[0].get_shape().size() << ", " << args[2].get_shape().size()
+                           << ">(" << args[0].get_name() << ",\n";
+                    writer << "                   " << args[1].get_name() << ",\n";
+                    writer << "                   " << args[2].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[2].get_shape()) << "},\n";
+                    writer << "                   0);\n";
+                }
+                else
+                {
+                    writer << "reference::scatter_add<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ">("
+                           << args[0].get_name() << ",\n";
+                    writer << "                   " << args[1].get_name() << ",\n";
+                    writer << "                   " << args[2].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[2].get_shape()) << "},\n";
+                    writer << "                   {" << join(out[0].get_shape()) << "});\n";
+                }
                 writer.block_end();
             }
 
@@ -2003,8 +2021,8 @@ namespace ngraph
                            << "auto pos_raw = " << emit_vector(args[0]) << "(0, 0);\n"
                            << "if (floor(pos_raw) != pos_raw)\n";
                     writer.block_begin();
-                    writer
-                        << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+                    writer << "throw(std::range_error(\"One-hot: non-integral value in "
+                              "input\"));\n";
                     writer.block_end();
 
                     writer << "size_t pos = pos_raw;\n"
@@ -2031,8 +2049,8 @@ namespace ngraph
 
                     writer << "if (floor(pos_raw) != pos_raw)\n";
                     writer.block_begin();
-                    writer
-                        << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+                    writer << "throw(std::range_error(\"One-hot: non-integral value in "
+                              "input\"));\n";
                     writer.block_end();
 
                     writer << "size_t pos = pos_raw;\n";
@@ -2468,7 +2486,8 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error(
-                        "QuantizedConvolutionBiasAdd is only supported with MKLDNN kernel.");
+                        "QuantizedConvolutionBiasAdd is only supported with MKLDNN "
+                        "kernel.");
                 }
             }
 
@@ -2500,7 +2519,8 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error(
-                        "QuantizedConvolutionBiasSignedAdd is only supported with MKLDNN kernel.");
+                        "QuantizedConvolutionBiasSignedAdd is only supported with MKLDNN "
+                        "kernel.");
                 }
             }
 
@@ -2682,7 +2702,8 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error(
-                        "ConvolutionBiasBackpropFiltersBias is only supported with MKLDNN kernel.");
+                        "ConvolutionBiasBackpropFiltersBias is only supported with MKLDNN "
+                        "kernel.");
                 }
             }
 
