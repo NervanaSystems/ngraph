@@ -3972,4 +3972,28 @@ TEST(cpu_fusion, validate_fuse_gru_inputs)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
+
+#if defined(AUTODIFF_BACKEND_CPU) && defined(NGRAPH_JSON_ENABLE)
+NGRAPH_TEST(cpu_fusion, backwards_batchmatmultranspose_tensor2_tensor2)
+{
+    auto backend = runtime::Backend::create("CPU");
+
+    const std::string file_name("mxnet/batch_dot_3.json");
+    auto f = make_function_from_file(file_name);
+
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
+    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    {
+        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_shape())));
+    }
+
+    auto g = make_function_from_file(file_name);
+    pass::Manager pass_manager;
+    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
+    pass_manager.run_passes(g);
+    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), f, g, args, .01f, .01f));
+}
+#endif
+
 #endif
