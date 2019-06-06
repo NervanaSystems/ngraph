@@ -39,6 +39,13 @@ boost compared to native implementations. For a high-level overview, see the
 
 .. toctree::
    :maxdepth: 1
+   :caption: Introduction
+   :glob:
+   
+   introduction/*
+
+.. toctree::
+   :maxdepth: 1
    :caption: Connecting Frameworks
    
    frameworks/index.rst
@@ -96,7 +103,6 @@ boost compared to native implementations. For a high-level overview, see the
    :maxdepth: 1
    :caption: Project Metadata
 
-   project/introduction.rst
    project/release-notes.rst
    project/contribution-guide.rst
    project/governance.rst
