@@ -75,10 +75,10 @@ namespace ngraph
         {
             namespace executor
             {
-                CPUExecutor::CPUExecutor(int num_thread_pools, int num_cores)
+                CPUExecutor::CPUExecutor(int num_thread_pools)
                     : m_num_thread_pools(num_thread_pools)
-                    , m_num_cores(num_cores)
                 {
+                    m_num_cores = GetNumCores();
                     for (int i = 0; i < num_thread_pools; i++)
                     {
                         int num_threads_per_pool;
@@ -132,9 +132,7 @@ namespace ngraph
                 CPUExecutor& GetCPUExecutor()
                 {
                     static int num_thread_pools = GetNumThreadPools();
-                    static int num_cores = GetNumCores();
-                    static CPUExecutor cpu_executor(num_thread_pools < 1 ? 1 : num_thread_pools,
-                                                    num_cores);
+                    static CPUExecutor cpu_executor(num_thread_pools < 1 ? 1 : num_thread_pools);
                     return cpu_executor;
                 }
 

@@ -2861,7 +2861,7 @@ TEST(cpu_fusion, fuse_dropout)
             rng.initialize(tensor_val);
             args.push_back(tensor_val);
         }
-        auto nofuse_results = execute(nofuse_func, args, "CPU");
+        //auto nofuse_results = execute(nofuse_func, args, "CPU");
 
         //stopwatch timer;
         auto fuse_results = execute(fuse_func, args, "CPU");

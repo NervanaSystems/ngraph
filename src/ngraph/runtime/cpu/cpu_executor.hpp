@@ -42,7 +42,7 @@ namespace ngraph
                 class CPUExecutor
                 {
                 public:
-                    explicit CPUExecutor(int num_thread_pools, int num_cores);
+                    explicit CPUExecutor(int num_thread_pools);
 
                     Eigen::ThreadPoolDevice& get_device(int id)
                     {

@@ -46,6 +46,8 @@ namespace ngraph
                 uint32_t seed = drop->get_seed();
                 double value = drop->get_value();
 
+                // Note: to optimize for performance creating, initializing and advancing each msr
+                // here in builder instead of kernel. By initializing here, we saved 30% vs. kernel
                 size_t nthr = ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores();
                 size_t chunk_size = (element_count + nthr - 1) / nthr;
                 std::vector<std::minstd_rand> vmsr(nthr);

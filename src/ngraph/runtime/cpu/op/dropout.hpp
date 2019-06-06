@@ -28,8 +28,8 @@ namespace ngraph
         public:
             Dropout(const std::shared_ptr<Node>& input,
                     const std::shared_ptr<Node>& gm_const,
-                    uint32_t seed,
-                    double value); // value = 1 - dropout_prob
+                    const uint32_t seed,
+                    const double value); // value = 1 - dropout_prob
 
             uint32_t get_seed() const { return m_seed; }
             double get_value() const { return m_value; } // this value is 1- probability
