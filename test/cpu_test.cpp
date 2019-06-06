@@ -1730,6 +1730,7 @@ TEST(cpu_test, avg_pool_bprop_2d_2channel_2image)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
+<<<<<<< Updated upstream
 TEST(cpu_test, scatter_add_1d_indices_in_place)
 {
     Shape ref_shape{2, 3, 3};
@@ -1798,4 +1799,41 @@ TEST(cpu_test, scatter_add_1d_indices_no_in_place)
         (vector<float>{0, 5, 10, 15, 20, 25, 30, 35, 40, 5, 10, 15, 20, 25, 30, 35, 40, 45}),
         read_vector<float>(result),
         MIN_FLOAT_TOLERANCE_BITS));
+=======
+TEST(cpu_test, tensor_copy_from_interpreter_to_cpu)
+{
+    // This test the copying of data between the tensor's having
+    // CPUtensorview and no CPUtensorview
+    auto backend = runtime::Backend::create("CPU");
+    auto backend_ref = runtime::Backend::create("INTERPRETER");
+    auto a = backend_ref->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{2, 3});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(cpu_test, tensor_copy_from_same_layout)
+{
+    // this test copying of data between two tensor having same
+    // layout
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{2, 3});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(cpu_test, tensor_copy_from_different_layout)
+{
+    // this test copying of data between two tensor having different
+    // layout
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{3, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+>>>>>>> Stashed changes
 }
