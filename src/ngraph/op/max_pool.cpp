@@ -112,7 +112,8 @@ shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_window_shape,
                                 m_window_movement_strides,
                                 m_padding_below,
-                                m_padding_above);
+                                m_padding_above,
+                                m_pad_type);
 }
 
 op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,

@@ -8647,6 +8647,27 @@ TEST(type_prop, avg_pool_3d_deduce_strided_padded_small)
     EXPECT_EQ(avg_pool->get_padding_above(), (Shape{6, 4, 5}));
 }
 
+TEST(type_prop, avg_pool_ceil_mode)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 10});
+    Shape window_shape{2};
+    auto move_strides = Strides{4};
+    Shape padding_below{4};
+    Shape padding_above{5};
+    auto avg_pool = make_shared<op::AvgPool>(param,
+                                             window_shape,
+                                             move_strides,
+                                             padding_below,
+                                             padding_above,
+                                             true,
+                                             op::PadType::EXPLICIT,
+                                             true);
+
+    // ceil((10 + 9 - 2)/4) + 1
+    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 6}));
+}
+
 TEST(type_prop, avg_pool_invalid_0d_input)
 {
     // Deduce type

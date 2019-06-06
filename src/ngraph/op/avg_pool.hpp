@@ -49,13 +49,16 @@ namespace ngraph
             /// \param include_padding_in_avg_computation If true then averages include padding
             ///  elements, each treated as the number zero.  If false, padding elements are entirely
             ///  ignored when computing averages.
+            /// \param pad_type Padding type to use for additional padded dimensions
+            /// \param ceil_mode Whether to use ceiling while computing output shape.
             AvgPool(const Output<Node>& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
                     const Shape& padding_above,
                     bool include_padding_in_avg_computation = false,
-                    const PadType& pad_type = PadType::EXPLICIT);
+                    const PadType& pad_type = PadType::EXPLICIT,
+                    bool ceil_mode = false);
 
             /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding shapes are set to 0).
             ///
@@ -102,6 +105,8 @@ namespace ngraph
             /// \return The pad type for pooling.
             const PadType& get_pad_type() const;
             void set_pad_type(const PadType& pad_type);
+            bool get_ceil_mode() const;
+            void set_ceil_mode(bool ceil_mode);
             /// \return The default value for AvgPool.
             virtual std::shared_ptr<Node> get_default_value() const override
             {
@@ -115,6 +120,7 @@ namespace ngraph
             Shape m_padding_above;
             bool m_include_padding_in_avg_computation{false};
             PadType m_pad_type{PadType::EXPLICIT};
+            bool m_ceil_mode{false};
         };
 
         class AvgPoolBackprop : public Op
