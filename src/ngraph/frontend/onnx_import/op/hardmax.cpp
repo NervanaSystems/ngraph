@@ -16,10 +16,10 @@
 
 #include "hardmax.hpp"
 #include "exceptions.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/frontend/onnx_import/utils/common.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
-#include "ngraph/op/util/reshape.hpp"
 
 namespace ngraph
 {
@@ -40,7 +40,7 @@ namespace ngraph
                         << " does not match the input tensor dimensions";
 
                     // reshape to 2D - "batch size" x "input feature dimensions" (NxD)
-                    const auto coerced_tensor = ngraph::op::util::flatten(input, axis);
+                    const auto coerced_tensor = ngraph::builder::flatten(input, axis);
                     const auto& coerced_shape = coerced_tensor->get_shape();
 
                     const std::shared_ptr<ngraph::Node> argmax_2d =
@@ -54,7 +54,7 @@ namespace ngraph
                     auto results =
                         std::make_shared<ngraph::op::EmbeddingLookup>(argmax_2d, eye_matrix);
 
-                    return {ngraph::op::util::reshape(results, input_shape)};
+                    return {ngraph::builder::reshape(results, input_shape)};
                 }
 
             } // namespace set_1

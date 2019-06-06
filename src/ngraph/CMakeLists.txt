@@ -38,6 +38,8 @@ set (SRC
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
+    builder/reshape.cpp
+    builder/reshape.hpp
     builder/split.cpp
     builder/split.hpp
     builder/tensor_mask.hpp
@@ -168,6 +170,8 @@ set (SRC
     op/experimental/quantized_dot_bias.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
+    op/experimental/layers/ctc_greedy_decoder.cpp
+    op/experimental/layers/ctc_greedy_decoder.hpp
     op/experimental/layers/detection_output.cpp
     op/experimental/layers/detection_output.hpp
     op/experimental/layers/interpolate.cpp
@@ -296,6 +300,8 @@ set (SRC
     op/fused/depth_to_space.hpp
     op/fused/elu.cpp
     op/fused/elu.hpp
+    op/fused/fake_quantize.cpp
+    op/fused/fake_quantize.hpp
     op/fused/gemm.cpp
     op/fused/gemm.hpp
     op/fused/grn.cpp
@@ -312,6 +318,8 @@ set (SRC
     op/fused/prelu.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/shuffle_channels.cpp
+    op/fused/shuffle_channels.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp
@@ -338,7 +346,6 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
-    op/util/reshape.cpp
     op/util/reshape.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
@@ -347,6 +354,8 @@ set (SRC
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
+    pass/implicit_broadcast_elimination.hpp
+    pass/implicit_broadcast_elimination.cpp
     pass/batch_fusion.hpp
     pass/batch_fusion.cpp
     pass/common_function_collection.cpp
@@ -488,7 +497,11 @@ endif()
 
 configure_file(version.in.hpp version.hpp)
 
-add_library(ngraph SHARED ${SRC})
+if (NGRAPH_STATIC_LIB_ENABLE)
+    add_library(ngraph STATIC ${SRC})
+else()
+    add_library(ngraph SHARED ${SRC})
+endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
@@ -512,7 +525,7 @@ endif()
 
 if(NGRAPH_ADDRESS_SANITIZER)
     message(STATUS "Enable Address Sanitizer")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
+    add_compile_options(-g -fsanitize=address -fno-omit-frame-pointer)
 endif()
 
 add_subdirectory(codegen)

@@ -534,8 +534,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormTraining>(
-            m.get_match_root()->get_argument(0)->get_inputs().at(0).get_output().get_node());
+        auto m_bn =
+            std::static_pointer_cast<ngraph::op::BatchNormTraining>(m.get_match_root()
+                                                                        ->get_argument(0)
+                                                                        ->input(0)
+                                                                        .get_source_output()
+                                                                        .get_node_shared_ptr());
 
         if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
@@ -603,7 +607,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
         auto pattern_map = m.get_pattern_map();
 
-        auto bn_match = m.get_match_root()->get_inputs().at(0).get_output().get_node();
+        auto bn_match = m.get_match_root()->input(0).get_source_output().get_node_shared_ptr();
         if (bn_match->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
@@ -2248,7 +2252,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
         NGRAPH_DEBUG << "In callback for Qdot against node = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto qdot = std::dynamic_pointer_cast<ngraph::op::QuantizedDot>(m.get_match_root());
+        auto qdot = std::static_pointer_cast<ngraph::op::QuantizedDot>(m.get_match_root());
         auto input_0 = pattern_map[input0];
         auto input_1 = pattern_map[input1];
         auto scale_new = pattern_map[scale];

@@ -234,6 +234,19 @@ namespace ngraph
                           const Shape& input_shape,
                           const Shape& output_shape,
                           int arena);
+
+                template <typename ElementType,
+                          typename IndicesType,
+                          unsigned int Rank1,
+                          unsigned int Rank2>
+                void scatter_add(void* inputs,
+                                 void* indices,
+                                 void* updates,
+                                 void* output,
+                                 const Shape& inputs_shape,
+                                 const Shape& indices_shape,
+                                 const Shape& updates_shape,
+                                 int arena);
             }
         }
     }

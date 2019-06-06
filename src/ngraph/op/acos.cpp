@@ -32,8 +32,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::Acos::Acos(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Acos", arg)
+const string op::Acos::type_name{"Acos"};
+
+op::Acos::Acos()
+{
+}
+
+op::Acos::Acos(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }

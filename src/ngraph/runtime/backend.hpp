@@ -109,6 +109,11 @@ public:
                                                 ngraph::pass::PassConfig& pass_config,
                                                 bool enable_performance_data = false);
 
+    /// \brief Loads a previously saved Executable object from a stream.
+    /// \param input_stream the opened input stream containing the saved Executable
+    /// \returns A compiled function or throws an exception on error
+    virtual std::shared_ptr<Executable> load(std::istream& input_stream);
+
     /// \brief Test if a backend is capable of supporting an op
     /// \param node is the op to test.
     /// \returns true if the op is supported, false otherwise.
@@ -127,11 +132,11 @@ public:
 
     virtual void remove_compiled_function(std::shared_ptr<Executable> exec);
 
-    // \brief Return a backend specific op (that is not a core ngraph op).
-    //     The string op_name is the requested op, which a backend may or may not implement.
-    //     If unsupported, nullptr is returned, else a backend op is returned.
-    //     The variadic input is used to pass inputs that the op constructor might take
-    // \param op_name is the name of the backend specific op
-    // \returns a shared pointer to the op if found, else nullptr
+    /// \brief Return a backend specific op (that is not a core ngraph op).
+    ///     The string op_name is the requested op, which a backend may or may not implement.
+    ///     If unsupported, nullptr is returned, else a backend op is returned.
+    ///     The variadic input is used to pass inputs that the op constructor might take
+    /// \param op_name is the name of the backend specific op
+    /// \returns a shared pointer to the op if found, else nullptr
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
 };
