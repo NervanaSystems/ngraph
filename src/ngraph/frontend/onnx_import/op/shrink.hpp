@@ -29,6 +29,12 @@ namespace ngraph
         {
             namespace set_1
             {
+                /// @brief ONNX Shrink operator
+                ///
+                /// @note It operates on a single input tensor and two attributes: lambd and bias.
+                ///       Input values that fall into the <-lambd;lambd> range are zeroed-out.
+                ///       'Bias' is added to the values that are less than negated 'lambd'
+                ///       and subtracted from values greater than 'lambd'.
                 NodeVector shrink(const Node& node);
             } // namespace set_1
 
