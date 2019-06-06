@@ -30,7 +30,10 @@ namespace ngraph
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            GreaterEq(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            /// \param autob Auto broadcast specification
+            GreaterEq(const std::shared_ptr<Node>& arg0,
+                      const std::shared_ptr<Node>& arg1,
+                      const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

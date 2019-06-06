@@ -19,15 +19,38 @@
 using namespace std;
 using namespace ngraph;
 
+op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic()
+{
+}
+
+op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const Output<Node>& arg0,
+                                                                   const Output<Node>& arg1,
+                                                                   const AutoBroadcastSpec& autob)
+    : Op({arg0, arg1})
+    , m_autob(autob)
+{
+}
+
+op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
+    const std::shared_ptr<Node>& arg0,
+    const std::shared_ptr<Node>& arg1,
+    const AutoBroadcastSpec& autob)
+    : Op(check_single_output_args({arg0, arg1}))
+    , m_autob(autob)
+{
+}
+
 op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
     const std::string& node_type,
     const std::shared_ptr<Node>& arg0,
-    const std::shared_ptr<Node>& arg1)
+    const std::shared_ptr<Node>& arg1,
+    const AutoBroadcastSpec& autob)
     : Op(node_type, check_single_output_args({arg0, arg1}))
+    , m_autob(autob)
 {
 }
 
 void op::util::BinaryElementwiseArithmetic::validate_and_infer_types()
 {
-    validate_and_infer_elementwise_arithmetic();
+    validate_and_infer_elementwise_arithmetic(m_autob);
 }
