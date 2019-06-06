@@ -69,7 +69,7 @@ namespace ngraph
 
                     // multiply by the corresponding mask to zero-out the values within
                     // the <-lambd;lambd> range and keep the bias-adjusted values from outside of it
-                    input_minus_bias = values_above_neg_lambd * input_minus_bias;
+                    input_minus_bias = values_above_pos_lambd * input_minus_bias;
                     input_plus_bias = values_below_neg_lambd * input_plus_bias;
 
                     return {input_plus_bias + input_minus_bias};
