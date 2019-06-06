@@ -31,6 +31,8 @@
 //
 #ifdef NGRAPH_DEPRECATED_ENABLE
 #define NGRAPH_DEPRECATED(msg) __attribute__((deprecated((msg))))
+#define NGRAPH_DEPRECATED_DOC /// \deprecated
 #else
 #define NGRAPH_DEPRECATED(msg)
+#define NGRAPH_DEPRECATED_DOC
 #endif
