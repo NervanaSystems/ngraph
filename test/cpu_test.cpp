@@ -1730,7 +1730,6 @@ TEST(cpu_test, avg_pool_bprop_2d_2channel_2image)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
-<<<<<<< Updated upstream
 TEST(cpu_test, scatter_add_1d_indices_in_place)
 {
     Shape ref_shape{2, 3, 3};
@@ -1799,7 +1798,8 @@ TEST(cpu_test, scatter_add_1d_indices_no_in_place)
         (vector<float>{0, 5, 10, 15, 20, 25, 30, 35, 40, 5, 10, 15, 20, 25, 30, 35, 40, 45}),
         read_vector<float>(result),
         MIN_FLOAT_TOLERANCE_BITS));
-=======
+}
+
 TEST(cpu_test, tensor_copy_from_interpreter_to_cpu)
 {
     // This test the copying of data between the tensor's having
@@ -1835,5 +1835,4 @@ TEST(cpu_test, tensor_copy_from_different_layout)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
     b->copy_from(*a);
     ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
->>>>>>> Stashed changes
 }
