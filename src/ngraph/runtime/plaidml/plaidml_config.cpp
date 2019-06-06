@@ -71,7 +71,7 @@ namespace ngraph
 }
 
 ngraph::runtime::plaidml::Config
-    ngraph::runtime::plaidml::parse_config_string(const char* configuration_string)
+    ngraph::runtime::plaidml::parse_config_string(const std::string& configuration_string)
 {
     bool err = false;
     bool help = false;
@@ -103,7 +103,7 @@ ngraph::runtime::plaidml::Config
     //        oval_begin
     //          oval_end
 
-    const char* c = configuration_string;
+    const char* c = configuration_string.c_str();
     while (*c && *c != ':')
     {
         ++c;

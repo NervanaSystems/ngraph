@@ -72,6 +72,7 @@ void op::util::IndexReduction::set_index_element_type(const element::Type& index
 
 void op::util::IndexReduction::validate_and_infer_types()
 {
+    // TODO(amprocte): Should reject if size of reduction axis is zero.
     const PartialShape& arg_shape = get_input_partial_shape(0);
     Rank rank = arg_shape.rank();
 
