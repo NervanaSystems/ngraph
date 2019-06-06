@@ -1469,3 +1469,16 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shrink_float)
 
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shrink_int)
+{
+    const auto shrink_fn = onnx_import::import_onnx_model(
+            file_util::path_join(SERIALIZED_ZOO, "onnx/shrink_int.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(shrink_fn, "${BACKEND_NAME}");
+    test_case.add_input<int>({-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5});
+    test_case.add_expected_output<int>(Shape{11},
+        {-4, -3, -2, -1, 0, 0, 0, 1, 2, 3, 4});
+
+    test_case.run();
+}
