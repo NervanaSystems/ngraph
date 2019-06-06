@@ -88,6 +88,50 @@ TEST(reshape_elimination, bn_bprop_rewrite)
 }
 #endif
 
+TEST(reshape_elimination, transpose_reshape_pattern_fuse)
+{
+    auto generate_func = []() {
+        auto input = make_shared<op::Parameter>(element::f32, Shape{8, 2, 4, 6});
+        auto transpose = make_shared<op::Reshape>(input, AxisVector{0, 2, 1, 3}, Shape{8, 2, 4, 6});
+        auto reshape =
+            make_shared<op::Reshape>(transpose, AxisVector{0, 1, 2, 3}, Shape{8, 4, 2, 6});
+        return make_shared<Function>(reshape, ParameterVector{input});
+    };
+
+    auto fuse_func = generate_func();
+    auto nofuse_func = generate_func();
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ReshapeElimination>();
+    pass_manager.run_passes(fuse_func);
+    ASSERT_TRUE(count_ops_of_type<op::Reshape>(fuse_func) == 1);
+    ASSERT_TRUE(count_ops_of_type<op::Reshape>(nofuse_func) == 2);
+
+    test::Uniform<float> rng(0.0f, 100.0f);
+    vector<vector<float>> args;
+    vector<float> tensor_val(shape_size(Shape{8, 2, 4, 6}));
+    rng.initialize(tensor_val);
+    args.push_back(tensor_val);
+
+    auto baseline_results = execute(fuse_func, args, "INTERPRETER");
+    auto optimized_results = execute(nofuse_func, args, "INTERPRETER");
+
+    EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
+}
+
+TEST(reshape_elimination, transpose_reshape_pattern_nofuse)
+{
+    auto input = make_shared<op::Parameter>(element::f32, Shape{8, 2, 4, 6});
+    auto transpose = make_shared<op::Reshape>(input, AxisVector{0, 2, 1, 3}, Shape{8, 2, 4, 6});
+    auto reshape = make_shared<op::Reshape>(transpose, AxisVector{2, 1, 0, 3}, Shape{8, 4, 2, 6});
+    auto f = make_shared<Function>(reshape, ParameterVector{input});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ReshapeElimination>();
+    pass_manager.run_passes(f);
+    ASSERT_TRUE(count_ops_of_type<op::Reshape>(f) == 2);
+}
+
 TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
 {
     Shape shape_w{2, 4};
