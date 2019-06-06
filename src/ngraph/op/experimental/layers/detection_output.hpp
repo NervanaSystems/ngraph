@@ -26,9 +26,9 @@ namespace ngraph
         {
             int num_classes;
             int background_label_id = 0;
-            int results_top_k = -1;
-            bool add_variance = false;
-            std::vector<int> boxes_top_k = {1};
+            int top_k = -1;
+            bool variance_encoded_in_target = false;
+            std::vector<int> keep_top_k = {1};
             std::string code_type = std::string{"caffe.PriorBoxParameter.CORNER"};
             bool share_location = true;
             float nms_threshold;
@@ -39,7 +39,7 @@ namespace ngraph
             bool normalized = false;
             size_t input_height = 1;
             size_t input_width = 1;
-            float objectness_score_threshold = 0;
+            float objectness_score = 0;
         } DetectionOutputAttrs;
 
         /// \brief Layer which performs non-max suppression to

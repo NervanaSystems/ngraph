@@ -1815,15 +1815,34 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                writer << "reference::gather<" << args[0].get_type() << ", "
-                       << args[1].get_element_type().c_type_string() << ">(" << args[0].get_name()
-                       << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
-                writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   {" << join(args[0].get_shape()) << "},\n";
-                writer << "                   {" << join(args[1].get_shape()) << "},\n";
-                writer << "                   {" << join(out[0].get_shape()) << "},\n";
-                writer << "                   " << gather->get_axis() << ");\n";
+                if ((args[0].get_element_type() == element::f64 ||
+                     args[0].get_element_type() == element::f32 ||
+                     args[0].get_element_type() == element::u8) &&
+                    gather->get_axis() == 0)
+                {
+                    writer << "cpu::kernel::gather<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ", "
+                           << args[0].get_shape().size() << ", " << out[0].get_shape().size()
+                           << ">(" << args[0].get_name() << ",\n";
+                    writer << "                   " << args[1].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                    writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                   0);\n";
+                }
+                else
+                {
+                    writer << "reference::gather<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ">("
+                           << args[0].get_name() << ",\n";
+                    writer << "                   " << args[1].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                    writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                   " << gather->get_axis() << ");\n";
+                }
                 writer.block_end();
             }
 
