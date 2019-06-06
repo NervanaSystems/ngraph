@@ -574,8 +574,7 @@ if (NOT WIN32)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    target_sources(ngraph PRIVATE $<TARGET_OBJECTS:onnx_import_interface>)
-    target_link_libraries(ngraph PRIVATE onnx_import)
+    target_link_libraries(ngraph PRIVATE onnx_import onnx_import_interface)
 endif()
 
 # Build subdirectories for all build types on Windows

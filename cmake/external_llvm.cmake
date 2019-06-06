@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(${CMAKE_VERSION} VERSION_LESS "3.4.3")
+    message(FATAL_ERROR "CODEGEN with LLVM from source requires at least CMake 3.4.3")
+endif()
+
 include(ExternalProject)
 
 set(NGRAPH_LLVM_VERSION 8.0.0)
