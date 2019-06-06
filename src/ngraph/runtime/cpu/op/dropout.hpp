@@ -29,21 +29,18 @@ namespace ngraph
             Dropout(const std::shared_ptr<Node>& input,
                     const std::shared_ptr<Node>& gm_const,
                     const uint32_t seed,
-                    const double value); // value = 1 - dropout_prob
+                    const double keep_prob); // keep_prob = 1 - dropout_prob
 
             uint32_t get_seed() const { return m_seed; }
-            double get_value() const { return m_value; } // this value is 1- probability
+            double get_keep_prob() const { return m_keep_prob; }
             void set_seed(uint32_t new_seed) { m_seed = new_seed; }
-            void set_value(double new_value) { m_value = new_value; }
+            void set_keep_prob(double new_keep_prob) { m_keep_prob = new_keep_prob; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            //virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-            //                               const NodeVector& deltas) override;
-
         private:
             uint32_t m_seed;
-            double m_value;
+            double m_keep_prob;
         };
     }
 }

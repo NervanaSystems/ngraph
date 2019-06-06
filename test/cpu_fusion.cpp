@@ -2843,14 +2843,12 @@ TEST(cpu_fusion, fuse_dropout)
         pass::Manager pass_manager;
         pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
         pass_manager.run_passes(fuse_func);
+        pass_manager.run_passes(nofuse_func);
         ASSERT_EQ(count_ops_of_type<op::Dropout>(fuse_func), 1);
         ASSERT_EQ(count_ops_of_type<op::GenerateMask>(fuse_func), 0);
-
-        auto dropout_goe_output =
-            std::dynamic_pointer_cast<op::GetOutputElement>(fuse_func->get_results().at(0));
+        ASSERT_EQ(count_ops_of_type<op::Dropout>(nofuse_func), 0);
     }
 
-    // Test values
     {
         test::Uniform<float> rng(1.0f, 100.0f);
         vector<vector<float>> args;
@@ -2861,18 +2859,14 @@ TEST(cpu_fusion, fuse_dropout)
             rng.initialize(tensor_val);
             args.push_back(tensor_val);
         }
-        //auto nofuse_results = execute(nofuse_func, args, "CPU");
 
-        //stopwatch timer;
         auto fuse_results = execute(fuse_func, args, "CPU");
         auto fuse_results2 = execute(fuse_func2, args, "CPU");
         EXPECT_TRUE(test::all_close(fuse_results.at(0), fuse_results2.at(0)));
         EXPECT_TRUE(test::all_close(fuse_results.at(1), fuse_results2.at(1)));
 
-        // Since the RNG used in Dropout kernel is different than RNG used in GenerateMask kernel,
-        // we can't compare fuse_results and nofuse_results
-        //EXPECT_TRUE(test::all_close(fuse_results.at(0), nofuse_results.at(0)));
-        //EXPECT_TRUE(test::all_close(fuse_results.at(1), nofuse_results.at(1)));
+        // Note: Since the RNG used in Dropout kernel is different than RNG used in GenerateMask
+        // kernel, we can't compare fuse_results and nofuse_results
     }
 }
 

@@ -44,10 +44,11 @@ namespace ngraph
                 size_t element_count = out[0].get_size();
 
                 uint32_t seed = drop->get_seed();
-                double value = drop->get_value();
+                double keep_prob = drop->get_keep_prob();
 
-                // Note: to optimize for performance creating, initializing and advancing each msr
-                // here in builder instead of kernel. By initializing here, we saved 30% vs. kernel
+                // Note: for performance optimization in addition to parallel RNG with multiple,
+                // threads, we create, initialize and advance each msr here in builder instead of
+                // in kernel. By doing so here, we saved 30% vs. kernel
                 size_t nthr = ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores();
                 size_t chunk_size = (element_count + nthr - 1) / nthr;
                 std::vector<std::minstd_rand> vmsr(nthr);
@@ -67,7 +68,7 @@ namespace ngraph
                                arg1_buffer_index,
                                out0_buffer_index,
                                out1_buffer_index,
-                               value,
+                               keep_prob,
                                vmsr](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg1_buffer_index])[0]);
@@ -77,7 +78,7 @@ namespace ngraph
                             static_cast<float*>(ctx->buffer_data[out1_buffer_index]),
                             element_count,
                             training,
-                            value,
+                            keep_prob,
                             vmsr);
                     };
                 }
@@ -89,7 +90,7 @@ namespace ngraph
                                arg1_buffer_index,
                                out0_buffer_index,
                                out1_buffer_index,
-                               value,
+                               keep_prob,
                                vmsr](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg1_buffer_index])[0]);
@@ -99,7 +100,7 @@ namespace ngraph
                             static_cast<double*>(ctx->buffer_data[out1_buffer_index]),
                             element_count,
                             training,
-                            value,
+                            keep_prob,
                             vmsr);
                     };
                 }

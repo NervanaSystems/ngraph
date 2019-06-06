@@ -942,7 +942,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 
     auto pdivide = std::make_shared<ngraph::op::Divide>(mult, value_label);
 
-    //----------
     auto callback = [x, const1_label, seed_label, value_label, genmask_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_dropout against "
                      << m.get_match_root()->get_name();
