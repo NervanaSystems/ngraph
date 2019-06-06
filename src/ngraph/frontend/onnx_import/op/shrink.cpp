@@ -64,15 +64,15 @@ namespace ngraph
                     values_below_neg_lambd = std::make_shared<ngraph::op::Convert>(values_below_neg_lambd, input->get_element_type());
                     values_above_pos_lambd = std::make_shared<ngraph::op::Convert>(values_above_pos_lambd, input->get_element_type());
 
-                    std::shared_ptr<ngraph::Node> x_minus_bias = input - bias_tensor;
-                    std::shared_ptr<ngraph::Node> x_plus_bias = input + bias_tensor;
+                    std::shared_ptr<ngraph::Node> input_minus_bias = input - bias_tensor;
+                    std::shared_ptr<ngraph::Node> input_plus_bias = input + bias_tensor;
 
                     // multiply by the corresponding mask to zero-out the values within
-                    // the <-lambd;lambd> range
-                    x_minus_bias = values_below_neg_lambd * x_minus_bias;
-                    x_plus_bias = values_below_neg_lambd * x_plus_bias;
+                    // the <-lambd;lambd> range and keep the bias-adjusted values from outside of it
+                    input_minus_bias = values_above_neg_lambd * input_minus_bias;
+                    input_plus_bias = values_below_neg_lambd * input_plus_bias;
 
-                    return {x_minus_bias + x_plus_bias};
+                    return {input_plus_bias + input_minus_bias};
                 }
 
             } // namespace set_1
