@@ -307,6 +307,40 @@ TEST(cpu_test, reshape_layout_optimizations2)
     }
 }
 
+// Mkldnn calls reference conv for these conv parameters
+// which results in a crash in the cpu backend. Adding and Disabling this test
+// for now. Will delete it once it passes with mkldnn fix.
+TEST(cpu_test, DISABLED_failing_conv_test)
+{
+    auto make_function = []() -> std::shared_ptr<Function> {
+        auto A = make_shared<op::Parameter>(element::f32, Shape{128, 3, 224, 224});
+        auto B = make_shared<op::Parameter>(element::f32, Shape{64, 3, 3, 3});
+        auto Bias = make_shared<op::Parameter>(element::f32, Shape{64});
+        auto conv = make_shared<op::ConvolutionBias>(A,
+                                                     B,
+                                                     Bias,
+                                                     Strides{1, 1},
+                                                     Strides{1, 1},
+                                                     CoordinateDiff{1, 1},
+                                                     CoordinateDiff{1, 1},
+                                                     Strides{1, 1},
+                                                     true);
+        return make_shared<Function>(NodeVector{conv}, ParameterVector{A, B, Bias});
+    };
+
+    auto backend = runtime::Backend::create("CPU");
+    auto cpu_f = make_function();
+
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<vector<float>> args;
+    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto cpu_results = execute(cpu_f, args, "CPU");
+}
 TEST(cpu_test, reshape_layout_optimizations3)
 {
     // Squeeze padded dimension
