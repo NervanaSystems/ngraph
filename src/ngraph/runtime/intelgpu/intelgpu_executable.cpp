@@ -140,7 +140,7 @@ bool runtime::intelgpu::IntelGPUExecutable::call(const vector<shared_ptr<runtime
 
         memory_size_check(result_memory.size(), dst_node, m_function->get_name());
 
-        ngraph_res->write(result_memory.data(), 0, result_memory.size());
+        ngraph_res->write(result_memory.data(), result_memory.size());
     }
 
     if (m_profile_enable)

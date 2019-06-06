@@ -192,6 +192,38 @@ TEST(zero_dim_tensor_elimination, zero_const_slice)
     EXPECT_EQ(count_ops_of_type<op::Slice>(f), 0);
 }
 
+TEST(zero_dim_tensor_elimination, zero_argmax)
+{
+    auto A = std::make_shared<op::Parameter>(element::f32, Shape{0, 2, 3});
+    auto argmax = make_shared<op::ArgMax>(A, 1, element::i32);
+    auto f = std::make_shared<Function>(NodeVector{argmax}, ParameterVector{A});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<pass::VisualizeTree>("zero_argmax_before.png");
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
+    pass_manager.register_pass<pass::VisualizeTree>("zero_argmax_after.png");
+    EXPECT_EQ(count_ops_of_type<op::ArgMax>(f), 1);
+    pass_manager.run_passes(f);
+    EXPECT_EQ(count_ops_of_type<op::ArgMax>(f), 0);
+    EXPECT_EQ(f->get_results().at(0)->get_shape(), (Shape{0, 3}));
+}
+
+TEST(zero_dim_tensor_elimination, zero_argmin)
+{
+    auto A = std::make_shared<op::Parameter>(element::f32, Shape{0, 2, 3});
+    auto argmin = make_shared<op::ArgMin>(A, 1, element::i32);
+    auto f = std::make_shared<Function>(NodeVector{argmin}, ParameterVector{A});
+    pass::Manager pass_manager;
+
+    pass_manager.register_pass<pass::VisualizeTree>("zero_argmin_before.png");
+    pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
+    pass_manager.register_pass<pass::VisualizeTree>("zero_argmin_after.png");
+    EXPECT_EQ(count_ops_of_type<op::ArgMin>(f), 1);
+    pass_manager.run_passes(f);
+    EXPECT_EQ(count_ops_of_type<op::ArgMin>(f), 0);
+    EXPECT_EQ(f->get_results().at(0)->get_shape(), (Shape{0, 3}));
+}
+
 TEST(zero_dim_tensor_elimination, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::ZeroDimTensorElimination>();

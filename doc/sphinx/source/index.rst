@@ -81,22 +81,9 @@ boost compared to native implementations. For a high-level overview, see the
 
 .. toctree::
    :maxdepth: 1
-   :caption: Distributed Training
-
-   distr/index.rst
-
-
-.. toctree::
-   :maxdepth: 1
    :caption: Inspecting Graphs
 
    inspection/index.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Tutorials
-
-   tutorials/index.rst
 
 
 .. toctree::
@@ -104,8 +91,8 @@ boost compared to native implementations. For a high-level overview, see the
    :caption: Project Metadata
 
    project/release-notes.rst
+   project/introduction.rst
    project/contribution-guide.rst
-   project/governance.rst
    project/doc-contributor-README.rst
    project/index.rst
    project/extras.rst 

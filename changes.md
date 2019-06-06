@@ -2,6 +2,7 @@
 
 ## Passes
 * `LikeReplacement` pass must be run by all transformers.
+* `ngraph::pass::FusionType` is now an enum class. Constant values defined by `FusionType` are created for backward compatibility and will be removed in future releases.
 
 ## Nodes, Parameters
 
@@ -52,6 +53,15 @@ need to be adapted.
 
 ## `Parameter` and `Function` no longer take a type argument.
 
+## Changes to Tensor read and write methods
+
+The `read` and `write` methods on ngraph::runtime::Tensor which take a `tensor_offset` as the
+second of three arguments have been deprecated. The replacement `read` and `write` methods take
+two arguments, the buffer pointer and the size. For any references to the deprecated methods
+remove the second argument, the tensor offset, to update to the new API. These old read/write
+methods have been decorated with deprecated warnings which may be enabled by setting
+`-DNGRAPH_DEPRECATED_ENABLE=ON`.
+
 To update, remove the passed argument. For example,
 ```C++
 // Old
@@ -67,3 +77,14 @@ make_shared<Function>(results, parameters);
 
 The runtime::Tensor methods to get_tensor<> and write<T>(std::vector&) have been removed
 to the unit test directory under utils/test_tool.hpp read_vector and write_vector.
+
+## Changes to reshape op utils
+
+Utility functions from `src/ngraph/op/util/reshape.hpp`, placed at namespace `ngraph::op::util`:
+
+  - `reshape`
+  - `reorder_axes`
+  - `transpose`
+  - `flatten`
+
+Are moved to new location: `src/ngraph/builder/reshape.hpp` to namespace `ngraph::builder`.

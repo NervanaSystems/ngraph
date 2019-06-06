@@ -17,8 +17,8 @@
 #include <memory>
 #include <vector>
 
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "transpose.hpp"
 #include "utils/reshape.hpp"
 
@@ -38,8 +38,8 @@ namespace ngraph
                         node.get_attribute_value<std::vector<std::size_t>>("perm", {});
 
                     return {(permute_axes.empty())
-                                ? ngraph::op::util::transpose(data)
-                                : ngraph::op::util::reorder_axes(data, permute_axes)};
+                                ? ngraph::builder::transpose(data)
+                                : ngraph::builder::reorder_axes(data, permute_axes)};
                 }
 
             } // namespace set_1
