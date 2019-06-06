@@ -274,3 +274,45 @@ NGRAPH_TEST(${BACKEND_NAME}, all_2x2x3_eliminate_dims_0_1_2)
     handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<char>{0}), read_vector<char>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, all_dynamic_axis)
+{
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto B = op::Constant::create(element::i64, Shape{1}, {1});
+    auto f = make_shared<Function>(make_shared<op::All>(A, B), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, test::NDArray<char, 2>({{1, 0, 1}, {1, 1, 1}}).get_vector());
+    auto result = backend->create_tensor(element::boolean, Shape{2});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<char>{0, 1}), read_vector<char>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, all_change_axis)
+{
+    Shape shape{2, 3};
+    auto A = make_shared<op::Parameter>(element::boolean, shape);
+    auto B = op::Constant::create(element::i64, Shape{1}, {1});
+    auto all = make_shared<op::All>(A, B);
+    ASSERT_EQ(all->get_reduction_axes(), AxisSet{1});
+    auto f = make_shared<Function>(all, ParameterVector{A});
+
+    all->set_reduction_axes(AxisSet{0});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::boolean, shape);
+    copy_data(a, test::NDArray<char, 2>({{1, 0, 1}, {1, 1, 1}}).get_vector());
+    auto result = backend->create_tensor(element::boolean, Shape{3});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<char>{1, 0, 1}), read_vector<char>(result));
+}

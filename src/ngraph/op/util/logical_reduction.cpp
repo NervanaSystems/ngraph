@@ -25,56 +25,39 @@ op::util::LogicalReduction::LogicalReduction()
 }
 
 op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg, const AxisSet& reduction_axes)
-    : Op({arg})
-{
-    set_reduction_axes(reduction_axes);
-}
-
-op::util::LogicalReduction::LogicalReduction(const std::shared_ptr<Node>& arg,
-                                             const AxisSet& reduction_axes)
-    : Op(check_single_output_args({arg,
-                                   op::Constant::create(element::i64,
-                                                        Shape{reduction_axes.size()},
-                                                        reduction_axes.to_vector())}))
-{
-    set_reduction_axes(reduction_axes);
-}
-
-op::util::LogicalReduction::LogicalReduction(const std::string& node_type,
-                                             const std::shared_ptr<Node>& arg,
-                                             const AxisSet& reduction_axes)
-    : Op(node_type,
-         check_single_output_args({arg,
-                                   op::Constant::create(element::i64,
-                                                        Shape{reduction_axes.size()},
-                                                        reduction_axes.to_vector())}))
+    : Op({arg,
+          op::Constant::create(
+              element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector())
+              ->output(0)})
 {
 }
 
-op::util::LogicalReduction::LogicalReduction(const std::string& node_type,
-                                             const std::shared_ptr<Node>& arg,
-                                             const std::shared_ptr<Node>& reduction_axes)
-    : Op(node_type, check_single_output_args({arg, reduction_axes}))
+op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg,
+                                             const Output<Node>& reduction_axes)
+    : Op({arg, reduction_axes})
 {
 }
 
-const AxisSet& op::util::LogicalReduction::get_reduction_axes() const
+const AxisSet op::util::LogicalReduction::get_reduction_axes() const
 {
-    return m_reduction_axes;
+    AxisSet axes;
+    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    {
+        axes = const_op->get_axis_set_val();
+    }
+    return axes;
 }
 
 void op::util::LogicalReduction::set_reduction_axes(const AxisSet& reduction_axes)
 {
-    m_reduction_axes = reduction_axes;
+    this->input(1).replace_source_output(
+        op::Constant::create(element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector())
+            ->output(0));
 }
 
 void op::util::LogicalReduction::validate_and_infer_types()
 {
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(1)))
-    {
-        m_reduction_axes = const_op->get_axis_set_val();
-    }
-
+    auto reduction_axes = get_reduction_axes();
     auto input_shape = get_input_partial_shape(0);
     auto input_rank = input_shape.rank();
 
@@ -84,7 +67,7 @@ void op::util::LogicalReduction::validate_and_infer_types()
     {
         std::vector<Dimension> dims;
 
-        for (auto axis : m_reduction_axes)
+        for (auto axis : reduction_axes)
         {
             NODE_VALIDATION_CHECK(this,
                                   axis < size_t(input_rank),
@@ -94,13 +77,13 @@ void op::util::LogicalReduction::validate_and_infer_types()
                                   "(argument shape: ",
                                   input_shape,
                                   ", reduction axes: ",
-                                  m_reduction_axes,
+                                  reduction_axes,
                                   ")");
         }
 
         for (size_t i = 0; i < size_t(input_rank); i++)
         {
-            if (m_reduction_axes.count(i) == 0)
+            if (reduction_axes.count(i) == 0)
             {
                 dims.push_back(input_shape[i]);
             }

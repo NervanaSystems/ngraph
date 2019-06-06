@@ -20,14 +20,20 @@
 using namespace std;
 using namespace ngraph;
 
-op::Sum::Sum(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : ArithmeticReduction("Sum", arg, reduction_axes)
+const string op::Sum::type_name{"Sum"};
+
+op::Sum::Sum()
+{
+}
+
+op::Sum::Sum(const Output<Node>& arg, const AxisSet& reduction_axes)
+    : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-op::Sum::Sum(const shared_ptr<Node>& arg, const shared_ptr<Node>& reduction_axes)
-    : ArithmeticReduction("Sum", arg, reduction_axes)
+op::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
+    : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
@@ -45,5 +51,5 @@ void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     auto x = get_argument(0);
     auto& x_shape = input(0).get_shape();
 
-    adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, m_reduction_axes));
+    adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, get_reduction_axes()));
 }
