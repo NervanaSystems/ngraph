@@ -166,7 +166,7 @@ final product of required kernels is increasing exponentially.
 
 PlaidML addresses the kernel explosion problem in a manner that lifts a heavy 
 burden off kernel developers. It automatically lowers networks from nGraph 
-into Tile, a :abbr:Domain-Specific Language (DSL) designed for deep learning 
+into Tile, a :abbr:`Domain-Specific Language (DSL)` designed for deep learning 
 that allows developers to express how an operation should calculate tensors in
 an intuitive, mathematical form via `Stripe`_. Integration of PlaidML with 
 nGraph means extra flexibility to support newer deep learning models in the 
