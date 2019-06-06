@@ -235,6 +235,7 @@ namespace ngraph
                             const Shape& inputs_shape,
                             const Shape& indices_shape,
                             const Shape& output_shape,
+                            size_t axis,
                             int arena);
 
                 template <typename ElementType,
