@@ -94,22 +94,22 @@ const char* runtime::HostTensor::get_data_ptr() const
     return m_aligned_buffer_pool;
 }
 
-void runtime::HostTensor::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::HostTensor::write(const void* source, size_t n)
 {
-    if (tensor_offset + n > m_buffer_size)
+    if (n > m_buffer_size)
     {
         throw out_of_range("write access past end of tensor");
     }
     char* target = get_data_ptr();
-    memcpy(&target[tensor_offset], source, n);
+    memcpy(target, source, n);
 }
 
-void runtime::HostTensor::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::HostTensor::read(void* target, size_t n) const
 {
-    if (tensor_offset + n > m_buffer_size)
+    if (n > m_buffer_size)
     {
         throw out_of_range("read access past end of tensor");
     }
     const char* source = get_data_ptr();
-    memcpy(target, &source[tensor_offset], n);
+    memcpy(target, source, n);
 }
