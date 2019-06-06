@@ -23,9 +23,9 @@
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/fused/rnn_cell_base.hpp"
 #include "ngraph/op/util/activation_functions.hpp"
 #include "ngraph/op/util/fused_op.hpp"
+#include "ngraph/op/util/rnn_cell_base.hpp"
 
 namespace ngraph
 {
@@ -39,7 +39,7 @@ namespace ngraph
         ///
         ///             Note this class represents only single *cell* and not whole LSTM *layer*.
         ///
-        class LSTMCell : public util::FusedOp, public RNNCellBase
+        class LSTMCell : public util::FusedOp, public util::RNNCellBase
         {
         public:
             ///
@@ -149,15 +149,15 @@ namespace ngraph
             ///
             /// \brief The Activation function f.
             ///
-            ActivationFunction m_activation_f;
+            util::ActivationFunction m_activation_f;
             ///
             /// \brief The Activation function g.
             ///
-            ActivationFunction m_activation_g;
+            util::ActivationFunction m_activation_g;
             ///
             /// \brief The Activation function h.
             ///
-            ActivationFunction m_activation_h;
+            util::ActivationFunction m_activation_h;
             ///
             /// \brief      Controls whether to couple input and forget gates.
             ///

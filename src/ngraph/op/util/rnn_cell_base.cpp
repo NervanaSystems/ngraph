@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <iterator>
 
-#include "ngraph/op/fused/rnn_cell_base.hpp"
+#include "ngraph/op/util/rnn_cell_base.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -31,11 +31,11 @@ static vector<string> to_lower_case(const vector<string>& vs)
     return res;
 }
 
-op::RNNCellBase::RNNCellBase(size_t hidden_size,
-                             float clip,
-                             const vector<string>& activations,
-                             const vector<float>& activation_alpha,
-                             const vector<float>& activation_beta)
+op::util::RNNCellBase::RNNCellBase(size_t hidden_size,
+                                   float clip,
+                                   const vector<string>& activations,
+                                   const vector<float>& activation_alpha,
+                                   const vector<float>& activation_beta)
     : m_hidden_size(hidden_size)
     , m_clip(clip)
     , m_activations(to_lower_case(activations))
@@ -44,9 +44,9 @@ op::RNNCellBase::RNNCellBase(size_t hidden_size,
 {
 }
 
-op::ActivationFunction op::RNNCellBase::get_activation_function(size_t idx) const
+op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size_t idx) const
 {
-    op::ActivationFunction afunc = get_activation_func_by_name(m_activations.at(idx));
+    op::util::ActivationFunction afunc = get_activation_func_by_name(m_activations.at(idx));
 
     // Set activation functions parameters (if any)
     if (m_activation_alpha.size() > idx)

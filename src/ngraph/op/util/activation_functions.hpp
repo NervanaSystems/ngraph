@@ -43,71 +43,74 @@ namespace ngraph
 {
     namespace op
     {
-        namespace error
+        namespace util
         {
-            struct UnknownActivationFunction : ngraph_error
+            namespace error
             {
-                UnknownActivationFunction(const std::string& func_name)
-                    : ngraph_error{"Unknown activation function: " + func_name}
+                struct UnknownActivationFunction : ngraph_error
                 {
-                }
+                    UnknownActivationFunction(const std::string& func_name)
+                        : ngraph_error{"Unknown activation function: " + func_name}
+                    {
+                    }
+                };
+            }
+
+            namespace detail
+            {
+                std::shared_ptr<Node> sigmoid(const std::shared_ptr<Node>& arg,
+                                              float alpha UNUSED_PARAMETER,
+                                              float beta UNUSED_PARAMETER);
+                std::shared_ptr<Node> tanh(const std::shared_ptr<Node>& arg,
+                                           float alpha UNUSED_PARAMETER,
+                                           float beta UNUSED_PARAMETER);
+                std::shared_ptr<Node> relu(const std::shared_ptr<Node>& arg,
+                                           float alpha UNUSED_PARAMETER,
+                                           float beta UNUSED_PARAMETER);
+                std::shared_ptr<Node>
+                    hardsigmoid(const std::shared_ptr<Node>& arg, float alpha, float beta);
+            }
+
+            using ActivationFunctionType = std::shared_ptr<Node> (*)(const std::shared_ptr<Node>&,
+                                                                     float,
+                                                                     float);
+
+            ///
+            /// \brief      Class representing activation function used in RNN cells.
+            ///
+            class ActivationFunction
+            {
+            public:
+                ActivationFunction(ActivationFunctionType f, float alpha, float beta);
+                ActivationFunction(ActivationFunctionType f, float alpha);
+                ActivationFunction(ActivationFunctionType f);
+
+                ///
+                /// \brief  Calls stored activation function with provided node argument.
+                ///
+                std::shared_ptr<Node> operator()(const std::shared_ptr<Node>& arg) const;
+
+                void set_alpha(float alpha) { m_alpha = alpha; }
+                void set_beta(float beta) { m_beta = beta; }
+            private:
+                /// \brief Activation function wrapper.
+                ActivationFunctionType m_function;
+                /// \brief Activation function alpha parameter (may be unused).
+                float m_alpha;
+                /// \brief Activation function beta parameter (may be unused).
+                float m_beta;
             };
-        }
 
-        namespace detail
-        {
-            std::shared_ptr<Node> sigmoid(const std::shared_ptr<Node>& arg,
-                                          float alpha UNUSED_PARAMETER,
-                                          float beta UNUSED_PARAMETER);
-            std::shared_ptr<Node> tanh(const std::shared_ptr<Node>& arg,
-                                       float alpha UNUSED_PARAMETER,
-                                       float beta UNUSED_PARAMETER);
-            std::shared_ptr<Node> relu(const std::shared_ptr<Node>& arg,
-                                       float alpha UNUSED_PARAMETER,
-                                       float beta UNUSED_PARAMETER);
-            std::shared_ptr<Node>
-                hardsigmoid(const std::shared_ptr<Node>& arg, float alpha, float beta);
-        }
-
-        using ActivationFunctionType = std::shared_ptr<Node> (*)(const std::shared_ptr<Node>&,
-                                                                 float,
-                                                                 float);
-
-        ///
-        /// \brief      Class representing activation function used in RNN cells.
-        ///
-        class ActivationFunction
-        {
-        public:
-            ActivationFunction(ActivationFunctionType f, float alpha, float beta);
-            ActivationFunction(ActivationFunctionType f, float alpha);
-            ActivationFunction(ActivationFunctionType f);
-
+            /// \brief      Gets the activation function by name.
             ///
-            /// \brief  Calls stored activation function with provided node argument.
+            /// \param[in]  func_name  The function name
             ///
-            std::shared_ptr<Node> operator()(const std::shared_ptr<Node>& arg) const;
-
-            void set_alpha(float alpha) { m_alpha = alpha; }
-            void set_beta(float beta) { m_beta = beta; }
-        private:
-            /// \brief Activation function wrapper.
-            ActivationFunctionType m_function;
-            /// \brief Activation function alpha parameter (may be unused).
-            float m_alpha;
-            /// \brief Activation function beta parameter (may be unused).
-            float m_beta;
-        };
-
-        /// \brief      Gets the activation function by name.
-        ///
-        /// \param[in]  func_name  The function name
-        ///
-        /// \throws     UnknownActivationFunction When provided func_name is unknown.
-        ///
-        /// \return     The activation function object.
-        ///
-        ActivationFunction get_activation_func_by_name(const std::string& func_name);
+            /// \throws     UnknownActivationFunction When provided func_name is unknown.
+            ///
+            /// \return     The activation function object.
+            ///
+            ActivationFunction get_activation_func_by_name(const std::string& func_name);
+        } // namespace util
 
     } // namespace op
 

@@ -318,8 +318,6 @@ set (SRC
     op/fused/normalize.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
-    op/fused/rnn_cell_base.cpp
-    op/fused/rnn_cell_base.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
     op/fused/shuffle_channels.cpp
@@ -353,6 +351,8 @@ set (SRC
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
     op/util/reshape.hpp
+    op/util/rnn_cell_base.cpp
+    op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
     partial_shape.cpp
