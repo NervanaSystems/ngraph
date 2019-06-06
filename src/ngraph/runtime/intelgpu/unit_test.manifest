@@ -40,6 +40,8 @@ pad_reflect_2d
 pad_reflect_2d_with_neg
 
 # Not implemented
+batch_mat_mul_forward
+backwards_batchmatmul_tensor2_tensor2
 erf
 gather_no_axis
 gather
@@ -78,6 +80,8 @@ mvn_mean_variance_normalization
 mvn_mean_variance_normalization_split_channels
 scale_shift_no_broadcast
 scale_shift
+scatter_add_4d_indices
+scatter_add_3d_indices
 scatter_add_2d_indices
 scatter_add_1d_indices
 scatter_add_scalar_indices

@@ -40,20 +40,19 @@ ngraph::runtime::plaidml::PlaidML_Tensor::PlaidML_Tensor(Config* config,
                  << " type=" << element_type << " shape=" << shape;
 }
 
-void ngraph::runtime::plaidml::PlaidML_Tensor::write(const void* p, size_t tensor_offset, size_t n)
+void ngraph::runtime::plaidml::PlaidML_Tensor::write(const void* p, size_t n)
 {
-    NGRAPH_DEBUG << "Write " << this << " offset=" << tensor_offset << " n=" << n
-                 << " is_logically_zero=" << m_is_logically_zero;
+    NGRAPH_DEBUG << "Write " << this << " n=" << n << " is_logically_zero=" << m_is_logically_zero;
 
     // As a special case: if we get a zero-sized write to offset zero, fill the tensor with zero.
-    if (n == 0 && tensor_offset == 0)
+    if (n == 0)
     {
         NGRAPH_DEBUG << "Logically zeroing tensor " << this;
         m_is_logically_zero = true;
         return;
     }
 
-    bool is_full_write = (tensor_offset == 0 && n == m_tensor.get_shape().buffer_size());
+    bool is_full_write = (n == m_tensor.get_shape().buffer_size());
 
     vp::mapping<char> mp;
     if (m_is_logically_zero || is_full_write)
@@ -77,14 +76,13 @@ void ngraph::runtime::plaidml::PlaidML_Tensor::write(const void* p, size_t tenso
     m_is_logically_zero = false;
 
     const char* src = static_cast<const char*>(p);
-    char* dest = mp.raw() + tensor_offset;
+    char* dest = mp.raw();
     std::copy(src, src + n, dest);
 }
 
-void ngraph::runtime::plaidml::PlaidML_Tensor::read(void* p, size_t tensor_offset, size_t n) const
+void ngraph::runtime::plaidml::PlaidML_Tensor::read(void* p, size_t n) const
 {
-    NGRAPH_DEBUG << "Read " << this << " offset=" << tensor_offset << " n=" << n
-                 << " is_logically_zero=" << m_is_logically_zero;
+    NGRAPH_DEBUG << "Read " << this << " n=" << n << " is_logically_zero=" << m_is_logically_zero;
 
     char* dest = static_cast<char*>(p);
 
@@ -95,7 +93,7 @@ void ngraph::runtime::plaidml::PlaidML_Tensor::read(void* p, size_t tensor_offse
     }
 
     vp::mapping<char> mp = m_tensor.map(vp::map_for_read);
-    const char* src = mp.raw() + tensor_offset;
+    const char* src = mp.raw();
     std::copy(src, src + n, dest);
 }
 
