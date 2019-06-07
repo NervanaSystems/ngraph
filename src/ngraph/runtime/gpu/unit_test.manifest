@@ -142,7 +142,6 @@ erf
 zero_sized_erf
 model_erf
 model_erf_int32
-gather_no_axis
 gather
 gather_nd_scalar_from_2d
 gather_nd_1d_from_2d
@@ -154,9 +153,13 @@ gather_nd_batch_1d_from_2d
 gather_nd_batch_scalar_from_3d
 gather_nd_batch_1d_from_3d
 gather_nd_batch_2d_from_3d
-gather_scalar_indices_no_axis
-gather_scalar_indices
 gather_nd_single_indices
+gather_scalar_indices
+gather_scalar_indices_no_axis
+gather_2d_indices_no_axis
+gather_3d_indices_no_axis
+gather_4d_indices_no_axis
+gather_4d_indices_no_axis_uint8
 gemm
 gemm_broadcast_input_C
 model_hardmax
