@@ -38,6 +38,7 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -1813,7 +1814,17 @@ TEST(cpu_test, tensor_copy_from_interpreter_to_cpu)
     ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
 }
 
-TEST(cpu_test, tensor_copy_from_same_layout)
+TEST(cpu_test, tensor_copy_from_different_shape)
+{
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{1, 3, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(cpu_test, tensor_copy_from_same_native_layouts)
 {
     // this test copying of data between two tensor having same
     // layout
@@ -1825,14 +1836,60 @@ TEST(cpu_test, tensor_copy_from_same_layout)
     ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
 }
 
+TEST(cpu_test, tensor_copy_from_same_rotated_layouts)
+{
+    auto A = make_shared<op::Parameter>(element::u8, Shape{2, 3});
+    auto f1 = make_shared<Function>(make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
+                                    ParameterVector{A});
+    auto B = make_shared<op::Parameter>(element::u8, Shape{2, 3});
+    auto f2 = make_shared<Function>(make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2}),
+                                    ParameterVector{B});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, Shape{2, 3});
+    copy_data(a, vector<uint8_t>{1, 2, 3, 4, 5, 6});
+    auto result1 = backend->create_tensor(element::u8, Shape{3, 2});
+    backend->compile(f1)->call_with_validate({result1}, {a});
+
+    auto b = backend->create_tensor(element::u8, Shape{2, 3});
+    copy_data(a, vector<uint8_t>{1, 1, 1, 1, 1, 1});
+    auto result2 = backend->create_tensor(element::u8, Shape{3, 2});
+    backend->compile(f2)->call_with_validate({result2}, {b});
+    // Both result1 and result2 will be in rotated layouts at this point.
+
+    result2->copy_from(*result1);
+
+    // Check internal values in rotated layout
+    auto result2_internal_buffer = reinterpret_cast<uint8_t*>(
+        static_pointer_cast<runtime::cpu::CPUTensorView>(result2)->get_data_ptr());
+    vector<uint8_t> vec(result2_internal_buffer, result2_internal_buffer + 6);
+    // This check can be removed if the CPU backend stops optimizing reshapes using layout transformations
+    EXPECT_EQ((vector<uint8_t>{1, 2, 3, 4, 5, 6}), vec);
+
+    // Check native layout
+    EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(result2));
+}
+
 TEST(cpu_test, tensor_copy_from_different_layout)
 {
-    // this test copying of data between two tensor having different
-    // layout
+    auto A = make_shared<op::Parameter>(element::u8, Shape{2, 3});
+    auto f = make_shared<Function>(make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
+                                   ParameterVector{A});
+
     auto backend = runtime::Backend::create("CPU");
-    auto a = backend->create_tensor(element::f32, Shape{2, 3});
-    auto b = backend->create_tensor(element::f32, Shape{3, 2});
-    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
-    b->copy_from(*a);
-    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, Shape{2, 3});
+    copy_data(a, vector<uint8_t>{1, 2, 3, 4, 5, 6});
+    auto result = backend->create_tensor(element::u8, Shape{3, 2});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+
+    auto b = backend->create_tensor(element::u8, Shape{3, 2});
+    b->copy_from(*result);
+
+    EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
 }
