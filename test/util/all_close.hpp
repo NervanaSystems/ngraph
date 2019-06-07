@@ -56,7 +56,7 @@ namespace ngraph
                     if (count < 5)
                     {
                         ar_fail << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-                                << +a[i] << " is not close to " << +b[i] << " at index " << i
+                                << a[i] << " is not close to " << b[i] << " at index " << i
                                 << std::endl;
                     }
                     count++;
@@ -91,6 +91,7 @@ namespace ngraph
                 T abs_diff = (a[i] > b[i]) ? (a[i] - b[i]) : (b[i] - a[i]);
                 if (abs_diff > atol + rtol * b[i])
                 {
+                    // use unary + operator to force integral values to be displayed as numbers
                     ar_fail << +a[i] << " is not close to " << +b[i] << " at index " << i
                             << std::endl;
                     rc = false;

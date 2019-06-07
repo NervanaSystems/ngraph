@@ -374,8 +374,8 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
         {
             if (diff_count < 5)
             {
-                msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1) << +a[i]
-                    << " is not close to " << +b[i] << " at index " << i << std::endl;
+                msg << std::setprecision(std::numeric_limits<long double>::digits10 + 1) << a[i]
+                    << " is not close to " << b[i] << " at index " << i << std::endl;
             }
 
             rc = false;
@@ -506,7 +506,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
         {
             if (diff_count < 5)
             {
-                msg << +a[i] << " is not close to " << +b[i] << " at index " << i << std::endl;
+                msg << a[i] << " is not close to " << b[i] << " at index " << i << std::endl;
             }
 
             rc = false;
