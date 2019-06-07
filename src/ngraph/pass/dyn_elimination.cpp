@@ -265,7 +265,8 @@ static SlicePlan make_plan(const Shape& input_shape,
             int64_t min_real_end = (is_reverse ? -1 : 0);
             real_end = std::max(min_real_end, std::min(int64_t(input_shape[i_in]), real_end));
 
-            // Adjust the stride for backwards slicing.
+            // Ensure stride is not zero, and adjust it for backwards slicing.
+            NGRAPH_CHECK(strides[i] != 0);
             int64_t real_stride = std::abs(strides[i]);
 
             // Adjust for reversal if needed. This isn't quite as simple as swapping begin and
@@ -279,6 +280,13 @@ static SlicePlan make_plan(const Shape& input_shape,
                 real_begin++;
                 real_end++;
                 p.reverse_axes.insert(i_out);
+            }
+
+            // nGraph's slice op does not like it when end < begin, so we truncate for that case
+            // here.
+            if (real_end < real_begin)
+            {
+                real_end = real_begin;
             }
 
             // Compute output dimension.
