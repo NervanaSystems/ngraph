@@ -24,24 +24,24 @@ namespace ngraph
     {
         struct PriorBoxAttrs
         {
-            // min_sizes      Desired min_sizes of prior boxes
-            // max_sizes      Desired max_sizes of prior boxes
-            // aspect_ratios  Aspect ratios of prior boxes
-            // clip           Clip output to [0,1]
-            // flip           Flip aspect ratios
-            // step           Distance between prior box centers
-            // offset         Box offset relative to top center of image
-            // variances      Values to adjust prior boxes with
-            // scale_all      Scale all sizes
-            std::vector<float> min_sizes;
-            std::vector<float> max_sizes;
-            std::vector<float> aspect_ratios;
+            // min_size         Desired min_size of prior boxes
+            // max_size         Desired max_size of prior boxes
+            // aspect_ratio     Aspect ratios of prior boxes
+            // clip             Clip output to [0,1]
+            // flip             Flip aspect ratios
+            // step             Distance between prior box centers
+            // offset           Box offset relative to top center of image
+            // variance         Values to adjust prior boxes with
+            // scale_all_sizes  Scale all sizes
+            std::vector<float> min_size;
+            std::vector<float> max_size;
+            std::vector<float> aspect_ratio;
             bool clip = false;
             bool flip = false;
             float step = 1.0f;
             float offset = 0.0f;
-            std::vector<float> variances;
-            bool scale_all = false;
+            std::vector<float> variance;
+            bool scale_all_sizes = false;
         };
 
         /// \brief Layer which generates prior boxes of specified sizes

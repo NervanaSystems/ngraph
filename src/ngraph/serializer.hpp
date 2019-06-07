@@ -62,3 +62,42 @@ namespace ngraph
     /// Option may be enabled by setting the environment variable NGRAPH_SERIALIZER_OUTPUT_SHAPES
     void set_serialize_output_shapes(bool enable);
 }
+
+#ifndef NGRAPH_JSON_ENABLE
+// Rather than making every reference to the serializer conditionally compile here we just
+// provide some null stubs to resolve link issues
+// The `inline` is so we don't get multiple definitions of function
+std::string inline ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent)
+{
+    return "";
+}
+
+void inline ngraph::serialize(const std::string& path,
+                              std::shared_ptr<ngraph::Function> func,
+                              size_t indent)
+{
+    throw std::runtime_error("serializer disabled in build");
+}
+
+void inline ngraph::serialize(std::ostream& out,
+                              std::shared_ptr<ngraph::Function> func,
+                              size_t indent)
+{
+    throw std::runtime_error("serializer disabled in build");
+}
+
+std::shared_ptr<ngraph::Function> inline ngraph::deserialize(std::istream& in)
+{
+    throw std::runtime_error("serializer disabled in build");
+}
+
+std::shared_ptr<ngraph::Function> inline ngraph::deserialize(const std::string& str)
+{
+    throw std::runtime_error("serializer disabled in build");
+}
+
+void inline ngraph::set_serialize_output_shapes(bool enable)
+{
+    throw std::runtime_error("serializer disabled in build");
+}
+#endif

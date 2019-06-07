@@ -48,7 +48,7 @@ template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)
 {
     size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
+    tv->write(data.data(), data_size);
 }
 
 template <typename T>
@@ -61,7 +61,7 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
     std::vector<T> rc(element_count);
-    tv->read(rc.data(), 0, size);
+    tv->read(rc.data(), size);
     return rc;
 }
 
@@ -70,7 +70,7 @@ std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv
 template <typename T>
 void write_vector(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& values)
 {
-    tv->write(values.data(), 0, values.size() * sizeof(T));
+    tv->write(values.data(), values.size() * sizeof(T));
 }
 
 template <typename T>
@@ -113,7 +113,7 @@ void init_int_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
     {
         element = dist(engine);
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(T));
+    tv->write(vec.data(), vec.size() * sizeof(T));
 }
 
 template <typename T>
@@ -126,7 +126,7 @@ void init_real_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engin
     {
         element = dist(engine);
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(T));
+    tv->write(vec.data(), vec.size() * sizeof(T));
 }
 
 void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine);

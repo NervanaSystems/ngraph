@@ -51,7 +51,7 @@ void init_int_tv(shared_ptr<runtime::Tensor> tv, T min, T max)
     {
         element = dist(s_random_engine);
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(T));
+    tv->write(vec.data(), vec.size() * sizeof(T));
 }
 
 template <>
@@ -64,7 +64,7 @@ void init_int_tv<char>(shared_ptr<runtime::Tensor> tv, char min, char max)
     {
         element = static_cast<char>(dist(s_random_engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(char));
+    tv->write(vec.data(), vec.size() * sizeof(char));
 }
 
 template <>
@@ -77,7 +77,7 @@ void init_int_tv<int8_t>(shared_ptr<runtime::Tensor> tv, int8_t min, int8_t max)
     {
         element = static_cast<int8_t>(dist(s_random_engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(int8_t));
+    tv->write(vec.data(), vec.size() * sizeof(int8_t));
 }
 
 template <>
@@ -90,7 +90,7 @@ void init_int_tv<uint8_t>(shared_ptr<runtime::Tensor> tv, uint8_t min, uint8_t m
     {
         element = static_cast<uint8_t>(dist(s_random_engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(uint8_t));
+    tv->write(vec.data(), vec.size() * sizeof(uint8_t));
 }
 
 template <typename T>
@@ -103,7 +103,7 @@ void init_real_tv(shared_ptr<runtime::Tensor> tv, T min, T max)
     {
         element = dist(s_random_engine);
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(T));
+    tv->write(vec.data(), vec.size() * sizeof(T));
 }
 
 static void random_init(shared_ptr<runtime::Tensor> tv)
@@ -151,7 +151,6 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
             make_shared<runtime::HostTensor>(param->get_element_type(), param->get_shape());
         random_init(tensor_data);
         tensor->write(tensor_data->get_data_ptr(),
-                      0,
                       tensor_data->get_element_count() * tensor_data->get_element_type().size());
         args.push_back(tensor);
         arg_data.push_back(tensor_data);
@@ -194,7 +193,6 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                 {
                     const shared_ptr<runtime::HostTensor>& data = arg_data[arg_index];
                     arg->write(data->get_data_ptr(),
-                               0,
                                data->get_element_count() * data->get_element_type().size());
                 }
             }
@@ -207,7 +205,6 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                 const shared_ptr<runtime::HostTensor>& data = result_data[result_index];
                 const shared_ptr<runtime::Tensor>& result = results[result_index];
                 result->read(data->get_data_ptr(),
-                             0,
                              data->get_element_count() * data->get_element_type().size());
             }
         }

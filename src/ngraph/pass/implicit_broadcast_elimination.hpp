@@ -24,7 +24,7 @@ namespace ngraph
     namespace pass
     {
         template <typename T>
-        NodeVector static explicit_broadcast(std::shared_ptr<T>& node)
+        NodeVector explicit_broadcast(std::shared_ptr<T>& node)
         {
             NodeVector rc;
 

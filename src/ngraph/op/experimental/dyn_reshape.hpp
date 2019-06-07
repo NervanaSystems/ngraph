@@ -37,16 +37,27 @@ namespace ngraph
             /// \param pattern The node that defines output shape pattern.
             ///        If the input shape is \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
             ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
-            DynReshape(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& pattern);
+            ///        A value of -1 is allowed for at most one dimension, in which case the dimension
+            ///        size is inferred based on element count of input tensor.
+            /// \param zero_flag Treats zeros in `pattern` as wildcard flags indicating a copy from input
+            ///                  shape at the same index.
+            DynReshape(const std::shared_ptr<Node>& arg,
+                       const std::shared_ptr<Node>& pattern,
+                       bool zero_flag = false);
 
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            bool get_zero_flag() const { return m_zero_flag; }
+            void set_zero_flag(bool zero_flag) { m_zero_flag = zero_flag; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
+
+        private:
+            bool m_zero_flag;
         };
     }
 }

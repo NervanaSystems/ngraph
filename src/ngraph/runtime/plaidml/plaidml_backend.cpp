@@ -22,7 +22,7 @@
 
 namespace vp = vertexai::plaidml;
 
-ngraph::runtime::plaidml::PlaidML_Backend::PlaidML_Backend(const char* configuration_string)
+ngraph::runtime::plaidml::PlaidML_Backend::PlaidML_Backend(const std::string& configuration_string)
     : m_config(parse_config_string(configuration_string))
     , m_compiler{&m_config}
 {
@@ -66,19 +66,4 @@ void ngraph::runtime::plaidml::PlaidML_Backend::remove_compiled_function(
     {
         m_cache.forget(std::move(plaidml_exec));
     }
-}
-
-extern "C" const char* get_ngraph_version_string()
-{
-    return NGRAPH_VERSION;
-}
-
-extern "C" ngraph::runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new ngraph::runtime::plaidml::PlaidML_Backend{configuration_string};
-}
-
-extern "C" void delete_backend(ngraph::runtime::Backend* backend)
-{
-    delete backend;
 }
