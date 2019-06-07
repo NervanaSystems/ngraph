@@ -76,7 +76,7 @@ namespace ngraph
             /// \return The pad type for pooling.
             const PadType& get_pad_type() const { return m_pad_type; }
             /// \return The ceiling mode being used for output shape computations
-            bool get_ceil_mode() const { return m_ceil_mode; };
+            bool get_ceil_mode() const { return m_ceil_mode; }
             /// \return The default value for MaxPool.
             virtual std::shared_ptr<Node> get_default_value() const override
             {
