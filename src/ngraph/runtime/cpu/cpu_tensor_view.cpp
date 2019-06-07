@@ -181,7 +181,7 @@ void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& sourc
         else
         {
             // This will copy the data in native/row-major layout
-            source.read(get_data_ptr(), 0, get_size_in_bytes());
+            source.read(get_data_ptr(), get_size_in_bytes());
             // Set default layout
             m_descriptor->set_tensor_layout(
                 std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
@@ -191,8 +191,8 @@ void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& sourc
     {
         auto size = get_size_in_bytes();
         AlignedBuffer tmp_buffer{size, static_cast<size_t>(BufferAlignment)};
-        source.read(tmp_buffer.get_ptr(), 0, size);
-        write(tmp_buffer.get_ptr(), 0, size);
+        source.read(tmp_buffer.get_ptr(), size);
+        write(tmp_buffer.get_ptr(), size);
         // Set default layout
         m_descriptor->set_tensor_layout(
             std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
