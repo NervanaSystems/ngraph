@@ -29,17 +29,21 @@ namespace ngraph
         class Acos : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs an arccos operation.
+            Acos();
             /// \brief Constructs an arccos operation.
             ///
-            /// \param arg Node that produces the input tensor.<br>
+            /// \param arg Output that produces the input tensor.<br>
             /// `[d1, ...]`
             ///
             /// Output `[d1, ...]`
             ///
-            Acos(const std::shared_ptr<Node>& arg);
+            Acos(const Output<Node>& arg);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

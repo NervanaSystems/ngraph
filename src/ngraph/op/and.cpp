@@ -19,8 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::And::And(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseLogical("And", arg0, arg1)
+const string op::And::type_name{"And"};
+
+op::And::And()
+{
+}
+
+op::And::And(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
+    : BinaryElementwiseLogical(arg0, arg1, autob)
 {
     constructor_validate_and_infer_types();
 }
@@ -28,5 +34,5 @@ op::And::And(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
 shared_ptr<Node> op::And::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<And>(new_args.at(0), new_args.at(1));
+    return make_shared<And>(new_args.at(0), new_args.at(1), this->get_autob());
 }

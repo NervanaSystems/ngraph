@@ -538,6 +538,32 @@ TEST(util, enum_mask_operators)
     EXPECT_EQ(true, n[Type::b]);
 }
 
+TEST(graph, huge)
+{
+    Function* f;
+    std::vector<std::weak_ptr<Node>> weak_nodes;
+    {
+        auto param = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+        std::shared_ptr<Node> n = param;
+        for (size_t i = 0; i < 1000000; i++)
+        {
+            n = make_shared<op::Negative>(n);
+        }
+        f = new Function(NodeVector{n}, ParameterVector{param});
+        for (auto node : f->get_ops())
+        {
+            weak_nodes.push_back(node);
+        }
+    }
+
+    delete f;
+
+    for (auto weak_node : weak_nodes)
+    {
+        EXPECT_TRUE(weak_node.expired());
+    }
+}
+
 TEST(util, apply_permutation)
 {
     ASSERT_EQ(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{2, 1, 0, 3}), (Shape{2, 1, 0, 3}));

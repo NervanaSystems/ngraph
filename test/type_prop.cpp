@@ -2484,6 +2484,41 @@ TEST(type_prop, or_bad_arguments)
         });
 }
 
+template <typename T>
+void test_binary_eltwise_numpy(const element::Type& et, const op::AutoBroadcastSpec& autob)
+{
+    auto param1 = make_shared<op::Parameter>(et, Shape{1, 3, 6});
+    auto param2 = make_shared<op::Parameter>(et, Shape{3, 1});
+    auto param3 = make_shared<op::Parameter>(et, Shape{2, 3, 6});
+    auto param4 = make_shared<op::Parameter>(et, Shape{6});
+    EXPECT_EQ(make_shared<T>(param1, param2, autob)->get_shape(), (Shape{1, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param1, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param4, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+
+    auto pp1 = make_shared<op::Parameter>(et, PartialShape{1, Dimension::dynamic(), 6});
+    auto pp2 = make_shared<op::Parameter>(et, PartialShape{3, 1});
+    EXPECT_EQ(make_shared<T>(pp1, pp2, autob)->get_shape(), (Shape{1, 3, 6}));
+}
+
+TEST(type_prop, eltwise_auto_bcast)
+{
+    test_binary_eltwise_numpy<op::Add>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::And>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Divide>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::GreaterEq>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Less>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::LessEq>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Maximum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Minimum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Multiply>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::NotEqual>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Or>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Power>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Subtract>(element::f32, op::AutoBroadcastType::NUMPY);
+}
+
 TEST(type_prop, embedding_lookup_non_matrix_weights)
 {
     auto tv0_2_4_param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
@@ -12941,6 +12976,95 @@ TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_rank_dynamic_ok)
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_pattern_zero)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 0, 2, 8});
+    auto dynamic_arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, 0, 32});
+
+    auto r1 = make_shared<op::DynReshape>(arg, pattern);
+    EXPECT_EQ(r1->get_output_shape(0), (Shape{1, 2, 0, 32}));
+
+    auto r2 = make_shared<op::DynReshape>(arg, pattern, true /*zero_flag*/);
+    EXPECT_EQ(r2->get_output_shape(0), (Shape{1, 2, 2, 32}));
+
+    auto r3 = make_shared<op::DynReshape>(dynamic_arg, pattern, true /*zero_flag*/);
+    EXPECT_TRUE(
+        r3->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic(), 32}));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_pattern_negative)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 8});
+    auto dynamic_arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, 4, -1});
+
+    auto r1 = make_shared<op::DynReshape>(arg, pattern);
+    EXPECT_EQ(r1->get_output_shape(0), (Shape{1, 2, 4, 16}));
+
+    auto r2 = make_shared<op::DynReshape>(dynamic_arg, pattern);
+    EXPECT_TRUE(
+        r2->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, 4, Dimension::dynamic()}));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_pattern_zero_negative)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 2, 0});
+    auto dynamic_arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = op::Constant::create(element::i64, Shape{2}, {0, -1});
+
+    auto r1 = make_shared<op::DynReshape>(arg, pattern);
+    auto r2 = make_shared<op::DynReshape>(arg, pattern, true);
+    EXPECT_EQ(r1->get_output_shape(0), (Shape{0, 0}));
+    EXPECT_EQ(r2->get_output_shape(0), (Shape{2, 0}));
+
+    auto r3 = make_shared<op::DynReshape>(dynamic_arg, pattern);
+    auto r4 = make_shared<op::DynReshape>(dynamic_arg, pattern, true);
+    EXPECT_TRUE(r3->get_output_partial_shape(0).same_scheme(PartialShape{0, Dimension::dynamic()}));
+    EXPECT_TRUE(r4->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_pattern_negative_failure1)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 8});
+    auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, -1, -1});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Expected failure on dynreshape construction";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("More than one dimension has size of -1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_pattern_negative_failure2)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 8});
+    auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, 4, -2});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Expected failure on dynreshape construction";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Dim size cannot be less than -1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
 }
 
 void DynReshape_Test_Shape_Except(const shared_ptr<Node>& param_0, const shared_ptr<Node>& param_1)
