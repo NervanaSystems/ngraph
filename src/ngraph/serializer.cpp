@@ -1407,7 +1407,7 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Result:
             {
-                auto needs_default_layout = node_js["pad_type"].empty()
+                auto needs_default_layout = node_js["needs_default_layout"].empty()
                                                 ? false
                                                 : node_js.at("needs_default_layout").get<bool>();
                 node = make_shared<op::Result>(args[0], needs_default_layout);
