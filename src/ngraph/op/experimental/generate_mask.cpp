@@ -26,19 +26,38 @@ op::GenerateMask::GenerateMask()
 {
 }
 
-op::GenerateMask::GenerateMask(const std::shared_ptr<Node>& training,
+#if 0
+// Not supported until all transformers use nodes instead of attributes
+op::GenerateMask::GenerateMask(const Output<Node>& training,
+                               const Output<Node>& shape,
+                               const Output<Node>& probability,
+                               const Output<Node>& seed,
+                               const Output<Node>& use_seed,
+                               const element::Type& element_type)
+    : Op({training, shape, probability, seed, use_seed})
+    , m_element_type(element_type)
+{
+}
+#endif
+
+op::GenerateMask::GenerateMask(const Output<Node>& training,
                                const Shape& shape,
                                const element::Type& element_type,
                                uint64_t seed,
                                double prob,
                                bool use_seed)
-    : Op(check_single_output_args({training}))
-    , m_shape(shape)
+    : Op({training})
     , m_element_type(element_type)
+    , m_shape(shape)
     , m_use_seed(use_seed)
     , m_seed(seed)
     , m_probability(prob)
 {
+    set_argument(1, make_shared<op::Constant>(element::u64, Shape{shape.size()}, shape));
+    set_argument(2,
+                 make_shared<op::Constant>(element::boolean, Shape{}, std::vector<char>{use_seed}));
+    set_argument(3, make_shared<op::Constant>(element::u64, Shape{}, std::vector<uint64_t>{seed}));
+    set_argument(4, make_shared<op::Constant>(element::f64, Shape{}, std::vector<double>{prob}));
     constructor_validate_and_infer_types();
 }
 
