@@ -40,7 +40,16 @@ namespace ngraph
                     {
                         throw std::domain_error("integer division by zero");
                     }
-                    out[i] = arg0[i] / arg1[i];
+                    T quot = arg0[i] / arg1[i];
+                    T rem = arg0[i] % arg1[i];
+                    if ((rem != 0) && ((arg0[i] < 0) != (arg1[i] < 0)))
+                    {
+                        out[i] = quot - 1;
+                    }
+                    else
+                    {
+                        out[i] = quot;
+                    }
                 }
             }
 
