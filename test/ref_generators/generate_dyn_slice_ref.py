@@ -18,8 +18,7 @@
 #
 # Test case generator for DynSlice op.
 #
-# TODO(amprocte): try to get compile time of the generated code down, refactor
-# to use parameterized gtests.
+# TODO(amprocte): refactor to use parameterized gtests.
 #
 
 import sys
