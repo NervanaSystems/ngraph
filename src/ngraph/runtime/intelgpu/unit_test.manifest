@@ -108,3 +108,6 @@ fake_quantize_with_clip_across_channels
 model_dequantize_linear_1d_zero_scale_int8
 model_dequantize_linear_1d_zero_scale_int8_4d
 model_quant_conv_linear
+
+# Need to update implementation
+divide_int32
