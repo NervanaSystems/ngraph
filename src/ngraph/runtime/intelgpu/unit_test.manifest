@@ -43,7 +43,6 @@ pad_reflect_2d_with_neg
 batch_mat_mul_forward
 backwards_batchmatmul_tensor2_tensor2
 erf
-gather_no_axis
 gather
 gather_nd_scalar_from_2d
 gather_nd_1d_from_2d
@@ -55,9 +54,13 @@ gather_nd_batch_1d_from_2d
 gather_nd_batch_scalar_from_3d
 gather_nd_batch_1d_from_3d
 gather_nd_batch_2d_from_3d
-gather_scalar_indices_no_axis
-gather_scalar_indices
 gather_nd_single_indices
+gather_scalar_indices
+gather_scalar_indices_no_axis
+gather_2d_indices_no_axis
+gather_3d_indices_no_axis
+gather_4d_indices_no_axis
+gather_4d_indices_no_axis_uint8
 gemm
 gemm_broadcast_input_C
 normalize_across_chw_scalar_scale_4d
