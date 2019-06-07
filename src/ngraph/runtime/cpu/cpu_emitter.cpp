@@ -1098,8 +1098,11 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
-                       << args[1].get_name() << "[i];\n";
+                writer << out[0].get_name() << "[i] = ((" << args[0].get_name() << "[i] % "
+                       << args[1].get_name() << "[i] != 0) && (" << args[0].get_name()
+                       << "[i] < 0 != " << args[1].get_name() << "[i] < 0)) ?" << args[0].get_name()
+                       << "[i] / " << args[1].get_name() << "[i] - 1 :" << args[0].get_name()
+                       << "[i] / " << args[1].get_name() << "[i];\n";
                 writer.block_end();
                 writer.block_end();
             }
