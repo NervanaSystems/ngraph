@@ -19,14 +19,23 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::GenerateMask::type_name{"GenerateMask"};
+
+op::GenerateMask::GenerateMask()
+    : Op()
+{
+}
+
 op::GenerateMask::GenerateMask(const std::shared_ptr<Node>& training,
                                const Shape& shape,
                                const element::Type& element_type,
-                               unsigned int seed,
-                               double prob)
-    : Op("GenerateMask", check_single_output_args({training}))
+                               uint64_t seed,
+                               double prob,
+                               bool use_seed)
+    : Op(check_single_output_args({training}))
     , m_shape(shape)
     , m_element_type(element_type)
+    , m_use_seed(use_seed)
     , m_seed(seed)
     , m_probability(prob)
 {
@@ -37,7 +46,7 @@ shared_ptr<Node> op::GenerateMask::copy_with_new_args(const NodeVector& new_args
 {
     check_new_args_count(this, new_args);
     return make_shared<GenerateMask>(
-        new_args.at(0), m_shape, m_element_type, m_seed, m_probability);
+        new_args.at(0), m_shape, m_element_type, m_seed, m_probability, m_use_seed);
 }
 
 void ngraph::op::GenerateMask::validate_and_infer_types()
