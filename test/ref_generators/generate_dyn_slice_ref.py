@@ -256,92 +256,55 @@ class SliceTestWriter:
         try:
             data_out = data_in.__getitem__(slices)
         except Exception as e:
-            self._stream.write('    {\n')
-            self._stream.write('        auto arg = std::make_shared<op::Parameter>(%s, %s);\n' % (np_dt_to_ng(self._dtype), print_shape(self._shape)))
-            self._stream.write('        auto lb = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('        auto ub = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('        auto strides = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('\n')
-            self._stream.write('        std::vector<%s> input_values(%s);\n' % (np_dt_to_c(self._dtype), np.prod(self._shape)))
-            self._stream.write('        std::iota(input_values.begin(), input_values.end(), static_cast<%s>(0));\n' % np_dt_to_c(self._dtype))
-            self._stream.write('        std::vector<int64_t> lb_values{%s};\n' % print_lb_values(slices))
-            self._stream.write('        std::vector<int64_t> ub_values{%s};\n' % print_ub_values(slices))
-            self._stream.write('        std::vector<int64_t> strides_values{%s};\n' % print_stride_values(slices))
-            self._stream.write('        AxisSet lb_mask{%s};\n' % print_lb_mask_axes(slices))
-            self._stream.write('        AxisSet ub_mask{%s};\n' % print_ub_mask_axes(slices))
-            self._stream.write('        AxisSet new_mask{%s};\n' % print_new_mask_axes(slices))
-            self._stream.write('        AxisSet shrink_mask{%s};\n' % print_shrink_mask_axes(slices))
-            self._stream.write('        AxisSet ellipsis_mask{%s};\n' % print_ellipsis_mask_axes(slices))
-            self._stream.write('\n')
-            self._stream.write('        // numpy threw: %s\n' % type(e))
-            self._stream.write('        EXPECT_ANY_THROW({\n');
-            self._stream.write('            auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);\n')
-            self._stream.write('\n')
-            self._stream.write('            auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});\n')
-            self._stream.write('\n')
-            self._stream.write('            auto backend = runtime::Backend::create("${BACKEND_NAME}",true);\n')
-            self._stream.write('            auto ex = backend->compile(f);\n')
-            self._stream.write('\n')
-            self._stream.write('            auto input_arg = backend->create_tensor(%s, %s);\n' % (np_dt_to_ng(self._dtype), print_shape(self._shape)))
-            self._stream.write('            auto input_lb = backend->create_tensor(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('            auto input_ub = backend->create_tensor(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('            auto input_strides = backend->create_tensor(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('            copy_data(input_arg, input_values);\n')
-            self._stream.write('            copy_data(input_lb, lb_values);\n')
-            self._stream.write('            copy_data(input_ub, ub_values);\n')
-            self._stream.write('            copy_data(input_strides, strides_values);\n')
-            self._stream.write('\n')
-            self._stream.write('            auto output = backend->create_dynamic_tensor(%s, PartialShape::dynamic());\n' % np_dt_to_ng(self._dtype))
-            self._stream.write('\n')
-            self._stream.write('            ex->call({output}, {input_arg, input_lb, input_ub, input_strides});\n')
-            self._stream.write('        });\n')
-            self._stream.write('    }\n')
+            self._stream.write('    check_failure<%s>\n'
+                               '                 (%s,\n'
+                               '                  %s,\n'
+                               '                  std::vector<int64_t>{%s},\n'
+                               '                  std::vector<int64_t>{%s},\n'
+                               '                  std::vector<int64_t>{%s},\n'
+                               '                  AxisSet{%s},\n'
+                               '                  AxisSet{%s},\n'
+                               '                  AxisSet{%s},\n'
+                               '                  AxisSet{%s},\n'
+                               '                  AxisSet{%s});\n'
+                                  % (np_dt_to_c(self._dtype),
+                                     np_dt_to_ng(self._dtype),
+                                     print_shape(data_in.shape),
+                                     print_lb_values(slices),
+                                     print_ub_values(slices),
+                                     print_stride_values(slices),
+                                     print_lb_mask_axes(slices),
+                                     print_ub_mask_axes(slices),
+                                     print_new_mask_axes(slices),
+                                     print_shrink_mask_axes(slices),
+                                     print_ellipsis_mask_axes(slices)))
         else:
-            self._stream.write('    {\n')
-            self._stream.write('        auto arg = std::make_shared<op::Parameter>(%s, %s);\n' % (np_dt_to_ng(self._dtype), print_shape(self._shape)))
-            self._stream.write('        auto lb = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('        auto ub = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('        auto strides = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('\n')
-            self._stream.write('        std::vector<%s> input_values(%s);\n' % (np_dt_to_c(self._dtype), np.prod(self._shape)))
-            self._stream.write('        std::iota(input_values.begin(), input_values.end(), static_cast<%s>(0));\n' % np_dt_to_c(self._dtype))
-            self._stream.write('        std::vector<int64_t> lb_values{%s};\n' % print_lb_values(slices))
-            self._stream.write('        std::vector<int64_t> ub_values{%s};\n' % print_ub_values(slices))
-            self._stream.write('        std::vector<int64_t> strides_values{%s};\n' % print_stride_values(slices))
-            self._stream.write('        AxisSet lb_mask{%s};\n' % print_lb_mask_axes(slices))
-            self._stream.write('        AxisSet ub_mask{%s};\n' % print_ub_mask_axes(slices))
-            self._stream.write('        AxisSet new_mask{%s};\n' % print_new_mask_axes(slices))
-            self._stream.write('        AxisSet shrink_mask{%s};\n' % print_shrink_mask_axes(slices))
-            self._stream.write('        AxisSet ellipsis_mask{%s};\n' % print_ellipsis_mask_axes(slices))
-            self._stream.write('\n')
-            self._stream.write('        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);\n')
-            self._stream.write('\n')
-            self._stream.write('        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});\n')
-            self._stream.write('\n')
-            self._stream.write('        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);\n')
-            self._stream.write('        auto ex = backend->compile(f);\n')
-            self._stream.write('\n')
-            self._stream.write('        auto input_arg = backend->create_tensor(%s, %s);\n' % (np_dt_to_ng(self._dtype), print_shape(self._shape)))
-            self._stream.write('        auto input_lb = backend->create_tensor(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('        auto input_ub = backend->create_tensor(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('        auto input_strides = backend->create_tensor(element::i64, %s);\n' % print_shape((n_slices,)))
-            self._stream.write('        copy_data(input_arg, input_values);\n')
-            self._stream.write('        copy_data(input_lb, lb_values);\n')
-            self._stream.write('        copy_data(input_ub, ub_values);\n')
-            self._stream.write('        copy_data(input_strides, strides_values);\n')
-            self._stream.write('\n')
-            self._stream.write('        auto output = backend->create_dynamic_tensor(%s, PartialShape::dynamic());\n' % np_dt_to_ng(self._dtype))
-            self._stream.write('\n')
-            self._stream.write('        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});\n')
-            self._stream.write('\n')
-            self._stream.write('        EXPECT_EQ(output->get_element_type(), (%s));\n' % np_dt_to_ng(self._dtype))
-            self._stream.write('        EXPECT_EQ(output->get_shape(), (%s));\n' % print_shape(data_out.shape))
-            self._stream.write('\n')
-            self._stream.write('        auto output_values = read_vector<%s>(output);\n' % np_dt_to_c(self._dtype))
-            self._stream.write('\n')
-            self._stream.write('        std::vector<%s> expected_values{%s};\n' % (np_dt_to_c(self._dtype), print_values(data_out.reshape(-1))))
-            self._stream.write('        EXPECT_EQ(output_values, expected_values);\n')
-            self._stream.write('    }\n')
+            self._stream.write('    check_success<%s>\n'
+                               '                 (%s,\n'
+                               '                  %s,\n'
+                               '                  std::vector<int64_t>{%s},\n'
+                               '                  std::vector<int64_t>{%s},\n'
+                               '                  std::vector<int64_t>{%s},\n'
+                               '                  AxisSet{%s},\n'
+                               '                  AxisSet{%s},\n'
+                               '                  AxisSet{%s},\n'
+                               '                  AxisSet{%s},\n'
+                               '                  AxisSet{%s},\n'
+                               '                  %s,\n'
+                               '                  std::vector<%s>{%s});\n'
+                                  % (np_dt_to_c(self._dtype),
+                                     np_dt_to_ng(self._dtype),
+                                     print_shape(data_in.shape),
+                                     print_lb_values(slices),
+                                     print_ub_values(slices),
+                                     print_stride_values(slices),
+                                     print_lb_mask_axes(slices),
+                                     print_ub_mask_axes(slices),
+                                     print_new_mask_axes(slices),
+                                     print_shrink_mask_axes(slices),
+                                     print_ellipsis_mask_axes(slices),
+                                     print_shape(data_out.shape),
+                                     np_dt_to_c(self._dtype), print_values(data_out.reshape(-1))))
 
     def set_shape(self,shape):
         self._shape = shape
@@ -401,6 +364,99 @@ using namespace std;
 using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
+
+template <typename T>
+void check_failure(const element::Type& input_element_type,
+                   const Shape& input_shape,
+                   const std::vector<int64_t>& lb_values,
+                   const std::vector<int64_t>& ub_values,
+                   const std::vector<int64_t>& strides_values,
+                   const AxisSet& lb_mask,
+                   const AxisSet& ub_mask,
+                   const AxisSet& new_mask,
+                   const AxisSet& shrink_mask,
+                   const AxisSet& ellipsis_mask)
+{
+    auto arg = std::make_shared<op::Parameter>(input_element_type, input_shape);
+    auto lb = std::make_shared<op::Parameter>(element::i64, Shape{lb_values.size()});
+    auto ub = std::make_shared<op::Parameter>(element::i64, Shape{ub_values.size()});
+    auto strides = std::make_shared<op::Parameter>(element::i64, Shape{strides_values.size()});
+
+    std::vector<T> input_values(shape_size(input_shape));
+    std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));
+
+    EXPECT_ANY_THROW({
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(input_element_type, input_shape);
+        auto input_lb = backend->create_tensor(element::i64, Shape{lb_values.size()});
+        auto input_ub = backend->create_tensor(element::i64, Shape{ub_values.size()});
+        auto input_strides = backend->create_tensor(element::i64, Shape{strides_values.size()});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(input_element_type, PartialShape::dynamic());
+
+        ex->call_with_validate({output}, {input_arg, input_lb, input_ub, input_strides});
+    });
+}
+
+template <typename T>
+void check_success(const element::Type& input_element_type,
+                   const Shape& input_shape,
+                   const std::vector<int64_t>& lb_values,
+                   const std::vector<int64_t>& ub_values,
+                   const std::vector<int64_t>& strides_values,
+                   const AxisSet& lb_mask,
+                   const AxisSet& ub_mask,
+                   const AxisSet& new_mask,
+                   const AxisSet& shrink_mask,
+                   const AxisSet& ellipsis_mask,
+                   const Shape& expected_output_shape,
+                   const std::vector<T>& expected_values)
+{
+    auto arg = std::make_shared<op::Parameter>(input_element_type, input_shape);
+    auto lb = std::make_shared<op::Parameter>(element::i64, Shape{lb_values.size()});
+    auto ub = std::make_shared<op::Parameter>(element::i64, Shape{ub_values.size()});
+    auto strides = std::make_shared<op::Parameter>(element::i64, Shape{strides_values.size()});
+
+    std::vector<T> input_values(shape_size(input_shape));
+    std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));
+
+    auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+    auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+    auto ex = backend->compile(f);
+
+    auto input_arg = backend->create_tensor(input_element_type, input_shape);
+    auto input_lb = backend->create_tensor(element::i64, Shape{lb_values.size()});
+    auto input_ub = backend->create_tensor(element::i64, Shape{ub_values.size()});
+    auto input_strides = backend->create_tensor(element::i64, Shape{strides_values.size()});
+    copy_data(input_arg, input_values);
+    copy_data(input_lb, lb_values);
+    copy_data(input_ub, ub_values);
+    copy_data(input_strides, strides_values);
+
+    auto output = backend->create_dynamic_tensor(input_element_type, PartialShape::dynamic());
+
+    ex->call_with_validate({output}, {input_arg, input_lb, input_ub, input_strides});
+
+    EXPECT_EQ(output->get_element_type(), input_element_type);
+    EXPECT_EQ(output->get_shape(), expected_output_shape);
+
+    auto output_values = read_vector<T>(output);
+
+    EXPECT_EQ(output_values, expected_values);
+}
 
 NGRAPH_TEST(${BACKEND_NAME}, dyn_slice)
 {
