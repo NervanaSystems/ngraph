@@ -1407,7 +1407,10 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Result:
             {
-                node = make_shared<op::Result>(args[0]);
+                auto needs_default_layout = node_js["pad_type"].empty()
+                                                ? false
+                                                : node_js.at("needs_default_layout").get<bool>();
+                node = make_shared<op::Result>(args[0], needs_default_layout);
                 break;
             }
             case OP_TYPEID::Reverse:
@@ -2321,7 +2324,11 @@ static json write(const Node& n, bool binary_constant_data)
         node["output_shape"] = tmp->get_output_shape();
         break;
     }
-    case OP_TYPEID::Result: { break;
+    case OP_TYPEID::Result:
+    {
+        auto tmp = dynamic_cast<const op::Result*>(&n);
+        node["needs_default_layout"] = tmp->needs_default_layout();
+        break;
     }
     case OP_TYPEID::Reverse:
     {
