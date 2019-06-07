@@ -395,8 +395,9 @@ namespace ngraph
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     auto convolution_algo = mkldnn_utils::get_conv_algo();
 
-                    if (node->get_input_element_type(0) != element::f32 &&
-                        convolution_algo != mkldnn::algorithm::convolution_direct)
+                    if ((node->get_input_element_type(0) != element::f32 &&
+                         convolution_algo != mkldnn::algorithm::convolution_direct) ||
+                        arg0_shape[1] <= 8)
                     {
                         convolution_algo = mkldnn::algorithm::convolution_direct;
                     }
