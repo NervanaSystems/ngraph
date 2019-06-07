@@ -504,8 +504,7 @@ else()
 endif()
 
 if(NOT NGRAPH_JSON_ENABLE)
-    message(STATUS "************************************ JSON Disabled")
-    target_compile_definitions(NGRAPH_JSON_DISABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
