@@ -30,6 +30,7 @@
 //
 // clang-format off
 
+#include <algorithm>
 #include <cmath>
 
 #include "gtest/gtest.h"
@@ -53,7 +54,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice)
         auto ub = std::make_shared<op::Parameter>(element::i64, Shape{2});
         auto strides = std::make_shared<op::Parameter>(element::i64, Shape{2});
 
-        std::vector<int32_t> input_values{0,1,2,3};
+        std::vector<int32_t> input_values(4);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
         std::vector<int64_t> lb_values{0,3};
         std::vector<int64_t> ub_values{0,0};
         std::vector<int64_t> strides_values{1,-1};
@@ -65,21 +67,21 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice)
 
         auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
 
-        auto f = std::make_shared<Function>(NodeVector{slice},ParameterVector{arg, lb, ub, strides});
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
 
         auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
         auto ex = backend->compile(f);
 
-        auto input_arg = backend->create_tensor(element::i32,Shape{4});
-        auto input_lb = backend->create_tensor(element::i64,Shape{2});
-        auto input_ub = backend->create_tensor(element::i64,Shape{2});
-        auto input_strides = backend->create_tensor(element::i64,Shape{2});
+        auto input_arg = backend->create_tensor(element::i32, Shape{4});
+        auto input_lb = backend->create_tensor(element::i64, Shape{2});
+        auto input_ub = backend->create_tensor(element::i64, Shape{2});
+        auto input_strides = backend->create_tensor(element::i64, Shape{2});
         copy_data(input_arg, input_values);
         copy_data(input_lb, lb_values);
         copy_data(input_ub, ub_values);
         copy_data(input_strides, strides_values);
 
-        auto output = backend->create_dynamic_tensor(element::i32,PartialShape::dynamic());
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
 
         ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
 
@@ -89,6 +91,861 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice)
         auto output_values = read_vector<int32_t>(output);
 
         std::vector<int32_t> expected_values{3,2,1};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{4});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(4);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{0};
+        std::vector<int64_t> ub_values{0};
+        std::vector<int64_t> strides_values{1};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{0};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{4});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{4}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{0,1,2,3};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{4});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(4);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{1};
+        std::vector<int64_t> ub_values{3};
+        std::vector<int64_t> strides_values{1};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{4});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{2}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{1,2};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{4});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(4);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{2};
+        std::vector<int64_t> ub_values{0};
+        std::vector<int64_t> strides_values{1};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{0};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{4});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{2};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{4});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(4);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{3};
+        std::vector<int64_t> ub_values{0};
+        std::vector<int64_t> strides_values{-2};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{4});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{2}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{3,1};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{4});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(4);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{0};
+        std::vector<int64_t> ub_values{0};
+        std::vector<int64_t> strides_values{1};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{0};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{4});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{1,4}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{0,1,2,3};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{4});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{2});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{2});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{2});
+
+        std::vector<int32_t> input_values(4);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{0,0};
+        std::vector<int64_t> ub_values{0,0};
+        std::vector<int64_t> strides_values{1,1};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{0,1};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{4});
+        auto input_lb = backend->create_tensor(element::i64, Shape{2});
+        auto input_ub = backend->create_tensor(element::i64, Shape{2});
+        auto input_strides = backend->create_tensor(element::i64, Shape{2});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{1,1,4}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{0,1,2,3};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{4});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{4});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{4});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{4});
+
+        std::vector<int32_t> input_values(4);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{0,0,0,0};
+        std::vector<int64_t> ub_values{0,0,0,0};
+        std::vector<int64_t> strides_values{1,1,1,1};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{0,1,3};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{2};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{4});
+        auto input_lb = backend->create_tensor(element::i64, Shape{4});
+        auto input_ub = backend->create_tensor(element::i64, Shape{4});
+        auto input_strides = backend->create_tensor(element::i64, Shape{4});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{1,1,4,1}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{0,1,2,3};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{5});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(5);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{3};
+        std::vector<int64_t> ub_values{0};
+        std::vector<int64_t> strides_values{-2};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{5});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{2}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{3,1};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{5});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(5);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{0};
+        std::vector<int64_t> ub_values{3};
+        std::vector<int64_t> strides_values{2};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{5});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{2}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{0,2};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{5});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(5);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{0};
+        std::vector<int64_t> ub_values{4};
+        std::vector<int64_t> strides_values{2};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{5});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{2}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{0,2};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{5});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(5);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{0};
+        std::vector<int64_t> ub_values{5};
+        std::vector<int64_t> strides_values{2};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{5});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{3}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{0,2,4};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{5});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(5);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{0};
+        std::vector<int64_t> ub_values{6};
+        std::vector<int64_t> strides_values{2};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{5});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{3}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{0,2,4};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{5});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(5);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{0};
+        std::vector<int64_t> ub_values{100};
+        std::vector<int64_t> strides_values{2};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{5});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{3}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{0,2,4};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{5});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(5);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{4};
+        std::vector<int64_t> ub_values{0};
+        std::vector<int64_t> strides_values{-2};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{5});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{2}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{4,2};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{5});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(5);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{4};
+        std::vector<int64_t> ub_values{0};
+        std::vector<int64_t> strides_values{-3};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{5});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{2}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{4,1};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{5});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{1});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{1});
+
+        std::vector<int32_t> input_values(5);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{4};
+        std::vector<int64_t> ub_values{0};
+        std::vector<int64_t> strides_values{-2};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{0};
+        AxisSet new_mask{};
+        AxisSet shrink_mask{};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{5});
+        auto input_lb = backend->create_tensor(element::i64, Shape{1});
+        auto input_ub = backend->create_tensor(element::i64, Shape{1});
+        auto input_strides = backend->create_tensor(element::i64, Shape{1});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{3}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{4,2,0};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{2,3,4});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{2});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{2});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{2});
+
+        std::vector<int32_t> input_values(24);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{1,0};
+        std::vector<int64_t> ub_values{0,0};
+        std::vector<int64_t> strides_values{1,1};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{1};
+        AxisSet shrink_mask{0};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{2,3,4});
+        auto input_lb = backend->create_tensor(element::i64, Shape{2});
+        auto input_ub = backend->create_tensor(element::i64, Shape{2});
+        auto input_strides = backend->create_tensor(element::i64, Shape{2});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{1,3,4}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{12,13,14,15,16,17,18,19,20,21,22,23};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{2,3,4});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{3});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{3});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{3});
+
+        std::vector<int32_t> input_values(24);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{-1,-1,0};
+        std::vector<int64_t> ub_values{0,0,0};
+        std::vector<int64_t> strides_values{1,1,1};
+        AxisSet lb_mask{};
+        AxisSet ub_mask{};
+        AxisSet new_mask{2};
+        AxisSet shrink_mask{0,1};
+        AxisSet ellipsis_mask{};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{2,3,4});
+        auto input_lb = backend->create_tensor(element::i64, Shape{3});
+        auto input_ub = backend->create_tensor(element::i64, Shape{3});
+        auto input_strides = backend->create_tensor(element::i64, Shape{3});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{1,4}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{20,21,22,23};
+        EXPECT_EQ(output_values, expected_values);
+    }
+    {
+        auto arg = std::make_shared<op::Parameter>(element::i32, Shape{2,4,6,8,2,2,2});
+        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{7});
+        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{7});
+        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{7});
+
+        std::vector<int32_t> input_values(3072);
+        std::iota(input_values.begin(), input_values.end(), static_cast<int32_t>(0));
+        std::vector<int64_t> lb_values{0,0,2,7,0,0,1};
+        std::vector<int64_t> ub_values{0,4,6,3,0,0,0};
+        std::vector<int64_t> strides_values{1,1,2,-2,1,1,1};
+        AxisSet lb_mask{1};
+        AxisSet ub_mask{0};
+        AxisSet new_mask{4};
+        AxisSet shrink_mask{6};
+        AxisSet ellipsis_mask{5};
+
+        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
+
+        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+
+        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
+        auto ex = backend->compile(f);
+
+        auto input_arg = backend->create_tensor(element::i32, Shape{2,4,6,8,2,2,2});
+        auto input_lb = backend->create_tensor(element::i64, Shape{7});
+        auto input_ub = backend->create_tensor(element::i64, Shape{7});
+        auto input_strides = backend->create_tensor(element::i64, Shape{7});
+        copy_data(input_arg, input_values);
+        copy_data(input_lb, lb_values);
+        copy_data(input_ub, ub_values);
+        copy_data(input_strides, strides_values);
+
+        auto output = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});
+
+        EXPECT_EQ(output->get_element_type(), (element::i32));
+        EXPECT_EQ(output->get_shape(), (Shape{2,4,2,2,1,2,2}));
+
+        auto output_values = read_vector<int32_t>(output);
+
+        std::vector<int32_t> expected_values{185,187,189,191,169,171,173,175,313,315,317,319,297,299,301,303,569,571,573,575,553,555,557,559,697,699,701,703,681,683,685,687,953,955,957,959,937,939,941,943,1081,1083,1085,1087,1065,1067,1069,1071,1337,1339,1341,1343,1321,1323,1325,1327,1465,1467,1469,1471,1449,1451,1453,1455,1721,1723,1725,1727,1705,1707,1709,1711,1849,1851,1853,1855,1833,1835,1837,1839,2105,2107,2109,2111,2089,2091,2093,2095,2233,2235,2237,2239,2217,2219,2221,2223,2489,2491,2493,2495,2473,2475,2477,2479,2617,2619,2621,2623,2601,2603,2605,2607,2873,2875,2877,2879,2857,2859,2861,2863,3001,3003,3005,3007,2985,2987,2989,2991};
         EXPECT_EQ(output_values, expected_values);
     }
 

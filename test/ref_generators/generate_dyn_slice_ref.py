@@ -210,15 +210,24 @@ class SliceTestWriter:
         self._stream = stream
 
     def __getitem__(self, slices):
+        self.write_test(slices)
+
+    def write_test(self, slices):
         data_in = np.linspace(0,np.prod(self._shape)-1,np.prod(self._shape),dtype=self._dtype).reshape(self._shape)
         data_out = data_in.__getitem__(slices)
+        n_slices = 1
+        try:
+            n_slices = len(slices)
+        except TypeError:
+            pass
         self._stream.write('    {\n')
         self._stream.write('        auto arg = std::make_shared<op::Parameter>(%s, %s);\n' % (np_dt_to_ng(self._dtype), print_shape(self._shape)))
-        self._stream.write('        auto lb = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((len(slices),)))
-        self._stream.write('        auto ub = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((len(slices),)))
-        self._stream.write('        auto strides = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((len(slices),)))
+        self._stream.write('        auto lb = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((n_slices,)))
+        self._stream.write('        auto ub = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((n_slices,)))
+        self._stream.write('        auto strides = std::make_shared<op::Parameter>(element::i64, %s);\n' % print_shape((n_slices,)))
         self._stream.write('\n')
-        self._stream.write('        std::vector<%s> input_values{%s};\n' % (np_dt_to_c(self._dtype), print_values(data_in.reshape(-1))))
+        self._stream.write('        std::vector<%s> input_values(%s);\n' % (np_dt_to_c(self._dtype), np.prod(self._shape)))
+        self._stream.write('        std::iota(input_values.begin(), input_values.end(), static_cast<%s>(0));\n' % np_dt_to_c(self._dtype))
         self._stream.write('        std::vector<int64_t> lb_values{%s};\n' % print_lb_values(slices))
         self._stream.write('        std::vector<int64_t> ub_values{%s};\n' % print_ub_values(slices))
         self._stream.write('        std::vector<int64_t> strides_values{%s};\n' % print_stride_values(slices))
@@ -230,21 +239,21 @@ class SliceTestWriter:
         self._stream.write('\n')
         self._stream.write('        auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);\n')
         self._stream.write('\n')
-        self._stream.write('        auto f = std::make_shared<Function>(NodeVector{slice},ParameterVector{arg, lb, ub, strides});\n')
+        self._stream.write('        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});\n')
         self._stream.write('\n')
         self._stream.write('        auto backend = runtime::Backend::create("${BACKEND_NAME}",true);\n')
         self._stream.write('        auto ex = backend->compile(f);\n')
         self._stream.write('\n')
-        self._stream.write('        auto input_arg = backend->create_tensor(%s,%s);\n' % (np_dt_to_ng(self._dtype), print_shape(self._shape)))
-        self._stream.write('        auto input_lb = backend->create_tensor(element::i64,%s);\n' % print_shape((len(slices),)))
-        self._stream.write('        auto input_ub = backend->create_tensor(element::i64,%s);\n' % print_shape((len(slices),)))
-        self._stream.write('        auto input_strides = backend->create_tensor(element::i64,%s);\n' % print_shape((len(slices),)))
+        self._stream.write('        auto input_arg = backend->create_tensor(%s, %s);\n' % (np_dt_to_ng(self._dtype), print_shape(self._shape)))
+        self._stream.write('        auto input_lb = backend->create_tensor(element::i64, %s);\n' % print_shape((n_slices,)))
+        self._stream.write('        auto input_ub = backend->create_tensor(element::i64, %s);\n' % print_shape((n_slices,)))
+        self._stream.write('        auto input_strides = backend->create_tensor(element::i64, %s);\n' % print_shape((n_slices,)))
         self._stream.write('        copy_data(input_arg, input_values);\n')
         self._stream.write('        copy_data(input_lb, lb_values);\n')
         self._stream.write('        copy_data(input_ub, ub_values);\n')
         self._stream.write('        copy_data(input_strides, strides_values);\n')
         self._stream.write('\n')
-        self._stream.write('        auto output = backend->create_dynamic_tensor(%s,PartialShape::dynamic());\n' % np_dt_to_ng(self._dtype))
+        self._stream.write('        auto output = backend->create_dynamic_tensor(%s, PartialShape::dynamic());\n' % np_dt_to_ng(self._dtype))
         self._stream.write('\n')
         self._stream.write('        ex->call({output}, {input_arg, input_lb, input_ub, input_strides});\n')
         self._stream.write('\n')
@@ -299,6 +308,7 @@ def main():
 //
 // clang-format off
 
+#include <algorithm>
 #include <cmath>
 
 #include "gtest/gtest.h"
@@ -321,8 +331,36 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice)
     t = SliceTestWriter(stream=f)
 
     t.set_dtype('int32')
+
     t.set_shape((4,))
     t[np.newaxis,3:0:-1]
+    t[...]
+    t[1:3]
+    t[2]
+    t[3:0:-2]
+    t[np.newaxis]
+    t[np.newaxis,np.newaxis]
+    t[np.newaxis,np.newaxis,...,np.newaxis]
+
+    t.set_shape((5,))
+    t[3:0:-2]
+    t[0:3:2]
+    t[0:4:2]
+    t[0:5:2]
+    t[0:6:2]
+    t[0:100:2]
+    t[4:0:-2]
+    t[4:0:-3]
+    # FIXME: DynElimination is not properly handling this (end < begin).
+    # t[3:2:1]
+    t[4::-2]
+
+    t.set_shape((2,3,4))
+    t[1,np.newaxis]
+    t[-1,-1,np.newaxis]
+
+    t.set_shape((2,4,6,8,2,2,2))
+    t[0:,:4,2:6:2,7:3:-2,np.newaxis,...,1]
 
     f.write('''
 }
