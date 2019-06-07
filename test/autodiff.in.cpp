@@ -855,8 +855,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
 
-#if defined(AUTODIFF_BACKEND_CPU) || defined(AUTODIFF_BACKEND_INTERPRETER)
-// XXX lfeng: remove backend check once all backends support this
 NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -875,31 +873,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2)
 
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
-#endif
-
-#if defined(AUTODIFF_BACKEND_CPU) && defined(NGRAPH_JSON_ENABLE)
-NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmultranspose_tensor2_tensor2)
-{
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    std::string backend_name = "${BACKEND_NAME}";
-
-    const std::string file_name("mxnet/batch_dot_3.json");
-    auto f = make_function_from_file(file_name);
-
-    test::Uniform<float> rng(-1.0f, 1.0f);
-    std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
-    {
-        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_shape())));
-    }
-
-    auto g = make_function_from_file(file_name);
-    pass::Manager pass_manager;
-    pass_manager.register_pass<runtime::cpu::pass::CPUBatchFusion>();
-    pass_manager.run_passes(g);
-    EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), f, g, args, .01f, .01f));
-}
-#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, backwards_exp)
 {

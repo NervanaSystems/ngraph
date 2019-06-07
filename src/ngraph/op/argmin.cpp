@@ -36,3 +36,10 @@ shared_ptr<Node> op::ArgMin::copy_with_new_args(const NodeVector& new_args) cons
     check_new_args_count(this, new_args);
     return make_shared<ArgMin>(new_args.at(0), m_axis, this->get_element_type());
 }
+
+std::shared_ptr<Node> op::ArgMin::get_default_value() const
+{
+    // Choice of value here is arbitrary, because validation should be rejecting cases where the
+    // axis of reduction has size zero.
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+}
