@@ -439,6 +439,49 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice)
         t[3:2:1]
         t[4::-2]
 
+        #
+        # A couple of tests for negative-stride slicing. The issue we want to
+        # be on the lookout for is this:
+        #
+        #   01234567
+        #   ..1..0..   [5:0:-3]  # suppose we start with this, want to convert
+        #    _____               # to pos stride. suppose that our stride is
+        #                        # "uneven" wrt the slicing region, i.e. the
+        #                        # start-to-end distance is not an even
+        #                        # multiple of the strides (e.g. here: we get
+        #                        # elements 5 and 2.)
+        #
+        #   01234567
+        #   .0..1...   [1:6:3]   # if we just reverse the sign of the stride
+        #    _____               # and flip the start/end indices while
+        #                        # traversing, we will get out the wrong
+        #                        # elements. (e.g. here: we get elements 1 and
+        #                        # 4, which are not what we want.)
+        #
+        #   01234567
+        #   ..0..1..   [2:6:3]   # the correct thing to do is to adjust the
+        #     ____               # start of our reversed slice to be the last
+        #                        # element that is *actually* touched by the
+        #                        # original negative striding, not the
+        #                        # boundary of the region. (e.g. here: we get
+        #                        # elements 2 and 5, which are what we want.)
+        #
+        # There's some logic to do this transformation in DynElimination, but
+        # it feels a bit delicate.
+        #
+        t.set_shape((8,))
+        t[5:2:-3]
+        t[5:1:-3]
+        t[5:0:-3]
+        t[5::-3]
+        t[6:3:-3]
+        t[6:2:-3]
+        t[6:1:-3]
+        t[6::-3]
+        t[7:1:-3]
+        t[7:0:-3]
+        t[7::-3]
+
     t.set_dtype('int32')
     t[80000] # error expected (shrink-axis OOB)
     t[-80000] # error expected (shrink-axis OOB)
