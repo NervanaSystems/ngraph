@@ -87,7 +87,7 @@ void pass::DynElimination::construct_transpose()
 //        v
 //     Reshape   (non-transposing, to handle shrinks)
 //        |
-//        vconst
+//        v
 //     Reverse   (to emulate backwards stride)
 //
 // (The Reshape, Reverse, or both may be omitted if they would just be identities.)
@@ -172,7 +172,7 @@ static SlicePlan make_plan(const Shape& input_shape,
     p.reshape_out_shape = Shape(num_new_axes + num_real_axes + ellipsis_size - num_shrink_axes);
     p.reverse_axes = AxisSet{};
 
-    // Begin a maddeningly delicate loop to desugar the original slice specs.
+    // Begin a maddeningly delicate loop to desugar the original slice.
     //
     // * i_in is iterating over the axes of the input shape, which are also the axes of
     //     p.reshape_in_shape.
@@ -199,16 +199,15 @@ static SlicePlan make_plan(const Shape& input_shape,
 
     for (size_t i = 0; i < num_slice_indices; i++)
     {
-        // If this is a "newaxis", we throw a 1 into the final shape, but it
-        // will not be present in the intermediate shape and does not
-        // correspond to anything in the original shape.
+        // If this is a "newaxis", then reshape_out_shape will have a 1 here,
+        // but reshape_in_shape will not.
         if (new_axis_mask.count(i))
         {
             p.reshape_out_shape[i_out] = 1;
             i_out++;
         }
-        // If this is a "shrunken" axis, the intermediate shape will have a
-        // "1" here, but nothing will be there in the final shape.
+        // If this is a "shrunken" axis, then reshape_in_shape will have a 1
+        // here, but reshape_out_shape will not.
         else if (shrink_axis_mask.count(i))
         {
             int64_t begin = begins[i];
@@ -228,8 +227,7 @@ static SlicePlan make_plan(const Shape& input_shape,
             p.reshape_in_shape[i_in] = 1;
             i_in++;
         }
-        // If this is the ellipsis, expand it (see expand_ellipsis above for
-        // details).
+        // If this is the ellipsis, expand it.
         else if (ellipsis_mask.count(i))
         {
             expand_ellipsis();
