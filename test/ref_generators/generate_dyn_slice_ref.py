@@ -519,7 +519,7 @@ def main():
     t = SliceTestWriter(stream=f)
 
     t.set_shape((4,))
-    for dt in ['int32','float32']:
+    for dt in ['int32','int64','float32','uint32']:
         t.set_dtype(dt)
 
         t[np.newaxis,3:0:-1]
@@ -553,6 +553,7 @@ def main():
         # A couple of tests for negative-stride slicing. The issue we want to
         # be on the lookout for is this:
         #
+        #  [ORIGINAL]
         #   01234567
         #   ..1..0..   [5:0:-3]  # suppose we start with this, want to convert
         #    _____               # to pos stride. suppose that our stride is
@@ -561,6 +562,7 @@ def main():
         #                        # multiple of the strides (e.g. here: we get
         #                        # elements 5 and 2.)
         #
+        #  [INCORRECT]
         #   01234567
         #   .0..1...   [1:6:3]   # if we just reverse the sign of the stride
         #    _____               # and flip the start/end indices while
@@ -568,6 +570,7 @@ def main():
         #                        # elements. (e.g. here: we get elements 1 and
         #                        # 4, which are not what we want.)
         #
+        #  [CORRECT]
         #   01234567
         #   ..0..1..   [2:6:3]   # the correct thing to do is to adjust the
         #     ____               # start of our reversed slice to be the last
@@ -602,7 +605,7 @@ def main():
     t[::0] # error expected (stride==0)
 
     t.set_shape((2,3,4))
-    for dt in ['int32','float32']:
+    for dt in ['int32','int64','float32','uint32']:
         t.set_dtype(dt)
 
         t[1,np.newaxis]

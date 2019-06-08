@@ -875,10 +875,745 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_34)
 }
 
 // slices are: [newaxis,3:0:-1]
-// dtype is: float32
+// dtype is: int64
 // input shape is: Shape{8}
 // expected output shape is Shape{1,3}
 NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_35)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{0,3},
+                  std::vector<int64_t>{0,0},
+                  std::vector<int64_t>{1,-1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1,3},
+                  std::vector<int64_t>{3,2,1});
+}
+
+// slices are: [...]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{8}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_36)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0},
+                  Shape{8},
+                  std::vector<int64_t>{0,1,2,3,4,5,6,7});
+}
+
+// slices are: [1:3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_37)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{1},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{1,2});
+}
+
+// slices are: [2]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_38)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{2},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  Shape{},
+                  std::vector<int64_t>{2});
+}
+
+// slices are: [3:0:-2]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_39)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{3,1});
+}
+
+// slices are: [3::-2]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_40)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{3,1});
+}
+
+// slices are: [4::-2]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_41)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{4},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<int64_t>{4,2,0});
+}
+
+// slices are: [5::-2]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_42)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<int64_t>{5,3,1});
+}
+
+// slices are: [-9000:-8000:2]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{0}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_43)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{-9000},
+                  std::vector<int64_t>{-8000},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{0},
+                  std::vector<int64_t>{});
+}
+
+// slices are: [-9000:8000:2]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{4}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_44)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{-9000},
+                  std::vector<int64_t>{8000},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{4},
+                  std::vector<int64_t>{0,2,4,6});
+}
+
+// slices are: [-5:5:2]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{1}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_45)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{-5},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1},
+                  std::vector<int64_t>{3});
+}
+
+// slices are: [newaxis]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{1,8}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_46)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1,8},
+                  std::vector<int64_t>{0,1,2,3,4,5,6,7});
+}
+
+// slices are: [newaxis,newaxis]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{1,1,8}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_47)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{0,0},
+                  std::vector<int64_t>{0,0},
+                  std::vector<int64_t>{1,1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0,1},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1,1,8},
+                  std::vector<int64_t>{0,1,2,3,4,5,6,7});
+}
+
+// slices are: [newaxis,newaxis,...,newaxis]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{1,1,8,1}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_48)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{0,0,0,0},
+                  std::vector<int64_t>{0,0,0,0},
+                  std::vector<int64_t>{1,1,1,1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0,1,3},
+                  AxisSet{},
+                  AxisSet{2},
+                  Shape{1,1,8,1},
+                  std::vector<int64_t>{0,1,2,3,4,5,6,7});
+}
+
+// slices are: [3:0:-2]
+// dtype is: int64
+// input shape is: Shape{5}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_49)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{5},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{3,1});
+}
+
+// slices are: [0:3:2]
+// dtype is: int64
+// input shape is: Shape{5}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_50)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{0,2});
+}
+
+// slices are: [0:4:2]
+// dtype is: int64
+// input shape is: Shape{5}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_51)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{4},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{0,2});
+}
+
+// slices are: [0:5:2]
+// dtype is: int64
+// input shape is: Shape{5}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_52)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<int64_t>{0,2,4});
+}
+
+// slices are: [0:6:2]
+// dtype is: int64
+// input shape is: Shape{5}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_53)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{6},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<int64_t>{0,2,4});
+}
+
+// slices are: [0:100:2]
+// dtype is: int64
+// input shape is: Shape{5}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_54)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{100},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<int64_t>{0,2,4});
+}
+
+// slices are: [4:0:-2]
+// dtype is: int64
+// input shape is: Shape{5}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_55)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{5},
+                  std::vector<int64_t>{4},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{4,2});
+}
+
+// slices are: [4:0:-3]
+// dtype is: int64
+// input shape is: Shape{5}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_56)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{5},
+                  std::vector<int64_t>{4},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{4,1});
+}
+
+// slices are: [3:2:1]
+// dtype is: int64
+// input shape is: Shape{5}
+// expected output shape is Shape{0}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_57)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{5},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{2},
+                  std::vector<int64_t>{1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{0},
+                  std::vector<int64_t>{});
+}
+
+// slices are: [4::-2]
+// dtype is: int64
+// input shape is: Shape{5}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_58)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{5},
+                  std::vector<int64_t>{4},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<int64_t>{4,2,0});
+}
+
+// slices are: [5:2:-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{1}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_59)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{2},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1},
+                  std::vector<int64_t>{5});
+}
+
+// slices are: [5:1:-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_60)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{1},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{5,2});
+}
+
+// slices are: [5:0:-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_61)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{5,2});
+}
+
+// slices are: [5::-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_62)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{5,2});
+}
+
+// slices are: [6:3:-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{1}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_63)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{6},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1},
+                  std::vector<int64_t>{6});
+}
+
+// slices are: [6:2:-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_64)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{6},
+                  std::vector<int64_t>{2},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{6,3});
+}
+
+// slices are: [6:1:-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_65)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{6},
+                  std::vector<int64_t>{1},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{6,3});
+}
+
+// slices are: [6::-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_66)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{6},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<int64_t>{6,3,0});
+}
+
+// slices are: [7:1:-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_67)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{7},
+                  std::vector<int64_t>{1},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<int64_t>{7,4});
+}
+
+// slices are: [7:0:-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_68)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{7},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<int64_t>{7,4,1});
+}
+
+// slices are: [7::-3]
+// dtype is: int64
+// input shape is: Shape{8}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_69)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{8},
+                  std::vector<int64_t>{7},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<int64_t>{7,4,1});
+}
+
+// slices are: [newaxis,3:0:-1]
+// dtype is: float32
+// input shape is: Shape{8}
+// expected output shape is Shape{1,3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_70)
 {
     check_success<float>
                  (element::f32,
@@ -899,7 +1634,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_35)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{8}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_36)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_71)
 {
     check_success<float>
                  (element::f32,
@@ -920,7 +1655,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_36)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_37)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_72)
 {
     check_success<float>
                  (element::f32,
@@ -941,7 +1676,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_37)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_38)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_73)
 {
     check_success<float>
                  (element::f32,
@@ -962,7 +1697,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_38)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_39)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_74)
 {
     check_success<float>
                  (element::f32,
@@ -983,7 +1718,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_39)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_40)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_75)
 {
     check_success<float>
                  (element::f32,
@@ -1004,7 +1739,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_40)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{3}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_41)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_76)
 {
     check_success<float>
                  (element::f32,
@@ -1025,7 +1760,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_41)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{3}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_42)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_77)
 {
     check_success<float>
                  (element::f32,
@@ -1046,7 +1781,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_42)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{0}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_43)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_78)
 {
     check_success<float>
                  (element::f32,
@@ -1067,7 +1802,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_43)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{4}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_44)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_79)
 {
     check_success<float>
                  (element::f32,
@@ -1088,7 +1823,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_44)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{1}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_45)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_80)
 {
     check_success<float>
                  (element::f32,
@@ -1109,7 +1844,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_45)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{1,8}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_46)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_81)
 {
     check_success<float>
                  (element::f32,
@@ -1130,7 +1865,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_46)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{1,1,8}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_47)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_82)
 {
     check_success<float>
                  (element::f32,
@@ -1151,7 +1886,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_47)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{1,1,8,1}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_48)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_83)
 {
     check_success<float>
                  (element::f32,
@@ -1172,7 +1907,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_48)
 // dtype is: float32
 // input shape is: Shape{5}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_49)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_84)
 {
     check_success<float>
                  (element::f32,
@@ -1193,7 +1928,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_49)
 // dtype is: float32
 // input shape is: Shape{5}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_50)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_85)
 {
     check_success<float>
                  (element::f32,
@@ -1214,7 +1949,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_50)
 // dtype is: float32
 // input shape is: Shape{5}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_51)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_86)
 {
     check_success<float>
                  (element::f32,
@@ -1235,7 +1970,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_51)
 // dtype is: float32
 // input shape is: Shape{5}
 // expected output shape is Shape{3}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_52)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_87)
 {
     check_success<float>
                  (element::f32,
@@ -1256,7 +1991,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_52)
 // dtype is: float32
 // input shape is: Shape{5}
 // expected output shape is Shape{3}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_53)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_88)
 {
     check_success<float>
                  (element::f32,
@@ -1277,7 +2012,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_53)
 // dtype is: float32
 // input shape is: Shape{5}
 // expected output shape is Shape{3}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_54)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_89)
 {
     check_success<float>
                  (element::f32,
@@ -1298,7 +2033,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_54)
 // dtype is: float32
 // input shape is: Shape{5}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_55)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_90)
 {
     check_success<float>
                  (element::f32,
@@ -1319,7 +2054,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_55)
 // dtype is: float32
 // input shape is: Shape{5}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_56)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_91)
 {
     check_success<float>
                  (element::f32,
@@ -1340,7 +2075,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_56)
 // dtype is: float32
 // input shape is: Shape{5}
 // expected output shape is Shape{0}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_57)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_92)
 {
     check_success<float>
                  (element::f32,
@@ -1361,7 +2096,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_57)
 // dtype is: float32
 // input shape is: Shape{5}
 // expected output shape is Shape{3}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_58)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_93)
 {
     check_success<float>
                  (element::f32,
@@ -1382,7 +2117,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_58)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{1}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_59)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_94)
 {
     check_success<float>
                  (element::f32,
@@ -1403,7 +2138,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_59)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_60)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_95)
 {
     check_success<float>
                  (element::f32,
@@ -1424,7 +2159,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_60)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_61)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_96)
 {
     check_success<float>
                  (element::f32,
@@ -1445,7 +2180,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_61)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_62)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_97)
 {
     check_success<float>
                  (element::f32,
@@ -1466,7 +2201,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_62)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{1}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_63)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_98)
 {
     check_success<float>
                  (element::f32,
@@ -1487,7 +2222,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_63)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_64)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_99)
 {
     check_success<float>
                  (element::f32,
@@ -1508,7 +2243,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_64)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_65)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_100)
 {
     check_success<float>
                  (element::f32,
@@ -1529,7 +2264,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_65)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{3}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_66)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_101)
 {
     check_success<float>
                  (element::f32,
@@ -1550,7 +2285,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_66)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_67)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_102)
 {
     check_success<float>
                  (element::f32,
@@ -1571,7 +2306,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_67)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{3}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_68)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_103)
 {
     check_success<float>
                  (element::f32,
@@ -1592,7 +2327,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_68)
 // dtype is: float32
 // input shape is: Shape{8}
 // expected output shape is Shape{3}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_69)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_104)
 {
     check_success<float>
                  (element::f32,
@@ -1609,11 +2344,746 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_69)
                   std::vector<float>{7.0,4.0,1.0});
 }
 
+// slices are: [newaxis,3:0:-1]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{1,3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_105)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{0,3},
+                  std::vector<int64_t>{0,0},
+                  std::vector<int64_t>{1,-1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1,3},
+                  std::vector<uint32_t>{3,2,1});
+}
+
+// slices are: [...]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{8}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_106)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0},
+                  Shape{8},
+                  std::vector<uint32_t>{0,1,2,3,4,5,6,7});
+}
+
+// slices are: [1:3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_107)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{1},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{1,2});
+}
+
+// slices are: [2]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_108)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{2},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  Shape{},
+                  std::vector<uint32_t>{2});
+}
+
+// slices are: [3:0:-2]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_109)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{3,1});
+}
+
+// slices are: [3::-2]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_110)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{3,1});
+}
+
+// slices are: [4::-2]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_111)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{4},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<uint32_t>{4,2,0});
+}
+
+// slices are: [5::-2]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_112)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<uint32_t>{5,3,1});
+}
+
+// slices are: [-9000:-8000:2]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{0}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_113)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{-9000},
+                  std::vector<int64_t>{-8000},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{0},
+                  std::vector<uint32_t>{});
+}
+
+// slices are: [-9000:8000:2]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{4}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_114)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{-9000},
+                  std::vector<int64_t>{8000},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{4},
+                  std::vector<uint32_t>{0,2,4,6});
+}
+
+// slices are: [-5:5:2]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{1}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_115)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{-5},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1},
+                  std::vector<uint32_t>{3});
+}
+
+// slices are: [newaxis]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{1,8}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_116)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1,8},
+                  std::vector<uint32_t>{0,1,2,3,4,5,6,7});
+}
+
+// slices are: [newaxis,newaxis]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{1,1,8}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_117)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{0,0},
+                  std::vector<int64_t>{0,0},
+                  std::vector<int64_t>{1,1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0,1},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1,1,8},
+                  std::vector<uint32_t>{0,1,2,3,4,5,6,7});
+}
+
+// slices are: [newaxis,newaxis,...,newaxis]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{1,1,8,1}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_118)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{0,0,0,0},
+                  std::vector<int64_t>{0,0,0,0},
+                  std::vector<int64_t>{1,1,1,1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{0,1,3},
+                  AxisSet{},
+                  AxisSet{2},
+                  Shape{1,1,8,1},
+                  std::vector<uint32_t>{0,1,2,3,4,5,6,7});
+}
+
+// slices are: [3:0:-2]
+// dtype is: uint32
+// input shape is: Shape{5}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_119)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{5},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{3,1});
+}
+
+// slices are: [0:3:2]
+// dtype is: uint32
+// input shape is: Shape{5}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_120)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{0,2});
+}
+
+// slices are: [0:4:2]
+// dtype is: uint32
+// input shape is: Shape{5}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_121)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{4},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{0,2});
+}
+
+// slices are: [0:5:2]
+// dtype is: uint32
+// input shape is: Shape{5}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_122)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<uint32_t>{0,2,4});
+}
+
+// slices are: [0:6:2]
+// dtype is: uint32
+// input shape is: Shape{5}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_123)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{6},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<uint32_t>{0,2,4});
+}
+
+// slices are: [0:100:2]
+// dtype is: uint32
+// input shape is: Shape{5}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_124)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{100},
+                  std::vector<int64_t>{2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<uint32_t>{0,2,4});
+}
+
+// slices are: [4:0:-2]
+// dtype is: uint32
+// input shape is: Shape{5}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_125)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{5},
+                  std::vector<int64_t>{4},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{4,2});
+}
+
+// slices are: [4:0:-3]
+// dtype is: uint32
+// input shape is: Shape{5}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_126)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{5},
+                  std::vector<int64_t>{4},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{4,1});
+}
+
+// slices are: [3:2:1]
+// dtype is: uint32
+// input shape is: Shape{5}
+// expected output shape is Shape{0}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_127)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{5},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{2},
+                  std::vector<int64_t>{1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{0},
+                  std::vector<uint32_t>{});
+}
+
+// slices are: [4::-2]
+// dtype is: uint32
+// input shape is: Shape{5}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_128)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{5},
+                  std::vector<int64_t>{4},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-2},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<uint32_t>{4,2,0});
+}
+
+// slices are: [5:2:-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{1}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_129)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{2},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1},
+                  std::vector<uint32_t>{5});
+}
+
+// slices are: [5:1:-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_130)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{1},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{5,2});
+}
+
+// slices are: [5:0:-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_131)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{5,2});
+}
+
+// slices are: [5::-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_132)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{5},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{5,2});
+}
+
+// slices are: [6:3:-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{1}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_133)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{6},
+                  std::vector<int64_t>{3},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{1},
+                  std::vector<uint32_t>{6});
+}
+
+// slices are: [6:2:-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_134)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{6},
+                  std::vector<int64_t>{2},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{6,3});
+}
+
+// slices are: [6:1:-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_135)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{6},
+                  std::vector<int64_t>{1},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{6,3});
+}
+
+// slices are: [6::-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_136)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{6},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<uint32_t>{6,3,0});
+}
+
+// slices are: [7:1:-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{2}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_137)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{7},
+                  std::vector<int64_t>{1},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{2},
+                  std::vector<uint32_t>{7,4});
+}
+
+// slices are: [7:0:-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_138)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{7},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<uint32_t>{7,4,1});
+}
+
+// slices are: [7::-3]
+// dtype is: uint32
+// input shape is: Shape{8}
+// expected output shape is Shape{3}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_139)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{8},
+                  std::vector<int64_t>{7},
+                  std::vector<int64_t>{0},
+                  std::vector<int64_t>{-3},
+                  AxisSet{},
+                  AxisSet{0},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{},
+                  Shape{3},
+                  std::vector<uint32_t>{7,4,1});
+}
+
 // slices are: [80000]
 // dtype is: int32
 // input shape is: Shape{8}
 // failure is expected
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_70)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_140)
 {
     check_failure<int32_t>
                  (element::i32,
@@ -1632,7 +3102,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_70)
 // dtype is: int32
 // input shape is: Shape{8}
 // failure is expected
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_71)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_141)
 {
     check_failure<int32_t>
                  (element::i32,
@@ -1651,7 +3121,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_71)
 // dtype is: int32
 // input shape is: Shape{8}
 // failure is expected
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_72)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_142)
 {
     check_failure<int32_t>
                  (element::i32,
@@ -1670,7 +3140,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_72)
 // dtype is: int32
 // input shape is: Shape{8}
 // failure is expected
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_73)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_143)
 {
     check_failure<int32_t>
                  (element::i32,
@@ -1689,7 +3159,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_73)
 // dtype is: int32
 // input shape is: Shape{8}
 // failure is expected
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_74)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_144)
 {
     check_failure<int32_t>
                  (element::i32,
@@ -1708,7 +3178,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_74)
 // dtype is: int32
 // input shape is: Shape{8}
 // failure is expected
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_75)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_145)
 {
     check_failure<int32_t>
                  (element::i32,
@@ -1727,7 +3197,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_75)
 // dtype is: int32
 // input shape is: Shape{8}
 // failure is expected
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_76)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_146)
 {
     check_failure<int32_t>
                  (element::i32,
@@ -1746,7 +3216,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_76)
 // dtype is: int32
 // input shape is: Shape{2,3,4}
 // expected output shape is Shape{1,3,4}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_77)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_147)
 {
     check_success<int32_t>
                  (element::i32,
@@ -1767,7 +3237,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_77)
 // dtype is: int32
 // input shape is: Shape{2,3,4}
 // expected output shape is Shape{1,4}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_78)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_148)
 {
     check_success<int32_t>
                  (element::i32,
@@ -1785,10 +3255,52 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_78)
 }
 
 // slices are: [1,newaxis]
+// dtype is: int64
+// input shape is: Shape{2,3,4}
+// expected output shape is Shape{1,3,4}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_149)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{2,3,4},
+                  std::vector<int64_t>{1,0},
+                  std::vector<int64_t>{0,0},
+                  std::vector<int64_t>{1,1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{1},
+                  AxisSet{0},
+                  AxisSet{},
+                  Shape{1,3,4},
+                  std::vector<int64_t>{12,13,14,15,16,17,18,19,20,21,22,23});
+}
+
+// slices are: [-1,-1,newaxis]
+// dtype is: int64
+// input shape is: Shape{2,3,4}
+// expected output shape is Shape{1,4}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_150)
+{
+    check_success<int64_t>
+                 (element::i64,
+                  Shape{2,3,4},
+                  std::vector<int64_t>{-1,-1,0},
+                  std::vector<int64_t>{0,0,0},
+                  std::vector<int64_t>{1,1,1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{2},
+                  AxisSet{0,1},
+                  AxisSet{},
+                  Shape{1,4},
+                  std::vector<int64_t>{20,21,22,23});
+}
+
+// slices are: [1,newaxis]
 // dtype is: float32
 // input shape is: Shape{2,3,4}
 // expected output shape is Shape{1,3,4}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_79)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_151)
 {
     check_success<float>
                  (element::f32,
@@ -1809,7 +3321,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_79)
 // dtype is: float32
 // input shape is: Shape{2,3,4}
 // expected output shape is Shape{1,4}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_80)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_152)
 {
     check_success<float>
                  (element::f32,
@@ -1826,11 +3338,53 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_80)
                   std::vector<float>{20.0,21.0,22.0,23.0});
 }
 
+// slices are: [1,newaxis]
+// dtype is: uint32
+// input shape is: Shape{2,3,4}
+// expected output shape is Shape{1,3,4}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_153)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{2,3,4},
+                  std::vector<int64_t>{1,0},
+                  std::vector<int64_t>{0,0},
+                  std::vector<int64_t>{1,1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{1},
+                  AxisSet{0},
+                  AxisSet{},
+                  Shape{1,3,4},
+                  std::vector<uint32_t>{12,13,14,15,16,17,18,19,20,21,22,23});
+}
+
+// slices are: [-1,-1,newaxis]
+// dtype is: uint32
+// input shape is: Shape{2,3,4}
+// expected output shape is Shape{1,4}
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_154)
+{
+    check_success<uint32_t>
+                 (element::u32,
+                  Shape{2,3,4},
+                  std::vector<int64_t>{-1,-1,0},
+                  std::vector<int64_t>{0,0,0},
+                  std::vector<int64_t>{1,1,1},
+                  AxisSet{},
+                  AxisSet{},
+                  AxisSet{2},
+                  AxisSet{0,1},
+                  AxisSet{},
+                  Shape{1,4},
+                  std::vector<uint32_t>{20,21,22,23});
+}
+
 // slices are: [0:,:4,2:6:2,7:3:-2,newaxis,...,1]
 // dtype is: int32
 // input shape is: Shape{2,4,6,8,2,2,2}
 // expected output shape is Shape{2,4,2,2,1,2,2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_81)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_155)
 {
     check_success<int32_t>
                  (element::i32,
@@ -1851,7 +3405,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_81)
 // dtype is: int64
 // input shape is: Shape{2,4,6,8,2,2,2}
 // expected output shape is Shape{2,4,2,2,1,2,2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_82)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_156)
 {
     check_success<int64_t>
                  (element::i64,
@@ -1872,7 +3426,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_82)
 // dtype is: float32
 // input shape is: Shape{2,4,6,8,2,2,2}
 // expected output shape is Shape{2,4,2,2,1,2,2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_83)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_157)
 {
     check_success<float>
                  (element::f32,
@@ -1893,7 +3447,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_83)
 // dtype is: uint32
 // input shape is: Shape{2,4,6,8,2,2,2}
 // expected output shape is Shape{2,4,2,2,1,2,2}
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_84)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_158)
 {
     check_success<uint32_t>
                  (element::u32,
@@ -1914,7 +3468,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_84)
 // dtype is: int32
 // input shape is: Shape{2,4,6,8,2,2,2}
 // failure is expected
-NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_85)
+NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_159)
 {
     check_failure<int32_t>
                  (element::i32,
