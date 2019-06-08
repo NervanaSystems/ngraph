@@ -902,7 +902,11 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Divide:
             {
-                auto pythondiv = node_js.at("pythondiv").get<bool>();
+                bool pythondiv = true;
+                if (node_js["pythondiv"].is_object())
+                {
+                    pythondiv = node_js.at("pythondiv").get<bool>();
+                }
                 node = make_shared<op::Divide>(
                     args[0], args[1], pythondiv, read_auto_broadcast(node_js["autob"]));
                 break;
