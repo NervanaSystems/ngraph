@@ -288,6 +288,8 @@ set (SRC
     op/tan.hpp
     op/tanh.cpp
     op/tanh.hpp
+    op/tensor_iterator.cpp
+    op/tensor_iterator.hpp
     op/topk.cpp
     op/topk.hpp
     op/fused/clamp.cpp

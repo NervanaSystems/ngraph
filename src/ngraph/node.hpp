@@ -570,8 +570,8 @@ namespace ngraph
         bool operator<=(const Output& other) const { return !(*this > other); }
         bool operator>=(const Output& other) const { return !(*this < other); }
     private:
-        NodeType* const m_node;
-        const size_t m_index;
+        NodeType* m_node;
+        size_t m_index;
     };
 
     inline Input<Node> Node::input(size_t input_index)
