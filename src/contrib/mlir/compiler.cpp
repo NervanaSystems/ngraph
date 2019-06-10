@@ -26,7 +26,6 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
-#include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>
