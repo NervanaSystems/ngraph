@@ -19,7 +19,7 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/pass/serialize.hpp"
 #include "ngraph/util.hpp"
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 #include "ngraph/serializer.hpp"
 #include "nlohmann/json.hpp"
 #endif
@@ -34,7 +34,7 @@ pass::Serialization::Serialization(const string& name)
 
 bool pass::Serialization::run_on_module(vector<shared_ptr<Function>>& functions)
 {
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
     // serializing the outermost functions
     // also implicitly serializes any inner functions
     serialize(m_name, functions.at(0), 4);
