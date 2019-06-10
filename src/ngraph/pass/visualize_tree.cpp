@@ -228,7 +228,8 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                     auto color = (arg->description() == "Parameter" ? "blue" : "black");
                     m_ss << "    " << clone_name
                          << "[shape=\"box\" style=\"dashed,filled\" color=\"" << color
-                         << "\" fillcolor=\"white\" label=\"" << arg->get_friendly_name() << "\"]\n";
+                         << "\" fillcolor=\"white\" label=\"" << arg->get_friendly_name()
+                         << "\"]\n";
                     m_ss << "    " << clone_name << " -> " << node->get_friendly_name()
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
                     fake_node_ctr++;
@@ -257,7 +258,8 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                 {
                     m_ss << add_attributes(arg);
                     m_ss << add_attributes(node);
-                    m_ss << "    " << arg->get_friendly_name() << " -> " << node->get_friendly_name()
+                    m_ss << "    " << arg->get_friendly_name() << " -> "
+                         << node->get_friendly_name()
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
                 }
                 arg_index++;
