@@ -437,3 +437,20 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_4d_zero_point)
         {2, 3, 6, 11, 46, 55, 66, 79, 154, 171, 190, 211, 326, 351, 378, 407}); // y
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_4d_no_zero_point)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer_4d_no_zero_point.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(
+        std::vector<uint8_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}); // a
+    test_case.add_input(
+        std::vector<uint8_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}); // b
+
+test_case.add_expected_output<int32_t>(
+        Shape{2, 2, 2, 2},
+{7, 10, 15, 22, 67, 78, 91, 106, 191, 210, 231, 254, 379, 406, 435, 466}); // y
+test_case.run();
+}

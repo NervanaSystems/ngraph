@@ -21,6 +21,7 @@
 
 #include "exceptions.hpp"
 #include "matmul.hpp"
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization/quantized_linear_matmul.hpp"
 #include "ngraph/coordinate.hpp"
 #include "ngraph/log.hpp"
@@ -70,9 +71,11 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector make_matmul_op(const Node& node, bool quantized)
+                NodeVector
+                    make_matmul_op(const Node& node, bool quantized = false, bool integer = false)
                 {
                     const NodeVector& ng_inputs{node.get_ng_inputs()};
+                    auto num_inputs = ng_inputs.size();
                     auto left = std::shared_ptr<ngraph::Node>{ng_inputs.at(0)};
                     auto right = std::shared_ptr<ngraph::Node>{};
                     auto scale = std::shared_ptr<ngraph::Node>{};
@@ -114,10 +117,28 @@ namespace ngraph
                                 ng_inputs.at(6),
                                 ng_inputs.at(7))};
                         }
-                        else
+                        if (integer)
                         {
-                            return {std::make_shared<ngraph::op::Dot>(left, right)};
+                            if (num_inputs == 2)
+                            {
+                                return NodeVector{
+                                    ngraph::builder::quantization::QuantizedLinearMatmulInteger(
+                                        left, right)};
+                            }
+
+                            auto left_zero_point = ng_inputs.at(2);
+                            auto right_zero_point = ngraph::builder::make_constant(
+                                right->get_element_type(), Shape{}, 0);
+                            if (num_inputs == 4)
+                            {
+                                right_zero_point = ng_inputs.at(3);
+                            }
+
+                            return {ngraph::builder::quantization::QuantizedLinearMatmulInteger(
+                                left, right, left_zero_point, right_zero_point)};
                         }
+
+                        return {std::make_shared<ngraph::op::Dot>(left, right)};
                     }
 
                     // Second case:
@@ -175,6 +196,28 @@ namespace ngraph
                                 ng_inputs.at(6),
                                 ng_inputs.at(7));
                         }
+                        else if (integer)
+                        {
+                            if (num_inputs == 2)
+                            {
+                                sub_dot =
+                                    ngraph::builder::quantization::QuantizedLinearMatmulInteger(
+                                        sliced_left, sliced_right);
+                            }
+                            else
+                            {
+                                auto left_zero_point = ng_inputs.at(2);
+                                auto right_zero_point = ngraph::builder::make_constant(
+                                        right->get_element_type(), Shape{}, 0);
+                                if (num_inputs == 4)
+                                {
+                                    right_zero_point = ng_inputs.at(3);
+                                }
+
+                                sub_dot = ngraph::builder::quantization::QuantizedLinearMatmulInteger(
+                                        sliced_left, sliced_right, left_zero_point, right_zero_point);
+                            }
+                        }
                         else
                         {
                             sub_dot = std::make_shared<ngraph::op::Dot>(sliced_left, sliced_right);
@@ -206,7 +249,7 @@ namespace ngraph
                     }
                 }
 
-                NodeVector matmul(const Node& node) { return make_matmul_op(node, false); }
+                NodeVector matmul(const Node& node) { return make_matmul_op(node, false, false); }
             } // namespace set_1
 
         } //namespace op

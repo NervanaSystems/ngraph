@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "op/matmul_integer.hpp"
+#include "matmul.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization/quantized_linear_matmul.hpp"
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
@@ -31,27 +32,7 @@ namespace ngraph
             {
                 NodeVector matmul_integer(const Node& node)
                 {
-                    const NodeVector& ng_inputs{node.get_ng_inputs()};
-                    auto num_inputs = ng_inputs.size();
-                    auto input_a = ng_inputs.at(0);
-                    auto input_b = ng_inputs.at(1);
-
-                    if (num_inputs == 2)
-                    {
-                        return NodeVector{
-                            quantization::QuantizedLinearMatmulInteger(input_a, input_b)};
-                    }
-
-                    auto input_a_zero_point = ng_inputs.at(2);
-                    auto input_b_zero_point =
-                        make_constant(input_b->get_element_type(), Shape{}, 0);
-                    if (num_inputs == 4)
-                    {
-                        input_b_zero_point = ng_inputs.at(3);
-                    }
-
-                    return NodeVector{quantization::QuantizedLinearMatmulInteger(
-                        input_a, input_b, input_a_zero_point, input_b_zero_point)};
+                    return make_matmul_op(node, false, true);
                 }
             } // namespace set_1
 
