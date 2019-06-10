@@ -387,7 +387,9 @@ void MLIRCompiler::cleanup()
 
     // Free MLIR function builder.
     if (m_builder)
+    {
         m_builder.reset(nullptr);
+    }
 
     // Free allocated memory for JIT'ed code temps
     m_mem_mgr.freeAll();
@@ -402,7 +404,9 @@ SmallVector<void*, 8> MLIRCompiler::allocate_memref_args(mlir::Function* func)
         auto descriptor = allocate_memref_descriptor(arg->getType());
 
         if (!descriptor)
+        {
             continue;
+        }
         args.push_back(descriptor);
     }
     return args;
@@ -412,7 +416,9 @@ mlir::StaticFloatMemRef* MLIRCompiler::allocate_memref_descriptor(mlir::Type typ
 {
     auto memRefType = type.dyn_cast<mlir::MemRefType>();
     if (!memRefType)
+    {
         return nullptr;
+    }
     NGRAPH_ASSERT(memRefType.getNumDynamicDims() == 0) << "No support for dynamic shapes";
 
     // We only use StaticFloatMemRef because that's what MLIR currently offers.
