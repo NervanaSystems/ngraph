@@ -449,8 +449,8 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_4d_no_zero_point)
     test_case.add_input(
         std::vector<uint8_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}); // b
 
-test_case.add_expected_output<int32_t>(
+    test_case.add_expected_output<int32_t>(
         Shape{2, 2, 2, 2},
-{7, 10, 15, 22, 67, 78, 91, 106, 191, 210, 231, 254, 379, 406, 435, 466}); // y
-test_case.run();
+        {7, 10, 15, 22, 67, 78, 91, 106, 191, 210, 231, 254, 379, 406, 435, 466}); // y
+    test_case.run();
 }
