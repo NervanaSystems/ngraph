@@ -2252,7 +2252,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
         NGRAPH_DEBUG << "In callback for Qdot against node = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto qdot = std::dynamic_pointer_cast<ngraph::op::QuantizedDot>(m.get_match_root());
+        auto qdot = std::static_pointer_cast<ngraph::op::QuantizedDot>(m.get_match_root());
         auto input_0 = pattern_map[input0];
         auto input_1 = pattern_map[input1];
         auto scale_new = pattern_map[scale];

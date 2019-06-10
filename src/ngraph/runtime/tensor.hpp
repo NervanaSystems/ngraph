@@ -98,19 +98,39 @@ namespace ngraph
 
             /// \brief Write bytes directly into the tensor
             /// \param p Pointer to source of data
-            /// \param offset Offset into tensor storage to begin writing. Must be element-aligned.
             /// \param n Number of bytes to write, must be integral number of elements.
-            virtual void write(const void* p, size_t offset, size_t n) = 0;
+            virtual void write(const void* p, size_t n) = 0;
 
             /// \brief Read bytes directly from the tensor
             /// \param p Pointer to destination for data
-            /// \param offset Offset into tensor storage to begin writing. Must be element-aligned.
             /// \param n Number of bytes to read, must be integral number of elements.
-            virtual void read(void* p, size_t offset, size_t n) const = 0;
+            virtual void read(void* p, size_t n) const = 0;
 
             /// \brief copy bytes directly from source to this tensor
             /// \param source The source tensor
             virtual void copy_from(const ngraph::runtime::Tensor& source);
+
+            NGRAPH_DEPRECATED_DOC
+            /// \brief Write bytes directly into the tensor
+            /// \param p Pointer to source of data
+            /// \param offset Offset into tensor storage to begin writing. Must be element-aligned.
+            /// \param n Number of bytes to write, must be integral number of elements.
+            void write(const void* p, size_t offset, size_t n)
+                NGRAPH_DEPRECATED("Use two-parameter write")
+            {
+                write(p, n);
+            }
+
+            NGRAPH_DEPRECATED_DOC
+            /// \brief Read bytes directly from the tensor
+            /// \param p Pointer to destination for data
+            /// \param offset Offset into tensor storage to begin writing. Must be element-aligned.
+            /// \param n Number of bytes to read, must be integral number of elements.
+            void read(void* p, size_t offset, size_t n) const
+                NGRAPH_DEPRECATED("Use two-parameter read")
+            {
+                read(p, n);
+            }
 
             /// \return Get the graph node for this tensor
             std::shared_ptr<Node> get_source_node() { return m_source_node; }
