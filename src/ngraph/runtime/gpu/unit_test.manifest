@@ -3,6 +3,7 @@ computation_reuse
 # int64 is not supprted by cuDNN
 dot_matrix_vector_int64
 generate_mask
+generate_mask2
 # custom_mem is not implemented on GPU
 tensorview_custom_mem
 # integer is not supported by cuDNN on backward pooling
