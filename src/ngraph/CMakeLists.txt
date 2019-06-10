@@ -498,9 +498,17 @@ endif()
 configure_file(version.in.hpp version.hpp)
 
 if (NGRAPH_STATIC_LIB_ENABLE)
-    add_library(ngraph STATIC ${SRC})
+    if (NGRAPH_ONNX_IMPORT_ENABLE)
+        add_library(ngraph STATIC $<TARGET_OBJECTS:onnx_import_interface> ${SRC})
+    else()
+        add_library(ngraph STATIC ${SRC})
+    endif()
 else()
-    add_library(ngraph SHARED ${SRC})
+    if (NGRAPH_ONNX_IMPORT_ENABLE)
+        add_library(ngraph SHARED $<TARGET_OBJECTS:onnx_import_interface> ${SRC})
+    else()
+        add_library(ngraph SHARED ${SRC})
+    endif()
 endif()
 
 if(NOT NGRAPH_JSON_ENABLE)
@@ -578,7 +586,7 @@ if (NOT WIN32)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    target_link_libraries(ngraph PRIVATE onnx_import onnx_import_interface)
+    target_link_libraries(ngraph PRIVATE onnx_import)
 endif()
 
 # Build subdirectories for all build types on Windows

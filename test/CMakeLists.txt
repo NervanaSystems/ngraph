@@ -249,9 +249,7 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_TOOLS_ENABLE)
-    get_property(NBENCH_PATH TARGET nbench PROPERTY BINARY_DIR)
-    set(NBENCH "${NBENCH_PATH}/nbench")
-    target_compile_definitions(unit-test PRIVATE NBENCH_PATH="${NBENCH}")
+    target_compile_definitions(unit-test PRIVATE NBENCH_PATH="$<TARGET_FILE:nbench>")
     add_dependencies(unit-test nbench)
 endif()
 
