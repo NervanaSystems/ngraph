@@ -27,8 +27,9 @@ namespace ngraph
             class MatmulFactory
             {
             public:
-                MatmulFactory(const Node& node)
+                explicit MatmulFactory(const Node& node)
                     : m_onnx_node(node)
+                    , m_inputs(node.get_ng_inputs())
                 {
                 }
 
@@ -36,30 +37,42 @@ namespace ngraph
 
                 virtual NodeVector make_matmul_op();
 
+                virtual std::shared_ptr<ngraph::Node> get_left();
+                virtual std::shared_ptr<ngraph::Node> get_right();
+                virtual std::shared_ptr<ngraph::Node>
+                    make_dot(const std::shared_ptr<ngraph::Node>& left,
+                             const std::shared_ptr<ngraph::Node>& right);
+
             protected:
                 const Node& m_onnx_node;
+                const NodeVector m_inputs;
             };
 
-            class QLinearMatmulFactory : MatmulFactory
+            class QLinearMatmulFactory : public MatmulFactory
             {
             public:
-                QLinearMatmulFactory(const Node& node)
+                explicit QLinearMatmulFactory(const Node& node)
                     : MatmulFactory(node)
                 {
                 }
 
-                NodeVector make_matmul_op();
+                std::shared_ptr<ngraph::Node> get_right() override;
+                std::shared_ptr<ngraph::Node>
+                    make_dot(const std::shared_ptr<ngraph::Node>& left,
+                             const std::shared_ptr<ngraph::Node>& right) override;
             };
 
-            class MatmulIntegerFactory : MatmulFactory
+            class MatmulIntegerFactory : public MatmulFactory
             {
             public:
-                MatmulIntegerFactory(const Node& node)
+                explicit MatmulIntegerFactory(const Node& node)
                     : MatmulFactory(node)
                 {
                 }
 
-                NodeVector make_matmul_op();
+                std::shared_ptr<ngraph::Node>
+                    make_dot(const std::shared_ptr<ngraph::Node>& left,
+                             const std::shared_ptr<ngraph::Node>& right) override;
             };
         }
     }

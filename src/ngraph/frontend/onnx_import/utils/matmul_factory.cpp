@@ -65,30 +65,73 @@ static std::shared_ptr<ngraph::Node> get_sub_matrix(const std::shared_ptr<ngraph
     return ngraph::onnx_import::reshape::squeeze(sub_matrix);
 }
 
-static NodeVector
-    make_matmul_op(const onnx_import::Node& node, bool quantized = false, bool integer = false)
+std::shared_ptr<ngraph::Node> ngraph::onnx_import::matmul::MatmulFactory::get_left()
 {
-    const NodeVector& ng_inputs{node.get_ng_inputs()};
-    auto num_inputs = ng_inputs.size();
-    auto left = std::shared_ptr<ngraph::Node>{ng_inputs.at(0)};
-    auto right = std::shared_ptr<ngraph::Node>{};
-    auto scale = std::shared_ptr<ngraph::Node>{};
-    if (quantized)
+    return m_inputs.at(0);
+}
+
+std::shared_ptr<ngraph::Node> ngraph::onnx_import::matmul::MatmulFactory::get_right()
+{
+    return m_inputs.at(1);
+}
+
+std::shared_ptr<ngraph::Node>
+    ngraph::onnx_import::matmul::MatmulFactory::make_dot(const std::shared_ptr<ngraph::Node>& left,
+                                                         const std::shared_ptr<ngraph::Node>& right)
+{
+    return std::make_shared<ngraph::op::Dot>(left, right);
+}
+
+std::shared_ptr<ngraph::Node> ngraph::onnx_import::matmul::QLinearMatmulFactory::get_right()
+{
+    return m_inputs.at(3);
+}
+
+std::shared_ptr<ngraph::Node> ngraph::onnx_import::matmul::QLinearMatmulFactory::make_dot(
+    const std::shared_ptr<ngraph::Node>& left, const std::shared_ptr<ngraph::Node>& right)
+{
+    return ngraph::builder::quantization::QuantizedLinearMatmul(left,
+                                                                right,
+                                                                m_inputs.at(1),
+                                                                m_inputs.at(2),
+                                                                m_inputs.at(4),
+                                                                m_inputs.at(5),
+                                                                m_inputs.at(6),
+                                                                m_inputs.at(7));
+}
+
+std::shared_ptr<ngraph::Node> ngraph::onnx_import::matmul::MatmulIntegerFactory::make_dot(
+    const std::shared_ptr<ngraph::Node>& left, const std::shared_ptr<ngraph::Node>& right)
+{
+    auto num_inputs = m_inputs.size();
+
+    if (num_inputs == 2)
     {
-        right = ng_inputs.at(3);
-        scale = ng_inputs.at(6);
+        return ngraph::builder::quantization::QuantizedLinearMatmulInteger(left, right);
     }
-    else
+
+    auto left_zero_point = m_inputs.at(2);
+    auto right_zero_point = ngraph::builder::make_constant(right->get_element_type(), Shape{}, 0);
+    if (num_inputs == 4)
     {
-        right = ng_inputs.at(1);
+        right_zero_point = m_inputs.at(3);
     }
+
+    return ngraph::builder::quantization::QuantizedLinearMatmulInteger(
+        left, right, left_zero_point, right_zero_point);
+}
+
+NodeVector ngraph::onnx_import::matmul::MatmulFactory::make_matmul_op()
+{
+    auto left = get_left();
+    auto right = get_right();
 
     std::size_t left_rank{left->get_shape().size()};
     std::size_t right_rank{right->get_shape().size()};
 
     if (left_rank == 0 || right_rank == 0)
     {
-        NGRAPH_WARN << (node) << " "
+        NGRAPH_WARN << (m_onnx_node) << " "
                     << "ONNX standard doesn't allow scalar operands, however nGraph "
                        "accepts them. Consider use of element-wise multiplication instead "
                        "to conform with ONNX standard.";
@@ -98,38 +141,7 @@ static NodeVector
     // Multiply two tensors where both of them has rank lower equal 2.
     if (left_rank <= 2 && right_rank <= 2)
     {
-        if (quantized)
-        {
-            return {ngraph::builder::quantization::QuantizedLinearMatmul(left,
-                                                                         right,
-                                                                         ng_inputs.at(1),
-                                                                         ng_inputs.at(2),
-                                                                         ng_inputs.at(4),
-                                                                         ng_inputs.at(5),
-                                                                         ng_inputs.at(6),
-                                                                         ng_inputs.at(7))};
-        }
-        if (integer)
-        {
-            if (num_inputs == 2)
-            {
-                return NodeVector{
-                    ngraph::builder::quantization::QuantizedLinearMatmulInteger(left, right)};
-            }
-
-            auto left_zero_point = ng_inputs.at(2);
-            auto right_zero_point =
-                ngraph::builder::make_constant(right->get_element_type(), Shape{}, 0);
-            if (num_inputs == 4)
-            {
-                right_zero_point = ng_inputs.at(3);
-            }
-
-            return {ngraph::builder::quantization::QuantizedLinearMatmulInteger(
-                left, right, left_zero_point, right_zero_point)};
-        }
-
-        return {std::make_shared<ngraph::op::Dot>(left, right)};
+        return NodeVector{make_dot(left, right)};
     }
 
     // Second case:
@@ -172,45 +184,7 @@ static NodeVector
     {
         const auto& sliced_left = get_sub_matrix(left, g);
         auto sliced_right = get_sub_matrix(right, g);
-
-        auto sub_dot = std::shared_ptr<ngraph::Node>{};
-
-        if (quantized)
-        {
-            sub_dot = ngraph::builder::quantization::QuantizedLinearMatmul(sliced_left,
-                                                                           sliced_right,
-                                                                           ng_inputs.at(1),
-                                                                           ng_inputs.at(2),
-                                                                           ng_inputs.at(4),
-                                                                           ng_inputs.at(5),
-                                                                           ng_inputs.at(6),
-                                                                           ng_inputs.at(7));
-        }
-        else if (integer)
-        {
-            if (num_inputs == 2)
-            {
-                sub_dot = ngraph::builder::quantization::QuantizedLinearMatmulInteger(sliced_left,
-                                                                                      sliced_right);
-            }
-            else
-            {
-                auto left_zero_point = ng_inputs.at(2);
-                auto right_zero_point =
-                    ngraph::builder::make_constant(right->get_element_type(), Shape{}, 0);
-                if (num_inputs == 4)
-                {
-                    right_zero_point = ng_inputs.at(3);
-                }
-
-                sub_dot = ngraph::builder::quantization::QuantizedLinearMatmulInteger(
-                    sliced_left, sliced_right, left_zero_point, right_zero_point);
-            }
-        }
-        else
-        {
-            sub_dot = std::make_shared<ngraph::op::Dot>(sliced_left, sliced_right);
-        }
+        auto sub_dot = make_dot(sliced_left, sliced_right);
 
         // Expand sub_dot result with single empty outermost axis, in order to
         // later concatenate sub_dots at this axis.
@@ -234,29 +208,5 @@ static NodeVector
                             std::next(std::begin(left_shape), left_shape.size() - 2));
         return {std::make_shared<ngraph::op::Reshape>(
             result, ngraph::get_default_order(shape.size()), result_shape)};
-    }
-}
-
-namespace ngraph
-{
-    namespace onnx_import
-    {
-        namespace matmul
-        {
-            NodeVector MatmulFactory::make_matmul_op()
-            {
-                return ::make_matmul_op(m_onnx_node, false, false);
-            }
-
-            NodeVector QLinearMatmulFactory::make_matmul_op()
-            {
-                return ::make_matmul_op(m_onnx_node, true, false);
-            }
-
-            NodeVector MatmulIntegerFactory::make_matmul_op()
-            {
-                return ::make_matmul_op(m_onnx_node, false, true);
-            }
-        }
     }
 }
