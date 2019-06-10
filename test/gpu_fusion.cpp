@@ -128,7 +128,7 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
 }
 #endif
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 TEST(gpu_fusion, fuse_lstm_cells)
 {
     pass::Manager pass_manager;
@@ -421,7 +421,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     EXPECT_TRUE(test::all_close(std::vector<float>{ct_val_second}, read_vector<float>(result_ct)));
 }
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
 {
     const std::string file_name("mxnet/1_lstm_cell_forward.json");
