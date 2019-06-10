@@ -35,18 +35,18 @@ namespace ngraph
             /// \param end The last index on axis of the slicing
             SliceInput(size_t argument_position,
                        const std::shared_ptr<Parameter>& body_parameter,
-                       ssize_t axis,
-                       ssize_t start,
-                       ssize_t stride,
-                       ssize_t part_size,
-                       ssize_t end);
+                       std::ptrdiff_t axis,
+                       std::ptrdiff_t start,
+                       std::ptrdiff_t stride,
+                       std::ptrdiff_t part_size,
+                       std::ptrdiff_t end);
             size_t m_argument_position;
             std::shared_ptr<Parameter> m_body_parameter;
-            ssize_t m_axis;
-            ssize_t m_start;
-            ssize_t m_stride;
-            ssize_t m_part_size;
-            ssize_t m_end;
+            std::ptrdiff_t m_axis;
+            std::ptrdiff_t m_start;
+            std::ptrdiff_t m_stride;
+            std::ptrdiff_t m_part_size;
+            std::ptrdiff_t m_end;
         };
 
         struct SliceOutput
@@ -61,19 +61,19 @@ namespace ngraph
             /// \param end The last index on axis of the slicing
             SliceOutput(const Output<Node>& value,
                         size_t result_position,
-                        ssize_t axis,
-                        ssize_t start,
-                        ssize_t stride,
-                        ssize_t part_size,
-                        ssize_t end);
+                        std::ptrdiff_t axis,
+                        std::ptrdiff_t start,
+                        std::ptrdiff_t stride,
+                        std::ptrdiff_t part_size,
+                        std::ptrdiff_t end);
 
             Output<Node> m_value;
             size_t m_result_position;
-            ssize_t m_axis;
-            ssize_t m_start;
-            ssize_t m_stride;
-            ssize_t m_part_size;
-            ssize_t m_end;
+            std::ptrdiff_t m_axis;
+            std::ptrdiff_t m_start;
+            std::ptrdiff_t m_stride;
+            std::ptrdiff_t m_part_size;
+            std::ptrdiff_t m_end;
         };
 
         /// \brief  Iterate a body over tensors, accumulating into tensors

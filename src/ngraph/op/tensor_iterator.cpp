@@ -21,11 +21,11 @@ using namespace ngraph;
 
 op::SliceInput::SliceInput(size_t argument_position,
                            const std::shared_ptr<Parameter>& body_parameter,
-                           ssize_t axis,
-                           ssize_t start,
-                           ssize_t stride,
-                           ssize_t part_size,
-                           ssize_t end)
+                           std::ptrdiff_t axis,
+                           std::ptrdiff_t start,
+                           std::ptrdiff_t stride,
+                           std::ptrdiff_t part_size,
+                           std::ptrdiff_t end)
     : m_argument_position(argument_position)
     , m_body_parameter(body_parameter)
     , m_axis(axis)
@@ -38,11 +38,11 @@ op::SliceInput::SliceInput(size_t argument_position,
 
 op::SliceOutput::SliceOutput(const Output<Node>& value,
                              size_t result_position,
-                             ssize_t axis,
-                             ssize_t start,
-                             ssize_t stride,
-                             ssize_t part_size,
-                             ssize_t end)
+                             std::ptrdiff_t axis,
+                             std::ptrdiff_t start,
+                             std::ptrdiff_t stride,
+                             std::ptrdiff_t part_size,
+                             std::ptrdiff_t end)
     : m_value(value)
     , m_result_position(result_position)
     , m_axis(axis)
