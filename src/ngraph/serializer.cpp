@@ -1843,7 +1843,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Constant:
     {
         auto tmp = dynamic_cast<const op::Constant*>(&n);
-        if (tmp->are_all_data_elements_bitwise_identical())
+        if (tmp->are_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
         {
             vector<string> vs;
             vs.push_back(tmp->convert_value_to_string(0));
