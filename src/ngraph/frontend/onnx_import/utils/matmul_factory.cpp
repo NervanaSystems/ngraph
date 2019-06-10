@@ -34,8 +34,6 @@
 #include "ngraph/util.hpp"
 #include "utils/reshape.hpp"
 
-using namespace ngraph;
-
 /// \brief      Slice the sub matrix from the input tensor.
 ///
 /// \param[in]  node  The input tensor. Must be at most of rank 3.
@@ -121,7 +119,7 @@ std::shared_ptr<ngraph::Node> ngraph::onnx_import::matmul::MatmulIntegerFactory:
         left, right, left_zero_point, right_zero_point);
 }
 
-NodeVector ngraph::onnx_import::matmul::MatmulFactory::make_matmul_op()
+ngraph::NodeVector ngraph::onnx_import::matmul::MatmulFactory::make_matmul_op()
 {
     auto left = get_left();
     auto right = get_right();
