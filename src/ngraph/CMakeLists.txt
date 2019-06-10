@@ -503,6 +503,10 @@ else()
     add_library(ngraph SHARED ${SRC})
 endif()
 
+if(NOT NGRAPH_JSON_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
+endif()
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
         target_include_directories(ngraph SYSTEM PRIVATE libmlsl)

@@ -6070,7 +6070,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
     auto df = make_shared<Function>(NodeVector{dinput, dgamma, dbeta},
                                     ParameterVector{mean, var, input, gamma, beta, C});
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
     // roundtrip serialization
     string js = serialize(df, 4);
     istringstream in(js);
