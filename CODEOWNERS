@@ -19,6 +19,8 @@
 
 /doc/                               @indie
 /doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
+/doc/*/*/tensorflow                 @shresthamalik @avijit-nervana @sayantan-nervana
+/doc/*/*/backends/plaidml-ng-api/   @flaub @brianretford @dgkutnic
 /README.md                          @indie
 /changes.md                         @indie @diyessi
 /INSTALL.md                         @indie
