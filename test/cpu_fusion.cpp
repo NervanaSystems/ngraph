@@ -3607,7 +3607,7 @@ TEST(cpu_quant_fusion, qconvba)
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 // Tests that rely on deserializing json files
 TEST(cpu_fusion, fuse_conv_bias)
 {
@@ -3973,7 +3973,7 @@ TEST(cpu_fusion, validate_fuse_gru_inputs)
     }
 }
 
-#if defined(AUTODIFF_BACKEND_CPU) && defined(NGRAPH_JSON_ENABLE)
+#if defined(AUTODIFF_BACKEND_CPU) && !defined(NGRAPH_JSON_DISABLE)
 NGRAPH_TEST(cpu_fusion, backwards_batchmatmultranspose_tensor2_tensor2)
 {
     auto backend = runtime::Backend::create("CPU");

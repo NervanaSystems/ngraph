@@ -37,7 +37,7 @@ TEST(backend_api, invalid_name)
     ASSERT_ANY_THROW(ngraph::runtime::Backend::create("COMPLETELY-BOGUS-NAME"));
 }
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 TEST(backend_api, save_load)
 {
     Shape shape{2, 2};

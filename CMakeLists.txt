@@ -427,10 +427,6 @@ if(NGRAPH_DEPRECATED_ENABLE)
     add_definitions(-DNGRAPH_DEPRECATED_ENABLE)
 endif()
 
-if(NGRAPH_JSON_ENABLE)
-    add_definitions(-DNGRAPH_JSON_ENABLE)
-endif()
-
 add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 #-----------------------------------------------------------------------------------------------

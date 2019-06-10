@@ -66,16 +66,16 @@ void op::PriorBox::validate_and_infer_types()
         auto layer_shape = const_shape->get_shape_val();
         size_t num_priors = 0;
         // {Prior boxes, Variance-adjusted prior boxes}
-        if (m_attrs.scale_all)
+        if (m_attrs.scale_all_sizes)
         {
-            num_priors = ((m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratios.size() + 1) *
-                             m_attrs.min_sizes.size() +
-                         m_attrs.max_sizes.size();
+            num_priors = ((m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratio.size() + 1) *
+                             m_attrs.min_size.size() +
+                         m_attrs.max_size.size();
         }
         else
         {
-            num_priors = (m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratios.size() +
-                         m_attrs.min_sizes.size() - 1;
+            num_priors =
+                (m_attrs.flip ? 2 : 1) * m_attrs.aspect_ratio.size() + m_attrs.min_size.size() - 1;
         }
 
         set_output_type(
