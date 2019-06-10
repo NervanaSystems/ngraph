@@ -19,6 +19,7 @@
 #include <cstring>
 #include <sstream>
 
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/type/bfloat16.hpp"
@@ -94,32 +95,43 @@ namespace ngraph
                     shape_size(m_shape),
                     ".");
 
-                std::vector<std::string> tmp_values;
-                if (values.size() == 1 && shape_size(m_shape) != 1)
-                {
-                    tmp_values = std::vector<std::string>(shape_size(m_shape), values[0]);
-                }
-                else
-                {
-                    tmp_values = values;
-                }
-
                 if (type.is_integral())
                 {
                     if (type.is_signed())
                     {
-                        std::vector<int64_t> dvalues = parse_string<int64_t>(tmp_values);
+                        std::vector<int64_t> dvalues = parse_string<int64_t>(values);
+                        if (values.size() == 1 && shape_size(m_shape) != 1)
+                        {
+                            for (size_t i = 1; i < shape_size(m_shape); i++)
+                            {
+                                dvalues.push_back(dvalues[0]);
+                            }
+                        }
                         write_values(dvalues);
                     }
                     else
                     {
-                        std::vector<uint64_t> dvalues = parse_string<uint64_t>(tmp_values);
+                        std::vector<uint64_t> dvalues = parse_string<uint64_t>(values);
+                        if (values.size() == 1 && shape_size(m_shape) != 1)
+                        {
+                            for (size_t i = 1; i < shape_size(m_shape); i++)
+                            {
+                                dvalues.push_back(dvalues[0]);
+                            }
+                        }
                         write_values(dvalues);
                     }
                 }
                 else
                 {
-                    std::vector<double> dvalues = parse_string<double>(tmp_values);
+                    std::vector<double> dvalues = parse_string<double>(values);
+                    if (values.size() == 1 && shape_size(m_shape) != 1)
+                    {
+                        for (size_t i = 1; i < shape_size(m_shape); i++)
+                        {
+                            dvalues.push_back(dvalues[0]);
+                        }
+                    }
                     write_values(dvalues);
                 }
                 constructor_validate_and_infer_types();
@@ -156,10 +168,31 @@ namespace ngraph
             ///        Can only be used on element::i64 nodes and interprets
             ///        negative values as zeros.
             Shape get_shape_val() const;
-            /// \brief Returns the value of the constant node as a Strides object
+            /// \brief Returns the value of the constant node as a Strides
+            ///        object
             ///        Can only be used on element::i64 nodes and interprets
             ///        negative values as zeros.
             Strides get_strides_val() const;
+            /// \brief Returns the value of the constant node as a Coordinate
+            ///        object
+            ///        Can only be used on element::i64 nodes and interprets
+            ///        negative values as zeros.
+            Coordinate get_coordinate_val() const;
+            /// \brief Returns the value of the constant node as a
+            ///        CoordinateDiff object
+            ///        Can only be used on element::i64 nodes.
+            CoordinateDiff get_coordinate_diff_val() const;
+            /// \brief Returns the value of the constant node as an AxisVector
+            ///        object
+            ///        Can only be used on element::i64 nodes and interprets
+            ///        negative values as zeros.
+            AxisVector get_axis_vector_val() const;
+            /// \brief Returns the value of the constant node as an AxisSet
+            ///        object
+            ///        Can only be used on element::i64 nodes and interprets
+            ///        negative values as zeros.
+            ///        Repeated values are allowed.
+            AxisSet get_axis_set_val() const;
 
             /// \brief Wrapper around constructing a shared_ptr of a Constant
             ///
@@ -221,6 +254,7 @@ namespace ngraph
 
             bool is_constant() const override { return true; }
             bool are_all_data_elements_bitwise_identical() const;
+            std::string convert_value_to_string(size_t index) const;
 
         protected:
             void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }

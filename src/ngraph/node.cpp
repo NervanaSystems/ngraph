@@ -33,21 +33,131 @@ using namespace ngraph;
 
 atomic<size_t> Node::m_next_instance_id(0);
 
+Node::Node(size_t output_size)
+    : Node()
+{
+    set_output_size(output_size);
+}
+
 Node::Node(const std::string& node_type, const NodeVector& arguments, size_t output_size)
     : m_node_type(node_type)
-    , m_instance_id(m_next_instance_id.fetch_add(1))
-    , m_unique_name(description() + "_" + to_string(m_instance_id))
+{
+    set_arguments(arguments);
+    set_output_size(output_size);
+}
+
+Node::Node(const NodeVector& arguments, size_t output_size)
+    : Node()
+{
+    set_arguments(arguments);
+    set_output_size(output_size);
+}
+
+Node::Node(const OutputVector& arguments, size_t output_size)
+    : Node()
+{
+    set_arguments(arguments);
+    set_output_size(output_size);
+}
+
+Node::~Node()
+{
+    for (descriptor::Input& input : m_inputs)
+    {
+        if (input.has_output())
+        {
+            // This test adds 1 to the actual count, so a count of 2 means this input is the only reference to the node.
+            if (input.get_output().get_node().use_count() == 2)
+            {
+                // Don't want to trigger a deep recursive delete
+                NodeVector nodes{input.get_output().get_node()};
+                input.remove_output();
+                safe_delete(nodes, true);
+                return;
+            }
+            input.remove_output();
+        }
+    }
+}
+
+void Node::safe_delete(NodeVector& nodes, bool recurse)
+{
+    for (auto& input : m_inputs)
+    {
+        if (input.has_output())
+        {
+            // This test adds 1 to the actual count, so a count of 2 means this input is the only reference to the node.
+            auto node = input.get_output().get_node();
+            if (node.use_count() == 2)
+            {
+                // Move the node from the input to nodes so we don't trigger a deep recursive delete
+                nodes.push_back(node);
+            }
+            input.remove_output();
+        }
+    }
+    if (recurse)
+    {
+        while (nodes.size() > 0)
+        {
+            auto node = nodes.back();
+            nodes.pop_back();
+            node->safe_delete(nodes, false);
+        }
+    }
+}
+
+void Node::set_arguments(const NodeVector& arguments)
+{
+    OutputVector outputs;
+    for (auto arg : arguments)
+    {
+        for (auto& output : arg->outputs())
+        {
+            outputs.push_back(output);
+        }
+    }
+    set_arguments(outputs);
+}
+
+void Node::set_arguments(const OutputVector& arguments)
 {
     // Add this node as a user of each argument.
     size_t i = 0;
-    for (auto arg : arguments)
+    for (auto& output : arguments)
     {
-        for (descriptor::Output& output : arg->m_outputs)
-        {
-            m_inputs.emplace_back(this, i++, output);
-        }
+        auto output_node = output.get_node();
+        auto& output_descriptor = output_node->get_outputs().at(output.get_index());
+        m_inputs.emplace_back(this, i++, output_descriptor);
     }
-    set_output_size(output_size);
+}
+
+descriptor::Input& Node::get_input_descriptor(size_t position)
+{
+    while (m_inputs.size() <= position)
+    {
+        m_inputs.emplace_back(this, m_inputs.size());
+    }
+    return m_inputs.at(position);
+}
+
+descriptor::Output& Node::get_output_descriptor(size_t position)
+{
+    while (m_outputs.size() <= position)
+    {
+        size_t i = m_outputs.size();
+        auto tensor_descriptor =
+            make_shared<descriptor::Tensor>(element::dynamic, PartialShape::dynamic(), this, i);
+        m_outputs.emplace_back(this, i, tensor_descriptor);
+    }
+    return m_outputs.at(position);
+}
+
+void Node::set_argument(size_t position, const Output<Node>& argument)
+{
+    auto output_node = argument.get_node();
+    auto& output_descriptor = output_node->get_output_descriptor(argument.get_index());
+    get_input_descriptor(position).replace_output(output_descriptor);
 }
 
 // While we are still doing validation and type inference in the constructor, this is true
@@ -75,9 +185,8 @@ void Node::set_output_size(size_t n)
     NGRAPH_CHECK(n >= m_outputs.size(), "shrinking ", m_outputs.size(), " to ", n);
     for (size_t i = m_outputs.size(); i < n; ++i)
     {
-        auto tensor_descriptor = make_shared<descriptor::Tensor>(
-            element::dynamic, PartialShape::dynamic(), get_name() + "_" + to_string(i));
-        m_outputs.emplace_back(this, i, tensor_descriptor);
+        // create the descriptors
+        get_output_descriptor(i);
     }
 }
 
@@ -97,7 +206,7 @@ void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
 
 void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
 {
-    m_outputs.at(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
+    get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()
@@ -134,13 +243,17 @@ const std::string& Node::get_friendly_name() const
 {
     if (m_friendly_name.empty())
     {
-        return m_unique_name;
+        return get_name();
     }
     return m_friendly_name;
 }
 
 const std::string& Node::get_name() const
 {
+    if (m_unique_name.empty())
+    {
+        const_cast<Node*>(this)->m_unique_name = description() + "_" + to_string(m_instance_id);
+    }
     return m_unique_name;
 }
 
@@ -202,14 +315,6 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
                      " has multiple outputs");
     }
     return m_inputs.at(index).get_output().get_node();
-}
-
-Node::~Node()
-{
-    for (auto& input : m_inputs)
-    {
-        input.get_output().remove_input(&input);
-    }
 }
 
 NodeVector Node::get_arguments() const
@@ -442,18 +547,6 @@ std::string ngraph::node_validation_failure_loc_string(const Node* node)
     return ss.str();
 }
 
-void ngraph::check_new_args_count(const Node* node, const NodeVector& new_args)
-{
-    NODE_VALIDATION_CHECK(node,
-                          new_args.size() == node->get_arguments().size(),
-                          "copy_with_new_args() expected ",
-                          node->get_arguments().size(),
-                          " argument",
-                          (node->get_arguments().size() == 1 ? "" : "s"),
-                          " but got ",
-                          new_args.size());
-}
-
 const std::shared_ptr<Node>& ngraph::check_single_output_arg(const std::shared_ptr<Node>& node,
                                                              size_t i)
 {
@@ -471,7 +564,8 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
     return args;
 }
 
-std::tuple<element::Type, PartialShape> Node::validate_and_infer_elementwise_args()
+std::tuple<element::Type, PartialShape>
+    Node::validate_and_infer_elementwise_args(const op::AutoBroadcastSpec& autob)
 {
     element::Type element_type = get_input_element_type(0);
     PartialShape pshape = get_input_partial_shape(0);
@@ -485,18 +579,32 @@ std::tuple<element::Type, PartialShape> Node::validate_and_infer_elementwise_arg
                 element::Type::merge(element_type, element_type, get_input_element_type(i)),
                 "Argument element types are inconsistent.");
 
-            NODE_VALIDATION_CHECK(this,
-                                  PartialShape::merge_into(pshape, get_input_partial_shape(i)),
-                                  "Argument shapes are inconsistent.");
+            if (autob.m_type == op::AutoBroadcastType::NONE)
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      PartialShape::merge_into(pshape, get_input_partial_shape(i)),
+                                      "Argument shapes are inconsistent.");
+            }
+            else if (autob.m_type == op::AutoBroadcastType::NUMPY)
+            {
+                NODE_VALIDATION_CHECK(
+                    this,
+                    PartialShape::broadcast_merge_into(pshape, get_input_partial_shape(i), autob),
+                    "Argument shapes are inconsistent.");
+            }
+            else
+            {
+                NODE_VALIDATION_CHECK(this, false, "Unsupported auto broadcast specification");
+            }
         }
     }
 
     return std::make_tuple(element_type, pshape);
 }
 
-void Node::validate_and_infer_elementwise_arithmetic()
+void Node::validate_and_infer_elementwise_arithmetic(const op::AutoBroadcastSpec& autob)
 {
-    auto args_et_pshape = validate_and_infer_elementwise_args();
+    auto args_et_pshape = validate_and_infer_elementwise_args(autob);
     element::Type& args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
@@ -509,9 +617,9 @@ void Node::validate_and_infer_elementwise_arithmetic()
     set_output_type(0, args_et, args_pshape);
 }
 
-void Node::validate_and_infer_elementwise_logical()
+void Node::validate_and_infer_elementwise_logical(const op::AutoBroadcastSpec& autob)
 {
-    auto args_et_pshape = validate_and_infer_elementwise_args();
+    auto args_et_pshape = validate_and_infer_elementwise_args(autob);
     element::Type& args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 

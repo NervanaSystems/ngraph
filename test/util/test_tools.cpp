@@ -195,7 +195,7 @@ void init_int_tv<char>(ngraph::runtime::Tensor* tv,
     {
         element = static_cast<char>(dist(engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(char));
+    tv->write(vec.data(), vec.size() * sizeof(char));
 }
 
 template <>
@@ -211,7 +211,7 @@ void init_int_tv<int8_t>(ngraph::runtime::Tensor* tv,
     {
         element = static_cast<int8_t>(dist(engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(int8_t));
+    tv->write(vec.data(), vec.size() * sizeof(int8_t));
 }
 
 template <>
@@ -227,7 +227,7 @@ void init_int_tv<uint8_t>(ngraph::runtime::Tensor* tv,
     {
         element = static_cast<uint8_t>(dist(engine));
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(uint8_t));
+    tv->write(vec.data(), vec.size() * sizeof(uint8_t));
 }
 
 void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine)
@@ -303,7 +303,7 @@ string get_results_str(const std::vector<char>& ref_data,
     return ss.str();
 }
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);

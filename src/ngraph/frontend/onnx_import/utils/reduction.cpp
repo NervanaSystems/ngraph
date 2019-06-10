@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "exceptions.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "reduction.hpp"
 #include "utils/common.hpp"
 

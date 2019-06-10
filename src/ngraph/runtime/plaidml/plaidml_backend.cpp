@@ -22,8 +22,8 @@
 
 namespace vp = vertexai::plaidml;
 
-ngraph::runtime::plaidml::PlaidML_Backend::PlaidML_Backend(const char* configuration_string)
-    : m_config{parse_config_string(configuration_string)}
+ngraph::runtime::plaidml::PlaidML_Backend::PlaidML_Backend(const std::string& configuration_string)
+    : m_config(parse_config_string(configuration_string))
     , m_compiler{&m_config}
 {
 }
@@ -31,15 +31,14 @@ ngraph::runtime::plaidml::PlaidML_Backend::PlaidML_Backend(const char* configura
 std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backend::create_tensor(
     const ngraph::element::Type& element_type, const ngraph::Shape& shape)
 {
-    return std::make_shared<PlaidML_Tensor>(
-        this, &m_config, element_type, shape, "direct_data", nullptr);
+    return std::make_shared<PlaidML_Tensor>(&m_config, element_type, shape, "direct_data", nullptr);
 }
 
 std::shared_ptr<ngraph::runtime::Tensor> ngraph::runtime::plaidml::PlaidML_Backend::create_tensor(
     const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
     return std::make_shared<PlaidML_Tensor>(
-        this, &m_config, element_type, shape, "direct_data", memory_pointer);
+        &m_config, element_type, shape, "direct_data", memory_pointer);
 }
 
 std::shared_ptr<ngraph::runtime::Executable>
@@ -67,19 +66,4 @@ void ngraph::runtime::plaidml::PlaidML_Backend::remove_compiled_function(
     {
         m_cache.forget(std::move(plaidml_exec));
     }
-}
-
-extern "C" const char* get_ngraph_version_string()
-{
-    return NGRAPH_VERSION;
-}
-
-extern "C" ngraph::runtime::Backend* new_backend(const char* configuration_string)
-{
-    return new ngraph::runtime::plaidml::PlaidML_Backend{configuration_string};
-}
-
-extern "C" void delete_backend(ngraph::runtime::Backend* backend)
-{
-    delete backend;
 }

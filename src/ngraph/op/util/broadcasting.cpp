@@ -112,7 +112,7 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
 ///             The ranks of source_shape and output_shape must be equal. This means that the
 ///             source_shape has to be padded with ones for this operation.
 ///
-/// \param[in]  node          The input Node to be broadcasted.
+/// \param[in]  node          The input Node to be broadcast.
 /// \param[in]  output_shape  The output shape.
 /// \param[in]  source_shape  The source shape from which we want to broadcast input node.
 ///
@@ -123,6 +123,12 @@ static std::shared_ptr<ngraph::Node>
                                const ngraph::Shape& output_shape,
                                const ngraph::Shape& source_shape)
 {
+    // If node already has the required shape, return original node
+    if (output_shape == node->get_shape())
+    {
+        return node;
+    }
+
     if (source_shape.size() != output_shape.size())
     {
         NGRAPH_WARN << "Ranks of source_shape and output_shape dont match: " << source_shape.size()
@@ -171,13 +177,18 @@ namespace ngraph
             for (std::size_t i = 0; i < inputs.size(); ++i)
             {
                 const std::shared_ptr<ngraph::Node> input_node = inputs[i];
-
-                Shape source_shape = input_node->get_shape();
                 broadcasted_inputs.push_back(broadcast_node_numpy_style(
                     inputs[i], bcast_shapes.first, bcast_shapes.second[i]));
             }
-
             return broadcasted_inputs;
+        }
+
+        std::shared_ptr<ngraph::Node>
+            numpy_style_broadcast(const std::shared_ptr<ngraph::Node>& input_node,
+                                  const Shape& shape)
+        {
+            auto bcast_shape = get_numpy_broadcast_shapes({input_node->get_shape(), shape});
+            return broadcast_node_numpy_style(input_node, bcast_shape.first, bcast_shape.second[0]);
         }
 
         NodeVector
