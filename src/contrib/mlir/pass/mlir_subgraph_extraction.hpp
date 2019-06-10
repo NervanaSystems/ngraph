@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ namespace ngraph
             MLIRSubgraphExtractionPass() {}
             bool run_on_function(std::shared_ptr<Function> func) override;
             /// Checks if an ngraph node is supported by MLIR backend
-            /// Currently this check is only valid for CPU backend.
             bool is_supported_mlir_op(std::shared_ptr<Node> node);
 
         private:

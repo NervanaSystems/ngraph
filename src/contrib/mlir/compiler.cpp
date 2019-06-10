@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -161,12 +161,19 @@ mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
 // Converts an nGraph element type into an MLIR type.
 mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
 {
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+
     switch (type.get_type_enum())
     {
     case ngraph::element::Type_t::undefined:
     case ngraph::element::Type_t::dynamic:
     default: NGRAPH_FAIL() << "MLIR: Unsupported NGraph types"; break;
     case ngraph::element::Type_t::bf16: return mlir::NGFloatType::getBF16(&m_context);
+    case ngraph::element::Type_t::f16: return mlir::NGFloatType::getF16(&m_context);
     case ngraph::element::Type_t::f32: return mlir::NGFloatType::getF32(&m_context);
     case ngraph::element::Type_t::f64: return mlir::NGFloatType::getF64(&m_context);
     case ngraph::element::Type_t::i8: return mlir::NGIntegerType::getInt8(&m_context);
@@ -181,6 +188,10 @@ mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
     }
     NGRAPH_FAIL() << "Unreachable";
     return mlir::Type();
+
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic pop
+#endif
 }
 
 void MLIRCompiler::update_tensor_value(descriptor::Tensor* tensor, mlir::Value* value)

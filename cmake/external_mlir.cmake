@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,26 +29,23 @@ set(MLIR_BUILD_DIR ${MLIR_LLVM_ROOT}/build)
 
 # MLIR has to be pre-built before ngraph build starts
 # this will clone and build MLIR during cmake config instead
-find_program(NINJA ninja)
-if (NINJA)
-    configure_file(${CMAKE_SOURCE_DIR}/cmake/mlir_fetch.cmake.in ${MLIR_PROJECT_ROOT}/CMakeLists.txt)
-    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-    # clone and build llvm
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir_llvm
-                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+configure_file(${CMAKE_SOURCE_DIR}/cmake/mlir_fetch.cmake.in ${MLIR_PROJECT_ROOT}/CMakeLists.txt)
+execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+                WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-    # clone and build mlir
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir
-                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+# clone and build llvm
+execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir_llvm
+                WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-    # point find_package to the pre-built libs
-    set(LLVM_DIR ${MLIR_LLVM_ROOT}/build/lib/cmake/llvm)
+# clone and build mlir
+execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir
+                WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-    set(MLIR_SRC_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
-    set(MLIR_BIN_INCLUDE_PATH ${MLIR_BUILD_DIR}/projects/mlir/include)
-    set(MLIR_INCLUDE_PATHS  ${MLIR_SRC_INCLUDE_PATH};${MLIR_BIN_INCLUDE_PATH})
-else()
-    message(FATAL_ERROR "Cannot find ninja. Cannot build with NGRAPH_MLIR_ENABLE=ON")
-endif()
+# point find_package to the pre-built libs
+set(LLVM_DIR ${MLIR_LLVM_ROOT}/build/lib/cmake/llvm)
+
+set(MLIR_SRC_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
+set(MLIR_BIN_INCLUDE_PATH ${MLIR_BUILD_DIR}/projects/mlir/include)
+set(MLIR_INCLUDE_PATHS  ${MLIR_SRC_INCLUDE_PATH};${MLIR_BIN_INCLUDE_PATH})
+

@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,9 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     {
         // All ops must be supported by MLIR compiler
         if (!is_supported_mlir_op(op))
+        {
             return false;
+        }
 
         if (TI(Parameter) != TI(*op) && TI(Result) != TI(*op))
         {
@@ -52,7 +54,9 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
     NodeVector ck_outputs = std::move(get_subgraph_outputs(ck_ops, {} /*exclusions*/));
     if (ck_outputs.size() != 1)
+    {
         return false;
+    }
 
     auto ck = std::make_shared<CompiledKernel>(ck_ops, ck_outputs, ck_args);
 
@@ -81,11 +85,15 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
 {
     if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
+    {
         return true;
+    }
 
     // supported by backend ?
     if (m_supported_ops.find(TI(*node)) == m_supported_ops.end())
+    {
         return false;
+    }
 
     // check on invariants expected by MLIR backend
 
@@ -93,7 +101,9 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     if (TI(ngraph::op::Dot) == TI(*node))
     {
         if (node->get_input_shape(0).size() != 2 || node->get_input_shape(1).size() != 2)
+        {
             return false;
+        }
     }
     return true;
 }

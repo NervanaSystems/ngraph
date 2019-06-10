@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,35 +50,35 @@ if (NGRAPH_MLIR_ENABLE)
     
     # Link MLIR libs
     target_link_libraries(
-      mlir_backend PRIVATE 
-      MLIRAnalysis
-      MLIREDSC
-      MLIRExecutionEngine
-      MLIRIR
-      MLIRLLVMIR
-      MLIRParser
-      MLIRPass
-      MLIRTargetLLVMIR
-      MLIRTransforms
-      MLIRSupport
+        mlir_backend PRIVATE 
+        MLIRAnalysis
+        MLIREDSC
+        MLIRExecutionEngine
+        MLIRIR
+        MLIRLLVMIR
+        MLIRParser
+        MLIRPass
+        MLIRTargetLLVMIR
+        MLIRTransforms
+        MLIRSupport
     )
     # some libs need whole archive linkage because of Globals static initialization
     function(whole_archive_link target)
-      if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
-        set(link_flags "-Llib -Wl,-all_load ")
-        FOREACH(LIB ${ARGN})
-          string(CONCAT link_flags ${link_flags} "${LIB}")
-        ENDFOREACH(LIB)
-      else()
-        set(link_flags "-Llib -Wl,--whole-archive,")
-        FOREACH(LIB ${ARGN})
-          string(CONCAT link_flags ${link_flags} "${LIB},")
-        ENDFOREACH(LIB)
-        string(CONCAT link_flags ${link_flags} "--no-whole-archive")
-      endif()
-      message(STATUS "MLIR Ops link flag: ${link_flags}" )
+        if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+            set(link_flags "-Llib -Wl,-all_load ")
+            FOREACH(LIB ${ARGN})
+                string(CONCAT link_flags ${link_flags} "${LIB}")
+            ENDFOREACH(LIB)
+        else()
+            set(link_flags "-Llib -Wl,--whole-archive,")
+            FOREACH(LIB ${ARGN})
+                string(CONCAT link_flags ${link_flags} "${LIB},")
+            ENDFOREACH(LIB)
+            string(CONCAT link_flags ${link_flags} "--no-whole-archive")
+        endif()
+        message(STATUS "MLIR Ops link flag: ${link_flags}" )
 
-      set_target_properties(${target} PROPERTIES LINK_FLAGS ${link_flags})
+        set_target_properties(${target} PROPERTIES LINK_FLAGS ${link_flags})
     endfunction(whole_archive_link)
 
     whole_archive_link(mlir_backend
@@ -87,8 +87,8 @@ if (NGRAPH_MLIR_ENABLE)
     )
     # Link LLVM libs
     target_link_libraries(
-      mlir_backend PRIVATE 
-      ${llvm_libs}
+        mlir_backend PRIVATE 
+        ${llvm_libs}
     )
 
     # Link ngraph 
@@ -102,17 +102,14 @@ if (NGRAPH_MLIR_ENABLE)
         tablegen(MLIR ${ARGV} "-I${MLIR_SRC_INCLUDE_PATH}" "-I${MLIR_BIN_INCLUDE_PATH}")
         set(TABLEGEN_OUTPUT ${TABLEGEN_OUTPUT} ${CMAKE_CURRENT_BINARY_DIR}/${ofn} PARENT_SCOPE)
     endfunction()
-    
 
     set(MLIR_TABLEGEN_EXE mlir-tblgen)
-
     set(LLVM_TARGET_DEFINITIONS dialect/ops.td)
-    
+
     ngraph_tablegen(ops.h.inc -gen-op-decls)
     ngraph_tablegen(ops.cpp.inc -gen-op-defs)
-    
+
     add_public_tablegen_target(ngraph_ops_gen)
     add_dependencies(mlir_backend ngraph_ops_gen)
     target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-
-endif()    
+endif()

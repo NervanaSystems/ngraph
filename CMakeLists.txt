@@ -190,10 +190,10 @@ if (NGRAPH_CPU_ENABLE
     set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
 endif()
 
-if (NGRAPH_MLIR_ENABLE)
+if (NGRAPH_MLIR_ENABLE AND (NOT NGRAPH_DEX_ONLY))
     #disable code-gen due to sym collision with LLVM
-    message(STATUS "Forcing NGRAPH_DEX_ONLY to ON")
-    set(NGRAPH_DEX_ONLY ON)
+    message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON.\n"
+                        "Use -DNGRAPH_DEX_ONLY=ON and try again. \n")
 endif()
 
 if (NGRAPH_DISTRIBUTED_ENABLE)
