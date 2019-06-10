@@ -44,7 +44,9 @@ namespace ngraph
             else if (type == element::f16)
             {
                 val = std::make_shared<ngraph::op::Constant>(
-                    type, ngraph::Shape{}, std::vector<ngraph::float16>{ngraph::float16(static_cast<float>(num))});
+                    type,
+                    ngraph::Shape{},
+                    std::vector<ngraph::float16>{ngraph::float16(static_cast<float>(num))});
             }
             else if (type == element::i64)
             {
