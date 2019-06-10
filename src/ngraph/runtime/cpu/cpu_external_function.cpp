@@ -939,7 +939,8 @@ using namespace ngraph::runtime;
                 // Always enable nodes computing output tensors or nodes whose outputs might get
                 // overwritten due to inplace kernels
                 // TODO (jbobba) - Do we need to handle cacheability
-                if (computes_result(node.get()) || possibly_overwritten(node.get()))
+                if (computes_result(node.get()) || possibly_overwritten(node.get()) ||
+                    has_state(node))
                 {
                     writer << " || 1";
                 }
@@ -1442,7 +1443,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         bool disable_caching =
             (reuse_memory &&
              !cacheable) // Check cacheability only if we are reusing intermediate tensors
-            || computes_result(node.get()) || possibly_overwritten(node.get());
+            || computes_result(node.get()) || possibly_overwritten(node.get()) || has_state(node);
 
         vector<reference_wrapper<bool>> in_stale, out_stale;
         for (const auto& name : in_names)
