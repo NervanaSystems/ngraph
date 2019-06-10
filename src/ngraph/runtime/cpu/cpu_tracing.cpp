@@ -19,7 +19,7 @@
 
 #include "cpu_tracing.hpp"
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 void ngraph::runtime::cpu::to_json(nlohmann::json& json, const TraceEvent& event)
 {
     std::map<std::string, std::string> args;
