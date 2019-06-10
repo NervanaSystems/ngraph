@@ -41,7 +41,6 @@ namespace ngraph
 
                 size_t element_count = out[0].get_size();
 
-                //auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name()); //shape
                 auto arg2_buffer_index =
                     external_function->get_buffer_index(args[2].get_name()); //use_seed
                 auto arg3_buffer_index =
