@@ -22,6 +22,26 @@ namespace ngraph
 {
     namespace op
     {
+        struct PriorBoxClusteredAttrs
+        {
+            // num_priors     Number of prior boxes
+            // widths         Desired widths of prior boxes
+            // heights        Desired heights of prior boxes
+            // clip           Clip output to [0,1]
+            // step_widths    Distance between prior box centers
+            // step_heights   Distance between prior box centers
+            // offset         Box offset relative to top center of image
+            // variances      Values to adjust prior boxes with
+            size_t num_priors;
+            std::vector<float> widths;
+            std::vector<float> heights;
+            bool clip = false;
+            float step_widths = 1.0f;
+            float step_heights = 1.0f;
+            float offset = 0.0f;
+            std::vector<float> variances;
+        };
+
         /// \brief Layer which generates prior boxes of specified sizes
         /// normalized to input image size
         class PriorBoxClustered : public Op
@@ -31,39 +51,19 @@ namespace ngraph
             ///
             /// \param layer_shape    Shape of layer for which prior boxes are computed
             /// \param image_shape    Shape of image to which prior boxes are scaled
-            /// \param num_priors     Number of prior boxes
-            /// \param widths         Desired widths of prior boxes
-            /// \param heights        Desired heights of prior boxes
-            /// \param clip           Clip output to [0,1]
-            /// \param step_widths    Distance between prior box centers
-            /// \param step_heights   Distance between prior box centers
-            /// \param offset         Box offset relative to top center of image
-            /// \param variances      Values to adjust prior boxes with
+            /// \param attrs          PriorBoxClustered attributes
             PriorBoxClustered(const std::shared_ptr<Node>& layer_shape,
                               const std::shared_ptr<Node>& image_shape,
-                              const size_t num_priors,
-                              const std::vector<float>& widths,
-                              const std::vector<float>& heights,
-                              const bool clip,
-                              const float step_widths,
-                              const float step_heights,
-                              const float offset,
-                              const std::vector<float>& variances);
+                              const PriorBoxClusteredAttrs& attrs);
 
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            const PriorBoxClusteredAttrs& get_attrs() const { return m_attrs; }
         private:
-            size_t m_num_priors;
-            std::vector<float> m_widths;
-            std::vector<float> m_heights;
-            bool m_clip;
-            float m_step_widths;
-            float m_step_heights;
-            float m_offset;
-            std::vector<float> m_variances;
+            PriorBoxClusteredAttrs m_attrs;
         };
     }
 }

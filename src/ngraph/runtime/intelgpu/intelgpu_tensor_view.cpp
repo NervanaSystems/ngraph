@@ -47,28 +47,26 @@ runtime::intelgpu::IntelGPUTensorView::IntelGPUTensorView(const element::Type& e
     }
 }
 
-void runtime::intelgpu::IntelGPUTensorView::write(const void* source,
-                                                  size_t tensor_offset,
-                                                  size_t n)
+void runtime::intelgpu::IntelGPUTensorView::write(const void* source, size_t n)
 {
-    if (tensor_offset + n > ocl_memory->size())
+    if (n > ocl_memory->size())
     {
         throw out_of_range("write access past end of tensor");
     }
 
     auto ptr = ocl_memory->pointer<char>();
     char* target = ptr.data();
-    memcpy(&target[tensor_offset], source, n);
+    memcpy(target, source, n);
 }
 
-void runtime::intelgpu::IntelGPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::intelgpu::IntelGPUTensorView::read(void* target, size_t n) const
 {
-    if (tensor_offset + n > ocl_memory->size())
+    if (n > ocl_memory->size())
     {
         throw out_of_range("read access past end of tensor");
     }
 
     const auto ptr = ocl_memory->pointer<char>();
     const char* source = ptr.data();
-    memcpy(target, &source[tensor_offset], n);
+    memcpy(target, source, n);
 }

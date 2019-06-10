@@ -30,6 +30,7 @@ namespace ngraph
         /// | ------ | --------------------------------- | ------------------------------------------------------ |
         /// | `arg0` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and element type.                |
         /// | `arg1` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same shape and element type as `arg0`. |
+        /// | `autob`| AutoBroadcastSpec                 | Auto broadcast specification.                          |
         ///
         /// ## Output
         ///
@@ -43,7 +44,10 @@ namespace ngraph
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            Equal(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            /// \param autob Auto broadcast specification
+            Equal(const std::shared_ptr<Node>& arg0,
+                  const std::shared_ptr<Node>& arg1,
+                  const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

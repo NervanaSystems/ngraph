@@ -395,8 +395,13 @@ namespace ngraph
                     std::unique_ptr<convolution_forward::desc> fwd_desc{nullptr};
                     auto convolution_algo = mkldnn_utils::get_conv_algo();
 
-                    if (node->get_input_element_type(0) != element::f32 &&
-                        convolution_algo != mkldnn::algorithm::convolution_direct)
+                    // I/p channels less than 8 & convolution_algo = convolution_auto
+                    // forces src format to be nChw16c & the weight format to be
+                    // OIhw16i16o which invokes mkldnn reference implementation of conv
+                    // which crashes as it has no support for post ops
+                    if ((node->get_input_element_type(0) != element::f32 &&
+                         convolution_algo != mkldnn::algorithm::convolution_direct) ||
+                        arg0_shape[1] <= 8)
                     {
                         convolution_algo = mkldnn::algorithm::convolution_direct;
                     }

@@ -23,15 +23,23 @@
 
 namespace py = pybind11;
 
+static void read_(ngraph::runtime::Tensor* self, void* p, size_t n)
+{
+    self->read(p, n);
+}
+
+static void write_(ngraph::runtime::Tensor* self, void* p, size_t n)
+{
+    self->write(p, n);
+}
+
 void regclass_pyngraph_runtime_Tensor(py::module m)
 {
     py::class_<ngraph::runtime::Tensor, std::shared_ptr<ngraph::runtime::Tensor>> tensor(m,
                                                                                          "Tensor");
     tensor.doc() = "ngraph.impl.runtime.Tensor wraps ngraph::runtime::Tensor";
-    tensor.def("write",
-               (void (ngraph::runtime::Tensor::*)(const void*, size_t, size_t)) &
-                   ngraph::runtime::Tensor::write);
-    tensor.def("read", &ngraph::runtime::Tensor::read);
+    tensor.def("write", &write_);
+    tensor.def("read", &read_);
 
     tensor.def_property_readonly("shape", &ngraph::runtime::Tensor::get_shape);
     tensor.def_property_readonly("element_count", &ngraph::runtime::Tensor::get_element_count);

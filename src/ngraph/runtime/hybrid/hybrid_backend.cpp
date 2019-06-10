@@ -31,13 +31,13 @@ shared_ptr<runtime::Tensor>
     runtime::hybrid::HybridBackend::create_tensor(const element::Type& element_type,
                                                   const Shape& shape)
 {
-    return make_shared<HybridTensor>(element_type, shape);
+    return m_backend_list[0]->create_tensor(element_type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::hybrid::HybridBackend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<HybridTensor>(element_type, shape, memory_pointer);
+    return m_backend_list[0]->create_tensor(element_type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Executable>

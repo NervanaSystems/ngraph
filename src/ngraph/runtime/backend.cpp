@@ -85,3 +85,8 @@ bool runtime::Backend::is_supported_property(const Property prop) const
 void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec)
 {
 }
+
+std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_stream)
+{
+    throw runtime_error("load opertion unimplemented.");
+}

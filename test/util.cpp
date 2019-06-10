@@ -537,3 +537,100 @@ TEST(util, enum_mask_operators)
     EXPECT_EQ(false, n[Type::d]);
     EXPECT_EQ(true, n[Type::b]);
 }
+
+TEST(graph, huge)
+{
+    Function* f;
+    std::vector<std::weak_ptr<Node>> weak_nodes;
+    {
+        auto param = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+        std::shared_ptr<Node> n = param;
+        for (size_t i = 0; i < 1000000; i++)
+        {
+            n = make_shared<op::Negative>(n);
+        }
+        f = new Function(NodeVector{n}, ParameterVector{param});
+        for (auto node : f->get_ops())
+        {
+            weak_nodes.push_back(node);
+        }
+    }
+
+    delete f;
+
+    for (auto weak_node : weak_nodes)
+    {
+        EXPECT_TRUE(weak_node.expired());
+    }
+}
+
+TEST(util, apply_permutation)
+{
+    ASSERT_EQ(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{2, 1, 0, 3}), (Shape{2, 1, 0, 3}));
+}
+
+TEST(util, apply_permutation_too_short_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2}), CheckFailure);
+}
+
+TEST(util, apply_permutation_too_long_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 3, 3}), CheckFailure);
+}
+
+TEST(util, apply_permutation_oob_axis_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 4}), CheckFailure);
+}
+
+TEST(util, apply_permutation_repeated_axis_fails)
+{
+    ASSERT_THROW(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{0, 1, 2, 2}), CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape)
+{
+    ASSERT_TRUE(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{2, 1, 0, 3})
+            .same_scheme(PartialShape{2, Dimension::dynamic(), 0, 3}));
+}
+
+TEST(util, apply_permutation_pshape_rank_dynamic)
+{
+    ASSERT_TRUE(apply_permutation(PartialShape::dynamic(), AxisVector{2, 1, 0, 3})
+                    .same_scheme(PartialShape::dynamic()));
+}
+
+TEST(util, apply_permutation_pshape_too_short_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_too_long_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 3, 3}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_oob_axis_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 4}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_repeated_axis_fails)
+{
+    ASSERT_THROW(
+        apply_permutation(PartialShape{0, Dimension::dynamic(), 2, 3}, AxisVector{0, 1, 2, 2}),
+        CheckFailure);
+}
+
+TEST(util, apply_permutation_pshape_rank_dynamic_inviable_permutation_fails)
+{
+    ASSERT_THROW(apply_permutation(PartialShape::dynamic(), AxisVector{0, 1, 2, 2}), CheckFailure);
+}

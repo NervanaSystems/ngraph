@@ -14,6 +14,16 @@
 # limitations under the License.
 # ******************************************************************************
 
+add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
+
+if(NOT NGRAPH_UNIT_TEST_ENABLE)
+    message(STATUS "unit tests disabled")
+    add_subdirectory(util)
+    return()
+endif()
+
+message(STATUS "unit tests enabled")
+
 if(LINUX)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 endif()
@@ -22,12 +32,13 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER "4.0.0")
         # gtest has issues with this with v1.8.x
         # gtest issue is supposed to be addressed after v1.8.x
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-zero-as-null-pointer-constant")
+        add_compile_options(-Wno-zero-as-null-pointer-constant)
     endif()
 endif()
 
 set(SRC
     algebraic_simplification.cpp
+    aligned_buffer.cpp
     all_close_f.cpp
     assertion.cpp
     bfloat16.cpp
@@ -41,6 +52,7 @@ set(SRC
     copy.cpp
     cpio.cpp
     cse.cpp
+    dyn_elimination.cpp
     element_type.cpp
     file_util.cpp
     float16.cpp
@@ -62,7 +74,7 @@ set(SRC
     reshape_elimination.cpp
     reshape_sinking.cpp
     shape.cpp
-    specialize_shapes.cpp
+    specialize_function.cpp
     tensor.cpp
     type_prop.cpp
     type_prop_layers.cpp
@@ -125,8 +137,7 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
 endif()
 
-add_subdirectory(models)
-add_subdirectory(files)
+add_definitions("-DTEST_FILES=\"${CMAKE_CURRENT_SOURCE_DIR}/files\"")
 add_subdirectory(util)
 
 # backend specific test files must meet the following requirements:
@@ -210,12 +221,11 @@ add_executable(unit-test ${SRC})
 
 target_include_directories(unit-test PRIVATE ".")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCURDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DJSON_INCLUDES=\\\"${JSON_INCLUDE_DIR}\\\"")
+add_definitions("-DCURDIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
+add_definitions("-DJSON_INCLUDES=\"${JSON_INCLUDE_DIR}\"")
 
 if(NGRAPH_ADDRESS_SANITIZER)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
+    add_compile_options(-g -fsanitize=address -fno-omit-frame-pointer)
 endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
