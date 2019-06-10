@@ -48,7 +48,7 @@ TEST(type_prop_layers, detection_output)
     auto aux_class_preds = make_shared<op::Parameter>(element::f32, Shape{2, 1, 4, 5});
     auto aux_box_preds = make_shared<op::Parameter>(element::f32, Shape{2, 1, 4, 5});
     op::DetectionOutputAttrs attrs;
-    attrs.boxes_top_k = {200};
+    attrs.keep_top_k = {200};
     auto op = make_shared<op::DetectionOutput>(
         box_logits, class_preds, proposals, aux_class_preds, aux_box_preds, attrs);
     ASSERT_EQ(op->get_shape(), (Shape{1, 1, 800, 7}));
@@ -57,43 +57,24 @@ TEST(type_prop_layers, detection_output)
 TEST(type_prop_layers, interpolate)
 {
     auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
-
-    op::InterpolateAttrs attrs1;
-    attrs1.height = 257;
-    attrs1.width = 513;
-    auto op1 = make_shared<op::Interpolate>(image, attrs1);
-    ASSERT_EQ(op1->get_shape(), (Shape{2, 2, 257, 513}));
-
-    op::InterpolateAttrs attrs2;
-    attrs2.scale_factor = 2;
-    attrs2.width = 513;
-    auto op2 = make_shared<op::Interpolate>(image, attrs2);
-    ASSERT_EQ(op2->get_shape(), (Shape{2, 2, 66, 513}));
-
-    op::InterpolateAttrs attrs3;
-    attrs3.scale_factor = 2;
-    attrs3.height = 257;
-    auto op3 = make_shared<op::Interpolate>(image, attrs3);
-    ASSERT_EQ(op3->get_shape(), (Shape{2, 2, 257, 130}));
-}
-
-TEST(type_prop_layers, dyn_interpolate)
-{
-    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
-    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{4}, {4, 2, 15, 30});
+    auto dyn_output_shape = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
 
     op::InterpolateAttrs attrs;
-    attrs.height = 257;
-    attrs.width = 513;
-    auto op = make_shared<op::DynInterpolate>(image, output_shape, attrs);
-    ASSERT_EQ(op->get_shape(), (Shape{4, 2, 15, 30}));
+    attrs.axes = {2, 3};
+    auto op = make_shared<op::Interpolate>(image, output_shape, attrs);
+    ASSERT_EQ(op->get_shape(), (Shape{2, 2, 15, 30}));
+
+    EXPECT_TRUE(make_shared<op::Interpolate>(image, dyn_output_shape, attrs)
+                    ->get_output_partial_shape(0)
+                    .same_scheme(PartialShape{2, 2, Dimension::dynamic(), Dimension::dynamic()}));
 }
 
 TEST(type_prop_layers, prior_box1)
 {
     op::PriorBoxAttrs attrs;
-    attrs.min_sizes = {2.0f, 3.0f};
-    attrs.aspect_ratios = {1.0f, 2.0f, 0.5f};
+    attrs.min_size = {2.0f, 3.0f};
+    attrs.aspect_ratio = {1.0f, 2.0f, 0.5f};
 
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {32, 32});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
@@ -104,8 +85,8 @@ TEST(type_prop_layers, prior_box1)
 TEST(type_prop_layers, prior_box2)
 {
     op::PriorBoxAttrs attrs;
-    attrs.min_sizes = {2.0f, 3.0f};
-    attrs.aspect_ratios = {1.0f, 2.0f, 0.5f};
+    attrs.min_size = {2.0f, 3.0f};
+    attrs.aspect_ratio = {1.0f, 2.0f, 0.5f};
     attrs.flip = true;
 
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {32, 32});
@@ -117,11 +98,11 @@ TEST(type_prop_layers, prior_box2)
 TEST(type_prop_layers, prior_box3)
 {
     op::PriorBoxAttrs attrs;
-    attrs.min_sizes = {256.0f};
-    attrs.max_sizes = {315.0f};
-    attrs.aspect_ratios = {2.0f};
+    attrs.min_size = {256.0f};
+    attrs.max_size = {315.0f};
+    attrs.aspect_ratio = {2.0f};
     attrs.flip = true;
-    attrs.scale_all = true;
+    attrs.scale_all_sizes = true;
 
     auto layer_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 1});
     auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {300, 300});
