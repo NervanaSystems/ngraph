@@ -19,6 +19,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -14898,4 +14899,29 @@ TEST(type_prop, fake_quantize_invalid_rank)
                              std::string("must either be a scalar or a vector of size equal "
                                          "to number of channels."));
     }
+}
+
+TEST(type_prop, group_conv_transpose)
+{
+    // C x M / group x kH x kW
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{16, 2, 3, 3});
+    // N x C x H x W
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 16, 6, 6});
+    auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                          weights,
+                                                          Strides{1, 1},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{0, 0},
+                                                          CoordinateDiff{0, 0},
+                                                          CoordinateDiff{0, 0},
+                                                          2);
+    EXPECT_EQ(gct->get_element_type(), element::f32);
+    EXPECT_EQ(gct->get_shape(), (Shape{1, 4, 8, 8}));
+    EXPECT_EQ(gct->get_strides(), (Strides{1, 1}));
+    EXPECT_EQ(gct->get_dilations(), (Strides{1, 1}));
+    EXPECT_EQ(gct->get_padding_begin(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_padding_end(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_output_padding(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_groups(), size_t(2));
+    EXPECT_EQ(gct->get_pad_type(), op::PadType::EXPLICIT);
 }

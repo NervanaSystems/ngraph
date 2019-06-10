@@ -74,6 +74,7 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -1066,6 +1067,30 @@ static shared_ptr<ngraph::Function>
                                                          data_dilation_strides,
                                                          groups,
                                                          pad_type);
+                break;
+            }
+            case OP_TYPEID::GroupConvolutionTranspose:
+            {
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto dilations = node_js.at("dilations").get<vector<size_t>>();
+                auto padding_begin = node_js.at("padding_begin").get<vector<ptrdiff_t>>();
+                auto padding_end = node_js.at("padding_end").get<vector<ptrdiff_t>>();
+                auto output_padding = node_js.at("output_padding").get<vector<ptrdiff_t>>();
+                auto groups = node_js.at("groups").get<size_t>();
+
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
+
+                node = make_shared<op::GroupConvolutionTranspose>(args[0],
+                                                                  args[1],
+                                                                  strides,
+                                                                  dilations,
+                                                                  padding_begin,
+                                                                  padding_end,
+                                                                  output_padding,
+                                                                  groups,
+                                                                  pad_type);
                 break;
             }
             case OP_TYPEID::LeakyRelu:
@@ -2065,6 +2090,18 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        node["groups"] = tmp->get_groups();
+        node["pad_type"] = tmp->get_pad_type();
+        break;
+    }
+    case OP_TYPEID::GroupConvolutionTranspose:
+    {
+        auto tmp = dynamic_cast<const op::GroupConvolutionTranspose*>(&n);
+        node["strides"] = tmp->get_strides();
+        node["dilations"] = tmp->get_dilations();
+        node["padding_begin"] = tmp->get_padding_begin();
+        node["padding_end"] = tmp->get_padding_end();
+        node["output_padding"] = tmp->get_output_padding();
         node["groups"] = tmp->get_groups();
         node["pad_type"] = tmp->get_pad_type();
         break;
