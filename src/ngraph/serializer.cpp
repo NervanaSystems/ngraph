@@ -2026,7 +2026,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::GenerateMask:
     {
         auto tmp = dynamic_cast<const op::GenerateMask*>(&n);
-        node["output_shape"] = tmp->get_shape();
+        node["output_shape"] = tmp->get_mask_shape();
         node["type"] = write_element_type(tmp->get_element_type());
         node["use_seed"] = tmp->get_use_seed();
         node["seed"] = tmp->get_seed();

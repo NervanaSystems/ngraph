@@ -66,7 +66,7 @@ namespace ngraph
             }
 
             /// Deprecated accessor for transitional attributes
-            const Shape& get_shape() const { return m_shape; }
+            const Shape& get_mask_shape() const { return m_shape; }
             /// \brief Returns the probability of a trial generating 1 (i.e. an element being kept)
             double get_probability() const { return m_probability; }
             /// \brief Returns the seed value supplied to a random generator
