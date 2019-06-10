@@ -37,6 +37,30 @@ namespace ngraph
                     out[i] = training ? static_cast<T>(bd(gen)) : static_cast<T>(1);
                 }
             }
+
+            template <typename T>
+            void generate_mask_no_state(
+                T* out, size_t count, bool training, uint32_t seed, double prob)
+            {
+                std::minstd_rand msr;
+                msr.seed(seed);
+                std::uniform_int_distribution<> dist(0, 1);
+
+                if (training)
+                {
+                    for (size_t i = 0; i < count; i++)
+                    {
+                        out[i] = (static_cast<T>(dist(msr)) < prob) ? 0 : 1;
+                    }
+                }
+                else
+                {
+                    for (size_t i = 0; i < count; i++)
+                    {
+                        out[i] = static_cast<T>(1);
+                    }
+                }
+            }
         }
     }
 }
