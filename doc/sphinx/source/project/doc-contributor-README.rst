@@ -32,14 +32,14 @@ to your efforts on our `wiki`_.
 
 Another option is to fork the `ngraph repo`_, essentially snapshotting it at 
 that point in time, and to build a Jupyter\* notebook or other set of docs around 
-it for a specific use case.  Join our `channel`_ on Slack, and show us what you 
-did; new and novel applications may have their projects highlighted on 
-`ngraph.ai`_.   
+it for a specific use case. Add a note on our wiki to show us what you 
+did; new and novel applications may have their projects highlighted on an 
+upcoming `ngraph.ai`_ release.   
 
 
 .. note:: Please do not submit Jupyter* notebook code to the nGraph Library 
    or core repos; best practice is to maintain any project-specific examples, 
-   tests, or walk-throughs separately.
+   tests, or walk-throughs in a separate repository.
 
 
 Documenting source code examples 
