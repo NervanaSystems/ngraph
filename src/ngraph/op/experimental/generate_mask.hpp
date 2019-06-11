@@ -44,6 +44,8 @@ namespace ngraph
             double get_probability() const { return m_probability; }
             /// \brief Returns the seed value supplied to a random generator
             unsigned int get_seed() const { return m_seed; }
+            ///
+            bool has_state() const override { return true; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override

@@ -573,15 +573,6 @@ bool ngraph::possibly_overwritten(Node* node)
     return false;
 }
 
-bool ngraph::has_state(std::shared_ptr<Node>& node)
-{
-    if (std::dynamic_pointer_cast<op::GenerateMask>(node))
-    {
-        return true;
-    }
-    return false;
-}
-
 bool ngraph::is_strided(const Strides& strides)
 {
     return std::any_of(strides.begin(), strides.end(), [](size_t stride) { return stride != 1; });

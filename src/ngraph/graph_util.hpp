@@ -292,9 +292,6 @@ namespace ngraph
     // the output of this node with in-place kernels
     bool possibly_overwritten(Node* node);
 
-    // Return true if node has state.
-    bool has_state(std::shared_ptr<Node>& node);
-
     bool is_strided(const Strides& strides);
 
     bool is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t> valid_ranks);
