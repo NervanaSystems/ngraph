@@ -14,8 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(${CMAKE_VERSION} VERSION_LESS "3.2.0")
-    message(FATAL_ERROR "Halide requires at least CMake 3.2.0")
+if(${CMAKE_VERSION} VERSION_LESS "3.2")
+    message(FATAL_ERROR "Halide requires at least CMake 3.2")
 endif()
 
 include(ExternalProject)
