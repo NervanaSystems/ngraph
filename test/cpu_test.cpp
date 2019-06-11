@@ -30,6 +30,7 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/erf.hpp"
+#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
@@ -38,6 +39,7 @@
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -1730,6 +1732,168 @@ TEST(cpu_test, avg_pool_bprop_2d_2channel_2image)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
+TEST(cpu_test, tile_1d_with_zero_repeats)
+{
+    Shape shape_a{2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{1};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{0});
+    Shape shape_r{0};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(
+        test::all_close_f(vector<float>{}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_1d)
+{
+    Shape shape_a{2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{1};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2});
+    Shape shape_r{4};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{1, 2, 1, 2}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_2d_with_zero_repeats)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{2};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2, 0});
+    Shape shape_r{4, 0};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(
+        test::all_close_f(vector<float>{}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_2d_1axis)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{2};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{3, 1});
+    Shape shape_r{6, 2};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(vector<float>{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4},
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_2d_2axes)
+{
+    Shape shape_a{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{2};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{3, 3});
+    Shape shape_r{6, 6};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(
+        test::all_close_f(vector<float>{1, 2, 1, 2, 1, 2, 3, 4, 3, 4, 3, 4, 1, 2, 1, 2, 1, 2,
+                                        3, 4, 3, 4, 3, 4, 1, 2, 1, 2, 1, 2, 3, 4, 3, 4, 3, 4},
+                          read_vector<float>(result),
+                          MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tile_3d)
+{
+    Shape shape_a{2, 1, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_re{3};
+    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2, 2, 1});
+    Shape shape_r{4, 2, 3};
+
+    auto tile = make_shared<op::Tile>(A, repeats);
+
+    auto f = make_shared<Function>(tile, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(
+        vector<float>{1, 2, 3, 1, 2, 3, 4, 5, 6, 4, 5, 6, 1, 2, 3, 1, 2, 3, 4, 5, 6, 4, 5, 6},
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
+}
+
 TEST(cpu_test, scatter_add_1d_indices_in_place)
 {
     Shape ref_shape{2, 3, 3};
@@ -1798,4 +1962,97 @@ TEST(cpu_test, scatter_add_1d_indices_no_in_place)
         (vector<float>{0, 5, 10, 15, 20, 25, 30, 35, 40, 5, 10, 15, 20, 25, 30, 35, 40, 45}),
         read_vector<float>(result),
         MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(cpu_test, tensor_copy_from_interpreter_to_cpu)
+{
+    // This test the copying of data between the tensor's having
+    // CPUtensorview and no CPUtensorview
+    auto backend = runtime::Backend::create("CPU");
+    auto backend_ref = runtime::Backend::create("INTERPRETER");
+    auto a = backend_ref->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{2, 3});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(cpu_test, tensor_copy_from_different_shape)
+{
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{1, 3, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(cpu_test, tensor_copy_from_same_native_layouts)
+{
+    // this test copying of data between two tensor having same
+    // layout
+    auto backend = runtime::Backend::create("CPU");
+    auto a = backend->create_tensor(element::f32, Shape{2, 3});
+    auto b = backend->create_tensor(element::f32, Shape{2, 3});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    b->copy_from(*a);
+    ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
+}
+
+TEST(cpu_test, tensor_copy_from_same_rotated_layouts)
+{
+    auto A = make_shared<op::Parameter>(element::u8, Shape{2, 3});
+    auto f1 = make_shared<Function>(make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
+                                    ParameterVector{A});
+    auto B = make_shared<op::Parameter>(element::u8, Shape{2, 3});
+    auto f2 = make_shared<Function>(make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2}),
+                                    ParameterVector{B});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, Shape{2, 3});
+    copy_data(a, vector<uint8_t>{1, 2, 3, 4, 5, 6});
+    auto result1 = backend->create_tensor(element::u8, Shape{3, 2});
+    backend->compile(f1)->call_with_validate({result1}, {a});
+
+    auto b = backend->create_tensor(element::u8, Shape{2, 3});
+    copy_data(a, vector<uint8_t>{1, 1, 1, 1, 1, 1});
+    auto result2 = backend->create_tensor(element::u8, Shape{3, 2});
+    backend->compile(f2)->call_with_validate({result2}, {b});
+    // Both result1 and result2 will be in rotated layouts at this point.
+
+    result2->copy_from(*result1);
+
+    // Check internal values in rotated layout
+    auto result2_internal_buffer = reinterpret_cast<uint8_t*>(
+        static_pointer_cast<runtime::cpu::CPUTensorView>(result2)->get_data_ptr());
+    vector<uint8_t> vec(result2_internal_buffer, result2_internal_buffer + 6);
+    // This check can be removed if the CPU backend stops optimizing reshapes using layout transformations
+    EXPECT_EQ((vector<uint8_t>{1, 2, 3, 4, 5, 6}), vec);
+
+    // Check native layout
+    EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(result2));
+}
+
+TEST(cpu_test, tensor_copy_from_different_layout)
+{
+    auto A = make_shared<op::Parameter>(element::u8, Shape{2, 3});
+    auto f = make_shared<Function>(make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
+                                   ParameterVector{A});
+
+    auto backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, Shape{2, 3});
+    copy_data(a, vector<uint8_t>{1, 2, 3, 4, 5, 6});
+    auto result = backend->create_tensor(element::u8, Shape{3, 2});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+
+    auto b = backend->create_tensor(element::u8, Shape{3, 2});
+    b->copy_from(*result);
+
+    EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
 }

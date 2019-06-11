@@ -303,7 +303,7 @@ string get_results_str(const std::vector<char>& ref_data,
     return ss.str();
 }
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);
