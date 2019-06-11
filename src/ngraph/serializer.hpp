@@ -63,7 +63,7 @@ namespace ngraph
     void set_serialize_output_shapes(bool enable);
 }
 
-#ifndef NGRAPH_JSON_ENABLE
+#ifdef NGRAPH_JSON_DISABLE
 // Rather than making every reference to the serializer conditionally compile here we just
 // provide some null stubs to resolve link issues
 // The `inline` is so we don't get multiple definitions of function
