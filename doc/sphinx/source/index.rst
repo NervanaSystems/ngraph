@@ -13,10 +13,6 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-
-.. This documentation is available online at
-.. https://ngraph.nervanasys.com/docs/latest
-
 ######################
 nGraph Compiler stack 
 ######################
@@ -29,33 +25,22 @@ nGraph Compiler stack
   nGraph Compiler stack documentation for version |version|.
 
    Documentation for the latest (master) development branch can be found 
-   at https://docs.ngraph.ai/
+   at https://ngraph.nervanasys.com/docs/latest 
+   .. https://docs.ngraph.ai/
 
 .. only:: (development or daily)
 
    nGraph Compiler stack documentation for the master tree under development 
    (version |version|).
 
-For information about the changes and additions for releases, please
-consult the published :doc:`project/release-notes`.
+For information about the releases, see the :doc:`../project/release-notes`. 
 
 The nGraph Library and Compiler stack are provided under the `Apache 2.0 license`_ 
-(as found in the LICENSE file in the project's `GitHub repo`_). The nGraph 
-Library and Compiler stack may also import or reuse packages, scripts, and 
-other files that use other licensing.
+(found in the LICENSE file in the project's `GitHub repo`_). It may also import 
+or reference packages, scripts, and other files that use licensing.
 
-.. _Apache 2.0 license:
-   https://github.com/NervanaSystems/ngraph/blob/master/LICENSE
-
+.. _Apache 2.0 license: https://github.com/NervanaSystems/ngraph/blob/master/LICENSE
 .. _GitHub repo: https://github.com/NervanaSystems/ngraph
-
-
-
-
-   * :doc:`project/index` -- Introduction to the nGraph Compiler stack: Overview, Architecture, Features, and Licensing
-   * :doc:`frameworks/index` -- Getting Started with Frameworks
-   * :doc:`python_api/index` -- Python API 
-   * :doc:`backends/index` -- Developer Guides: Documentation and APIs for backend developers building custom hardware or frameworks on nGraph Core. 
 
 
 .. toctree::
@@ -77,6 +62,7 @@ other files that use other licensing.
    nGraph Core Ops <ops/index.rst>
    core/constructing-graphs/index.rst
    core/passes/passes.rst
+
    
 .. toctree::
    :maxdepth: 1

@@ -29,7 +29,7 @@
 .. |lambda|     unicode:: U+039B      .. Lambda Λ
 
 .. |vmlt|       unicode:: U+22D8      .. very much less than ⋘
-.. |vmgt|       unicode:: U+229       .. very much greater than ⋙
+.. |vmgt|       unicode:: U+22D9      .. very much greater than ⋙
 
 
 .. Miscellaneous IP-related substitutions

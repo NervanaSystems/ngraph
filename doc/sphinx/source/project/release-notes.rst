@@ -3,60 +3,46 @@
 Release Notes
 #############
 
-nGraph is provided as source code, APIs, build scripts, and some binary formats for 
-various Compiler stack configurations and use cases. 
+nGraph is provided as source code, APIs, build scripts, and some binary formats 
+for various Compiler stack configurations and use cases. 
 
-All project source code and documentation are maintained in a GitHub* repository.
+This page includes additional documentation updates.
 
-.. Begin release notes template
-   This is the `Release Notes` template for latest nGraph Compiler stack release versioning 
-
-We are pleased to announce the release of version |version|.
+We are pleased to announce the release of version |version|-doc.
 
 
-What's new?
------------
+0.21-doc
+--------
 
-Additional functionality included with this release:
+Documentation updates
+~~~~~~~~~~~~~~~~~~~~~
 
+Summary of documentation-related changes:
 
-
-
-What's updated?
----------------
-
-The following sections provide detailed lists of major updates and removals by component:
-
-
-Core
-~~~~
-
-
-
-Frameworks
-~~~~~~~~~~
++ Update :doc:`doc-contributor-README` for new community-based contributions. 
++ Added instructions on how to test or display the installed nGraph version.
++ Added instructions on building nGraph bridge (ngraph-bridge).
++ Updated Backend Developer Guides and ToC structure.
++ Tested documentation build on Clear Linux OS; it works.
++ Fixed a few links and redirs affected by filename changes.
++ Some coding adjustments for options to render math symbols, so they can be 
+  documented more clearly and without excessive JS (see replacements.txt).
++ Consistent filenaming on all BE indexes.
++ Remove deprecated TensorAPI.
 
 
+Core updates for |version|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Backends
-~~~~~~~~
++ The offset argument in tensor reads and writes has been removed
++ Save/load API
++ More ONNX ops
++ Better tensor creation
++ More shape support
++ Provenance improvements
++ offset arg for tensor creation is deprecated
++ static linking support
 
-
-
-Visualization Tools
-~~~~~~~~~~~~~~~~~~~
-
-
-
-Other
-~~~~~
-
-
-.. ----------------------------------------------------------------------------
-   End release notes template 
-
-
-For downloads formatted as ``.zip`` and ``tar.gz``, see https://github.com/NervanaSystems/ngraph/releases.
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
 
@@ -64,9 +50,17 @@ For downloads formatted as ``.zip`` and ``tar.gz``, see https://github.com/Nerva
 Changelog on Previous Releases
 ==============================
 
+For downloads formatted as ``.zip`` and ``tar.gz``, see 
+https://github.com/NervanaSystems/ngraph/releases.
 
+0.20
+----
 
-
++ Save/load API
++ More ONNX ops
++ Better tensor creation
++ More shape support
++ Provenance improvements
 
 
 0.19
@@ -114,7 +108,8 @@ Changelog on Previous Releases
 + Add code generation for some quantized ops
 + Preliminary dynamic shape support
 + initial distributed ops
-+ Pad op takes CoordinateDiff instead of Shape pad values to allow for negative padding.
++ Pad op takes CoordinateDiff instead of Shape pad values to allow for negative 
+  padding.
 
 
 0.16
@@ -133,6 +128,7 @@ Changelog on Previous Releases
 + Concat optimization
 + Doc updates
 
+.. _0.20.0-rc.0: https://github.com/NervanaSystems/ngraph/releases/tag/v0.20.0-rc.0_
 .. _0.19.0-rc.2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.19.0-rc.2_
 .. _0.18.1: https://github.com/NervanaSystems/ngraph/releases/tag/v0.18.1_
 .. _0.17.0-rc.1: `https://github.com/NervanaSystems/ngraph/releases/tag/v0.17.0-rc.1
