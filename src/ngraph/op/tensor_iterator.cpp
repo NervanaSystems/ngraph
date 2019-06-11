@@ -19,23 +19,6 @@
 using namespace std;
 using namespace ngraph;
 
-op::SliceInput::SliceInput(size_t argument_position,
-                           const std::shared_ptr<Parameter>& body_parameter,
-                           std::ptrdiff_t axis,
-                           std::ptrdiff_t start,
-                           std::ptrdiff_t stride,
-                           std::ptrdiff_t part_size,
-                           std::ptrdiff_t end)
-    : m_argument_position(argument_position)
-    , m_body_parameter(body_parameter)
-    , m_axis(axis)
-    , m_start(start)
-    , m_stride(stride)
-    , m_part_size(part_size)
-    , m_end(end)
-{
-}
-
 op::SliceOutput::SliceOutput(const Output<Node>& value,
                              size_t result_position,
                              std::ptrdiff_t axis,
@@ -64,14 +47,12 @@ op::TensorIterator::TensorIterator(const OutputVector& inputs,
                                    const OutputVector& initial_body_arguments,
                                    const OutputVector& body_arguments,
                                    const OutputVector& outputs,
-                                   std::vector<SliceInput> slice_inputs,
                                    std::vector<SliceOutput> slice_outputs)
     : Op(inputs)
     , m_body_parameters(body_parameters)
     , m_initial_body_arguments(initial_body_arguments)
     , m_body_arguments(body_arguments)
     , m_outputs(outputs)
-    , m_slice_inputs(slice_inputs)
     , m_slice_outputs(slice_outputs)
 {
 }
@@ -135,21 +116,6 @@ void op::TensorIterator::set_outputs(const OutputVector& outputs)
     m_outputs = outputs;
 }
 
-const std::vector<op::SliceInput>& op::TensorIterator::get_slice_inputs() const
-{
-    return m_slice_inputs;
-}
-
-std::vector<op::SliceInput>& op::TensorIterator::get_slice_inputs()
-{
-    return m_slice_inputs;
-}
-
-void op::TensorIterator::set_slice_inputs(const std::vector<op::SliceInput>& slice_inputs)
-{
-    m_slice_inputs = slice_inputs;
-}
-
 const std::vector<op::SliceOutput>& op::TensorIterator::get_slice_outputs() const
 {
     return m_slice_outputs;
@@ -172,7 +138,6 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
                                               m_initial_body_arguments,
                                               m_body_arguments,
                                               m_outputs,
-                                              m_slice_inputs,
                                               m_slice_outputs);
     result->set_arguments(new_args);
     return std::move(result);

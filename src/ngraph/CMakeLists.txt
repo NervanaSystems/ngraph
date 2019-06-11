@@ -274,6 +274,8 @@ set (SRC
     op/sinh.hpp
     op/slice.cpp
     op/slice.hpp
+    op/slice_input.cpp
+    op/slice_input.hpp
     op/softmax.cpp
     op/softmax.hpp
     op/sqrt.cpp

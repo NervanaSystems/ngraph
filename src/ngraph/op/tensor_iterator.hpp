@@ -23,32 +23,6 @@ namespace ngraph
 {
     namespace op
     {
-        struct SliceInput
-        {
-            /// \brief Describes how to slice an input for iteration
-            /// \param argument_position Selects the argument to slice
-            /// \param body_parameter Body parameter that receives the sliced input
-            /// \param axis The axis to slice along
-            /// \param start First index on axis of the slicing
-            /// \param stride Stepping of the slice
-            /// \param part_size Size of the slice on axis
-            /// \param end The last index on axis of the slicing
-            SliceInput(size_t argument_position,
-                       const std::shared_ptr<Parameter>& body_parameter,
-                       std::ptrdiff_t axis,
-                       std::ptrdiff_t start,
-                       std::ptrdiff_t stride,
-                       std::ptrdiff_t part_size,
-                       std::ptrdiff_t end);
-            size_t m_argument_position;
-            std::shared_ptr<Parameter> m_body_parameter;
-            std::ptrdiff_t m_axis;
-            std::ptrdiff_t m_start;
-            std::ptrdiff_t m_stride;
-            std::ptrdiff_t m_part_size;
-            std::ptrdiff_t m_end;
-        };
-
         struct SliceOutput
         {
             /// \brief Describes how to construct an output from slices
@@ -91,7 +65,6 @@ namespace ngraph
                            const OutputVector& initial_body_arguments,
                            const OutputVector& body_arguments,
                            const OutputVector& outputs,
-                           std::vector<SliceInput> slice_inputs,
                            std::vector<SliceOutput> slice_outputs);
 
             const ParameterVector& get_body_parameters() const;
@@ -110,10 +83,6 @@ namespace ngraph
             OutputVector& get_outputs();
             void set_outputs(const OutputVector& outputs);
 
-            const std::vector<SliceInput>& get_slice_inputs() const;
-            std::vector<SliceInput>& get_slice_inputs();
-            void set_slice_inputs(const std::vector<SliceInput>& slice_inputs);
-
             const std::vector<SliceOutput>& get_slice_outputs() const;
             std::vector<SliceOutput>& get_slice_outputs();
             void set_slice_outputs(const std::vector<SliceOutput>& slice_outputs);
@@ -125,7 +94,6 @@ namespace ngraph
             OutputVector m_initial_body_arguments;
             OutputVector m_body_arguments;
             OutputVector m_outputs;
-            std::vector<SliceInput> m_slice_inputs;
             std::vector<SliceOutput> m_slice_outputs;
         };
     }

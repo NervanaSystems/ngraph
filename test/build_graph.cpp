@@ -174,14 +174,15 @@ TEST(build_graph, tensor_iterator)
                                     make_shared<op::Broadcast>(bY, Shape{32, 5}, AxisSet{0}));
 
     // TensorIterator
+
+    // X, axis=1, start=0, stride=1, part_size=1, end=40
+    auto Xsliced = make_shared<op::SliceInput>(X, 1, 0, 1, 1, 40);
     auto tensor_iterator = make_shared<op::TensorIterator>(
-        OutputVector{X},                     // Inputs to TensorIterator
-        ParameterVector{Hi, Xi},             // Body parameters
-        OutputVector{Hinit, Output<Node>{}}, // Initial non-sliced body arguments
-        OutputVector{Ho, Output<Node>{}},    // Successive non-sliced body arguments
-        OutputVector{Output<Node>{}},        // Non-sliced outputs
-        // Argument 0 to Xi, axis=1, start=0, stride=1, part_size=1, end=40
-        std::vector<op::SliceInput>{{0, Xi, 1, 0, 1, 1, 40}},
+        OutputVector{X},              // Inputs to TensorIterator
+        ParameterVector{Hi, Xi},      // Body parameters
+        OutputVector{Hinit, Xsliced}, // Initial non-sliced body arguments
+        OutputVector{Ho, Xsliced},    // Successive non-sliced body arguments
+        OutputVector{Output<Node>{}}, // Non-sliced outputs
         // Body Y0 to op output 0, axis=1, start=0, stride=1, part_size=1, end=40
         std::vector<op::SliceOutput>{{Yo, 0, 1, 0, 1, 1, 40}});
 }
