@@ -115,19 +115,19 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
         size_t n_filters_channels{filters_shape.at(0)};
 
         // groups
+        NODE_VALIDATION_CHECK(this,
+                              (m_groups <= n_data_channels && m_groups <= n_filters_channels),
+                              "Incorrect value of groups: ",
+                              m_groups);
+        // filter channels
         NODE_VALIDATION_CHECK(
             this,
-            (m_groups >= 0 && m_groups <= n_data_channels && m_groups <= n_filters_channels),
-            "Incorrect value of groups: ",
-            m_groups);
+            n_filters_channels == n_data_channels,
+            "Number of filters channels must be equal to number of data channels.");
         // data channels
         NODE_VALIDATION_CHECK(this,
                               n_data_channels % m_groups == 0,
                               "Number of data channels not a multiple of group size.");
-        // filter channels
-        NODE_VALIDATION_CHECK(this,
-                              n_filters_channels % m_groups == 0,
-                              "Number of filters not a multiple of group size.");
         // padding
         NODE_VALIDATION_CHECK(
             this, m_pad_type == PadType::EXPLICIT, "Currently only eplicit pad type is supported.");
