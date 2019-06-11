@@ -110,4 +110,4 @@ model_dequantize_linear_1d_zero_scale_int8_4d
 model_quant_conv_linear
 
 # Need to update implementation
-divide_int32
+divide_python_rounding_int32
