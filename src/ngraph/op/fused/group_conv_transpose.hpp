@@ -73,7 +73,6 @@ namespace ngraph
             std::size_t get_groups() const { return m_groups; }
             const PadType& get_pad_type() const { return m_pad_type; }
             const Shape& get_output_shape() const { return m_output_shape; }
-
             virtual void pre_validate_and_infer_types() override;
             virtual NodeVector decompose_op() const override;
 
