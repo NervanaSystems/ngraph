@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(${CMAKE_VERSION} VERSION_LESS "3.3.0")
+    message(FATAL_ERROR "CODEGEN with prebuilt LLVM requires at least CMake 3.3.0")
+endif()
+
 include(ExternalProject)
 
 find_package(ZLIB REQUIRED)

@@ -196,7 +196,6 @@ if (NGRAPH_CPU_ENABLE)
         add_dependencies(cpu_backend codegen)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
-    target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
     if (NOT APPLE AND NOT MSVS)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the

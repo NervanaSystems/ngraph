@@ -44,4 +44,5 @@ ExternalProject_Add(
 #------------------------------------------------------------------------------
 
 ExternalProject_Get_Property(libeigen SOURCE_DIR)
-include_directories(${SOURCE_DIR})
+set(EIGEN_INCLUDE_DIR ${SOURCE_DIR})
+include_directories(${EIGEN_INCLUDE_DIR})
