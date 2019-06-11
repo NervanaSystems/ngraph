@@ -555,7 +555,7 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
         SOVERSION ${NGRAPH_API_VERSION})
 endif()
 if(NGRAPH_JSON_ENABLE)
-    target_link_libraries(ngraph PRIVATE libjson)
+    add_dependencies(ngraph libjson)
 endif()
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
 

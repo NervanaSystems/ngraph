@@ -169,16 +169,25 @@ if(WIN32)
         )
 endif()
 
-add_library(libmkl INTERFACE)
+if(WIN32)
+    add_library(libmkl STATIC IMPORTED)
+else()
+    add_library(libmkl SHARED IMPORTED)
+endif()
 add_dependencies(libmkl ext_mkl)
 if(WIN32)
-    target_link_libraries(libmkl INTERFACE
-        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLML_IMPLIB}
+    set_property(TARGET libmkl PROPERTY IMPORTED_LOCATION
+        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLML_IMPLIB})
+    set_property(TARGET libmkl PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES
         ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${OMP_IMPLIB})
 else()
-    target_link_libraries(libmkl INTERFACE
-        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
+    set_property(TARGET libmkl PROPERTY IMPORTED_LOCATION
+        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB})
+    set_property(TARGET libmkl PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES
         ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB})
+    if(LINUX)
+        set_property(TARGET libmkl PROPERTY IMPORTED_NO_SONAME 1)
+    endif()
 endif()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
@@ -300,19 +309,21 @@ ExternalProject_Add_Step(
     DEPENDERS configure
     )
 
-add_library(libmkldnn INTERFACE)
-add_dependencies(libmkldnn ext_mkldnn)
-target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 if (WIN32)
-    target_link_libraries(libmkldnn INTERFACE
-        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
-        libmkl
-    )
+    add_library(libmkldnn STATIC IMPORTED)
 else()
-    target_link_libraries(libmkldnn INTERFACE
-        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
-        libmkl
-    )
+    add_library(libmkldnn SHARED IMPORTED)
+endif()
+add_dependencies(libmkldnn ext_mkldnn)
+include_directories(${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
+if (WIN32)
+    set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB})
+    set_target_properties(libmkldnn PROPERTIES
+        IMPORTED_LINK_INTERFACE_LIBRARIES libmkl)
+else()
+    set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB})
+    set_target_properties(libmkldnn PROPERTIES
+        IMPORTED_LINK_INTERFACE_LIBRARIES libmkl)
 endif()
 
 if(WIN32)

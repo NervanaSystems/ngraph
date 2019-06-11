@@ -25,7 +25,8 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    target_link_libraries(gcpu_backend PRIVATE ngraph libeigen)
+    add_dependencies(gcpu_backend ngraph libeigen)
+    target_link_libraries(gcpu_backend PRIVATE ngraph)
 
     install(TARGETS gcpu_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"

@@ -25,10 +25,10 @@ set(EIGEN_GIT_URL https://github.com/eigenteam/eigen-git-mirror)
 #------------------------------------------------------------------------------
 
 # Revert prior changes to make incremental build work.
-set(EIGEN_PATCH_REVERT_COMMAND cd ${EXTERNAL_PROJECTS_ROOT}/eigen/src/ext_eigen && git reset HEAD --hard)
+set(EIGEN_PATCH_REVERT_COMMAND cd ${EXTERNAL_PROJECTS_ROOT}/eigen/src/libeigen && git reset HEAD --hard)
 
 ExternalProject_Add(
-    ext_eigen
+    libeigen
     PREFIX eigen
     GIT_REPOSITORY ${EIGEN_GIT_URL}
     GIT_TAG ${EIGEN_GIT_TAG}
@@ -43,7 +43,5 @@ ExternalProject_Add(
 
 #------------------------------------------------------------------------------
 
-ExternalProject_Get_Property(ext_eigen SOURCE_DIR)
-add_library(libeigen INTERFACE)
-target_include_directories(libeigen SYSTEM INTERFACE ${SOURCE_DIR})
-add_dependencies(libeigen ext_eigen)
+ExternalProject_Get_Property(libeigen SOURCE_DIR)
+include_directories(${SOURCE_DIR})

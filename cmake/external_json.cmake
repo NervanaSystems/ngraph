@@ -25,7 +25,7 @@ SET(JSON_GIT_REPO_URL https://github.com/nlohmann/json)
 SET(JSON_GIT_LABEL v3.5.0)
 
 ExternalProject_Add(
-    ext_json
+    libjson
     PREFIX json
     GIT_REPOSITORY ${JSON_GIT_REPO_URL}
     GIT_TAG ${JSON_GIT_LABEL}
@@ -39,7 +39,5 @@ ExternalProject_Add(
 
 #------------------------------------------------------------------------------
 
-ExternalProject_Get_Property(ext_json SOURCE_DIR)
-add_library(libjson INTERFACE)
-target_include_directories(libjson SYSTEM INTERFACE ${SOURCE_DIR}/include)
-add_dependencies(libjson ext_json)
+ExternalProject_Get_Property(libjson SOURCE_DIR)
+include_directories(${SOURCE_DIR}/include)
