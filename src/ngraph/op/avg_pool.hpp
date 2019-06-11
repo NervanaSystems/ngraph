@@ -113,8 +113,8 @@ namespace ngraph
             Strides m_window_movement_strides;
             Shape m_padding_below;
             Shape m_padding_above;
-            bool m_include_padding_in_avg_computation;
-            PadType m_pad_type;
+            bool m_include_padding_in_avg_computation{false};
+            PadType m_pad_type{PadType::EXPLICIT};
         };
 
         class AvgPoolBackprop : public Op
@@ -155,7 +155,7 @@ namespace ngraph
             Strides m_window_movement_strides;
             Shape m_padding_below;
             Shape m_padding_above;
-            bool m_include_padding_in_avg_computation;
+            bool m_include_padding_in_avg_computation{false};
         };
     }
 }
