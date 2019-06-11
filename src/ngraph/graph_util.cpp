@@ -255,7 +255,6 @@ std::list<std::shared_ptr<ngraph::Node>>
                 cloned_node->add_control_dependency(node_map.at(cdep.get()));
             }
 
-            // copy friendly name
             if (node->get_friendly_name() != node->get_name())
             {
                 // There is a friendly name for this node so copy it
