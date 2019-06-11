@@ -3977,14 +3977,12 @@ namespace ngraph
                 writer << "                " << out[0].get_size() << ",\n";
                 writer << "                state, training);\n";
                 writer << "}\n";
-                writer << "else {\n"
-                          "       reference::generate_mask_no_state(\n"
-                          "           "
-                       << out[0].get_name() << ",\n"
-                                               "           "
-                       << out[0].get_size() << ",\n"
-                                               "           training, seed, keep_prob);\n"
-                                               "}";
+                writer << "else {\n";
+                writer << "       reference::generate_mask_no_state(\n";
+                writer << "           " << out[0].get_name() << ",\n";
+                writer << "           " << out[0].get_size() << ",\n";
+                writer << "           training, seed, keep_prob);\n";
+                writer << "}\n";
                 writer.block_end();
             }
 

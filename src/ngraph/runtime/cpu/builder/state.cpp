@@ -67,7 +67,7 @@ namespace ngraph
                             static_cast<float*>(ctx->buffer_data[arg_buffer_index])[0]);
                         // TODO: get shape when required
                         bool use_seed = static_cast<bool>(
-                            static_cast<char*>(ctx->buffer_data[arg2_buffer_index])[0]);
+                            static_cast<int32_t*>(ctx->buffer_data[arg2_buffer_index])[0]);
                         uint64_t seed =
                             static_cast<uint64_t*>(ctx->buffer_data[arg3_buffer_index])[0];
                         double prob = static_cast<double*>(ctx->buffer_data[arg4_buffer_index])[0];
@@ -106,7 +106,7 @@ namespace ngraph
                             static_cast<double*>(ctx->buffer_data[arg_buffer_index])[0]);
                         // TODO: get shape when required
                         bool use_seed = static_cast<bool>(
-                            static_cast<char*>(ctx->buffer_data[arg2_buffer_index])[0]);
+                            static_cast<int32_t*>(ctx->buffer_data[arg2_buffer_index])[0]);
                         uint64_t seed =
                             static_cast<uint64_t*>(ctx->buffer_data[arg3_buffer_index])[0];
                         double prob = static_cast<double*>(ctx->buffer_data[arg4_buffer_index])[0];

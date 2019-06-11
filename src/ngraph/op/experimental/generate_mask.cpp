@@ -55,7 +55,7 @@ op::GenerateMask::GenerateMask(const Output<Node>& training,
 {
     set_argument(1, make_shared<op::Constant>(element::u64, Shape{shape.size()}, shape));
     set_argument(2,
-                 make_shared<op::Constant>(element::boolean, Shape{}, std::vector<char>{use_seed}));
+                 make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{use_seed}));
     set_argument(3, make_shared<op::Constant>(element::u64, Shape{}, std::vector<uint64_t>{seed}));
     set_argument(4, make_shared<op::Constant>(element::f64, Shape{}, std::vector<double>{prob}));
     constructor_validate_and_infer_types();

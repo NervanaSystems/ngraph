@@ -358,7 +358,7 @@ private:
         }
         case OP_TYPEID::GenerateMask:
         {
-            bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const char>()[0]);
+            bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const int32_t>()[0]);
             if (m_states.count(&node) == 0)
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
