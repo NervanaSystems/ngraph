@@ -25,8 +25,8 @@
 #include "ngraph/frontend/onnx_import/op/conv_transpose.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 

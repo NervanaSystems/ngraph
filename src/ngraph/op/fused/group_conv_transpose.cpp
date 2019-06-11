@@ -161,25 +161,6 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
 
 void op::GroupConvolutionTranspose::post_validate_and_infer_types()
 {
-    // auto data_shape = get_input_partial_shape(0);
-    // auto filters_shape = get_input_partial_shape(1);
-    // if (data_shape.is_static() && filters_shape.is_static())
-    // {
-    //     if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
-    //     {
-    //         m_padding_begin.clear();
-    //         m_padding_end.clear();
-    //         auto filter_shape = filters_shape.to_shape();
-    //         filter_shape.erase(filter_shape.begin(), filter_shape.begin() + 2); // Remove {O,I}
-    //         infer_auto_padding(data_shape.to_shape(),
-    //                            filter_shape,
-    //                            m_strides,
-    //                            m_dilations,
-    //                            m_pad_type,
-    //                            m_padding_end,
-    //                            m_padding_begin);
-    //     }
-    // }
 }
 
 shared_ptr<Node> op::GroupConvolutionTranspose::copy_with_new_args(const NodeVector& new_args) const
