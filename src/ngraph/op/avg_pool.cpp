@@ -52,6 +52,24 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
                      const Shape& padding_above,
+                     bool include_padding_in_avg_computation,
+                     const PadType& pad_type)
+    : AvgPool(arg,
+              window_shape,
+              window_movement_strides,
+              padding_below,
+              padding_above,
+              include_padding_in_avg_computation,
+              pad_type,
+              false)
+{
+}
+
+op::AvgPool::AvgPool(const Output<Node>& arg,
+                     const Shape& window_shape,
+                     const Strides& window_movement_strides,
+                     const Shape& padding_below,
+                     const Shape& padding_above,
                      bool include_padding_in_avg_computation)
     : AvgPool(arg,
               window_shape,
@@ -59,8 +77,7 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
               padding_below,
               padding_above,
               include_padding_in_avg_computation,
-              PadType::EXPLICIT,
-              false)
+              PadType::EXPLICIT)
 {
 }
 

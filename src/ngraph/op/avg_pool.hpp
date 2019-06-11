@@ -34,6 +34,7 @@ namespace ngraph
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a batched average pooling operation.
             AvgPool();
+
             /// \brief Constructs a batched average pooling operation.
             ///
             /// \param arg The output producing the input data batch tensor.<br>
@@ -58,7 +59,31 @@ namespace ngraph
                     const Shape& padding_above,
                     bool include_padding_in_avg_computation,
                     const PadType& pad_type,
-                    bool ceil_mode = false);
+                    bool ceil_mode);
+
+            /// \brief Constructs a batched average pooling operation.
+            ///
+            /// \param arg The output producing the input data batch tensor.<br>
+            /// `[d1, dn]`
+            /// \param window_shape The window shape.<br>
+            /// `[n]`
+            /// \param window_movement_strides The window movement strides.<br>
+            /// `[n]`
+            /// \param padding_below The below-padding shape.<br>
+            /// `[n]`
+            /// \param padding_above The above-padding shape.<br>
+            /// `[n]`
+            /// \param include_padding_in_avg_computation If true then averages include padding
+            ///  elements, each treated as the number zero.  If false, padding elements are entirely
+            ///  ignored when computing averages.
+            /// \param pad_type Padding type to use for additional padded dimensions
+            AvgPool(const Output<Node>& arg,
+                    const Shape& window_shape,
+                    const Strides& window_movement_strides,
+                    const Shape& padding_below,
+                    const Shape& padding_above,
+                    bool include_padding_in_avg_computation,
+                    const PadType& pad_type);
 
             /// \brief Constructs a batched average pooling operation.
             ///
