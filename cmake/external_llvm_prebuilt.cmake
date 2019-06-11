@@ -14,10 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(${CMAKE_VERSION} VERSION_LESS "3.3")
-    message(FATAL_ERROR "CODEGEN with prebuilt LLVM requires at least CMake 3.3")
-endif()
-
 include(ExternalProject)
 
 find_package(ZLIB REQUIRED)
@@ -74,7 +70,8 @@ set(INSTALL_DIR ${SOURCE_DIR})
 
 set(LLVM_LINK_LIBS
     # Do not change order of libraries !!!
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangTooling${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # First library will be listed separately as IMPORTED_LOCATION
+    #${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangTooling${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangCodeGen${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangFrontendTool${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangFrontend${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -153,7 +150,10 @@ else()
     set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} tinfo z m)
 endif()
 
-add_library(libllvm INTERFACE)
+add_library(libllvm UNKNOWN IMPORTED)
 add_dependencies(libllvm ext_llvm)
-target_include_directories(libllvm SYSTEM INTERFACE ${INSTALL_DIR}/include)
-target_link_libraries(libllvm INTERFACE ${LLVM_LINK_LIBS})
+set(LLVM_INCLUDE_DIR ${INSTALL_DIR}/include)
+include_directories(${LLVM_INCLUDE_DIR})
+set_property(TARGET libllvm PROPERTY IMPORTED_LOCATION
+    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangTooling${CMAKE_STATIC_LIBRARY_SUFFIX})
+set_property(TARGET libllvm PROPERTY INTERFACE_LINK_LIBRARIES ${LLVM_LINK_LIBS})

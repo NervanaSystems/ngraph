@@ -35,8 +35,6 @@ if(NOT WIN32)
    set_source_files_properties(compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
 endif()
 
-get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
-
 # find_file(HEADER_1 cmath HINTS /usr/include/c++/7)
 get_filename_component(CLANG_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/${NGRAPH_LLVM_VERSION}/include ABSOLUTE)
 
@@ -66,7 +64,6 @@ set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADE
 add_custom_target(header_resource
     resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
     DEPENDS resource_generator
-    BYPRODUCTS
 )
 if (NGRAPH_CPU_ENABLE)
     add_dependencies(header_resource libeigen libmkldnn)
