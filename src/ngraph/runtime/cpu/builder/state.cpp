@@ -48,13 +48,9 @@ namespace ngraph
                 auto arg4_buffer_index =
                     external_function->get_buffer_index(args[4].get_name()); //prob
 
-                auto seed = gm->get_seed();
-                if (!gm->get_use_seed())
-                {
-                    seed = 0; // OR fix this in the op
-                }
+                auto seed_attr = gm->get_use_seed() ? gm->get_seed() : 0;
                 auto index = external_function->add_state(
-                    ngraph::RNGState::create_rng_state(seed, gm->get_probability()));
+                    ngraph::RNGState::create_rng_state(seed_attr, gm->get_probability()));
 
                 if (args[0].get_element_type() == element::f32)
                 {

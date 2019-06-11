@@ -3964,10 +3964,23 @@ namespace ngraph
                 writer << "auto state = static_cast<ngraph::RNGState*>(ctx->states[" << index
                        << "]);\n";
                 writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
-                writer << "reference::generate_mask(";
-                writer << "            " << out[0].get_name() << ",\n";
-                writer << "            " << out[0].get_size() << ",\n";
-                writer << "            state, training);\n";
+                writer << "bool use_seed = static_cast<bool>(" << args[2].get_name() << "[0]);\n";
+                
+                writer << "uint64_t seed = static_cast<uint64_t>(" << args[3].get_name() << "[0]);\n";
+                writer << "double keep_prob = static_cast<double>(" << args[4].get_name() << "[0]);\n";
+                writer << "if (use_seed == false) \n";
+                writer << "{\n";
+                writer << "    reference::generate_mask(\n";
+                writer << "                " << out[0].get_name() << ",\n";
+                writer << "                " << out[0].get_size() << ",\n";
+                writer << "                state, training);\n";
+                writer << "}\n";
+                writer << "else {\n"\
+                "       reference::generate_mask_no_state(\n"\
+                "           " << out[0].get_name() << ",\n"\
+                "           " << out[0].get_size() << ",\n"\
+                "           training, seed, keep_prob);\n"\
+                "}";
                 writer.block_end();
             }
 
