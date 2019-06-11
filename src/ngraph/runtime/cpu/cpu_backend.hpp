@@ -62,7 +62,7 @@ namespace ngraph
                 void remove_compiled_function(std::shared_ptr<Executable> exec) override;
 
                 Allocator* get_host_memory_allocator() override;
-                void set_host_memory_allocator(Allocator* allocator) override;
+                void set_host_memory_allocator(std::unique_ptr<Allocator> allocator) override;
 
                 bool is_supported(const Node& node) const override;
                 bool is_supported_property(const Property prop) const override;

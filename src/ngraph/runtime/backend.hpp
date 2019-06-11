@@ -150,7 +150,7 @@ public:
 
     /// \brief Set the host memory allocator to be used by the backend
     /// \param allocator is pointer to host memory allocator object
-    virtual void set_host_memory_allocator(Allocator* allocator) {}
+    virtual void set_host_memory_allocator(std::unique_ptr<Allocator> allocator) {}
     /// \brief Returns memory allocator used by backend for device allocations
     virtual Allocator* get_device_memory_allocator()
     {
