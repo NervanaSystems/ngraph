@@ -177,12 +177,12 @@ TEST(build_graph, tensor_iterator)
 
     // X, axis=1, start=0, stride=1, part_size=1, end=40
     auto Xsliced = make_shared<op::SliceInput>(X, 1, 0, 1, 1, 40);
-    auto tensor_iterator = make_shared<op::TensorIterator>(
-        OutputVector{X},              // Inputs to TensorIterator
-        ParameterVector{Hi, Xi},      // Body parameters
-        OutputVector{Hinit, Xsliced}, // Initial non-sliced body arguments
-        OutputVector{Ho, Xsliced},    // Successive non-sliced body arguments
-        OutputVector{Yo});            // outputs
+    auto tensor_iterator =
+        make_shared<op::TensorIterator>(OutputVector{Xsliced},        // Inputs to TensorIterator
+                                        ParameterVector{Hi, Xi},      // Body parameters
+                                        OutputVector{Hinit, Xsliced}, // Initial body arguments
+                                        OutputVector{Ho, Xsliced},    // Successive body arguments
+                                        OutputVector{Yo});            // outputs
     // axis=1, start=0, stride=1, part_size=1, end=40
     auto Y = make_shared<op::SliceOutput>(tensor_iterator, 1, 0, 1, 1, 40);
 }
