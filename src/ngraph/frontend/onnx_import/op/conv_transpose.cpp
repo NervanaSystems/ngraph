@@ -54,7 +54,6 @@ namespace ngraph
                     ngraph::CoordinateDiff padding_below = paddings.first;
                     ngraph::CoordinateDiff padding_above = paddings.second;
 
-                    Strides data_dilation_strides(num_spatial_dims, 1);
                     std::vector<std::int64_t> output_shape{
                         node.get_attribute_value<std::vector<std::int64_t>>("output_shape", {})};
 
