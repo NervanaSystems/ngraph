@@ -150,3 +150,38 @@ TEST(build_graph, no_arg_construction)
     validate_nodes_and_infer_types(ops);
     ASSERT_EQ(add1->get_output_shape(0), Shape{7});
 }
+
+TEST(build_graph, tensor_iterator)
+{
+    // Common to all cells
+    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto Hinit = make_shared<op::Parameter>(element::f32, Shape{20});
+    auto WH = make_shared<op::Parameter>(element::f32, Shape{20, 20});
+    auto WX = make_shared<op::Parameter>(element::f32, Shape{10, 20});
+    auto bH = make_shared<op::Parameter>(element::f32, Shape{20});
+    auto WY = make_shared<op::Parameter>(element::f32, Shape{20, 5});
+    auto bY = make_shared<op::Parameter>(element::f32, Shape{5});
+
+    // Set up the cell body, a function from (Hi, Xi) -> (Ho, Yo)
+    // Cell parameters
+    auto Hi = make_shared<op::Parameter>(element::f32, Shape{32, 20});
+    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 10});
+
+    // Body
+    auto Ho = make_shared<op::Relu>(make_shared<op::Dot>(Xi, WX) + make_shared<op::Dot>(Hi, WH) +
+                                    make_shared<op::Broadcast>(bH, Shape{32, 20}, AxisSet{0}));
+    auto Yo = make_shared<op::Relu>(make_shared<op::Dot>(Ho, WY) +
+                                    make_shared<op::Broadcast>(bY, Shape{32, 5}, AxisSet{0}));
+
+    // TensorIterator
+    auto tensor_iterator = make_shared<op::TensorIterator>(
+        OutputVector{X},                     // Inputs to TensorIterator
+        ParameterVector{Hi, Xi},             // Body parameters
+        OutputVector{Hinit, Output<Node>{}}, // Initial non-sliced body arguments
+        OutputVector{Ho, Output<Node>{}},    // Successive non-sliced body arguments
+        OutputVector{Output<Node>{}},        // Non-sliced outputs
+        // Argument 0 to Xi, axis=1, start=0, stride=1, part_size=1, end=40
+        std::vector<op::SliceInput>{{0, Xi, 1, 0, 1, 1, 40}},
+        // Body Y0 to op output 0, axis=1, start=0, stride=1, part_size=1, end=40
+        std::vector<op::SliceOutput>{{Yo, 0, 1, 0, 1, 1, 40}});
+}

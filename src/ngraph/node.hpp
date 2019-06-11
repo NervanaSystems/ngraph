@@ -513,6 +513,12 @@ namespace ngraph
         {
         }
 
+        // A null output
+        Output()
+            : Output(nullptr, 0)
+        {
+        }
+
         /// \return A pointer to the node referred to by this output handle.
         NodeType* get_node() const { return m_node; }
         /// \return A `shared_ptr` to the node referred to by this output handle.
