@@ -19,23 +19,6 @@
 using namespace std;
 using namespace ngraph;
 
-op::SliceOutput::SliceOutput(const Output<Node>& value,
-                             size_t result_position,
-                             std::ptrdiff_t axis,
-                             std::ptrdiff_t start,
-                             std::ptrdiff_t stride,
-                             std::ptrdiff_t part_size,
-                             std::ptrdiff_t end)
-    : m_value(value)
-    , m_result_position(result_position)
-    , m_axis(axis)
-    , m_start(start)
-    , m_stride(stride)
-    , m_part_size(part_size)
-    , m_end(end)
-{
-}
-
 const string op::TensorIterator::type_name{"TensorIterator"};
 
 op::TensorIterator::TensorIterator()
@@ -46,14 +29,12 @@ op::TensorIterator::TensorIterator(const OutputVector& inputs,
                                    const ParameterVector& body_parameters,
                                    const OutputVector& initial_body_arguments,
                                    const OutputVector& body_arguments,
-                                   const OutputVector& outputs,
-                                   std::vector<SliceOutput> slice_outputs)
+                                   const OutputVector& outputs)
     : Op(inputs)
     , m_body_parameters(body_parameters)
     , m_initial_body_arguments(initial_body_arguments)
     , m_body_arguments(body_arguments)
     , m_outputs(outputs)
-    , m_slice_outputs(slice_outputs)
 {
 }
 
@@ -116,29 +97,10 @@ void op::TensorIterator::set_outputs(const OutputVector& outputs)
     m_outputs = outputs;
 }
 
-const std::vector<op::SliceOutput>& op::TensorIterator::get_slice_outputs() const
-{
-    return m_slice_outputs;
-}
-
-std::vector<op::SliceOutput>& op::TensorIterator::get_slice_outputs()
-{
-    return m_slice_outputs;
-}
-
-void op::TensorIterator::set_slice_outputs(const std::vector<op::SliceOutput>& slice_outputs)
-{
-    m_slice_outputs = slice_outputs;
-}
-
 std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
 {
-    auto result = make_shared<TensorIterator>(OutputVector{},
-                                              m_body_parameters,
-                                              m_initial_body_arguments,
-                                              m_body_arguments,
-                                              m_outputs,
-                                              m_slice_outputs);
+    auto result = make_shared<TensorIterator>(
+        OutputVector{}, m_body_parameters, m_initial_body_arguments, m_body_arguments, m_outputs);
     result->set_arguments(new_args);
     return std::move(result);
 }
