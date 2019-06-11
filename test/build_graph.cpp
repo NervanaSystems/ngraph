@@ -182,7 +182,7 @@ TEST(build_graph, tensor_iterator)
         ParameterVector{Hi, Xi},      // Body parameters
         OutputVector{Hinit, Xsliced}, // Initial non-sliced body arguments
         OutputVector{Ho, Xsliced},    // Successive non-sliced body arguments
-        OutputVector{Ho});            // outputs
+        OutputVector{Yo});            // outputs
     // axis=1, start=0, stride=1, part_size=1, end=40
     auto Y = make_shared<op::SliceOutput>(tensor_iterator, 1, 0, 1, 1, 40);
 }
