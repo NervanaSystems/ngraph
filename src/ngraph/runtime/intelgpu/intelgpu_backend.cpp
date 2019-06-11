@@ -86,6 +86,7 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -2063,6 +2064,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::GatherND:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::GRN:
+        case OP_TYPEID::GroupConvolutionTranspose:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::LeakyRelu:
         case OP_TYPEID::MVN:
@@ -2183,6 +2185,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::FakeQuantize:
     case OP_TYPEID::Gemm:
     case OP_TYPEID::GRN:
+    case OP_TYPEID::GroupConvolutionTranspose:
     case OP_TYPEID::LeakyRelu:
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
