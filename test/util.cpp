@@ -649,7 +649,7 @@ TEST(util, clone_function_friendly_name)
 
     bool found_A = false;
     bool found_B = false;
-    for (auto parameter: g->get_parameters())
+    for (auto parameter : g->get_parameters())
     {
         found_A |= parameter->get_friendly_name() == "A";
         found_B |= parameter->get_friendly_name() == "B";
