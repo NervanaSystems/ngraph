@@ -36,7 +36,7 @@ class ngraph::runtime::AlignedBuffer
 public:
     AlignedBuffer(size_t byte_size,
                   size_t alignment,
-                  Allocator* allocator = get_ngraph_allocator());
+                  Allocator* allocator = get_default_allocator());
     AlignedBuffer();
     ~AlignedBuffer();
 

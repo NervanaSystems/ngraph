@@ -165,7 +165,7 @@ runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
     }
     else
     {
-        return runtime::get_ngraph_allocator();
+        return runtime::get_default_allocator();
     }
 }
 

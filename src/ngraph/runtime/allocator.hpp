@@ -30,7 +30,7 @@ namespace ngraph
         class DefaultAllocator;
         /// \brief Returns a statically allocated default ngraph allocator
         //         that calls into system allocation libraries
-        Allocator* get_ngraph_allocator();
+        Allocator* get_default_allocator();
     }
 }
 
