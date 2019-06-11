@@ -43,6 +43,21 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
+op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+                     const Shape& window_shape,
+                     const Strides& window_movement_strides,
+                     const Shape& padding_below,
+                     const Shape& padding_above)
+    : MaxPool(arg,
+              window_shape,
+              window_movement_strides,
+              padding_below,
+              padding_above,
+              PadType::EXPLICIT,
+              false)
+{
+}
+
 void op::MaxPool::validate_and_infer_types()
 {
     if (0 == m_window_movement_strides.size())

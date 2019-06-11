@@ -47,6 +47,23 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
+op::AvgPool::AvgPool(const Output<Node>& arg,
+                     const Shape& window_shape,
+                     const Strides& window_movement_strides,
+                     const Shape& padding_below,
+                     const Shape& padding_above,
+                     bool include_padding_in_avg_computation)
+    : AvgPool(arg,
+              window_shape,
+              window_movement_strides,
+              padding_below,
+              padding_above,
+              include_padding_in_avg_computation,
+              PadType::EXPLICIT,
+              false)
+{
+}
+
 void op::AvgPool::validate_and_infer_types()
 {
     if (0 == m_window_movement_strides.size())
