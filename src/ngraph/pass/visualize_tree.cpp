@@ -243,14 +243,14 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 
                     m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
                                                         "fillcolor=\"#ffcccc\" label=\"Receive["
-                         << get_node_name(arg) << "]\"]\n";
+                         << arg->get_name() << "]\"]\n";
                     m_ss << "    " << send_node_name << "[shape=\"box\" style=\"solid,filled\" "
                                                         "fillcolor=\"#ccffcc\" label=\"Send["
-                         << get_node_name(node) << "]\"]\n";
+                         << node->get_name() << "]\"]\n";
 
-                    m_ss << "    " << get_node_name(arg) << " -> " << send_node_name
+                    m_ss << "    " << arg->get_name() << " -> " << send_node_name
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                    m_ss << "    " << recv_node_name << " -> " << get_node_name(node)
+                    m_ss << "    " << recv_node_name << " -> " << node->get_name()
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
                     fake_node_ctr++;
                 }
@@ -258,8 +258,8 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                 {
                     m_ss << add_attributes(arg);
                     m_ss << add_attributes(node);
-                    m_ss << "    " << get_node_name(arg) << " -> "
-                         << get_node_name(node)
+                    m_ss << "    " << arg->get_name() << " -> "
+                         << node->get_name()
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
                 }
                 arg_index++;
@@ -381,7 +381,7 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     }
 
     stringstream ss;
-    ss << "    " << get_node_name(node) << " [" << join(attributes, " ") << "]\n";
+    ss << "    " << node->get_name() << " [" << join(attributes, " ") << "]\n";
 
     return ss.str();
 }

@@ -312,15 +312,15 @@ TEST(serialize, constant_infinity_nan)
     EXPECT_TRUE(test::all_close_f(c->get_vector<float>(), c_data));
     EXPECT_EQ(d->get_vector<int64_t>(), d_data);
 
-    string filename = "constant_infinity_nan_test.svg";
+    string filename = "constant_infinity_nan_test.dot";
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>(filename);
     pass_manager.run_passes(g);
     ifstream file(filename);
     ASSERT_TRUE(file);
     string str((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
-    EXPECT_NE(str.find(R"(label="A")"), string::npos);
-    EXPECT_NE(str.find(R"(label="B")"), string::npos);
-    EXPECT_NE(str.find(R"(label="C")"), string::npos);
-    EXPECT_NE(str.find(R"(label="D")"), string::npos);
+    EXPECT_NE(str.find(R"(label="A)"), string::npos);
+    EXPECT_NE(str.find(R"(label="B)"), string::npos);
+    EXPECT_NE(str.find(R"(label="C)"), string::npos);
+    EXPECT_NE(str.find(R"(label="D)"), string::npos);
 }
