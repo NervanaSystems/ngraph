@@ -169,7 +169,8 @@ runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
     }
 }
 
-void runtime::cpu::CPU_Backend::set_host_memory_allocator(std::unique_ptr<runtime::Allocator> allocator)
+void runtime::cpu::CPU_Backend::set_host_memory_allocator(
+    std::unique_ptr<runtime::Allocator> allocator)
 {
     m_allocator = allocator.get();
 }
