@@ -48,9 +48,18 @@ namespace ngraph
 
             GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
                                       const std::shared_ptr<Node>& filters,
+                                      const std::size_t groups = 1UL);
+
+            GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
+                                      const std::shared_ptr<Node>& filters,
                                       const Strides& strides,
                                       const Strides& dilations,
                                       const CoordinateDiff& output_padding,
+                                      const Shape& output_shape,
+                                      const std::size_t groups = 1UL);
+
+            GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
+                                      const std::shared_ptr<Node>& filters,
                                       const Shape& output_shape,
                                       const std::size_t groups = 1UL);
 
@@ -63,6 +72,7 @@ namespace ngraph
             const CoordinateDiff& get_output_padding() const { return m_output_padding; }
             std::size_t get_groups() const { return m_groups; }
             const PadType& get_pad_type() const { return m_pad_type; }
+            const Shape& get_output_shape() const { return m_output_shape; }
             virtual void pre_validate_and_infer_types() override;
             virtual void post_validate_and_infer_types() override;
 

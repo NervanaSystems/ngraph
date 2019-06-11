@@ -52,6 +52,22 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const shared_ptr<Node>&
 
 op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
                                                          const std::shared_ptr<Node>& filters,
+                                                         const std::size_t groups)
+    : GroupConvolutionTranspose(data,
+                                filters,
+                                Strides(),
+                                Strides(),
+                                CoordinateDiff(),
+                                CoordinateDiff(),
+                                CoordinateDiff(),
+                                groups,
+                                PadType::EXPLICIT,
+                                Shape())
+{
+}
+
+op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
+                                                         const std::shared_ptr<Node>& filters,
                                                          const Strides& strides,
                                                          const Strides& dilations,
                                                          const CoordinateDiff& output_padding,
@@ -64,6 +80,23 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<N
                                 CoordinateDiff(),
                                 CoordinateDiff(),
                                 output_padding,
+                                groups,
+                                PadType::EXPLICIT,
+                                output_shape)
+{
+}
+
+op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
+                                                         const std::shared_ptr<Node>& filters,
+                                                         const Shape& output_shape,
+                                                         const std::size_t groups)
+    : GroupConvolutionTranspose(data,
+                                filters,
+                                Strides(),
+                                Strides(),
+                                CoordinateDiff(),
+                                CoordinateDiff(),
+                                CoordinateDiff(),
                                 groups,
                                 PadType::EXPLICIT,
                                 output_shape)
@@ -99,6 +132,14 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
         NODE_VALIDATION_CHECK(
             this, m_pad_type == PadType::EXPLICIT, "Currently only eplicit pad type is supported.");
 
+        if (m_padding_begin.size() == 0)
+        {
+            m_padding_begin = conv_default_padding(this, data_pshape, filters_pshape);
+        }
+        if (m_padding_end.size() == 0)
+        {
+            m_padding_end = conv_default_padding(this, data_pshape, filters_pshape);
+        }
         if (m_output_padding.size() == 0)
         {
             m_output_padding = conv_default_padding(this, data_pshape, filters_pshape);

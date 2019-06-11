@@ -1077,10 +1077,10 @@ static shared_ptr<ngraph::Function>
                 auto padding_end = node_js.at("padding_end").get<vector<ptrdiff_t>>();
                 auto output_padding = node_js.at("output_padding").get<vector<ptrdiff_t>>();
                 auto groups = node_js.at("groups").get<size_t>();
-
                 op::PadType pad_type = node_js["pad_type"].empty()
                                            ? op::PadType::EXPLICIT
                                            : static_cast<op::PadType>(node_js.at("pad_type"));
+                auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
 
                 node = make_shared<op::GroupConvolutionTranspose>(args[0],
                                                                   args[1],
@@ -1090,7 +1090,8 @@ static shared_ptr<ngraph::Function>
                                                                   padding_end,
                                                                   output_padding,
                                                                   groups,
-                                                                  pad_type);
+                                                                  pad_type,
+                                                                  output_shape);
                 break;
             }
             case OP_TYPEID::LeakyRelu:
@@ -2104,6 +2105,7 @@ static json write(const Node& n, bool binary_constant_data)
         node["output_padding"] = tmp->get_output_padding();
         node["groups"] = tmp->get_groups();
         node["pad_type"] = tmp->get_pad_type();
+        node["output_shape"] = tmp->get_output_shape();
         break;
     }
     case OP_TYPEID::LeakyRelu: { break;
