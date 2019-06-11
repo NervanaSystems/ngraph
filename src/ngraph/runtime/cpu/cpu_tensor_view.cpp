@@ -92,19 +92,19 @@ const char* runtime::cpu::CPUTensorView::get_data_ptr() const
     return aligned_buffer;
 }
 
-void runtime::cpu::CPUTensorView::write(const void* source, size_t tensor_offset, size_t n)
+void runtime::cpu::CPUTensorView::write(const void* source, size_t n)
 {
-    if (tensor_offset + n > buffer_size)
+    if (n > buffer_size)
     {
         throw out_of_range("write access past end of tensor");
     }
     char* target = get_data_ptr();
-    memcpy(&target[tensor_offset], source, n);
+    memcpy(target, source, n);
 }
 
-void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_t n) const
+void runtime::cpu::CPUTensorView::read(void* target, size_t n) const
 {
-    if (tensor_offset + n > buffer_size)
+    if (n > buffer_size)
     {
         throw out_of_range("read access past end of tensor");
     }
@@ -150,6 +150,6 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t tensor_offset, size_
     else
     {
         const char* source = get_data_ptr();
-        memcpy(target, &source[tensor_offset], n);
+        memcpy(target, source, n);
     }
 }

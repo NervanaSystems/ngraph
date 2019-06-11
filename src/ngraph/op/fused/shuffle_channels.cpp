@@ -60,7 +60,7 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
         size_t axis_zb = get_zero_based_axis();
 
         NODE_VALIDATION_CHECK(this,
-                              axis_zb >= 0 && axis_zb < shape.size(),
+                              axis_zb < shape.size(),
                               "The 'axis' parameter for ShuffleChannels has to point to one of the "
                               "input tensor's shape dimensions.");
 

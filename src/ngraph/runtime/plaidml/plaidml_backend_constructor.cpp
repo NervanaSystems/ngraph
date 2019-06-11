@@ -14,12 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include <plaidml/plaidml++.h>
-
-#include <memory>
-#include <string>
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/plaidml/plaidml_backend.hpp"
 
 namespace ngraph
 {
@@ -27,17 +23,27 @@ namespace ngraph
     {
         namespace plaidml
         {
-            struct Config;
-
-            Config parse_config_string(const std::string& configuration_string);
+            class PlaidML_BackendConstructor;
         }
     }
 }
 
-struct ngraph::runtime::plaidml::Config
+class ngraph::runtime::plaidml::PlaidML_BackendConstructor final
+    : public runtime::BackendConstructor
 {
-    std::shared_ptr<vertexai::ctx> ctx;
-    std::shared_ptr<vertexai::plaidml::device> dev;
-    bool debug;
-    std::string graphviz;
+public:
+    ~PlaidML_BackendConstructor() final {}
+    std::shared_ptr<Backend> create(const std::string& config) final;
 };
+
+std::shared_ptr<ngraph::runtime::Backend>
+    ngraph::runtime::plaidml::PlaidML_BackendConstructor::create(const std::string& config)
+{
+    return std::make_shared<PlaidML_Backend>(config);
+}
+
+extern "C" ngraph::runtime::BackendConstructor* get_backend_constructor_pointer()
+{
+    static ngraph::runtime::plaidml::PlaidML_BackendConstructor backend_constructor;
+    return &backend_constructor;
+}

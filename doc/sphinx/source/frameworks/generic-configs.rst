@@ -23,10 +23,10 @@ Find or display nGraph Version
 -------------------------------
 
 
-.. code-block:: python 
 
-   python -c "import ngraph as ng; 
-   print('nGraph version: ',ng.__version__)";
+.. code-block:: console
+
+   python3 -c "import ngraph as ng; print('nGraph version: ',ng.__version__)";
 
 
 FMV
