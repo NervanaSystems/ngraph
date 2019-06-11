@@ -228,9 +228,9 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                     auto color = (arg->description() == "Parameter" ? "blue" : "black");
                     m_ss << "    " << clone_name
                          << "[shape=\"box\" style=\"dashed,filled\" color=\"" << color
-                         << "\" fillcolor=\"white\" label=\"" << arg->get_friendly_name()
+                         << "\" fillcolor=\"white\" label=\"" << get_node_name(arg)
                          << "\"]\n";
-                    m_ss << "    " << clone_name << " -> " << node->get_friendly_name()
+                    m_ss << "    " << clone_name << " -> " << node->get_name()
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
                     fake_node_ctr++;
                 }
@@ -243,14 +243,14 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 
                     m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
                                                         "fillcolor=\"#ffcccc\" label=\"Receive["
-                         << arg->get_friendly_name() << "]\"]\n";
+                         << get_node_name(arg) << "]\"]\n";
                     m_ss << "    " << send_node_name << "[shape=\"box\" style=\"solid,filled\" "
                                                         "fillcolor=\"#ccffcc\" label=\"Send["
-                         << node->get_friendly_name() << "]\"]\n";
+                         << get_node_name(node) << "]\"]\n";
 
-                    m_ss << "    " << arg->get_friendly_name() << " -> " << send_node_name
+                    m_ss << "    " << get_node_name(arg) << " -> " << send_node_name
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                    m_ss << "    " << recv_node_name << " -> " << node->get_friendly_name()
+                    m_ss << "    " << recv_node_name << " -> " << get_node_name(node)
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
                     fake_node_ctr++;
                 }
@@ -258,8 +258,8 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                 {
                     m_ss << add_attributes(arg);
                     m_ss << add_attributes(node);
-                    m_ss << "    " << arg->get_friendly_name() << " -> "
-                         << node->get_friendly_name()
+                    m_ss << "    " << get_node_name(arg) << " -> "
+                         << get_node_name(node)
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
                 }
                 arg_index++;
@@ -343,7 +343,7 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     // Construct the label attribute
     {
         stringstream label;
-        label << "label=\"" << node->get_friendly_name();
+        label << "label=\"" << get_node_name(node);
 
         static const char* nvtos = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
         if (nvtos != nullptr)
@@ -381,9 +381,19 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     }
 
     stringstream ss;
-    ss << "    " << node->get_friendly_name() << " [" << join(attributes, " ") << "]\n";
+    ss << "    " << get_node_name(node) << " [" << join(attributes, " ") << "]\n";
 
     return ss.str();
+}
+
+string pass::VisualizeTree::get_node_name(shared_ptr<Node> node)
+{
+    string rc = node->get_friendly_name();
+    if ( node->get_friendly_name() != node->get_name())
+    {
+        rc += "\\n" + node->get_name();
+    }
+    return rc;
 }
 
 void pass::VisualizeTree::render() const

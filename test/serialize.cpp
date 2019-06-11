@@ -312,7 +312,7 @@ TEST(serialize, constant_infinity_nan)
     EXPECT_TRUE(test::all_close_f(c->get_vector<float>(), c_data));
     EXPECT_EQ(d->get_vector<int64_t>(), d_data);
 
-    string filename = "constant_infinity_nan_test.dot";
+    string filename = "constant_infinity_nan_test.svg";
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::VisualizeTree>(filename);
     pass_manager.run_passes(g);
