@@ -51,8 +51,8 @@ namespace ngraph
                     auto strides = convpool::get_strides(node);
                     auto dilations = convpool::get_dilations(node);
                     auto paddings = convpool::get_pads(node);
-                    ngraph::CoordinateDiff padding_below = paddings.first;
-                    ngraph::CoordinateDiff padding_above = paddings.second;
+                    CoordinateDiff padding_below = paddings.first;
+                    CoordinateDiff padding_above = paddings.second;
 
                     std::vector<std::int64_t> output_shape{
                         node.get_attribute_value<std::vector<std::int64_t>>("output_shape", {})};
@@ -86,21 +86,21 @@ namespace ngraph
                             filters,
                             strides,
                             dilations,
-                            output_padding,
+                            CoordinateDiff(std::begin(output_padding), std::end(output_padding)),
                             Shape(std::begin(output_shape), std::end(output_shape)),
                             groups);
                     }
                     else
                     {
-                        conv_node =
-                            std::make_shared<ngraph::op::GroupConvolutionTranspose>(data,
-                                                                                    filters,
-                                                                                    strides,
-                                                                                    dilations,
-                                                                                    padding_below,
-                                                                                    padding_above,
-                                                                                    output_padding,
-                                                                                    groups);
+                        conv_node = std::make_shared<ngraph::op::GroupConvolutionTranspose>(
+                            data,
+                            filters,
+                            strides,
+                            dilations,
+                            padding_below,
+                            padding_above,
+                            CoordinateDiff(std::begin(output_padding), std::end(output_padding)),
+                            groups);
                     }
 
                     // no bias param
