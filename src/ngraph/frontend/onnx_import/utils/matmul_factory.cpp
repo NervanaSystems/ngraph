@@ -100,7 +100,7 @@ ngraph::NodeVector MatmulFactory::make_matmul_op()
     if (left_rank > 1 && right_rank > 1)
     {
         const NodeVector& broadcasted_nodes =
-                ngraph::op::numpy_style_broadcast_for_matmul_operation(left, right);
+            ngraph::op::numpy_style_broadcast_for_matmul_operation(left, right);
 
         left = broadcasted_nodes.at(0);
         right = broadcasted_nodes.at(1);
@@ -147,7 +147,7 @@ ngraph::NodeVector MatmulFactory::make_matmul_op()
     {
         return {result};
     }
-        // Expand result _stack of matrices_ axes to get expected result shape.
+    // Expand result _stack of matrices_ axes to get expected result shape.
     else
     {
         const Shape& shape{result->get_shape()};
@@ -156,7 +156,7 @@ ngraph::NodeVector MatmulFactory::make_matmul_op()
                             std::begin(left_shape),
                             std::next(std::begin(left_shape), left_shape.size() - 2));
         return {std::make_shared<ngraph::op::Reshape>(
-                result, ngraph::get_default_order(shape.size()), result_shape)};
+            result, ngraph::get_default_order(shape.size()), result_shape)};
     }
 }
 
@@ -165,7 +165,6 @@ std::shared_ptr<ngraph::Node> MatmulFactory::make_dot(const std::shared_ptr<ngra
 {
     return std::make_shared<ngraph::op::Dot>(left, right);
 }
-
 
 std::shared_ptr<ngraph::Node> QLinearMatmulFactory::get_right()
 {
