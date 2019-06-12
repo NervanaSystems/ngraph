@@ -72,14 +72,13 @@ namespace ngraph
                                                                  axes);
 
                     auto dot = make_shared<op::Dot>(dq_input0, dq_input1, 1);
-                    auto q_dot = make_shared<op::Quantize>(
+                    return make_shared<op::Quantize>(
                         dot,
                         output_scale,
                         output_zero_point,
                         output_zero_point->get_element_type(),
                         axes,
                         op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
-                    return move(q_dot);
                 }
             }
 
@@ -123,14 +122,13 @@ namespace ngraph
                                                                  axes);
 
                     auto dot = make_shared<op::Dot>(dq_input0, dq_input1, 1);
-                    auto q_dot = make_shared<op::Quantize>(
+                    return make_shared<op::Quantize>(
                         dot,
                         output_scale,
                         output_zero_point,
                         output_zero_point->get_element_type(),
                         axes,
                         op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
-                    return move(q_dot);
                 }
             }
         }
