@@ -49,13 +49,14 @@ namespace
         {
             ngraph::descriptor::Tensor* tensor = op_input.get_output().get_tensor_ptr().get();
             PLAIDML_DEBUG << "Input: descriptor::Tensor " << tensor << " "
-                          << op.get_input_shape(op_input.get_index());
+                          << op.get_input_shape(op_input.get_index())
+                          << op.get_input_element_type(op_input.get_index());
         }
         for (std::size_t out_idx = 0; out_idx < op.get_output_size(); ++out_idx)
         {
             ngraph::descriptor::Tensor* tensor = op.get_output_tensor_ptr(out_idx).get();
             PLAIDML_DEBUG << "Output: descriptor::Tensor " << tensor << " "
-                          << op.get_output_shape(out_idx);
+                          << op.get_output_shape(out_idx) << op.get_output_element_type(out_idx);
         }
         for (auto* t : op.liveness_new_list)
         {

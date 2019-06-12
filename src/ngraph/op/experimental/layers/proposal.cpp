@@ -45,8 +45,8 @@ void op::Proposal::validate_and_infer_types()
     if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(2)))
     {
         NODE_VALIDATION_CHECK(this,
-                              shape_size(const_shape->get_shape()) == 2,
-                              "Layer shape must have rank 2",
+                              shape_size(const_shape->get_shape()) >= 1,
+                              "Layer shape must have rank greater than 1",
                               const_shape->get_shape());
 
         auto image_shape = const_shape->get_shape_val();
