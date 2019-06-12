@@ -33,8 +33,7 @@ namespace ngraph
             /// \brief Constructs an empty TensorIterator operation
             TensorIterator();
 
-            TensorIterator(const OutputVector& inputs,
-                           const ParameterVector& body_parameters,
+            TensorIterator(const ParameterVector& body_parameters,
                            const OutputVector& initial_body_arguments,
                            const OutputVector& body_arguments,
                            const OutputVector& outputs);

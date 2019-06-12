@@ -25,13 +25,11 @@ op::TensorIterator::TensorIterator()
 {
 }
 
-op::TensorIterator::TensorIterator(const OutputVector& inputs,
-                                   const ParameterVector& body_parameters,
+op::TensorIterator::TensorIterator(const ParameterVector& body_parameters,
                                    const OutputVector& initial_body_arguments,
                                    const OutputVector& body_arguments,
                                    const OutputVector& outputs)
-    : Op(inputs)
-    , m_body_parameters(body_parameters)
+    : m_body_parameters(body_parameters)
     , m_initial_body_arguments(initial_body_arguments)
     , m_body_arguments(body_arguments)
     , m_outputs(outputs)
@@ -99,8 +97,7 @@ void op::TensorIterator::set_outputs(const OutputVector& outputs)
 
 std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
 {
-    auto result = make_shared<TensorIterator>(
-        OutputVector{}, m_body_parameters, m_initial_body_arguments, m_body_arguments, m_outputs);
-    result->set_arguments(new_args);
-    return std::move(result);
+    NGRAPH_CHECK(new_args.size() == 0, "TensorIterator has no arguments");
+    return make_shared<TensorIterator>(
+        m_body_parameters, m_initial_body_arguments, m_body_arguments, m_outputs);
 }
