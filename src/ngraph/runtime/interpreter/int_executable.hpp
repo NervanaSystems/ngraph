@@ -17,6 +17,7 @@
 #pragma once
 
 #include <initializer_list>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -33,6 +34,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
@@ -357,17 +359,30 @@ private:
         }
         case OP_TYPEID::GenerateMask:
         {
+            bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const int32_t>()[0]);
             if (m_states.count(&node) == 0)
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
+                auto seed = use_seed ? gm->get_seed() : 0;
                 m_states[&node] = std::unique_ptr<ngraph::RNGState>(
-                    ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
+                    ngraph::RNGState::create_rng_state(seed, gm->get_probability()));
             }
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
             auto state = m_states.at(&node).get();
             size_t element_count = shape_size(node.get_output_shape(0));
-            reference::generate_mask<T>(out[0]->get_data_ptr<T>(), element_count, state, training);
+            if (!use_seed)
+            {
+                reference::generate_mask<T>(
+                    out[0]->get_data_ptr<T>(), element_count, state, training);
+            }
+            else
+            {
+                uint64_t seed = static_cast<uint64_t>(args[3]->get_data_ptr<const T>()[0]);
+                double prob = static_cast<double>(args[4]->get_data_ptr<const T>()[0]);
+                reference::generate_mask_no_state<T>(
+                    out[0]->get_data_ptr<T>(), element_count, training, seed, prob);
+            }
             break;
         }
         case OP_TYPEID::GetOutputElement:
@@ -691,11 +706,13 @@ private:
         }
         case OP_TYPEID::Divide:
         {
+            const op::Divide* divop = static_cast<const op::Divide*>(&node);
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::divide<T>(args[0]->get_data_ptr<const T>(),
                                  args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
-                                 element_count);
+                                 element_count,
+                                 divop->is_pythondiv());
             break;
         }
         case OP_TYPEID::Dot:

@@ -41,33 +41,93 @@ namespace ngraph
 
                 size_t element_count = out[0].get_size();
 
+                auto arg2_buffer_index =
+                    external_function->get_buffer_index(args[2].get_name()); //use_seed
+                auto arg3_buffer_index =
+                    external_function->get_buffer_index(args[3].get_name()); //seed
+                auto arg4_buffer_index =
+                    external_function->get_buffer_index(args[4].get_name()); //prob
+
+                auto seed_attr = gm->get_use_seed() ? gm->get_seed() : 0;
                 auto index = external_function->add_state(
-                    ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
+                    ngraph::RNGState::create_rng_state(seed_attr, gm->get_probability()));
 
                 if (args[0].get_element_type() == element::f32)
                 {
-                    functor = [&, index, element_count, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    functor = [&,
+                               index,
+                               element_count,
+                               arg_buffer_index,
+                               out_buffer_index,
+                               arg2_buffer_index,
+                               arg3_buffer_index,
+                               arg4_buffer_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg_buffer_index])[0]);
-                        reference::generate_mask(
-                            static_cast<float*>(ctx->buffer_data[out_buffer_index]),
-                            element_count,
-                            static_cast<RNGState*>(ctx->states[index]),
-                            training);
+                        // TODO: get shape when required
+                        bool use_seed = static_cast<bool>(
+                            static_cast<int32_t*>(ctx->buffer_data[arg2_buffer_index])[0]);
+                        uint64_t seed =
+                            static_cast<uint64_t*>(ctx->buffer_data[arg3_buffer_index])[0];
+                        double prob = static_cast<double*>(ctx->buffer_data[arg4_buffer_index])[0];
+
+                        if (use_seed == false)
+                        {
+                            reference::generate_mask(
+                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
+                                element_count,
+                                static_cast<RNGState*>(ctx->states[index]),
+                                training);
+                        }
+                        else
+                        {
+                            reference::generate_mask_no_state(
+                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
+                                element_count,
+                                training,
+                                seed,
+                                prob);
+                        }
                     };
                 }
                 else if (args[0].get_element_type() == element::f64)
                 {
-                    functor = [&, index, element_count, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    functor = [&,
+                               index,
+                               element_count,
+                               arg_buffer_index,
+                               out_buffer_index,
+                               arg2_buffer_index,
+                               arg3_buffer_index,
+                               arg4_buffer_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
                         bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg_buffer_index])[0]);
-                        reference::generate_mask(
-                            static_cast<double*>(ctx->buffer_data[out_buffer_index]),
-                            element_count,
-                            static_cast<RNGState*>(ctx->states[index]),
-                            training);
+                        // TODO: get shape when required
+                        bool use_seed = static_cast<bool>(
+                            static_cast<int32_t*>(ctx->buffer_data[arg2_buffer_index])[0]);
+                        uint64_t seed =
+                            static_cast<uint64_t*>(ctx->buffer_data[arg3_buffer_index])[0];
+                        double prob = static_cast<double*>(ctx->buffer_data[arg4_buffer_index])[0];
+
+                        if (use_seed == false)
+                        {
+                            reference::generate_mask(
+                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
+                                element_count,
+                                static_cast<RNGState*>(ctx->states[index]),
+                                training);
+                        }
+                        else
+                        {
+                            reference::generate_mask_no_state(
+                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
+                                element_count,
+                                training,
+                                seed,
+                                prob);
+                        }
                     };
                 }
                 else
