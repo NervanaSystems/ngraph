@@ -1600,6 +1600,10 @@ static shared_ptr<ngraph::Function>
             {
                 node->set_friendly_name(friendly_name);
             }
+            else
+            {
+                node->set_friendly_name(node_name);
+            }
             node_map[node_name] = node;
         }
         catch (...)
