@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "matmul.hpp"
-#include "frontend/onnx_import/utils/matmul_factory.hpp"
+#pragma once
+
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -25,11 +27,14 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector matmul(const Node& node)
-                {
-                    auto factory = matmul::MatmulFactory(node);
-                    return factory.make_matmul_op();
-                }
+                /// \brief Performs ONNX MatMulInteger operation.
+                ///
+                /// \param node The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing Ngraph nodes producing output of quantized ONNX matrix
+                ///         multiplication operation.
+                NodeVector matmul_integer(const Node& node);
+
             } // namespace set_1
 
         } //namespace op
