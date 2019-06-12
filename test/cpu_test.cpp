@@ -33,6 +33,7 @@
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
@@ -1892,4 +1893,60 @@ TEST(cpu_test, tensor_copy_from_different_layout)
     b->copy_from(*result);
 
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
+}
+
+// Adding this test case in cpu_test
+// because reference kernel isn't supporting intermediate
+// output types as of now
+TEST(cpu_test, quantized_conv_int32_output)
+{
+    Shape shape_a{1, 1, 3, 4};
+    Shape shape_b{1, 1, 3, 3};
+    Shape shape_r{1, 1, 3, 4};
+    vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
+    vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
+    auto A = make_shared<op::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::Parameter>(element::i8, shape_b);
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto D = op::Constant::create(element::u8, Shape{}, {0});
+    auto E = make_shared<op::Parameter>(element::f32, Shape{});
+    auto F = op::Constant::create(element::i8, Shape{}, {0});
+    auto G = make_shared<op::Parameter>(element::f32, Shape{});
+    auto H = op::Constant::create(element::i32, Shape{}, {0});
+    auto CV = make_shared<op::QuantizedConvolution>(A,
+                                                    B,
+                                                    Strides{1, 1},
+                                                    Strides{1, 1},
+                                                    CoordinateDiff{1, 1},
+                                                    CoordinateDiff{1, 1},
+                                                    Strides{1, 1},
+                                                    C,
+                                                    D,
+                                                    E,
+                                                    F,
+                                                    G,
+                                                    H,
+                                                    element::i32,
+                                                    AxisSet{},
+                                                    AxisSet{},
+                                                    AxisSet{});
+    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, E, G});
+
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::i8, shape_b);
+    copy_data(b, b_data);
+    auto c = backend->create_tensor(element::f32, Shape{});
+    copy_data(c, vector<float>{1.0f});
+    auto d = backend->create_tensor(element::f32, Shape{});
+    copy_data(d, vector<float>{1.0f});
+    auto e = backend->create_tensor(element::f32, Shape{});
+    copy_data(e, vector<float>{1.0f});
+    auto result = backend->create_tensor(element::i32, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b, c, d, e});
+    EXPECT_EQ((vector<int32_t>{22, 34, 30, 32, 38, 72, 90, 43, 33, 52, 43, 39}),
+              read_vector<int32_t>(result));
 }

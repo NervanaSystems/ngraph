@@ -7551,8 +7551,8 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_convolution)
 
 NGRAPH_TEST(${BACKEND_NAME}, quantized_conv_non_zero_zero_point)
 {
-    Shape shape_a{1, 1, 7, 7}; // input shape
-    Shape shape_b{1, 1, 1, 1}; // filter shape
+    Shape shape_a{1, 1, 7, 7};
+    Shape shape_b{1, 1, 1, 1};
     Shape shape_r{1, 1, 7, 7};
     vector<float> X = {0.45246148109436035f,   0.15498268604278564f,  0.11199361085891724f,
                        -0.39421093463897705f,  0.2626858949661255f,   0.13414543867111206f,

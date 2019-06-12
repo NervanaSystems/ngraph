@@ -85,7 +85,7 @@ void op::QuantizedConvolution::validate_and_infer_types()
                           get_input_element_type(0) == get_input_element_type(INPUT_ZERO_POINT),
                           "Input Zero point element type (",
                           get_input_element_type(INPUT_ZERO_POINT),
-                          ") must match Input element type (",
+                          ") must match input element type (",
                           get_input_element_type(0),
                           ")");
 
@@ -93,15 +93,7 @@ void op::QuantizedConvolution::validate_and_infer_types()
                           get_input_element_type(1) == get_input_element_type(FILTER_ZERO_POINT),
                           "Filter Zero point element type (",
                           get_input_element_type(FILTER_ZERO_POINT),
-                          ") must match Input element type (",
-                          get_input_element_type(1),
-                          ")");
-
-    NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(1) == get_input_element_type(OUTPUT_ZERO_POINT),
-                          "Output Zero point element type (",
-                          get_input_element_type(OUTPUT_ZERO_POINT),
-                          ") must match Input element type (",
+                          ") must match filter element type (",
                           get_input_element_type(1),
                           ")");
 
@@ -150,6 +142,13 @@ void op::QuantizedConvolution::validate_and_infer_types()
                                                          0, /* batch_axis_result,            */
                                                          1  /* output_channel_axis_result,   */
                                                          ));
+    NODE_VALIDATION_CHECK(this,
+                          get_output_element_type(0) == get_input_element_type(OUTPUT_ZERO_POINT),
+                          "Output Zero point element type (",
+                          get_input_element_type(OUTPUT_ZERO_POINT),
+                          ") must match output element type (",
+                          get_output_element_type(0),
+                          ")");
 }
 
 shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& new_args) const
