@@ -24,6 +24,15 @@ namespace ngraph
     {
         namespace matmul
         {
+            /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX MatMul operation.
+            ///
+            /// \note
+            /// The sub-graph is needed to adjust nGraph's Dot operation semantics to semantics
+            /// expected by ONNX, which are modeled on NumPy's "stacks of arrays" approach.
+            /// Differences are apparent with matrices of rank > 2.
+            ///
+            /// This default implementation `MatmulFactory` creates a `MatMul` operation for floating-point data.
+            /// Subclasses: `QLinearMatmulFactory` and `MatmulIntegerFactory` implement quantized versions.
             class MatmulFactory
             {
             public:
@@ -35,10 +44,18 @@ namespace ngraph
 
                 virtual ~MatmulFactory() = default;
 
+                /// \brief Create a sub-graph representing an ONNX MatMul operation.
+                ///
+                /// \return NodeVector containing the sub-graph output node.
                 virtual NodeVector make_matmul_op();
 
+                /// \return Node representing the left operand.
                 virtual std::shared_ptr<ngraph::Node> get_left();
+
+                /// \return Node representing the right operand.
                 virtual std::shared_ptr<ngraph::Node> get_right();
+
+                /// \return Node representing the nGraph Dot operation used to construct MatMul.
                 virtual std::shared_ptr<ngraph::Node>
                     make_dot(const std::shared_ptr<ngraph::Node>& left,
                              const std::shared_ptr<ngraph::Node>& right);
@@ -48,6 +65,7 @@ namespace ngraph
                 const NodeVector m_inputs;
             };
 
+            /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX QLinearMatMul operation.
             class QLinearMatmulFactory : public MatmulFactory
             {
             public:
@@ -62,6 +80,7 @@ namespace ngraph
                              const std::shared_ptr<ngraph::Node>& right) override;
             };
 
+            /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX MatMulInteger operation.
             class MatmulIntegerFactory : public MatmulFactory
             {
             public:
