@@ -42,7 +42,9 @@ namespace ngraph
             /// \param output_scale Scale to transform the output
             /// \param output_zero_point Zero point used for mapping
             /// \param output_type Output element type
-            ///
+            /// \param input_axes Input axes set for channel wise quantization
+            /// \param filter_axes Filter axes set for channel wise quantization
+            /// \param output_axes Output axes set for channel wise quantization
             QuantizedConvolution(const std::shared_ptr<Node>& input,
                                  const std::shared_ptr<Node>& filters,
                                  const Strides& window_movement_strides,
@@ -60,6 +62,7 @@ namespace ngraph
                                  const ngraph::AxisSet& input_axes,
                                  const ngraph::AxisSet& filter_axes,
                                  const ngraph::AxisSet& output_axes);
+
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
@@ -74,6 +77,9 @@ namespace ngraph
             void validate_and_infer_types() override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const NodeVector& deltas) override;
 
         protected:
             Strides m_window_movement_strides;

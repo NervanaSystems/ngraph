@@ -97,6 +97,22 @@ void op::QuantizedConvolution::validate_and_infer_types()
                           get_input_element_type(1),
                           ")");
 
+    // TODO Remove these checks once we support channelwise and vector of scales
+    NODE_VALIDATION_CHECK(this,
+                          shape_size(get_input_shape(2)) == 1 ||
+                              shape_size(get_input_shape(3)) == 1,
+                          "Input scale and input zero point shape must be same and 1");
+
+    NODE_VALIDATION_CHECK(this,
+                          shape_size(get_input_shape(4)) == 1 ||
+                              shape_size(get_input_shape(5)) == 1,
+                          "Filter scale and filter zero point shape must be same and 1");
+
+    NODE_VALIDATION_CHECK(this,
+                          shape_size(get_input_shape(6)) == 1 ||
+                              shape_size(get_input_shape(7)) == 1,
+                          "Output scale and output zero point shape must be same and 1");
+
     auto input_shape = get_input_shape(0);
     auto filters_shape = get_input_shape(1);
 
@@ -171,4 +187,10 @@ shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& 
                                                      m_input_axes,
                                                      m_filter_axes,
                                                      m_output_axes));
+}
+
+void op::QuantizedConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
+                                                 const NodeVector& deltas)
+{
+    throw ngraph_error("Forward-propagation-only operation");
 }
