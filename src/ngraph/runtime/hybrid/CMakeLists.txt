@@ -14,36 +14,32 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(interpreter)
-add_subdirectory(hybrid)
+set(SRC
+    hybrid_backend.cpp
+    hybrid_backend.hpp
+    hybrid_executable.cpp
+    hybrid_executable.hpp
+    hybrid_tensor.cpp
+    hybrid_util.cpp
+    hybrid_util.hpp
+    op/function_call.cpp
+    op/function_call.hpp
+    pass/default_placement.cpp
+    pass/default_placement.hpp
+    pass/dump.cpp
+    pass/dump.hpp
+    pass/fix_get_output_element.cpp
+    pass/fix_get_output_element.hpp
+    pass/liveness.cpp
+    pass/liveness.hpp
+    pass/memory_layout.cpp
+    pass/memory_layout.hpp
+    )
 
-# With CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS, when creating cpu_backend.dll, link reports error: library limit of 65535 objects exceeded
-if (NGRAPH_CPU_ENABLE)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS FALSE)
-    add_subdirectory(cpu)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-endif()
+add_library(hybrid STATIC ${SRC})
+target_link_libraries(hybrid PUBLIC ngraph)
 
-if (NGRAPH_INTELGPU_ENABLE)
-    add_subdirectory(intelgpu)
-endif()
-
-if (NGRAPH_GPU_ENABLE)
-    add_subdirectory(gpu)
-endif()
-
-if (NGRAPH_NOP_ENABLE)
-    add_subdirectory(nop)
-endif()
-
-if (NGRAPH_GPUH_ENABLE)
-    add_subdirectory(gpuh)
-endif()
-
-if (NGRAPH_GENERIC_CPU_ENABLE)
-    add_subdirectory(generic_cpu)
-endif()
-
-if (NGRAPH_PLAIDML_ENABLE)
-    add_subdirectory(plaidml)
-endif()
+install(TARGETS hybrid
+    ARCHIVE DESTINATION ${NGRAPH_INSTALL_LIB}
+    LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB}
+    )
