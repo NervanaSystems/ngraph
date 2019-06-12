@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "matmul.hpp"
+#include "matmul_integer.hpp"
 #include "frontend/onnx_import/utils/matmul_factory.hpp"
 
 namespace ngraph
@@ -25,9 +25,9 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector matmul(const Node& node)
+                NodeVector matmul_integer(const Node& node)
                 {
-                    auto factory = matmul::MatmulFactory(node);
+                    auto factory = matmul::MatmulIntegerFactory(node);
                     return factory.make_matmul_op();
                 }
             } // namespace set_1
