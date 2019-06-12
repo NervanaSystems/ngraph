@@ -48,14 +48,9 @@ namespace ngraph
                                                    const shared_ptr<Node>& output_scale,
                                                    const shared_ptr<Node>& output_zero_point)
             {
-                auto input0_zero = dynamic_pointer_cast<ngraph::op::Constant>(input0_zero_point);
-                auto input1_zero = dynamic_pointer_cast<ngraph::op::Constant>(input1_zero_point);
-                auto output_zero = dynamic_pointer_cast<ngraph::op::Constant>(output_zero_point);
-
                 // Check if zero point is constant and zero
-                if (input0_zero != nullptr && input1_zero != nullptr && output_zero != nullptr &&
-                    ngraph::is_zero(input0_zero) && ngraph::is_zero(input1_zero) &&
-                    ngraph::is_zero(output_zero))
+                if (ngraph::is_zero(input0_zero_point) && ngraph::is_zero(input1_zero_point) &&
+                    ngraph::is_zero(output_zero_point))
                 {
                     auto requantization_scale = (input0_scale * input1_scale) / output_scale;
                     return make_shared<op::QuantizedDot>(input0, input1, requantization_scale);
@@ -101,12 +96,8 @@ namespace ngraph
                                              const std::shared_ptr<Node>& input0_zero_point,
                                              const std::shared_ptr<Node>& input1_zero_point)
             {
-                auto input0_zero = dynamic_pointer_cast<ngraph::op::Constant>(input0_zero_point);
-                auto input1_zero = dynamic_pointer_cast<ngraph::op::Constant>(input1_zero_point);
-
                 // Check if zero points are constant and zero
-                if (input0_zero != nullptr && input1_zero != nullptr &&
-                    ngraph::is_zero(input0_zero) && ngraph::is_zero(input1_zero))
+                if (ngraph::is_zero(input0_zero_point) && ngraph::is_zero(input1_zero_point))
                 {
                     return QuantizedLinearMatmulInteger(input0, input1);
                 }
