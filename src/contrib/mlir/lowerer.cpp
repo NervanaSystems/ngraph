@@ -83,12 +83,13 @@ namespace
         }
         void runOnModule() override;
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
-
-    private:
+        Value* createTempTensor(Type type, unsigned size, PatternRewriter& rewriter);
+    
         mlir::Function* getCallDecl(StringRef name,
                                     ArrayRef<Type> args,
                                     ArrayRef<Type> output,
                                     PatternRewriter& rewriter);
+    private:
         void findOutputValues();
         void processFakeInstrs();
         Value* insertMemMgrDef(PatternRewriter* rewriter = nullptr);
@@ -183,23 +184,27 @@ namespace
             else
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
-                auto callBackFunc = getCallDecl("__mlir_allocate",
-                                                {rewriter.getIndexType(), rewriter.getIndexType()},
-                                                {m_dialectLowerer.convertType(tensorType)},
-                                                rewriter);
-
-                auto size = tensorType.getSizeInBytes();
-                SmallVector<mlir::Value*, 4> args = {
-                    insertMemMgrDef(&rewriter), /* pointer to mem manager */
-                    rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(),
-                                                           size)}; /* size to allocate */
-                auto newResult =
-                    rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args)
-                        .getResult(0);
+                auto newResult = createTempTensor(m_dialectLowerer.convertType(tensorType), tensorType.getSizeInBytes(), rewriter);
                 newResults.push_back(newResult);
             }
         }
         return newResults;
+    }
+
+    Value* DialectLoweringPass::createTempTensor(Type type, unsigned size, PatternRewriter& rewriter)
+    {
+        auto callBackFunc = getCallDecl("__mlir_allocate",
+                                {rewriter.getIndexType(), rewriter.getIndexType()},
+                                {type},
+                                rewriter);
+        SmallVector<mlir::Value*, 4> args = {
+            insertMemMgrDef(&rewriter), /* pointer to mem manager */
+            rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(),
+                                                   size)}; /* size to allocate */
+        auto newTemp =
+            rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args)
+                    .getResult(0);
+        return newTemp;
     }
 
     void DialectLoweringPass::processFakeInstrs()
@@ -406,7 +411,11 @@ namespace
     {
         auto argmin = cast<NGArgMinRedOp>(op);
         auto loc = argmin.getLoc();
-
+        auto axesAttr = argmin.axes();
+        
+        NGRAPH_ASSERT(axesAttr.size() == 1) << "ArgMin should have one reduction axis";
+        unsigned axis = axesAttr.begin()->dyn_cast<IntegerAttr>().getInt();
+        
         NGRAPH_ASSERT(operands.size() == 1 && operands[0] != nullptr)
             << "Expected one non-null operand in ArgMin op";
 
@@ -414,23 +423,94 @@ namespace
         ScopedContext scope(rewriter, loc);
         Value* arg = operands[0];
         auto arg_type = arg->getType().cast<MemRefType>();
-        NGRAPH_ASSERT(arg_type.getRank() == 2) << "Unsupported tensor type in ArgMin op";
 
-        //axis = op->getAttr();
-        //NGRAPH_ASSERT(axis == 0) << "Unsupported axis in ArgMin op";
-        Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
-        //NGRAPH_ASSERT(lhs && rhs && result) << "Unexpected null values in MatmulBiasOp";
+        Value* finalResult = m_pass.buildOutputDefs(op, rewriter)[0];
+        auto resultTy = argmin.getResult()->getType().cast<NGTensorType>();
+        // MLIR doesn't support Index to/from Integer type-conversion
+        // We have to store our result in an IndexType tensor and call-back to a type-conversion routine in nGraph
+        // TODO: Fix this once MLIR provides explicit cast operations.
+        Value* result = m_pass.createTempTensor(
+                                                rewriter.getMemRefType(resultTy.getShape(),rewriter.getIndexType()),
+                                                resultTy.getSizeInBytes(),
+                                                rewriter
+                                                );
 
-        // FIXME: Workaround to the integer to index conversion.
-        auto res_ty = result->getType().cast<MemRefType>();
-        Type res_elem_ty = res_ty.getElementType();
-        //result->setType(
-        //    MemRefType::get(res_ty.getShape(), IndexType::get(res_elem_ty.getContext())));
+        // Views
+        MemRefView vRes(result), vArg(arg);
+        // Index Values
+        IndexedValue iRes(result), iArg(arg);
+        // Bounds Index Handles
+        auto resLbs = vRes.getLbs();
+        auto resUbs = vRes.getUbs();
+        auto argLbs = vArg.getLbs();
+        auto argUbs = vArg.getUbs();
+        {
+            // Loop induction vars
+            auto ivs = IndexHandle::makeIndexHandles(vRes.rank());
+            auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+            // Steps
+            auto steps = vRes.getSteps();
+            auto initVal = vArg.lb(axis);
+            // clang-format off
+            LoopNestBuilder(pivs, resLbs, resUbs, steps)( 
+                // single stmt body
+                [&] {
+                        iRes(ivs) = initVal;
+                    }
+            );
+        }
 
-        // Create the following loop nest for argmin operation:
-        //   for(i, I, 1)
-        //     for(j, J, 1) // Reduction dimention
-        //       res[j] = select((arg[i, j] < res[j]), i, res[j])
+        // reduction loops
+        {
+            auto allIVs = IndexHandle::makeIndexHandles(vArg.rank());
+            auto pAllIVs = IndexHandle::makeIndexHandlePointers(allIVs);
+            SmallVector<IndexHandle,8> nonRedIVs;
+
+
+            auto steps = vArg.getSteps();
+            
+            // iterate over all argument dimensions
+            LoopNestBuilder(pAllIVs, argLbs, argUbs, steps)(
+                [&] {
+                    // build a list of non-reduction IVs
+                    for (auto i = 0; i < vArg.rank(); i++)
+                    {
+                        if (i != axis)
+                            nonRedIVs.push_back(allIVs[i]);
+                    }
+                    // load current min index
+                    ValueHandle currMinIndx = iRes(nonRedIVs);
+                    auto tempIVs = allIVs;
+                    // build list of IVs including current min index
+                    tempIVs[axis] = currMinIndx;
+                    iRes(nonRedIVs) = edsc::intrinsics::select(iArg(allIVs) < iArg(tempIVs), allIVs[axis], currMinIndx);
+                }
+            );
+        }
+
+        // Call-back to convert Index tensor to Integer tensor
+        auto callBackFunc = m_pass.getCallDecl("__mlir_convert_index_to_int", 
+                                        {finalResult->getType(), result->getType(), rewriter.getIndexType(), rewriter.getIndexType()},
+                                        {},
+                                        rewriter);
+
+        SmallVector<mlir::Value*, 4> args = {finalResult,  /* dst tensor */
+                                             result,       /* src tensor */
+                                             /* Num of Elements */
+                                             rewriter.create<mlir::ConstantIndexOp>(
+                                                rewriter.getUnknownLoc(),
+                                                resultTy.getNumElements()
+                                             ),
+                                             /* Integer size used */
+                                             rewriter.create<mlir::ConstantIndexOp>(
+                                                rewriter.getUnknownLoc(),
+                                                resultTy.getElementType().cast<NGIntegerType>().getWidth()
+                                             )
+                                            };
+        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+        
+        rewriter.replaceOp(op, {finalResult});
+#if 0
 
         MemRefView v_res(result), v_arg(arg);
         unsigned n_dim = v_arg.fastestVarying() - 1;
@@ -459,8 +539,8 @@ namespace
                 i_res(m) = edsc::intrinsics::select(i_arg(n, m) < i_arg(curr_res, m), n, curr_res);
             });
         });
+#endif
 
-        rewriter.replaceOp(op, {result});
     }
 
     REWRITER(NGReturnOp) { rewriter.replaceOpWithNewOp<ReturnOp>(op); }
