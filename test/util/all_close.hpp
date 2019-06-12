@@ -56,13 +56,14 @@ namespace ngraph
                     if (count < 5)
                     {
                         ar_fail << std::setprecision(std::numeric_limits<long double>::digits10 + 1)
-                                << a[i] << " is not close to " << b[i] << " at index " << i << "\n";
+                                << a[i] << " is not close to " << b[i] << " at index " << i
+                                << std::endl;
                     }
                     count++;
                     rc = false;
                 }
             }
-            ar_fail << "diff count: " << count << " out of " << a.size() << "\n";
+            ar_fail << "diff count: " << count << " out of " << a.size() << std::endl;
             return rc ? ::testing::AssertionSuccess() : ar_fail;
         }
 
@@ -90,7 +91,9 @@ namespace ngraph
                 T abs_diff = (a[i] > b[i]) ? (a[i] - b[i]) : (b[i] - a[i]);
                 if (abs_diff > atol + rtol * b[i])
                 {
-                    ar_fail << a[i] << " is not close to " << b[i] << " at index " << i;
+                    // use unary + operator to force integral values to be displayed as numbers
+                    ar_fail << +a[i] << " is not close to " << +b[i] << " at index " << i
+                            << std::endl;
                     rc = false;
                 }
             }
