@@ -29,6 +29,7 @@ Summary of documentation-related changes:
   documented more clearly and without excessive JS (see replacements.txt).
 + Consistent filenaming on all BE indexes.
 + Remove deprecated TensorAPI.
++ 
 
 
 Core updates for |version|
