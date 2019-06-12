@@ -61,6 +61,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -3964,10 +3965,25 @@ namespace ngraph
                 writer << "auto state = static_cast<ngraph::RNGState*>(ctx->states[" << index
                        << "]);\n";
                 writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
-                writer << "reference::generate_mask(";
-                writer << "            " << out[0].get_name() << ",\n";
-                writer << "            " << out[0].get_size() << ",\n";
-                writer << "            state, training);\n";
+                writer << "bool use_seed = static_cast<bool>(" << args[2].get_name() << "[0]);\n";
+
+                writer << "uint64_t seed = static_cast<uint64_t>(" << args[3].get_name()
+                       << "[0]);\n";
+                writer << "double keep_prob = static_cast<double>(" << args[4].get_name()
+                       << "[0]);\n";
+                writer << "if (use_seed == false) \n";
+                writer << "{\n";
+                writer << "    reference::generate_mask(\n";
+                writer << "                " << out[0].get_name() << ",\n";
+                writer << "                " << out[0].get_size() << ",\n";
+                writer << "                state, training);\n";
+                writer << "}\n";
+                writer << "else {\n";
+                writer << "       reference::generate_mask_no_state(\n";
+                writer << "           " << out[0].get_name() << ",\n";
+                writer << "           " << out[0].get_size() << ",\n";
+                writer << "           training, seed, keep_prob);\n";
+                writer << "}\n";
                 writer.block_end();
             }
 
@@ -4059,6 +4075,37 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error("unsupported parameters for QuantizedConcat via DEX");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Tile)
+            {
+                auto arg_shape = args[0].get_shape();
+                auto arg_rank = arg_shape.size();
+                auto out_shape = out[0].get_shape();
+                const element::Type& et = args[0].get_element_type();
+
+                if (arg_rank == 0)
+                {
+                    size_t repeats = shape_size(out_shape);
+
+                    writer.block_begin();
+                    writer << "cpu::kernel::tile_rank_0<" << et.c_type_string() << ">("
+                           << args[0].get_name() << ", " << out[0].get_name() << ", "
+                           << std::to_string(repeats) << ");\n";
+
+                    writer.block_end();
+                }
+                else
+                {
+                    writer.block_begin();
+                    writer << "cpu::kernel::tile<" << et.c_type_string() << ", "
+                           << std::to_string(arg_rank) << ">(" << args[0].get_name() << ", "
+                           << out[0].get_name() << ", {" << join(arg_shape) << "}, {"
+                           << join(out_shape) << "}, 0);\n";
+
+                    writer.block_end();
                 }
             }
 
