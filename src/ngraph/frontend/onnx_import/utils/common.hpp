@@ -105,6 +105,40 @@ namespace ngraph
 
                 return std::make_shared<ngraph::op::Constant>(type, Shape{{n, n}}, identity_matrix);
             }
+
+            /// \brief Creates a shifted square identity matrix.
+            ///
+            /// \param[in] output_shape Shape of the resulting matrix.
+            /// \param[in] output_type Element type of the resulting matrix.
+            /// \param[in] shift Shifting of diagonal.
+            ///
+            /// \return A Constant node representing shifted identity matrix.
+            template <typename T = double>
+            std::shared_ptr<ngraph::op::Constant>
+                shifted_square_identity(const Shape output_shape,
+                                        const element::Type& output_type,
+                                        const std::int64_t shift)
+            {
+                std::vector<T> identity_matrix(shape_size(output_shape), T{0});
+                auto rows = output_shape[0];
+                auto cols = output_shape[1];
+                for (size_t row = 0; row < rows; ++row)
+                {
+                   const size_t diagonal_element = (row * cols) + row + shift;
+                   if (diagonal_element < 0)
+                   {
+                       continue;
+                   }
+                   else if (row + shift > rows)
+                   {
+                       break;
+                   }
+                   identity_matrix.at(diagonal_element) = T{1};
+                }
+
+                return std::make_shared<ngraph::op::Constant>(
+                    output_type, output_shape, identity_matrix);
+            }
         } // namespace  common
     }     // namespace onnx_import
 } // namespace ngraph
