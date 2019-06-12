@@ -228,7 +228,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                     auto color = (arg->description() == "Parameter" ? "blue" : "black");
                     m_ss << "    " << clone_name
                          << "[shape=\"box\" style=\"dashed,filled\" color=\"" << color
-                         << "\" fillcolor=\"white\" label=\"" << arg->get_name() << "\"]\n";
+                         << "\" fillcolor=\"white\" label=\"" << get_node_name(arg) << "\"]\n";
                     m_ss << "    " << clone_name << " -> " << node->get_name()
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
                     fake_node_ctr++;
@@ -341,7 +341,7 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     // Construct the label attribute
     {
         stringstream label;
-        label << "label=\"" << node->get_name();
+        label << "label=\"" << get_node_name(node);
 
         static const char* nvtos = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
         if (nvtos != nullptr)
@@ -382,6 +382,16 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     ss << "    " << node->get_name() << " [" << join(attributes, " ") << "]\n";
 
     return ss.str();
+}
+
+string pass::VisualizeTree::get_node_name(shared_ptr<Node> node)
+{
+    string rc = node->get_friendly_name();
+    if (node->get_friendly_name() != node->get_name())
+    {
+        rc += "\\n" + node->get_name();
+    }
+    return rc;
 }
 
 void pass::VisualizeTree::render() const
