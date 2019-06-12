@@ -6287,8 +6287,10 @@ NGRAPH_TEST(${BACKEND_NAME}, generate_mask)
     Shape result_shape{1, 128};
     const unsigned int seed = 777;
     auto training = op::Constant::create(element::f32, Shape{}, {1});
-    auto gen_mask = make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5);
-    auto gen_mask2 = make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5);
+    auto gen_mask =
+        make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5, false);
+    auto gen_mask2 =
+        make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5, false);
     auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -6309,6 +6311,42 @@ NGRAPH_TEST(${BACKEND_NAME}, generate_mask)
     ASSERT_FALSE(test::all_close_f(result1, result1_2));
     ASSERT_FALSE(std::any_of(result1_2.begin(), result1_2.end(), is_not_zero_or_one));
     ASSERT_FALSE(test::all_close_f(result2, result2_2));
+    ASSERT_FALSE(std::any_of(result2_2.begin(), result2_2.end(), is_not_zero_or_one));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, generate_mask2)
+{
+    Shape scalar{};
+    Shape result_shape{1, 128};
+    const unsigned int seed = 777;
+    auto training = op::Constant::create(element::f32, Shape{}, {1});
+    auto gen_mask =
+        make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5, true);
+    auto gen_mask2 =
+        make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5, true);
+    auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, ParameterVector{});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto is_not_zero_or_one = [](float num) { return num != 0.f && num != 1.f; };
+
+    auto result_tv1 = backend->create_tensor<float>(result_shape);
+    auto result_tv2 = backend->create_tensor<float>(result_shape);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result_tv1, result_tv2}, {});
+    auto result1 = read_vector<float>(result_tv1);
+    auto result2 = read_vector<float>(result_tv2);
+    ASSERT_TRUE(test::all_close_f(result1, result2));
+    ASSERT_FALSE(std::any_of(result1.begin(), result1.end(), is_not_zero_or_one));
+
+    auto result_tv1_2 = backend->create_tensor<float>(result_shape);
+    auto result_tv2_2 = backend->create_tensor<float>(result_shape);
+    handle->call_with_validate({result_tv1_2, result_tv2_2}, {});
+    auto result1_2 = read_vector<float>(result_tv1_2);
+    auto result2_2 = read_vector<float>(result_tv2_2);
+    ASSERT_TRUE(test::all_close_f(result1, result1_2));
+    ASSERT_FALSE(std::any_of(result1_2.begin(), result1_2.end(), is_not_zero_or_one));
+    ASSERT_TRUE(test::all_close_f(result2, result2_2));
     ASSERT_FALSE(std::any_of(result2_2.begin(), result2_2.end(), is_not_zero_or_one));
 }
 
