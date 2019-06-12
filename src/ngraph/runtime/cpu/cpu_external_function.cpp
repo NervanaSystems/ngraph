@@ -78,6 +78,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -437,6 +438,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeconvolutionBias>},
     {TI(ngraph::op::QuantizedConcat), &runtime::cpu::CPU_Emitter::emit<op::QuantizedConcat>},
+    {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
 };
 
 static void
@@ -1194,7 +1196,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(BatchFusion, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(CPUBatchFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(ReshapeSinking, false, ngraph::pass);
-    REGISTER_KNOBBED_PASS(ReshapeElimination, false, ngraph::pass);
+    REGISTER_KNOBBED_PASS(ReshapeElimination, true, ngraph::pass);
+    REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS);
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);

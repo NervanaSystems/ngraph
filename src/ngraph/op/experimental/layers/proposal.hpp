@@ -25,33 +25,33 @@ namespace ngraph
         // base_size       Anchor sizes
         // pre_nms_topn    Number of boxes before nms
         // post_nms_topn   Number of boxes after nms
-        // nms_threshold   Threshold for nms
-        // feature_stride  Feature stride
+        // nms_thresh      Threshold for nms
+        // feat_stride     Feature stride
         // min_size        Minimum box size
-        // anchor_ratios   Ratios for anchor generation
-        // anchor_scales   Scales for anchor generation
+        // ratio   Ratios for anchor generation
+        // scale   Scales for anchor generation
         // clip_before_nms Clip before NMs
         // clip_after_nms  Clip after NMs
         // normalize       Normalize boxes to [0,1]
         // box_size_scale  Scale factor for scaling box size logits
-        // box_coord_scale Scale factor for scaling box coordiate logits
-        // algo            Calculation algorithm to use
+        // box_coordinate_scale Scale factor for scaling box coordiate logits
+        // framework            Calculation frameworkrithm to use
         struct ProposalAttrs
         {
             size_t base_size;
             size_t pre_nms_topn;
             size_t post_nms_topn;
-            float nms_threshold = 0.0f;
-            size_t feature_stride = 1;
+            float nms_thresh = 0.0f;
+            size_t feat_stride = 1;
             size_t min_size = 1;
-            std::vector<float> anchor_ratios;
-            std::vector<float> anchor_scales;
+            std::vector<float> ratio;
+            std::vector<float> scale;
             bool clip_before_nms = false;
             bool clip_after_nms = false;
             bool normalize = false;
             float box_size_scale = 1.0f;
-            float box_coord_scale = 1.0f;
-            std::string algo;
+            float box_coordinate_scale = 1.0f;
+            std::string framework;
         };
 
         class Proposal : public Op
