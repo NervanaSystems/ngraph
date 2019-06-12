@@ -678,11 +678,13 @@ private:
         }
         case OP_TYPEID::Divide:
         {
+            const op::Divide* divop = static_cast<const op::Divide*>(&node);
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::divide<T>(static_cast<const T*>(args[0]),
                                  static_cast<const T*>(args[1]),
                                  static_cast<T*>(out[0]),
-                                 element_count);
+                                 element_count,
+                                 divop->is_pythondiv());
             break;
         }
         case OP_TYPEID::Dot:

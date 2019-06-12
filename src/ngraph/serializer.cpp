@@ -902,8 +902,13 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Divide:
             {
+                bool pythondiv = true;
+                if (node_js["pythondiv"].is_object())
+                {
+                    pythondiv = node_js.at("pythondiv").get<bool>();
+                }
                 node = make_shared<op::Divide>(
-                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
+                    args[0], args[1], pythondiv, read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Dot:
@@ -1959,6 +1964,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Divide:
     {
         auto tmp = dynamic_cast<const op::Divide*>(&n);
+        node["pythondiv"] = tmp->is_pythondiv();
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["autob"] = write_auto_broadcast(tmp->get_autob());
