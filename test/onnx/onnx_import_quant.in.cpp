@@ -338,3 +338,167 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_qlinear_matmul_3d)
         std::vector<uint8_t>{168, 115, 255, 1, 66, 151, 168, 115, 255, 1, 66, 151}); // T3
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<uint8_t>{11, 7, 3, 10, 6, 2, 9, 5, 1, 8, 4, 0}); // a
+    test_case.add_input(std::vector<uint8_t>{1, 4, 2, 5, 3, 6});                     // b
+    test_case.add_input(std::vector<uint8_t>{12});                                   // a_zero_point
+    test_case.add_input(std::vector<uint8_t>{0});                                    // b_zero_point
+
+    test_case.add_expected_output(
+        {4, 2}, std::vector<int32_t>{-38, -83, -44, -98, -50, -113, -56, -128}); // y
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_zero_point_zero)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<uint8_t>{11, 7, 3, 10, 6, 2, 9, 5, 1, 8, 4, 0}); // a
+    test_case.add_input(std::vector<uint8_t>{1, 4, 2, 5, 3, 6});                     // b
+    test_case.add_input(std::vector<uint8_t>{0});                                    // a_zero_point
+    test_case.add_input(std::vector<uint8_t>{0});                                    // b_zero_point
+
+    test_case.add_expected_output({4, 2},
+                                  std::vector<int32_t>{34, 97, 28, 82, 22, 67, 16, 52}); // y
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_no_zero_point)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer_no_zero_point.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<uint8_t>{11, 7, 3, 10, 6, 2, 9, 5, 1, 8, 4, 0}); // a
+    test_case.add_input(std::vector<uint8_t>{1, 4, 2, 5, 3, 6});                     // b
+
+    test_case.add_expected_output({4, 2},
+                                  std::vector<int32_t>{34, 97, 28, 82, 22, 67, 16, 52}); // y
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_scalar)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer_scalar.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<uint8_t>{11}); // a
+    test_case.add_input(std::vector<uint8_t>{13}); // b
+    test_case.add_input(std::vector<uint8_t>{12}); // a_zero_point
+    test_case.add_input(std::vector<uint8_t>{12}); // b_zero_point
+
+    test_case.add_expected_output({1, 1}, std::vector<int32_t>{-1}); // y
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_4d)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer_4d.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // a
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // b
+    test_case.add_input(std::vector<uint8_t>{0}); // a_zero_point
+    test_case.add_input(std::vector<uint8_t>{0}); // b_zero_point
+
+    test_case.add_expected_output<int32_t>(Shape{1, 2, 3, 3},
+                                           {42,
+                                            48,
+                                            54,
+                                            114,
+                                            136,
+                                            158,
+                                            186,
+                                            224,
+                                            262,
+                                            906,
+                                            960,
+                                            1014,
+                                            1170,
+                                            1240,
+                                            1310,
+                                            1434,
+                                            1520,
+                                            1606}); // y
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_4d_zero_point)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer_4d.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // a
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // b
+    test_case.add_input(std::vector<uint8_t>{1}); // a_zero_point
+    test_case.add_input(std::vector<uint8_t>{1}); // b_zero_point
+
+    test_case.add_expected_output<int32_t>(Shape{1, 2, 3, 3},
+                                           {22,
+                                            24,
+                                            26,
+                                            78,
+                                            96,
+                                            114,
+                                            134,
+                                            168,
+                                            202,
+                                            790,
+                                            840,
+                                            890,
+                                            1038,
+                                            1104,
+                                            1170,
+                                            1286,
+                                            1368,
+                                            1450}); // y
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_4d_no_zero_point)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer_4d_no_zero_point.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // a
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // b
+
+    test_case.add_expected_output<int32_t>(Shape{1, 2, 3, 3},
+                                           {42,
+                                            48,
+                                            54,
+                                            114,
+                                            136,
+                                            158,
+                                            186,
+                                            224,
+                                            262,
+                                            906,
+                                            960,
+                                            1014,
+                                            1170,
+                                            1240,
+                                            1310,
+                                            1434,
+                                            1520,
+                                            1606}); // y
+    test_case.run();
+}
