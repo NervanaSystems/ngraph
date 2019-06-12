@@ -626,7 +626,6 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                                        const AxisSet& shrink_axis,
                                        const AxisSet& ellipsis_mask)
 {
-    // TODO(amprocte): double-check that these checks are needed.
     if (lb.size() && ub.size())
     {
         NODE_VALIDATION_CHECK(node,
