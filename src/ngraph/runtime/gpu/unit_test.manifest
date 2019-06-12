@@ -134,6 +134,13 @@ model_conv_integer_zero_point_zero
 model_conv_integer_no_zero_point
 model_conv_integer
 model_conv_integer_pads
+model_matmul_integer
+model_matmul_integer_zero_point_zero
+model_matmul_integer_no_zero_point
+model_matmul_integer_scalar
+model_matmul_integer_4d
+model_matmul_integer_4d_zero_point
+model_matmul_integer_4d_no_zero_point
 
 # This should be implemented
 create_tensor_2_input
