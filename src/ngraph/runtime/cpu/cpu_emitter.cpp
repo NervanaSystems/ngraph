@@ -61,6 +61,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -1815,15 +1816,34 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                writer << "reference::gather<" << args[0].get_type() << ", "
-                       << args[1].get_element_type().c_type_string() << ">(" << args[0].get_name()
-                       << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
-                writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   {" << join(args[0].get_shape()) << "},\n";
-                writer << "                   {" << join(args[1].get_shape()) << "},\n";
-                writer << "                   {" << join(out[0].get_shape()) << "},\n";
-                writer << "                   " << gather->get_axis() << ");\n";
+                if ((args[0].get_element_type() == element::f64 ||
+                     args[0].get_element_type() == element::f32 ||
+                     args[0].get_element_type() == element::u8) &&
+                    gather->get_axis() == 0)
+                {
+                    writer << "cpu::kernel::gather<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ", "
+                           << args[0].get_shape().size() << ", " << out[0].get_shape().size()
+                           << ">(" << args[0].get_name() << ",\n";
+                    writer << "                   " << args[1].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                    writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                   0);\n";
+                }
+                else
+                {
+                    writer << "reference::gather<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ">("
+                           << args[0].get_name() << ",\n";
+                    writer << "                   " << args[1].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                    writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                   " << gather->get_axis() << ");\n";
+                }
                 writer.block_end();
             }
 
@@ -4040,6 +4060,37 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error("unsupported parameters for QuantizedConcat via DEX");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Tile)
+            {
+                auto arg_shape = args[0].get_shape();
+                auto arg_rank = arg_shape.size();
+                auto out_shape = out[0].get_shape();
+                const element::Type& et = args[0].get_element_type();
+
+                if (arg_rank == 0)
+                {
+                    size_t repeats = shape_size(out_shape);
+
+                    writer.block_begin();
+                    writer << "cpu::kernel::tile_rank_0<" << et.c_type_string() << ">("
+                           << args[0].get_name() << ", " << out[0].get_name() << ", "
+                           << std::to_string(repeats) << ");\n";
+
+                    writer.block_end();
+                }
+                else
+                {
+                    writer.block_begin();
+                    writer << "cpu::kernel::tile<" << et.c_type_string() << ", "
+                           << std::to_string(arg_rank) << ">(" << args[0].get_name() << ", "
+                           << out[0].get_name() << ", {" << join(arg_shape) << "}, {"
+                           << join(out_shape) << "}, 0);\n";
+
+                    writer.block_end();
                 }
             }
 

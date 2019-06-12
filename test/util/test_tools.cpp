@@ -293,17 +293,17 @@ string get_results_str(const std::vector<char>& ref_data,
     ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        ss << "\n"
+        ss << std::endl
            << std::setw(4) << i << " ref: " << std::setw(16) << std::left
            << static_cast<int>(ref_data[i]) << "  actual: " << std::setw(16) << std::left
            << static_cast<int>(actual_data[i]);
     }
-    ss << "\n";
+    ss << std::endl;
 
     return ss.str();
 }
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, file_name);

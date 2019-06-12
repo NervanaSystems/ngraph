@@ -40,7 +40,7 @@ namespace ngraph
 
 bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<ngraph::Function> make_function_from_file(const std::string& file_name);
 #endif
 
@@ -231,11 +231,12 @@ std::string get_results_str(const std::vector<T>& ref_data,
     ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        ss << "\n"
-           << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
-           << "  actual: " << std::setw(16) << std::left << actual_data[i];
+        ss << std::endl
+           // use unary + operator to force integral values to be displayed as numbers
+           << std::setw(4) << i << " ref: " << std::setw(16) << std::left << +ref_data[i]
+           << "  actual: " << std::setw(16) << std::left << +actual_data[i];
     }
-    ss << "\n";
+    ss << std::endl;
 
     return ss.str();
 }
