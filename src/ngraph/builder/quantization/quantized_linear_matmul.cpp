@@ -48,14 +48,9 @@ namespace ngraph
                                                    const shared_ptr<Node>& output_scale,
                                                    const shared_ptr<Node>& output_zero_point)
             {
-                auto input0_zero = dynamic_pointer_cast<ngraph::op::Constant>(input0_zero_point);
-                auto input1_zero = dynamic_pointer_cast<ngraph::op::Constant>(input1_zero_point);
-                auto output_zero = dynamic_pointer_cast<ngraph::op::Constant>(output_zero_point);
-
                 // Check if zero point is constant and zero
-                if (input0_zero != nullptr && input1_zero != nullptr && output_zero != nullptr &&
-                    ngraph::is_zero(input0_zero) && ngraph::is_zero(input1_zero) &&
-                    ngraph::is_zero(output_zero))
+                if (ngraph::is_zero(input0_zero_point) && ngraph::is_zero(input1_zero_point) &&
+                    ngraph::is_zero(output_zero_point))
                 {
                     auto requantization_scale = (input0_scale * input1_scale) / output_scale;
                     return make_shared<op::QuantizedDot>(input0, input1, requantization_scale);
@@ -77,14 +72,13 @@ namespace ngraph
                                                                  axes);
 
                     auto dot = make_shared<op::Dot>(dq_input0, dq_input1, 1);
-                    auto q_dot = make_shared<op::Quantize>(
+                    return make_shared<op::Quantize>(
                         dot,
                         output_scale,
                         output_zero_point,
                         output_zero_point->get_element_type(),
                         axes,
                         op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
-                    return move(q_dot);
                 }
             }
 
@@ -93,6 +87,51 @@ namespace ngraph
             {
                 auto output_scale = make_constant(element::f32, Shape{}, 1);
                 return make_shared<op::QuantizedDot>(input0, input1, output_scale, false, false);
+            }
+
+            shared_ptr<Node>
+                QuantizedLinearMatmulInteger(const std::shared_ptr<Node>& input0,
+                                             const std::shared_ptr<Node>& input1,
+                                             const std::shared_ptr<Node>& input0_zero_point,
+                                             const std::shared_ptr<Node>& input1_zero_point)
+            {
+                // Check if zero points are constant and zero
+                if (ngraph::is_zero(input0_zero_point) && ngraph::is_zero(input1_zero_point))
+                {
+                    return QuantizedLinearMatmulInteger(input0, input1);
+                }
+                else
+                {
+                    // Fall back to performing matmul on dequantized floating-point values
+                    const auto input0_scale = make_constant(element::f32, Shape{}, 1);
+                    const auto input1_scale = make_constant(element::f32, Shape{}, 1);
+                    const auto output_scale = make_constant(element::f32, Shape{}, 1);
+                    const auto output_zero_point = make_constant(element::i32, Shape{}, 0);
+                    const AxisSet axes;
+
+                    const auto dq_input0 =
+                        make_shared<op::Dequantize>(input0,
+                                                    input0_scale,
+                                                    input0_zero_point,
+                                                    input0_scale->get_element_type(),
+                                                    axes);
+
+                    const auto dq_input1 =
+                        make_shared<op::Dequantize>(input1,
+                                                    input1_scale,
+                                                    input1_zero_point,
+                                                    input1_scale->get_element_type(),
+                                                    axes);
+
+                    const auto dot = make_shared<op::Dot>(dq_input0, dq_input1, 1);
+                    return make_shared<op::Quantize>(
+                        dot,
+                        output_scale,
+                        output_zero_point,
+                        output_zero_point->get_element_type(),
+                        axes,
+                        op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
+                }
             }
         }
     }

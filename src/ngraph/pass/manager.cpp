@@ -131,6 +131,10 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
             for (auto f_pair : fs)
             {
                 shared_ptr<Function> f = f_pair.first;
+                if (node_pass->get_property(PassProperty::REQUIRE_STATIC_SHAPE) && f_pair.second)
+                {
+                    continue;
+                }
                 for (shared_ptr<Node> n : f->get_ops())
                 {
                     node_pass->run_on_node(n);
