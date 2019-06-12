@@ -45,10 +45,10 @@ namespace ngraph
                                                      const ngraph::AxisSet& output_axes)
         {
             auto input_scale =
-                quantization_scale::get_scale(min_input, max_input, input->get_element_type());
+                quantization_utils::get_scale(min_input, max_input, input->get_element_type());
             auto filter_scale =
-                quantization_scale::get_scale(min_filter, max_filter, filters->get_element_type());
-            auto output_scale = quantization_scale::get_scale(min_output, max_output, output_type);
+                quantization_utils::get_scale(min_filter, max_filter, filters->get_element_type());
+            auto output_scale = quantization_utils::get_scale(min_output, max_output, output_type);
 
             // TODO: Check for this later
             // For Builders the zero point is assumed to be zero (for now)

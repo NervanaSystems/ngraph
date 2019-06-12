@@ -38,8 +38,8 @@ set (SRC
     builder/quantization/quantized_linear_matmul.cpp
     builder/quantization/quantized_linear_matmul.hpp
     builder/quantization_util.hpp
-    builder/quantization_scale.hpp
-    builder/quantization_scale.cpp
+    builder/quantization_utils.hpp
+    builder/quantization_utils.cpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
     builder/reshape.cpp

@@ -19,7 +19,7 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
-#include "quantization_scale.hpp"
+#include "quantization_utils.hpp"
 
 namespace ngraph
 {

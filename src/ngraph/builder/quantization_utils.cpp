@@ -14,13 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "quantization_scale.hpp"
+#include "quantization_utils.hpp"
 
 namespace ngraph
 {
     namespace builder
     {
-        namespace quantization_scale
+        namespace quantization_utils
         {
             std::shared_ptr<Node> max_abs(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
             {
