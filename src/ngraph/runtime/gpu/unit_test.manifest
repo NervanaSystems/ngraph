@@ -95,6 +95,8 @@ all_2x2x3_eliminate_dims_0_1_2
 # GPU backend uses floats to implement these ops for int32
 floor_int32
 divide_int32
+divide_python_rounding_int32
+divide_cpp_rounding_int32
 one_hot_scalar_oob_in_3
 
 # Unsupported extra pading modes

@@ -255,3 +255,6 @@ backwards_softmax_all
 backwards_softmax_axis
 backwards_softmax_underflow
 backwards_softmax_3d
+batch_mat_mul_forward
+dot_matrix_2x0_0x2
+backwards_batchmatmul_tensor2_tensor2
