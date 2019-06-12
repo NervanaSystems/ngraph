@@ -118,7 +118,7 @@ void ngraph::runtime::plaidml::PlaidML_Tensor::sync_input()
         return;
     }
     NGRAPH_DEBUG << "Syncing input for tensor " << this;
-    write(m_memory, 0, m_memory_size);
+    write(m_memory, m_memory_size);
 }
 
 void ngraph::runtime::plaidml::PlaidML_Tensor::sync_output()
@@ -132,5 +132,5 @@ void ngraph::runtime::plaidml::PlaidML_Tensor::sync_output()
         return;
     }
     NGRAPH_DEBUG << "Syncing output for tensor " << this;
-    read(m_memory, 0, m_memory_size);
+    read(m_memory, m_memory_size);
 }

@@ -1086,7 +1086,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Divide)
             {
                 writer.block_begin();
-                if (node->get_element_type().is_real() == false)
+                bool integral_type = !node->get_element_type().is_real();
+                if (integral_type)
                 {
                     // Check for divide by zero for integer types only
                     size_t element_count = args[1].get_size();
@@ -1096,11 +1097,25 @@ namespace ngraph
                            << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
                     writer.block_end();
                 }
+                auto divop = static_cast<const ngraph::op::Divide*>(node);
+                bool pythondiv = divop->is_pythondiv();
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
-                       << args[1].get_name() << "[i];\n";
+                if (integral_type && pythondiv)
+                {
+                    writer << out[0].get_name() << "[i] = ((" << args[0].get_name() << "[i] % "
+                           << args[1].get_name() << "[i] != 0) && (" << args[0].get_name()
+                           << "[i] < 0 != " << args[1].get_name() << "[i] < 0)) ?"
+                           << args[0].get_name() << "[i] / " << args[1].get_name()
+                           << "[i] - 1 :" << args[0].get_name() << "[i] / " << args[1].get_name()
+                           << "[i];\n";
+                }
+                else
+                {
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
+                           << args[1].get_name() << "[i];\n";
+                }
                 writer.block_end();
                 writer.block_end();
             }
