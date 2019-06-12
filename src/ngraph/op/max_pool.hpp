@@ -43,7 +43,7 @@ namespace ngraph
                     const Shape& padding_below,
                     const Shape& padding_above,
                     const PadType& pad_type,
-                    bool ceil_mode = false);
+                    bool ceil_mode);
 
             /// \brief Constructs a batched max pooling operation.
             ///
@@ -52,11 +52,26 @@ namespace ngraph
             /// \param window_movement_strides The window movement strides.
             /// \param padding_below The below-padding shape.
             /// \param padding_above The above-padding shape.
+            /// \param pad_type The pad type for automatically computing padding sizes
             MaxPool(const std::shared_ptr<Node>& arg,
                     const Shape& window_shape,
                     const Strides& window_movement_strides,
                     const Shape& padding_below,
-                    const Shape& padding_above);
+                    const Shape& padding_above,
+                    const PadType& pad_type);
+
+                /// \brief Constructs a batched max pooling operation.
+                ///
+                /// \param arg The node producing the input data batch tensor.
+                /// \param window_shape The window shape.
+                /// \param window_movement_strides The window movement strides.
+                /// \param padding_below The below-padding shape.
+                /// \param padding_above The above-padding shape.
+                MaxPool(const std::shared_ptr<Node>& arg,
+                        const Shape& window_shape,
+                        const Strides& window_movement_strides,
+                        const Shape& padding_below,
+                        const Shape& padding_above);
 
             void validate_and_infer_types() override;
 

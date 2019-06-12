@@ -47,14 +47,24 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
+                     const Shape& padding_above,
+                     const PadType& pad_type)
+    : MaxPool(
+          arg, window_shape, window_movement_strides, padding_below, padding_above, pad_type, false)
+{
+}
+
+op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+                     const Shape& window_shape,
+                     const Strides& window_movement_strides,
+                     const Shape& padding_below,
                      const Shape& padding_above)
     : MaxPool(arg,
               window_shape,
               window_movement_strides,
               padding_below,
               padding_above,
-              PadType::EXPLICIT,
-              false)
+              PadType::EXPLICIT)
 {
 }
 
