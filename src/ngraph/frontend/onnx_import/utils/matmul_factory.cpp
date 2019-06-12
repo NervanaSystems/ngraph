@@ -14,24 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "matmul_factory.hpp"
 #include <cstddef>
 #include <iterator>
 #include <memory>
 #include <vector>
 
-#include "exceptions.hpp"
+#include "matmul_factory.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization/quantized_linear_matmul.hpp"
-#include "ngraph/coordinate.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/shape.hpp"
-#include "ngraph/util.hpp"
 #include "utils/reshape.hpp"
 
 /// \brief      Slice the sub matrix from the input tensor.
