@@ -230,6 +230,7 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
+target_link_libraries(unit-test PRIVATE -Wl,--whole-archive hybrid -Wl,--no-whole-archive)
 if (NGRAPH_JSON_ENABLE)
     target_link_libraries(unit-test PRIVATE libjson)
 endif()

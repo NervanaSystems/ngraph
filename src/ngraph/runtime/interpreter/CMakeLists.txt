@@ -21,7 +21,7 @@ if (NGRAPH_INTERPRETER_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    target_link_libraries(interpreter_backend PUBLIC ngraph)
+    target_link_libraries(interpreter_backend PUBLIC ngraph hybrid)
 
     install(TARGETS interpreter_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
