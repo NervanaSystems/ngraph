@@ -71,7 +71,7 @@ add_dependencies(libgtest ext_gtest)
 #set_property(TARGET libgtest PROPERTY INTERFACE_INCLUDE_DIRECTORIES
 #    ${SOURCE_DIR}/googletest/include
 #    ${SOURCE_DIR}/googlemock/include)
-include_directories(${SOURCE_DIR}/googletest/include ${SOURCE_DIR}/googlemock/include)
+include_directories(SYSTEM ${SOURCE_DIR}/googletest/include ${SOURCE_DIR}/googlemock/include)
 
 if(LINUX OR APPLE)
     set_property(TARGET libgtest PROPERTY IMPORTED_LOCATION_DEBUG

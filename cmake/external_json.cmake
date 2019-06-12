@@ -40,4 +40,4 @@ ExternalProject_Add(
 #------------------------------------------------------------------------------
 
 ExternalProject_Get_Property(libjson SOURCE_DIR)
-include_directories(${SOURCE_DIR}/include)
+include_directories(SYSTEM ${SOURCE_DIR}/include)

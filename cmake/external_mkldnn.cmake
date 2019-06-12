@@ -316,7 +316,7 @@ else()
 endif()
 add_dependencies(libmkldnn ext_mkldnn)
 set(MKLDNN_INCLUDE_DIR ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
-include_directories(${MKLDNN_INCLUDE_DIR})
+include_directories(SYSTEM ${MKLDNN_INCLUDE_DIR})
 if (WIN32)
     set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB})
     set_target_properties(libmkldnn PROPERTIES

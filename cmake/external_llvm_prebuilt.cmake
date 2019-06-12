@@ -153,7 +153,7 @@ endif()
 add_library(libllvm UNKNOWN IMPORTED)
 add_dependencies(libllvm ext_llvm)
 set(LLVM_INCLUDE_DIR ${INSTALL_DIR}/include)
-include_directories(${LLVM_INCLUDE_DIR})
+include_directories(SYSTEM ${LLVM_INCLUDE_DIR})
 set_property(TARGET libllvm PROPERTY IMPORTED_LOCATION
     ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}clangTooling${CMAKE_STATIC_LIBRARY_SUFFIX})
 set_property(TARGET libllvm PROPERTY INTERFACE_LINK_LIBRARIES ${LLVM_LINK_LIBS})
