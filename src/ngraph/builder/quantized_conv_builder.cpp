@@ -40,7 +40,9 @@ namespace ngraph
                                                      const shared_ptr<Node>& min_output,
                                                      const shared_ptr<Node>& max_output,
                                                      const ngraph::element::Type& output_type,
-                                                     const ngraph::AxisSet& axes)
+                                                     const ngraph::AxisSet& input_axes,
+                                                     const ngraph::AxisSet& filter_axes,
+                                                     const ngraph::AxisSet& output_axes)
         {
             auto input_scale =
                 quantization_scale::get_scale(min_input, max_input, input->get_element_type());
@@ -69,7 +71,9 @@ namespace ngraph
                 output_scale,
                 filter_zero_point, // output type will be same as filter
                 output_type,
-                axes);
+                input_axes,
+                filter_axes,
+                output_axes);
         }
     }
 }

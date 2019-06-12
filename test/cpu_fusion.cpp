@@ -3183,6 +3183,8 @@ TEST(cpu_quant_fusion, qconv_relu)
                                                                output_scale,
                                                                int8_zero,
                                                                element::i8,
+                                                               AxisSet{},
+                                                               AxisSet{},
                                                                AxisSet{});
         auto dq = std::make_shared<op::Dequantize>(
             conv, output_scale, int8_zero, element::f32, AxisSet{});

@@ -38,7 +38,9 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& input,
                                                const std::shared_ptr<Node>& output_scale,
                                                const std::shared_ptr<Node>& output_zero_point,
                                                const ngraph::element::Type& output_type,
-                                               const ngraph::AxisSet& axes)
+                                               const ngraph::AxisSet& input_axes,
+                                               const ngraph::AxisSet& filter_axes,
+                                               const ngraph::AxisSet& output_axes)
     : Op("QuantizedConvolution",
          check_single_output_args({input,
                                    filters,
@@ -54,7 +56,9 @@ op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& input,
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
     , m_output_type(output_type)
-    , m_axes(axes)
+    , m_input_axes(input_axes)
+    , m_filter_axes(filter_axes)
+    , m_output_axes(output_axes)
 {
     constructor_validate_and_infer_types();
 }
@@ -165,5 +169,7 @@ shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& 
                                                      new_args.at(6),
                                                      new_args.at(7),
                                                      m_output_type,
-                                                     m_axes));
+                                                     m_input_axes,
+                                                     m_filter_axes,
+                                                     m_output_axes));
 }

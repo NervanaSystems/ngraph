@@ -39,6 +39,8 @@ namespace ngraph
                                                           const std::shared_ptr<Node>& min_output,
                                                           const std::shared_ptr<Node>& max_output,
                                                           const ngraph::element::Type& output_type,
-                                                          const ngraph::AxisSet& axes);
+                                                          const ngraph::AxisSet& input_axes,
+                                                          const ngraph::AxisSet& filter_axes,
+                                                          const ngraph::AxisSet& output_axes);
     }
 }

@@ -36,52 +36,6 @@ namespace ngraph
     {
         namespace quantization
         {
-            // TODO: this codes is falling back to fp32 convolution
-            //       need to make this the primary builder which means
-            //       1) add support for zero point in QuantizeConvolution op API
-            //       2) add QuantizedConvolution reference kernel, including zero point
-            shared_ptr<Node> QuantizedLinearConvolution(const shared_ptr<Node>& input,
-                                                        const shared_ptr<Node>& filter,
-                                                        const Strides& window_movement_strides,
-                                                        const Strides& window_dilation_strides,
-                                                        const CoordinateDiff& padding_below,
-                                                        const CoordinateDiff& padding_above,
-                                                        const Strides& data_dilation_strides,
-                                                        const shared_ptr<Node>& input_scale,
-                                                        const shared_ptr<Node>& input_zero_point,
-                                                        const shared_ptr<Node>& filter_scale,
-                                                        const shared_ptr<Node>& filter_zero_point,
-                                                        const shared_ptr<Node>& output_scale,
-                                                        const shared_ptr<Node>& output_zero_point)
-            {
-                AxisSet axes;
-
-                auto dq_input = make_shared<op::Dequantize>(
-                    input, input_scale, input_zero_point, input_scale->get_element_type(), axes);
-
-                auto dq_filter = make_shared<op::Dequantize>(filter,
-                                                             filter_scale,
-                                                             filter_zero_point,
-                                                             filter_scale->get_element_type(),
-                                                             axes);
-
-                auto convolution = make_shared<op::Convolution>(dq_input,
-                                                                dq_filter,
-                                                                window_movement_strides,
-                                                                window_dilation_strides,
-                                                                padding_below,
-                                                                padding_above,
-                                                                data_dilation_strides);
-                auto q_convolution =
-                    make_shared<op::Quantize>(convolution,
-                                              output_scale,
-                                              output_zero_point,
-                                              output_zero_point->get_element_type(),
-                                              axes,
-                                              op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
-                return move(q_convolution);
-            }
-
             shared_ptr<Node> QuantizedLinearConvolutionBias(const shared_ptr<Node>& input,
                                                             const shared_ptr<Node>& filter,
                                                             const shared_ptr<Node>& bias,

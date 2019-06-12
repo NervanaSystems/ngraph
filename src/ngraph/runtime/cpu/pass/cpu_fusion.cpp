@@ -1823,6 +1823,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
                                                                    output_scale,
                                                                    int8_zero,
                                                                    element::i8,
+                                                                   AxisSet{},
+                                                                   AxisSet{},
                                                                    AxisSet{});
     }
     auto dq =
