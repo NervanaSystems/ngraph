@@ -82,6 +82,7 @@ set(SRC
     builder/softmax.cpp
     builder/get_output_element.cpp
     builder/sum.cpp
+    builder/tile.cpp
     builder/topk.cpp
     builder/update_slice.cpp
     kernel/pad.cpp
@@ -169,6 +170,10 @@ if (NGRAPH_CPU_ENABLE)
         target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
         target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.a libhalidellvm)
         add_dependencies(cpu_backend ext_halide)
+    endif()
+
+    if(NOT NGRAPH_FAST_MATH_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_FAST_MATH=0)
     endif()
 
     if(OPENMP_FOUND)

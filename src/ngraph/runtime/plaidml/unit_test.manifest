@@ -57,6 +57,7 @@ max_pool_2d_1channel_1image_overpadded
 max_pool_3d
 maxpool_bprop_larger_than_cache
 generate_mask
+generate_mask2
 avg_pool_3d
 avg_pool_3d_uneven_strided_padded_include_in_computation
 quantize_dynamic_offset                 # Quantization/Dequantization is unimplemented

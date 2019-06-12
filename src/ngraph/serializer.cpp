@@ -1006,9 +1006,15 @@ static shared_ptr<ngraph::Function>
                 auto type = read_element_type(node_js.at("type"));
                 auto seed = node_js.at("seed").get<unsigned int>();
                 auto probability = node_js.at("probability").get<double>();
+                auto use_seed_maybe = node_js.at("use_seed");
+                bool use_seed = false;
+                if (!use_seed_maybe.empty())
+                {
+                    use_seed = use_seed_maybe.get<bool>();
+                }
 
-                node =
-                    make_shared<op::GenerateMask>(args[0], output_shape, type, seed, probability);
+                node = make_shared<op::GenerateMask>(
+                    args[0], output_shape, type, seed, probability, use_seed);
                 break;
             }
             case OP_TYPEID::GetOutputElement:
@@ -1600,6 +1606,10 @@ static shared_ptr<ngraph::Function>
             {
                 node->set_friendly_name(friendly_name);
             }
+            else
+            {
+                node->set_friendly_name(node_name);
+            }
             node_map[node_name] = node;
         }
         catch (...)
@@ -1843,7 +1853,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Constant:
     {
         auto tmp = dynamic_cast<const op::Constant*>(&n);
-        if (tmp->are_all_data_elements_bitwise_identical())
+        if (tmp->are_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
         {
             vector<string> vs;
             vs.push_back(tmp->convert_value_to_string(0));
@@ -2020,8 +2030,9 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::GenerateMask:
     {
         auto tmp = dynamic_cast<const op::GenerateMask*>(&n);
-        node["output_shape"] = tmp->get_shape();
+        node["output_shape"] = tmp->get_mask_shape();
         node["type"] = write_element_type(tmp->get_element_type());
+        node["use_seed"] = tmp->get_use_seed();
         node["seed"] = tmp->get_seed();
         node["probability"] = tmp->get_probability();
         break;
