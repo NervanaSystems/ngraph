@@ -406,16 +406,32 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_4d)
         file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer_4d.prototxt"));
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
-    test_case.add_input(
-        std::vector<uint8_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}); // a
-    test_case.add_input(
-        std::vector<uint8_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}); // b
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // a
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // b
     test_case.add_input(std::vector<uint8_t>{0}); // a_zero_point
     test_case.add_input(std::vector<uint8_t>{0}); // b_zero_point
 
-    test_case.add_expected_output<int32_t>(
-        Shape{2, 2, 2, 2},
-        {7, 10, 15, 22, 67, 78, 91, 106, 191, 210, 231, 254, 379, 406, 435, 466}); // y
+    test_case.add_expected_output<int32_t>(Shape{1, 2, 3, 3},
+                                           {42,
+                                            48,
+                                            54,
+                                            114,
+                                            136,
+                                            158,
+                                            186,
+                                            224,
+                                            262,
+                                            906,
+                                            960,
+                                            1014,
+                                            1170,
+                                            1240,
+                                            1310,
+                                            1434,
+                                            1520,
+                                            1606}); // y
     test_case.run();
 }
 
@@ -425,16 +441,32 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_4d_zero_point)
         file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer_4d.prototxt"));
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
-    test_case.add_input(
-        std::vector<uint8_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}); // a
-    test_case.add_input(
-        std::vector<uint8_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}); // b
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // a
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // b
     test_case.add_input(std::vector<uint8_t>{1}); // a_zero_point
     test_case.add_input(std::vector<uint8_t>{1}); // b_zero_point
 
-    test_case.add_expected_output<int32_t>(
-        Shape{2, 2, 2, 2},
-        {2, 3, 6, 11, 46, 55, 66, 79, 154, 171, 190, 211, 326, 351, 378, 407}); // y
+    test_case.add_expected_output<int32_t>(Shape{1, 2, 3, 3},
+                                           {22,
+                                            24,
+                                            26,
+                                            78,
+                                            96,
+                                            114,
+                                            134,
+                                            168,
+                                            202,
+                                            790,
+                                            840,
+                                            890,
+                                            1038,
+                                            1104,
+                                            1170,
+                                            1286,
+                                            1368,
+                                            1450}); // y
     test_case.run();
 }
 
@@ -444,13 +476,29 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_matmul_integer_4d_no_zero_point)
         file_util::path_join(SERIALIZED_ZOO, "onnx/matmul_integer_4d_no_zero_point.prototxt"));
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
-    test_case.add_input(
-        std::vector<uint8_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}); // a
-    test_case.add_input(
-        std::vector<uint8_t>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}); // b
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // a
+    test_case.add_input(std::vector<uint8_t>{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
+                                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}); // b
 
-    test_case.add_expected_output<int32_t>(
-        Shape{2, 2, 2, 2},
-        {7, 10, 15, 22, 67, 78, 91, 106, 191, 210, 231, 254, 379, 406, 435, 466}); // y
+    test_case.add_expected_output<int32_t>(Shape{1, 2, 3, 3},
+                                           {42,
+                                            48,
+                                            54,
+                                            114,
+                                            136,
+                                            158,
+                                            186,
+                                            224,
+                                            262,
+                                            906,
+                                            960,
+                                            1014,
+                                            1170,
+                                            1240,
+                                            1310,
+                                            1434,
+                                            1520,
+                                            1606}); // y
     test_case.run();
 }

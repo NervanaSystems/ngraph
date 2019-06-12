@@ -20,16 +20,16 @@ graph {
         elem_type: 2
         shape {
           dim {
-            dim_value: 2
+            dim_value: 1
           }
           dim {
             dim_value: 2
           }
           dim {
-            dim_value: 2
+            dim_value: 3
           }
           dim {
-            dim_value: 2
+            dim_value: 4
           }
         }
       }
@@ -42,16 +42,16 @@ graph {
         elem_type: 2
         shape {
           dim {
-            dim_value: 2
+            dim_value: 1
           }
           dim {
             dim_value: 2
           }
           dim {
-            dim_value: 2
+            dim_value: 4
           }
           dim {
-            dim_value: 2
+            dim_value: 3
           }
         }
       }
@@ -84,16 +84,16 @@ graph {
         elem_type: 6
         shape {
           dim {
-            dim_value: 2
+            dim_value: 1
           }
           dim {
             dim_value: 2
           }
           dim {
-            dim_value: 2
+            dim_value: 3
           }
           dim {
-            dim_value: 2
+            dim_value: 3
           }
         }
       }
