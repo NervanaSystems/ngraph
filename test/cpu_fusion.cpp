@@ -3824,6 +3824,56 @@ TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
     }
 }
 
+TEST(cpu_fusion, lstm_cell)
+{
+    auto make_function = []() {
+        const size_t batch_size = 2;
+        const size_t input_size = 2;
+        const size_t hidden_size = 3;
+        const size_t gates_count = 4;
+
+        const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+        const auto W =
+            make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        const auto R =
+            make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+        const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+        const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+
+        auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
+                                                 ParameterVector{X, W, R, H_t, C_t});
+        return ht_function;
+    };
+    auto ht_function_cpu = make_function();
+    auto ht_function_inter = make_function();
+    test::Uniform<float> rng(1.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : ht_function_cpu->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    for (auto arg : args)
+    {
+        std::cout << "##########################" << std::endl;
+        for (auto val : arg)
+        {
+            std::cout << val << std::endl;
+        }
+    }
+    auto int_results = execute(ht_function_inter, args, "INTERPRETER");
+    auto cpu_results = execute(ht_function_cpu, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
 TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
 {
     const std::string file_name("mxnet/2rnn_layer_3lstm_cell.json");

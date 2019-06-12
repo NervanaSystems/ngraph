@@ -45,11 +45,13 @@ public:
     {
         construct_sigmoid();
         construct_lstm_fprop();
+        construct_onnx_lstmcell_fprop();
     }
 
 private:
     void construct_sigmoid();
     void construct_lstm_fprop();
+    void construct_onnx_lstmcell_fprop();
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::RNNFusion

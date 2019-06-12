@@ -48,7 +48,7 @@ namespace ngraph
                 auto lower_bounds = slice->get_lower_bounds();
                 auto upper_bounds = slice->get_upper_bounds();
 
-                if (auto op_annotations = slice->get_op_annotations())
+                /*if (auto op_annotations = slice->get_op_annotations())
                 {
                     auto in_place_oi_pairs = op_annotations->get_in_place_oi_pairs();
                     if (in_place_oi_pairs.size() > 0)
@@ -86,7 +86,7 @@ namespace ngraph
                         functors.emplace_back(functor);
                         return;
                     }
-                }
+                }*/
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
