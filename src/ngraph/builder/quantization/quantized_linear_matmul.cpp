@@ -103,25 +103,27 @@ namespace ngraph
                 else
                 {
                     // Fall back to performing matmul on dequantized floating-point values
-                    auto input0_scale = make_constant(element::f32, Shape{}, 1);
-                    auto input1_scale = make_constant(element::f32, Shape{}, 1);
-                    auto output_scale = make_constant(element::f32, Shape{}, 1);
-                    auto output_zero_point = make_constant(element::i32, Shape{}, 0);
-                    AxisSet axes;
+                    const auto input0_scale = make_constant(element::f32, Shape{}, 1);
+                    const auto input1_scale = make_constant(element::f32, Shape{}, 1);
+                    const auto output_scale = make_constant(element::f32, Shape{}, 1);
+                    const auto output_zero_point = make_constant(element::i32, Shape{}, 0);
+                    const AxisSet axes;
 
-                    auto dq_input0 = make_shared<op::Dequantize>(input0,
-                                                                 input0_scale,
-                                                                 input0_zero_point,
-                                                                 input0_scale->get_element_type(),
-                                                                 axes);
+                    const auto dq_input0 =
+                        make_shared<op::Dequantize>(input0,
+                                                    input0_scale,
+                                                    input0_zero_point,
+                                                    input0_scale->get_element_type(),
+                                                    axes);
 
-                    auto dq_input1 = make_shared<op::Dequantize>(input1,
-                                                                 input1_scale,
-                                                                 input1_zero_point,
-                                                                 input1_scale->get_element_type(),
-                                                                 axes);
+                    const auto dq_input1 =
+                        make_shared<op::Dequantize>(input1,
+                                                    input1_scale,
+                                                    input1_zero_point,
+                                                    input1_scale->get_element_type(),
+                                                    axes);
 
-                    auto dot = make_shared<op::Dot>(dq_input0, dq_input1, 1);
+                    const auto dot = make_shared<op::Dot>(dq_input0, dq_input1, 1);
                     return make_shared<op::Quantize>(
                         dot,
                         output_scale,
