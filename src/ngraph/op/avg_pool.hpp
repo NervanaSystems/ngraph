@@ -136,8 +136,10 @@ namespace ngraph
             /// \return The pad type for pooling.
             const PadType& get_pad_type() const;
             void set_pad_type(const PadType& pad_type);
+#if 0
             bool get_ceil_mode() const { return m_ceil_mode; }
             void set_ceil_mode(bool ceil_mode) { m_ceil_mode = ceil_mode; }
+#endif
             /// \return The default value for AvgPool.
             virtual std::shared_ptr<Node> get_default_value() const override
             {
@@ -151,7 +153,7 @@ namespace ngraph
             Shape m_padding_above;
             bool m_include_padding_in_avg_computation{false};
             PadType m_pad_type{PadType::EXPLICIT};
-            bool m_ceil_mode{false};
+            // bool m_ceil_mode{false};
         };
 
         class AvgPoolBackprop : public Op

@@ -42,7 +42,7 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
     , m_padding_above(padding_above)
     , m_include_padding_in_avg_computation(include_padding_in_avg_computation)
     , m_pad_type(pad_type)
-    , m_ceil_mode(ceil_mode)
+//    , m_ceil_mode(ceil_mode)
 {
     constructor_validate_and_infer_types();
 }
@@ -131,7 +131,7 @@ void op::AvgPool::validate_and_infer_types()
                                                   m_window_shape,
                                                   m_window_movement_strides,
                                                   m_include_padding_in_avg_computation,
-                                                  m_ceil_mode));
+                                                  false /*m_ceil_mode*/));
 }
 
 op::AvgPool::AvgPool(const Output<Node>& arg,
@@ -216,7 +216,7 @@ shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_padding_above,
                                 m_include_padding_in_avg_computation,
                                 m_pad_type,
-                                m_ceil_mode);
+                                false /*m_ceil_mode*/);
 }
 
 const string op::AvgPoolBackprop::type_name("AvgPoolBackprop");
