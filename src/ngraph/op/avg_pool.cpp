@@ -33,8 +33,7 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
                      const Shape& padding_below,
                      const Shape& padding_above,
                      bool include_padding_in_avg_computation,
-                     const PadType& pad_type,
-                     bool ceil_mode)
+                     const PadType& pad_type)
     : Op({arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
@@ -42,27 +41,8 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
     , m_padding_above(padding_above)
     , m_include_padding_in_avg_computation(include_padding_in_avg_computation)
     , m_pad_type(pad_type)
-    , m_ceil_mode(ceil_mode)
 {
     constructor_validate_and_infer_types();
-}
-
-op::AvgPool::AvgPool(const Output<Node>& arg,
-                     const Shape& window_shape,
-                     const Strides& window_movement_strides,
-                     const Shape& padding_below,
-                     const Shape& padding_above,
-                     bool include_padding_in_avg_computation,
-                     const PadType& pad_type)
-    : AvgPool(arg,
-              window_shape,
-              window_movement_strides,
-              padding_below,
-              padding_above,
-              include_padding_in_avg_computation,
-              pad_type,
-              false)
-{
 }
 
 op::AvgPool::AvgPool(const Output<Node>& arg,
@@ -131,7 +111,7 @@ void op::AvgPool::validate_and_infer_types()
                                                   m_window_shape,
                                                   m_window_movement_strides,
                                                   m_include_padding_in_avg_computation,
-                                                  m_ceil_mode));
+                                                  false /*m_ceil_mode*/));
 }
 
 op::AvgPool::AvgPool(const Output<Node>& arg,
@@ -206,16 +186,6 @@ void op::AvgPool::set_pad_type(const op::PadType& pad_type)
     m_pad_type = pad_type;
 }
 
-bool op::AvgPool::get_ceil_mode() const
-{
-    return m_ceil_mode;
-}
-
-void op::AvgPool::set_ceil_mode(bool ceil_mode)
-{
-    m_ceil_mode = ceil_mode;
-}
-
 shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
@@ -225,8 +195,7 @@ shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_padding_below,
                                 m_padding_above,
                                 m_include_padding_in_avg_computation,
-                                m_pad_type,
-                                m_ceil_mode);
+                                m_pad_type);
 }
 
 const string op::AvgPoolBackprop::type_name("AvgPoolBackprop");
@@ -363,11 +332,6 @@ shared_ptr<Node> op::AvgPoolBackprop::copy_with_new_args(const NodeVector& new_a
 
 void op::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    if (m_ceil_mode)
-    {
-        throw ngraph_error("Autodiff not supported on AvgPool with ceil_mode set");
-    }
-
     auto delta = deltas.at(0);
 
     auto operand = get_argument(0);
