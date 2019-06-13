@@ -65,7 +65,9 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
+#endif
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
@@ -762,7 +764,7 @@ private:
             }
             else if (type == element::i32)
             {
-                reference::embedding<T, int>(args[0]->get_data_ptr<const int>(),
+                reference::embedding<T, int32_t>(args[0]->get_data_ptr<const int>(),
                                              args[1]->get_data_ptr<const T>(),
                                              out[0]->get_data_ptr<T>(),
                                              element_count,
@@ -806,6 +808,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+#ifdef INTERPRETER_USE_HYBRID
         case OP_TYPEID::FunctionCall:
         {
             auto f = static_cast<const runtime::hybrid::op::FunctionCall*>(&node);
@@ -829,6 +832,7 @@ private:
             executable->call(outputs, inputs);
             break;
         }
+#endif
         case OP_TYPEID::Floor:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
