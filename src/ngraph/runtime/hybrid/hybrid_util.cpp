@@ -178,11 +178,12 @@ void runtime::hybrid::rewrite_function(const shared_ptr<Function>& f,
                 {
                     for (auto input : node->get_arguments())
                     {
-                        if (input->get_placement_index() == 0)
+                        if (input->get_placement_index() == 0 && !input->is_constant())
                         {
                             // Since this input is from outside the cluster we need to create
                             // a new Parameter node placed in the cluster instead of this external
-                            // node
+                            // node. Constant nodes are ignored here since the values are available
+                            // in the graph.
                             std::vector<Output<Node>> source_outputs =
                                 get_outputs_to(*input, *node);
                             NGRAPH_CHECK(
