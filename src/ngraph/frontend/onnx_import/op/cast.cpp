@@ -13,9 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include <memory>
 
 #include "cast.hpp"
-#include <memory>
 #include "exceptions.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/type/element_type.hpp"
