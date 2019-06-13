@@ -765,10 +765,10 @@ private:
             else if (type == element::i32)
             {
                 reference::embedding<T, int32_t>(args[0]->get_data_ptr<const int>(),
-                                             args[1]->get_data_ptr<const T>(),
-                                             out[0]->get_data_ptr<T>(),
-                                             element_count,
-                                             embed->get_shape());
+                                                 args[1]->get_data_ptr<const T>(),
+                                                 out[0]->get_data_ptr<T>(),
+                                                 element_count,
+                                                 embed->get_shape());
             }
             else if (type == element::i64)
             {
