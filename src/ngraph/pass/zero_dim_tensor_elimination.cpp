@@ -44,7 +44,7 @@ static bool verify_no_internal_zero_length_ops(shared_ptr<Function> f)
     set<Output<Node>> zero_length_source_outputs;
     for (auto n : f->get_ordered_ops())
     {
-        if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
+        if (n->is_output() || n->is_parameter() || n->is_constant() || n->get_output_size() > 1)
         {
             continue;
         }

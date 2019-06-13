@@ -36,28 +36,18 @@ namespace ngraph
                 /// \param arg Output that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 LogicalReduction(const Output<Node>& arg, const AxisSet& reduction_axes);
-                /// \brief Constructs a logical reduction operation.
+                /// \brief Constructs a 'dynamic' logical reduction operation.
                 ///
                 /// \param arg Node that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                LogicalReduction(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
-                /// \brief Constructs a logical reduction operation.
-                ///
-                /// \param arg Node that produces the first input tensor.
-                /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                LogicalReduction(const std::string& node_type,
-                                 const std::shared_ptr<Node>& arg,
-                                 const AxisSet& reduction_axes);
+                LogicalReduction(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
             public:
                 void validate_and_infer_types() override;
 
                 /// \return The axis positions (0-based) to be eliminated through reduction.
-                const AxisSet& get_reduction_axes() const;
+                const AxisSet get_reduction_axes() const;
                 void set_reduction_axes(const AxisSet& reduction_axes);
-
-            protected:
-                AxisSet m_reduction_axes;
             };
         }
     }
