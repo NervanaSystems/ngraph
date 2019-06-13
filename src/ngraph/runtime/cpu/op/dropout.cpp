@@ -23,9 +23,11 @@ using namespace ngraph;
 
 op::Dropout::Dropout(const std::shared_ptr<Node>& input,
                      const std::shared_ptr<Node>& gm_const,
-                     uint32_t seed,
-                     double keep_prob)
+                     const bool use_seed,
+                     const uint32_t seed,
+                     const double keep_prob)
     : Op("Dropout", check_single_output_args({input, gm_const}))
+    , m_use_seed(use_seed)
     , m_seed(seed)
     , m_keep_prob(keep_prob)
 {
@@ -43,5 +45,5 @@ shared_ptr<Node> op::Dropout::copy_with_new_args(const NodeVector& new_args) con
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return make_shared<Dropout>(new_args.at(0), new_args.at(1), m_seed, m_keep_prob);
+    return make_shared<Dropout>(new_args.at(0), new_args.at(1), m_use_seed, m_seed, m_keep_prob);
 }

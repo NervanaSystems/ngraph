@@ -933,8 +933,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto const1 = ngraph::op::Constant::create(x->get_element_type(), Shape{}, {1});
     auto const1_label = std::make_shared<pattern::op::Label>(const1);
 
+    bool use_seed = false;
+    auto use_seed_const = ngraph::op::Constant::create(element::i32, Shape{}, {use_seed});
+    auto use_seed_label = std::make_shared<pattern::op::Label>(use_seed_const);
+
     auto genmask = std::make_shared<op::GenerateMask>(
-        const1_label, x->get_shape(), x->get_element_type(), seed, value);
+        const1_label, x->get_shape(), x->get_element_type(), seed, value, use_seed);
     auto genmask_label =
         std::make_shared<pattern::op::Label>(genmask, nullptr, NodeVector{genmask});
 
@@ -961,9 +965,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
         auto gm_seed = gm->get_seed();
 
         auto training = gm->get_argument(0); //for training purpose this is always going to be 1
+        auto use_seed = gm->get_use_seed();
 
-        auto dropout_n =
-            std::make_shared<ngraph::op::Dropout>(pattern_map[x], training, gm_seed, gm_value);
+        auto dropout_n = std::make_shared<ngraph::op::Dropout>(
+            pattern_map[x], training, use_seed, gm_seed, gm_value);
         auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 0);
         ngraph::replace_node(m.get_match_root(), goe1);
 

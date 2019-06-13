@@ -43,7 +43,7 @@ namespace ngraph
 
                 size_t element_count = out[0].get_size();
 
-                uint32_t seed = drop->get_seed();
+                uint32_t seed = drop->get_use_seed() ? drop->get_seed() : rand();
                 double keep_prob = drop->get_keep_prob();
 
                 // Note: for performance optimization in addition to parallel RNG with multiple,

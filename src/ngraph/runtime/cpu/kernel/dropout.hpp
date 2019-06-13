@@ -62,7 +62,7 @@ namespace ngraph
                               https://github.com/NervanaSystems/ngraph-paddle/blob/14d88829b386c9f7601788c5539c08326dcbe2fe/paddle/fluid/operators/dropout_op.h#L58-L78
                               So, if framework passes same seed, then we will get same mask.*/
                             std::minstd_rand msr = vmsr[tid];
-                            std::uniform_int_distribution<> gen(0, 1);
+                            std::uniform_real_distribution<> gen(0, 1);
 
                             size_t idx_start = tid * chunk_size;
                             size_t idx_end = std::min(idx_start + chunk_size, nelems);
