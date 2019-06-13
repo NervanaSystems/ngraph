@@ -34,6 +34,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
@@ -705,11 +706,13 @@ private:
         }
         case OP_TYPEID::Divide:
         {
+            const op::Divide* divop = static_cast<const op::Divide*>(&node);
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::divide<T>(args[0]->get_data_ptr<const T>(),
                                  args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
-                                 element_count);
+                                 element_count,
+                                 divop->is_pythondiv());
             break;
         }
         case OP_TYPEID::Dot:
