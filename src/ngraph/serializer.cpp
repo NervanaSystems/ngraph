@@ -1006,11 +1006,15 @@ static shared_ptr<ngraph::Function>
                 auto type = read_element_type(node_js.at("type"));
                 auto seed = node_js.at("seed").get<unsigned int>();
                 auto probability = node_js.at("probability").get<double>();
-                auto use_seed_maybe = node_js.at("use_seed");
                 bool use_seed = false;
-                if (!use_seed_maybe.empty())
+                if (args.size() > 1)
                 {
-                    use_seed = use_seed_maybe.get<bool>();
+                    // new API
+                    auto use_seed_maybe = node_js.at("use_seed");
+                    if (!use_seed_maybe.empty())
+                    {
+                        use_seed = use_seed_maybe.get<bool>();
+                    }
                 }
 
                 node = make_shared<op::GenerateMask>(
