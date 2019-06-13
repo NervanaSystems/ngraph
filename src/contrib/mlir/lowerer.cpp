@@ -133,8 +133,8 @@ namespace
                 op->setAttr("graphOutputIdx",
                             mlir::IntegerAttr::get(IntegerType::get(8, op->getContext()), i));
             }
-            NGRAPH_ASSERT(outputCount == 0 || outputCount == ret.getNumOperands())
-                << "Inconsistent returns in function";
+            NGRAPH_CHECK(outputCount == 0 || outputCount == ret.getNumOperands(),
+                         "Inconsistent returns in function");
             outputCount = ret.getNumOperands();
         });
         // will be populated with lowered output values later
@@ -232,7 +232,7 @@ namespace
         for (auto value : m_loweredOutputValues)
         {
             auto op = value->getDefiningOp();
-            NGRAPH_ASSERT(isa<NGFakeInputOp>(op)) << "output value not defined by fake output?";
+            NGRAPH_CHECK(isa<NGFakeInputOp>(op), "output value not defined by fake output?");
             value->replaceAllUsesWith(entryBlock->getArgument(oldFuncType.getNumInputs() + i));
             op->erase();
             i++;
@@ -289,7 +289,7 @@ namespace
             return mlir::IntegerType::get(1 /* width */, bool_type.getContext());
         }
 
-        NGRAPH_FAIL() << "Unsupported type to lower";
+        NGRAPH_CHECK(false, "Unsupported type to lower");
         return type;
     }
 
@@ -305,7 +305,7 @@ namespace
         auto loc = add.getLoc();
 
         auto result = m_pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_ASSERT(result->getType().isa<MemRefType>());
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
         // Note that builder's current function is still the original function body.
         // use getBlock to get the new block instead.
 
@@ -346,18 +346,18 @@ namespace
         Value* lhs = operands[0];
         Value* rhs = operands[1];
         Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_ASSERT(lhs && rhs && result) << "Unexpected null values in DotOp";
+        NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in DotOp");
 
         auto result_ty = result->getType().dyn_cast<MemRefType>();
         auto lhs_ty = lhs->getType().dyn_cast<MemRefType>();
         auto rhs_ty = rhs->getType().dyn_cast<MemRefType>();
-        NGRAPH_ASSERT(result_ty) << "Unexpected non-memref result type";
-        NGRAPH_ASSERT(lhs_ty) << "Unexpected non-memref LHS type";
-        NGRAPH_ASSERT(rhs_ty) << "Unexpected non-memref RHS type";
+        NGRAPH_CHECK(result_ty, "Unexpected non-memref result type");
+        NGRAPH_CHECK(lhs_ty, "Unexpected non-memref LHS type");
+        NGRAPH_CHECK(rhs_ty, "Unexpected non-memref RHS type");
 
         Type elem_ty = result_ty.getElementType();
-        NGRAPH_ASSERT(elem_ty == lhs_ty.getElementType() && elem_ty == rhs_ty.getElementType())
-            << "Types mismatch in DotOp";
+        NGRAPH_CHECK(elem_ty == lhs_ty.getElementType() && elem_ty == rhs_ty.getElementType(),
+                     "Types mismatch in DotOp");
 
         // Create the following loop nest for matmul operation:
         //   for(n, N, 1)
@@ -368,8 +368,8 @@ namespace
 
         MemRefView v_res(result), v_lhs(lhs), v_rhs(rhs);
 
-        NGRAPH_ASSERT(v_lhs.rank() == 2 && v_rhs.rank() == 2 && v_res.rank() == 2)
-            << "Dot operation is only supported for 2D tensors";
+        NGRAPH_CHECK(v_lhs.rank() == 2 && v_rhs.rank() == 2 && v_res.rank() == 2,
+                     "Dot operation is only supported for 2D tensors");
 
         // Create induction variables, lower bounds, upper bounds and steps of the loop nest.
         // It's important to note that MemRefView priovides lb/ub/step info is "reverse order",

@@ -22,7 +22,7 @@
 #include "mlir/IR/StandardTypes.h"
 #include "mlir/IR/TypeSupport.h"
 #include "mlir/IR/Types.h"
-#include "ngraph/assertion.hpp"
+#include "ngraph/check.hpp"
 namespace mlir
 {
     class NGDialect : public mlir::Dialect
@@ -31,7 +31,7 @@ namespace mlir
         explicit NGDialect(mlir::MLIRContext* ctx);
         mlir::Type parseType(llvm::StringRef tyData, mlir::Location loc) const override
         {
-            NGRAPH_ASSERT(0) << "Unsupported type parsing.";
+            NGRAPH_CHECK(false, "Unsupported type parsing.");
             return mlir::Type();
         }
         void printType(mlir::Type type, llvm::raw_ostream& os) const override;

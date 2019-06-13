@@ -65,7 +65,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     for (size_t i = 0, end = ck_outputs.size(); i < end; ++i)
     {
         auto& output_descs = ck_outputs[i]->get_outputs();
-        NGRAPH_ASSERT(output_descs.size() == 1) << "Unexpected multiple output descriptors";
+        NGRAPH_CHECK(output_descs.size() == 1, "Unexpected multiple output descriptors");
         auto& out_desc = output_descs[0];
 
         // 'replace_output' invalidates iterator of the original container. Use a copy instead.
