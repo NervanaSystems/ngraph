@@ -59,7 +59,15 @@ namespace ngraph
                     const Shape& padding_above,
                     bool include_padding_in_avg_computation,
                     const PadType& pad_type,
-                    bool ceil_mode = false);
+                    bool ceil_mode);
+
+            AvgPool(const Output<Node>& arg,
+                    const Shape& window_shape,
+                    const Strides& window_movement_strides,
+                    const Shape& padding_below,
+                    const Shape& padding_above,
+                    bool include_padding_in_avg_computation,
+                    const PadType& pad_type);
 
             /// \brief Constructs a batched average pooling operation.
             ///
