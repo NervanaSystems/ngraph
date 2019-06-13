@@ -51,6 +51,7 @@ To build your own bridge, follow these steps:
 
        git clone https://github.com/tensorflow/ngraph-bridge.git
        cd ngraph-bridge
+       git checkout v0.14.2-rc0
 
 #. The script we need to run assumes you're running the ``pip`` implementation 
    of ``virtualenv``, on Python3.5 or greater.  The quickest way to get this on 
@@ -93,7 +94,7 @@ the script above with the ``--use_prebuilt_tensorflow`` option doesn't work.
 
       git clone https://github.com/tensorflow/ngraph-bridge.git
       cd ngraph-bridge
-      git checkout v0.14.0
+      git checkout v0.15.0-rc0
       cd ../
 
 #. Install Bazel v ``0.24.1``; Bazel is a TensorFlow dependency:
