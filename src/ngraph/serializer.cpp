@@ -611,7 +611,6 @@ static shared_ptr<ngraph::Function>
                                            : static_cast<op::PadType>(node_js.at("pad_type"));
                 bool ceil_mode =
                     node_js["ceil_mode"].empty() ? false : node_js.at("ceil_mode").get<bool>();
-                ;
                 node = make_shared<op::AvgPool>(args[0],
                                                 window_shape,
                                                 window_movement_strides,
