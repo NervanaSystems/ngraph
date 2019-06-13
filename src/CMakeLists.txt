@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIN_NGRAPH_LIBRARY")
+add_definitions(-DIN_NGRAPH_LIBRARY)
 
 include_directories(ngraph)
 

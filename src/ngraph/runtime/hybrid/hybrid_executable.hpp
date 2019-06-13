@@ -51,7 +51,14 @@ public:
     template <typename T>
     std::shared_ptr<T> get_as() const
     {
-        return std::dynamic_pointer_cast<T>(m_executable);
+        if (auto exec = std::dynamic_pointer_cast<T>(m_executable))
+        {
+            return exec;
+        }
+        else
+        {
+            throw ngraph::ngraph_error("Requested invalid ngraph::Executable subclass");
+        }
     }
 
     /// Allow overriding the configuration of the pass manager. If you overload this method

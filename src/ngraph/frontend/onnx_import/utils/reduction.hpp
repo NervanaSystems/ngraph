@@ -24,7 +24,6 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
 #include "utils/reshape.hpp"

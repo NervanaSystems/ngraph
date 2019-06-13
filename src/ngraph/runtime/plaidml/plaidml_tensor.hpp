@@ -42,8 +42,8 @@ public:
                    void* memory);
     ~PlaidML_Tensor() final {}
     const vertexai::plaidml::tensor<char>& tensor() const { return m_tensor; }
-    void write(const void* p, size_t tensor_offset, size_t n) final;
-    void read(void* p, size_t tensor_offset, size_t n) const final;
+    void write(const void* p, size_t n) final;
+    void read(void* p, size_t n) const final;
 
     // Copy the backing memory to the tensor, if needed.
     void sync_input();

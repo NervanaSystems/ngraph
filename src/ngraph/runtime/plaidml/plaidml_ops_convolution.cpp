@@ -52,7 +52,13 @@ ngraph::runtime::plaidml::op::Convolution::Convolution(std::shared_ptr<ngraph::o
 
 void ngraph::runtime::plaidml::op::Convolution::validate_and_infer_types()
 {
-    set_output_type(0, m_src->get_element_type(), m_src->get_output_partial_shape(0));
+    auto src_shape = m_src->get_output_shape(0);
+    Shape out_shape(src_shape.size());
+    for (std::size_t idx = 0; idx < src_shape.size(); ++idx)
+    {
+        out_shape[idx] = src_shape.at(m_output_axes.at(idx));
+    }
+    set_output_type(0, m_src->get_element_type(), out_shape);
 }
 
 std::shared_ptr<ngraph::Node>
@@ -83,7 +89,13 @@ ngraph::runtime::plaidml::op::ConvolutionBackpropData::ConvolutionBackpropData(
 
 void ngraph::runtime::plaidml::op::ConvolutionBackpropData::validate_and_infer_types()
 {
-    set_output_type(0, m_src->get_element_type(), m_src->get_output_partial_shape(0));
+    auto src_shape = m_src->get_output_shape(0);
+    Shape out_shape(src_shape.size());
+    for (std::size_t idx = 0; idx < src_shape.size(); ++idx)
+    {
+        out_shape[idx] = src_shape.at(m_output_axes.at(idx));
+    }
+    set_output_type(0, m_src->get_element_type(), out_shape);
 }
 
 std::shared_ptr<ngraph::Node>
@@ -115,7 +127,13 @@ ngraph::runtime::plaidml::op::ConvolutionBackpropFilters::ConvolutionBackpropFil
 
 void ngraph::runtime::plaidml::op::ConvolutionBackpropFilters::validate_and_infer_types()
 {
-    set_output_type(0, m_src->get_element_type(), m_src->get_output_partial_shape(0));
+    auto src_shape = m_src->get_output_shape(0);
+    Shape out_shape(src_shape.size());
+    for (std::size_t idx = 0; idx < src_shape.size(); ++idx)
+    {
+        out_shape[idx] = src_shape.at(m_output_axes.at(idx));
+    }
+    set_output_type(0, m_src->get_element_type(), out_shape);
 }
 
 std::shared_ptr<ngraph::Node>

@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
 {
@@ -25,8 +26,8 @@ namespace ngraph
         namespace util
         {
             /// \brief Abstract base class for elementwise binary arithmetic operations, i.e., operations where the same
-            ///        scalar binary arithmetic operation is applied to each corresponding pair of elements in two same-shaped
-            ///        input tensors.
+            ///        scalar binary arithmetic operation is applied to each corresponding pair of elements in the two
+            ///        input tensors. Implicit broadcast of input tensors is supported through one of the AutoBroadcast modes
             ///
             /// For example, if the underlying arithmetic operation (determined by the subclass) is \f$\mathit{op}(x,y)\f$, the input tensors
             /// \f$[[x_0,y_0],[z_0,w_0]]\f$ and \f$[[x_1,y_1],[z_1,w_1]]\f$ will be mapped to \f$[[\mathit{op}(x_0,x_1),\mathit{op}(y_0,y_1)],[\mathit{op}(z_0,z_1),\mathit{op}(w_0,w_1)]]\f$.
@@ -36,25 +37,49 @@ namespace ngraph
             /// |        | Type                              | Description                                                              |
             /// | ------ | --------------------------------- | ------------------------------------------------------------------------ |
             /// | `arg0` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape. The element type \f$N\f$ may be any numeric type. |
-            /// | `arg1` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same shape and element type as `arg0`.                   |
+            /// | `arg1` | \f$N[d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of the same element type as `arg0`.                             |
+            /// | `autob`| AutoBroadcastSpec                 | Auto broadcast specification.                                            |
             ///
             /// ## Output
             ///
             /// | Type                   | Description                                                                                                                                                                                            |
             /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-            /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape and element type as the input tensors. |
+            /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape and element type as the input tensors (after auto broadcasting). |
             class BinaryElementwiseArithmetic : public Op
             {
-            public:
+            protected:
+                /// \brief Constructs a binary elementwise arithmetic operation.
+                BinaryElementwiseArithmetic();
+
+                BinaryElementwiseArithmetic(const std::shared_ptr<Node>& arg0,
+                                            const std::shared_ptr<Node>& arg1,
+                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+
+                /// \brief Constructs a binary elementwise arithmetic operation.
+                ///
+                /// \param arg0 Output that produces the first input tensor.
+                /// \param arg1 Output that produces the second input tensor.
+                BinaryElementwiseArithmetic(const Output<Node>& arg0,
+                                            const Output<Node>& arg1,
+                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+
                 /// \brief Constructs a binary elementwise arithmetic operation.
                 ///
                 /// \param arg0 Node that produces the first input tensor.
                 /// \param arg1 Node that produces the second input tensor.
+                /// \param autob AutoBroadcast mode.
                 BinaryElementwiseArithmetic(const std::string& node_type,
                                             const std::shared_ptr<Node>& arg0,
-                                            const std::shared_ptr<Node>& arg1);
+                                            const std::shared_ptr<Node>& arg1,
+                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
+            public:
                 void validate_and_infer_types() override;
+
+                const AutoBroadcastSpec& get_autob() const { return m_autob; }
+                void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
+            private:
+                AutoBroadcastSpec m_autob;
             };
         }
     }

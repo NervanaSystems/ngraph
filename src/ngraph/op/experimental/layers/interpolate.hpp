@@ -24,14 +24,12 @@ namespace ngraph
     {
         typedef struct
         {
-            int height = -1;
-            int width = -1;
-            float zoom_factor = 0;
-            float shrink_factor = 0;
-            float scale_factor = 1.0;
-            bool align_coreners = true;
-            int pad_beg = 0;
-            int pad_end = 0;
+            AxisSet axes;
+            std::string mode;
+            bool align_corners = true;
+            bool antialias = false;
+            std::vector<size_t> pads_begin;
+            std::vector<size_t> pads_end;
         } InterpolateAttrs;
 
         /// \brief Layer which performs bilinear interpolation
@@ -40,32 +38,12 @@ namespace ngraph
         public:
             /// \brief Constructs a Interpolate operation
             ///
-            /// \param image	Input image
-            /// \param attrs    Interpolation attributes
-            Interpolate(const std::shared_ptr<Node>& image, const InterpolateAttrs& attrs);
-
-            void validate_and_infer_types() override;
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            const InterpolateAttrs& get_attrs() const { return m_attrs; }
-        private:
-            InterpolateAttrs m_attrs;
-        };
-
-        /// \brief Layer which performs bilinear interpolation
-        class DynInterpolate : public Op
-        {
-        public:
-            /// \brief Constructs a DynInterpolate operation
-            ///
             /// \param image	    Input image
-            /// \param output_shape Output shape
+            /// \param output_shape Output shape of spatial axes
             /// \param attrs        Interpolation attributes
-            DynInterpolate(const std::shared_ptr<Node>& image,
-                           const std::shared_ptr<Node>& output_shape,
-                           const InterpolateAttrs& attrs);
+            Interpolate(const std::shared_ptr<Node>& image,
+                        const std::shared_ptr<Node>& output_shape,
+                        const InterpolateAttrs& attrs);
 
             void validate_and_infer_types() override;
 
