@@ -42,9 +42,9 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
+            bool m_use_seed;
             uint32_t m_seed;
             double m_keep_prob;
-            bool m_use_seed;
         };
     }
 }
