@@ -132,7 +132,30 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Divide)
             {
-                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::divide);
+                auto& functors = external_function->get_functors();
+                const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
+                std::function<void(void*, void*, void*, size_t, bool, int)> kernel;
+                SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::divide);
+                auto element_count = out[0].get_size();
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+                bool pythondiv = divop->is_pythondiv();
+                auto functor = [&,
+                                kernel,
+                                element_count,
+                                arg0_buffer_index,
+                                arg1_buffer_index,
+                                out0_buffer_index,
+                                pythondiv](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    kernel(ctx->buffer_data[arg0_buffer_index],
+                           ctx->buffer_data[arg1_buffer_index],
+                           ctx->buffer_data[out0_buffer_index],
+                           element_count,
+                           pythondiv,
+                           ectx->arena);
+                };
+                functors.emplace_back(functor);
             }
 
             template <>
@@ -394,7 +417,17 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Divide)
             {
-                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::divide);
+                const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
+                std::function<void(void*, void*, void*, size_t, bool, int)> kernel;
+                SELECT_KERNEL(
+                    kernel, node->get_input_element_type(0), runtime::cpu::kernel::divide);
+                auto element_count = shape_size(node->get_shape());
+                bool pythondiv = divop->is_pythondiv();
+                auto functor = [&, kernel, element_count, pythondiv](
+                    const std::vector<void*>& inputs, std::vector<void*>& outputs) {
+                    kernel(inputs[0], inputs[1], outputs[0], element_count, pythondiv, 0);
+                };
+                return functor;
             }
 
             template <>
