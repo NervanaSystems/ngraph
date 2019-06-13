@@ -2,8 +2,10 @@
 model_quant_conv_linear
 model_qlinear_matmul
 model_qlinear_matmul_3d
+model_conv_integer_no_zero_point
 model_matmul_integer_no_zero_point
 model_matmul_integer_4d_no_zero_point
+
 fake_quantize
 fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
