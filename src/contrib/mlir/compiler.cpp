@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -412,8 +412,9 @@ void MLIRCompiler::execute()
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer to run
     // LLVM optimizations at level 3.
-    //auto llvm_transformer = mlir::makeOptimizingTransformer(0 /*optLevel*/, 0 /*sizeLevel*/);
-    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), nullptr);
+    auto llvm_transformer =
+        mlir::makeOptimizingTransformer(opt_level /*optLevel*/, 0 /*sizeLevel*/);
+    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
 
