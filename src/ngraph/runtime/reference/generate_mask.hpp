@@ -37,6 +37,19 @@ namespace ngraph
                     out[i] = training ? static_cast<T>(bd(gen)) : static_cast<T>(1);
                 }
             }
+
+            template <typename T>
+            void generate_mask_no_state(
+                T* out, size_t count, bool training, uint32_t seed, double prob)
+            {
+                std::mt19937 gen(seed);
+                std::bernoulli_distribution bd(prob);
+
+                for (size_t i = 0; i < count; i++)
+                {
+                    out[i] = training ? static_cast<T>(bd(gen)) : static_cast<T>(1);
+                }
+            }
         }
     }
 }
