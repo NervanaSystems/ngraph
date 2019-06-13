@@ -95,6 +95,8 @@ all_2x2x3_eliminate_dims_0_1_2
 # GPU backend uses floats to implement these ops for int32
 floor_int32
 divide_int32
+divide_python_rounding_int32
+divide_cpp_rounding_int32
 one_hot_scalar_oob_in_3
 
 # Unsupported extra pading modes
@@ -131,6 +133,10 @@ model_quant_conv_linear_2d
 model_quant_conv_linear_3d
 model_qlinear_matmul
 model_qlinear_matmul_3d
+model_conv_integer_zero_point_zero
+model_conv_integer_no_zero_point
+model_conv_integer
+model_conv_integer_pads
 model_matmul_integer
 model_matmul_integer_zero_point_zero
 model_matmul_integer_no_zero_point

@@ -609,13 +609,17 @@ static shared_ptr<ngraph::Function>
                 op::PadType pad_type = node_js["pad_type"].empty()
                                            ? op::PadType::EXPLICIT
                                            : static_cast<op::PadType>(node_js.at("pad_type"));
+                bool ceil_mode =
+                    node_js["ceil_mode"].empty() ? false : node_js.at("ceil_mode").get<bool>();
+                ;
                 node = make_shared<op::AvgPool>(args[0],
                                                 window_shape,
                                                 window_movement_strides,
                                                 padding_below,
                                                 padding_above,
                                                 include_padding_in_avg_computation,
-                                                pad_type);
+                                                pad_type,
+                                                ceil_mode);
                 break;
             }
             case OP_TYPEID::AvgPoolBackprop:
@@ -902,8 +906,13 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Divide:
             {
+                bool pythondiv = true;
+                if (node_js["pythondiv"].is_object())
+                {
+                    pythondiv = node_js.at("pythondiv").get<bool>();
+                }
                 node = make_shared<op::Divide>(
-                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
+                    args[0], args[1], pythondiv, read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Dot:
@@ -1787,6 +1796,10 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_above"] = tmp->get_padding_above();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         node["pad_type"] = tmp->get_pad_type();
+        if (tmp->get_ceil_mode())
+        {
+            node["ceil_mode"] = tmp->get_ceil_mode();
+        }
         break;
     }
     case OP_TYPEID::AvgPoolBackprop:
@@ -1959,6 +1972,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Divide:
     {
         auto tmp = dynamic_cast<const op::Divide*>(&n);
+        node["pythondiv"] = tmp->is_pythondiv();
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["autob"] = write_auto_broadcast(tmp->get_autob());
