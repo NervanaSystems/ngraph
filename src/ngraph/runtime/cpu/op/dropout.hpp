@@ -35,6 +35,7 @@ namespace ngraph
             bool get_use_seed() const { return m_use_seed; }
             uint32_t get_seed() const { return m_seed; }
             double get_keep_prob() const { return m_keep_prob; }
+            void set_use_seed(bool use_seed) { m_use_seed = use_seed; }
             void set_seed(uint32_t new_seed) { m_seed = new_seed; }
             void set_keep_prob(double new_keep_prob) { m_keep_prob = new_keep_prob; }
             virtual std::shared_ptr<Node>
