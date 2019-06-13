@@ -16,10 +16,10 @@
 
 #include "cast.hpp"
 #include <memory>
-#include "utils/common.hpp"
 #include "exceptions.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
