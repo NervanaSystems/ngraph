@@ -37,12 +37,13 @@ namespace ngraph
                     element::Type target_type;
 
                     std::int64_t shift = node.get_attribute_value<std::int64_t>("k", 0);
-                    try
+                    if (node.is_attribute_present("dtype"))
                     {
+
                         dtype = node.get_attribute_value<std::int64_t>("dtype");
                         target_type = common::get_ngraph_element_type(dtype);
                     }
-                    catch (...)
+                    else
                     {
                         target_type = input->get_element_type();
                     }
