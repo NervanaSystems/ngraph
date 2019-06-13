@@ -51,7 +51,6 @@ namespace mlir
 
     // reuse std float types as-is
     using NGFloatType = mlir::FloatType;
-    using NGIndexType = mlir::IndexType;
 
     /// Integer type. It represents an integer of width 8,16,32,64. Signed or not.
     class NGIntegerType : public mlir::Type::TypeBase<NGIntegerType, mlir::Type>
@@ -234,8 +233,6 @@ namespace mlir
                 return intType.getWidth();
             if (NGFloatType floatType = type.dyn_cast<NGFloatType>())
                 return floatType.getIntOrFloatBitWidth();
-            if (NGIndexType indexType = type.dyn_cast<NGIndexType>())
-                return sizeof(intptr_t);
             if (NGBoolType boolType = type.dyn_cast<NGBoolType>())
                 return boolType.getWidth();
             NGRAPH_FAIL() << "Unknown type";

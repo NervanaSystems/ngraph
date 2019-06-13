@@ -31,6 +31,7 @@ public:\
 
 DECL_OP_CONV(NGAddOp)
 DECL_OP_CONV(NGArgMinRedOp)
+DECL_OP_CONV(NGArgMaxRedOp)
 DECL_OP_CONV(NGDotOp)
 DECL_OP_CONV(NGReturnOp)
 

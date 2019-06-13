@@ -45,6 +45,10 @@ namespace
 
 #include "op_lowerers.inc"
 
+    // Helpers
+    template<typename RedOp>
+    void lowerIndexReduction(Operation* op, ArrayRef<Value*> operands, PatternRewriter& rewriter, DialectLoweringPass& m_pass, bool isMin);
+
     /// Use Dialect Converson Framework
     class DialectLowerer : public DialectConversion
     {
@@ -63,6 +67,7 @@ namespace
         {
             RewriteListBuilder<NGAddOpConversion,
                                NGArgMinRedOpConversion,
+                               NGArgMaxRedOpConversion,
                                NGDotOpConversion,
                                NGReturnOpConversion>::build(patterns, mlirContext, m_pass);
         }
@@ -308,7 +313,6 @@ namespace
 
     // ADD
     REWRITER(NGAddOp)
-
     {
         auto add = cast<NGAddOp>(op);
         auto loc = add.getLoc();
@@ -409,142 +413,124 @@ namespace
 
     REWRITER(NGArgMinRedOp)
     {
-        auto argmin = cast<NGArgMinRedOp>(op);
-        auto loc = argmin.getLoc();
-        auto axesAttr = argmin.axes();
-        
-        NGRAPH_ASSERT(axesAttr.size() == 1) << "ArgMin should have one reduction axis";
-        unsigned axis = axesAttr.begin()->dyn_cast<IntegerAttr>().getInt();
-        
-        NGRAPH_ASSERT(operands.size() == 1 && operands[0] != nullptr)
-            << "Expected one non-null operand in ArgMin op";
+        lowerIndexReduction<mlir::NGArgMinRedOp>(op, operands, rewriter, m_pass, true);
+    }
 
-        // Retrieve/generate Values for operands and result.
-        ScopedContext scope(rewriter, loc);
-        Value* arg = operands[0];
-        auto arg_type = arg->getType().cast<MemRefType>();
-
-        Value* finalResult = m_pass.buildOutputDefs(op, rewriter)[0];
-        auto resultTy = argmin.getResult()->getType().cast<NGTensorType>();
-        // MLIR doesn't support Index to/from Integer type-conversion
-        // We have to store our result in an IndexType tensor and call-back to a type-conversion routine in nGraph
-        // TODO: Fix this once MLIR provides explicit cast operations.
-        Value* result = m_pass.createTempTensor(
-                                                rewriter.getMemRefType(resultTy.getShape(),rewriter.getIndexType()),
-                                                resultTy.getSizeInBytes(),
-                                                rewriter
-                                                );
-
-        // Views
-        MemRefView vRes(result), vArg(arg);
-        // Index Values
-        IndexedValue iRes(result), iArg(arg);
-        // Bounds Index Handles
-        auto resLbs = vRes.getLbs();
-        auto resUbs = vRes.getUbs();
-        auto argLbs = vArg.getLbs();
-        auto argUbs = vArg.getUbs();
-        {
-            // Loop induction vars
-            auto ivs = IndexHandle::makeIndexHandles(vRes.rank());
-            auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
-            // Steps
-            auto steps = vRes.getSteps();
-            auto initVal = vArg.lb(axis);
-            // clang-format off
-            LoopNestBuilder(pivs, resLbs, resUbs, steps)( 
-                // single stmt body
-                [&] {
-                        iRes(ivs) = initVal;
-                    }
-            );
-        }
-
-        // reduction loops
-        {
-            auto allIVs = IndexHandle::makeIndexHandles(vArg.rank());
-            auto pAllIVs = IndexHandle::makeIndexHandlePointers(allIVs);
-            SmallVector<IndexHandle,8> nonRedIVs;
-
-
-            auto steps = vArg.getSteps();
-            
-            // iterate over all argument dimensions
-            LoopNestBuilder(pAllIVs, argLbs, argUbs, steps)(
-                [&] {
-                    // build a list of non-reduction IVs
-                    for (auto i = 0; i < vArg.rank(); i++)
-                    {
-                        if (i != axis)
-                            nonRedIVs.push_back(allIVs[i]);
-                    }
-                    // load current min index
-                    ValueHandle currMinIndx = iRes(nonRedIVs);
-                    auto tempIVs = allIVs;
-                    // build list of IVs including current min index
-                    tempIVs[axis] = currMinIndx;
-                    iRes(nonRedIVs) = edsc::intrinsics::select(iArg(allIVs) < iArg(tempIVs), allIVs[axis], currMinIndx);
-                }
-            );
-        }
-
-        // Call-back to convert Index tensor to Integer tensor
-        auto callBackFunc = m_pass.getCallDecl("__mlir_convert_index_to_int", 
-                                        {finalResult->getType(), result->getType(), rewriter.getIndexType(), rewriter.getIndexType()},
-                                        {},
-                                        rewriter);
-
-        SmallVector<mlir::Value*, 4> args = {finalResult,  /* dst tensor */
-                                             result,       /* src tensor */
-                                             /* Num of Elements */
-                                             rewriter.create<mlir::ConstantIndexOp>(
-                                                rewriter.getUnknownLoc(),
-                                                resultTy.getNumElements()
-                                             ),
-                                             /* Integer size used */
-                                             rewriter.create<mlir::ConstantIndexOp>(
-                                                rewriter.getUnknownLoc(),
-                                                resultTy.getElementType().cast<NGIntegerType>().getWidth()
-                                             )
-                                            };
-        rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
-        
-        rewriter.replaceOp(op, {finalResult});
-#if 0
-
-        MemRefView v_res(result), v_arg(arg);
-        unsigned n_dim = v_arg.fastestVarying() - 1;
-        unsigned m_dim = v_arg.fastestVarying();
-
-        // Constants, indexed values and other vars to be used inside the loop nest.
-        IndexedValue i_res(result), i_arg(arg);
-
-        // Initialize result to zero.
-        IndexHandle m_init;
-        IndexHandle m_lb_init(v_arg.lb(m_dim));
-        IndexHandle m_ub_init(v_arg.ub(m_dim));
-        int64_t m_step = v_arg.step(m_dim);
-        LoopBuilder(&m_init, m_lb_init, m_ub_init, m_step)([&] { i_res(m_init) = m_lb_init; });
-
-        // Main loop nest for argmin
-        IndexHandle n, m;
-        IndexHandle n_lb(v_arg.lb(n_dim)), m_lb(v_arg.lb(m_dim));
-        IndexHandle n_ub(v_arg.ub(n_dim)), m_ub(v_arg.ub(m_dim));
-        ValueHandle curr_res(res_elem_ty);
-        int64_t n_step = v_arg.step(n_dim);
-
-        LoopBuilder(&n, n_lb, n_ub, n_step)([&] {
-            LoopBuilder(&m, m_lb, m_ub, m_step)([&] {
-                curr_res = i_res(m);
-                i_res(m) = edsc::intrinsics::select(i_arg(n, m) < i_arg(curr_res, m), n, curr_res);
-            });
-        });
-#endif
-
+    REWRITER(NGArgMaxRedOp)
+    {
+        lowerIndexReduction<mlir::NGArgMaxRedOp>(op, operands, rewriter, m_pass, false);
     }
 
     REWRITER(NGReturnOp) { rewriter.replaceOpWithNewOp<ReturnOp>(op); }
 #undef REWRITER
+
+template<typename T>
+void lowerIndexReduction(Operation* op, ArrayRef<Value*> operands, PatternRewriter& rewriter, DialectLoweringPass& m_pass, bool isMin)
+{
+    T argmin = cast<T>(op);
+    auto loc = argmin.getLoc();
+    auto axesAttr = argmin.axes();
+
+    NGRAPH_CHECK(axesAttr.size() == 1 , "Index Reduction op should have one reduction axis");
+    Attribute axisAttr = *axesAttr.begin();
+    unsigned axis = axisAttr.dyn_cast<IntegerAttr>().getInt();
+
+    NGRAPH_CHECK(operands.size() == 1 && operands[0] != nullptr,
+                 "Expected one non-null operand in Index Reduction op");
+
+    // Retrieve/generate Values for operands and result.
+    ScopedContext scope(rewriter, loc);
+    Value* arg = operands[0];
+    auto arg_type = arg->getType().cast<MemRefType>();
+
+    Value* finalResult = m_pass.buildOutputDefs(op, rewriter)[0];
+    Type type = argmin.getResult()->getType();
+    NGTensorType resultTy = type.cast<NGTensorType>();
+    // MLIR doesn't support Index to/from Integer type-conversion
+    // We have to store our result in an IndexType tensor and call-back to a type-conversion routine in nGraph
+    // TODO: Fix this once MLIR provides explicit cast operations.
+    Value* result = m_pass.createTempTensor(
+                                           rewriter.getMemRefType(resultTy.getShape(),rewriter.getIndexType()),
+                                           resultTy.getNumElements() * sizeof(intptr_t), /* hacky way to get target-dependent size of IndexType */
+                                           rewriter
+                                           );
+
+    // Views
+    MemRefView vRes(result), vArg(arg);
+    // Index Values
+    IndexedValue iRes(result), iArg(arg);
+    // Bounds Index Handles
+    auto resLbs = vRes.getLbs();
+    auto resUbs = vRes.getUbs();
+    auto argLbs = vArg.getLbs();
+    auto argUbs = vArg.getUbs();
+    {
+        // Loop induction vars
+        auto ivs = IndexHandle::makeIndexHandles(vRes.rank());
+        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        // Steps
+        auto steps = vRes.getSteps();
+        auto initVal = vArg.lb(axis);
+        // clang-format off
+        LoopNestBuilder(pivs, resLbs, resUbs, steps)( 
+            // single stmt body
+            [&] {
+                    iRes(ivs) = initVal;
+                }
+        );
+    }
+
+    // reduction loops
+    {
+        auto allIVs = IndexHandle::makeIndexHandles(vArg.rank());
+        auto pAllIVs = IndexHandle::makeIndexHandlePointers(allIVs);
+        SmallVector<IndexHandle,8> nonRedIVs;
+
+        auto steps = vArg.getSteps();
+
+        // iterate over all argument dimensions
+        LoopNestBuilder(pAllIVs, argLbs, argUbs, steps)(
+            [&] {
+                // build a list of non-reduction IVs
+                for (auto i = 0; i < vArg.rank(); i++)
+                {
+                    if (i != axis)
+                        nonRedIVs.push_back(allIVs[i]);
+                }
+                // load current min index
+                ValueHandle currMinIndx = iRes(nonRedIVs);
+                auto tempIVs = allIVs;
+                // build list of IVs including current min index
+                tempIVs[axis] = currMinIndx;
+                iRes(nonRedIVs) = isMin ? edsc::intrinsics::select(iArg(allIVs) < iArg(tempIVs), allIVs[axis], currMinIndx) :
+                                          edsc::intrinsics::select(iArg(tempIVs) < iArg(allIVs), allIVs[axis], currMinIndx);
+            }
+        );
+    }
+
+    // Call-back to convert Index tensor to Integer tensor
+    auto callBackFunc = m_pass.getCallDecl("__mlir_convert_index_to_int", 
+                                    {finalResult->getType(), result->getType(), rewriter.getIndexType(), rewriter.getIndexType()},
+                                    {},
+                                    rewriter);
+
+    SmallVector<mlir::Value*, 4> args = {finalResult,  /* dst tensor */
+                                         result,       /* src tensor */
+                                         /* Num of Elements */
+                                         rewriter.create<mlir::ConstantIndexOp>(
+                                            rewriter.getUnknownLoc(),
+                                            resultTy.getNumElements()
+                                         ),
+                                         /* Integer size used in final result*/
+                                         rewriter.create<mlir::ConstantIndexOp>(
+                                            rewriter.getUnknownLoc(),
+                                            resultTy.getElementType().cast<NGIntegerType>().getWidth()
+                                         )
+                                        };
+    rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args);
+
+    rewriter.replaceOp(op, {finalResult});
+}
 }
 
 namespace mlir

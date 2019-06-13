@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/op/argmax.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
@@ -289,20 +290,13 @@ mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
 template<>
 mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMin)
 {
-    auto* idx_red = static_cast<const ngraph::op::util::IndexReduction*>(ng_node);
+    return compiler.create_index_reduction<mlir::NGArgMinRedOp>(ng_node);
+}
 
-    auto arg = idx_red->get_argument(0);
-    size_t red_axis = idx_red->get_reduction_axis();
-
-    mlir::Value* arg_val = compiler.get_tensor_value(arg->get_output_tensor_ptr().get()).m_value;
-    mlir::ArrayAttr red_axes_attr = compiler.m_builder->getI64ArrayAttr({(int64_t)red_axis});
-
-    return compiler.m_builder
-        ->create<mlir::NGArgMinRedOp>(mlir::UnknownLoc::get(&compiler.m_context),
-                                      compiler.get_mlir_type(ng_node),
-                                      arg_val,
-                                      red_axes_attr)
-        .getResult();
+template<>
+mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMax)
+{
+    return compiler.create_index_reduction<mlir::NGArgMaxRedOp>(ng_node);
 }
 
 template <>
@@ -338,6 +332,24 @@ void MLIRCompiler::create_return()
     m_builder->create<mlir::NGReturnOp>(mlir::UnknownLoc::get(&m_context), value_list);
 }
 
+template<typename RedOp>
+mlir::Value* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_node)
+{
+    auto* idx_red = static_cast<const ngraph::op::util::IndexReduction*>(ng_node);
+
+    auto arg = idx_red->get_argument(0);
+    size_t red_axis = idx_red->get_reduction_axis();
+
+    mlir::Value* arg_val = get_tensor_value(arg->get_output_tensor_ptr().get()).m_value;
+    mlir::ArrayAttr red_axes_attr = m_builder->getI64ArrayAttr({(int64_t)red_axis});
+
+    return m_builder
+        ->create<RedOp>(mlir::UnknownLoc::get(&m_context),
+                                      get_mlir_type(ng_node),
+                                      arg_val,
+                                      red_axes_attr)
+        .getResult();
+}
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
 // helpers to be used inside the function.
 void MLIRCompiler::bind_arguments()
@@ -393,6 +405,12 @@ void MLIRCompiler::execute()
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
 
+    unsigned opt_level = 3;
+    if (char* opt_level_str = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
+    {
+        opt_level = std::stoi(opt_level_str);
+        NGRAPH_CHECK(opt_level >=0 && opt_level <= 3 , "Invalid optimization level");
+    }
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer to run
     // LLVM optimizations at level 3.
