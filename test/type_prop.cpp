@@ -8667,7 +8667,6 @@ TEST(type_prop, avg_pool_3d_deduce_strided_padded_small)
     EXPECT_EQ(avg_pool->get_padding_above(), (Shape{6, 4, 5}));
 }
 
-#if 0
 TEST(type_prop, avg_pool_ceil_mode)
 {
     // Deduce type
@@ -8688,7 +8687,6 @@ TEST(type_prop, avg_pool_ceil_mode)
     // ceil((10 + 9 - 2)/4) + 1
     EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 6}));
 }
-#endif
 
 TEST(type_prop, avg_pool_invalid_0d_input)
 {
