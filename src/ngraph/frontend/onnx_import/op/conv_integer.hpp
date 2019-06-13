@@ -14,31 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/all.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
-const string op::All::type_name{"All"};
-
-op::All::All()
+namespace ngraph
 {
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                /// \brief Performs ONNX ConvInteger operation.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing Ngraph nodes producing output of quantized ONNX convolution
+                ///         operation.
+                NodeVector conv_integer(const Node& node);
 
-op::All::All(const Output<Node>& arg, const AxisSet& reduction_axes)
-    : LogicalReduction(arg, reduction_axes)
-{
-    constructor_validate_and_infer_types();
-}
+            } // namespace set_1
 
-op::All::All(const Output<Node>& arg, const Output<Node>& reduction_axes)
-    : LogicalReduction(arg, reduction_axes)
-{
-    constructor_validate_and_infer_types();
-}
+        } //namespace op
 
-shared_ptr<Node> op::All::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<All>(new_args.at(0), new_args.at(1));
-}
+    } // namespace onnx_import
+
+} // namespace ngraph

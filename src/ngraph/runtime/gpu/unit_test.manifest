@@ -78,6 +78,8 @@ any_2x2x3_eliminate_dims_0_1
 any_2x2x3_eliminate_dims_0_2
 any_2x2x3_eliminate_dims_1_2
 any_2x2x3_eliminate_dims_0_1_2
+all_dynamic_axis
+all_change_axis
 all_trivial
 all_2x2_to_scalar_false
 all_2x2_to_scalar_true
@@ -133,6 +135,10 @@ model_quant_conv_linear_2d
 model_quant_conv_linear_3d
 model_qlinear_matmul
 model_qlinear_matmul_3d
+model_conv_integer_zero_point_zero
+model_conv_integer_no_zero_point
+model_conv_integer
+model_conv_integer_pads
 model_matmul_integer
 model_matmul_integer_zero_point_zero
 model_matmul_integer_no_zero_point
