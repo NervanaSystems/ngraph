@@ -78,6 +78,8 @@ any_2x2x3_eliminate_dims_0_1
 any_2x2x3_eliminate_dims_0_2
 any_2x2x3_eliminate_dims_1_2
 any_2x2x3_eliminate_dims_0_1_2
+all_dynamic_axis
+all_change_axis
 all_trivial
 all_2x2_to_scalar_false
 all_2x2_to_scalar_true
