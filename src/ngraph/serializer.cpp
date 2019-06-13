@@ -609,13 +609,17 @@ static shared_ptr<ngraph::Function>
                 op::PadType pad_type = node_js["pad_type"].empty()
                                            ? op::PadType::EXPLICIT
                                            : static_cast<op::PadType>(node_js.at("pad_type"));
+                bool ceil_mode =
+                    node_js["ceil_mode"].empty() ? false : node_js.at("ceil_mode").get<bool>();
+                ;
                 node = make_shared<op::AvgPool>(args[0],
                                                 window_shape,
                                                 window_movement_strides,
                                                 padding_below,
                                                 padding_above,
                                                 include_padding_in_avg_computation,
-                                                pad_type);
+                                                pad_type,
+                                                ceil_mode);
                 break;
             }
             case OP_TYPEID::AvgPoolBackprop:
@@ -1011,12 +1015,7 @@ static shared_ptr<ngraph::Function>
                 auto type = read_element_type(node_js.at("type"));
                 auto seed = node_js.at("seed").get<unsigned int>();
                 auto probability = node_js.at("probability").get<double>();
-                auto use_seed_maybe = node_js.at("use_seed");
-                bool use_seed = false;
-                if (!use_seed_maybe.empty())
-                {
-                    use_seed = use_seed_maybe.get<bool>();
-                }
+                bool use_seed = get_or_default<bool>(node_js, "use_seed", false);
 
                 node = make_shared<op::GenerateMask>(
                     args[0], output_shape, type, seed, probability, use_seed);
@@ -1792,6 +1791,10 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_above"] = tmp->get_padding_above();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         node["pad_type"] = tmp->get_pad_type();
+        if (tmp->get_ceil_mode())
+        {
+            node["ceil_mode"] = tmp->get_ceil_mode();
+        }
         break;
     }
     case OP_TYPEID::AvgPoolBackprop:
