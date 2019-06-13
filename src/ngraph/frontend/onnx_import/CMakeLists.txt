@@ -112,6 +112,8 @@ add_library(onnx_import STATIC
         op/lstm.hpp
         op/matmul.cpp
         op/matmul.hpp
+        op/matmul_integer.cpp
+        op/matmul_integer.hpp
         op/max_pool.cpp
         op/max_pool.hpp
         op/max.hpp
@@ -129,11 +131,12 @@ add_library(onnx_import STATIC
         op/pow.hpp
         op/prelu.cpp
         op/prelu.hpp
+        op/qlinear_matmul.cpp
+        op/qlinear_matmul.hpp
         op/quant_conv.cpp
         op/quant_conv.hpp
         op/quantize_linear.cpp
         op/quantize_linear.hpp
-        op/quantized_matmul.hpp
         op/reciprocal.cpp
         op/reciprocal.hpp
         op/reduce.cpp
@@ -185,6 +188,8 @@ add_library(onnx_import STATIC
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
+        utils/matmul_factory.cpp
+        utils/matmul_factory.hpp
         utils/reduction.cpp
         utils/reduction.hpp
         utils/reshape.cpp

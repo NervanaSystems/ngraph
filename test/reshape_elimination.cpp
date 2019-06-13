@@ -44,7 +44,7 @@
 using namespace ngraph;
 using namespace std;
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 TEST(reshape_elimination, remove_reshape)
 {
     pass::Manager pass_manager;

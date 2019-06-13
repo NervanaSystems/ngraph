@@ -51,7 +51,7 @@ void op::Tile::validate_and_infer_types()
         // Repeats shapes should be of form {arg_rank} or dynamic
         NODE_VALIDATION_CHECK(this,
                               repeats_shape.compatible(PartialShape{arg_rank}),
-                              "Arg and padding below ranks mismatch");
+                              "Arg and repeats ranks mismatch");
 
         output_rank = arg_rank;
     }

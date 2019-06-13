@@ -129,8 +129,8 @@ std::vector<ngraph::runtime::PerformanceCounter>
     return std::vector<ngraph::runtime::PerformanceCounter>{};
 }
 
-void ngraph::runtime::plaidml::PlaidML_Executable::save(const std::string& filename,
-                                                        plaidml_file_format format) const
+void ngraph::runtime::plaidml::PlaidML_Executable::save_as_format(const std::string& filename,
+                                                                  plaidml_file_format format) const
 {
     std::lock_guard<std::mutex> lock{m_mu};
 
