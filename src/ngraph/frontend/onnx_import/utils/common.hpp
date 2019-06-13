@@ -16,12 +16,13 @@
 
 #pragma once
 
-#include <algorithm>   // std::generate
-#include <cmath>       // std::floor, std::min
-#include <cstddef>     // std::size_t
-#include <iterator>    // std::begin, std::end
-#include <memory>      // std::shared_ptr, std::make_shared
-#include <type_traits> // std::enable_if
+#include <algorithm>    // std::generate
+#include <cmath>        // std::floor, std::min
+#include <cstddef>      // std::size_t
+#include <iterator>     // std::begin, std::end
+#include <memory>       // std::shared_ptr, std::make_shared
+#include <onnx-ml.pb.h> // onnx types
+#include <type_traits>  // std::enable_if
 #include <vector>
 
 #include "ngraph/op/constant.hpp"
@@ -34,6 +35,29 @@ namespace ngraph
     {
         namespace common
         {
+            inline const ngraph::element::Type& get_ngraph_element_type(int64_t onnx_type)
+            {
+                switch (onnx_type)
+                {
+                case onnx::TensorProto_DataType_BOOL: return element::boolean;
+                case onnx::TensorProto_DataType_DOUBLE: return element::f64;
+                case onnx::TensorProto_DataType_FLOAT16: return element::f16;
+                case onnx::TensorProto_DataType_FLOAT: return element::f32;
+                case onnx::TensorProto_DataType_INT8: return element::i8;
+                case onnx::TensorProto_DataType_INT16: return element::i16;
+                case onnx::TensorProto_DataType_INT32: return element::i32;
+                case onnx::TensorProto_DataType_INT64: return element::i64;
+                case onnx::TensorProto_DataType_UINT8: return element::u8;
+                case onnx::TensorProto_DataType_UINT16: return element::u16;
+                case onnx::TensorProto_DataType_UINT32: return element::u32;
+                case onnx::TensorProto_DataType_UINT64: return element::u64;
+                case onnx::TensorProto_DataType_UNDEFINED: return element::dynamic;
+                }
+                throw ngraph_error("unsupported element type: " +
+                                   onnx::TensorProto_DataType_Name(
+                                       static_cast<onnx::TensorProto_DataType>(onnx_type)));
+            }
+
             /// \brief      Return a monotonic sequence.
             ///
             /// \note       Limitations: this function may not work for very large integer values

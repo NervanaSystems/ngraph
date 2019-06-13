@@ -13,9 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-
-#include <onnx-ml.pb.h>
-
 #include "exceptions.hpp"
 #include "eye_like.hpp"
 #include "ngraph/builder/reshape.hpp"
@@ -43,25 +40,7 @@ namespace ngraph
                     try
                     {
                         dtype = node.get_attribute_value<std::int64_t>("dtype");
-                        switch (dtype)
-                        {
-                        case onnx::TensorProto_DataType_BOOL: target_type = element::boolean; break;
-                        case onnx::TensorProto_DataType_DOUBLE: target_type = element::f64; break;
-                        case onnx::TensorProto_DataType_FLOAT16:
-                        case onnx::TensorProto_DataType_FLOAT: target_type = element::f32; break;
-                        case onnx::TensorProto_DataType_INT8: target_type = element::i8; break;
-                        case onnx::TensorProto_DataType_INT16: target_type = element::i16; break;
-                        case onnx::TensorProto_DataType_INT32: target_type = element::i32; break;
-                        case onnx::TensorProto_DataType_INT64: target_type = element::i64; break;
-                        case onnx::TensorProto_DataType_UINT8: target_type = element::u8; break;
-                        case onnx::TensorProto_DataType_UINT16: target_type = element::u16; break;
-                        case onnx::TensorProto_DataType_UINT32: target_type = element::u32; break;
-                        case onnx::TensorProto_DataType_UINT64: target_type = element::u64; break;
-                        case onnx::TensorProto_DataType_UNDEFINED:
-                            target_type = element::dynamic;
-                            break;
-                        default: ASSERT_IS_SUPPORTED(node, false) << "unsupported type";
-                        }
+                        target_type = common::get_ngraph_element_type(dtype);
                     }
                     catch (...)
                     {
