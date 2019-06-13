@@ -28,7 +28,7 @@ function run() {
     set -e
 
     cd ./dockerfiles
-    docker build --build-arg http_proxy=$http_proxy --build-arg https_proxy=$https_proxy -f=./ubunt_-16_04.dockerfile -t ngraph-onnx:ubuntu-16_04 .
+    docker build --build-arg http_proxy=$http_proxy --build-arg https_proxy=$https_proxy -f=./ubuntu_16_04.dockerfile -t ngraph-onnx:ubuntu-16_04 .
 
     cd "${CI_PATH}"
     if [[ -z $(docker ps -a | grep -i "${DOCKER_CONTAINER}") ]];
