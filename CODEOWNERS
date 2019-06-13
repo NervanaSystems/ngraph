@@ -21,6 +21,8 @@
 /doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
 /doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik @avijit-nervana @sayantan-nervana
 /doc/*/*/backends/plaidml-ng-api/   @flaub @brianretford @dgkutnic
+/doc/*/*/inspection/                @aproctor
+/doc/examples/onnx/                 @arogowie-intel @tsocha
 /README.md                          @adstraw
 project/introduction.rst            @adstraw
 project/governance.rst              @adstraw

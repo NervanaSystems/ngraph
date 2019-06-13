@@ -21,7 +21,7 @@ to a system location.
 
 .. code-block:: console
    
-   pip install -U tensorflow==1.14.1
+   pip install -U tensorflow==1.13.1
    pip install -U ngraph-tensorflow-bridge
 
 That's it!  Now you can test the installation by running the following command:
