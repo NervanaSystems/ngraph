@@ -235,7 +235,7 @@ namespace mlir
                 return floatType.getIntOrFloatBitWidth();
             if (NGBoolType boolType = type.dyn_cast<NGBoolType>())
                 return boolType.getWidth();
-            NGRAPH_FAIL() << "Unknown type";
+            NGRAPH_CHECK(false, "Unknown type");
             return -1;
         }
         /// Get number of elements

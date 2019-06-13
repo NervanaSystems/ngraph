@@ -14,21 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <stdint.h>
 #include "ngraph/ngraph_visibility.hpp"
-#include <mlir/ExecutionEngine/MemRefUtils.h>
 
 /// Call back to copy Index tensor to Int tensor
 /// Can handle int tensors of bitwidth 8, 16, 32 and 64
 /// Index width is always intptr_t
-extern "C" NGRAPH_API void __mlir_convert_index_to_int(mlir::StaticFloatMemRef dst, mlir::StaticFloatMemRef src, size_t numElements, size_t intWidth)
+extern "C" NGRAPH_API void __mlir_convert_index_to_int(mlir::StaticFloatMemRef dst,
+                                                       mlir::StaticFloatMemRef src,
+                                                       size_t numElements,
+                                                       size_t intWidth)
 {
     size_t indexSize = sizeof(intptr_t);
     auto pSrc = reinterpret_cast<intptr_t*>(src.data);
     auto pDst = reinterpret_cast<char*>(dst.data);
     for (auto i = 0; i < numElements; i++)
     {
-        switch(intWidth)
+        switch (intWidth)
         {
         case 8:
             *pDst = static_cast<char>(pSrc[i]);

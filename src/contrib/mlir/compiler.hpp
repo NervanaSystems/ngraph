@@ -108,7 +108,7 @@ namespace ngraph
                 template <typename BinOp>
                 mlir::Value* create_binary_op(const ngraph::Node* ng_node);
 
-                template<typename RedOp>
+                template <typename RedOp>
                 mlir::Value* create_index_reduction(const ngraph::Node* ng_node);
 
                 void create_return();

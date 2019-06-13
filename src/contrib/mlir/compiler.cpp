@@ -24,8 +24,8 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
@@ -287,13 +287,13 @@ mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
     return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
 }
 
-template<>
+template <>
 mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMin)
 {
     return compiler.create_index_reduction<mlir::NGArgMinRedOp>(ng_node);
 }
 
-template<>
+template <>
 mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMax)
 {
     return compiler.create_index_reduction<mlir::NGArgMaxRedOp>(ng_node);
@@ -332,7 +332,7 @@ void MLIRCompiler::create_return()
     m_builder->create<mlir::NGReturnOp>(mlir::UnknownLoc::get(&m_context), value_list);
 }
 
-template<typename RedOp>
+template <typename RedOp>
 mlir::Value* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_node)
 {
     auto* idx_red = static_cast<const ngraph::op::util::IndexReduction*>(ng_node);
@@ -344,10 +344,8 @@ mlir::Value* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_node)
     mlir::ArrayAttr red_axes_attr = m_builder->getI64ArrayAttr({(int64_t)red_axis});
 
     return m_builder
-        ->create<RedOp>(mlir::UnknownLoc::get(&m_context),
-                                      get_mlir_type(ng_node),
-                                      arg_val,
-                                      red_axes_attr)
+        ->create<RedOp>(
+            mlir::UnknownLoc::get(&m_context), get_mlir_type(ng_node), arg_val, red_axes_attr)
         .getResult();
 }
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
@@ -409,7 +407,7 @@ void MLIRCompiler::execute()
     if (char* opt_level_str = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
     {
         opt_level = std::stoi(opt_level_str);
-        NGRAPH_CHECK(opt_level >=0 && opt_level <= 3 , "Invalid optimization level");
+        NGRAPH_CHECK(opt_level >= 0 && opt_level <= 3, "Invalid optimization level");
     }
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer to run

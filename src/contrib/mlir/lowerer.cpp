@@ -46,8 +46,12 @@ namespace
 #include "op_lowerers.inc"
 
     // Helpers
-    template<typename RedOp>
-    void lowerIndexReduction(Operation* op, ArrayRef<Value*> operands, PatternRewriter& rewriter, DialectLoweringPass& m_pass, bool isMin);
+    template <typename RedOp>
+    void lowerIndexReduction(Operation* op,
+                             ArrayRef<Value*> operands,
+                             PatternRewriter& rewriter,
+                             DialectLoweringPass& m_pass,
+                             bool isMin);
 
     /// Use Dialect Converson Framework
     class DialectLowerer : public DialectConversion
@@ -89,11 +93,12 @@ namespace
         void runOnModule() override;
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
         Value* createTempTensor(Type type, unsigned size, PatternRewriter& rewriter);
-    
+
         mlir::Function* getCallDecl(StringRef name,
                                     ArrayRef<Type> args,
                                     ArrayRef<Type> output,
                                     PatternRewriter& rewriter);
+
     private:
         void findOutputValues();
         void processFakeInstrs();
@@ -189,26 +194,28 @@ namespace
             else
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
-                auto newResult = createTempTensor(m_dialectLowerer.convertType(tensorType), tensorType.getSizeInBytes(), rewriter);
+                auto newResult = createTempTensor(m_dialectLowerer.convertType(tensorType),
+                                                  tensorType.getSizeInBytes(),
+                                                  rewriter);
                 newResults.push_back(newResult);
             }
         }
         return newResults;
     }
 
-    Value* DialectLoweringPass::createTempTensor(Type type, unsigned size, PatternRewriter& rewriter)
+    Value*
+        DialectLoweringPass::createTempTensor(Type type, unsigned size, PatternRewriter& rewriter)
     {
         auto callBackFunc = getCallDecl("__mlir_allocate",
-                                {rewriter.getIndexType(), rewriter.getIndexType()},
-                                {type},
-                                rewriter);
+                                        {rewriter.getIndexType(), rewriter.getIndexType()},
+                                        {type},
+                                        rewriter);
         SmallVector<mlir::Value*, 4> args = {
             insertMemMgrDef(&rewriter), /* pointer to mem manager */
             rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(),
                                                    size)}; /* size to allocate */
-        auto newTemp =
-            rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args)
-                    .getResult(0);
+        auto newTemp = rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args)
+                           .getResult(0);
         return newTemp;
     }
 
@@ -424,54 +431,58 @@ namespace
     REWRITER(NGReturnOp) { rewriter.replaceOpWithNewOp<ReturnOp>(op); }
 #undef REWRITER
 
-template<typename T>
-void lowerIndexReduction(Operation* op, ArrayRef<Value*> operands, PatternRewriter& rewriter, DialectLoweringPass& m_pass, bool isMin)
-{
-    T argmin = cast<T>(op);
-    auto loc = argmin.getLoc();
-    auto axesAttr = argmin.axes();
-
-    NGRAPH_CHECK(axesAttr.size() == 1 , "Index Reduction op should have one reduction axis");
-    Attribute axisAttr = *axesAttr.begin();
-    unsigned axis = axisAttr.dyn_cast<IntegerAttr>().getInt();
-
-    NGRAPH_CHECK(operands.size() == 1 && operands[0] != nullptr,
-                 "Expected one non-null operand in Index Reduction op");
-
-    // Retrieve/generate Values for operands and result.
-    ScopedContext scope(rewriter, loc);
-    Value* arg = operands[0];
-    auto arg_type = arg->getType().cast<MemRefType>();
-
-    Value* finalResult = m_pass.buildOutputDefs(op, rewriter)[0];
-    Type type = argmin.getResult()->getType();
-    NGTensorType resultTy = type.cast<NGTensorType>();
-    // MLIR doesn't support Index to/from Integer type-conversion
-    // We have to store our result in an IndexType tensor and call-back to a type-conversion routine in nGraph
-    // TODO: Fix this once MLIR provides explicit cast operations.
-    Value* result = m_pass.createTempTensor(
-                                           rewriter.getMemRefType(resultTy.getShape(),rewriter.getIndexType()),
-                                           resultTy.getNumElements() * sizeof(intptr_t), /* hacky way to get target-dependent size of IndexType */
-                                           rewriter
-                                           );
-
-    // Views
-    MemRefView vRes(result), vArg(arg);
-    // Index Values
-    IndexedValue iRes(result), iArg(arg);
-    // Bounds Index Handles
-    auto resLbs = vRes.getLbs();
-    auto resUbs = vRes.getUbs();
-    auto argLbs = vArg.getLbs();
-    auto argUbs = vArg.getUbs();
+    template <typename T>
+    void lowerIndexReduction(Operation* op,
+                             ArrayRef<Value*> operands,
+                             PatternRewriter& rewriter,
+                             DialectLoweringPass& m_pass,
+                             bool isMin)
     {
-        // Loop induction vars
-        auto ivs = IndexHandle::makeIndexHandles(vRes.rank());
-        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
-        // Steps
-        auto steps = vRes.getSteps();
-        auto initVal = vArg.lb(axis);
-        // clang-format off
+        T argmin = cast<T>(op);
+        auto loc = argmin.getLoc();
+        auto axesAttr = argmin.axes();
+
+        NGRAPH_CHECK(axesAttr.size() == 1, "Index Reduction op should have one reduction axis");
+        Attribute axisAttr = *axesAttr.begin();
+        unsigned axis = axisAttr.dyn_cast<IntegerAttr>().getInt();
+
+        NGRAPH_CHECK(operands.size() == 1 && operands[0] != nullptr,
+                     "Expected one non-null operand in Index Reduction op");
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* arg = operands[0];
+        auto arg_type = arg->getType().cast<MemRefType>();
+
+        Value* finalResult = m_pass.buildOutputDefs(op, rewriter)[0];
+        Type type = argmin.getResult()->getType();
+        NGTensorType resultTy = type.cast<NGTensorType>();
+        // MLIR doesn't support Index to/from Integer type-conversion
+        // We have to store our result in an IndexType tensor and call-back to a type-conversion routine in nGraph
+        // TODO: Fix this once MLIR provides explicit cast operations.
+        Value* result = m_pass.createTempTensor(
+            rewriter.getMemRefType(resultTy.getShape(), rewriter.getIndexType()),
+            resultTy.getNumElements() *
+                sizeof(intptr_t), /* hacky way to get target-dependent size of IndexType */
+            rewriter);
+
+        // Views
+        MemRefView vRes(result), vArg(arg);
+        // Index Values
+        IndexedValue iRes(result), iArg(arg);
+        // Bounds Index Handles
+        auto resLbs = vRes.getLbs();
+        auto resUbs = vRes.getUbs();
+        auto argLbs = vArg.getLbs();
+        auto argUbs = vArg.getUbs();
+        {
+            // Loop induction vars
+            auto ivs = IndexHandle::makeIndexHandles(vRes.rank());
+            auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+            // Steps
+            auto steps = vRes.getSteps();
+            auto initVal = vArg.lb(axis);
+            // clang-format off
         LoopNestBuilder(pivs, resLbs, resUbs, steps)( 
             // single stmt body
             [&] {
