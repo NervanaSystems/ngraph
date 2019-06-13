@@ -4,6 +4,7 @@
 #endif
 
 MLIR_OP(Add)
+MLIR_OP(Multiply)
 MLIR_OP(Dot)
 // Add new supported ops here
 

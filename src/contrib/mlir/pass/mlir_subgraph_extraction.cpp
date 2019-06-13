@@ -21,6 +21,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/multiply.hpp"
 
 using namespace ngraph::descriptor;
 using namespace ngraph::op;

@@ -26,6 +26,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/multiply.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>
@@ -270,6 +271,12 @@ template <>
 mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
 {
     return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
+}
+
+template <>
+mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Multiply)
+{
+    return compiler.create_binary_op<mlir::NGMulOp>(ng_node);
 }
 
 template <>
