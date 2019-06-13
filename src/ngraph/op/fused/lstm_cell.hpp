@@ -146,6 +146,11 @@ namespace ngraph
             std::shared_ptr<Node> get_bias() const;
             NodeVector get_peephole_weigths() const;
 
+            /// brief Add and initialize bias input to all zeros.
+            void add_default_bias_input();
+            /// brief Add and initialize peepholes weights input to all zeros.
+            void add_default_peepholes_input();
+
             ///
             /// \brief The Activation function f.
             ///
