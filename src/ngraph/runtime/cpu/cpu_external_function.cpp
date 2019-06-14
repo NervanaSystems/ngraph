@@ -168,6 +168,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
@@ -438,6 +439,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeconvolutionBias>},
     {TI(ngraph::op::QuantizedConcat), &runtime::cpu::CPU_Emitter::emit<op::QuantizedConcat>},
+    {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
 };
 
