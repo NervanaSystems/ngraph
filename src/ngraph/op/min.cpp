@@ -20,8 +20,20 @@
 using namespace std;
 using namespace ngraph;
 
-op::Min::Min(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : ArithmeticReduction("Min", arg, reduction_axes)
+const string op::Min::type_name{"Min"};
+
+op::Min::Min()
+{
+}
+
+op::Min::Min(const Output<Node>& arg, const AxisSet& reduction_axes)
+    : ArithmeticReduction(arg, reduction_axes)
+{
+    constructor_validate_and_infer_types();
+}
+
+op::Min::Min(const Output<Node>& arg, const Output<Node>& reduction_axes)
+    : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
@@ -29,7 +41,7 @@ op::Min::Min(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
 shared_ptr<Node> op::Min::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Min>(new_args.at(0), m_reduction_axes);
+    return make_shared<Min>(new_args.at(0), get_reduction_axes());
 }
 
 shared_ptr<Node> op::Min::get_default_value() const

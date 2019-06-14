@@ -16,31 +16,29 @@
 
 #pragma once
 
-#include <string>
-
-#include "ngraph/pass/pass.hpp"
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace hybrid
+        namespace op
         {
-            namespace pass
+            namespace set_1
             {
-                class Dump;
-            }
-        }
-    }
-}
+                /// \brief Performs ONNX ConvInteger operation.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing Ngraph nodes producing output of quantized ONNX convolution
+                ///         operation.
+                NodeVector conv_integer(const Node& node);
 
-class ngraph::runtime::hybrid::pass::Dump : public ngraph::pass::ModulePass
-{
-public:
-    Dump(const std::string& output_file);
+            } // namespace set_1
 
-    virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
+        } //namespace op
 
-private:
-    const std::string m_output_file;
-};
+    } // namespace onnx_import
+
+} // namespace ngraph
