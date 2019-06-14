@@ -1320,6 +1320,13 @@ private:
                                  element_count);
             break;
         }
+        case OP_TYPEID::SequencePushFront:
+        case OP_TYPEID::SequenceRepeat:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() +
+                                 "' in Interpreter back end.");
+        }
+
         case OP_TYPEID::ShapeOf:
         {
             reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
@@ -1374,6 +1381,13 @@ private:
                                 node.get_output_shape(0));
             break;
         }
+        case OP_TYPEID::SliceInput:
+        case OP_TYPEID::SliceOutput:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() +
+                                 "' in Interpreter back end.");
+        }
+
         case OP_TYPEID::Softmax:
         {
             const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
@@ -1424,6 +1438,11 @@ private:
             reference::tanh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
+        }
+        case OP_TYPEID::TensorIterator:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() +
+                                 "' in Interpreter back end.");
         }
         case OP_TYPEID::TopK:
         {

@@ -121,11 +121,15 @@
 #include "ngraph/op/scatter_add.hpp"
 #include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
+#include "ngraph/op/sequence_push_front.hpp"
+#include "ngraph/op/sequence_repeat.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/slice_input.hpp"
+#include "ngraph/op/slice_output.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/stop_gradient.hpp"
@@ -133,6 +137,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -1460,6 +1465,16 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::Select>(args[0], args[1], args[2]);
                 break;
             }
+            case OP_TYPEID::SequencePushFront:
+            {
+                node = make_shared<op::SequencePushFront>(args[0], args[1]);
+                break;
+            }
+            case OP_TYPEID::SequenceRepeat:
+            {
+                node = make_shared<op::SequenceRepeat>(args[0]);
+                break;
+            }
             case OP_TYPEID::ShapeOf:
             {
                 node = make_shared<op::ShapeOf>(args[0]);
@@ -1503,6 +1518,26 @@ static shared_ptr<ngraph::Function>
                 auto upper_bounds = node_js.at("upper_bounds").get<vector<size_t>>();
                 auto strides = node_js.at("strides").get<vector<size_t>>();
                 node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
+                break;
+            }
+            case OP_TYPEID::SliceInput:
+            {
+                auto axis = node_js.at("axis").get<ptrdiff_t>();
+                auto start = node_js.at("start").get<ptrdiff_t>();
+                auto stride = node_js.at("stride").get<ptrdiff_t>();
+                auto part_size = node_js.at("part_size").get<ptrdiff_t>();
+                auto end = node_js.at("end").get<ptrdiff_t>();
+                node = make_shared<op::SliceInput>(args[0], axis, start, stride, part_size, end);
+                break;
+            }
+            case OP_TYPEID::SliceOutput:
+            {
+                auto axis = node_js.at("axis").get<ptrdiff_t>();
+                auto start = node_js.at("start").get<ptrdiff_t>();
+                auto stride = node_js.at("stride").get<ptrdiff_t>();
+                auto part_size = node_js.at("part_size").get<ptrdiff_t>();
+                auto end = node_js.at("end").get<ptrdiff_t>();
+                node = make_shared<op::SliceOutput>(args[0], axis, start, stride, part_size, end);
                 break;
             }
             case OP_TYPEID::Softmax:
@@ -1559,6 +1594,11 @@ static shared_ptr<ngraph::Function>
             case OP_TYPEID::Tanh:
             {
                 node = make_shared<op::Tanh>(args[0]);
+                break;
+            }
+            case OP_TYPEID::TensorIterator:
+            {
+                // TODO
                 break;
             }
             case OP_TYPEID::Tile:
@@ -2372,6 +2412,10 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Select: { break;
     }
+    case OP_TYPEID::SequencePushFront: { break;
+    }
+    case OP_TYPEID::SequenceRepeat: { break;
+    }
     case OP_TYPEID::ShapeOf: { break;
     }
     case OP_TYPEID::ShuffleChannels:
@@ -2397,6 +2441,26 @@ static json write(const Node& n, bool binary_constant_data)
         node["lower_bounds"] = tmp->get_lower_bounds();
         node["upper_bounds"] = tmp->get_upper_bounds();
         node["strides"] = tmp->get_strides();
+        break;
+    }
+    case OP_TYPEID::SliceInput:
+    {
+        auto tmp = static_cast<const op::SliceInput*>(&n);
+        node["axis"] = tmp->get_axis();
+        node["start"] = tmp->get_start();
+        node["stride"] = tmp->get_stride();
+        node["part_size"] = tmp->get_part_size();
+        node["end"] = tmp->get_end();
+        break;
+    }
+    case OP_TYPEID::SliceOutput:
+    {
+        auto tmp = static_cast<const op::SliceOutput*>(&n);
+        node["axis"] = tmp->get_axis();
+        node["start"] = tmp->get_start();
+        node["stride"] = tmp->get_stride();
+        node["part_size"] = tmp->get_part_size();
+        node["end"] = tmp->get_end();
         break;
     }
     case OP_TYPEID::SpaceToDepth:
@@ -2445,6 +2509,11 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Tan: { break;
     }
     case OP_TYPEID::Tanh: { break;
+    }
+    case OP_TYPEID::TensorIterator:
+    {
+        // TODO
+        break;
     }
     case OP_TYPEID::Tile: { break;
     }
