@@ -690,9 +690,10 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
         {
             if (new_axis.find(i) == new_axis.end())
             {
-                end_dms[i] = end_dms[i].is_static() && int64_t(end_dms[i]) >= 0
-                                 ? end_dms[i]
-                                 : input_shape[j++] + end_dms[i];
+                end_dms[i] =
+                    end_dms[i].is_dynamic()
+                        ? end_dms[i]
+                        : int64_t(end_dms[i]) >= 0 ? end_dms[i] : input_shape[j++] + end_dms[i];
             }
             else
             {
@@ -723,44 +724,53 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
         }
         bj++;
 
-        begin_dms[i] = (begin_dms[i].is_static() && int64_t(begin_dms[i]) >= 0)
-                           ? begin_dms[i]
-                           : input_shape[j] + begin_dms[i];
+        begin_dms[i] =
+            begin_dms[i].is_dynamic()
+                ? begin_dms[i]
+                : int64_t(begin_dms[i]) >= 0 ? begin_dms[i] : input_shape[j] + begin_dms[i];
         //  Clipping 'begin'
-        begin_dms[i] = (begin_dms[i].is_static() && int64_t(begin_dms[i]) < 0)
-                           ? 0
-                           : (begin_dms[i].is_static() && input_shape[j].is_static() &&
-                                      int64_t(begin_dms[i]) >= int64_t(input_shape[j])
-                                  ? input_shape[j] - 1
-                                  : begin_dms[i]);
+        begin_dms[i] = begin_dms[i].is_dynamic()
+                           ? begin_dms[i]
+                           : int64_t(begin_dms[i]) < 0
+                                 ? 0
+                                 : input_shape[j].is_dynamic()
+                                       ? Dimension::dynamic()
+                                       : int64_t(begin_dms[i]) >= int64_t(input_shape[j])
+                                             ? input_shape[j] - 1
+                                             : begin_dms[i];
 
         // Use upper_bounds if mask is not set
         if (ub_mask.find(j) == ub_mask.end())
         {
             Dimension end_dms_tmp =
-                ub.size() > ej
-                    ? (stride_dms[i].is_static() && int64_t(stride_dms[i]) > 0 ? ub[ej] - 1
-                                                                               : ub[ej] + 1)
-                    : end_dms[i];
+                ub.size() <= ej ? end_dms[i]
+                                : stride_dms[i].is_dynamic()
+                                      ? Dimension::dynamic()
+                                      : int64_t(stride_dms[i]) > 0 ? ub[ej] - 1 : ub[ej] + 1;
             end_dms[i] = ub.size() > ej
                              ? end_dms_tmp
-                             : (stride_dms[i].is_static() && int64_t(stride_dms[i]) > 0 ? -1 : 0);
+                             : stride_dms[i].is_dynamic() ? Dimension::dynamic()
+                                                          : int64_t(stride_dms[i]) > 0 ? -1 : 0;
         }
         else
         {
-            end_dms[i] = stride_dms[i].is_static() && int64_t(stride_dms[i]) > 0 ? -1 : 0;
+            end_dms[i] = stride_dms[i].is_dynamic() ? Dimension::dynamic()
+                                                    : int64_t(stride_dms[i]) > 0 ? -1 : 0;
         }
         ej++;
-        end_dms[i] = end_dms[i].is_static() && int64_t(end_dms[i]) >= 0
-                         ? end_dms[i]
-                         : input_shape[j] + end_dms[i];
+        end_dms[i] = end_dms[i].is_dynamic()
+                         ? Dimension::dynamic()
+                         : int64_t(end_dms[i]) >= 0 ? end_dms[i] : input_shape[j] + end_dms[i];
         //  Clipping 'end'
-        end_dms[i] = (end_dms[i].is_static() && int64_t(end_dms[i]) < 0)
-                         ? 0
-                         : (end_dms[i].is_static() && input_shape[j].is_static() &&
-                                    int64_t(end_dms[i]) >= int64_t(input_shape[j])
-                                ? input_shape[j] - 1
-                                : end_dms[i]);
+        end_dms[i] = end_dms[i].is_dynamic()
+                         ? end_dms[i]
+                         : int64_t(end_dms[i]) < 0
+                               ? 0
+                               : input_shape[j].is_dynamic()
+                                     ? Dimension::dynamic()
+                                     : int64_t(end_dms[i]) >= int64_t(input_shape[j])
+                                           ? input_shape[j] - 1
+                                           : end_dms[i];
 
         if (new_axis.find(i) == new_axis.end())
         {
