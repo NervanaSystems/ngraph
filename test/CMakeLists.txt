@@ -98,9 +98,6 @@ if (NGRAPH_INTERPRETER_ENABLE)
         backend_debug_api.cpp
         builder.cpp
         backend_api.cpp)
-        if (NGRAPH_CPU_ENABLE)
-            list(APPEND SRC hybrid_backend.cpp)
-        endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
