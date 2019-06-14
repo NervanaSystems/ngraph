@@ -11,15 +11,27 @@ This page includes additional documentation updates.
 We are pleased to announce the release of version |version|-doc.
 
 
+==============================
+
+0.22-doc
+--------
+
+
+
+
+Core updates for |version|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
 0.21-doc
 --------
 
-Documentation updates
-~~~~~~~~~~~~~~~~~~~~~
-
 Summary of documentation-related changes:
 
-+ Update :doc:`doc-contributor-README` for new community-based contributions. 
++ Updated :doc:`doc-contributor-README` for new community-based contributions. 
 + Added instructions on how to test or display the installed nGraph version.
 + Added instructions on building nGraph bridge (ngraph-bridge).
 + Updated Backend Developer Guides and ToC structure.
@@ -28,8 +40,7 @@ Summary of documentation-related changes:
 + Some coding adjustments for options to render math symbols, so they can be 
   documented more clearly and without excessive JS (see replacements.txt).
 + Consistent filenaming on all BE indexes.
-+ Remove deprecated TensorAPI.
-+ 
++ Removed deprecated TensorAPI.
 
 
 Core updates for |version|

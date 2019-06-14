@@ -23,6 +23,8 @@ audio:not([controls]) {
   display: none;
 }
 
+
+
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -334,6 +336,11 @@ big, small {
 
 .icon {
   display: none !important;
+}
+
+.▼ {
+  color: #e0e0e0;
+  line-height: 1.18em;
 }
 
 .clearfix {
