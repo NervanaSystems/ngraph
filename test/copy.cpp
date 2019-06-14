@@ -344,9 +344,9 @@ TEST(copy, sum)
     Shape shape{4, 3};
     AxisSet axes{1};
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
-    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape)};
 
     auto node = make_shared<op::Sum>(arg0, axes);
+    NodeVector new_args{make_shared<op::Parameter>(element::f32, shape), node->get_argument(1)};
     auto new_node = node->copy_with_new_args(new_args);
     auto node_cast = dynamic_pointer_cast<op::Sum>(new_node);
     ASSERT_NE(node_cast, nullptr);
