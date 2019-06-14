@@ -110,7 +110,7 @@ namespace ngraph
             /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
             /// \param[in]  B                 The bias tensor for input gate with shape: [8*hidden_size].
             /// \param[in]  P                 The weight tensor for peepholes with shape:
-            ///                               [3*hidde_size] - 3 equals to only iof gates.
+            ///                               [3*hidden_size] - 3 equals to only iof gates.
             /// \param[in]  activations       The vector of activation functions used inside
             ///                               recurrent cell.
             /// \param[in]  activation_alpha  The vector of alpha parameters for activation
