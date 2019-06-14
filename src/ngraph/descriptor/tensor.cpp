@@ -47,7 +47,7 @@ void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
                                          const PartialShape& pshape)
 {
     NGRAPH_CHECK(pshape.all_non_negative(),
-                 "set_tensor_type called on a PartialShape containing non-negative dimensions: ",
+                 "set_tensor_type called on a PartialShape containing negative dimensions: ",
                  pshape);
     if (pshape.is_static())
     {
