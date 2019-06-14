@@ -142,8 +142,8 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t data_padded_dilated_dim = -1;
             if (data_dim_static)
             {
-                data_padded_dilated_dim = (static_cast<ptrdiff_t>(data_dilation[i]) *
-                                           (static_cast<ptrdiff_t>(data_shape[i]) - 1)) +
+                data_padded_dilated_dim = (static_cast<int64_t>(data_dilation[i]) *
+                                           (static_cast<int64_t>(data_shape[i]) - 1)) +
                                           1 + data_padding_below[i] + data_padding_above[i];
                 NODE_VALIDATION_CHECK(
                     node,
@@ -158,8 +158,8 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t window_dilated_dim = -1;
             if (window_dim_static)
             {
-                window_dilated_dim = static_cast<ptrdiff_t>(window_dilation[i]) *
-                                         (static_cast<ptrdiff_t>(window_shape[i]) - 1) +
+                window_dilated_dim = static_cast<int64_t>(window_dilation[i]) *
+                                         (static_cast<int64_t>(window_shape[i]) - 1) +
                                      1;
 
                 NODE_VALIDATION_CHECK(node,
