@@ -51,7 +51,7 @@ public:
 
     std::vector<PerformanceCounter> get_performance_data() const final;
 
-    void save(const std::string& filename, plaidml_file_format format) const;
+    void save_as_format(const std::string& filename, plaidml_file_format format) const;
 
     const std::shared_ptr<Function>& src_func() const { return m_src_func; }
 private:

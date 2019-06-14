@@ -162,7 +162,7 @@ TEST(control_dependencies, clone_function_cdop_abs)
     }
 }
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 TEST(control_dependencies, serialize_cdop)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{});

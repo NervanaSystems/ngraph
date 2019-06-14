@@ -250,7 +250,11 @@ static void materialize_shapes(shared_ptr<Node> n,
             NGRAPH_DEBUG << "Materializing " << describe_reshape(reorders.at(arg)) << " for "
                          << arg->get_name();
             mark_reshape_for_deletion(reorders.at(arg), reshapes_to_delete);
-            insert_reshape(n, reorders.at(arg), i);
+            if (reorders.at(arg)->get_input_order() != get_default_order(arg->get_shape()))
+            {
+                // Insert if arg needs to be transposed.
+                insert_reshape(n, reorders.at(arg), i);
+            }
             //no swimming up
         }
     }
