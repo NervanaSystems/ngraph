@@ -923,8 +923,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
     auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
 
-    uint32_t seed = 1234;
-    auto seed_label = std::make_shared<pattern::op::Label>(element::u32, Shape{0});
+    uint64_t seed = 1234;
+    auto seed_label = std::make_shared<pattern::op::Label>(element::u64, Shape{0});
 
     double value = 0.9;
     auto value_const = ngraph::op::Constant::create(element::f32, Shape{1, 1, 2, 2}, {value});
@@ -960,15 +960,28 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
             NGRAPH_DEBUG << "training argument to GenerateMask must be constant";
             return false;
         }
+        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(gm->get_argument(2)))
+        {
+            NGRAPH_DEBUG << "use_seed argument to GenerateMask must be constant";
+            return false;
+        }
+        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(gm->get_argument(3)))
+        {
+            NGRAPH_DEBUG << "seed argument to GenerateMask must be constant";
+            return false;
+        }
+        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(gm->get_argument(4)))
+        {
+            NGRAPH_DEBUG << "probability argument to GenerateMask must be constant";
+            return false;
+        }
 
-        auto gm_value = gm->get_probability();
-        auto gm_seed = gm->get_seed();
+        auto dropout_n = std::make_shared<ngraph::op::Dropout>(pattern_map[x],
+                                                               gm->get_argument(0),
+                                                               gm->get_argument(2),
+                                                               gm->get_argument(3),
+                                                               gm->get_argument(4));
 
-        auto training = gm->get_argument(0);     //for training purpose this is always going to be 1
-        auto use_seed_arg = gm->get_argument(2); // this is the use_seed node
-
-        auto dropout_n = std::make_shared<ngraph::op::Dropout>(
-            pattern_map[x], training, use_seed_arg, gm_seed, gm_value);
         auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 0);
         ngraph::replace_node(m.get_match_root(), goe1);
 
