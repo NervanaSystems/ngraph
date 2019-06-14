@@ -115,7 +115,7 @@ def prepareEnvironment(configurationMaps) {
         UTILS.propagateStatus("Run_docker_containers", configMap["dockerContainerName"])
         sh """
             docker cp ${CI_ROOT}/utils/docker.sh ${configMap["dockerContainerName"]}:/home
-            docker exec ${configMap["dockerContainerName"]} bash -c "/root/${CI_ROOT}/prepare_environment.sh"
+            docker exec ${configMap["dockerContainerName"]} bash -c "/root/${CI_ROOT}/prepare_environment.sh --no-incremental"
         """
     }
     UTILS.createStage("Prepare_environment", prepareEnvironmentMethod, configurationMaps)

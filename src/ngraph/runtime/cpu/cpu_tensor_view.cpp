@@ -20,6 +20,7 @@
 #include "cpu_tensor_view.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -151,5 +152,49 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t n) const
     {
         const char* source = get_data_ptr();
         memcpy(target, source, n);
+    }
+}
+
+void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& source)
+{
+    if (get_element_count() != source.get_element_count())
+    {
+        throw invalid_argument("runtime::cpu::CPUTensorView::copy_from element count must match");
+    }
+
+    if (get_element_type() != source.get_element_type())
+    {
+        throw invalid_argument("runtime::cpu::CPUTensorView::copy_from element types must match");
+    }
+
+    if (auto cpu_source = dynamic_cast<const runtime::cpu::CPUTensorView*>(&source))
+    {
+        auto this_tl =
+            dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(this->get_tensor_layout().get());
+        auto other_tl =
+            dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(source.get_tensor_layout().get());
+        if ((this_tl != NULL) && (other_tl != NULL) && (*this_tl == *other_tl))
+        {
+            // Direct copy
+            memcpy(get_data_ptr(), cpu_source->get_data_ptr(), get_size_in_bytes());
+        }
+        else
+        {
+            // This will copy the data in native/row-major layout
+            source.read(get_data_ptr(), get_size_in_bytes());
+            // Set default layout
+            m_descriptor->set_tensor_layout(
+                std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
+        }
+    }
+    else
+    {
+        auto size = get_size_in_bytes();
+        AlignedBuffer tmp_buffer{size, static_cast<size_t>(BufferAlignment)};
+        source.read(tmp_buffer.get_ptr(), size);
+        write(tmp_buffer.get_ptr(), size);
+        // Set default layout
+        m_descriptor->set_tensor_layout(
+            std::make_shared<runtime::cpu::LayoutDescriptor>(*m_descriptor));
     }
 }
