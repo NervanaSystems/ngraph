@@ -23,6 +23,7 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/op/negative.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "quantization_util.hpp"
 
@@ -101,8 +102,19 @@ namespace ngraph
             auto quant_type = args[0]->get_element_type();
 
             // output scale
-            auto min = make_shared<op::Min>(make_shared<op::Concat>(mins, 0), ngraph::AxisSet{0});
-            auto max = make_shared<op::Max>(make_shared<op::Concat>(maxs, 0), ngraph::AxisSet{0});
+            std::shared_ptr<Node> min =
+                make_shared<op::Min>(make_shared<op::Concat>(mins, 0), ngraph::AxisSet{0});
+            std::shared_ptr<Node> max =
+                make_shared<op::Max>(make_shared<op::Concat>(maxs, 0), ngraph::AxisSet{0});
+            auto zero = make_constant(min->get_element_type(), min->get_shape(), 0);
+            // ensure min is no more than zero.
+            min = std::make_shared<op::Minimum>(zero, min);
+            if (quant_type.is_signed())
+            {
+                // ensure symmetrical distribution including zero
+                max = quantization_util::max_abs(min, max);
+                min = std::make_shared<op::Negative>(max);
+            }
             auto out_scale = quantization_util::get_scale(min, max, quant_type);
 
             NodeVector rescaled_args(args.size());
