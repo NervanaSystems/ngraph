@@ -60,10 +60,11 @@ void pass::DynElimination::construct_transpose()
 
         auto& data_shape = data_arg->get_output_shape(0);
 
-        // TODO(amprocte): These should be redundant if the graph is validated. Necessary?
-        if (perm_arg->get_element_type() != element::i64 ||
-            perm_arg->get_output_partial_shape(0).is_dynamic() ||
-            perm_arg->get_output_shape(0).size() != 1)
+        NGRAPH_CHECK(perm_arg->get_output_partial_shape(0).rank().compatible(1));
+        NGRAPH_CHECK(perm_arg->get_output_element_type(0).compatible(element::i64));
+
+        if (perm_arg->get_output_element_type(0).is_dynamic() ||
+            perm_arg->get_output_partial_shape(0).is_dynamic())
         {
             return false;
         }
@@ -101,13 +102,15 @@ void pass::DynElimination::construct_broadcast()
             auto shape_arg = static_pointer_cast<op::Constant>(pattern_map[shape_arg_label]);
             auto axes_arg = static_pointer_cast<op::Constant>(pattern_map[axes_arg_label]);
 
-            // TODO(amprocte): These should be redundant if the graph is validated. Necessary?
-            if (shape_arg->get_element_type() != element::i64 ||
+            NGRAPH_CHECK(shape_arg->get_output_partial_shape(0).rank().compatible(1));
+            NGRAPH_CHECK(shape_arg->get_output_element_type(0).compatible(element::i64));
+            NGRAPH_CHECK(axes_arg->get_output_partial_shape(0).rank().compatible(1));
+            NGRAPH_CHECK(axes_arg->get_output_element_type(0).compatible(element::i64));
+
+            if (shape_arg->get_output_element_type(0).is_dynamic() ||
                 shape_arg->get_output_partial_shape(0).is_dynamic() ||
-                shape_arg->get_output_shape(0).size() != 1 ||
-                axes_arg->get_element_type() != element::i64 ||
-                axes_arg->get_output_partial_shape(0).is_dynamic() ||
-                axes_arg->get_output_shape(0).size() != 1)
+                axes_arg->get_output_element_type(0).is_dynamic() ||
+                axes_arg->get_output_partial_shape(0).is_dynamic())
             {
                 return false;
             }
