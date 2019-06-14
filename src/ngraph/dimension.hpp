@@ -73,7 +73,20 @@ namespace ngraph
         }
         /// \brief Convert this dimension to `ptrdiff_t`. This dimension must be static.
         /// \throws std::invalid_argument If this dimension is dynamic.
-        explicit operator ptrdiff_t() const
+        ///
+        /// The type signature here is a bit confusing, so it bears explanation. On some systems,
+        /// `ptrdiff_t` and `int64_t` are equivalent. This means we cannot declare conversion
+        /// operators for both types. On other systems, `ptrdiff_t` and `int64_t` are different,
+        /// so we _have_ to declare a separate conversion operator for `ptrdiff_t`.
+        ///
+        /// On systems where `int64_t` and `ptrdiff_t` are the same type, this definition will be
+        /// disabled. On systems where they are different, it is equivalent to:
+        ///
+        ///    explicit operator ptrdiff_t() const { ... }
+        ///
+        explicit
+            operator std::enable_if<!std::is_same<int64_t, ptrdiff_t>::value, ptrdiff_t>::type()
+                const
         {
             if (is_dynamic())
             {
