@@ -35,7 +35,8 @@ namespace ngraph
 
         virtual void
             all_reduce(void* in, void* out, element::Type_t element_type, size_t count) = 0;
-        virtual void broadcast(void* in, element::Type_t element_type, size_t count) = 0;
+        virtual void
+            broadcast(void* in, element::Type_t element_type, size_t count, int root_id) = 0;
     };
 
     void set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface);
