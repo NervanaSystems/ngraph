@@ -161,7 +161,7 @@ runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
 {
     if (m_allocator)
     {
-        return m_allocator;
+        return m_allocator.get();
     }
     else
     {
@@ -172,7 +172,7 @@ runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
 void runtime::cpu::CPU_Backend::set_host_memory_allocator(
     std::unique_ptr<runtime::Allocator> allocator)
 {
-    m_allocator = allocator.get();
+    m_allocator = std::move(allocator);
 }
 
 vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const
