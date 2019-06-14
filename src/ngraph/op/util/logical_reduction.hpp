@@ -45,7 +45,12 @@ namespace ngraph
             public:
                 void validate_and_infer_types() override;
 
+                /// \return true if reduction axes are constant else false.
+                bool reduction_axes_constant() const;
+
                 /// \return The axis positions (0-based) to be eliminated through reduction.
+                /// \throws CheckFailure if the reduction axes are not constant. (Use
+                ///           reduction_axes_constant to check.)
                 const AxisSet get_reduction_axes() const;
                 void set_reduction_axes(const AxisSet& reduction_axes);
             };
