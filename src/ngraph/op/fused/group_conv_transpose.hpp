@@ -35,6 +35,22 @@ namespace ngraph
         class GroupConvolutionTranspose : public util::FusedOp
         {
         public:
+            ///
+            /// \brief      Constructs GroupConvolutionTranspose operation.
+            ///
+            /// \param[in]  data            The node producing input data.
+            /// \param[in]  filters         The node producing filters data.
+            /// \param[in]  strides         The strides along each feature axis.
+            /// \param[in]  dilations       The dilations along each feature axis.
+            /// \param[in]  padding_begin   The padding added at the beggining of each feature axis.
+            /// \param[in]  padding_end     The padding added at the end of each feature axis.
+            /// \param[in]  output_padding  The zero-padding (adjustment) added to one side of the output.
+            /// \param[in]  groups          The number of groups the input channels and output channels
+            ///                             are divided into.
+            /// \param[in]  pad_type        The provided padding type.
+            /// \param[in]  output_shape    The output shape. When provided padding values are
+            ///                             automatically inferred.
+            ///
             GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
                                       const std::shared_ptr<Node>& filters,
                                       const Strides& strides,
@@ -46,10 +62,31 @@ namespace ngraph
                                       const PadType& pad_type = PadType::EXPLICIT,
                                       const Shape& output_shape = Shape{});
 
+            ///
+            /// \brief      Constructs GroupConvolutionTranspose operation.
+            ///
+            /// \param[in]  data            The node producing input data.
+            /// \param[in]  filters         The node producing filters data.
+            /// \param[in]  groups          The number of groups the input channels and output channels
+            ///                             are divided into.
+            ///
             GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
                                       const std::shared_ptr<Node>& filters,
                                       const std::size_t groups = 1UL);
 
+            ///
+            /// \brief      Constructs GroupConvolutionTranspose operation.
+            ///
+            /// \param[in]  data            The node producing input data.
+            /// \param[in]  filters         The node producing filters data.
+            /// \param[in]  strides         The strides along each feature axis.
+            /// \param[in]  dilations       The dilations along each feature axis.
+            /// \param[in]  output_padding  The zero-padding (adjustment) added to one side of the output.
+            /// \param[in]  output_shape    The output shape. When provided padding values are
+            ///                             automatically inferred.
+            /// \param[in]  groups          The number of groups the input channels and output channels
+            ///                             are divided into.
+            ///
             GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
                                       const std::shared_ptr<Node>& filters,
                                       const Strides& strides,
@@ -58,6 +95,16 @@ namespace ngraph
                                       const Shape& output_shape,
                                       const std::size_t groups = 1UL);
 
+            ///
+            /// \brief      Constructs GroupConvolutionTranspose operation.
+            ///
+            /// \param[in]  data            The node producing input data.
+            /// \param[in]  filters         The node producing filters data.
+            /// \param[in]  output_shape    The output shape. When provided padding values are
+            ///                             automatically inferred.
+            /// \param[in]  groups          The number of groups the input channels and output channels
+            ///                             are divided into.
+            ///
             GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
                                       const std::shared_ptr<Node>& filters,
                                       const Shape& output_shape,

@@ -128,7 +128,7 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
         NODE_VALIDATION_CHECK(this,
                               n_data_channels % m_groups == 0,
                               "Number of data channels not a multiple of group size.");
-        // padding
+        // padding type
         NODE_VALIDATION_CHECK(
             this, m_pad_type == PadType::EXPLICIT, "Currently only eplicit pad type is supported.");
 
@@ -167,6 +167,7 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
                               m_output_padding.size() == num_spatial_dims,
                               "Output padding should be of number of input data features size.");
 
+        // If output shape is provided, ignore current values for padding begin/end and infer them.
         if (!m_output_shape.empty())
         {
             m_padding_begin = CoordinateDiff(num_spatial_dims);
