@@ -121,6 +121,8 @@ add_library(onnx_import STATIC
         op/max.hpp
         op/mean.cpp
         op/mean.hpp
+        op/mean_variance_normalization.cpp
+        op/mean_variance_normalization.hpp
         op/min.hpp
         op/mul.hpp
         op/neg.hpp

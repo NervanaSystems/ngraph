@@ -1208,10 +1208,10 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::MVN:
             {
+                auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
                 auto normalize_variance = node_js.at("normalize_variance").get<bool>();
-                auto across_channels = node_js.at("across_channels").get<bool>();
                 auto eps = node_js.at("eps").get<double>();
-                node = make_shared<op::MVN>(args[0], normalize_variance, across_channels, eps);
+                node = make_shared<op::MVN>(args[0], reduction_axes, normalize_variance, eps);
                 break;
             }
             case OP_TYPEID::Negative:
@@ -2181,8 +2181,8 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::MVN:
     {
         auto tmp = dynamic_cast<const op::MVN*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
         node["normalize_variance"] = tmp->get_normalize_variance();
-        node["across_channels"] = tmp->get_across_channels();
         node["eps"] = tmp->get_eps();
         break;
     }
