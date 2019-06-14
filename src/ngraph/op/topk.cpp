@@ -17,24 +17,63 @@
 #include <memory>
 
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::TopK::TopK(const shared_ptr<Node>& arg,
+const string op::TopK::type_name{"TopK"};
+
+op::TopK::TopK()
+{
+}
+
+op::TopK::TopK(const Output<Node>& arg,
                size_t top_k_axis,
                const element::Type& index_element_type,
                size_t k,
                bool compute_max)
-    : Op("TopK", check_single_output_args({arg}))
+    : Op({arg, op::Constant::create(element::i64, Shape{1}, {k})->output(0)})
     , m_top_k_axis(top_k_axis)
     , m_index_element_type(index_element_type)
-    , m_k(k)
     , m_compute_max(compute_max)
 {
     constructor_validate_and_infer_types();
+}
+
+op::TopK::TopK(const Output<Node>& arg,
+               const Output<Node>& k,
+               size_t top_k_axis,
+               const element::Type& index_element_type,
+               bool compute_max)
+    : Op({arg, k})
+    , m_top_k_axis(top_k_axis)
+    , m_index_element_type(index_element_type)
+    , m_compute_max(compute_max)
+{
+    constructor_validate_and_infer_types();
+}
+
+size_t op::TopK::get_k() const
+{
+    size_t k = 0;
+    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    {
+        k = const_op->get_vector<int64_t>()[0];
+    }
+    if (k == 0 && get_input_partial_shape(0).is_static())
+    {
+        k = get_input_partial_shape(0).to_shape()[m_top_k_axis];
+    }
+    return k;
+}
+
+void op::TopK::set_k(size_t k)
+{
+    this->input(1).replace_source_output(
+        op::Constant::create(element::i64, Shape{1}, {k})->output(0));
 }
 
 void op::TopK::validate_and_infer_types()
@@ -63,11 +102,12 @@ void op::TopK::validate_and_infer_types()
                           m_top_k_axis,
                           ") is out of bounds.");
 
+    size_t k = get_k();
     NODE_VALIDATION_CHECK(this,
                           input_rank.is_dynamic() || input_shape[m_top_k_axis].is_dynamic() ||
-                              m_k <= static_cast<size_t>(input_shape[m_top_k_axis]),
+                              k <= static_cast<size_t>(input_shape[m_top_k_axis]),
                           "K (",
-                          m_k,
+                          k,
                           ") exceeds the dimension (",
                           (input_rank.is_static() ? input_shape[m_top_k_axis] : 0),
                           ") of the TopK axis (axis ",
@@ -76,16 +116,9 @@ void op::TopK::validate_and_infer_types()
 
     PartialShape output_shape{input_shape};
 
-    if (input_rank.is_static())
+    if (input_rank.is_static() && k != 0)
     {
-        if (m_k != 0)
-        {
-            output_shape[m_top_k_axis] = m_k;
-        }
-        else if (input_shape[m_top_k_axis].is_static())
-        {
-            m_k = static_cast<size_t>(input_shape[m_top_k_axis]);
-        }
+        output_shape[m_top_k_axis] = k;
     }
 
     set_output_size(2);
@@ -97,7 +130,7 @@ shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<TopK>(
-        new_args.at(0), m_top_k_axis, m_index_element_type, m_k, m_compute_max);
+        new_args.at(0), new_args.at(1), m_top_k_axis, m_index_element_type, m_compute_max);
 }
 
 void op::TopK::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
