@@ -53,10 +53,9 @@ namespace ngraph
 
                     if (is_int64)
                     {
-                        if ((args[0].get_element_type() == element::f32 ||
-                             args[0].get_element_type() == element::f64 ||
-                             args[0].get_element_type() == element::u8) &&
-                            axis == 0)
+                        if (args[0].get_element_type() == element::f32 ||
+                            args[0].get_element_type() == element::f64 ||
+                            args[0].get_element_type() == element::u8)
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i64<float, 2, 2>)>
                                 kernel;
@@ -72,6 +71,7 @@ namespace ngraph
                                     params_shape,
                                     indices_shape,
                                     out_shape,
+                                    axis,
                                     params_buffer_index,
                                     indices_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -82,6 +82,7 @@ namespace ngraph
                                        params_shape,
                                        indices_shape,
                                        out_shape,
+                                       axis,
                                        ectx->arena);
                             };
                         }
@@ -110,10 +111,9 @@ namespace ngraph
 
                     else
                     {
-                        if ((args[0].get_element_type() == element::f32 ||
-                             args[0].get_element_type() == element::f64 ||
-                             args[0].get_element_type() == element::u8) &&
-                            axis == 0)
+                        if (args[0].get_element_type() == element::f32 ||
+                            args[0].get_element_type() == element::f64 ||
+                            args[0].get_element_type() == element::u8)
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i32<float, 2, 2>)>
                                 kernel;
@@ -129,6 +129,7 @@ namespace ngraph
                                     params_shape,
                                     indices_shape,
                                     out_shape,
+                                    axis,
                                     params_buffer_index,
                                     indices_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
@@ -139,6 +140,7 @@ namespace ngraph
                                        params_shape,
                                        indices_shape,
                                        out_shape,
+                                       axis,
                                        ectx->arena);
                             };
                         }
