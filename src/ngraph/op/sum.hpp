@@ -74,11 +74,21 @@ namespace ngraph
         class Sum : public util::ArithmeticReduction
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a summation operation.
+            Sum();
             /// \brief Constructs a summation operation.
             ///
             /// \param arg The tensor to be summed.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Sum(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            Sum(const Output<Node>& arg, const AxisSet& reduction_axes);
+            /// \brief Constructs a summation operation.
+            ///
+            /// \param arg The tensor to be summed.
+            /// \param reduction_axes The axis positions (0-based) to be eliminated.
+            Sum(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

@@ -225,6 +225,16 @@ namespace ngraph
                 template <typename ElementType>
                 void reference_erf(void* arg, void* out, size_t count);
 
+                template <typename ElementType>
+                void tile_rank_0(void* input, void* output, size_t repeats);
+
+                template <typename ElementType, unsigned int Rank>
+                void tile(void* input,
+                          void* output,
+                          const Shape& input_shape,
+                          const Shape& output_shape,
+                          int arena);
+
                 template <typename ElementType,
                           typename IndicesType,
                           unsigned int Rank1,
