@@ -32,7 +32,7 @@ namespace ngraph
                     const uint32_t seed,
                     const double keep_prob); // keep_prob = 1 - dropout_prob
 
-            const bool get_use_seed() const;
+            bool get_use_seed() const;
             uint32_t get_seed() const { return m_seed; }
             double get_keep_prob() const { return m_keep_prob; }
             void set_seed(uint32_t new_seed) { m_seed = new_seed; }
