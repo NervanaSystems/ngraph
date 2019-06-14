@@ -30,6 +30,7 @@ namespace ngraph
 
         private:
             void construct_transpose();
+            void construct_dyn_reshape();
         };
     }
 }
