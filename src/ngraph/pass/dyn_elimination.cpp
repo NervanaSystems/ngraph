@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include "dyn_elimination.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -30,6 +32,7 @@ pass::DynElimination::DynElimination()
     : GraphRewrite()
 {
     construct_transpose();
+    construct_broadcast();
     construct_dyn_reshape();
 }
 
@@ -57,10 +60,11 @@ void pass::DynElimination::construct_transpose()
 
         auto& data_shape = data_arg->get_output_shape(0);
 
-        // TODO(amprocte): These should be redundant if the graph is validated. Necessary?
-        if (perm_arg->get_element_type() != element::i64 ||
-            perm_arg->get_output_partial_shape(0).is_dynamic() ||
-            perm_arg->get_output_shape(0).size() != 1)
+        NGRAPH_CHECK(perm_arg->get_output_partial_shape(0).rank().compatible(1));
+        NGRAPH_CHECK(perm_arg->get_output_element_type(0).compatible(element::i64));
+
+        if (perm_arg->get_output_element_type(0).is_dynamic() ||
+            perm_arg->get_output_partial_shape(0).is_dynamic())
         {
             return false;
         }
@@ -77,6 +81,52 @@ void pass::DynElimination::construct_transpose()
 
     auto transpose_matcher = make_shared<pattern::Matcher>(transpose, "DynElimination.Transpose");
     add_matcher(transpose_matcher, transpose_callback, all_pass_property_off);
+}
+
+void pass::DynElimination::construct_broadcast()
+{
+    auto data_arg_label = make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 3});
+    auto shape_arg_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
+    auto axes_arg_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{0}, pattern::has_class<op::Constant>());
+
+    auto dyn_broadcast =
+        make_shared<op::DynBroadcast>(data_arg_label, shape_arg_label, axes_arg_label);
+
+    auto dyn_broadcast_callback =
+        [data_arg_label, shape_arg_label, axes_arg_label](pattern::Matcher& m) {
+            auto pattern_map = m.get_pattern_map();
+
+            auto data_arg = pattern_map[data_arg_label];
+            auto shape_arg = static_pointer_cast<op::Constant>(pattern_map[shape_arg_label]);
+            auto axes_arg = static_pointer_cast<op::Constant>(pattern_map[axes_arg_label]);
+
+            NGRAPH_CHECK(shape_arg->get_output_partial_shape(0).rank().compatible(1));
+            NGRAPH_CHECK(shape_arg->get_output_element_type(0).compatible(element::i64));
+            NGRAPH_CHECK(axes_arg->get_output_partial_shape(0).rank().compatible(1));
+            NGRAPH_CHECK(axes_arg->get_output_element_type(0).compatible(element::i64));
+
+            if (shape_arg->get_output_element_type(0).is_dynamic() ||
+                shape_arg->get_output_partial_shape(0).is_dynamic() ||
+                axes_arg->get_output_element_type(0).is_dynamic() ||
+                axes_arg->get_output_partial_shape(0).is_dynamic())
+            {
+                return false;
+            }
+
+            auto shape = shape_arg->get_shape_val();
+            auto axes = axes_arg->get_axis_vector_val();
+
+            auto replacement = std::make_shared<op::Broadcast>(data_arg, shape, axes);
+
+            replace_node(m.get_match_root(), replacement);
+            return true;
+        };
+
+    auto dyn_broadcast_matcher =
+        make_shared<pattern::Matcher>(dyn_broadcast, "DynElimination.DynBroadcast");
+    add_matcher(dyn_broadcast_matcher, dyn_broadcast_callback, all_pass_property_off);
 }
 
 //

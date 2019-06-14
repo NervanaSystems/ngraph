@@ -1846,6 +1846,7 @@ namespace ngraph
                     writer << "                   {" << join(args[0].get_shape()) << "},\n";
                     writer << "                   {" << join(args[1].get_shape()) << "},\n";
                     writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                   " << gather->get_axis() << ",\n";
                     writer << "                   0);\n";
                 }
                 else
