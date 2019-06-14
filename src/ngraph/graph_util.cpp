@@ -249,10 +249,16 @@ std::list<std::shared_ptr<ngraph::Node>>
             }
             auto cloned_node = node->copy_with_new_args(cloned_args);
 
-            //copy control dependencies
+            // copy control dependencies
             for (auto cdep : node->get_control_dependencies())
             {
                 cloned_node->add_control_dependency(node_map.at(cdep.get()));
+            }
+
+            if (node->get_friendly_name() != node->get_name())
+            {
+                // There is a friendly name for this node so copy it
+                cloned_node->set_friendly_name(node->get_friendly_name());
             }
             node_map[node.get()] = cloned_node;
         }
