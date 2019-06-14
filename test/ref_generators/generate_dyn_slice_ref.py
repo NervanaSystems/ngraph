@@ -264,7 +264,6 @@ def print_slices(slices):
 class SliceTestWriter:
     def __init__(self, shape=(), dtype='int32', stream=sys.stdout):
         self._shape = shape
-        n_elems = np.prod(shape)
         self._dtype = dtype
         self._stream = stream
         self._test_counter = 0
@@ -275,12 +274,6 @@ class SliceTestWriter:
     def write_test(self, slices):
         data_in = np.linspace(0,np.prod(self._shape)-1,np.prod(self._shape),dtype=self._dtype).reshape(self._shape)
 
-        n_slices = 1
-        try:
-            n_slices = len(slices)
-        except TypeError:
-            pass
-
         self._stream.write('\n')
         self._stream.write('// slices are: %s\n' % print_slices(slices))
         self._stream.write('// dtype is: %s\n' % self._dtype)
@@ -288,7 +281,7 @@ class SliceTestWriter:
 
         try:
             data_out = data_in.__getitem__(slices)
-        except Exception as e:
+        except Exception:
             self._stream.write('// failure is expected\n'
                                'NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_%d)\n'
                                '{\n'
@@ -548,6 +541,13 @@ def main():
         t[4:0:-3]
         t[3:2:1]
         t[4::-2]
+        t[1:-5:-1]
+        t[1:-1:-1]
+        t[1:None]
+        t[1:None:-1]
+        t[-5:5:2]
+        t[-1:5:1]
+        t[-1:1:1]
 
         #
         # A couple of tests for negative-stride slicing. The issue we want to

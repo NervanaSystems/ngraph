@@ -41,7 +41,8 @@ namespace ngraph
                                                        const PartialShape& window_shape,
                                                        const Strides& window_strides,
                                                        const Strides& window_dilation,
-                                                       bool is_window_all_in_padding_allowed);
+                                                       bool is_window_all_in_padding_allowed,
+                                                       bool ceil_mode = false);
 
     std::tuple<element::Type, PartialShape>
         infer_convolution_forward(const Node* node,
@@ -61,7 +62,8 @@ namespace ngraph
                                                const CoordinateDiff& data_padding_above,
                                                const PartialShape& window_shape,
                                                const Strides& window_strides,
-                                               bool is_window_all_in_padding_allowed);
+                                               bool is_window_all_in_padding_allowed,
+                                               bool ceil_mode = false);
 
     std::tuple<element::Type, PartialShape, PartialShape>
         infer_batch_norm_forward(const Node* node,

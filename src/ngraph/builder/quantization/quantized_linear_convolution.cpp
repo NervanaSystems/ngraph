@@ -49,7 +49,7 @@ namespace ngraph
                                                         const shared_ptr<Node>& output_scale)
             {
                 // TODO: need to establish cross-nGraph view of scale (mult or div)
-                auto requantization_scale = (input_scale * filter_scale) / output_scale;
+                const auto requantization_scale = (input_scale * filter_scale) / output_scale;
 
                 return make_shared<op::QuantizedConvolution>(input,
                                                              filter,
@@ -79,32 +79,32 @@ namespace ngraph
                                                         const shared_ptr<Node>& output_scale,
                                                         const shared_ptr<Node>& output_zero_point)
             {
-                AxisSet axes;
+                const AxisSet axes;
 
-                auto dq_input = make_shared<op::Dequantize>(
+                const auto dq_input = make_shared<op::Dequantize>(
                     input, input_scale, input_zero_point, input_scale->get_element_type(), axes);
 
-                auto dq_filter = make_shared<op::Dequantize>(filter,
-                                                             filter_scale,
-                                                             filter_zero_point,
-                                                             filter_scale->get_element_type(),
-                                                             axes);
+                const auto dq_filter = make_shared<op::Dequantize>(filter,
+                                                                   filter_scale,
+                                                                   filter_zero_point,
+                                                                   filter_scale->get_element_type(),
+                                                                   axes);
 
-                auto convolution = make_shared<op::Convolution>(dq_input,
-                                                                dq_filter,
-                                                                window_movement_strides,
-                                                                window_dilation_strides,
-                                                                padding_below,
-                                                                padding_above,
-                                                                data_dilation_strides);
-                auto q_convolution =
-                    make_shared<op::Quantize>(convolution,
-                                              output_scale,
-                                              output_zero_point,
-                                              output_zero_point->get_element_type(),
-                                              axes,
-                                              op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
-                return move(q_convolution);
+                const auto convolution = make_shared<op::Convolution>(dq_input,
+                                                                      dq_filter,
+                                                                      window_movement_strides,
+                                                                      window_dilation_strides,
+                                                                      padding_below,
+                                                                      padding_above,
+                                                                      data_dilation_strides);
+                // Return quantized convolution
+                return make_shared<op::Quantize>(
+                    convolution,
+                    output_scale,
+                    output_zero_point,
+                    output_zero_point->get_element_type(),
+                    axes,
+                    op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
             }
 
             shared_ptr<Node> QuantizedLinearConvolutionBias(const shared_ptr<Node>& input,
@@ -125,9 +125,9 @@ namespace ngraph
                 auto mybias = bias;
                 if (bias->get_element_type() != element::i32)
                 {
-                    auto zero = make_constant(element::i32, input_scale->get_shape(), 0);
-                    AxisSet quantization_axes;
-                    auto bias_scale = input_scale * filter_scale;
+                    const auto zero = make_constant(element::i32, input_scale->get_shape(), 0);
+                    const AxisSet quantization_axes;
+                    const auto bias_scale = input_scale * filter_scale;
                     op::Quantize::RoundMode round_mode =
                         op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
@@ -165,6 +165,69 @@ namespace ngraph
                                                              data_dilation_strides,
                                                              output_scale,
                                                              false);
+            }
+
+            shared_ptr<Node> QuantizedConvInteger(const shared_ptr<Node>& input,
+                                                  const shared_ptr<Node>& filter,
+                                                  const Strides& window_movement_strides,
+                                                  const Strides& window_dilation_strides,
+                                                  const CoordinateDiff& padding_below,
+                                                  const CoordinateDiff& padding_above,
+                                                  const Strides& data_dilation_strides,
+                                                  const std::shared_ptr<Node>& input_zero_point,
+                                                  const std::shared_ptr<Node>& filter_zero_point)
+            {
+                // Check if zero points are constant and zero
+                if (ngraph::is_zero(input_zero_point) && ngraph::is_zero(filter_zero_point))
+                {
+                    return QuantizedConvInteger(input,
+                                                filter,
+                                                window_movement_strides,
+                                                window_dilation_strides,
+                                                padding_below,
+                                                padding_above,
+                                                data_dilation_strides);
+                }
+                else
+                {
+                    // Fall back to performing operation on dequantized floating-point values
+                    const auto input_scale = make_constant(element::f32, Shape{}, 1);
+                    const auto filter_scale = make_constant(element::f32, Shape{}, 1);
+                    const auto output_scale = make_constant(element::f32, Shape{}, 1);
+                    const auto output_zero_point = make_constant(element::i32, Shape{}, 0);
+                    const AxisSet axes;
+
+                    const auto dq_input =
+                        make_shared<op::Dequantize>(input,
+                                                    input_scale,
+                                                    input_zero_point,
+                                                    input_scale->get_element_type(),
+                                                    axes);
+
+                    const auto dq_filter =
+                        make_shared<op::Dequantize>(filter,
+                                                    filter_scale,
+                                                    filter_zero_point,
+                                                    filter_scale->get_element_type(),
+                                                    axes);
+
+                    const auto output = make_shared<op::Convolution>(dq_input,
+                                                                     dq_filter,
+                                                                     window_movement_strides,
+                                                                     window_dilation_strides,
+                                                                     padding_below,
+                                                                     padding_above,
+                                                                     data_dilation_strides);
+
+                    // Return quantized output
+                    return make_shared<op::Quantize>(
+                        output,
+                        output_scale,
+                        output_zero_point,
+                        output_zero_point->get_element_type(),
+                        axes,
+                        op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
+                }
             }
         }
     }

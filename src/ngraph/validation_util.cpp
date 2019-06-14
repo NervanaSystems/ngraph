@@ -79,7 +79,8 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
                                                            const PartialShape& window_shape,
                                                            const Strides& window_strides,
                                                            const Strides& window_dilation,
-                                                           bool is_window_all_in_padding_allowed)
+                                                           bool is_window_all_in_padding_allowed,
+                                                           bool ceil_mode)
 {
     PartialShape data_shape_merged{PartialShape::dynamic()};
 
@@ -198,9 +199,20 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
                                       i,
                                       ".");
 
-                output_shape[i] = ceil_div(static_cast<size_t>(data_padded_dilated_dim) -
-                                               static_cast<size_t>(window_dilated_dim) + 1,
-                                           window_strides[i]);
+                if (ceil_mode)
+                {
+                    output_shape[i] = ceil_div(static_cast<size_t>(data_padded_dilated_dim) -
+                                                   static_cast<size_t>(window_dilated_dim),
+                                               window_strides[i]) +
+                                      1;
+                }
+                else
+                {
+                    output_shape[i] = ((static_cast<size_t>(data_padded_dilated_dim) -
+                                        static_cast<size_t>(window_dilated_dim)) /
+                                       window_strides[i]) +
+                                      1;
+                }
             }
         }
     }
@@ -370,7 +382,8 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
                                                    const CoordinateDiff& data_padding_above,
                                                    const PartialShape& window_shape,
                                                    const Strides& window_strides,
-                                                   bool is_window_all_in_padding_allowed)
+                                                   bool is_window_all_in_padding_allowed,
+                                                   bool ceil_mode)
 {
     NODE_VALIDATION_CHECK(node,
                           data_batch_shape.rank().is_dynamic() ||
@@ -438,7 +451,8 @@ PartialShape ngraph::infer_batched_pooling_forward(const Node* node,
                                                   window_shape,
                                                   window_strides,
                                                   window_dilation,
-                                                  is_window_all_in_padding_allowed);
+                                                  is_window_all_in_padding_allowed,
+                                                  ceil_mode);
     }
 
     PartialShape data_batch_output_shape{

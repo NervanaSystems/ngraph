@@ -37,32 +37,19 @@ namespace ngraph
                 /// \param arg Output that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 ArithmeticReduction(const Output<Node>& arg, const AxisSet& reduction_axes);
-
                 /// \brief Constructs an arithmetic reduction operation.
                 ///
-                /// \param arg Node that produces the first input tensor.
+                /// \param arg Output that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                ArithmeticReduction(const std::shared_ptr<Node>& arg,
-                                    const AxisSet& reduction_axes);
-
-                /// \brief Constructs an arithmetic reduction operation.
-                ///
-                /// \param arg Node that produces the first input tensor.
-                /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                ArithmeticReduction(const std::string& node_type,
-                                    const std::shared_ptr<Node>& arg,
-                                    const AxisSet& reduction_axes);
+                ArithmeticReduction(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
             public:
                 void validate_and_infer_types() override;
 
                 /// \return The axis positions (0-based) to be eliminated through reduction.
-                const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
+                const AxisSet get_reduction_axes() const;
                 /// \brief Change the reduction axes
                 void set_reduction_axes(const AxisSet& reduction_axes);
-
-            protected:
-                AxisSet m_reduction_axes;
             };
         }
     }
