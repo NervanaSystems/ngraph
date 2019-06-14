@@ -91,7 +91,10 @@ namespace ngraph
                 env.DeleteDistribution(distribution);
             }
 
-            void broadcast(void* in, element::Type_t element_type, size_t count) override
+            void broadcast(void* in,
+                           element::Type_t element_type,
+                           size_t count,
+                           int root_id) override
             {
                 auto data_type = MLSL::DT_FLOAT;
 
@@ -107,7 +110,8 @@ namespace ngraph
 
                 MLSL::Environment& env = MLSL::Environment::GetEnv();
                 MLSL::Distribution* distribution = env.CreateDistribution(env.GetProcessCount(), 1);
-                MLSL::CommReq* req = distribution->Bcast(in, count, data_type, 0, MLSL::GT_DATA);
+                MLSL::CommReq* req =
+                    distribution->Bcast(in, count, data_type, root_id, MLSL::GT_DATA);
                 env.Wait(req);
                 env.DeleteDistribution(distribution);
             }
