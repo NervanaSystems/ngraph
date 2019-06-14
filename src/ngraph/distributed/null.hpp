@@ -41,7 +41,10 @@ namespace ngraph
                 throw ngraph_error("Distributed Library not supported/mentioned");
             }
 
-            void broadcast(void* in, element::Type_t element_type, size_t count) override
+            void broadcast(void* in,
+                           element::Type_t element_type,
+                           size_t count,
+                           int root_id) override
             {
                 throw ngraph_error("Distributed Library not supported/mentioned");
             }
