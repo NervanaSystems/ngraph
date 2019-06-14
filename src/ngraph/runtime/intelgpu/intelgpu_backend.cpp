@@ -1053,7 +1053,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Sum:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             const shared_ptr<op::Sum> sum = static_pointer_cast<op::Sum>(op);
             const AxisSet& axis = sum->get_reduction_axes();
@@ -1071,7 +1071,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Product:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             const shared_ptr<op::Product> prod = static_pointer_cast<op::Product>(op);
             const AxisSet& axis = prod->get_reduction_axes();
@@ -1142,7 +1142,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::All:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             // Empty axis is not a case for do_equal_propagation()
             kern.emit<op::All>(static_pointer_cast<op::All>(op));
@@ -1150,7 +1150,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Any:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             // Empty axis is not a case for do_equal_propagation()
             kern.emit<op::Any>(static_pointer_cast<op::Any>(op));
@@ -1850,14 +1850,14 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Min:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             kern.emit<op::Min>(static_pointer_cast<op::Min>(op));
             break;
         }
         case OP_TYPEID::Max:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             kern.emit<op::Max>(static_pointer_cast<op::Max>(op));
             break;
@@ -2009,7 +2009,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::TopK:
         {
-            arguments_check(op, 1, 2);
+            arguments_check(op, 2, 2);
 
             const shared_ptr<op::TopK> topk_op = static_pointer_cast<op::TopK>(op);
 
