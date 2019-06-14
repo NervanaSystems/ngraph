@@ -9699,6 +9699,16 @@ TEST(type_prop, sum_axis_oob)
     }
 }
 
+TEST(type_prop, sum_dynamic_axes)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto summation_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto sum = make_shared<op::Sum>(param, summation_axes);
+
+    EXPECT_EQ(sum->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(sum->get_output_partial_shape(0).rank().is_dynamic());
+}
+
 TEST(type_prop, sum_partial_rank_dynamic)
 {
     auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
