@@ -465,28 +465,6 @@ set (SRC
     )
 
 set(SRC ${SRC}
-    runtime/hybrid/hybrid_backend.cpp
-    runtime/hybrid/hybrid_backend.hpp
-    runtime/hybrid/hybrid_executable.cpp
-    runtime/hybrid/hybrid_executable.hpp
-    runtime/hybrid/hybrid_tensor.cpp
-    runtime/hybrid/hybrid_util.cpp
-    runtime/hybrid/hybrid_util.hpp
-    runtime/hybrid/op/function_call.cpp
-    runtime/hybrid/op/function_call.hpp
-    runtime/hybrid/pass/default_placement.cpp
-    runtime/hybrid/pass/default_placement.hpp
-    runtime/hybrid/pass/dump.cpp
-    runtime/hybrid/pass/dump.hpp
-    runtime/hybrid/pass/fix_get_output_element.cpp
-    runtime/hybrid/pass/fix_get_output_element.hpp
-    runtime/hybrid/pass/liveness.cpp
-    runtime/hybrid/pass/liveness.hpp
-    runtime/hybrid/pass/memory_layout.cpp
-    runtime/hybrid/pass/memory_layout.hpp
-    )
-
-set(SRC ${SRC}
     runtime/dynamic/dynamic_backend.cpp
     runtime/dynamic/dynamic_backend.hpp
     )
