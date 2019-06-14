@@ -634,3 +634,26 @@ TEST(util, apply_permutation_pshape_rank_dynamic_inviable_permutation_fails)
 {
     ASSERT_THROW(apply_permutation(PartialShape::dynamic(), AxisVector{0, 1, 2, 2}), CheckFailure);
 }
+
+TEST(util, clone_function_friendly_name)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+
+    A->set_friendly_name("A");
+    B->set_friendly_name("B");
+
+    auto g = clone_function(*f);
+
+    bool found_A = false;
+    bool found_B = false;
+    for (auto parameter : g->get_parameters())
+    {
+        found_A |= parameter->get_friendly_name() == "A";
+        found_B |= parameter->get_friendly_name() == "B";
+    }
+    EXPECT_TRUE(found_A);
+    EXPECT_TRUE(found_B);
+}
