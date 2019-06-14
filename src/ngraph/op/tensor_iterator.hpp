@@ -33,22 +33,18 @@ namespace ngraph
             /// \brief Constructs an empty TensorIterator operation
             TensorIterator();
 
-            TensorIterator(const ParameterVector& body_parameters,
-                           const OutputVector& initial_body_arguments,
-                           const OutputVector& body_arguments,
+            TensorIterator(const OutputVector& body_arguments,
+                           const ParameterVector& body_parameters,
+                           const OutputVector& body_outputs,
                            const OutputVector& outputs);
 
             const ParameterVector& get_body_parameters() const;
             ParameterVector& get_body_parameters();
             void set_body_parameters(const ParameterVector& body_parameters);
 
-            const OutputVector& get_initial_body_arguments() const;
-            OutputVector& get_initial_body_arguments();
-            void set_initial_body_arguments(const OutputVector& initial_body_arguments);
-
-            const OutputVector& get_body_arguments() const;
-            OutputVector& get_body_arguments();
-            void set_body_arguments(const OutputVector& body_arguments);
+            const OutputVector& get_body_outputs() const;
+            OutputVector& get_body_outputs();
+            void set_body_outputs(const OutputVector& body_outputs);
 
             const OutputVector& get_outputs() const;
             OutputVector& get_outputs();
@@ -58,8 +54,7 @@ namespace ngraph
 
         private:
             ParameterVector m_body_parameters;
-            OutputVector m_initial_body_arguments;
-            OutputVector m_body_arguments;
+            OutputVector m_body_outputs;
             OutputVector m_outputs;
         };
     }

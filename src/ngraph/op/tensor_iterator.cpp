@@ -25,13 +25,13 @@ op::TensorIterator::TensorIterator()
 {
 }
 
-op::TensorIterator::TensorIterator(const ParameterVector& body_parameters,
-                                   const OutputVector& initial_body_arguments,
-                                   const OutputVector& body_arguments,
+op::TensorIterator::TensorIterator(const OutputVector& body_inputs,
+                                   const ParameterVector& body_parameters,
+                                   const OutputVector& body_outputs,
                                    const OutputVector& outputs)
-    : m_body_parameters(body_parameters)
-    , m_initial_body_arguments(initial_body_arguments)
-    , m_body_arguments(body_arguments)
+    : Op(body_inputs)
+    , m_body_parameters(body_parameters)
+    , m_body_outputs(body_outputs)
     , m_outputs(outputs)
 {
 }
@@ -51,34 +51,19 @@ void op::TensorIterator::set_body_parameters(const ParameterVector& body_paramet
     m_body_parameters = body_parameters;
 }
 
-const OutputVector& op::TensorIterator::get_initial_body_arguments() const
+const OutputVector& op::TensorIterator::get_body_outputs() const
 {
-    return m_initial_body_arguments;
+    return m_body_outputs;
 }
 
-OutputVector& op::TensorIterator::get_initial_body_arguments()
+OutputVector& op::TensorIterator::get_body_outputs()
 {
-    return m_initial_body_arguments;
+    return m_body_outputs;
 }
 
-void op::TensorIterator::set_initial_body_arguments(const OutputVector& initial_body_arguments)
+void op::TensorIterator::set_body_outputs(const OutputVector& body_outputs)
 {
-    m_initial_body_arguments = initial_body_arguments;
-}
-
-const OutputVector& op::TensorIterator::get_body_arguments() const
-{
-    return m_body_arguments;
-}
-
-OutputVector& op::TensorIterator::get_body_arguments()
-{
-    return m_body_arguments;
-}
-
-void op::TensorIterator::set_body_arguments(const OutputVector& body_arguments)
-{
-    m_body_arguments = body_arguments;
+    m_body_outputs = body_outputs;
 }
 
 const OutputVector& op::TensorIterator::get_outputs() const
@@ -97,7 +82,10 @@ void op::TensorIterator::set_outputs(const OutputVector& outputs)
 
 std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
 {
-    NGRAPH_CHECK(new_args.size() == 0, "TensorIterator has no arguments");
-    return make_shared<TensorIterator>(
-        m_body_parameters, m_initial_body_arguments, m_body_arguments, m_outputs);
+    auto result = make_shared<TensorIterator>();
+    result->set_arguments(new_args);
+    result->set_body_parameters(m_body_parameters);
+    result->set_body_outputs(m_body_outputs);
+    result->set_outputs(m_outputs);
+    return move(result);
 }
