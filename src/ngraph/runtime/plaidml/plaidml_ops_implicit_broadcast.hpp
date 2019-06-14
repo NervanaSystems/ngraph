@@ -16,34 +16,36 @@
 
 #pragma once
 
-#include <exception>
-#include <functional>
-#include <sstream>
+#include <memory>
 
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace hybrid
+        namespace plaidml
         {
-            namespace pass
+            namespace op
             {
-                class DefaultPlacement;
+                // Implements NumPy-style broadcast semantics by passing its single argument through to its
+                // output and pretending that this changes the shape.  The creator of this node is responsible
+                // for ensuring that the downstream operation will perform a NumPy-style broadcast.
+                class ImplicitBroadcast;
             }
         }
     }
 }
 
-class ngraph::runtime::hybrid::pass::DefaultPlacement : public ngraph::pass::NodePass
+class ngraph::runtime::plaidml::op::ImplicitBroadcast final : public ngraph::op::Op
 {
 public:
-    DefaultPlacement(
-        const std::vector<std::shared_ptr<ngraph::runtime::Backend>>& placement_backends);
+    ImplicitBroadcast(std::shared_ptr<Node> input, const Shape& shape);
+
+    void validate_and_infer_types() final;
+
+    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
 
 private:
-    bool run_on_node(std::shared_ptr<Node> node) override;
-
-    std::vector<std::shared_ptr<ngraph::runtime::Backend>> m_placement_backends;
+    Shape m_shape;
 };

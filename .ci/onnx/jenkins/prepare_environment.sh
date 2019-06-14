@@ -60,9 +60,32 @@ function build_ngraph() {
     return 0
 }
 
-# Link Onnx models
-mkdir -p /home/onnx_models/.onnx
-ln -s /home/onnx_models/.onnx /root/.onnx
+function main() {
+    # By default copy stored nGraph master and use it to build PR branch
+    BUILD_CALL='build_ngraph "/root" "USE_CACHED" || build_ngraph "/root" "REBUILD"'
 
-# Copy stored nGraph master and use it to build PR branch
-build_ngraph "/root" "USE_CACHED" || build_ngraph "/root" "REBUILD"
+    PATTERN='[-a-zA-Z0-9_]*='
+    for i in "$@"
+    do
+        case $i in
+            --no-incremental)
+                # Build nGraph from scratch if incremental building is disabled
+                BUILD_CALL='build_ngraph "/root"'
+                ;;
+            *)
+                echo "Parameter $i not recognized."
+                exit 1
+                ;;
+        esac
+    done
+
+    # Link Onnx models
+    mkdir -p /home/onnx_models/.onnx
+    ln -s /home/onnx_models/.onnx /root/.onnx
+
+    eval "${BUILD_CALL}"
+}
+
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
+    main "${@}"
+fi
