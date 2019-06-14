@@ -185,16 +185,7 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
                 int total_padding = m_strides[i] * (data_shape[i + 2] - 1) +
                                     m_dilations[i] * (filters_shape[i + 2] - 1) - out_shape[i] +
                                     m_output_padding[i] + 1;
-                if (total_padding < 0)
-                {
-                    // (int) -9 / 2 = -5 but we need -4
-                    // (int) -9 --> 9 / 2 = 4 --> -4
-                    m_padding_begin[i] = -(-total_padding / 2);
-                }
-                else
-                {
-                    m_padding_begin[i] = total_padding / 2;
-                }
+                m_padding_begin[i] = total_padding / 2;
             }
             m_padding_end = m_padding_begin;
         }
