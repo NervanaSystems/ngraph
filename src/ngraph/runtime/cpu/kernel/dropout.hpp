@@ -37,11 +37,13 @@ namespace ngraph
                                       const size_t nelems,
                                       const bool training,
                                       const double keep_prob,
-                                      const std::vector<std::minstd_rand>& vmsr)
+                                      const std::vector<std::minstd_rand>& vmsr,
+                                      const bool use_seed)
                 {
                     if (training)
 
                     {
+                        int32_t rnd_seed = rand();
                         double dropout_prob = 1 - keep_prob;
 #ifdef _OPENMP
                         size_t nthr =
@@ -61,7 +63,15 @@ namespace ngraph
                               native implementation (and other frameworks).
                               https://github.com/NervanaSystems/ngraph-paddle/blob/14d88829b386c9f7601788c5539c08326dcbe2fe/paddle/fluid/operators/dropout_op.h#L58-L78
                               So, if framework passes same seed, then we will get same mask.*/
-                            std::minstd_rand msr = vmsr[tid];
+                            std::minstd_rand msr;
+                            if (use_seed)
+                            {
+                                msr = vmsr[tid];
+                            }
+                            else
+                            {
+                                msr.seed(rnd_seed + tid);
+                            }
                             std::uniform_real_distribution<> gen(0, 1);
 
                             size_t idx_start = tid * chunk_size;

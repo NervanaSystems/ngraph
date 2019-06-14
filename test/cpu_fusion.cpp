@@ -2814,64 +2814,6 @@ TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
 
 TEST(cpu_fusion, fuse_dropout)
 {
-    auto make_function =
-        [](Shape input_shape, const uint32_t seed_val, double one_minus_prob, bool fuse) {
-            auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
-            auto value = op::Constant::create(element::f32, input_shape, {one_minus_prob});
-            auto const1 = op::Constant::create(input->get_element_type(), Shape{}, {1});
-
-            auto gen_mask = std::make_shared<op::GenerateMask>(
-                const1, input->get_shape(), input->get_element_type(), seed_val, one_minus_prob);
-
-            auto mult = std::make_shared<op::Multiply>(gen_mask, input);
-
-            auto goe = std::make_shared<op::GetOutputElement>(mult, 0);
-
-            auto pdivide = fuse ? std::make_shared<op::Divide>(mult, value)
-                                : std::make_shared<op::Divide>(goe, value);
-
-            auto f = make_shared<Function>(NodeVector{pdivide, gen_mask}, ParameterVector{input});
-
-            return f;
-
-        };
-
-    auto fuse_func = make_function(Shape{2, 2, 256, 256}, 1, 0.9, true);
-    auto fuse_func2 = make_function(Shape{2, 2, 256, 256}, 1, 0.9, true);
-    auto nofuse_func = make_function(Shape{2, 2, 256, 256}, 1, 0.9, false);
-    {
-        pass::Manager pass_manager;
-        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-        pass_manager.run_passes(fuse_func);
-        pass_manager.run_passes(nofuse_func);
-        ASSERT_EQ(count_ops_of_type<op::Dropout>(fuse_func), 1);
-        ASSERT_EQ(count_ops_of_type<op::GenerateMask>(fuse_func), 0);
-        ASSERT_EQ(count_ops_of_type<op::Dropout>(nofuse_func), 0);
-    }
-
-    {
-        test::Uniform<float> rng(1.0f, 100.0f);
-        vector<vector<float>> args;
-        for (shared_ptr<op::Parameter> param : fuse_func->get_parameters())
-        {
-            auto name = param->get_name();
-            vector<float> tensor_val(shape_size(param->get_shape()));
-            rng.initialize(tensor_val);
-            args.push_back(tensor_val);
-        }
-
-        auto fuse_results = execute(fuse_func, args, "CPU");
-        auto fuse_results2 = execute(fuse_func2, args, "CPU");
-        EXPECT_TRUE(test::all_close(fuse_results.at(0), fuse_results2.at(0)));
-        EXPECT_TRUE(test::all_close(fuse_results.at(1), fuse_results2.at(1)));
-
-        // Note: Since the RNG used in Dropout kernel is different than RNG used in GenerateMask
-        // kernel, we can't compare fuse_results and nofuse_results
-    }
-}
-
-TEST(cpu_fusion, fuse_dropout_use_seed)
-{
     auto make_function = [](Shape input_shape,
                             const uint32_t seed_val,
                             double one_minus_prob,
@@ -2901,9 +2843,22 @@ TEST(cpu_fusion, fuse_dropout_use_seed)
 
     };
 
-    auto fuse_func = make_function(Shape{2, 2, 256, 256}, 1, 0.9, true, true);
-    auto fuse_func2 = make_function(Shape{2, 2, 256, 256}, 1, 0.9, true, false);
+    uint32_t seed = rand();
+    auto fuse_func = make_function(Shape{2, 2, 256, 256}, seed, 0.9, true, true);
+    auto fuse_func2 = make_function(Shape{2, 2, 256, 256}, seed, 0.9, true, true);
+    auto nofuse_func = make_function(Shape{2, 2, 256, 256}, 1, 0.9, false, false);
+    {
+        pass::Manager pass_manager;
+        pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+        pass_manager.run_passes(fuse_func);
+        pass_manager.run_passes(nofuse_func);
+        ASSERT_EQ(count_ops_of_type<op::Dropout>(fuse_func), 1);
+        ASSERT_EQ(count_ops_of_type<op::GenerateMask>(fuse_func), 0);
+        ASSERT_EQ(count_ops_of_type<op::Dropout>(nofuse_func), 0);
+    }
 
+    auto fuse_func3 = make_function(Shape{2, 2, 256, 256}, seed, 0.9, true, false);
+    auto fuse_func4 = make_function(Shape{2, 2, 256, 256}, seed, 0.9, true, false);
     {
         test::Uniform<float> rng(1.0f, 100.0f);
         vector<vector<float>> args;
@@ -2917,8 +2872,16 @@ TEST(cpu_fusion, fuse_dropout_use_seed)
 
         auto fuse_results = execute(fuse_func, args, "CPU");
         auto fuse_results2 = execute(fuse_func2, args, "CPU");
-        EXPECT_FALSE(test::all_close(fuse_results.at(0), fuse_results2.at(0)));
-        EXPECT_FALSE(test::all_close(fuse_results.at(1), fuse_results2.at(1)));
+        EXPECT_TRUE(test::all_close(fuse_results.at(0), fuse_results2.at(0)));
+        EXPECT_TRUE(test::all_close(fuse_results.at(1), fuse_results2.at(1)));
+
+        auto fuse_results3 = execute(fuse_func3, args, "CPU");
+        auto fuse_results4 = execute(fuse_func4, args, "CPU");
+        EXPECT_FALSE(test::all_close(fuse_results3.at(0), fuse_results4.at(0)));
+        EXPECT_FALSE(test::all_close(fuse_results3.at(1), fuse_results4.at(1)));
+
+        // Note: Since the RNG used in Dropout kernel is different than RNG used in GenerateMask
+        // kernel, we can't compare fuse_results and nofuse_results
     }
 }
 
