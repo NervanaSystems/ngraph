@@ -55,6 +55,26 @@ namespace ngraph
                 }
             }
 
+            void initialize_maybe() override {
+                int flag = 0;
+                MPI_Initialized(&flag);
+                if (!flag && !m_initialized_mpi)
+                {
+                    MPI_Init(NULL, NULL);
+                    m_initialized_mpi = true;
+                }
+            }
+
+            void finalize_maybe() override {
+                int is_mpi_finalized = 0;
+                MPI_Finalized(&is_mpi_finalized);
+                if (!is_mpi_finalized && m_initialized_mpi)
+                {
+                    MPI_Finalize();
+                    m_initialized_mpi = false;
+                }
+            }
+
             const std::string& get_name() const override { return m_name; }
             int get_size() override
             {
