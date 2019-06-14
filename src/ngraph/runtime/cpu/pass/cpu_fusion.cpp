@@ -22,8 +22,12 @@
 
 #include "cpu_fusion.hpp"
 #include "ngraph/builder/make_constant.hpp"
+
+#include "ngraph/descriptor/input.hpp"
+#include "ngraph/descriptor/output.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
@@ -36,6 +40,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv.hpp"
@@ -72,6 +77,7 @@
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -908,6 +914,71 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
     };
 
     auto m = std::make_shared<pattern::Matcher>(padd, "CPUFusion.ConvBiasAdd");
+    this->add_matcher(m, callback);
+}
+
+void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
+{
+    Shape shape{1, 1, 2, 2};
+    auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
+    auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
+
+    uint32_t seed = 1234;
+    auto seed_label = std::make_shared<pattern::op::Label>(element::u32, Shape{0});
+
+    double value = 0.9;
+    auto value_const = ngraph::op::Constant::create(element::f32, Shape{1, 1, 2, 2}, {value});
+    auto value_label = std::make_shared<pattern::op::Label>(value_const);
+
+    auto const1 = ngraph::op::Constant::create(x->get_element_type(), Shape{}, {1});
+    auto const1_label = std::make_shared<pattern::op::Label>(const1);
+
+    bool use_seed = false;
+    auto use_seed_const = ngraph::op::Constant::create(element::i32, Shape{}, {use_seed});
+    auto use_seed_label = std::make_shared<pattern::op::Label>(use_seed_const);
+
+    auto genmask = std::make_shared<op::GenerateMask>(
+        const1_label, x->get_shape(), x->get_element_type(), seed, value, use_seed);
+    auto genmask_label =
+        std::make_shared<pattern::op::Label>(genmask, nullptr, NodeVector{genmask});
+
+    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x_label);
+
+    auto pdivide = std::make_shared<ngraph::op::Divide>(mult, value_label);
+
+    auto callback = [x, const1_label, seed_label, value_label, genmask_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In a callback for construct_dropout against "
+                     << m.get_match_root()->get_name();
+        auto pattern_map = m.get_pattern_map();
+
+        auto m_div = std::static_pointer_cast<ngraph::op::Divide>(m.get_match_root());
+
+        auto gm = std::static_pointer_cast<ngraph::op::GenerateMask>(pattern_map[genmask_label]);
+
+        if (!std::dynamic_pointer_cast<ngraph::op::Constant>(gm->get_argument(0)))
+        {
+            NGRAPH_DEBUG << "training argument to GenerateMask must be constant";
+            return false;
+        }
+
+        auto gm_value = gm->get_probability();
+        auto gm_seed = gm->get_seed();
+
+        auto training = gm->get_argument(0);     //for training purpose this is always going to be 1
+        auto use_seed_arg = gm->get_argument(2); // this is the use_seed node
+
+        auto dropout_n = std::make_shared<ngraph::op::Dropout>(
+            pattern_map[x], training, use_seed_arg, gm_seed, gm_value);
+        auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 0);
+        ngraph::replace_node(m.get_match_root(), goe1);
+
+        auto goe2 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 1);
+        ngraph::replace_node(pattern_map[genmask_label], goe2);
+
+        return true;
+    };
+
+    auto m = std::make_shared<pattern::Matcher>(pdivide, "CPUFusion.Dropout");
     this->add_matcher(m, callback);
 }
 
