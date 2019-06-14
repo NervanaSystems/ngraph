@@ -240,7 +240,15 @@ void op::DynSlice::validate_and_infer_types()
 shared_ptr<Node> op::DynSlice::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<DynSlice>(new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
+    return make_shared<DynSlice>(new_args.at(0),
+                                 new_args.at(1),
+                                 new_args.at(2),
+                                 new_args.at(3),
+                                 m_lower_bounds_mask,
+                                 m_upper_bounds_mask,
+                                 m_new_axis,
+                                 m_shrink_axis,
+                                 m_ellipsis_mask);
 }
 
 void op::DynSlice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

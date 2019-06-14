@@ -30,6 +30,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
@@ -65,7 +66,9 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
+#endif
 #include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
@@ -480,14 +483,18 @@ private:
         }
         case OP_TYPEID::BroadcastDistributed:
         {
+            const ngraph::op::BroadcastDistributed* broadcast =
+                static_cast<const ngraph::op::BroadcastDistributed*>(&node);
             int rank_ID;
             rank_ID = get_distributed_interface()->get_rank();
-            if (rank_ID == 0)
+            int root_id = broadcast->get_root_id();
+            if (rank_ID == root_id)
             {
                 reference::broadcastdistributed<T>(
                     args[0]->get_data_ptr<T>(),
                     node.get_input_element_type(0).get_type_enum(),
-                    static_cast<int>(shape_size(node.get_input_shape(0))));
+                    static_cast<int>(shape_size(node.get_input_shape(0))),
+                    root_id);
                 auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) * sizeof(T);
                 memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             }
@@ -496,7 +503,8 @@ private:
                 reference::broadcastdistributed<T>(
                     out[0]->get_data_ptr<T>(),
                     node.get_input_element_type(0).get_type_enum(),
-                    static_cast<int>(shape_size(node.get_input_shape(0))));
+                    static_cast<int>(shape_size(node.get_input_shape(0))),
+                    root_id);
             }
             break;
         }
@@ -762,11 +770,11 @@ private:
             }
             else if (type == element::i32)
             {
-                reference::embedding<T, int>(args[0]->get_data_ptr<const int>(),
-                                             args[1]->get_data_ptr<const T>(),
-                                             out[0]->get_data_ptr<T>(),
-                                             element_count,
-                                             embed->get_shape());
+                reference::embedding<T, int32_t>(args[0]->get_data_ptr<const int>(),
+                                                 args[1]->get_data_ptr<const T>(),
+                                                 out[0]->get_data_ptr<T>(),
+                                                 element_count,
+                                                 embed->get_shape());
             }
             else if (type == element::i64)
             {
@@ -806,6 +814,7 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+#ifdef INTERPRETER_USE_HYBRID
         case OP_TYPEID::FunctionCall:
         {
             auto f = static_cast<const runtime::hybrid::op::FunctionCall*>(&node);
@@ -829,6 +838,7 @@ private:
             executable->call(outputs, inputs);
             break;
         }
+#endif
         case OP_TYPEID::Floor:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
