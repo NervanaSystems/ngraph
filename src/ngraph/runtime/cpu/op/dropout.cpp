@@ -50,7 +50,7 @@ shared_ptr<Node> op::Dropout::copy_with_new_args(const NodeVector& new_args) con
         new_args.at(0), new_args.at(1), new_args.at(2), m_seed, m_keep_prob);
 }
 
-const bool op::Dropout::get_use_seed() const
+bool op::Dropout::get_use_seed() const
 {
     bool use_seed = false;
     if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(2)))
