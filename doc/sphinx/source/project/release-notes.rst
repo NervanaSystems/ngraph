@@ -43,8 +43,17 @@ Summary of documentation-related changes:
 + Removed deprecated TensorAPI.
 
 
-Core updates for |version|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
+
+
+Changelog on Previous Releases
+==============================
+
+For downloads formatted as ``.zip`` and ``tar.gz``, see 
+https://github.com/NervanaSystems/ngraph/releases.
+
+0.21
+----
 
 + The offset argument in tensor reads and writes has been removed
 + Save/load API
@@ -54,16 +63,7 @@ Core updates for |version|
 + Provenance improvements
 + offset arg for tensor creation is deprecated
 + static linking support
-
-
-.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
-
-
-Changelog on Previous Releases
-==============================
-
-For downloads formatted as ``.zip`` and ``tar.gz``, see 
-https://github.com/NervanaSystems/ngraph/releases.
++ Intial test of 0.21-doc
 
 0.20
 ----
