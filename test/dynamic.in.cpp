@@ -159,3 +159,152 @@ NGRAPH_TEST(dynamic_${BACKEND_NAME}, transpose)
         ASSERT_TRUE(test::all_close_f(results, expected_results[i], MIN_FLOAT_TOLERANCE_BITS));
     }
 }
+
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, broadcast)
+{
+    // Create a graph for
+    //   f(x,shape:i32,axes:32) = Broadcast(x,Convert<i64>(shape),Convert<i64>(axes)).
+    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto shape = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto axes = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto shape_i64 = make_shared<op::Convert>(shape, element::i64);
+    auto axes_i64 = make_shared<op::Convert>(axes, element::i64);
+
+    auto bc = make_shared<op::DynBroadcast>(x, shape_i64, axes_i64);
+
+    auto f = make_shared<Function>(NodeVector{bc}, ParameterVector{x, shape, axes});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    std::vector<Shape> x_shapes{Shape{}, Shape{}, Shape{2}, Shape{2}};
+    std::vector<std::vector<int32_t>> shapes{{2, 2}, {2, 2, 2}, {3, 2}, {2, 3}};
+    std::vector<std::vector<int32_t>> axeses{{0, 1}, {0, 1, 2}, {0}, {1}};
+    std::vector<std::vector<float>> inputs{{6}, {7}, {10, 11}, {10, 11}};
+    std::vector<Shape> expected_result_shapes{
+        Shape{2, 2}, Shape{2, 2, 2}, Shape{3, 2}, Shape{2, 3}};
+    std::vector<std::vector<float>> expected_results{
+        {6, 6, 6, 6}, {7, 7, 7, 7, 7, 7, 7, 7}, {10, 11, 10, 11, 10, 11}, {10, 10, 10, 11, 11, 11}};
+
+    for (size_t i = 0; i < x_shapes.size(); i++)
+    {
+        auto t_x = backend->create_tensor(element::f32, x_shapes[i]);
+        auto t_shape = backend->create_tensor(element::i32, Shape{shapes[i].size()});
+        auto t_axes = backend->create_tensor(element::i32, Shape{axeses[i].size()});
+
+        copy_data(t_x, inputs[i]);
+        copy_data(t_shape, shapes[i]);
+        copy_data(t_axes, axeses[i]);
+
+        ex->call_with_validate({t_r}, {t_x, t_shape, t_axes});
+
+        ASSERT_EQ(t_r->get_shape(), expected_result_shapes[i]);
+
+        auto results = read_vector<float>(t_r);
+
+        ASSERT_TRUE(test::all_close_f(results, expected_results[i], MIN_FLOAT_TOLERANCE_BITS));
+    }
+}
+
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, sum)
+{
+    // Create a graph for f(x,axes:int32) = Sum(x,Convert<int64>(axes)).
+    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto axes = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto axes_i64 = make_shared<op::Convert>(axes, element::i64);
+
+    auto sum = make_shared<op::Sum>(x, axes_i64);
+    ASSERT_TRUE(sum->get_output_partial_shape(0).rank().is_dynamic());
+
+    auto f = make_shared<Function>(NodeVector{sum}, ParameterVector{x, axes});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    std::vector<Shape> x_shapes{
+        Shape{2, 3}, Shape{2, 3}, Shape{2, 3}, Shape{2, 3}, Shape{5}, Shape{5}};
+    std::vector<std::vector<int32_t>> axeses{{}, {0}, {1}, {0, 1}, {}, {0}};
+    std::vector<std::vector<float>> inputs{{1, 2, 3, 4, 5, 6},
+                                           {1, 2, 3, 4, 5, 6},
+                                           {1, 2, 3, 4, 5, 6},
+                                           {1, 2, 3, 4, 5, 6},
+                                           {1, 2, 3, 4, 5},
+                                           {1, 2, 3, 4, 5}};
+    std::vector<Shape> expected_result_shapes{
+        Shape{2, 3}, Shape{3}, Shape{2}, Shape{}, Shape{5}, Shape{}};
+    std::vector<std::vector<float>> expected_results{
+        {1, 2, 3, 4, 5, 6}, {5, 7, 9}, {6, 15}, {21}, {1, 2, 3, 4, 5}, {15}};
+
+    for (size_t i = 0; i < x_shapes.size(); i++)
+    {
+        auto t_x = backend->create_tensor(element::f32, x_shapes[i]);
+        auto t_axes = backend->create_tensor(element::i32, Shape{axeses[i].size()});
+
+        copy_data(t_x, inputs[i]);
+        copy_data(t_axes, axeses[i]);
+
+        ex->call_with_validate({t_r}, {t_x, t_axes});
+
+        ASSERT_EQ(t_r->get_shape(), expected_result_shapes[i]);
+
+        auto results = read_vector<float>(t_r);
+
+        ASSERT_TRUE(test::all_close_f(results, expected_results[i], MIN_FLOAT_TOLERANCE_BITS));
+    }
+}
+
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, all)
+{
+    // Create a graph for f(x,axes:int32) = All(x,Convert<int64>(axes)).
+    auto x = make_shared<op::Parameter>(element::boolean, PartialShape::dynamic());
+    auto axes = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto axes_i64 = make_shared<op::Convert>(axes, element::i64);
+
+    auto all = make_shared<op::All>(x, axes_i64);
+    ASSERT_TRUE(all->get_output_partial_shape(0).rank().is_dynamic());
+
+    auto f = make_shared<Function>(NodeVector{all}, ParameterVector{x, axes});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::boolean, PartialShape::dynamic());
+
+    std::vector<Shape> x_shapes{
+        Shape{2, 3}, Shape{2, 3}, Shape{2, 3}, Shape{2, 3}, Shape{5}, Shape{5}};
+    std::vector<std::vector<int32_t>> axeses{{}, {0}, {1}, {0, 1}, {}, {0}};
+    std::vector<std::vector<char>> inputs{{1, 0, 1, 0, 1, 0},
+                                          {1, 0, 1, 0, 0, 1},
+                                          {1, 0, 1, 1, 1, 1},
+                                          {1, 0, 1, 0, 1, 0},
+                                          {1, 0, 1, 0, 1},
+                                          {1, 0, 1, 0, 1}};
+    std::vector<Shape> expected_result_shapes{
+        Shape{2, 3}, Shape{3}, Shape{2}, Shape{}, Shape{5}, Shape{}};
+    std::vector<std::vector<char>> expected_results{
+        {1, 0, 1, 0, 1, 0}, {0, 0, 1}, {0, 1}, {0}, {1, 0, 1, 0, 1}, {0}};
+
+    for (size_t i = 0; i < x_shapes.size(); i++)
+    {
+        auto t_x = backend->create_tensor(element::boolean, x_shapes[i]);
+        auto t_axes = backend->create_tensor(element::i32, Shape{axeses[i].size()});
+
+        copy_data(t_x, inputs[i]);
+        copy_data(t_axes, axeses[i]);
+
+        ex->call_with_validate({t_r}, {t_x, t_axes});
+
+        ASSERT_EQ(t_r->get_shape(), expected_result_shapes[i]);
+
+        auto results = read_vector<char>(t_r);
+
+        ASSERT_EQ(results, expected_results[i]);
+    }
+}

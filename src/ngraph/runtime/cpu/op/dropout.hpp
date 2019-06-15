@@ -16,22 +16,28 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace op
     {
-        class DynElimination : public GraphRewrite
+        class Dropout : public Op
         {
         public:
-            DynElimination();
+            Dropout(const std::shared_ptr<Node>& input,
+                    const std::shared_ptr<Node>& gm_const,
+                    const std::shared_ptr<Node>& use_seed,
+                    const std::shared_ptr<Node>& seed,
+                    const std::shared_ptr<Node>& keep_prob); // keep_prob = 1 - dropout_prob
 
-        private:
-            void construct_transpose();
-            void construct_broadcast();
-            void construct_dyn_reshape();
+            bool get_use_seed() const;
+            uint64_t get_seed() const;
+            double get_keep_prob() const;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
         };
     }
 }

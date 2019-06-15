@@ -150,6 +150,8 @@ add_library(onnx_import STATIC
         op/selu.hpp
         op/shape.hpp
         op/shape.cpp
+        op/shrink.hpp
+        op/shrink.cpp
         op/sigmoid.hpp
         op/sign.hpp
         op/sin.hpp
