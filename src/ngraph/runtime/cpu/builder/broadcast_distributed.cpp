@@ -30,7 +30,9 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::BroadcastDistributed)
             {
                 auto& functors = external_function->get_functors();
-
+                NGRAPH_DEBUG_PRINT(
+                 "distributed broadcast Queued"
+                )
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto count = static_cast<int>(args[0].get_size());
                 auto data_type = args[0].get_element_type().get_type_enum();
