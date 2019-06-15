@@ -2,7 +2,7 @@
 From directory containing CI scripts execute runCI.sh bash script:
 
 ```
-cd <path-to-repo>/.ci/jenkins/
+cd <path-to-repo>/.ci/onnx/jenkins/
 ./runCI.sh
 ```
 

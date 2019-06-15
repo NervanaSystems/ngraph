@@ -69,7 +69,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_4d_indices_no_axis_uint8)
         read_vector<uint8_t>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, gather_4d_indices_no_axis)
+NGRAPH_TEST(${BACKEND_NAME}, gather_4d_indices_no_axis_2d_input)
 {
     Shape params_shape{3, 2};
     Shape indices_shape{2, 2, 3, 4};
@@ -105,7 +105,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_4d_indices_no_axis)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, gather_3d_indices_no_axis)
+NGRAPH_TEST(${BACKEND_NAME}, gather_3d_indices_no_axis_2d_input)
 {
     Shape params_shape{3, 2};
     Shape indices_shape{2, 3, 4};
@@ -136,7 +136,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_3d_indices_no_axis)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, gather_2d_indices_no_axis)
+NGRAPH_TEST(${BACKEND_NAME}, gather_2d_indices_no_axis_2d_input)
 {
     Shape params_shape{3, 2};
     Shape indices_shape{2, 2};
@@ -162,7 +162,32 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_2d_indices_no_axis)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices_no_axis)
+NGRAPH_TEST(${BACKEND_NAME}, gather_1d_indices_no_axis_1d_input)
+{
+    Shape params_shape{3};
+    Shape indices_shape{2};
+    Shape out_shape{2};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::Gather>(P, I);
+    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{P, I});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto p = backend->create_tensor(element::f32, params_shape);
+    copy_data(p, vector<float>{1.0f, 2.0f, 3.0f});
+    auto i = backend->create_tensor(element::i32, indices_shape);
+    copy_data(i, vector<int32_t>{1, 0});
+    auto result = backend->create_tensor(element::f32, out_shape);
+
+    auto c = backend->compile(f);
+    c->call_with_validate({result}, {p, i});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{2.0f, 1.0f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices_no_axis_2d_input)
 {
     Shape params_shape{3, 2};
     Shape indices_shape{};
@@ -187,7 +212,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices_no_axis)
         (vector<float>{2.0f, 2.1f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, gather)
+NGRAPH_TEST(${BACKEND_NAME}, gather_2d_indices_axis_1_2d_input)
 {
     Shape params_shape{3, 3};
     Shape indices_shape{1, 2};
@@ -213,7 +238,38 @@ NGRAPH_TEST(${BACKEND_NAME}, gather)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices)
+NGRAPH_TEST(${BACKEND_NAME}, gather_1d_indices_axis_2_4d_input)
+{
+    Shape params_shape{2, 2, 3, 3};
+    Shape indices_shape{2};
+    Shape out_shape{2, 2, 2, 3};
+    auto P = make_shared<op::Parameter>(element::f32, params_shape);
+    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto G = make_shared<op::Gather>(P, I, 2);
+    auto f = make_shared<Function>(make_shared<op::GetOutputElement>(G, 0), ParameterVector{P, I});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto p = backend->create_tensor(element::f32, params_shape);
+    copy_data(p, vector<float>{1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f, 3.0f, 3.1f, 3.2f,
+                               1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f, 3.0f, 3.1f, 3.2f,
+                               1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f, 3.0f, 3.1f, 3.2f,
+                               1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f, 3.0f, 3.1f, 3.2f});
+    auto i = backend->create_tensor(element::i32, indices_shape);
+    copy_data(i, vector<int32_t>{0, 2});
+    auto result = backend->create_tensor(element::f32, out_shape);
+
+    auto c = backend->compile(f);
+    c->call_with_validate({result}, {p, i});
+    EXPECT_TRUE(test::all_close_f(
+        (vector<float>{1.0f, 1.1f, 1.2f, 3.0f, 3.1f, 3.2f, 1.0f, 1.1f, 1.2f, 3.0f, 3.1f, 3.2f,
+                       1.0f, 1.1f, 1.2f, 3.0f, 3.1f, 3.2f, 1.0f, 1.1f, 1.2f, 3.0f, 3.1f, 3.2f}),
+        read_vector<float>(result),
+        MIN_FLOAT_TOLERANCE_BITS));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, gather_scalar_indices_axis_1_2d_input)
 {
     Shape params_shape{3, 3};
     Shape indices_shape{};
