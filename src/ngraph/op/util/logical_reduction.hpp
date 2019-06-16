@@ -28,21 +28,31 @@ namespace ngraph
             ///        are eliminated (reduced out) by repeated application of a particular binary logical operation.
             class LogicalReduction : public Op
             {
-            public:
+            protected:
                 /// \brief Constructs a logical reduction operation.
+                LogicalReduction();
+                /// \brief Constructs a logical reduction operation.
+                ///
+                /// \param arg Output that produces the first input tensor.
+                /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                LogicalReduction(const Output<Node>& arg, const AxisSet& reduction_axes);
+                /// \brief Constructs a 'dynamic' logical reduction operation.
                 ///
                 /// \param arg Node that produces the first input tensor.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                LogicalReduction(const std::string& node_type,
-                                 const std::shared_ptr<Node>& arg,
-                                 const AxisSet& reduction_axes);
+                LogicalReduction(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
+            public:
                 void validate_and_infer_types() override;
 
+                /// \return true if reduction axes are constant else false.
+                bool reduction_axes_constant() const;
+
                 /// \return The axis positions (0-based) to be eliminated through reduction.
-                const AxisSet& get_reduction_axes() const { return m_reduction_axes; }
-            protected:
-                AxisSet m_reduction_axes;
+                /// \throws CheckFailure if the reduction axes are not constant. (Use
+                ///           reduction_axes_constant to check.)
+                const AxisSet get_reduction_axes() const;
+                void set_reduction_axes(const AxisSet& reduction_axes);
             };
         }
     }

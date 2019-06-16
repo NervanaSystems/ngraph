@@ -94,8 +94,8 @@ void runtime::Tensor::copy_from(const ngraph::runtime::Tensor& source)
     // This is be replaced with more optimial implementations in later PRs
     auto size = get_size_in_bytes();
     AlignedBuffer buffer{size, 64};
-    source.read(buffer.get_ptr(), 0, size);
-    write(buffer.get_ptr(), 0, size);
+    source.read(buffer.get_ptr(), size);
+    write(buffer.get_ptr(), size);
 }
 
 future<void> runtime::Tensor::begin_write(const void* p, size_t size_in_bytes, size_t buffer_number)

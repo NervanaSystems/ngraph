@@ -40,7 +40,7 @@ namespace ngraph
 
 bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<ngraph::Function> make_function_from_file(const std::string& file_name);
 #endif
 
@@ -48,7 +48,7 @@ template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)
 {
     size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), 0, data_size);
+    tv->write(data.data(), data_size);
 }
 
 template <typename T>
@@ -61,7 +61,7 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
     std::vector<T> rc(element_count);
-    tv->read(rc.data(), 0, size);
+    tv->read(rc.data(), size);
     return rc;
 }
 
@@ -70,7 +70,7 @@ std::vector<float> read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv
 template <typename T>
 void write_vector(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& values)
 {
-    tv->write(values.data(), 0, values.size() * sizeof(T));
+    tv->write(values.data(), values.size() * sizeof(T));
 }
 
 template <typename T>
@@ -113,7 +113,7 @@ void init_int_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engine
     {
         element = dist(engine);
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(T));
+    tv->write(vec.data(), vec.size() * sizeof(T));
 }
 
 template <typename T>
@@ -126,7 +126,7 @@ void init_real_tv(ngraph::runtime::Tensor* tv, std::default_random_engine& engin
     {
         element = dist(engine);
     }
-    tv->write(vec.data(), 0, vec.size() * sizeof(T));
+    tv->write(vec.data(), vec.size() * sizeof(T));
 }
 
 void random_init(ngraph::runtime::Tensor* tv, std::default_random_engine& engine);
@@ -231,11 +231,12 @@ std::string get_results_str(const std::vector<T>& ref_data,
     ss << "First " << num_results << " results";
     for (size_t i = 0; i < num_results; ++i)
     {
-        ss << "\n"
-           << std::setw(4) << i << " ref: " << std::setw(16) << std::left << ref_data[i]
-           << "  actual: " << std::setw(16) << std::left << actual_data[i];
+        ss << std::endl
+           // use unary + operator to force integral values to be displayed as numbers
+           << std::setw(4) << i << " ref: " << std::setw(16) << std::left << +ref_data[i]
+           << "  actual: " << std::setw(16) << std::left << +actual_data[i];
     }
-    ss << "\n";
+    ss << std::endl;
 
     return ss.str();
 }

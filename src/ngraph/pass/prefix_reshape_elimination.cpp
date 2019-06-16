@@ -71,8 +71,7 @@ pass::PrefixReshapeElimination::PrefixReshapeElimination()
         element::i8,
         Shape{},
         [](shared_ptr<Node> node) {
-            return pattern::has_class<op::Reshape>()(node) ||
-                   pattern::has_class<op::util::UnaryElementwiseArithmetic>()(node) ||
+            return pattern::has_class<op::util::UnaryElementwiseArithmetic>()(node) ||
                    pattern::has_class<op::util::BinaryElementwiseArithmetic>()(node);
         },
         NodeVector{reshape_op});

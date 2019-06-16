@@ -27,12 +27,16 @@ namespace ngraph
         class BroadcastDistributed : public Op
         {
         public:
-            BroadcastDistributed(const std::shared_ptr<Node>& arg);
+            BroadcastDistributed(const std::shared_ptr<Node>& arg, int root_id = 0);
 
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            int get_root_id() const;
+
+        private:
+            const int m_root_id;
         };
     }
 }

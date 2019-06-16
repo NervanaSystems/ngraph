@@ -131,6 +131,10 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
             for (auto f_pair : fs)
             {
                 shared_ptr<Function> f = f_pair.first;
+                if (node_pass->get_property(PassProperty::REQUIRE_STATIC_SHAPE) && f_pair.second)
+                {
+                    continue;
+                }
                 for (shared_ptr<Node> n : f->get_ops())
                 {
                     node_pass->run_on_node(n);
@@ -170,7 +174,9 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
 
             if (m_visualize)
             {
-                pass::VisualizeTree vt(base_filename);
+                auto format = std::getenv("NGRAPH_VISUALIZE_TRACING_FORMAT");
+                auto file_ext = format ? std::string(format) : std::string("svg");
+                pass::VisualizeTree vt(base_filename + std::string(".") + file_ext);
                 vt.set_ops_to_details(get_state().get_visualize_tree_ops_map());
                 vt.run_on_module(f_array);
             }

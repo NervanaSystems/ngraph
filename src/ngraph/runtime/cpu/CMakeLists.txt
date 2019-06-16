@@ -45,6 +45,7 @@ set(SRC
     builder/convert_layout.cpp
     builder/convolution.cpp
     builder/dot.cpp
+    builder/dropout.cpp
     builder/embedding_lookup.cpp
     builder/erf.cpp
     builder/gather.cpp
@@ -82,6 +83,7 @@ set(SRC
     builder/softmax.cpp
     builder/get_output_element.cpp
     builder/sum.cpp
+    builder/tile.cpp
     builder/topk.cpp
     builder/update_slice.cpp
     kernel/pad.cpp
@@ -98,6 +100,7 @@ set(SRC
     op/conv_relu.cpp
     op/convert_layout.cpp
     op/deconv.cpp
+    op/dropout.cpp
     op/group_conv_bias.cpp
     op/halide_op.cpp
     op/leaky_relu.cpp
@@ -169,6 +172,10 @@ if (NGRAPH_CPU_ENABLE)
         target_include_directories(cpu_backend SYSTEM PRIVATE ${BINARY_DIR}/include)
         target_link_libraries(cpu_backend PRIVATE ${BINARY_DIR}/lib/libHalide.a libhalidellvm)
         add_dependencies(cpu_backend ext_halide)
+    endif()
+
+    if(NOT NGRAPH_FAST_MATH_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE EIGEN_FAST_MATH=0)
     endif()
 
     if(OPENMP_FOUND)

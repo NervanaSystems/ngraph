@@ -123,14 +123,14 @@ def binary_op_exec(op_str):
     b = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, shape)
 
-    a.write(util.numpy_to_c(np.array([[1, 6], [7, 4]], dtype=np.float32)), 0, 16)
-    b.write(util.numpy_to_c(np.array([[5, 2], [3, 8]], dtype=np.float32)), 0, 16)
+    a.write(util.numpy_to_c(np.array([[1, 6], [7, 4]], dtype=np.float32)), 16)
+    b.write(util.numpy_to_c(np.array([[5, 2], [3, 8]], dtype=np.float32)), 16)
 
     result_arr = np.array([[0, 0], [0, 0]], dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 0, 16)
+    result.write(util.numpy_to_c(result_arr), 16)
     handle = backend.compile(function)
     handle.call([result], [a, b])
-    result.read(util.numpy_to_c(result_arr), 0, 16)
+    result.read(util.numpy_to_c(result_arr), 16)
 
     a_arr = np.array([[1, 6], [7, 4]], dtype=np.float32)
     b_arr = np.array([[5, 2], [3, 8]], dtype=np.float32)
@@ -153,14 +153,14 @@ def binary_op_comparison(op_str):
     b = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(Type.boolean, shape)
 
-    a.write(util.numpy_to_c(np.array([[1, 5], [3, 2]], dtype=np.float32)), 0, 16)
-    b.write(util.numpy_to_c(np.array([[2, 4], [3, 1]], dtype=np.float32)), 0, 16)
+    a.write(util.numpy_to_c(np.array([[1, 5], [3, 2]], dtype=np.float32)), 16)
+    b.write(util.numpy_to_c(np.array([[2, 4], [3, 1]], dtype=np.float32)), 16)
 
     result_arr = np.array([[False, False], [False, False]], dtype=np.bool)
-    result.write(util.numpy_to_c(result_arr), 0, 4)
+    result.write(util.numpy_to_c(result_arr), 4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
-    result.read(util.numpy_to_c(result_arr), 0, 4)
+    result.read(util.numpy_to_c(result_arr), 4)
 
     a_arr = np.array([[1, 5], [3, 2]], dtype=np.float32)
     b_arr = np.array([[2, 4], [3, 1]], dtype=np.float32)
@@ -253,15 +253,15 @@ def test_add_with_mul():
     c = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, shape)
 
-    a.write(util.numpy_to_c(np.array([1, 2, 3, 4], dtype=np.float32)), 0, 16)
-    b.write(util.numpy_to_c(np.array([5, 6, 7, 8], dtype=np.float32)), 0, 16)
-    c.write(util.numpy_to_c(np.array([9, 10, 11, 12], dtype=np.float32)), 0, 16)
+    a.write(util.numpy_to_c(np.array([1, 2, 3, 4], dtype=np.float32)), 16)
+    b.write(util.numpy_to_c(np.array([5, 6, 7, 8], dtype=np.float32)), 16)
+    c.write(util.numpy_to_c(np.array([9, 10, 11, 12], dtype=np.float32)), 16)
 
     result_arr = np.array([0, 0, 0, 0], dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 0, 16)
+    result.write(util.numpy_to_c(result_arr), 16)
     handle = backend.compile(function)
     handle.call([result], [a, b, c])
-    result.read(util.numpy_to_c(result_arr), 0, 16)
+    result.read(util.numpy_to_c(result_arr), 16)
 
     a_arr = np.array([1, 2, 3, 4], dtype=np.float32)
     b_arr = np.array([5, 6, 7, 8], dtype=np.float32)
@@ -364,13 +364,13 @@ def unary_op_exec(op_str, input_list):
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, shape)
 
-    a.write(util.numpy_to_c(np.array(input_list, dtype=np.float32)), 0, 16)
+    a.write(util.numpy_to_c(np.array(input_list, dtype=np.float32)), 16)
 
     result_arr = np.zeros(shape_np, dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 0, 16)
+    result.write(util.numpy_to_c(result_arr), 16)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 16)
+    result.read(util.numpy_to_c(result_arr), 16)
 
     a_arr = np.array(input_list, dtype=np.float32)
     result_arr_ref = unary_op_ref(op_str, a_arr)
@@ -498,13 +498,13 @@ def test_not():
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(Type.boolean, shape)
 
-    a.write(util.numpy_to_c(np.array([True, False], dtype=np.bool)), 0, 2)
+    a.write(util.numpy_to_c(np.array([True, False], dtype=np.bool)), 2)
 
     result_arr = np.array([False, False], dtype=np.bool)
-    result.write(util.numpy_to_c(result_arr), 0, 2)
+    result.write(util.numpy_to_c(result_arr), 2)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 2)
+    result.read(util.numpy_to_c(result_arr), 2)
 
     a_arr = np.array([True, False], dtype=np.bool)
     result_arr_ref = np.logical_not(a_arr)
@@ -524,14 +524,14 @@ def test_sum():
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([1]))
 
-    a.write(util.numpy_to_c(np.array([1, 2, 3, 4], dtype=np.float32)), 0, 16)
+    a.write(util.numpy_to_c(np.array([1, 2, 3, 4], dtype=np.float32)), 16)
 
     result_arr = np.array([0], dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 0, 4)
+    result.write(util.numpy_to_c(result_arr), 4)
     handle = backend.compile(function)
     handle.get_performance_data()
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 4)
+    result.read(util.numpy_to_c(result_arr), 4)
 
     a_arr = np.array([1, 2, 3, 4], dtype=np.float32)
     result_arr_ref = np.sum(a_arr)
@@ -551,13 +551,13 @@ def test_reshape():
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([3, 2]))
 
-    a.write(util.numpy_to_c(np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)), 0, 24)
+    a.write(util.numpy_to_c(np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)), 24)
 
     result_arr = np.array([[0, 0], [0, 0], [0, 0]], dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 0, 24)
+    result.write(util.numpy_to_c(result_arr), 24)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 24)
+    result.read(util.numpy_to_c(result_arr), 24)
 
     a_arr = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
     result_arr_ref = np.reshape(a_arr, (3, 2))
@@ -578,13 +578,13 @@ def test_convert():
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(Type.boolean, shape)
 
-    a.write(util.numpy_to_c(np.array([1, 5, 3], dtype=np.float32)), 0, 12)
+    a.write(util.numpy_to_c(np.array([1, 5, 3], dtype=np.float32)), 12)
 
     result_arr = np.array([False, False, False], dtype=np.bool)
-    result.write(util.numpy_to_c(result_arr), 0, 3)
+    result.write(util.numpy_to_c(result_arr), 3)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 3)
+    result.read(util.numpy_to_c(result_arr), 3)
 
     a_arr = np.array([1, 5, 3], dtype=np.float32)
     result_arr_ref = a_arr.astype(bool)
@@ -596,13 +596,13 @@ def test_convert():
 
     result = backend.create_tensor(Type.i32, shape)
 
-    a.write(util.numpy_to_c(np.array([1.4, 5.5, 3.9], dtype=np.float32)), 0, 12)
+    a.write(util.numpy_to_c(np.array([1.4, 5.5, 3.9], dtype=np.float32)), 12)
 
     result_arr = np.array([0, 0, 0], dtype=np.int32)
-    result.write(util.numpy_to_c(result_arr), 0, 12)
+    result.write(util.numpy_to_c(result_arr), 12)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 12)
+    result.read(util.numpy_to_c(result_arr), 12)
 
     a_arr = np.array([1.4, 5.4, 3.9], dtype=np.float32)
     result_arr_ref = a_arr.astype(int)
@@ -621,13 +621,13 @@ def test_broadcast():
     a = backend.create_tensor(element_type, Shape([3]))
     result = backend.create_tensor(element_type, Shape([3, 3]))
 
-    a.write(util.numpy_to_c(np.array([1, 2, 3], dtype=np.float32)), 0, 12)
+    a.write(util.numpy_to_c(np.array([1, 2, 3], dtype=np.float32)), 12)
 
     result_arr = np.zeros((3, 3), dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 0, 36)
+    result.write(util.numpy_to_c(result_arr), 36)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 36)
+    result.read(util.numpy_to_c(result_arr), 36)
 
     a_arr = np.array([[0], [0], [0]], dtype=np.float32)
     b_arr = np.array([[1, 2, 3]], dtype=np.float32)
@@ -647,10 +647,10 @@ def test_constant():
     result = backend.create_tensor(element_type, Shape([3, 3]))
 
     result_arr = np.zeros((3, 3), dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 0, 36)
+    result.write(util.numpy_to_c(result_arr), 36)
     handle = backend.compile(function)
     handle.call([result], [])
-    result.read(util.numpy_to_c(result_arr), 0, 36)
+    result.read(util.numpy_to_c(result_arr), 36)
 
     result_arr_ref = np.arange(9).reshape(3, 3)
 
@@ -668,13 +668,13 @@ def test_onehot():
     a = backend.create_tensor(element_type, Shape([3]))
     result = backend.create_tensor(element_type, Shape([3, 3]))
 
-    a.write(util.numpy_to_c(np.array([1, 0, 2], dtype=np.int32)), 0, 12)
+    a.write(util.numpy_to_c(np.array([1, 0, 2], dtype=np.int32)), 12)
 
     result_arr = np.zeros((3, 3), dtype=np.int32)
-    result.write(util.numpy_to_c(result_arr), 0, 36)
+    result.write(util.numpy_to_c(result_arr), 36)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 36)
+    result.read(util.numpy_to_c(result_arr), 36)
 
     a_arr = np.array([1, 0, 2])
     result_arr_ref = np.eye(3)[a_arr]
@@ -699,15 +699,15 @@ def test_concat():
     c = backend.create_tensor(element_type, Shape([1, 2]))
     result = backend.create_tensor(element_type, Shape([3, 2]))
 
-    a.write(util.numpy_to_c(np.array([1, 2], dtype=np.float32)), 0, 8)
-    b.write(util.numpy_to_c(np.array([5, 6], dtype=np.float32)), 0, 8)
-    c.write(util.numpy_to_c(np.array([7, 8], dtype=np.float32)), 0, 8)
+    a.write(util.numpy_to_c(np.array([1, 2], dtype=np.float32)), 8)
+    b.write(util.numpy_to_c(np.array([5, 6], dtype=np.float32)), 8)
+    c.write(util.numpy_to_c(np.array([7, 8], dtype=np.float32)), 8)
 
     result_arr = np.zeros(6, dtype=np.float32).reshape(3, 2)
-    result.write(util.numpy_to_c(result_arr), 0, 24)
+    result.write(util.numpy_to_c(result_arr), 24)
     handle = backend.compile(function)
     handle.call([result], [a, b, c])
-    result.read(util.numpy_to_c(result_arr), 0, 24)
+    result.read(util.numpy_to_c(result_arr), 24)
 
     a_arr = np.array([[1, 2]], dtype=np.float32)
     b_arr = np.array([[5, 6]], dtype=np.float32)
@@ -751,15 +751,15 @@ def test_select():
     c = backend.create_tensor(element_type, Shape([1, 2]))
     result = backend.create_tensor(element_type, Shape([1, 2]))
 
-    a.write(util.numpy_to_c(np.array([[True, False]], dtype=np.bool)), 0, 2)
-    b.write(util.numpy_to_c(np.array([[5, 6]], dtype=np.float32)), 0, 8)
-    c.write(util.numpy_to_c(np.array([[7, 8]], dtype=np.float32)), 0, 8)
+    a.write(util.numpy_to_c(np.array([[True, False]], dtype=np.bool)), 2)
+    b.write(util.numpy_to_c(np.array([[5, 6]], dtype=np.float32)), 8)
+    c.write(util.numpy_to_c(np.array([[7, 8]], dtype=np.float32)), 8)
 
     result_arr = np.array([[0, 0]], dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 0, 8)
+    result.write(util.numpy_to_c(result_arr), 8)
     handle = backend.compile(function)
     handle.call([result], [a, b, c])
-    result.read(util.numpy_to_c(result_arr), 0, 8)
+    result.read(util.numpy_to_c(result_arr), 8)
 
     result_arr_ref = np.array([[5, 8]])
 
@@ -785,13 +785,13 @@ def test_slice():
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([4, 4]))
 
-    a.write(util.numpy_to_c(input_arr), 0, 36*4)
+    a.write(util.numpy_to_c(input_arr), 36*4)
 
     result_arr = np.zeros(16, dtype=np.float32).reshape(4, 4)
-    result.write(util.numpy_to_c(result_arr), 0, 16*4)
+    result.write(util.numpy_to_c(result_arr), 16*4)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 64)
+    result.read(util.numpy_to_c(result_arr), 64)
 
     result_arr_ref = input_arr[lower_bounds[0]:upper_bounds[0], lower_bounds[1]:upper_bounds[1]]
 
@@ -808,10 +808,10 @@ def test_slice():
     result = backend.create_tensor(element_type, Shape([4, 2]))
     result_arr = np.zeros(8, dtype=np.float32).reshape(4, 2)
 
-    result.write(util.numpy_to_c(result_arr), 0, 8*4)
+    result.write(util.numpy_to_c(result_arr), 8*4)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 32)
+    result.read(util.numpy_to_c(result_arr), 32)
 
     result_arr_ref = result_arr_ref[::strides[0], ::strides[1]]
 
@@ -839,14 +839,14 @@ def test_replace_slice():
     b = backend.create_tensor(element_type, Shape([3, 2]))
     result = backend.create_tensor(element_type, Shape([6, 4]))
 
-    a.write(util.numpy_to_c(input_arr_a), 0, 24*4)
-    b.write(util.numpy_to_c(input_arr_b), 0, 6*4)
+    a.write(util.numpy_to_c(input_arr_a), 24*4)
+    b.write(util.numpy_to_c(input_arr_b), 6*4)
 
     result_arr = np.zeros(24, dtype=np.float32).reshape(6, 4)
-    result.write(util.numpy_to_c(result_arr), 0, 24*4)
+    result.write(util.numpy_to_c(result_arr), 24*4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
-    result.read(util.numpy_to_c(result_arr), 0, 24*4)
+    result.read(util.numpy_to_c(result_arr), 24*4)
 
     result_arr_ref = np.copy(input_arr_a)
     result_arr_ref[lower_bounds[0]:upper_bounds[0], lower_bounds[1]:upper_bounds[1]] = input_arr_b
@@ -865,7 +865,7 @@ def test_replace_slice():
 
     handle = backend.compile(function)
     handle.call([result], [a, b])
-    result.read(util.numpy_to_c(result_arr), 0, 24*4)
+    result.read(util.numpy_to_c(result_arr), 24*4)
 
     result_arr_ref = np.copy(input_arr_a)
     result_arr_ref[::strides[0], ::strides[1]] = input_arr_b
@@ -891,13 +891,13 @@ def test_max_pool():
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([1, 1, 8]))
 
-    a.write(util.numpy_to_c(input_arr), 0, 10*4)
+    a.write(util.numpy_to_c(input_arr), 10*4)
 
     result_arr = np.zeros(8, dtype=np.float32).reshape(1, 1, 8)
-    result.write(util.numpy_to_c(result_arr), 0, 8*4)
+    result.write(util.numpy_to_c(result_arr), 8*4)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 32)
+    result.read(util.numpy_to_c(result_arr), 32)
 
     result_arr_ref = (np.arange(8) + 2).reshape(1, 1, 8)
     assert np.allclose(result_arr, result_arr_ref)
@@ -912,10 +912,10 @@ def test_max_pool():
     result = backend.create_tensor(element_type, Shape([1, 1, size]))
     result_arr = np.zeros(size, dtype=np.float32).reshape(1, 1, size)
 
-    result.write(util.numpy_to_c(result_arr), 0, size*4)
+    result.write(util.numpy_to_c(result_arr), size*4)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, size*4)
+    result.read(util.numpy_to_c(result_arr), size*4)
 
     result_arr_ref = ((np.arange(size) + 1) * 2).reshape(1, 1, size)
     assert np.allclose(result_arr, result_arr_ref)
@@ -935,13 +935,13 @@ def test_max_pool():
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([1, 1, 8, 8]))
 
-    a.write(util.numpy_to_c(input_arr), 0, 10*10*4)
+    a.write(util.numpy_to_c(input_arr), 10*10*4)
 
     result_arr = np.zeros(64, dtype=np.float32).reshape(1, 1, 8, 8)
-    result.write(util.numpy_to_c(result_arr), 0, 8*8*4)
+    result.write(util.numpy_to_c(result_arr), 8*8*4)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, 8*8*4)
+    result.read(util.numpy_to_c(result_arr), 8*8*4)
 
     result_arr_ref = ((np.arange(100).reshape(10, 10))[2:, 2:]).reshape(1, 1, 8, 8)
     assert np.allclose(result_arr, result_arr_ref)
@@ -956,10 +956,10 @@ def test_max_pool():
     result = backend.create_tensor(element_type, Shape([1, 1, size, size]))
     result_arr = np.zeros(size*size, dtype=np.float32).reshape(1, 1, size, size)
 
-    result.write(util.numpy_to_c(result_arr), 0, size*size*4)
+    result.write(util.numpy_to_c(result_arr), size*size*4)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 0, size*size*4)
+    result.read(util.numpy_to_c(result_arr), size*size*4)
 
     result_arr_ref = ((np.arange(100).reshape(10, 10))[2::2, 2::2]).reshape(1, 1, size, size)
     assert np.allclose(result_arr, result_arr_ref)
@@ -1033,14 +1033,14 @@ def test_convolution():
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 0, 16*16*4)
-    b.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 16*16*4)
+    b.write(util.numpy_to_c(filter_arr), 3*3*4)
 
     result = backend.create_tensor(element_type, Shape([1, 1, 14, 14]))
-    result.write(util.numpy_to_c(result_arr), 0, 14*14*4)
+    result.write(util.numpy_to_c(result_arr), 14*14*4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
-    result.read(util.numpy_to_c(result_arr), 0, 14*14*4)
+    result.read(util.numpy_to_c(result_arr), 14*14*4)
 
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0]).reshape(1, 1, 14, 14)
     assert np.allclose(result_arr, result_arr_ref)
@@ -1067,16 +1067,16 @@ def test_convolution_with_strides():
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
-    b.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 10*10*4)
+    b.write(util.numpy_to_c(filter_arr), 3*3*4)
 
     result_arr = np.zeros(16, dtype=np.float32).reshape(1, 1, 4, 4)
     result = backend.create_tensor(element_type, Shape([1, 1, 4, 4]))
-    result.write(util.numpy_to_c(result_arr), 0, 4*4*4)
+    result.write(util.numpy_to_c(result_arr), 4*4*4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 0, 4*4*4)
+    result.read(util.numpy_to_c(result_arr), 4*4*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides).reshape(1, 1, 4, 4)
     assert np.allclose(result_arr, result_arr_ref)
 
@@ -1102,16 +1102,16 @@ def test_convolution_with_filter_dilation():
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
-    b.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 10*10*4)
+    b.write(util.numpy_to_c(filter_arr), 3*3*4)
 
     result_arr = np.zeros(36, dtype=np.float32).reshape(1, 1, 6, 6)
     result = backend.create_tensor(element_type, Shape([1, 1, 6, 6]))
-    result.write(util.numpy_to_c(result_arr), 0, 6*6*4)
+    result.write(util.numpy_to_c(result_arr), 6*6*4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 0, 6*6*4)
+    result.read(util.numpy_to_c(result_arr), 6*6*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
                                    dilation).reshape(1, 1, 6, 6)
     assert np.allclose(result_arr, result_arr_ref)
@@ -1143,16 +1143,16 @@ def test_convolution_with_padding():
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
-    b.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 10*10*4)
+    b.write(util.numpy_to_c(filter_arr), 3*3*4)
 
     result_arr = np.zeros(36, dtype=np.float32).reshape(1, 1, 6, 6)
     result = backend.create_tensor(element_type, Shape([1, 1, 6, 6]))
-    result.write(util.numpy_to_c(result_arr), 0, 6*6*4)
+    result.write(util.numpy_to_c(result_arr), 6*6*4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 0, 6*6*4)
+    result.read(util.numpy_to_c(result_arr), 6*6*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
                                    dilation, padding_below,
                                    padding_above).reshape(1, 1, 6, 6)
@@ -1182,16 +1182,16 @@ def test_convolution_with_padding():
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
-    b.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 10*10*4)
+    b.write(util.numpy_to_c(filter_arr), 3*3*4)
 
     result_arr = np.zeros(81, dtype=np.float32).reshape(1, 1, 9, 9)
     result = backend.create_tensor(element_type, Shape([1, 1, 9, 9]))
-    result.write(util.numpy_to_c(result_arr), 0, 9*9*4)
+    result.write(util.numpy_to_c(result_arr), 9*9*4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 0, 9*9*4)
+    result.read(util.numpy_to_c(result_arr), 9*9*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
                                    dilation, padding_below,
                                    padding_above).reshape(1, 1, 9, 9)
@@ -1224,16 +1224,16 @@ def test_convolution_with_data_dilation():
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
-    b.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 10*10*4)
+    b.write(util.numpy_to_c(filter_arr), 3*3*4)
 
     result_arr = np.zeros(17*17, dtype=np.float32).reshape(1, 1, 17, 17)
     result = backend.create_tensor(element_type, Shape([1, 1, 17, 17]))
-    result.write(util.numpy_to_c(result_arr), 0, 17*17*4)
+    result.write(util.numpy_to_c(result_arr), 17*17*4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 0, 17*17*4)
+    result.read(util.numpy_to_c(result_arr), 17*17*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
                                    dilation, padding_below, padding_above,
                                    data_dilation).reshape(1, 1, 17, 17)
@@ -1272,16 +1272,16 @@ def test_convolutionBackpropData():
     a = backend.create_tensor(element_type, filter_shape)
     b = backend.create_tensor(element_type, output_shape)
 
-    a.write(util.numpy_to_c(filter_arr), 0, 3*3*4)
-    b.write(util.numpy_to_c(output_arr), 0, 17*17*4)
+    a.write(util.numpy_to_c(filter_arr), 3*3*4)
+    b.write(util.numpy_to_c(output_arr), 17*17*4)
 
     result_arr = np.zeros(10*10, dtype=np.float32).reshape(1, 1, 10, 10)
     result = backend.create_tensor(element_type, Shape([1, 1, 10, 10]))
-    result.write(util.numpy_to_c(result_arr), 0, 10*10*4)
+    result.write(util.numpy_to_c(result_arr), 10*10*4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 0, 10*10*4)
+    result.read(util.numpy_to_c(result_arr), 10*10*4)
     result_arr_ref = np.array(
         [[[[  22,   60,   70,   80,   90,  100,  110,  120,  130,   54.],
            [ 105,  275,  300,  325,  350,  375,  400,  425,  450,  185.],
@@ -1328,16 +1328,16 @@ def test_convolutionBackpropFilters():
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, output_shape)
 
-    a.write(util.numpy_to_c(image_arr), 0, 10*10*4)
-    b.write(util.numpy_to_c(output_arr), 0, 17*17*4)
+    a.write(util.numpy_to_c(image_arr), 10*10*4)
+    b.write(util.numpy_to_c(output_arr), 17*17*4)
 
     result_arr = np.zeros(3*3, dtype=np.float32).reshape(1, 1, 3, 3)
     result = backend.create_tensor(element_type, Shape([1, 1, 3, 3]))
-    result.write(util.numpy_to_c(result_arr), 0, 3*3*4)
+    result.write(util.numpy_to_c(result_arr), 3*3*4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 0, 3*3*4)
+    result.read(util.numpy_to_c(result_arr), 3*3*4)
     result_arr_ref = np.array(
         [[[[ 923832,  413952,  939870.],
            [ 425832,  190752,  432960.],

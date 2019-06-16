@@ -14,12 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
-#include <memory>
 using namespace std;
 using namespace ngraph;
 
@@ -2482,6 +2483,41 @@ TEST(type_prop, or_bad_arguments)
         "Or", [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
             return make_shared<op::Or>(x, y);
         });
+}
+
+template <typename T>
+void test_binary_eltwise_numpy(const element::Type& et, const op::AutoBroadcastSpec& autob)
+{
+    auto param1 = make_shared<op::Parameter>(et, Shape{1, 3, 6});
+    auto param2 = make_shared<op::Parameter>(et, Shape{3, 1});
+    auto param3 = make_shared<op::Parameter>(et, Shape{2, 3, 6});
+    auto param4 = make_shared<op::Parameter>(et, Shape{6});
+    EXPECT_EQ(make_shared<T>(param1, param2, autob)->get_shape(), (Shape{1, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param1, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param4, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+
+    auto pp1 = make_shared<op::Parameter>(et, PartialShape{1, Dimension::dynamic(), 6});
+    auto pp2 = make_shared<op::Parameter>(et, PartialShape{3, 1});
+    EXPECT_EQ(make_shared<T>(pp1, pp2, autob)->get_shape(), (Shape{1, 3, 6}));
+}
+
+TEST(type_prop, eltwise_auto_bcast)
+{
+    test_binary_eltwise_numpy<op::Add>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::And>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Divide>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::GreaterEq>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Less>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::LessEq>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Maximum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Minimum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Multiply>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::NotEqual>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Or>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Power>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::Subtract>(element::f32, op::AutoBroadcastType::NUMPY);
 }
 
 TEST(type_prop, embedding_lookup_non_matrix_weights)
@@ -7543,6 +7579,26 @@ TEST(type_prop, max_pool_3d_deduce_strided_small)
     EXPECT_EQ(max_pool->get_window_shape(), (Shape{2, 3, 2}));
 }
 
+TEST(type_prop, max_pool_ceil_mode)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 10});
+    Shape window_shape{2};
+    auto move_strides = Strides{4};
+    Shape padding_below{4};
+    Shape padding_above{5};
+    auto max_pool = make_shared<op::MaxPool>(param,
+                                             window_shape,
+                                             move_strides,
+                                             padding_below,
+                                             padding_above,
+                                             op::PadType::EXPLICIT,
+                                             true);
+
+    // ceil((10 + 9 - 2)/4) + 1
+    EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 6}));
+}
+
 TEST(type_prop, max_pool_invalid_0d_input)
 {
     // Deduce type
@@ -8612,6 +8668,27 @@ TEST(type_prop, avg_pool_3d_deduce_strided_padded_small)
     EXPECT_EQ(avg_pool->get_padding_above(), (Shape{6, 4, 5}));
 }
 
+TEST(type_prop, avg_pool_ceil_mode)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 10});
+    Shape window_shape{2};
+    auto move_strides = Strides{4};
+    Shape padding_below{4};
+    Shape padding_above{5};
+    auto avg_pool = make_shared<op::AvgPool>(param,
+                                             window_shape,
+                                             move_strides,
+                                             padding_below,
+                                             padding_above,
+                                             true,
+                                             op::PadType::EXPLICIT,
+                                             true);
+
+    // ceil((10 + 9 - 2)/4) + 1
+    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 6}));
+}
+
 TEST(type_prop, avg_pool_invalid_0d_input)
 {
     // Deduce type
@@ -9621,6 +9698,16 @@ TEST(type_prop, sum_axis_oob)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, sum_dynamic_axes)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto summation_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto sum = make_shared<op::Sum>(param, summation_axes);
+
+    EXPECT_EQ(sum->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(sum->get_output_partial_shape(0).rank().is_dynamic());
 }
 
 TEST(type_prop, sum_partial_rank_dynamic)
@@ -12943,6 +13030,95 @@ TEST(type_prop, dynreshape_arg_rank_static_dynamic_pattern_rank_dynamic_ok)
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 }
 
+TEST(type_prop, dynreshape_arg_rank_static_pattern_zero)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 0, 2, 8});
+    auto dynamic_arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, 0, 32});
+
+    auto r1 = make_shared<op::DynReshape>(arg, pattern);
+    EXPECT_EQ(r1->get_output_shape(0), (Shape{1, 2, 0, 32}));
+
+    auto r2 = make_shared<op::DynReshape>(arg, pattern, true /*zero_flag*/);
+    EXPECT_EQ(r2->get_output_shape(0), (Shape{1, 2, 2, 32}));
+
+    auto r3 = make_shared<op::DynReshape>(dynamic_arg, pattern, true /*zero_flag*/);
+    EXPECT_TRUE(
+        r3->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, Dimension::dynamic(), 32}));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_pattern_negative)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 8});
+    auto dynamic_arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, 4, -1});
+
+    auto r1 = make_shared<op::DynReshape>(arg, pattern);
+    EXPECT_EQ(r1->get_output_shape(0), (Shape{1, 2, 4, 16}));
+
+    auto r2 = make_shared<op::DynReshape>(dynamic_arg, pattern);
+    EXPECT_TRUE(
+        r2->get_output_partial_shape(0).same_scheme(PartialShape{1, 2, 4, Dimension::dynamic()}));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_pattern_zero_negative)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 2, 0});
+    auto dynamic_arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto pattern = op::Constant::create(element::i64, Shape{2}, {0, -1});
+
+    auto r1 = make_shared<op::DynReshape>(arg, pattern);
+    auto r2 = make_shared<op::DynReshape>(arg, pattern, true);
+    EXPECT_EQ(r1->get_output_shape(0), (Shape{0, 0}));
+    EXPECT_EQ(r2->get_output_shape(0), (Shape{2, 0}));
+
+    auto r3 = make_shared<op::DynReshape>(dynamic_arg, pattern);
+    auto r4 = make_shared<op::DynReshape>(dynamic_arg, pattern, true);
+    EXPECT_TRUE(r3->get_output_partial_shape(0).same_scheme(PartialShape{0, Dimension::dynamic()}));
+    EXPECT_TRUE(r4->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), Dimension::dynamic()}));
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_pattern_negative_failure1)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 8});
+    auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, -1, -1});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Expected failure on dynreshape construction";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("More than one dimension has size of -1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynreshape_arg_rank_static_pattern_negative_failure2)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 8});
+    auto pattern = op::Constant::create(element::i64, Shape{4}, {1, 2, 4, -2});
+
+    try
+    {
+        auto r = make_shared<op::DynReshape>(arg, pattern);
+        FAIL() << "Expected failure on dynreshape construction";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Dim size cannot be less than -1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 void DynReshape_Test_Shape_Except(const shared_ptr<Node>& param_0, const shared_ptr<Node>& param_1)
 {
     try
@@ -14568,6 +14744,65 @@ TEST(type_prop, scale_shift)
     EXPECT_EQ(scale_shift_func->get_shape(), (Shape{3, 6}));
 }
 
+TEST(type_prop, shuffle_channels_axis_validation)
+{
+    try
+    {
+        const auto data = make_shared<op::Parameter>(element::f64, Shape{1, 2, 3, 4});
+        const auto shuffle_channels = make_shared<op::ShuffleChannels>(data, -5, 5);
+        FAIL() << "ShuffleChannels validation did not work. Op node was created with incorrect "
+                  "params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "The 'axis' parameter for ShuffleChannels has to point to one of the "
+                             "input tensor's shape dimensions");
+    }
+}
+
+TEST(type_prop, shuffle_channels_negative_axis_calculation)
+{
+    const auto data = make_shared<op::Parameter>(element::f64, Shape{1, 2, 3, 4});
+
+    const auto shuffle_channels = make_shared<op::ShuffleChannels>(data, -3, 2);
+
+    EXPECT_EQ(shuffle_channels->get_zero_based_axis(), 1);
+}
+
+TEST(type_prop, shuffle_channels_invalid_input_shape)
+{
+    try
+    {
+        const auto data = make_shared<op::Parameter>(element::f64, Shape{});
+        const auto shuffle_channels = make_shared<op::ShuffleChannels>(data, 0, 1);
+        FAIL() << "ShuffleChannels validation did not work. Op node was created with incorrect "
+                  "params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "The input tensor's shape is expected to be at least 1D.");
+    }
+}
+
+TEST(type_prop, shuffle_channels_invalid_groups_value)
+{
+    try
+    {
+        const auto data = make_shared<op::Parameter>(element::f64, Shape{1, 2, 3, 15});
+        const auto shuffle_channels = make_shared<op::ShuffleChannels>(data, -1, 2);
+        FAIL() << "ShuffleChannels validation did not work. Op node was created with incorrect "
+                  "params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "The channel dimension size has to be a multiple of the groups parameter value.");
+    }
+}
+
 TEST(type_prop, squared_difference)
 {
     const auto x1 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
@@ -14624,4 +14859,285 @@ TEST(type_prop, split)
     EXPECT_EQ(split->output(1).get_shape(), (Shape{2, 3}));
     EXPECT_EQ(split->output(0).get_element_type(), element::i32);
     EXPECT_EQ(split->output(1).get_element_type(), element::i32);
+}
+
+TEST(type_prop, fake_quantize)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const int levels = 5;
+
+    const auto fake_quantize =
+        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+    EXPECT_EQ(fake_quantize->get_element_type(), element::f32);
+    EXPECT_EQ(fake_quantize->get_shape(), (Shape{1, 2, 3, 4}));
+}
+
+TEST(type_prop, fake_quantize_invalid_rank)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto input_low = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const int levels = 5;
+
+    // Invalid input_low dimension
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
+
+    // Invalid input_high dimension
+    input_low = make_shared<op::Parameter>(element::f32, Shape{});
+    input_high = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
+
+    // Invalid output_low dimension
+    input_high = make_shared<op::Parameter>(element::f32, Shape{});
+    output_low = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
+
+    // Invalid output_high dimension
+    output_low = make_shared<op::Parameter>(element::f32, Shape{});
+    output_high = make_shared<op::Parameter>(element::f32, Shape{3});
+    try
+    {
+        const auto fake_quantize = make_shared<op::FakeQuantize>(
+            data, input_low, input_high, output_low, output_high, levels);
+        EXPECT_FALSE(fake_quantize.get())
+            << "FakeQuantize validation did not work. Op node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("must either be a scalar or a vector of size equal "
+                                         "to number of channels."));
+    }
+}
+
+TEST(type_prop, group_conv_transpose)
+{
+    // C x M / group x kH x kW
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{16, 2, 3, 3});
+    // N x C x H x W
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 16, 6, 6});
+    auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                          weights,
+                                                          Strides{1, 1},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{0, 0},
+                                                          CoordinateDiff{0, 0},
+                                                          CoordinateDiff{0, 0},
+                                                          2);
+    EXPECT_EQ(gct->get_element_type(), element::f32);
+    EXPECT_EQ(gct->get_shape(), (Shape{1, 4, 8, 8}));
+    EXPECT_EQ(gct->get_strides(), (Strides{1, 1}));
+    EXPECT_EQ(gct->get_dilations(), (Strides{1, 1}));
+    EXPECT_EQ(gct->get_padding_begin(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_padding_end(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_output_padding(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_groups(), size_t(2));
+    EXPECT_EQ(gct->get_pad_type(), op::PadType::EXPLICIT);
+}
+
+TEST(type_prop, group_conv_transpose_output_shape)
+{
+    // N x C x H x W
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 16, 5, 5});
+    // C x M / group x kH x kW
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{16, 2, 3, 3});
+    auto gct = make_shared<op::GroupConvolutionTranspose>(
+        data, weights, Strides{1, 1}, Strides{1, 1}, CoordinateDiff{0, 0}, Shape{1, 2, 3, 3}, 1);
+    EXPECT_EQ(gct->get_element_type(), element::f32);
+    EXPECT_EQ(gct->get_shape(), (Shape{1, 2, 3, 3}));
+    EXPECT_EQ(gct->get_strides(), (Strides{1, 1}));
+    EXPECT_EQ(gct->get_dilations(), (Strides{1, 1}));
+    EXPECT_EQ(gct->get_padding_begin(), (CoordinateDiff{2, 2}));
+    EXPECT_EQ(gct->get_padding_end(), (CoordinateDiff{2, 2}));
+    EXPECT_EQ(gct->get_output_padding(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_groups(), size_t(1));
+    EXPECT_EQ(gct->get_pad_type(), op::PadType::EXPLICIT);
+}
+
+TEST(type_prop, group_conv_transpose_invalid_params)
+{
+    // C x M / group x kH x kW
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{16, 20, 3, 3});
+    // N x C x H x W
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 16, 5, 5});
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    21);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Incorrect value of groups:"));
+    }
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    5);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Number of data channels not a multiple of group size."));
+    }
+
+    try
+    {
+        // C x M / group x kH x kW
+        auto bad_weights = make_shared<op::Parameter>(element::f32, Shape{10, 20, 3, 3});
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    bad_weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    8);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Number of filters channels must be equal to number of ") +
+                                 std::string("data channels"));
+    }
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    4,
+                                                                    op::PadType::SAME_UPPER);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Currently only eplicit pad type is supported."));
+    }
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    4);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Strides should be of number of input data features size."));
+    }
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    4);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Dilations should be of number of input data features size."));
+    }
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0, 1, 1},
+                                                                    4);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Output padding should be of number of input data features size."));
+    }
 }

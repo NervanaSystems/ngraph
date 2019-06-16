@@ -118,7 +118,6 @@ namespace ngraph
 
                 // reset the adjoint element
                 c_vec[i] = 0;
-                write_vector(c_arg, c_vec);
 
                 // for each result
                 // same as saying for each x "of interest"
