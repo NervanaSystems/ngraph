@@ -26,6 +26,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>
@@ -273,6 +274,12 @@ mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
 }
 
 template <>
+mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
+{
+    return compiler.create_unary_op<mlir::NGReluOp>(ng_node);
+}
+
+template <>
 mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
 {
     return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
@@ -282,6 +289,16 @@ const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
 #define MLIR_OP(OP) {TI(ngraph::op::OP), &MLIRCompiler::create_op<ngraph::op::OP>},
 #include "ops_supported.inc"
 };
+
+template <typename UnaryOp>
+mlir::Value* MLIRCompiler::create_unary_op(const ngraph::Node* ng_node)
+{
+    auto lhs = ng_node->get_argument(0)->get_output_tensor_ptr();
+    auto lhs_v = get_tensor_value(lhs.get()).m_value;
+    auto res_type = get_mlir_type(ng_node->get_output_tensor_ptr().get());
+    return m_builder->create<UnaryOp>(mlir::UnknownLoc::get(&m_context), res_type, lhs_v)
+        .getResult();
+}
 
 template <typename BinOp>
 mlir::Value* MLIRCompiler::create_binary_op(const ngraph::Node* ng_node)

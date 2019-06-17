@@ -59,8 +59,10 @@ namespace
         // Initialize the list of converters.
         void initConverters(OwningRewritePatternList& patterns, MLIRContext* mlirContext) override
         {
-            RewriteListBuilder<NGAddOpConversion, NGDotOpConversion, NGReturnOpConversion>::build(
-                patterns, mlirContext, m_pass);
+            RewriteListBuilder<NGAddOpConversion,
+                               NGReluOpConversion,
+                               NGDotOpConversion,
+                               NGReturnOpConversion>::build(patterns, mlirContext, m_pass);
         }
 
     private:
@@ -331,6 +333,56 @@ namespace
             // single stmt body
             [&] {
                     iRes(ivs) = iLHS(ivs) + iRHS(ivs);
+                });
+        // clang-format on
+        rewriter.replaceOp(op, {result});
+    }
+
+    // ADD
+    REWRITER(NGReluOp)
+    {
+        auto loc = cast<NGReluOp>(op).getLoc();
+
+        auto result = m_pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        // Note that builder's current function is still the original function body.
+        // use getBlock to get the new block instead.
+
+        // get new operands
+        Value* lhs = operands[0];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        // Steps
+        auto steps = vLHS.getSteps();
+
+        NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
+        Type elemTy = lhs->getType().dyn_cast<MemRefType>().getElementType();
+        NGRAPH_CHECK(!elemTy.isa<FloatType>(),
+                     "NGReluOp with float element type should not be lowered until MLIR supports "
+                     "lowering !std.CmpF");
+
+        // clang-format off
+        LoopNestBuilder(pivs, lbs, ubs, steps)(
+            // single stmt body
+            [&] {
+                    if (auto floatTy = elemTy.dyn_cast<FloatType>()) {
+                        ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+                        auto cmpZero = ValueHandle(ScopedContext::getBuilder()->create<CmpFOp>(ScopedContext::getLocation(), CmpFPredicate::OGT, static_cast<ValueHandle>(iLHS(ivs)), zero).getResult());
+                        iRes(ivs) = intrinsics::select(cmpZero, static_cast<ValueHandle>(iLHS(ivs)), zero);
+                    } else if (auto intTy = elemTy.dyn_cast<IntegerType>()){
+                        ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
+                        auto cmpZero = ValueHandle(ScopedContext::getBuilder()->create<CmpIOp>(ScopedContext::getLocation(), CmpIPredicate::SGT, static_cast<ValueHandle>(iLHS(ivs)), zero).getResult());
+                        iRes(ivs) = intrinsics::select(cmpZero, static_cast<ValueHandle>(iLHS(ivs)), zero);
                 });
         // clang-format on
         rewriter.replaceOp(op, {result});

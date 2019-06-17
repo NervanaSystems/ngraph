@@ -30,6 +30,7 @@ public:\
 };
 
 DECL_OP_CONV(NGAddOp)
+DECL_OP_CONV(NGReluOp)
 DECL_OP_CONV(NGDotOp)
 DECL_OP_CONV(NGReturnOp)
 
