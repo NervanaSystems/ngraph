@@ -19,12 +19,13 @@
 #include <algorithm>    // std::generate
 #include <cmath>        // std::floor, std::min
 #include <cstddef>      // std::size_t
+#include <cstdint>      // std::int64_t
 #include <iterator>     // std::begin, std::end
 #include <memory>       // std::shared_ptr, std::make_shared
-#include <onnx-ml.pb.h> // onnx types
 #include <type_traits>  // std::enable_if
 #include <vector>
 
+#include "ngraph/type/element_type.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
