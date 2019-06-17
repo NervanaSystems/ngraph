@@ -15,10 +15,7 @@
 //*****************************************************************************
 #include "eye_like.hpp"
 #include "exceptions.hpp"
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/frontend/onnx_import/utils/common.hpp"
-#include "ngraph/op/argmax.hpp"
-#include "ngraph/op/embedding_lookup.hpp"
 
 namespace ngraph
 {
