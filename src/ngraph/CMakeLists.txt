@@ -308,6 +308,8 @@ set (SRC
     op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/group_conv_transpose.hpp
+    op/fused/group_conv_transpose.cpp
     op/fused/leaky_relu.cpp
     op/fused/leaky_relu.hpp
     op/fused/mvn.cpp

@@ -94,6 +94,7 @@
 #include "op/reshape.hpp"
 #include "op/selu.hpp"
 #include "op/shape.hpp"
+#include "op/shrink.hpp"
 #include "op/sigmoid.hpp"
 #include "op/sign.hpp"
 #include "op/sin.hpp"
@@ -311,6 +312,7 @@ namespace ngraph
             REGISTER_OPERATOR("Reshape", 1, reshape);
             REGISTER_OPERATOR("Selu", 1, selu);
             REGISTER_OPERATOR("Shape", 1, shape);
+            REGISTER_OPERATOR("Shrink", 1, shrink);
             REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
             REGISTER_OPERATOR("Sign", 1, sign);
             REGISTER_OPERATOR("Sin", 1, sin);
