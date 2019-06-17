@@ -30,12 +30,28 @@ namespace ngraph
                 NodeVector mean_variance_normalization(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
+                    bool across_channels =
+                        node.get_attribute_value<std::int64_t>("across_channels", 0);
+                    bool normalize_variance =
+                        node.get_attribute_value<std::int64_t>("normalize_variance ", 1);
+
+                    return {std::make_shared<ngraph::op::MVN>(
+                        data, across_channels, normalize_variance)};
+                }
+
+            } // namespace set_1
+
+            namespace set_9
+            {
+                NodeVector mean_variance_normalization(const Node& node)
+                {
+                    auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<size_t>>("axes", {0, 2, 3});
 
                     return {std::make_shared<ngraph::op::MVN>(data, AxisSet(axes))};
                 }
 
-            } // namespace set_1
+            } // namespace set_9
 
         } //namespace op
 

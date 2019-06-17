@@ -32,6 +32,11 @@ namespace ngraph
                 NodeVector mean_variance_normalization(const Node& node);
             } // namespace set_1
 
+            namespace set_9
+            {
+                NodeVector mean_variance_normalization(const Node& node);
+            } // namespace set_9
+
         } //namespace op
 
     } // namespace onnx_import
