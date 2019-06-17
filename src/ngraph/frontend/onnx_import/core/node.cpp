@@ -95,7 +95,7 @@ namespace ngraph
                 std::begin(m_attributes), std::end(m_attributes), [&](const Attribute& attribute) {
                     return attribute.get_name() == name;
                 });
-            return !(it == std::end(m_attributes));
+            return it != std::end(m_attributes);
         }
 
         template <typename T>
