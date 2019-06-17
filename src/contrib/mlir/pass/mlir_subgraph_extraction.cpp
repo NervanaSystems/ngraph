@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "mlir_subgraph_extraction.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/assertion.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/add.hpp"
@@ -28,8 +29,103 @@ using namespace ngraph::pass;
 
 #define TI(x) std::type_index(typeid(x))
 
+void MLIRSubgraphExtractionPass::MLIRSubgraph::add_inputs(NodeVector &inputs)
+{
+
+    for (NodeVector::iterator it = inputs.begin(); it != inputs.end(); it++)
+    {
+        std::shared_ptr<Node> node = *it;
+        if (std::find(m_input_nodes.begin(), m_input_nodes.end(), node) != m_input_nodes.end())
+        {
+            m_input_nodes.push_back(node);
+        }
+    }
+}
+
+void MLIRSubgraphExtractionPass::MLIRSubgraph::add_node(std::shared_ptr<Node> node)
+{
+    m_nodes.push_back(node);
+}
+
+void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& other)
+{
+    // nodes of sub-graphs are unique
+    m_nodes.insert(m_nodes.end(), other.get_nodes().begin(), other.get_nodes().end());
+    add_inputs(other.get_input_nodes());
+}
+
+
 bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 {
+    for (auto op : func->get_ordered_ops())
+    {
+        NodeVector inputs;
+        int graph_id = -1;
+        // unsupported ops, skip
+        if (!is_supported_mlir_op(op))
+        {
+            continue;
+        }
+        if (TI(Parameter) != TI(*op) && TI(Result) != TI(*op))
+        {
+            continue;
+        }
+
+        // supported op
+        // go over all its inputs and figure out which graph ID it belongs to
+        // if all inputs are outside any sub-graph, we assign a new graph ID to that node
+        // if some inputs belong to different sub-graphs, we merge those sub-graphs into the first one
+        for (auto pred : op->get_arguments())
+        {
+            int pred_graph_id = get_subgraph(pred);
+            if (pred_graph_id == -1)
+            {
+                // predecessor doesn't belong to any sub-graph, it is an input
+                inputs.push_back(pred);
+            } else 
+            {
+                // we have a predecessor in a sub-graph
+                if (graph_id == -1)
+                {
+                    // record first sub-graph
+                    graph_id = pred_graph_id;
+                }
+                else
+                {
+                    // merge this sub-graph into first one
+                    MLIRSubgraph& first_sub_graph = get_subgraph(graph_id);
+                    MLIRSubgraph& pred_sub_graph = get_subgraph(pred_graph_id);
+                    first_sub_graph.merge(pred_sub_graph);
+                }
+            }
+        }
+        if (graph_id == -1)
+        {
+            // we couldn't find a previous sub-graph to extend with this node
+            // create a new one
+            MLIRSubgraph sg;
+            sg.add_inputs(inputs);
+            sg.add_node(op);
+            add_subgraph(sg);
+        } 
+        else
+        {
+            // we have a sub-graph. Update it with current node.
+            MLIRSubgraph &sg = get_subgraph(graph_id);
+            sg.add_node(op);
+            sg.add_inputs(inputs);
+        }
+        
+    }
+
+    // attach CK node to each sub-graph. 
+    for (auto it : m_id_to_graph)
+    {
+        MLIRSubgraph sg = it.second;
+        NodeVector outputs = std::move(get_subgraph_outputs(sg.get_nodes(), {} /*exclusions*/));
+        auto ck = std::make_shared<CompiledKernel>(sg.get_nodes(), outputs, sg.get_inputs());
+    }
+    #if 0
     // Create a CompiledKernel for all the ops in the function, except Parameters and Results.
     NodeVector ck_ops;
     for (auto op : func->get_ordered_ops())
@@ -76,7 +172,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
             in_desc->replace_output(ck, i);
         }
     }
-
+#endif
     return true;
 }
 
