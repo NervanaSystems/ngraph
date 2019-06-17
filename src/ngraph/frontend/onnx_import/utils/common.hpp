@@ -36,7 +36,7 @@ namespace ngraph
     {
         namespace common
         {
-            const ngraph::element::Type& get_ngraph_element_type(int64_t onnx_type);
+            const ngraph::element::Type& get_ngraph_element_type(std::int64_t onnx_type);
 
             /// \brief      Return a monotonic sequence.
             ///
@@ -111,7 +111,7 @@ namespace ngraph
                 std::int64_t cols = output_shape[1];
                 for (std::int64_t row = 0; row < rows; ++row)
                 {
-                    const std::int64_t diagonal_element = (row * cols) + row + shift;
+                    const std::int64_t diagonal_element_idx = (row * cols) + row + shift;
                     if (row + shift < 0)
                     {
                         continue;
@@ -120,7 +120,7 @@ namespace ngraph
                     {
                         break;
                     }
-                    identity_matrix.at(diagonal_element) = T{1};
+                    identity_matrix.at(diagonal_element_idx) = T{1};
                 }
 
                 return std::make_shared<ngraph::op::Constant>(
