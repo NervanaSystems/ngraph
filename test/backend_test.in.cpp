@@ -7500,12 +7500,12 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_convolution)
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto C = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto D = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto E = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto F = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto G = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto H = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto D = make_shared<op::Parameter>(element::f32, Shape{});
+    auto E = make_shared<op::Parameter>(element::f32, Shape{});
+    auto F = make_shared<op::Parameter>(element::f32, Shape{});
+    auto G = make_shared<op::Parameter>(element::f32, Shape{});
+    auto H = make_shared<op::Parameter>(element::f32, Shape{});
     auto CV = ngraph::builder::QuantizedConvolutionBuilder(A,
                                                            B,
                                                            Strides{1, 1},
@@ -7530,17 +7530,17 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_convolution)
     copy_data(a, a_data);
     auto b = backend->create_tensor(element::i8, shape_b);
     copy_data(b, b_data);
-    auto d = backend->create_tensor(element::f32, Shape{1});
+    auto d = backend->create_tensor(element::f32, Shape{});
     copy_data(d, vector<float>{0.0f});
-    auto e = backend->create_tensor(element::f32, Shape{1});
+    auto e = backend->create_tensor(element::f32, Shape{});
     copy_data(e, vector<float>{255.0f});
-    auto e_a = backend->create_tensor(element::f32, Shape{1});
+    auto e_a = backend->create_tensor(element::f32, Shape{});
     copy_data(e_a, vector<float>{-127.0f});
-    auto g = backend->create_tensor(element::f32, Shape{1});
+    auto g = backend->create_tensor(element::f32, Shape{});
     copy_data(g, vector<float>{127.0f});
-    auto h = backend->create_tensor(element::f32, Shape{1});
+    auto h = backend->create_tensor(element::f32, Shape{});
     copy_data(h, vector<float>{22.0f});
-    auto i = backend->create_tensor(element::f32, Shape{1});
+    auto i = backend->create_tensor(element::f32, Shape{});
     copy_data(i, vector<float>{90.0f});
     auto result = backend->create_tensor(element::i8, shape_r);
     auto handle = backend->compile(f);

@@ -104,22 +104,19 @@ void op::QuantizedConvolution::validate_and_infer_types()
 
     // TODO Remove these checks once we support channelwise and vector of scales
     NODE_VALIDATION_CHECK(this,
-                          shape_size(get_input_shape(2)) == 1 ||
-                              shape_size(get_input_shape(3)) == 1,
+                          get_input_partial_shape(2).compatible(PartialShape{}) &&
+                              get_input_partial_shape(3).compatible(PartialShape{}),
                           "Input scale and input zero point shape must be same and 1");
 
     NODE_VALIDATION_CHECK(this,
-                          shape_size(get_input_shape(4)) == 1 ||
-                              shape_size(get_input_shape(5)) == 1,
+                          get_input_partial_shape(4).compatible(PartialShape{}) == 1 &&
+                              get_input_partial_shape(5).compatible(PartialShape{}) == 1,
                           "Filter scale and filter zero point shape must be same and 1");
 
     NODE_VALIDATION_CHECK(this,
-                          shape_size(get_input_shape(6)) == 1 ||
-                              shape_size(get_input_shape(7)) == 1,
+                          get_input_partial_shape(6).compatible(PartialShape{}) == 1 &&
+                              get_input_partial_shape(7).compatible(PartialShape{}) == 1,
                           "Output scale and output zero point shape must be same and 1");
-
-    //   auto input_shape = get_input_shape(0);
-    //   auto filters_shape = get_input_shape(1);
 
     const PartialShape& input_shape = get_input_partial_shape(0);
     const PartialShape& filters_shape = get_input_partial_shape(1);
