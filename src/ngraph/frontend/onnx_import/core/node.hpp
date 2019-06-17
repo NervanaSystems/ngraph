@@ -78,7 +78,7 @@ namespace ngraph
             const std::string& output(int index) const;
             std::size_t get_outputs_size() const;
 
-            bool is_attribute_present(const std::string& name) const;
+            bool has_attribute(const std::string& name) const;
 
             template <typename T>
             T get_attribute_value(const std::string& name, T default_value) const;

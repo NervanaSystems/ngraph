@@ -52,7 +52,7 @@ namespace ngraph
             const std::string& output(int index) const;
             std::size_t get_outputs_size() const;
 
-            bool is_attribute_present(const std::string& name) const;
+            bool has_attribute(const std::string& name) const;
 
             template <typename T>
             T get_attribute_value(const std::string& name, T default_value) const;
@@ -89,7 +89,7 @@ namespace ngraph
         }
 
         std::size_t Node::Impl::get_outputs_size() const { return m_output_names.size(); }
-        bool Node::Impl::is_attribute_present(const std::string& name) const
+        bool Node::Impl::has_attribute(const std::string& name) const
         {
             auto it = std::find_if(
                 std::begin(m_attributes), std::end(m_attributes), [&](const Attribute& attribute) {
@@ -196,9 +196,9 @@ namespace ngraph
 
         const std::string& Node::output(int index) const { return m_pimpl->output(index); }
         std::size_t Node::get_outputs_size() const { return m_pimpl->get_outputs_size(); }
-        bool Node::is_attribute_present(const std::string& name) const
+        bool Node::has_attribute(const std::string& name) const
         {
-            return m_pimpl->is_attribute_present(name);
+            return m_pimpl->has_attribute(name);
         }
 
         template <>
