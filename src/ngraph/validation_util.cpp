@@ -682,29 +682,40 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
     std::vector<Dimension> end_dms(max_dims, -1);
     std::vector<Dimension> stride_dms(max_dims, 1);
 
-    int i, j, k, bj, ej, sj;
     std::vector<Dimension> out_dims;
-    for (i = 0, j = 0, k = 0, bj = 0, ej = 0, sj = 0; i < max_dims; i++)
+
+    int j = 0;
+    int k = 0;
+    int bj = 0;
+    int ej = 0;
+    int sj = 0;
+
+    for (int i; i < max_dims; i++)
     {
         if (i >= ellipsis_pos1 && i < ellipsis_pos2)
         {
             if (new_axis.find(i) == new_axis.end())
             {
-                end_dms[i] =
-                    end_dms[i].is_dynamic()
-                        ? end_dms[i]
-                        : int64_t(end_dms[i]) >= 0 ? end_dms[i] : input_shape[j++] + end_dms[i];
+                if (end_dms[i].is_static() && int64_t(end_dms[i]) < 0)
+                {
+                    end_dms[i] = input_shape[j++] + end_dms[i];
+                }
             }
             else
             {
                 end_dms[i] = begin_dms[i];
             }
-            out_dims.push_back(
-                (end_dms[i].is_dynamic() || begin_dms[i].is_dynamic() || stride_dms[i].is_dynamic())
-                    ? Dimension::dynamic()
-                    : static_cast<int64_t>(ceil(
-                          static_cast<float>(abs(int64_t(end_dms[i]) - int64_t(begin_dms[i])) + 1) /
-                          static_cast<float>(abs(int64_t(stride_dms[i]))))));
+
+            if (end_dms[i].is_dynamic() || begin_dms[i].is_dynamic() || stride_dms[i].is_dynamic())
+            {
+                out_dims.push_back(Dimension::dynamic());
+            }
+            else
+            {
+                out_dims.push_back(static_cast<int64_t>(
+                    ceil(static_cast<float>(abs(int64_t(end_dms[i]) - int64_t(begin_dms[i])) + 1) /
+                         static_cast<float>(abs(int64_t(stride_dms[i]))))));
+            }
             k = ellipsis_pos1;
             continue;
         }
@@ -713,64 +724,124 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
         // Use lower_bounds if mask is not set
         if (lb_mask.find(j) == lb_mask.end())
         {
-            begin_dms[i] = lb.size() > bj ? lb[bj] : (stride_dms[i].is_dynamic()
-                                                          ? Dimension::dynamic()
-                                                          : (int64_t(stride_dms[i]) > 0 ? 0 : -1));
+            if (lb.size() > bj)
+            {
+                begin_dms[i] = lb[bj];
+            }
+        }
+
+        if (stride_dms[i].is_dynamic())
+        {
+            begin_dms[i] = Dimension::dynamic();
+        }
+        else if (int64_t(stride_dms[i]) > 0)
+        {
+            begin_dms[i] = 0;
         }
         else
         {
-            begin_dms[i] = stride_dms[i].is_dynamic() ? Dimension::dynamic()
-                                                      : (int64_t(stride_dms[i]) > 0 ? 0 : -1);
+            begin_dms[i] = -1;
         }
+
         bj++;
 
-        begin_dms[i] =
-            begin_dms[i].is_dynamic()
-                ? begin_dms[i]
-                : int64_t(begin_dms[i]) >= 0 ? begin_dms[i] : input_shape[j] + begin_dms[i];
-        //  Clipping 'begin'
-        begin_dms[i] = begin_dms[i].is_dynamic()
-                           ? begin_dms[i]
-                           : int64_t(begin_dms[i]) < 0
-                                 ? 0
-                                 : input_shape[j].is_dynamic()
-                                       ? Dimension::dynamic()
-                                       : int64_t(begin_dms[i]) >= int64_t(input_shape[j])
-                                             ? input_shape[j] - 1
-                                             : begin_dms[i];
+        if (begin_dms[i].is_static() && int64_t(begin_dms[i]) < 0)
+        {
+            begin_dms[i] = input_shape[j] + begin_dms[i];
+        }
+        // Clipping 'begin'
+        if (begin_dms[i].is_static())
+        {
+            if (int64_t(begin_dms[i]) < 0)
+            {
+                begin_dms[i] = 0;
+            }
+            else if (input_shape[j].is_dynamic())
+            {
+                begin_dms[i] = Dimension::dynamic();
+            }
+            else if (int64_t(begin_dms[i]) >= int64_t(input_shape[j]))
+            {
+                begin_dms[i] = input_shape[j] - 1;
+            }
+        }
 
         // Use upper_bounds if mask is not set
         if (ub_mask.find(j) == ub_mask.end())
         {
-            Dimension end_dms_tmp =
-                ub.size() <= ej ? end_dms[i]
-                                : stride_dms[i].is_dynamic()
-                                      ? Dimension::dynamic()
-                                      : int64_t(stride_dms[i]) > 0 ? ub[ej] - 1 : ub[ej] + 1;
-            end_dms[i] = ub.size() > ej
-                             ? end_dms_tmp
-                             : stride_dms[i].is_dynamic() ? Dimension::dynamic()
-                                                          : int64_t(stride_dms[i]) > 0 ? -1 : 0;
+            Dimension end_dms_tmp;
+
+            if (ub.size() <= ej)
+            {
+                end_dms_tmp = end_dms[i];
+            }
+            else if (stride_dms[i].is_dynamic())
+            {
+                end_dms_tmp = Dimension::dynamic();
+            }
+            else if (int64_t(stride_dms[i]) > 0)
+            {
+                end_dms_tmp = ub[ej] - 1;
+            }
+            else
+            {
+                end_dms_tmp = ub[ej] + 1;
+            }
+
+            if (ub.size() > ej)
+            {
+                end_dms[i] = end_dms_tmp;
+            }
+            else if (stride_dms[i].is_dynamic())
+            {
+                end_dms[i] = Dimension::dynamic();
+            }
+            else if (int64_t(stride_dms[i]) > 0)
+            {
+                end_dms[i] = -1;
+            }
+            else
+            {
+                end_dms[i] = 0;
+            }
         }
         else
         {
-            end_dms[i] = stride_dms[i].is_dynamic() ? Dimension::dynamic()
-                                                    : int64_t(stride_dms[i]) > 0 ? -1 : 0;
+            if (stride_dms[i].is_dynamic())
+            {
+                end_dms[i] = Dimension::dynamic();
+            }
+            else if (int64_t(stride_dms[i]) > 0)
+            {
+                end_dms[i] = -1;
+            }
+            else
+            {
+                end_dms[i] = 0;
+            }
         }
         ej++;
-        end_dms[i] = end_dms[i].is_dynamic()
-                         ? Dimension::dynamic()
-                         : int64_t(end_dms[i]) >= 0 ? end_dms[i] : input_shape[j] + end_dms[i];
-        //  Clipping 'end'
-        end_dms[i] = end_dms[i].is_dynamic()
-                         ? end_dms[i]
-                         : int64_t(end_dms[i]) < 0
-                               ? 0
-                               : input_shape[j].is_dynamic()
-                                     ? Dimension::dynamic()
-                                     : int64_t(end_dms[i]) >= int64_t(input_shape[j])
-                                           ? input_shape[j] - 1
-                                           : end_dms[i];
+
+        if (end_dms[i].is_static() && int64_t(end_dms[i]) < 0)
+        {
+            end_dms[i] = input_shape[j] + end_dms[i];
+        }
+        // Clipping 'end'
+        if (end_dms[i].is_static())
+        {
+            if (int64_t(end_dms[i]) < 0)
+            {
+                end_dms[i] = 0;
+            }
+            else if (input_shape[j].is_dynamic())
+            {
+                end_dms[i] = Dimension::dynamic();
+            }
+            else if (int64_t(end_dms[i]) >= int64_t(input_shape[j]))
+            {
+                end_dms[i] = input_shape[j] - 1;
+            }
+        }
 
         if (new_axis.find(i) == new_axis.end())
         {
@@ -785,14 +856,15 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
         {
             end_dms[i] = begin_dms[i];
         }
+        else if (end_dms[i].is_dynamic() || begin_dms[i].is_dynamic() || stride_dms[i].is_dynamic())
+        {
+            out_dims.push_back(Dimension::dynamic());
+        }
         else
         {
-            out_dims.push_back(
-                end_dms[i].is_dynamic() || begin_dms[i].is_dynamic() || stride_dms[i].is_dynamic()
-                    ? Dimension::dynamic()
-                    : static_cast<int64_t>(ceil(
-                          static_cast<float>(abs(int64_t(end_dms[i]) - int64_t(begin_dms[i])) + 1) /
-                          static_cast<float>(abs(int64_t(stride_dms[i]))))));
+            out_dims.push_back(static_cast<int64_t>(
+                ceil(static_cast<float>(abs(int64_t(end_dms[i]) - int64_t(begin_dms[i])) + 1) /
+                     static_cast<float>(abs(int64_t(stride_dms[i]))))));
         }
 
         k++;
