@@ -1246,6 +1246,36 @@ bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
     return false;
 }
 
+void runtime::cpu::CPU_ExternalFunction::dump_one_kernel(CPU_DebugTracer& debug_tracer,
+                                                         CPURuntimeContext* ctx,
+                                                         bool is_it_input)
+{
+    size_t index = ctx->pc;
+    if (is_it_input)
+    {
+        for (size_t i = 0; i < m_op_attrs.at(index).Inputs.size(); i++)
+        {
+            debug_tracer.dump_one_tensor(m_op_attrs.at(index).Description,
+                                        tv_inputs.at(index).at(i),
+                                        ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Inputs.at(i))],
+                                        m_op_attrs.at(index).Inputs.at(i),
+                                        ">>");
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < m_op_attrs.at(index).Outputs.size(); i++)
+        {
+            debug_tracer.dump_one_tensor(m_op_attrs.at(index).Description,
+                                        tv_outputs.at(index).at(i),
+                                        ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Outputs.at(i))],
+                                        m_op_attrs.at(index).Outputs.at(i),
+                                        "<<");
+        }
+        debug_tracer.end_of_kernel();
+    }
+}
+
 void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_config)
 {
     if (m_is_built)
@@ -1267,6 +1297,17 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager, pass_config);
     pass_manager.run_passes(m_function, false);
+
+    static const auto do_ngraph_trace = std::getenv("NGRAPH_TRACER_LOG");
+    auto& debug_tracer = runtime::cpu::CPU_DebugTracer::getInstance();
+
+    if (do_ngraph_trace != nullptr)
+    {
+        const char* trace_log_file = std::getenv("NGRAPH_TRACER_LOG");
+        const char* bin_log_file = std::getenv("NGRAPH_BIN_TRACER_LOG");
+
+        debug_tracer.init_streams(trace_log_file, bin_log_file);
+    }
 
     // Store layouts assigned for arguments
     for (const auto& parameter : m_function->get_parameters())
@@ -1432,6 +1473,12 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         m_op_attrs.emplace_back(node->description(), out_names, in_names);
         op_names.push_back(node->get_name());
         handler->second(this, node.get(), in, out);
+
+        if (do_ngraph_trace != nullptr)
+        {
+            tv_inputs.push_back(in);
+            tv_outputs.push_back(out);
+        }
 
         auto cacheable = true;
         auto reuse_memory = pass_config.get_pass_attribute("CPUMemoryAssignment::ReuseMemory") ||
@@ -1719,6 +1766,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                     std::stringstream ss;
 
                     ss << "\nEXECUTION PLAN:\n";
+
                     for (size_t i = 0; i < functors.size(); i++)
                     {
                         ss << op_names.at(i) << " will be executed with the following inputs:\n";
@@ -1735,7 +1783,9 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                         }
                     }
                     write_to_file(ss.str(), s_debug_dir, filename);
+
                 }
+
             }
 
             for (; ctx->pc < functors.size(); ctx->pc++)
@@ -1749,8 +1799,21 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                     {
                         start_ts = cpu::Clock::now();
                     }
+
                     CPUExecutionContext ectx{0};
+
+                    if (do_ngraph_trace != nullptr)
+                    {
+                        this->dump_one_kernel(debug_tracer, ctx, true);
+                    }
+
                     executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
+
+                    if (do_ngraph_trace != nullptr)
+                    {
+                        this->dump_one_kernel(debug_tracer, ctx, false);
+                    }
+
                     if (ctx->breakpoints.count(ctx->pc + 1))
                     {
                         ctx->pc++;
@@ -1789,6 +1852,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                     }
                 }
             }
+
+
         }
         ctx->first_iteration = false;
         if (runtime::cpu::IsTracingEnabled())

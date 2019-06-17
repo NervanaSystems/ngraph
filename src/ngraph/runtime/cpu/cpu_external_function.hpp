@@ -47,9 +47,11 @@
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
+#include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/state/state.hpp"
 #include "ngraph/util.hpp"
+
 
 namespace ngraph
 {
@@ -61,6 +63,7 @@ namespace ngraph
             class CPU_Emitter;
             class CPU_CallFrame;
             class CPU_Debugger;
+            class CPU_DebugTracer;
 
 #if !defined(NGRAPH_DEX_ONLY)
 
@@ -87,6 +90,7 @@ namespace ngraph
                 {
                 }
             };
+
 
             class CPU_ExternalFunction : public std::enable_shared_from_this<CPU_ExternalFunction>
             {
@@ -188,6 +192,10 @@ namespace ngraph
 
                 std::vector<ngraph::State*> m_states;
 
+                void dump_one_kernel(CPU_DebugTracer& debug_tracer,
+                                     CPURuntimeContext* ctx,
+                                     bool is_it_input);
+
             private:
                 // Register passes that are common to codegen and DEX
                 void register_common_passes(ngraph::pass::Manager& pass_manager,
@@ -213,6 +221,7 @@ namespace ngraph
                     const Node&,
                     const Node&,
                     const std::unordered_map<const Node*, std::string>& node_cache);
+
                 std::string emit_op_as_function(const Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
 
@@ -259,6 +268,8 @@ namespace ngraph
                 LayoutDescriptorPtrs result_layout_descriptors;
                 std::vector<size_t> m_memory_buffer_sizes;
                 std::vector<OpAttributes> m_op_attrs;
+                std::vector<std::vector<TensorViewWrapper>> tv_inputs;
+                std::vector<std::vector<TensorViewWrapper>> tv_outputs;
 
                 std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;
 
