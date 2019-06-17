@@ -35,7 +35,7 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::add_inputs(NodeVector &inputs)
     for (NodeVector::iterator it = inputs.begin(); it != inputs.end(); it++)
     {
         std::shared_ptr<Node> node = *it;
-        if (std::find(m_input_nodes.begin(), m_input_nodes.end(), node) != m_input_nodes.end())
+        if (std::find(m_input_nodes.begin(), m_input_nodes.end(), node) == m_input_nodes.end())
         {
             m_input_nodes.push_back(node);
         }
@@ -66,7 +66,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         {
             continue;
         }
-        if (TI(Parameter) != TI(*op) && TI(Result) != TI(*op))
+        if (TI(Parameter) == TI(*op) || TI(Result) == TI(*op))
         {
             continue;
         }
@@ -118,12 +118,30 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         
     }
 
-    // attach CK node to each sub-graph. 
+    // attach CK node to each sub-graph.
+     
     for (auto it : m_id_to_graph)
     {
         MLIRSubgraph sg = it.second;
         NodeVector outputs = std::move(get_subgraph_outputs(sg.get_nodes(), {} /*exclusions*/));
-        auto ck = std::make_shared<CompiledKernel>(sg.get_nodes(), outputs, sg.get_inputs());
+        auto ck = std::make_shared<CompiledKernel>(sg.get_nodes(), outputs, sg.get_input_nodes());
+
+        // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
+        // nodes.
+        for (size_t i = 0, end = outputs.size(); i < end; ++i)
+        {
+            auto& output_descs = outputs[i]->get_outputs();
+            NGRAPH_CHECK(output_descs.size() == 1, "Unexpected multiple output descriptors");
+            auto& out_desc = output_descs[0];
+
+            // 'replace_output' invalidates iterator of the original container. Use a copy instead.
+            const std::set<descriptor::Input*> input_descs = out_desc.get_inputs();
+
+            for (descriptor::Input* in_desc : input_descs)
+            {
+                in_desc->replace_output(ck, i);
+            }
+        }
     }
     #if 0
     // Create a CompiledKernel for all the ops in the function, except Parameters and Results.
