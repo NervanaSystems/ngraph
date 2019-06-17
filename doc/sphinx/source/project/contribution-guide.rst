@@ -37,7 +37,7 @@ functions that build sub-graphs from existing core ops.
 
 
 Coding style
--------------
+------------
 
 We have a coding standard to help us to get development done. If part of the
 standard is impeding progress, we either adjust that part or remove it. To this
