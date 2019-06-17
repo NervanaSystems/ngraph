@@ -33,7 +33,7 @@ namespace ngraph
                     bool across_channels =
                         node.get_attribute_value<std::int64_t>("across_channels", 0);
                     bool normalize_variance =
-                        node.get_attribute_value<std::int64_t>("normalize_variance ", 1);
+                        node.get_attribute_value<std::int64_t>("normalize_variance", 1);
 
                     return {std::make_shared<ngraph::op::MVN>(
                         data, across_channels, normalize_variance)};
