@@ -67,13 +67,36 @@ void op::QuantizedConvolution::validate_and_infer_types()
 {
     enum
     {
-        INPUT_SCALE = 2,
+        INPUT,
+        FILTER,
+        INPUT_SCALE,
         INPUT_ZERO_POINT,
         FILTER_SCALE,
         FILTER_ZERO_POINT,
         OUTPUT_SCALE,
         OUTPUT_ZERO_POINT
     };
+
+    NODE_VALIDATION_CHECK(
+        this, m_output_type.is_static(), "Output element type must not be dynamic");
+
+    NODE_VALIDATION_CHECK(this,
+                          m_output_type.is_quantized(),
+                          "Output element type (",
+                          m_output_type,
+                          ") must be a quantized type");
+
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(INPUT).is_quantized(),
+                          "Input element type (",
+                          get_input_element_type(INPUT),
+                          ") must be a quantized type");
+
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(FILTER).is_quantized(),
+                          "Filter element type (",
+                          get_input_element_type(FILTER),
+                          ") must be a quantized type");
 
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(INPUT_SCALE).is_real() ||
