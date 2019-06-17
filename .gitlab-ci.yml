@@ -1,0 +1,19 @@
+image: alpine
+
+pages:
+  script:
+  - apk --no-cache add python3
+  - python3 -m ensurepip
+  - pip3 install sphinx==1.7.5 docutils==0.14 sphinx_rtd_theme breathe==4.9.1 sphinxcontrib-plantuml
+  - apk --no-cache add make
+  - apk --no-cache add doxygen
+  - apk --no-cache add graphviz
+  - apk --no-cache add ttf-dejavu 
+  - apk --no-cache add openjdk8-jre
+  - make html
+  - mv _build/html/ public/
+  artifacts:
+    paths:
+    - public
+  only:
+  - master

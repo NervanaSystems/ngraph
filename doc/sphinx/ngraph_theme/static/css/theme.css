@@ -1607,7 +1607,7 @@ html {
 }
 
 body {
-  font-family: "RobotoSlab", Sans, sans-serif;
+  font-family: Helvetica, Arial, Sans, sans-serif;
   font-weight: normal;
   color: #31343D;
   min-height: 100%;
@@ -1687,7 +1687,7 @@ a.wy-text-neutral:hover {
 h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
   margin-top: 0.33em;
   font-weight: 700;
-  font-family: "NeoSansIntel", "RobotoSlab", Lato, sans;
+  font-family: Helvetica, Arial, sans;
 }
 
 p {
@@ -1702,24 +1702,24 @@ p {
 
 h1 {
   font-size: 153%;
-  color: #393f4d;
+  color: #DC700D;
 }
 
 h2, .rst-content .toctree-wrapper p.caption {
   font-size: 139%;
   font-weight: bolder;
-  color: #505257;
+  color: #F1C301;
 }
 
 h3 {
   font-size: 127%;
-  color: #9ba7c3;
+  color: #F1C301;
   font-weight: lighter;
 }
 
 h4 {
   font-size: 115%;
-  color: #454c5d;
+  color: #F1C301;
 
 }
 
@@ -2741,11 +2741,11 @@ span[id*='MathJax-Span'] {
   margin-left: 0.43em;
   margin-bottom: 0;
   display: block;
-  font-family: "NeoSansIntel", sans;
+  font-family: Helvetica, Arial, sans;
   font-weight: bolder;
   text-transform: uppercase;
   font-size: 103%;
-  color: #abb6cd;
+  color: #DC700D;
   /* background-color: #53607d; */
   white-space: nowrap;
 }
@@ -2782,10 +2782,10 @@ span[id*='MathJax-Span'] {
   margin-left: -1.2em;
   font-size: 0.8em;
   line-height: 1.6em;
-  color: #393f4d;
+  color: #fafbfd;
 }
 .wy-menu-vertical li.on a, .wy-menu-vertical li.current > a {
-  color: #5a5a59;
+  color: #dc700d;
   padding: 0.4045em 1.618em;
   position: relative;
   background: #fafbfd;
@@ -2812,6 +2812,7 @@ span[id*='MathJax-Span'] {
 }
 .wy-menu-vertical li.toctree-l2.current > a {
   background: #efeeed;
+  color: #dc700d;
   padding: 0.4045em 2.427em;
 }
 .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a {
@@ -2870,7 +2871,7 @@ span[id*='MathJax-Span'] {
   display: block;
   position: relative;
   font-size: 90%;
-  color: #e8e8e8;
+  color: #31343D;
 }
 .wy-menu-vertical a:hover {
   background-color: #fafbfd;
@@ -3007,7 +3008,7 @@ span[id*='MathJax-Span'] {
   overflow-x: hidden;
   overflow-y: hidden;
   min-height: 100%;
-  background: #393f4d;
+  background: #fafbfd;
   z-index: 200;
 }
 
@@ -3016,7 +3017,7 @@ span[id*='MathJax-Span'] {
   position: relative;
   overflow-x: hidden;
   overflow-y: scroll;
-  height: 100%;
+  height: 95%;
 }
 
 .wy-nav-top {
@@ -3038,7 +3039,7 @@ span[id*='MathJax-Span'] {
   clear: both;
 }
 .wy-nav-top a {
-  color: #393f4d;
+  color: #fafbfd;
   font-family: "NeoSansIntel-Regular", sans;
 }
 .wy-nav-top img {
@@ -3188,6 +3189,85 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
   .wy-nav-content-wrap {
     margin-left: 0;
   }
+}
+
+#header {
+    width: 100%;
+    display: block;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    background: #2F343D;
+   }
+
+.padding-md--left-right {
+    padding-left: 2.6%;
+    padding-right: 2.6%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.header__site_info {
+  display: inline-block;
+}
+
+.header__site_img_object {
+    height: 50px;
+}
+
+.header__site_info_name {
+    vertical-align: middle;
+    display: inline-block;
+    height: 50px
+}
+
+#header__site_info_name a:link {
+  color: black;
+}
+
+#header__site_info_name a:visited {
+  color: black;
+}
+
+.header__menu {
+    text-align: right;
+    display: inline-block;
+}
+
+.header__menu_list li {
+    display: inline;
+    margin-left: 20px;
+}
+
+.header__menu_list li a {
+  color: black;
+}
+
+.header__menu_list_item {
+    display: inline;
+    position: relative;
+    margin-bottom: 0;
+    margin-left: 0;
+    min-width: 1px;
+    max-width: 100%;
+    padding: 0;
+    text-align: left;
+    color: white;
+    /*top: 35px;*/
+}
+
+.header__banner {
+   width: 120%;
+   margin-left: -3.236em;
+   background-image: url(https://stg.clearlinux.org/sites/default/files/bg_developer_0.png);
+}
+
+.header__banner_title {
+   display: block;
+   color: white;
+   font-size: 36px;
+   font-family: "IntelClear-Bold", Helvetica, Arial, sans-serif;
+   margin-left: 0.67em;
+   line-height: 100px;
 }
 
 /*# sourceMappingURL=theme.css.map */
