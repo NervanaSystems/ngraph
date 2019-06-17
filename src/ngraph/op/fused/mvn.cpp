@@ -40,6 +40,7 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
 
     // if m_across_channels is true we should calculate mean and variance per batch
     // else we calculate these per channel
+    m_reduction_axes.insert(0);
     size_t start_axis = m_across_channels ? 1 : 2;
     for (size_t i = start_axis; i < data->get_shape().size(); ++i)
     {
