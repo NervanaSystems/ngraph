@@ -25,13 +25,7 @@
 #include "ngraph/frontend/onnx_import/op/conv_transpose.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/concat.hpp"
-#include "ngraph/op/convolution.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/slice.hpp"
-#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
@@ -44,79 +38,6 @@ namespace ngraph
         {
             namespace set_1
             {
-                namespace
-                {
-                    std::shared_ptr<ngraph::Node>
-                        make_ng_conv_transpose(std::int64_t groups,
-                                               const Shape& data_batch_shape,
-                                               const std::shared_ptr<ngraph::Node>& filters,
-                                               const std::shared_ptr<ngraph::Node>& data,
-                                               const Strides& strides,
-                                               const Strides& dilations,
-                                               const CoordinateDiff& padding_below,
-                                               const CoordinateDiff& padding_above,
-                                               const Strides& data_dilation_strides)
-                    {
-                        if (groups > 1)
-                        {
-                            // Split one convolution op to N ops where N is the number of groups
-                            // and concat results after computation.
-                            std::size_t n_data_channels{data->get_shape().at(1)};
-                            std::size_t n_filters_channels{filters->get_shape().at(0)};
-                            std::size_t data_group_size{n_data_channels / groups};
-                            std::size_t filters_group_size{n_filters_channels / groups};
-                            NodeVector conv_transpose_nodes;
-
-                            // initial bounds for slice
-                            std::vector<std::size_t> data_lower_bounds(data->get_shape().size());
-                            std::vector<std::size_t> data_upper_bounds{data->get_shape()};
-                            std::vector<std::size_t> filters_lower_bounds(
-                                filters->get_shape().size());
-                            std::vector<std::size_t> filters_upper_bounds{filters->get_shape()};
-
-                            for (std::size_t group{0}; group < groups; ++group)
-                            {
-                                // slice data
-                                data_lower_bounds[1] = group * data_group_size;
-                                data_upper_bounds[1] = (group + 1) * data_group_size;
-                                auto sliced_data = std::make_shared<ngraph::op::Slice>(
-                                    data, data_lower_bounds, data_upper_bounds);
-                                // slice filters
-                                filters_lower_bounds[0] = group * filters_group_size;
-                                filters_upper_bounds[0] = (group + 1) * filters_group_size;
-                                auto sliced_filters = std::make_shared<ngraph::op::Slice>(
-                                    filters, filters_lower_bounds, filters_upper_bounds);
-
-                                conv_transpose_nodes.push_back(
-                                    std::make_shared<ngraph::op::ConvolutionBackpropData>(
-                                        data_batch_shape,
-                                        sliced_filters,
-                                        sliced_data,
-                                        strides,
-                                        dilations,
-                                        padding_below,
-                                        padding_above,
-                                        data_dilation_strides));
-                            }
-                            std::size_t concatenation_axis = 1;
-                            return std::make_shared<ngraph::op::Concat>(conv_transpose_nodes,
-                                                                        concatenation_axis);
-                        }
-                        else
-                        {
-                            return std::make_shared<ngraph::op::ConvolutionBackpropData>(
-                                data_batch_shape,
-                                filters,
-                                data,
-                                strides,
-                                dilations,
-                                padding_below,
-                                padding_above,
-                                data_dilation_strides);
-                        }
-                    }
-                } // anonymous namespace
-
                 NodeVector conv_transpose(const Node& node)
                 {
                     const NodeVector& inputs = node.get_ng_inputs();
@@ -130,10 +51,9 @@ namespace ngraph
                     auto strides = convpool::get_strides(node);
                     auto dilations = convpool::get_dilations(node);
                     auto paddings = convpool::get_pads(node);
-                    ngraph::CoordinateDiff padding_below = paddings.first;
-                    ngraph::CoordinateDiff padding_above = paddings.second;
+                    CoordinateDiff padding_below = paddings.first;
+                    CoordinateDiff padding_above = paddings.second;
 
-                    Strides data_dilation_strides(num_spatial_dims, 1);
                     std::vector<std::int64_t> output_shape{
                         node.get_attribute_value<std::vector<std::int64_t>>("output_shape", {})};
 
@@ -158,72 +78,30 @@ namespace ngraph
                         << "provided group attribute value must be a multiple of filter channels "
                            "count.";
 
-                    Shape data_batch_shape(data_shape.size(), 1);
-                    data_batch_shape.at(0) = data_shape.at(0);
-                    data_batch_shape.at(1) = weights_shape.at(1);
-
+                    std::shared_ptr<ngraph::Node> conv_node;
                     if (!output_shape.empty())
                     {
-                        if (output_shape.size() > num_spatial_dims)
-                        {
-                            output_shape.erase(std::begin(output_shape),
-                                               std::begin(output_shape) + 2);
-                        }
-                        for (int i = 0; i < num_spatial_dims; ++i)
-                        {
-                            padding_below[i] = strides[i] * (data_shape[i + 2] - 1) +
-                                               dilations[i] * (weights_shape[i + 2] - 1) -
-                                               data_dilation_strides[i] *
-                                                   (output_shape[i] - output_padding[i] - 1);
-                            if (padding_below[i] < 0)
-                            {
-                                // (int) -9 / 2 = -5 but we need -4
-                                // (int) -9 --> 9 / 2 = 4 --> -4
-                                padding_below[i] = -(-padding_below[i] / 2);
-                            }
-                            else
-                            {
-                                padding_below[i] /= 2;
-                            }
-                            padding_above[i] = padding_below[i];
-                            data_batch_shape[i + 2] = output_shape[i];
-                        }
+                        conv_node = std::make_shared<ngraph::op::GroupConvolutionTranspose>(
+                            data,
+                            filters,
+                            strides,
+                            dilations,
+                            CoordinateDiff(std::begin(output_padding), std::end(output_padding)),
+                            Shape(std::begin(output_shape), std::end(output_shape)),
+                            groups);
                     }
                     else
                     {
-                        for (int i = 0; i < num_spatial_dims; ++i)
-                        {
-                            // Calculating spatial dims of data output shape for ngraph conv backprop op
-                            // | s(ds-1) + d(ws-1) - pb - pa |
-                            // | --------------------------- | + 1 + op
-                            // | _           dds           _ |
-                            //
-                            // d - dilation
-                            // ds - data shape
-                            // dds - data dilation strides
-                            // op - output padding
-                            // pa - padding above
-                            // pb - padding below
-                            // s - strides
-                            // ws - weights shape
-                            data_batch_shape[i + 2] = (strides[i] * (data_shape[i + 2] - 1) +
-                                                       dilations[i] * (weights_shape[i + 2] - 1) -
-                                                       padding_below[i] - padding_above[i]) /
-                                                          data_dilation_strides[i] +
-                                                      1 + output_padding[i];
-                        }
+                        conv_node = std::make_shared<ngraph::op::GroupConvolutionTranspose>(
+                            data,
+                            filters,
+                            strides,
+                            dilations,
+                            padding_below,
+                            padding_above,
+                            CoordinateDiff(std::begin(output_padding), std::end(output_padding)),
+                            groups);
                     }
-
-                    std::shared_ptr<ngraph::Node> conv_node =
-                        make_ng_conv_transpose(groups,
-                                               data_batch_shape,
-                                               filters,
-                                               data,
-                                               strides,
-                                               dilations,
-                                               padding_below,
-                                               padding_above,
-                                               data_dilation_strides);
 
                     // no bias param
                     if (inputs.size() < 3)

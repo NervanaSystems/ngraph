@@ -59,21 +59,26 @@ TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::BroadcastDistributed>(A), ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    auto v = vector<float>{1, 2, 3, 4};
-    auto result = backend->create_tensor(element::f32, shape);
-    copy_data(result, vector<float>(4, 0));
-
-    auto processIdx = get_distributed_interface()->get_rank();
-    if (processIdx == 0)
+    auto comm_size = get_distributed_interface()->get_size();
+    for (int root_id = 0; root_id < comm_size; ++root_id)
     {
-        copy_data(result, v);
-    }
+        auto f = make_shared<Function>(make_shared<op::BroadcastDistributed>(A, root_id),
+                                       ParameterVector{A});
 
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {result});
-    EXPECT_EQ(v, read_vector<float>(result));
+        auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+        auto v = vector<float>{1, 2, 3, 4};
+        auto result = backend->create_tensor(element::f32, shape);
+        copy_data(result, vector<float>(4, 0));
+
+        auto processIdx = get_distributed_interface()->get_rank();
+        if (processIdx == root_id)
+        {
+            copy_data(result, v);
+        }
+
+        auto handle = backend->compile(f);
+        handle->call_with_validate({result}, {result});
+        EXPECT_EQ(v, read_vector<float>(result));
+    }
 }
