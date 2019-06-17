@@ -16,20 +16,19 @@
 
 #pragma once
 
+#include <algorithm>
+#include <cctype>
+#include <cstring>
+#include <fstream>
 #include <functional>
+#include <iomanip>
+#include <iostream>
+#include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <iomanip>
-#include <numeric>
-#include <algorithm>
-#include <cctype>
 
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
-
 
 namespace ngraph
 {
@@ -37,7 +36,6 @@ namespace ngraph
     {
         namespace cpu
         {
-
             class CPU_DebugTracer
             {
             public:
@@ -46,7 +44,7 @@ namespace ngraph
 
                 static CPU_DebugTracer& getInstance();
 
-                void init_streams(const char* , const char* );
+                void init_streams(const char*, const char*);
 
                 void end_of_kernel();
 
@@ -57,7 +55,6 @@ namespace ngraph
                                      const std::string& in_out);
 
             private:
-
                 CPU_DebugTracer();
 
                 size_t m_serial_number;

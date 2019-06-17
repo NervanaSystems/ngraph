@@ -1255,22 +1255,24 @@ void runtime::cpu::CPU_ExternalFunction::dump_one_kernel(CPU_DebugTracer& debug_
     {
         for (size_t i = 0; i < m_op_attrs.at(index).Inputs.size(); i++)
         {
-            debug_tracer.dump_one_tensor(m_op_attrs.at(index).Description,
-                                        tv_inputs.at(index).at(i),
-                                        ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Inputs.at(i))],
-                                        m_op_attrs.at(index).Inputs.at(i),
-                                        ">>");
+            debug_tracer.dump_one_tensor(
+                m_op_attrs.at(index).Description,
+                tv_inputs.at(index).at(i),
+                ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Inputs.at(i))],
+                m_op_attrs.at(index).Inputs.at(i),
+                ">>");
         }
     }
     else
     {
         for (size_t i = 0; i < m_op_attrs.at(index).Outputs.size(); i++)
         {
-            debug_tracer.dump_one_tensor(m_op_attrs.at(index).Description,
-                                        tv_outputs.at(index).at(i),
-                                        ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Outputs.at(i))],
-                                        m_op_attrs.at(index).Outputs.at(i),
-                                        "<<");
+            debug_tracer.dump_one_tensor(
+                m_op_attrs.at(index).Description,
+                tv_outputs.at(index).at(i),
+                ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Outputs.at(i))],
+                m_op_attrs.at(index).Outputs.at(i),
+                "<<");
         }
         debug_tracer.end_of_kernel();
     }
@@ -1783,9 +1785,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                         }
                     }
                     write_to_file(ss.str(), s_debug_dir, filename);
-
                 }
-
             }
 
             for (; ctx->pc < functors.size(); ctx->pc++)
@@ -1852,8 +1852,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                     }
                 }
             }
-
-
         }
         ctx->first_iteration = false;
         if (runtime::cpu::IsTracingEnabled())

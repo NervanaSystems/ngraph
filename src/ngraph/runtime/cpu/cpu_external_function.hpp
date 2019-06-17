@@ -44,14 +44,13 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
-#include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/state/state.hpp"
 #include "ngraph/util.hpp"
-
 
 namespace ngraph
 {
@@ -90,7 +89,6 @@ namespace ngraph
                 {
                 }
             };
-
 
             class CPU_ExternalFunction : public std::enable_shared_from_this<CPU_ExternalFunction>
             {
