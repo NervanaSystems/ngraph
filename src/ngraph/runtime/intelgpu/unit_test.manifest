@@ -18,6 +18,7 @@ replace_slice_matrix
 replace_slice_matrix_inplace
 replace_slice_scalar
 replace_slice_vector
+dyn_replace_slice
 shape_of_5d
 shape_of_matrix
 shape_of_scalar
