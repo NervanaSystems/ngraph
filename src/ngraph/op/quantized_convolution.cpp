@@ -118,8 +118,11 @@ void op::QuantizedConvolution::validate_and_infer_types()
                               shape_size(get_input_shape(7)) == 1,
                           "Output scale and output zero point shape must be same and 1");
 
-    auto input_shape = get_input_shape(0);
-    auto filters_shape = get_input_shape(1);
+    //   auto input_shape = get_input_shape(0);
+    //   auto filters_shape = get_input_shape(1);
+
+    const PartialShape& input_shape = get_input_partial_shape(0);
+    const PartialShape& filters_shape = get_input_partial_shape(1);
 
     if (m_data_dilation_strides.size() == 0)
     {
@@ -146,23 +149,16 @@ void op::QuantizedConvolution::validate_and_infer_types()
         m_padding_above = conv_default_padding(this, input_shape, filters_shape);
     }
 
-    set_output_type(0,
-                    m_output_type,
-                    util::infer_convolution_output_shape(this,
-                                                         input_shape,
-                                                         filters_shape,
-                                                         m_window_movement_strides,
-                                                         m_window_dilation_strides,
-                                                         m_padding_below,
-                                                         m_padding_above,
-                                                         m_data_dilation_strides,
-                                                         0, /* batch_axis_data,              */
-                                                         1, /* input_channel_axis_data,      */
-                                                         1, /* input_channel_axis_filters,   */
-                                                         0, /* output_channel_axis_filters,  */
-                                                         0, /* batch_axis_result,            */
-                                                         1  /* output_channel_axis_result,   */
-                                                         ));
+    PartialShape result_shape;
+
+    result_shape = infer_convolution_forward(this,
+                                             input_shape,
+                                             m_data_dilation_strides,
+                                             m_padding_below,
+                                             m_padding_above,
+                                             filters_shape,
+                                             m_window_movement_strides,
+                                             m_window_dilation_strides);
 
     NODE_VALIDATION_CHECK(
         this,
@@ -172,6 +168,8 @@ void op::QuantizedConvolution::validate_and_infer_types()
         ") must match output element type (",
         get_output_element_type(0),
         ")");
+
+    set_output_type(0, m_output_type, result_shape);
 }
 
 shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& new_args) const
