@@ -14,4 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-NGRAPH_OP(FunctionCall, ngraph::runtime::hybrid::op)
+#pragma once
+
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
+
+namespace ngraph
+{
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                /// \brief Performs ONNX ConvInteger operation.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing Ngraph nodes producing output of quantized ONNX convolution
+                ///         operation.
+                NodeVector conv_integer(const Node& node);
+
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

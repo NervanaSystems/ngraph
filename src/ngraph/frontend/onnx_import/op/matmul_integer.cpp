@@ -14,25 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/hybrid/pass/fix_get_output_element.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/runtime/backend.hpp"
+#include "matmul_integer.hpp"
+#include "frontend/onnx_import/utils/matmul_factory.hpp"
 
-using namespace ngraph;
-using namespace std;
-
-runtime::hybrid::pass::FixGetOutputElement::FixGetOutputElement()
+namespace ngraph
 {
-}
-
-bool runtime::hybrid::pass::FixGetOutputElement::run_on_node(shared_ptr<Node> node)
-{
-    if (node->description() == "GetOutputElement")
+    namespace onnx_import
     {
-        auto parent = node->get_arguments().at(0);
-        node->set_placement_index(parent->get_placement_index());
-    }
-    return false;
-}
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector matmul_integer(const Node& node)
+                {
+                    auto factory = matmul::MatmulIntegerFactory(node);
+                    return factory.make_matmul_op();
+                }
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

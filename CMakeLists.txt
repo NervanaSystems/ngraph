@@ -188,6 +188,7 @@ if (NGRAPH_MANYLINUX_ENABLE)
 endif()
 
 option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
+option(NGRAPH_FAST_MATH_ENABLE "Enable fast math" ON)
 option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
 option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph static library" FALSE)
 
@@ -377,6 +378,7 @@ if (LINUX)
     else()
         set(CMAKE_INSTALL_RPATH "$ORIGIN")
     endif()
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
@@ -502,10 +504,6 @@ endif()
 #-----------------------------------------------------------------------------------------------
 if(NGRAPH_DEPRECATED_ENABLE)
     add_definitions(-DNGRAPH_DEPRECATED_ENABLE)
-endif()
-
-if(NGRAPH_JSON_ENABLE)
-    add_definitions(-DNGRAPH_JSON_ENABLE)
 endif()
 
 add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")

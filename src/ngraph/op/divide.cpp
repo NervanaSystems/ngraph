@@ -25,6 +25,17 @@ op::Divide::Divide(const shared_ptr<Node>& arg0,
                    const shared_ptr<Node>& arg1,
                    const AutoBroadcastSpec& autob)
     : BinaryElementwiseArithmetic("Divide", arg0, arg1, autob)
+    , m_pythondiv(true)
+{
+    constructor_validate_and_infer_types();
+}
+
+op::Divide::Divide(const shared_ptr<Node>& arg0,
+                   const shared_ptr<Node>& arg1,
+                   bool pythondiv,
+                   const AutoBroadcastSpec& autob)
+    : BinaryElementwiseArithmetic("Divide", arg0, arg1, autob)
+    , m_pythondiv(pythondiv)
 {
     constructor_validate_and_infer_types();
 }
@@ -32,7 +43,8 @@ op::Divide::Divide(const shared_ptr<Node>& arg0,
 shared_ptr<Node> op::Divide::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Divide>(new_args.at(0), new_args.at(1), this->get_autob());
+    return make_shared<Divide>(
+        new_args.at(0), new_args.at(1), this->is_pythondiv(), this->get_autob());
 }
 
 void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

@@ -16,25 +16,22 @@
 
 #pragma once
 
-#include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/pass/pass.hpp"
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace hybrid
+        namespace op
         {
-            namespace pass
+            namespace set_1
             {
-                class Liveness;
-            }
-        }
-    }
-}
+                NodeVector qlinear_matmul(const Node& node);
+            } // namespace set_1
 
-class ngraph::runtime::hybrid::pass::Liveness : public ngraph::pass::FunctionPass
-{
-public:
-    bool run_on_function(std::shared_ptr<ngraph::Function>) override;
-};
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

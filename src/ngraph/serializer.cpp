@@ -74,6 +74,7 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -609,13 +610,17 @@ static shared_ptr<ngraph::Function>
                 op::PadType pad_type = node_js["pad_type"].empty()
                                            ? op::PadType::EXPLICIT
                                            : static_cast<op::PadType>(node_js.at("pad_type"));
+                bool ceil_mode =
+                    node_js["ceil_mode"].empty() ? false : node_js.at("ceil_mode").get<bool>();
+                ;
                 node = make_shared<op::AvgPool>(args[0],
                                                 window_shape,
                                                 window_movement_strides,
                                                 padding_below,
                                                 padding_above,
                                                 include_padding_in_avg_computation,
-                                                pad_type);
+                                                pad_type,
+                                                ceil_mode);
                 break;
             }
             case OP_TYPEID::AvgPoolBackprop:
@@ -902,8 +907,13 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Divide:
             {
+                bool pythondiv = true;
+                if (node_js["pythondiv"].is_object())
+                {
+                    pythondiv = node_js.at("pythondiv").get<bool>();
+                }
                 node = make_shared<op::Divide>(
-                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
+                    args[0], args[1], pythondiv, read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Dot:
@@ -1006,9 +1016,10 @@ static shared_ptr<ngraph::Function>
                 auto type = read_element_type(node_js.at("type"));
                 auto seed = node_js.at("seed").get<unsigned int>();
                 auto probability = node_js.at("probability").get<double>();
+                bool use_seed = get_or_default<bool>(node_js, "use_seed", false);
 
-                node =
-                    make_shared<op::GenerateMask>(args[0], output_shape, type, seed, probability);
+                node = make_shared<op::GenerateMask>(
+                    args[0], output_shape, type, seed, probability, use_seed);
                 break;
             }
             case OP_TYPEID::GetOutputElement:
@@ -1066,6 +1077,31 @@ static shared_ptr<ngraph::Function>
                                                          data_dilation_strides,
                                                          groups,
                                                          pad_type);
+                break;
+            }
+            case OP_TYPEID::GroupConvolutionTranspose:
+            {
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto dilations = node_js.at("dilations").get<vector<size_t>>();
+                auto padding_begin = node_js.at("padding_begin").get<vector<ptrdiff_t>>();
+                auto padding_end = node_js.at("padding_end").get<vector<ptrdiff_t>>();
+                auto output_padding = node_js.at("output_padding").get<vector<ptrdiff_t>>();
+                auto groups = node_js.at("groups").get<size_t>();
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
+                auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
+
+                node = make_shared<op::GroupConvolutionTranspose>(args[0],
+                                                                  args[1],
+                                                                  strides,
+                                                                  dilations,
+                                                                  padding_begin,
+                                                                  padding_end,
+                                                                  output_padding,
+                                                                  groups,
+                                                                  pad_type,
+                                                                  output_shape);
                 break;
             }
             case OP_TYPEID::LeakyRelu:
@@ -1407,7 +1443,9 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Result:
             {
-                node = make_shared<op::Result>(args[0]);
+                auto needs_default_layout =
+                    get_or_default<bool>(node_js, "needs_default_layout", false);
+                node = make_shared<op::Result>(args[0], needs_default_layout);
                 break;
             }
             case OP_TYPEID::Reverse:
@@ -1600,6 +1638,10 @@ static shared_ptr<ngraph::Function>
             {
                 node->set_friendly_name(friendly_name);
             }
+            else
+            {
+                node->set_friendly_name(node_name);
+            }
             node_map[node_name] = node;
         }
         catch (...)
@@ -1777,6 +1819,10 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_above"] = tmp->get_padding_above();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         node["pad_type"] = tmp->get_pad_type();
+        if (tmp->get_ceil_mode())
+        {
+            node["ceil_mode"] = tmp->get_ceil_mode();
+        }
         break;
     }
     case OP_TYPEID::AvgPoolBackprop:
@@ -1843,7 +1889,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Constant:
     {
         auto tmp = dynamic_cast<const op::Constant*>(&n);
-        if (tmp->are_all_data_elements_bitwise_identical())
+        if (tmp->are_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
         {
             vector<string> vs;
             vs.push_back(tmp->convert_value_to_string(0));
@@ -1949,6 +1995,7 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Divide:
     {
         auto tmp = dynamic_cast<const op::Divide*>(&n);
+        node["pythondiv"] = tmp->is_pythondiv();
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["autob"] = write_auto_broadcast(tmp->get_autob());
@@ -2020,8 +2067,9 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::GenerateMask:
     {
         auto tmp = dynamic_cast<const op::GenerateMask*>(&n);
-        node["output_shape"] = tmp->get_shape();
+        node["output_shape"] = tmp->get_mask_shape();
         node["type"] = write_element_type(tmp->get_element_type());
+        node["use_seed"] = tmp->get_use_seed();
         node["seed"] = tmp->get_seed();
         node["probability"] = tmp->get_probability();
         break;
@@ -2067,6 +2115,19 @@ static json write(const Node& n, bool binary_constant_data)
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
         node["groups"] = tmp->get_groups();
         node["pad_type"] = tmp->get_pad_type();
+        break;
+    }
+    case OP_TYPEID::GroupConvolutionTranspose:
+    {
+        auto tmp = dynamic_cast<const op::GroupConvolutionTranspose*>(&n);
+        node["strides"] = tmp->get_strides();
+        node["dilations"] = tmp->get_dilations();
+        node["padding_begin"] = tmp->get_padding_begin();
+        node["padding_end"] = tmp->get_padding_end();
+        node["output_padding"] = tmp->get_output_padding();
+        node["groups"] = tmp->get_groups();
+        node["pad_type"] = tmp->get_pad_type();
+        node["output_shape"] = tmp->get_output_shape();
         break;
     }
     case OP_TYPEID::LeakyRelu: { break;
@@ -2321,7 +2382,11 @@ static json write(const Node& n, bool binary_constant_data)
         node["output_shape"] = tmp->get_output_shape();
         break;
     }
-    case OP_TYPEID::Result: { break;
+    case OP_TYPEID::Result:
+    {
+        auto tmp = dynamic_cast<const op::Result*>(&n);
+        node["needs_default_layout"] = tmp->needs_default_layout();
+        break;
     }
     case OP_TYPEID::Reverse:
     {

@@ -14,33 +14,36 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include <string>
-
-#include "ngraph/pass/pass.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/plaidml/plaidml_backend.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace hybrid
+        namespace plaidml
         {
-            namespace pass
-            {
-                class Dump;
-            }
+            class PlaidML_BackendConstructor;
         }
     }
 }
 
-class ngraph::runtime::hybrid::pass::Dump : public ngraph::pass::ModulePass
+class ngraph::runtime::plaidml::PlaidML_BackendConstructor final
+    : public runtime::BackendConstructor
 {
 public:
-    Dump(const std::string& output_file);
-
-    virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
-
-private:
-    const std::string m_output_file;
+    ~PlaidML_BackendConstructor() final {}
+    std::shared_ptr<Backend> create(const std::string& config) final;
 };
+
+std::shared_ptr<ngraph::runtime::Backend>
+    ngraph::runtime::plaidml::PlaidML_BackendConstructor::create(const std::string& config)
+{
+    return std::make_shared<PlaidML_Backend>(config);
+}
+
+extern "C" ngraph::runtime::BackendConstructor* get_backend_constructor_pointer()
+{
+    static ngraph::runtime::plaidml::PlaidML_BackendConstructor backend_constructor;
+    return &backend_constructor;
+}

@@ -110,7 +110,7 @@ TEST(reshape_sinking, broadcast_swimming)
     ASSERT_EQ(add->get_argument(1), conv);
 }
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 TEST(reshape_sinking, mnist_conv)
 {
     const string json_path = file_util::path_join(SERIALIZED_ZOO, "tf_conv_mnist_nhwc.json");

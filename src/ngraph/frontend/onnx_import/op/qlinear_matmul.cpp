@@ -14,36 +14,26 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include <exception>
-#include <functional>
-#include <sstream>
-
-#include "ngraph/pass/pass.hpp"
+#include "qlinear_matmul.hpp"
+#include "frontend/onnx_import/utils/matmul_factory.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace hybrid
+        namespace op
         {
-            namespace pass
+            namespace set_1
             {
-                class DefaultPlacement;
-            }
-        }
-    }
-}
+                NodeVector qlinear_matmul(const Node& node)
+                {
+                    auto factory = matmul::QLinearMatmulFactory(node);
+                    return factory.make_matmul_op();
+                }
+            } // namespace set_1
 
-class ngraph::runtime::hybrid::pass::DefaultPlacement : public ngraph::pass::NodePass
-{
-public:
-    DefaultPlacement(
-        const std::vector<std::shared_ptr<ngraph::runtime::Backend>>& placement_backends);
+        } //namespace op
 
-private:
-    bool run_on_node(std::shared_ptr<Node> node) override;
+    } // namespace onnx_import
 
-    std::vector<std::shared_ptr<ngraph::runtime::Backend>> m_placement_backends;
-};
+} // namespace ngraph

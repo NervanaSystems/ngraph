@@ -16,40 +16,36 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ngraph/op/op.hpp"
-#include "ngraph/runtime/backend.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace hybrid
+        namespace plaidml
         {
             namespace op
             {
-                class FunctionCall;
+                // Implements NumPy-style broadcast semantics by passing its single argument through to its
+                // output and pretending that this changes the shape.  The creator of this node is responsible
+                // for ensuring that the downstream operation will perform a NumPy-style broadcast.
+                class ImplicitBroadcast;
             }
         }
     }
 }
 
-class ngraph::runtime::hybrid::op::FunctionCall : public ngraph::op::Op
+class ngraph::runtime::plaidml::op::ImplicitBroadcast final : public ngraph::op::Op
 {
 public:
-    FunctionCall(const NodeVector& outputs,
-                 const NodeVector& inputs,
-                 const Function& function,
-                 std::shared_ptr<Backend> backend);
+    ImplicitBroadcast(std::shared_ptr<Node> input, const Shape& shape);
 
-    std::shared_ptr<Backend> get_backend() const;
-    std::shared_ptr<Executable> get_executable() const;
-    std::shared_ptr<Function> get_function() const;
+    void validate_and_infer_types() final;
+
+    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
 
 private:
-    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
-
-    const NodeVector m_function_outputs;
-    std::shared_ptr<Function> m_function;
-    std::shared_ptr<Backend> m_backend;
-    std::shared_ptr<Executable> m_executable;
+    Shape m_shape;
 };
