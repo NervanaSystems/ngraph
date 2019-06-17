@@ -45,7 +45,7 @@ namespace ngraph
             ///
             /// \param data Input tensor with data
             /// \param reduction_axes A list of axes, along which to reduce.
-            /// \param across_channels flag that denotes if mean values are shared across channels.
+            /// \param normalize_variance flag that denotes whether to perform variance normalization.
             /// \param eps the number to be added to the variance to avoid division by zero when normalizing the value
             ///
             MVN(const std::shared_ptr<ngraph::Node>& data,
