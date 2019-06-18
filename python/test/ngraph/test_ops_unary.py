@@ -85,25 +85,18 @@ def test_unary_op_scalar(ng_api_fn, numpy_fn, input_data):
     result = run_op_numeric_data(input_data, ng_api_fn)
     assert np.allclose(result, expected)
 
+@pytest.mark.parametrize('input_data', [
+    (np.array([True, False, True, False])),
+    (np.array(True)),
+    (np.array(False)),
+])
 @pytest.mark.skip_on_gpu
-def test_logical_not():
-    input_data = np.array([True, False, True, False])
+def test_logical_not(input_data):
     expected = np.logical_not(input_data)
 
-    # test for an array of boolean values
     result = run_op_node([input_data], ng.logical_not)[0]
+
     assert np.array_equal(result, expected)
     result = run_op_numeric_data(input_data, ng.logical_not)[0]
     assert np.array_equal(result, expected)
 
-    # test for a single boolean value (True)
-    result = run_op_node([True], ng.logical_not)
-    assert np.equal(result, False)
-    result = run_op_numeric_data([True], ng.logical_not)
-    assert np.equal(result, False)
-
-    # test for a single boolean value (False)
-    result = run_op_node([False], ng.logical_not)
-    assert np.equal(result, True)
-    result = run_op_numeric_data([False], ng.logical_not)
-    assert np.equal(result, True)
