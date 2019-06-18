@@ -728,9 +728,20 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
             {
                 begin_dms[i] = lb[bj];
             }
+            else if (stride_dms[i].is_dynamic())
+            {
+                begin_dms[i] = Dimension::dynamic();
+            }
+            else if (int64_t(stride_dms[i]) > 0)
+            {
+                begin_dms[i] = 0;
+            }
+            else
+            {
+                begin_dms[i] = -1;
+            }
         }
-
-        if (stride_dms[i].is_dynamic())
+        else if (stride_dms[i].is_dynamic())
         {
             begin_dms[i] = Dimension::dynamic();
         }
