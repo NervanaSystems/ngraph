@@ -26,7 +26,7 @@ deliver performance via software optimization. nGraph provides
 developers with a way to accelerate the performance of deep learning
 ASICs via software and to provide a significant increase in performance for
 standard hardware targets such as CPUs and GPUs. For deploying scalable AI
-solutions, nGraph uses kernel libraries, which is a popular method to improve deep learning performance. 
+solutions, nGraph uses kernel libraries, which is a popular method to improve deep learning performance. Where kernel libraries are available and perform well, we use them. Where they are not available or do not perform well, we can build on PlaidML.
 
 Motivations
 ===========
@@ -42,7 +42,7 @@ However, kernel libraries have three main problems:
 
 #. Kernel libraries do not support graph-level optimizations.
 #. Framework integration of kernel libraries does not scale.
-#. Many kernels are required; all require expert knowledge to create.
+#. The number of required kernels keeps growing.
 
 The nGraph Compiler addresses the first two problems, and nGraph
 combined with PlaidML addresses the third problem. nGraph applies
@@ -68,16 +68,16 @@ graph, but the choice of operations in the graph may not be optimal.
 
 .. _figure-A:
 
-.. figure:: ../graphics/intro_graph_optimization.png
+.. figure:: ../graphics/kernel-problem-1.png
    :width: 555px
    :alt: 
 
 The computation is constructed to execute ``(A+B)*C``. With nGraph, we can
 further optimize the graph to be represented as ``A*C``. From the first graph
 shown on the left, the operation on the constant ``B`` can be computed at
-compile time (known as constant folding). The graph can be further
-simplified to the one on the right because the constant has a value of
-zero (known as algebraic simplification). Without such graph-level
+compile time (an optimization known as *constant folding*). The graph can be
+further simplified to the one on the right because the constant has a value of
+zero (known as *algebraic simplification*). Without such graph-level
 optimizations, a deep learning framework with a kernel library will compute
 all operations, resulting in suboptimal execution. 
 
@@ -85,15 +85,15 @@ Problem 2: Framework integration of kernel libraries does not scale
 -------------------------------------------------------------------
 
 Due to the growing number of new deep learning accelerators, integrating
-kernel libraries with frameworks has become increasingly challenging. For each
-new deep learning accelerator, a custom kernel library integration must be
-implemented by a team of experts. This labor-intensive work is further
-complicated by the number of frameworks, as illustrated in the diagram below
-using orange lines. 
+kernel libraries with frameworks has become increasingly more difficult. For
+each new deep learning accelerator, a custom kernel library integration must
+be implemented by a team of experts. This labor-intensive work is further
+complicated by the number of frameworks, as illustrated in the following
+diagram using orange lines. 
 
 .. _figure-B:
 
-.. figure:: ../graphics/lorem-ipsum.png
+.. figure:: ../graphics/kernel-problem-2.png
    :width: 555px
    :alt: 
 
@@ -104,45 +104,45 @@ connection that needs to be made increases the amount of work, resulting in a
 fragile setup that is costly to maintain.
 
 nGraph solves this problem with bridges. A bridge takes a computational
-graph from a supported framework and reconstructs it in the nGraph IR with a
+graph or similar structure and reconstructs it in the nGraph IR along with a
 few primitive nGraph operations. With a unified computational graph, kernel
 libraries no longer need to be separately integrated into each deep learning
 framework. Instead, the libraries only need to support nGraph primitive
 operations, and this approach streamlines the integration process for the
 backend.  
 
-Problem 3: Many kernels are required; all require expert knowledge to create
+Problem 3: The number of required kernels keeps growing
 ----------------------------------------------------------------------------
-<--The number of kernels is rapidly increasing--> 
 
-As previously mentioned, kernel libraries must be integrated with multiple
-deep learning frameworks, and this already arduous task becomes even harder
-due to the greater number of kernels for achieving optimal performance. The
-number of required kernels is based on the number of chip designs, data types,
-operations, and the cardinality of each parameter per operation. In the past,
-the number of required kernels was limited but, as AI research and industry
-continue to rapidly develop, the number of required kernels is exponentially
-increasing. 
+Integrating kernel libraries with multiple deep learning frameworks is a
+difficult task that becomes more complex with the growing number of
+kernels needed to achieve optimal performance. Past deep learning research has
+been built on a small set of standard computational primitives (convolution,
+GEMM, etc.). But as AI research advances and industrial deep learning
+applications continue to develop, the number of required kernels continues to
+increase exponentially. The number of required kernels is based on the number
+of chip designs, data types, operations, and the cardinality of each parameter
+per operation. 
 
 .. _figure-C:
 
-.. figure:: ../graphics/intro_kernel_explosion.png
+.. figure:: ../graphics/kernel-problem-3.png
    :width: 555px
    :alt: 
 
    Each connection represents significant work for what will
    ultimately be a fragile setup that is costly to maintain.
 
-Integrating PlaidML with nGraph provides flexbility to support newer deep
+Integrating PlaidML with nGraph provides flexbility to support the latest deep
 learning models in the absence of hand-optimized kernels for new operations.
 PlaidML works together with nGraph to address the exponential growth of
-required kernels. It takes two inputs: the operation defined by the user and
-the machine description of the hardware target. 
+kernels. 
 
-PlaidML automatically generates kernels that are iteratively optimized through
-an IR known as `Stripe`_. Integration of PlaidML with nGraph allows users to
-choose the hardware and framework that suits their needs, resulting in freedom
-from kernel libraries. 
+PlaidML takes two inputs: the operation defined by the user and the machine
+description of the hardware target. It then automatically generates kernels
+that are iteratively optimized through an IR known as `Stripe`_. Integration of
+PlaidML with nGraph allows users to choose the hardware and framework that
+suits their needs, resulting in freedom from kernel libraries. 
 
 Solution: nGraph and PlaidML
 ============================
@@ -155,7 +155,7 @@ To address the problem of scaling backends, nGraph applies graph-level
 optimizations to deep learning computations and unifies computational graphs
 from deep learning frameworks with nGraph IR. 
 
-In conjunction with Ngraph's graph-level optimizations, PlaidML automatically
+In conjunction with nGraph's graph-level optimizations, PlaidML automatically
 applies low-level optimizations to improve deep learning performance.
 Additionally, PlaidML offers extensive support for various hardware targets
 due to its abilility to generate code in LLVM, OpenCL, OpenGL, and Metal.
