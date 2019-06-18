@@ -3635,6 +3635,14 @@ TEST(type_prop, tensor_constant_bad_count)
     }
 }
 
+TEST(type_prop, constant_zero_elements_one_string)
+{
+    auto c =
+        make_shared<op::Constant>(element::i64, Shape{2, 0, 2, 2}, std::vector<std::string>{"42"});
+    ASSERT_EQ(c->get_element_type(), element::i64);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 0, 2, 2}));
+}
+
 TEST(type_prop, replace_slice_deduce_vector)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6});
@@ -14859,6 +14867,120 @@ TEST(type_prop, split)
     EXPECT_EQ(split->output(1).get_shape(), (Shape{2, 3}));
     EXPECT_EQ(split->output(0).get_element_type(), element::i32);
     EXPECT_EQ(split->output(1).get_element_type(), element::i32);
+}
+
+TEST(type_prop, lstm_cell)
+{
+    const size_t batch_size = 2;
+    const size_t input_size = 3;
+    const size_t hidden_size = 3;
+    const size_t gates_count = 4;
+
+    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto W =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+    const auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+
+    const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+    EXPECT_EQ(lstm_cell->output(0).get_element_type(), element::f32);
+    EXPECT_EQ(lstm_cell->output(0).get_shape(), (Shape{batch_size, hidden_size}));
+    EXPECT_EQ(lstm_cell->output(1).get_element_type(), element::f32);
+    EXPECT_EQ(lstm_cell->output(1).get_shape(), (Shape{batch_size, hidden_size}));
+}
+
+TEST(type_prop, lstm_cell_invalid_input)
+{
+    const size_t batch_size = 2;
+    const size_t input_size = 3;
+    const size_t hidden_size = 3;
+    const size_t gates_count = 4;
+
+    auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+
+    // Invalid W tensor shape.
+    auto W = make_shared<op::Parameter>(element::f32, Shape{1 * hidden_size, input_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor W must have shape"));
+    }
+
+    // Invalid R tensor shape.
+    W = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+    R = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, 1});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor R must have shape"));
+    }
+
+    // Invalid H_t tensor shape.
+    R = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    H_t = make_shared<op::Parameter>(element::f32, Shape{4, hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor H_t must have shape"));
+    }
+
+    // Invalid C_t tensor shape.
+    H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    C_t = make_shared<op::Parameter>(element::f32, Shape{4, hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor C_t must have shape"));
+    }
+
+    // Invalid B tensor shape.
+    C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
+    auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size, B, P);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor B must have shape"));
+    }
+
+    // Invalid P tensor shape.
+    B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    P = make_shared<op::Parameter>(element::f32, Shape{hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size, B, P);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor P must have shape"));
+    }
 }
 
 TEST(type_prop, fake_quantize)
