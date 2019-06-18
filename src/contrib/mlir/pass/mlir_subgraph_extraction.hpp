@@ -46,12 +46,10 @@ namespace ngraph
                 MLIRSubgraph(int graph_id) : m_graph_id(graph_id) {}
                 /// Get graph id
                 int get_id() const      { return m_graph_id; }
-                /// Get all nodes in the sub-graph. Including head nodes. 
+                /// Get all nodes in the sub-graph.
                 NodeVector& get_nodes() { return m_nodes; }
                 /// Get input nodes. Predecessors to head nodes. 
                 NodeVector& get_input_nodes() { return m_input_nodes; }
-                /// Get head nodes. Nodes in the sub-graph that has at least one input from outside.
-                NodeVector& get_head_nodes()  { return m_head_nodes;  }
                 /// Checks if a node is an input node.
                 bool is_input_node(std::shared_ptr<Node> node)
                 {
@@ -59,8 +57,8 @@ namespace ngraph
                 }
                 /// Add a list of input nodes to the graph.
                 void add_inputs(NodeVector &inputs);
-                /// Add one node to the sub-graph. If is_head is true, it is added to head nodes as well.
-                void add_node(std::shared_ptr<Node> node, bool is_head = false);
+                /// Add one node to the sub-graph.
+                void add_node(std::shared_ptr<Node> node);
                 /// Merges sub-graph (other) into this sub-graph.
                 void merge(MLIRSubgraph& other);
 
@@ -71,8 +69,6 @@ namespace ngraph
                 NodeVector m_nodes;
                 // Predecessor to head nodes in the sub-graph. 
                 NodeVector m_input_nodes;
-                // Head nodes in the sub-graph (taking at least one input from outside the sub-graph)
-                NodeVector m_head_nodes;
             };
 
         public:
@@ -96,9 +92,9 @@ namespace ngraph
             {
                 m_id_to_graph.emplace(sg.get_id(), sg);
             }
-            void add_node_to_subgraph(MLIRSubgraph& sg, std::shared_ptr<Node> node, bool is_head = false)
+            void add_node_to_subgraph(MLIRSubgraph& sg, std::shared_ptr<Node> node)
             {
-                sg.add_node(node, is_head);
+                sg.add_node(node);
                 m_node_to_graph[node] = sg.get_id();
             }
             void add_inputs_to_subgraph(MLIRSubgraph& sg, NodeVector& inputs)

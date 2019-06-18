@@ -40,27 +40,10 @@ namespace ngraph
 
             const NodeVector& get_node_list() const { return m_node_list; }
             const NodeVector& get_kernel_outputs() const { return m_output_nodes; }
-            descriptor::Tensor* get_head_node_input(Node* node, int arg_no)
-            {
-                auto it = m_node_inputs_map.find(node);
-                if (it == m_node_inputs_map.end())
-                {
-                    return nullptr;
-                }
 
-                auto vector = it->second;
-                return vector[arg_no];
-            };
-            void add_head_node_input(Node* node, descriptor::Tensor* tensor)
-            {
-                m_node_inputs_map[node].push_back(tensor);
-            }
         private:
             NodeVector m_node_list;
             NodeVector m_output_nodes;
-            // Maps head nodes to their input tensor ptrs
-            // Needed because we remove all inputs to the sub-graph to make it unreachable. 
-            std::unordered_map<Node*, std::vector<descriptor::Tensor*>> m_node_inputs_map;
         };
     }
 }

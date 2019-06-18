@@ -213,12 +213,7 @@ MLIRCompiler::TensorInfo MLIRCompiler::get_tensor_value(descriptor::Tensor* tens
 MLIRCompiler::TensorInfo MLIRCompiler::get_tensor_value(Node* node, int arg_no)
 {
     descriptor::Tensor* tensor;
-    tensor = m_compiled_kernel->get_head_node_input(node, arg_no);
-    if (tensor == nullptr)
-    {
-        // Not a head node. Get input from node itself. 
-        tensor = node->get_argument(arg_no)->get_output_tensor_ptr().get();
-    }
+    tensor = node->get_argument(arg_no)->get_output_tensor_ptr().get();
     return get_tensor_value(tensor);
 }
 
