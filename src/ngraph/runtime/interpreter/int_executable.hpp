@@ -1216,6 +1216,50 @@ private:
                     args[6]->get_data_ptr<const float>(),
                     args[7]->get_data_ptr<const uint8_t>());
             }
+            else if (input_element_type == element::u8 && filter_element_type == element::i8 &&
+                     output_element_type == element::i32)
+            {
+                reference::convolution<uint8_t, int8_t, int32_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const int8_t>(),
+                    out[0]->get_data_ptr<int32_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    qc->get_window_movement_strides(),
+                    qc->get_window_dilation_strides(),
+                    qc->get_padding_below(),
+                    qc->get_padding_above(),
+                    qc->get_data_dilation_strides(),
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const int8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int32_t>());
+            }
+            else if (input_element_type == element::u8 && filter_element_type == element::u8 &&
+                     output_element_type == element::i32)
+            {
+                reference::convolution<uint8_t, uint8_t, int32_t, int32_t>(
+                    args[0]->get_data_ptr<const uint8_t>(),
+                    args[1]->get_data_ptr<const uint8_t>(),
+                    out[0]->get_data_ptr<int32_t>(),
+                    node.get_input_shape(0),
+                    node.get_input_shape(1),
+                    node.get_output_shape(0),
+                    qc->get_window_movement_strides(),
+                    qc->get_window_dilation_strides(),
+                    qc->get_padding_below(),
+                    qc->get_padding_above(),
+                    qc->get_data_dilation_strides(),
+                    args[2]->get_data_ptr<const float>(),
+                    args[3]->get_data_ptr<const uint8_t>(),
+                    args[4]->get_data_ptr<const float>(),
+                    args[5]->get_data_ptr<const uint8_t>(),
+                    args[6]->get_data_ptr<const float>(),
+                    args[7]->get_data_ptr<const int32_t>());
+            }
             else
             {
                 std::stringstream ss;
