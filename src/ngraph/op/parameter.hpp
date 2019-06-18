@@ -42,8 +42,7 @@ namespace ngraph
             /// \param cacheable True if the parameter is not expected to be frequently updated.
             Parameter(const ngraph::element::Type& element_type,
                       const PartialShape& pshape,
-                      const bool cacheable = false,
-                      bool can_double_buffer = false);
+                      const bool cacheable = false);
 
             void validate_and_infer_types() override;
 
@@ -53,13 +52,12 @@ namespace ngraph
 
             bool is_relevant_to_shapes() const;
             void set_is_relevant_to_shapes(bool is_relevant);
-            bool get_can_double_buffer() const { return m_can_double_buffer; }
+
         protected:
             bool m_cacheable;
             PartialShape m_partial_shape;
             element::Type m_element_type;
             bool m_is_relevant_to_shapes;
-            bool m_can_double_buffer;
         };
     }
     using ParameterVector = std::vector<std::shared_ptr<op::Parameter>>;
