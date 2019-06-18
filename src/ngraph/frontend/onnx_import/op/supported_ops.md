@@ -52,12 +52,14 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | GlobalMaxPool | 1- | 
 | Greater | 1-7-9 | 
 | HardSigmoid | 1-6- | 
-| Identity | 1- | 
+| Identity | 1- |
+| InstanceNormalization | 1- | 
 | LRN | 1- | 
 | LeakyRelu | 1-6- |  
 | Less | 1-7-9 |
 | Log | 1-6- | 
 | LogSoftmax | 1- | 
+| LpNormalization | 1- |
 | MatMul | 1-9 | 
 | Max | 1-6-8- | 
 | MaxPool | 1-8- | 
@@ -153,8 +155,4 @@ opset versions starting from `1` to `6` and to the latest opset version.
 |------|-----------------|--------|--------|---------|
 | Add, Sub, Mul, Div | 1-6 | | | We currently don't support legacy broadcasting rules for binary ops. |
 | Cast | 1-6- | | 427 | Errors while casting to bool |
-| EyeLike | (9) | | 439 | Make constant node. |
 | Hardmax | - | | 431 | Use make constant and Argmax. See `test_ops_unary.py::test_hardmax()` |
-| LpNormalization | - | | 436 | Just an equation. Only Lp{1,2} need to be supported. |
-| InstanceNormalization | - | | 436 | Just an equation. For per channel computation may _slice/op/concat_ pattern need to be used. |
-| Shrink | (9) | | 449 | Just an easy equation. |
