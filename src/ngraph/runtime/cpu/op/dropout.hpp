@@ -14,18 +14,30 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
-#include <memory>
+#pragma once
 
-#include "ngraph/function.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/pass/manager_state.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/util.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-const vector<shared_ptr<Function>>& pass::ManagerState::get_functions()
+namespace ngraph
 {
-    return m_function_list;
+    namespace op
+    {
+        class Dropout : public Op
+        {
+        public:
+            Dropout(const std::shared_ptr<Node>& input,
+                    const std::shared_ptr<Node>& gm_const,
+                    const std::shared_ptr<Node>& use_seed,
+                    const std::shared_ptr<Node>& seed,
+                    const std::shared_ptr<Node>& keep_prob); // keep_prob = 1 - dropout_prob
+
+            bool get_use_seed() const;
+            uint64_t get_seed() const;
+            double get_keep_prob() const;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        };
+    }
 }

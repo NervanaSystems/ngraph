@@ -29,11 +29,21 @@ namespace ngraph
         class Product : public util::ArithmeticReduction
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a product reduction operation.
+            Product();
             /// \brief Constructs a product reduction operation.
             ///
             /// \param arg The tensor to be reduced.
             /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Product(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            Product(const Output<Node>& arg, const AxisSet& reduction_axes);
+            /// \brief Constructs a product reduction operation.
+            ///
+            /// \param arg The tensor to be reduced.
+            /// \param reduction_axes The axis positions (0-based) to be eliminated.
+            Product(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
             /// \return The default value for Product.
             virtual std::shared_ptr<Node> get_default_value() const override
