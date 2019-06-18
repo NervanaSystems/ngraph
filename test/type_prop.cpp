@@ -10028,6 +10028,7 @@ TEST(type_prop, topk_rank_dynamic_ok)
     ASSERT_TRUE(topk->get_output_element_type(1) == element::f32);
     ASSERT_TRUE(topk->get_output_partial_shape(0).rank().is_dynamic());
     ASSERT_TRUE(topk->get_output_partial_shape(1).rank().is_dynamic());
+    ASSERT_TRUE(topk->get_sort_type() == op::TopK::SortType::NONE);
 }
 
 TEST(type_prop, topk_rank_dynamic_result_et_dynamic)
