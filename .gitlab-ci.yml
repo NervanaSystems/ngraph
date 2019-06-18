@@ -14,7 +14,7 @@ pages:
   - apk --no-cache add bash
   - cd doc/sphinx
   - make html
-  - mv build/html/ /public/
+  - mv build/html/ ../../public/
   artifacts:
     paths:
     - public
