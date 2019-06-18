@@ -340,33 +340,24 @@ static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, s
     cpio::Writer writer(out);
     writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
 
-    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
-        traverse_nodes(const_cast<Function*>(f.get()),
-                       [&](shared_ptr<Node> node) {
-                           if (auto c = dynamic_pointer_cast<op::Constant>(node))
-                           {
-                               uint32_t size =
-                                   static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
-                                                         c->get_output_element_type(0).size());
-                               writer.write(c->get_name(), c->get_data_ptr(), size);
-                           }
-                       },
-                       true);
-    });
+    traverse_nodes(const_cast<Function*>(func.get()),
+                   [&](shared_ptr<Node> node) {
+                       if (auto c = dynamic_pointer_cast<op::Constant>(node))
+                       {
+                           uint32_t size =
+                               static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
+                                                     c->get_output_element_type(0).size());
+                           writer.write(c->get_name(), c->get_data_ptr(), size);
+                       }
+                   },
+                   true);
 }
 #endif
 
 static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {
     json j;
-    vector<json> functions;
-    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
-        functions.push_back(write(*f, binary_constant_data));
-    });
-    for (auto it = functions.rbegin(); it != functions.rend(); it++)
-    {
-        j.push_back(*it);
-    }
+    j.push_back(write(*func, binary_constant_data));
 
     string rc;
     if (indent == 0)
