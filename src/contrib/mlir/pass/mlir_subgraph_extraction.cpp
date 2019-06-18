@@ -31,7 +31,7 @@ using namespace ngraph::pass;
 
 void MLIRSubgraphExtractionPass::MLIRSubgraph::add_inputs(NodeVector &inputs)
 {
-
+    // inputs list are not exclusive, avoid duplication
     for (NodeVector::iterator it = inputs.begin(); it != inputs.end(); it++)
     {
         std::shared_ptr<Node> node = *it;
@@ -42,18 +42,26 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::add_inputs(NodeVector &inputs)
     }
 }
 
-void MLIRSubgraphExtractionPass::MLIRSubgraph::add_node(std::shared_ptr<Node> node)
+void MLIRSubgraphExtractionPass::MLIRSubgraph::add_node(std::shared_ptr<Node> node, bool is_head)
 {
+    NGRAPH_CHECK(std::find(m_nodes.begin(), m_nodes.end(), node) == m_nodes.end(), "node added to graph before");
     m_nodes.push_back(node);
+    if (is_head) 
+    {
+        NGRAPH_CHECK(std::find(m_head_nodes.begin(), m_head_nodes.end(), node) == m_head_nodes.end(), "head node added to graph before");
+        m_head_nodes.push_back(node);
+    }
+
 }
 
 void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& other)
 {
-    // nodes of sub-graphs are unique
+    // nodes and head nodes of sub-graphs are exclusive
     m_nodes.insert(m_nodes.end(), other.get_nodes().begin(), other.get_nodes().end());
+    m_head_nodes.insert(m_head_nodes.end(), other.get_head_nodes().begin(), other.get_head_nodes().end());
+    // merge inputs
     add_inputs(other.get_input_nodes());
 }
-
 
 bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 {
@@ -61,6 +69,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     {
         NodeVector inputs;
         int graph_id = -1;
+        bool is_head = false;
         // unsupported ops, skip
         if (!is_supported_mlir_op(op))
         {
@@ -82,6 +91,8 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
             {
                 // predecessor doesn't belong to any sub-graph, it is an input
                 inputs.push_back(pred);
+                // this makes the current node a head node (taking input from outside the graph)
+                is_head = true;
             } else 
             {
                 // we have a predecessor in a sub-graph
@@ -95,7 +106,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
                     // merge this sub-graph into first one
                     MLIRSubgraph& first_sub_graph = get_subgraph(graph_id);
                     MLIRSubgraph& pred_sub_graph = get_subgraph(pred_graph_id);
-                    first_sub_graph.merge(pred_sub_graph);
+                    merge_subgraphs(first_sub_graph, pred_sub_graph);
                 }
             }
         }
@@ -104,18 +115,17 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
             // we couldn't find a previous sub-graph to extend with this node
             // create a new one
             MLIRSubgraph sg;
-            sg.add_inputs(inputs);
-            sg.add_node(op);
+            add_inputs_to_subgraph(sg, inputs);
+            add_node_to_subgraph(sg, op, is_head);
             add_subgraph(sg);
         } 
         else
         {
             // we have a sub-graph. Update it with current node.
             MLIRSubgraph &sg = get_subgraph(graph_id);
-            sg.add_node(op);
-            sg.add_inputs(inputs);
+            add_node_to_subgraph(sg, op, is_head);
+            add_inputs_to_subgraph(sg, inputs);
         }
-        
     }
 
     // attach CK node to each sub-graph.
@@ -143,8 +153,41 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
                 in_desc->replace_output(ck, i);
             }
         }
-
+        // remove all input edges to the sub-graph
+        for (auto head : sg.get_head_nodes())
+        {
+            for (descriptor::Input& input : head->get_inputs())
+            {
+                if (sg.is_input_node(input.get_output().get_node()))
+                {
+                    ck->add_head_node_input(head.get(), &input.get_tensor());
+                    input.remove_output();
+                }
+            }
+        }
         #if 0
+// remove input edges to sub-graph
+        for (auto arg : sg.get_input_nodes())
+        {
+            // Find edges from input nodes that go into the sub-graph. Replace them with CK output.
+            for (auto output : arg->outputs())
+            {
+                // make a copy since modifying the inputs list will corrupt the container iterator
+                auto inputs = output.get_target_inputs();
+                // all inputs that this output feeds
+                for (auto use : inputs)
+                {
+                    if (std::find(nodes_list.begin(), nodes_list.end(), use.get_node()->shared_from_this()) != nodes_list.end())
+                    {
+                        // find uses inside the sub-graph. Replace source with corresponding output of CK
+                        output.remove_target_input(use);
+                    }
+                }
+            }
+        }
+        
+
+
         // Replace input edges to sub-graph with output of CK instead. 
         // This ensures the sub-graph is unreachable from the rest of the graph
         unsigned i = 0;
@@ -188,54 +231,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         }
 
         #endif
-    #if 0
-    // Create a CompiledKernel for all the ops in the function, except Parameters and Results.
-    NodeVector ck_ops;
-    for (auto op : func->get_ordered_ops())
-    {
-        // All ops must be supported by MLIR compiler
-        if (!is_supported_mlir_op(op))
-        {
-            return false;
-        }
-
-        if (TI(Parameter) != TI(*op) && TI(Result) != TI(*op))
-        {
-            ck_ops.push_back(op);
-        }
-    }
-
-    NodeVector ck_args;
-    for (auto& param : func->get_parameters())
-    {
-        ck_args.push_back(param);
-    }
-
-    NodeVector ck_outputs = std::move(get_subgraph_outputs(ck_ops, {} /*exclusions*/));
-    if (ck_outputs.size() != 1)
-    {
-        return false;
-    }
-
-    auto ck = std::make_shared<CompiledKernel>(ck_ops, ck_outputs, ck_args);
-
-    // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
-    // nodes.
-    for (size_t i = 0, end = ck_outputs.size(); i < end; ++i)
-    {
-        auto& output_descs = ck_outputs[i]->get_outputs();
-        NGRAPH_CHECK(output_descs.size() == 1, "Unexpected multiple output descriptors");
-        auto& out_desc = output_descs[0];
-
-        // 'replace_output' invalidates iterator of the original container. Use a copy instead.
-        const std::set<descriptor::Input*> input_descs = out_desc.get_inputs();
-
-        for (descriptor::Input* in_desc : input_descs)
-        {
-            in_desc->replace_output(ck, i);
-        }
-    }
-#endif
+ 
     return true;
 }
 

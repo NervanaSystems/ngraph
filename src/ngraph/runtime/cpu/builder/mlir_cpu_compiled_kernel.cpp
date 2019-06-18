@@ -67,9 +67,9 @@ namespace ngraph
                     }
 
                     // Compile nodes within the CompiledKernel op.
-                    auto* compiled_kernel = static_cast<const CompiledKernel*>(node);
+                    const CompiledKernel* compiled_kernel = static_cast<const CompiledKernel*>(node);
 
-                    MLIRCompiler mlir_compiler(compiled_kernel, ptr_args);
+                    MLIRCompiler mlir_compiler(const_cast<CompiledKernel*>(compiled_kernel), ptr_args);
                     // TODO: Decouple 'compile' and 'run' APIs. We want to be able to run the same
                     // jitted code on different arguments.
                     mlir_compiler.compile_and_run();
