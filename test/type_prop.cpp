@@ -15335,67 +15335,6 @@ TEST(type_prop, quantized_conv_filter_zero_point_type_mismatch_fails)
     }
 }
 
-/*
-TEST(type_prop, quantized_conv_output_zero_point_type_mismatch_fails)
-{
-    auto strides = Strides{1, 1};
-    auto dilation = Strides{1, 1};
-    auto padding_below = CoordinateDiff{1, 1};
-    auto padding_above = CoordinateDiff{1, 1};
-    element::Type f32 = element::f32;
-    element::Type i8 = element::i8;
-    element::Type u8 = element::u8;
-    element::Type input_type = u8;
-    element::Type filter_type = i8;
-    element::Type output_type = i8;
-    element::Type scale_type = f32;
-    element::Type input_zero_point_type = u8;
-    element::Type filter_zero_point_type = i8;
-    element::Type output_zero_point_type = u8;
-    Shape output_shape{64, 64, 220, 220};
-    AxisSet axes{};
-
-    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
-    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
-    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
-    auto input_zero_point = make_shared<op::Parameter>(input_zero_point_type, Shape{});
-    auto filter_zero_point = make_shared<op::Parameter>(filter_zero_point_type, Shape{});
-    auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{});
-    try
-    {
-        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
-                                                                filter,
-                                                                strides,
-                                                                dilation,
-                                                                padding_below,
-                                                                padding_above,
-                                                                dilation,
-                                                                scale,
-                                                                input_zero_point,
-                                                                scale,
-                                                                filter_zero_point,
-                                                                scale,
-                                                                output_zero_point,
-                                                                output_type,
-                                                                axes,
-                                                                axes,
-                                                                axes);
-        FAIL() << "Attempt to use zero point type different from output type not detected";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Output Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
-            "match output element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
-*/
-
 TEST(type_prop, quantized_conv_non_scalar_input_zero_point_fails)
 {
     auto strides = Strides{1, 1};
