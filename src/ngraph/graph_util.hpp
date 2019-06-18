@@ -70,8 +70,12 @@ namespace ngraph
                         bool include_control_deps,
                         const NodeVector& subgraph_params = {});
 
-    void traverse_functions(std::shared_ptr<Function> p,
-                            std::function<void(std::shared_ptr<Function>)> f);
+    inline void traverse_functions(std::shared_ptr<Function> p,
+                                   std::function<void(std::shared_ptr<Function>)> f)
+        NGRAPH_DEPRECATED("Replace with f(p)")
+    {
+        f(p);
+    };
 
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 

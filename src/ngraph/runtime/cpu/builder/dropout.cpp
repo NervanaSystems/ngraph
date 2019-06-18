@@ -38,13 +38,13 @@ namespace ngraph
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto arg4_buffer_index = external_function->get_buffer_index(args[4].get_name());
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto out1_buffer_index = external_function->get_buffer_index(out[1].get_name());
 
                 size_t element_count = out[0].get_size();
 
                 bool use_seed = drop->get_use_seed();
-                double keep_prob = drop->get_keep_prob();
 
                 // Note: for performance optimization in addition to parallel RNG with multiple,
                 // threads, we create, initialize and advance each msr here in builder instead of
@@ -56,7 +56,7 @@ namespace ngraph
                 std::vector<std::minstd_rand> vmsr(nthr);
                 if (use_seed)
                 {
-                    uint32_t seed = drop->get_seed();
+                    uint64_t seed = drop->get_seed();
                     for (size_t i = 0; i < nthr; i++)
                     {
                         std::minstd_rand msr;
@@ -72,13 +72,15 @@ namespace ngraph
                                element_count,
                                arg_buffer_index,
                                arg1_buffer_index,
+                               arg4_buffer_index,
                                out0_buffer_index,
                                out1_buffer_index,
-                               keep_prob,
                                vmsr,
                                use_seed](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         bool training = static_cast<bool>(
                             static_cast<float*>(ctx->buffer_data[arg1_buffer_index])[0]);
+                        double keep_prob =
+                            static_cast<double*>(ctx->buffer_data[arg4_buffer_index])[0];
                         runtime::cpu::kernel::generate_dropout(
                             static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
                             static_cast<float*>(ctx->buffer_data[out0_buffer_index]),
@@ -96,13 +98,15 @@ namespace ngraph
                                element_count,
                                arg_buffer_index,
                                arg1_buffer_index,
+                               arg4_buffer_index,
                                out0_buffer_index,
                                out1_buffer_index,
-                               keep_prob,
                                vmsr,
                                use_seed](CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         bool training = static_cast<bool>(
                             static_cast<double*>(ctx->buffer_data[arg1_buffer_index])[0]);
+                        double keep_prob =
+                            static_cast<double*>(ctx->buffer_data[arg4_buffer_index])[0];
                         runtime::cpu::kernel::generate_dropout(
                             static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
                             static_cast<double*>(ctx->buffer_data[out0_buffer_index]),
