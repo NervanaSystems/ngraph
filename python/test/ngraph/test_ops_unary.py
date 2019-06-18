@@ -85,7 +85,7 @@ def test_unary_op_scalar(ng_api_fn, numpy_fn, input_data):
     result = run_op_numeric_data(input_data, ng_api_fn)
     assert np.allclose(result, expected)
 
-    
+
 @pytest.mark.parametrize('input_data', [
     (np.array([True, False, True, False])),
     (np.array(True)),
