@@ -690,7 +690,7 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
     int ej = 0;
     int sj = 0;
 
-    for (int i; i < max_dims; i++)
+    for (int i = 0; i < max_dims; i++)
     {
         if (i >= ellipsis_pos1 && i < ellipsis_pos2)
         {
