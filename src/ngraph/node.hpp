@@ -323,8 +323,6 @@ namespace ngraph
         // Will be replaced with an OutputVector version
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
-        virtual std::vector<std::shared_ptr<Function>> get_functions() const;
-
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
 

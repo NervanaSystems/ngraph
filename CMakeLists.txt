@@ -301,6 +301,7 @@ if (LINUX)
     else()
         set(CMAKE_INSTALL_RPATH "$ORIGIN")
     endif()
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 

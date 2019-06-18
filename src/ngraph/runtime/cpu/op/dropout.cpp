@@ -26,11 +26,9 @@ using namespace ngraph;
 op::Dropout::Dropout(const std::shared_ptr<Node>& input,
                      const std::shared_ptr<Node>& gm_const,
                      const std::shared_ptr<Node>& use_seed,
-                     const uint32_t seed,
-                     const double keep_prob)
-    : Op("Dropout", check_single_output_args({input, gm_const, use_seed}))
-    , m_seed(seed)
-    , m_keep_prob(keep_prob)
+                     const std::shared_ptr<Node>& seed,
+                     const std::shared_ptr<Node>& keep_prob)
+    : Op("Dropout", check_single_output_args({input, gm_const, use_seed, seed, keep_prob}))
 {
     constructor_validate_and_infer_types();
 
@@ -41,13 +39,13 @@ op::Dropout::Dropout(const std::shared_ptr<Node>& input,
 
 shared_ptr<Node> op::Dropout::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 3)
+    if (new_args.size() != 5)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
 
     return make_shared<Dropout>(
-        new_args.at(0), new_args.at(1), new_args.at(2), m_seed, m_keep_prob);
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4));
 }
 
 bool op::Dropout::get_use_seed() const
@@ -59,4 +57,15 @@ bool op::Dropout::get_use_seed() const
         use_seed = static_cast<const bool>(*use_seed_ptr);
     }
     return use_seed;
+}
+
+uint64_t op::Dropout::get_seed() const
+{
+    uint64_t seed = 0;
+    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(3)))
+    {
+        auto seed_ptr = static_cast<const uint64_t*>(const_op->get_data_ptr());
+        seed = *seed_ptr;
+    }
+    return seed;
 }
