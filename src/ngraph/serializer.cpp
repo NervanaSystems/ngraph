@@ -16,6 +16,8 @@
 
 #include <fstream>
 #include <functional>
+#include <queue>
+#include <stack>
 
 #include "ngraph/cpio.hpp"
 #include "ngraph/file_util.hpp"
@@ -197,8 +199,40 @@ static std::shared_ptr<ngraph::Function>
                   std::unordered_map<std::string, std::shared_ptr<Function>>&,
                   function<const_data_callback_t>);
 
-static json write(const ngraph::Function&, bool binary_constant_data);
-static json write(const ngraph::Node&, bool binary_constant_data);
+class Serializer
+{
+public:
+    void set_indent(size_t indent) { m_indent = indent; }
+    void set_serialize_output_shapes(bool serialize_output_shapes)
+    {
+        m_serialize_output_shapes = serialize_output_shapes;
+    }
+
+    void set_binary_constant_data(bool binary_constant_data)
+    {
+        m_binary_constant_data = binary_constant_data;
+    }
+
+    virtual ~Serializer() {}
+protected:
+    size_t m_indent{0};
+    bool m_serialize_output_shapes{false};
+    bool m_binary_constant_data{false};
+};
+
+class JSONSerializer : public Serializer
+{
+public:
+    void serialize_function(json& j, const Function& function);
+    void serialize_node_reference(json& j, const Node& node);
+    void serialize_node(json& j, const Node& node);
+
+protected:
+    json m_json_nodes;
+    set<const Node*> m_nodes_serialized;
+    queue<const Node*> m_nodes_to_serialize;
+};
+
 static string
     serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
 
@@ -356,8 +390,16 @@ static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, s
 
 static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {
+    JSONSerializer serializer;
+    serializer.set_binary_constant_data(binary_constant_data);
+    serializer.set_indent(indent);
+    serializer.set_serialize_output_shapes(s_serialize_output_shapes_enabled);
+
+    json function_json;
+    serializer.serialize_function(function_json, *func);
+
     json j;
-    j.push_back(write(*func, binary_constant_data));
+    j.push_back(function_json);
 
     string rc;
     if (indent == 0)
@@ -450,33 +492,27 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
     return rc;
 }
 
-static json write(const Function& f, bool binary_constant_data)
+void JSONSerializer::serialize_function(json& function, const Function& f)
 {
-    json function;
     function["name"] = f.get_name();
 
     vector<string> parameter_list;
     for (auto param : f.get_parameters())
     {
-        parameter_list.push_back(param->get_name());
+        json j;
+        serialize_node_reference(j, *param);
+        parameter_list.push_back(j);
     }
     function["parameters"] = parameter_list;
 
     // TODO Functions can return multiple results
     for (size_t i = 0; i < f.get_output_size(); ++i)
     {
-        function["result"].push_back(f.get_output_op(i)->get_name());
+        json j;
+        serialize_node_reference(j, *f.get_output_op(i));
+        function["result"].push_back(j);
     }
-
-    Function* pf = const_cast<Function*>(&f);
-    json nodes;
-    for (shared_ptr<Node> node : pf->get_ordered_ops(true))
-    {
-        nodes.push_back(write(*node, binary_constant_data));
-    }
-
-    function["ops"] = nodes;
-    return function;
+    function["ops"] = m_json_nodes;
 }
 
 template <typename T>
@@ -1688,9 +1724,37 @@ static shared_ptr<ngraph::Function>
     return rc;
 }
 
-static json write(const Node& n, bool binary_constant_data)
+void JSONSerializer::serialize_node_reference(json& node, const Node& n)
 {
-    json node;
+    node = n.get_name();
+    if (m_nodes_serialized.count(&n) == 1)
+    {
+        return;
+    }
+    m_nodes_to_serialize.push(&n);
+    if (m_nodes_to_serialize.size() == 1)
+    {
+        // Nothing in the queue
+        stack<json> serialized_nodes;
+        while (!m_nodes_to_serialize.empty())
+        {
+            const Node* next_node = m_nodes_to_serialize.front();
+            m_nodes_to_serialize.pop();
+            json new_node;
+            serialize_node(new_node, *next_node);
+            serialized_nodes.push(new_node);
+        }
+        while (serialized_nodes.size() > 0)
+        {
+            m_json_nodes.push_back(serialized_nodes.top());
+            serialized_nodes.pop();
+        }
+    }
+}
+
+void JSONSerializer::serialize_node(json& node, const Node& n)
+{
+    m_nodes_serialized.insert(&n);
     node["name"] = n.get_name();
     if (n.get_name() != n.get_friendly_name())
     {
@@ -1704,11 +1768,15 @@ static json write(const Node& n, bool binary_constant_data)
 
     for (auto& input : n.inputs())
     {
-        inputs.push_back(input.get_source_output().get_node()->get_name());
+        json j;
+        serialize_node_reference(j, *input.get_source_output().get_node());
+        inputs.push_back(j);
     }
     for (auto cdep : n.get_control_dependencies())
     {
-        control_deps.push_back(cdep->get_name());
+        json j;
+        serialize_node_reference(j, *cdep);
+        control_deps.push_back(j);
     }
     for (auto& output : n.outputs())
     {
@@ -2503,6 +2571,4 @@ static json write(const Node& n, bool binary_constant_data)
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
 #endif
-
-    return node;
 }
