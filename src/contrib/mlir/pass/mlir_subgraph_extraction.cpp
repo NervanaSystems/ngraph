@@ -125,6 +125,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         MLIRSubgraph sg = it.second;
         NodeVector outputs = std::move(get_subgraph_outputs(sg.get_nodes(), {} /*exclusions*/));
         auto ck = std::make_shared<CompiledKernel>(sg.get_nodes(), outputs, sg.get_input_nodes());
+        NodeVector& nodes_list = sg.get_nodes();
 
         // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
         // nodes.
@@ -142,7 +143,51 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
                 in_desc->replace_output(ck, i);
             }
         }
+
+        #if 0
+        // Replace input edges to sub-graph with output of CK instead. 
+        // This ensures the sub-graph is unreachable from the rest of the graph
+        unsigned i = 0;
+        for (auto arg : sg.get_input_nodes())
+        {
+            // Find edges from input nodes that go into the sub-graph. Replace them with CK output.
+            for (auto output : arg->outputs())
+            {
+                // make a copy since modifying the inputs list will corrupt the container iterator
+                auto inputs = output.get_target_inputs();
+                // all inputs that this output feeds
+                for (auto use : inputs)
+                {
+                    if (std::find(nodes_list.begin(), nodes_list.end(), use.get_node()->shared_from_this()) != nodes_list.end())
+                    {
+                        // find uses inside the sub-graph. Replace source with corresponding output of CK
+                        use.replace_source_output(ck->output(i));
+                    }
+                }
+            }
+            i++;
+        }
+        #endif
     }
+#if 0
+        // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
+        // nodes.
+        for (size_t i = 0, end = outputs.size(); i < end; ++i)
+        {
+            auto& output_descs = outputs[i]->get_outputs();
+            NGRAPH_CHECK(output_descs.size() == 1, "Unexpected multiple output descriptors");
+            auto& out_desc = output_descs[0];
+
+            // 'replace_output' invalidates iterator of the original container. Use a copy instead.
+            const std::set<descriptor::Input*> input_descs = out_desc.get_inputs();
+
+            for (descriptor::Input* in_desc : input_descs)
+            {
+                in_desc->replace_output(ck, i);
+            }
+        }
+
+        #endif
     #if 0
     // Create a CompiledKernel for all the ops in the function, except Parameters and Results.
     NodeVector ck_ops;

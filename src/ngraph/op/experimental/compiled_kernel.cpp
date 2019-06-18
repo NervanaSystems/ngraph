@@ -67,39 +67,26 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {
-
     constructor_validate_and_infer_types();
+    set_output_size(m_output_nodes.size());
 
-    set_output_size(args.size());
-    std::vector<Node*> raw_node_list;
-    for (auto node : node_list)
+    auto ref = node_list.at(0);
+    for (auto n : node_list)
     {
-        raw_node_list.push_back(node.get());
-    }
-    // Replace input edges to sub-graph with output of CK instead. 
-    // This ensures the sub-graph is unreachable from the rest of the graph
-    unsigned i = 0;
-    for (auto arg : args)
-    {
-        // CK output is identical to corresponding input to sub-graph
-        set_output_type(i, arg->get_element_type(), arg->get_shape());
-        
-        // Find edges from input nodes that go into the sub-graph. Replace them with CK output.
-        for (auto output : arg->outputs())
+        if (n->get_shape() != ref->get_shape() || n->get_element_type() != ref->get_element_type())
         {
-            // make a copy since modifying the inputs list will corrupt the container iterator
-            auto inputs = output.get_target_inputs();
-            // all inputs that this output feeds
-            for (auto use : inputs)
-            {
-                if (std::find(raw_node_list.begin(), raw_node_list.end(), use.get_node()) != raw_node_list.end())
-                {
-                    // find uses inside the sub-graph. Replace source with corresponding output of CK
-                    use.replace_source_output(this->output(i));
-                }
-            }
+            throw ngraph_error("types and shapes of the nodes in node_list are different");
         }
-        i++;
     }
 
+    for (size_t i = 0; i < outputs.size(); ++i)
+    {
+        auto& o = outputs.at(i);
+
+        if (std::find(node_list.begin(), node_list.end(), o) == node_list.end())
+        {
+            throw ngraph_error(o->get_name() + " isn't in node_list");
+        }
+        set_output_type(i, o->get_element_type(), o->get_shape());
+    }
 }
