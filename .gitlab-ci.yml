@@ -11,6 +11,7 @@ pages:
   - apk --no-cache add ttf-dejavu 
   - apk --no-cache add openjdk8-jre
   - apk --no-cache add py-numpy
+  - apk --no-cache add bash
   - cd doc/sphinx
   - make html
   - mv build/html/ public/
