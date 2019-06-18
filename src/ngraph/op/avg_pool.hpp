@@ -148,7 +148,7 @@ namespace ngraph
             const Shape& get_padding_above() const;
             void set_padding_above(const Shape& padding_above);
             bool get_include_padding_in_avg_computation() const;
-            void get_include_padding_in_avg_computation(bool include_padding_in_avg_computation);
+            void set_include_padding_in_avg_computation(bool include_padding_in_avg_computation);
             /// \return The pad type for pooling.
             const PadType& get_pad_type() const;
             void set_pad_type(const PadType& pad_type);
