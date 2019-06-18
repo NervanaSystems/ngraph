@@ -144,31 +144,6 @@ void op::QuantizedConvolution::validate_and_infer_types()
     const PartialShape& input_shape = get_input_partial_shape(0);
     const PartialShape& filters_shape = get_input_partial_shape(1);
 
-    if (m_data_dilation_strides.size() == 0)
-    {
-        m_data_dilation_strides = conv_default_strides(this, input_shape, filters_shape);
-    }
-
-    if (m_window_movement_strides.size() == 0)
-    {
-        m_window_movement_strides = conv_default_strides(this, input_shape, filters_shape);
-    }
-
-    if (m_window_dilation_strides.size() == 0)
-    {
-        m_window_dilation_strides = conv_default_strides(this, input_shape, filters_shape);
-    }
-
-    if (m_padding_below.size() == 0)
-    {
-        m_padding_below = conv_default_padding(this, input_shape, filters_shape);
-    }
-
-    if (m_padding_above.size() == 0)
-    {
-        m_padding_above = conv_default_padding(this, input_shape, filters_shape);
-    }
-
     PartialShape result_shape;
 
     result_shape = infer_convolution_forward(this,
