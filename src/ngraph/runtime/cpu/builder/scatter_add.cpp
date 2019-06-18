@@ -46,7 +46,9 @@ namespace ngraph
                 }
 
                 if (args[0].get_element_type() != element::f64 &&
-                    args[0].get_element_type() != element::f32)
+                    args[0].get_element_type() != element::f32 &&
+                    args[0].get_element_type() != element::u8 &&
+                    args[0].get_element_type() != element::i8)
                 {
                     throw ngraph_error("Unsupported type in CPU Builder for ScatterAdd");
                 }

@@ -1832,10 +1832,10 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                if ((args[0].get_element_type() == element::f64 ||
-                     args[0].get_element_type() == element::f32 ||
-                     args[0].get_element_type() == element::u8) &&
-                    gather->get_axis() == 0)
+                if (args[0].get_element_type() == element::f64 ||
+                    args[0].get_element_type() == element::f32 ||
+                    args[0].get_element_type() == element::u8 ||
+                    args[0].get_element_type() == element::i8)
                 {
                     writer << "cpu::kernel::gather<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
@@ -1896,7 +1896,9 @@ namespace ngraph
 
                 writer.block_begin();
                 if (args[0].get_element_type() == element::f64 ||
-                    args[0].get_element_type() == element::f32)
+                    args[0].get_element_type() == element::f32 ||
+                    args[0].get_element_type() == element::u8 ||
+                    args[0].get_element_type() == element::i8)
                 {
                     writer << "cpu::kernel::scatter_add<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "

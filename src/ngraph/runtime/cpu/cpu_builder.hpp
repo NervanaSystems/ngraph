@@ -270,6 +270,10 @@
     {                                                                                              \
         SELECT_2RANKS(KV, uint8_t, R1, R2, K);                                                     \
     }                                                                                              \
+    else if (ET == element::i8)                                                                    \
+    {                                                                                              \
+        SELECT_2RANKS(KV, int8_t, R1, R2, K);                                                      \
+    }                                                                                              \
     else                                                                                           \
     {                                                                                              \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
