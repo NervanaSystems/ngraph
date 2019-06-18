@@ -194,12 +194,7 @@ T get_or_default(nlohmann::json& j, const std::string& key, const T& default_val
     return j.count(key) != 0 ? j.at(key).get<T>() : default_value;
 }
 
-static std::shared_ptr<ngraph::Function>
-    read_function(const json&,
-                  std::unordered_map<std::string, std::shared_ptr<Function>>&,
-                  function<const_data_callback_t>);
-
-class Serializer
+class JSONSerializer
 {
 public:
     void set_indent(size_t indent) { m_indent = indent; }
@@ -213,24 +208,35 @@ public:
         m_binary_constant_data = binary_constant_data;
     }
 
-    virtual ~Serializer() {}
+    json serialize_function(Function& function);
+    json serialize_node_reference(Node& node);
+    json serialize_node(Node& node);
+
 protected:
     size_t m_indent{0};
     bool m_serialize_output_shapes{false};
     bool m_binary_constant_data{false};
+    json m_json_nodes;
+    set<Node*> m_nodes_serialized;
+    queue<Node*> m_nodes_to_serialize;
 };
 
-class JSONSerializer : public Serializer
+class JSONDeserializer
 {
 public:
-    void serialize_function(json& j, const Function& function);
-    void serialize_node_reference(json& j, const Node& node);
-    void serialize_node(json& j, const Node& node);
+    void set_const_data_callback(function<const_data_callback_t> const_data_callback)
+    {
+        m_const_data_callback = const_data_callback;
+    }
+
+    shared_ptr<Function> deserialize_function(json& j);
+    shared_ptr<Node> deserialize_node_reference(json& j);
+    shared_ptr<Node> deserialize_node(json& j);
 
 protected:
-    json m_json_nodes;
-    set<const Node*> m_nodes_serialized;
-    queue<const Node*> m_nodes_to_serialize;
+    unordered_map<string, shared_ptr<Node>> m_node_map;
+    unordered_map<string, shared_ptr<Function>> m_function_map;
+    function<const_data_callback_t> m_const_data_callback;
 };
 
 static string
@@ -388,18 +394,15 @@ static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, s
 }
 #endif
 
-static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
+static string serialize(shared_ptr<Function> func, size_t indent, bool binary_constant_data)
 {
     JSONSerializer serializer;
     serializer.set_binary_constant_data(binary_constant_data);
     serializer.set_indent(indent);
     serializer.set_serialize_output_shapes(s_serialize_output_shapes_enabled);
 
-    json function_json;
-    serializer.serialize_function(function_json, *func);
-
     json j;
-    j.push_back(function_json);
+    j.push_back(serializer.serialize_function(*func));
 
     string rc;
     if (indent == 0)
@@ -434,28 +437,26 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
             string jstr(data, size);
             delete[] data;
             json js = json::parse(jstr);
-            unordered_map<string, shared_ptr<Function>> function_map;
+            JSONDeserializer deserializer;
+            deserializer.set_const_data_callback(
+                [&](const string& const_name, const element::Type& et, const Shape& shape) {
+                    shared_ptr<Node> const_node;
+                    for (const cpio::FileInfo& info : file_info)
+                    {
+                        if (info.get_name() == const_name)
+                        {
+                            void* const_data = ngraph_malloc(info.get_size());
+                            reader.read(const_name, const_data, info.get_size());
+                            const_node = make_shared<op::Constant>(et, shape, const_data);
+                            ngraph_free(const_data);
+                            break;
+                        }
+                    }
+                    return const_node;
+                });
             for (json func : js)
             {
-                shared_ptr<Function> f = read_function(
-                    func,
-                    function_map,
-                    [&](const string& const_name, const element::Type& et, const Shape& shape) {
-                        shared_ptr<Node> const_node;
-                        for (const cpio::FileInfo& info : file_info)
-                        {
-                            if (info.get_name() == const_name)
-                            {
-                                void* const_data = ngraph_malloc(info.get_size());
-                                reader.read(const_name, const_data, info.get_size());
-                                const_node = make_shared<op::Constant>(et, shape, const_data);
-                                ngraph_free(const_data);
-                                break;
-                            }
-                        }
-                        return const_node;
-                    });
-                rc = f;
+                rc = deserializer.deserialize_function(func);
             }
         }
     }
@@ -481,38 +482,35 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
     else
     {
         json js = json::parse(s);
-        unordered_map<string, shared_ptr<Function>> function_map;
+        JSONDeserializer deserializer;
         for (json func : js)
         {
-            shared_ptr<Function> f = read_function(func, function_map, nullptr);
-            rc = f;
+            rc = deserializer.deserialize_function(func);
         }
     }
 
     return rc;
 }
 
-void JSONSerializer::serialize_function(json& function, const Function& f)
+json JSONSerializer::serialize_function(Function& f)
 {
+    json function;
     function["name"] = f.get_name();
 
     vector<string> parameter_list;
     for (auto param : f.get_parameters())
     {
-        json j;
-        serialize_node_reference(j, *param);
-        parameter_list.push_back(j);
+        parameter_list.push_back(serialize_node_reference(*param));
     }
     function["parameters"] = parameter_list;
 
     // TODO Functions can return multiple results
     for (size_t i = 0; i < f.get_output_size(); ++i)
     {
-        json j;
-        serialize_node_reference(j, *f.get_output_op(i));
-        function["result"].push_back(j);
+        function["result"].push_back(serialize_node_reference(*f.get_output_op(i)));
     }
     function["ops"] = m_json_nodes;
+    return function;
 }
 
 template <typename T>
@@ -527,17 +525,17 @@ T get_value(nlohmann::json js, const string& key)
     return rc;
 }
 
-static shared_ptr<ngraph::Function>
-    read_function(const json& func_js,
-                  unordered_map<string, shared_ptr<Function>>& function_map,
-                  function<const_data_callback_t> const_data_callback)
+shared_ptr<Node> JSONDeserializer::deserialize_node_reference(json& j)
 {
-    shared_ptr<ngraph::Function> rc;
+    const string& name = j;
+    return m_node_map.at(name);
+}
 
+shared_ptr<Function> JSONDeserializer::deserialize_function(json& func_js)
+{
     string func_name = func_js.at("name").get<string>();
-    vector<string> func_parameters = func_js.at("parameters").get<vector<string>>();
-    vector<string> func_result = func_js.at("result").get<vector<string>>();
-    unordered_map<string, shared_ptr<Node>> node_map;
+    vector<json> func_parameters = func_js.at("parameters").get<vector<json>>();
+    vector<json> func_result = func_js.at("result").get<vector<json>>();
     for (json node_js : func_js.at("ops"))
     {
         try
@@ -545,14 +543,14 @@ static shared_ptr<ngraph::Function>
             string node_name = node_js.at("name").get<string>();
             string node_op = node_js.at("op").get<string>();
             string friendly_name = get_value<string>(node_js, "friendly_name");
-            vector<string> node_inputs = get_value<vector<string>>(node_js, "inputs");
-            vector<string> control_deps_inputs = get_value<vector<string>>(node_js, "control_deps");
+            vector<json> node_inputs = get_value<vector<json>>(node_js, "inputs");
+            vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
             vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
             shared_ptr<Node> node;
             vector<shared_ptr<Node>> args;
-            for (const string& name : node_inputs)
+            for (auto& node_input : node_inputs)
             {
-                args.push_back(node_map.at(name));
+                args.push_back(deserialize_node_reference(node_input));
             }
 #if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
@@ -1656,9 +1654,9 @@ static shared_ptr<ngraph::Function>
 #pragma GCC diagnostic pop
 #endif
 
-            for (const string& name : control_deps_inputs)
+            for (auto& control_dep : control_deps_inputs)
             {
-                node->add_control_dependency(node_map.at(name));
+                node->add_control_dependency(deserialize_node_reference(control_dep));
             }
 
             if (!friendly_name.empty())
@@ -1669,7 +1667,7 @@ static shared_ptr<ngraph::Function>
             {
                 node->set_friendly_name(node_name);
             }
-            node_map[node_name] = node;
+            m_node_map[node_name] = node;
         }
         catch (...)
         {
@@ -1691,9 +1689,9 @@ static shared_ptr<ngraph::Function>
     // If we are dealing w/ a legacy graph, add op::Result for each output node
     ResultVector result;
     size_t results = 0;
-    for (auto result_name : func_result)
+    for (auto& result_ref : func_result)
     {
-        auto fr = node_map.at(result_name);
+        auto fr = deserialize_node_reference(result_ref);
         if (auto res = std::dynamic_pointer_cast<op::Result>(fr))
         {
             result.push_back(res);
@@ -1713,48 +1711,46 @@ static shared_ptr<ngraph::Function>
     }
 
     std::vector<std::shared_ptr<op::Parameter>> params;
-    for (auto param_name : func_parameters)
+    for (auto& param_ref : func_parameters)
     {
-        params.push_back(dynamic_pointer_cast<op::Parameter>(node_map.at(param_name)));
+        params.push_back(
+            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(param_ref)));
     }
 
-    rc = make_shared<Function>(result, params, func_name);
-    function_map[func_name] = rc;
-
+    shared_ptr<Function> rc{make_shared<Function>(result, params, func_name)};
+    m_function_map[func_name] = rc;
     return rc;
 }
 
-void JSONSerializer::serialize_node_reference(json& node, const Node& n)
+json JSONSerializer::serialize_node_reference(Node& n)
 {
-    node = n.get_name();
-    if (m_nodes_serialized.count(&n) == 1)
+    if (m_nodes_serialized.count(&n) != 1)
     {
-        return;
-    }
-    m_nodes_to_serialize.push(&n);
-    if (m_nodes_to_serialize.size() == 1)
-    {
-        // Nothing in the queue
-        stack<json> serialized_nodes;
-        while (!m_nodes_to_serialize.empty())
+        m_nodes_to_serialize.push(&n);
+        if (m_nodes_to_serialize.size() == 1)
         {
-            const Node* next_node = m_nodes_to_serialize.front();
-            m_nodes_to_serialize.pop();
-            json new_node;
-            serialize_node(new_node, *next_node);
-            serialized_nodes.push(new_node);
-        }
-        while (serialized_nodes.size() > 0)
-        {
-            m_json_nodes.push_back(serialized_nodes.top());
-            serialized_nodes.pop();
+            // Nothing in the queue
+            stack<json> serialized_nodes;
+            while (!m_nodes_to_serialize.empty())
+            {
+                Node* next_node = m_nodes_to_serialize.front();
+                m_nodes_to_serialize.pop();
+                serialized_nodes.push(serialize_node(*next_node));
+            }
+            while (serialized_nodes.size() > 0)
+            {
+                m_json_nodes.push_back(serialized_nodes.top());
+                serialized_nodes.pop();
+            }
         }
     }
+    return n.get_name();
 }
 
-void JSONSerializer::serialize_node(json& node, const Node& n)
+json JSONSerializer::serialize_node(Node& n)
 {
     m_nodes_serialized.insert(&n);
+    json node;
     node["name"] = n.get_name();
     if (n.get_name() != n.get_friendly_name())
     {
@@ -1768,15 +1764,11 @@ void JSONSerializer::serialize_node(json& node, const Node& n)
 
     for (auto& input : n.inputs())
     {
-        json j;
-        serialize_node_reference(j, *input.get_source_output().get_node());
-        inputs.push_back(j);
+        inputs.push_back(serialize_node_reference(*input.get_source_output().get_node()));
     }
     for (auto cdep : n.get_control_dependencies())
     {
-        json j;
-        serialize_node_reference(j, *cdep);
-        control_deps.push_back(j);
+        control_deps.push_back(serialize_node_reference(*cdep));
     }
     for (auto& output : n.outputs())
     {
@@ -2571,4 +2563,5 @@ void JSONSerializer::serialize_node(json& node, const Node& n)
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
 #endif
+    return node;
 }
