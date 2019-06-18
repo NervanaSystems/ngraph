@@ -221,3 +221,26 @@ void runtime::Backend::async_thread_entry()
         }
     }
 }
+
+namespace ngraph
+{
+    namespace runtime
+    {
+        ostream& operator<<(ostream& out, const ngraph::runtime::Backend::AsyncEvent& event)
+        {
+            out << "Async{";
+            switch (event.get_type())
+            {
+            case runtime::Backend::AsyncEvent::Type::READ:
+                out << "READ " << locale_string(event.get_size_in_bytes());
+                break;
+            case runtime::Backend::AsyncEvent::Type::WRITE:
+                out << "WRITE " << locale_string(event.get_size_in_bytes());
+                break;
+            case runtime::Backend::AsyncEvent::Type::EXECUTE: out << "EXECUTE"; break;
+            }
+            out << "}";
+            return out;
+        }
+    }
+}

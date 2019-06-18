@@ -142,7 +142,6 @@ public:
     /// \returns a shared pointer to the op if found, else nullptr
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
 
-protected:
     friend class ngraph::runtime::Tensor;
     friend class ngraph::runtime::Executable;
 
@@ -176,6 +175,8 @@ protected:
         const std::vector<std::shared_ptr<runtime::Tensor>>& get_inputs() const { return m_inputs; }
         std::future<void> get_future() { return m_promise.get_future(); }
         void signal_result() { m_promise.set_value(); }
+        friend std::ostream& operator<<(std::ostream& out, const AsyncEvent& event);
+
     private:
         const Type m_type;
         size_t m_buffer_number;
@@ -188,6 +189,7 @@ protected:
         std::promise<void> m_promise;
     };
 
+protected:
     std::future<void> post_async_read_event(const std::shared_ptr<Tensor>& tensor,
                                             void* p,
                                             size_t size_in_bytes,
