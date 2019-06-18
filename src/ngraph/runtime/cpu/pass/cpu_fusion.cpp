@@ -2234,7 +2234,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
                     auto q_m_scale = q_m->get_argument(1);
                     auto dq_l_m_scale = dq_l_m->get_argument(1);
                     auto dq_r_m_scale = dq_r_m->get_argument(1);
-                    if (!ngraph::compare_constants(q_m_scale, dq_l_m_scale) && ngraph::compare_constants(q_m_scale, dq_r_m_scale))
+                    if (!ngraph::compare_constants(q_m_scale, dq_l_m_scale) &&
+                        ngraph::compare_constants(q_m_scale, dq_r_m_scale))
                     {
                         NGRAPH_DEBUG << "Scales of Q and DQ of right branch match";
                         // switch left and right branch
