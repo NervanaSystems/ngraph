@@ -308,6 +308,8 @@ set (SRC
     op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/group_conv_transpose.hpp
+    op/fused/group_conv_transpose.cpp
     op/fused/leaky_relu.cpp
     op/fused/leaky_relu.hpp
     op/fused/mvn.cpp
@@ -383,7 +385,6 @@ set (SRC
     pass/liveness.hpp
     pass/manager.cpp
     pass/manager.hpp
-    pass/manager_state.cpp
     pass/manager_state.hpp
     pass/memory_layout.cpp
     pass/memory_layout.hpp
