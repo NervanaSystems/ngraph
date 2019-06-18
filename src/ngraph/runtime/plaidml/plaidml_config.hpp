@@ -29,7 +29,7 @@ namespace ngraph
         {
             struct Config;
 
-            Config parse_config_string(const char* configuration_string);
+            Config parse_config_string(const std::string& configuration_string);
         }
     }
 }

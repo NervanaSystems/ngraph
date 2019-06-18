@@ -538,6 +538,32 @@ TEST(util, enum_mask_operators)
     EXPECT_EQ(true, n[Type::b]);
 }
 
+TEST(graph, huge)
+{
+    Function* f;
+    std::vector<std::weak_ptr<Node>> weak_nodes;
+    {
+        auto param = make_shared<op::Parameter>(element::f32, Shape{3, 3});
+        std::shared_ptr<Node> n = param;
+        for (size_t i = 0; i < 1000000; i++)
+        {
+            n = make_shared<op::Negative>(n);
+        }
+        f = new Function(NodeVector{n}, ParameterVector{param});
+        for (auto node : f->get_ops())
+        {
+            weak_nodes.push_back(node);
+        }
+    }
+
+    delete f;
+
+    for (auto weak_node : weak_nodes)
+    {
+        EXPECT_TRUE(weak_node.expired());
+    }
+}
+
 TEST(util, apply_permutation)
 {
     ASSERT_EQ(apply_permutation(Shape{0, 1, 2, 3}, AxisVector{2, 1, 0, 3}), (Shape{2, 1, 0, 3}));
@@ -607,4 +633,27 @@ TEST(util, apply_permutation_pshape_repeated_axis_fails)
 TEST(util, apply_permutation_pshape_rank_dynamic_inviable_permutation_fails)
 {
     ASSERT_THROW(apply_permutation(PartialShape::dynamic(), AxisVector{0, 1, 2, 2}), CheckFailure);
+}
+
+TEST(util, clone_function_friendly_name)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+
+    A->set_friendly_name("A");
+    B->set_friendly_name("B");
+
+    auto g = clone_function(*f);
+
+    bool found_A = false;
+    bool found_B = false;
+    for (auto parameter : g->get_parameters())
+    {
+        found_A |= parameter->get_friendly_name() == "A";
+        found_B |= parameter->get_friendly_name() == "B";
+    }
+    EXPECT_TRUE(found_A);
+    EXPECT_TRUE(found_B);
 }

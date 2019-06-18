@@ -19,8 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::LessEq::LessEq(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseComparison("LessEq", arg0, arg1)
+op::LessEq::LessEq(const shared_ptr<Node>& arg0,
+                   const shared_ptr<Node>& arg1,
+                   const AutoBroadcastSpec& autob)
+    : BinaryElementwiseComparison("LessEq", arg0, arg1, autob)
 {
     constructor_validate_and_infer_types();
 }
@@ -28,5 +30,5 @@ op::LessEq::LessEq(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
 shared_ptr<Node> op::LessEq::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<LessEq>(new_args.at(0), new_args.at(1));
+    return make_shared<LessEq>(new_args.at(0), new_args.at(1), this->get_autob());
 }

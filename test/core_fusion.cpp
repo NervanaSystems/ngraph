@@ -62,7 +62,7 @@ TEST(core_fusion, core_fusion_pass_basic)
     ASSERT_NE(std::dynamic_pointer_cast<op::Relu>(graph->get_argument(0)), nullptr);
 }
 
-#ifdef NGRAPH_JSON_ENABLE
+#ifndef NGRAPH_JSON_DISABLE
 TEST(core_fusion, sigmoid_fprop_fusion)
 {
     pass::Manager pass_manager;

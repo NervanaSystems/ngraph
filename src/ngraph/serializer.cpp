@@ -74,6 +74,7 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -259,6 +260,27 @@ static PartialShape read_partial_shape(const json& j)
     }
 }
 
+static json write_auto_broadcast(const op::AutoBroadcastSpec& autob)
+{
+    json j;
+    j["type"] = autob.m_type;
+    j["axis"] = autob.m_axis;
+    return j;
+}
+
+static op::AutoBroadcastSpec read_auto_broadcast(const json& j)
+{
+    if (!j.is_object())
+    {
+        return op::AutoBroadcastSpec();
+    }
+    else
+    {
+        return op::AutoBroadcastSpec(static_cast<op::AutoBroadcastType>(j.at("type")),
+                                     j.at("axis").get<size_t>());
+    }
+}
+
 static json write_element_type(const ngraph::element::Type& n)
 {
     json j;
@@ -318,33 +340,24 @@ static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, s
     cpio::Writer writer(out);
     writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
 
-    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
-        traverse_nodes(const_cast<Function*>(f.get()),
-                       [&](shared_ptr<Node> node) {
-                           if (auto c = dynamic_pointer_cast<op::Constant>(node))
-                           {
-                               uint32_t size =
-                                   static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
-                                                         c->get_output_element_type(0).size());
-                               writer.write(c->get_name(), c->get_data_ptr(), size);
-                           }
-                       },
-                       true);
-    });
+    traverse_nodes(const_cast<Function*>(func.get()),
+                   [&](shared_ptr<Node> node) {
+                       if (auto c = dynamic_pointer_cast<op::Constant>(node))
+                       {
+                           uint32_t size =
+                               static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
+                                                     c->get_output_element_type(0).size());
+                           writer.write(c->get_name(), c->get_data_ptr(), size);
+                       }
+                   },
+                   true);
 }
 #endif
 
 static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {
     json j;
-    vector<json> functions;
-    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
-        functions.push_back(write(*f, binary_constant_data));
-    });
-    for (auto it = functions.rbegin(); it != functions.rend(); it++)
-    {
-        j.push_back(*it);
-    }
+    j.push_back(write(*func, binary_constant_data));
 
     string rc;
     if (indent == 0)
@@ -525,7 +538,8 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Add:
             {
-                node = make_shared<op::Add>(args[0], args[1]);
+                node =
+                    make_shared<op::Add>(args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::All:
@@ -541,7 +555,8 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::And:
             {
-                node = make_shared<op::And>(args[0], args[1]);
+                node =
+                    make_shared<op::And>(args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Any:
@@ -586,13 +601,17 @@ static shared_ptr<ngraph::Function>
                 op::PadType pad_type = node_js["pad_type"].empty()
                                            ? op::PadType::EXPLICIT
                                            : static_cast<op::PadType>(node_js.at("pad_type"));
+                bool ceil_mode =
+                    node_js["ceil_mode"].empty() ? false : node_js.at("ceil_mode").get<bool>();
+                ;
                 node = make_shared<op::AvgPool>(args[0],
                                                 window_shape,
                                                 window_movement_strides,
                                                 padding_below,
                                                 padding_above,
                                                 include_padding_in_avg_computation,
-                                                pad_type);
+                                                pad_type,
+                                                ceil_mode);
                 break;
             }
             case OP_TYPEID::AvgPoolBackprop:
@@ -879,7 +898,13 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Divide:
             {
-                node = make_shared<op::Divide>(args[0], args[1]);
+                bool pythondiv = true;
+                if (node_js["pythondiv"].is_object())
+                {
+                    pythondiv = node_js.at("pythondiv").get<bool>();
+                }
+                node = make_shared<op::Divide>(
+                    args[0], args[1], pythondiv, read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Dot:
@@ -929,7 +954,8 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Equal:
             {
-                node = make_shared<op::Equal>(args[0], args[1]);
+                node =
+                    make_shared<op::Equal>(args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Erf:
@@ -981,9 +1007,10 @@ static shared_ptr<ngraph::Function>
                 auto type = read_element_type(node_js.at("type"));
                 auto seed = node_js.at("seed").get<unsigned int>();
                 auto probability = node_js.at("probability").get<double>();
+                bool use_seed = get_or_default<bool>(node_js, "use_seed", false);
 
-                node =
-                    make_shared<op::GenerateMask>(args[0], output_shape, type, seed, probability);
+                node = make_shared<op::GenerateMask>(
+                    args[0], output_shape, type, seed, probability, use_seed);
                 break;
             }
             case OP_TYPEID::GetOutputElement:
@@ -993,12 +1020,14 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Greater:
             {
-                node = make_shared<op::Greater>(args[0], args[1]);
+                node = make_shared<op::Greater>(
+                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::GreaterEq:
             {
-                node = make_shared<op::GreaterEq>(args[0], args[1]);
+                node = make_shared<op::GreaterEq>(
+                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::GRN:
@@ -1041,6 +1070,31 @@ static shared_ptr<ngraph::Function>
                                                          pad_type);
                 break;
             }
+            case OP_TYPEID::GroupConvolutionTranspose:
+            {
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto dilations = node_js.at("dilations").get<vector<size_t>>();
+                auto padding_begin = node_js.at("padding_begin").get<vector<ptrdiff_t>>();
+                auto padding_end = node_js.at("padding_end").get<vector<ptrdiff_t>>();
+                auto output_padding = node_js.at("output_padding").get<vector<ptrdiff_t>>();
+                auto groups = node_js.at("groups").get<size_t>();
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
+                auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
+
+                node = make_shared<op::GroupConvolutionTranspose>(args[0],
+                                                                  args[1],
+                                                                  strides,
+                                                                  dilations,
+                                                                  padding_begin,
+                                                                  padding_end,
+                                                                  output_padding,
+                                                                  groups,
+                                                                  pad_type,
+                                                                  output_shape);
+                break;
+            }
             case OP_TYPEID::LeakyRelu:
             {
                 node = make_shared<op::LeakyRelu>(args[0], args[1]);
@@ -1048,12 +1102,14 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Less:
             {
-                node = make_shared<op::Less>(args[0], args[1]);
+                node =
+                    make_shared<op::Less>(args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::LessEq:
             {
-                node = make_shared<op::LessEq>(args[0], args[1]);
+                node = make_shared<op::LessEq>(
+                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Log:
@@ -1145,7 +1201,8 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Maximum:
             {
-                node = make_shared<op::Maximum>(args[0], args[1]);
+                node = make_shared<op::Maximum>(
+                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Min:
@@ -1156,12 +1213,14 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Minimum:
             {
-                node = make_shared<op::Minimum>(args[0], args[1]);
+                node = make_shared<op::Minimum>(
+                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Multiply:
             {
-                node = make_shared<op::Multiply>(args[0], args[1]);
+                node = make_shared<op::Multiply>(
+                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::MVN:
@@ -1188,7 +1247,8 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::NotEqual:
             {
-                node = make_shared<op::NotEqual>(args[0], args[1]);
+                node = make_shared<op::NotEqual>(
+                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Not:
@@ -1205,7 +1265,7 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Or:
             {
-                node = make_shared<op::Or>(args[0], args[1]);
+                node = make_shared<op::Or>(args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Pad:
@@ -1259,7 +1319,8 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Power:
             {
-                node = make_shared<op::Power>(args[0], args[1]);
+                node =
+                    make_shared<op::Power>(args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::PRelu:
@@ -1373,7 +1434,9 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Result:
             {
-                node = make_shared<op::Result>(args[0]);
+                auto needs_default_layout =
+                    get_or_default<bool>(node_js, "needs_default_layout", false);
+                node = make_shared<op::Result>(args[0], needs_default_layout);
                 break;
             }
             case OP_TYPEID::Reverse:
@@ -1497,7 +1560,8 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Subtract:
             {
-                node = make_shared<op::Subtract>(args[0], args[1]);
+                node = make_shared<op::Subtract>(
+                    args[0], args[1], read_auto_broadcast(node_js["autob"]));
                 break;
             }
             case OP_TYPEID::Sum:
@@ -1564,6 +1628,10 @@ static shared_ptr<ngraph::Function>
             if (!friendly_name.empty())
             {
                 node->set_friendly_name(friendly_name);
+            }
+            else
+            {
+                node->set_friendly_name(node_name);
             }
             node_map[node_name] = node;
         }
@@ -1683,7 +1751,14 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::Acos: { break;
     }
-    case OP_TYPEID::Add: { break;
+    case OP_TYPEID::Add:
+    {
+        auto tmp = dynamic_cast<const op::Add*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::ArgMin:
     {
@@ -1707,7 +1782,14 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::AllReduce: { break;
     }
-    case OP_TYPEID::And: { break;
+    case OP_TYPEID::And:
+    {
+        auto tmp = dynamic_cast<const op::And*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Any:
     {
@@ -1728,6 +1810,10 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_above"] = tmp->get_padding_above();
         node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         node["pad_type"] = tmp->get_pad_type();
+        if (tmp->get_ceil_mode())
+        {
+            node["ceil_mode"] = tmp->get_ceil_mode();
+        }
         break;
     }
     case OP_TYPEID::AvgPoolBackprop:
@@ -1794,10 +1880,10 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::Constant:
     {
         auto tmp = dynamic_cast<const op::Constant*>(&n);
-        if (tmp->are_all_data_elements_bitwise_identical())
+        if (tmp->are_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
         {
             vector<string> vs;
-            vs.push_back(tmp->get_value_strings()[0]);
+            vs.push_back(tmp->convert_value_to_string(0));
             node["value"] = vs;
         }
         else
@@ -1897,7 +1983,15 @@ static json write(const Node& n, bool binary_constant_data)
         node["block_size"] = tmp->get_block_size();
         break;
     }
-    case OP_TYPEID::Divide: { break;
+    case OP_TYPEID::Divide:
+    {
+        auto tmp = dynamic_cast<const op::Divide*>(&n);
+        node["pythondiv"] = tmp->is_pythondiv();
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Dot:
     {
@@ -1917,7 +2011,14 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
-    case OP_TYPEID::Equal: { break;
+    case OP_TYPEID::Equal:
+    {
+        auto tmp = dynamic_cast<const op::Equal*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Erf: { break;
     }
@@ -1957,15 +2058,30 @@ static json write(const Node& n, bool binary_constant_data)
     case OP_TYPEID::GenerateMask:
     {
         auto tmp = dynamic_cast<const op::GenerateMask*>(&n);
-        node["output_shape"] = tmp->get_shape();
+        node["output_shape"] = tmp->get_mask_shape();
         node["type"] = write_element_type(tmp->get_element_type());
+        node["use_seed"] = tmp->get_use_seed();
         node["seed"] = tmp->get_seed();
         node["probability"] = tmp->get_probability();
         break;
     }
-    case OP_TYPEID::Greater: { break;
+    case OP_TYPEID::Greater:
+    {
+        auto tmp = dynamic_cast<const op::Greater*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
-    case OP_TYPEID::GreaterEq: { break;
+    case OP_TYPEID::GreaterEq:
+    {
+        auto tmp = dynamic_cast<const op::GreaterEq*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::GRN:
     {
@@ -1992,11 +2108,38 @@ static json write(const Node& n, bool binary_constant_data)
         node["pad_type"] = tmp->get_pad_type();
         break;
     }
+    case OP_TYPEID::GroupConvolutionTranspose:
+    {
+        auto tmp = dynamic_cast<const op::GroupConvolutionTranspose*>(&n);
+        node["strides"] = tmp->get_strides();
+        node["dilations"] = tmp->get_dilations();
+        node["padding_begin"] = tmp->get_padding_begin();
+        node["padding_end"] = tmp->get_padding_end();
+        node["output_padding"] = tmp->get_output_padding();
+        node["groups"] = tmp->get_groups();
+        node["pad_type"] = tmp->get_pad_type();
+        node["output_shape"] = tmp->get_output_shape();
+        break;
+    }
     case OP_TYPEID::LeakyRelu: { break;
     }
-    case OP_TYPEID::Less: { break;
+    case OP_TYPEID::Less:
+    {
+        auto tmp = dynamic_cast<const op::Less*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
-    case OP_TYPEID::LessEq: { break;
+    case OP_TYPEID::LessEq:
+    {
+        auto tmp = dynamic_cast<const op::LessEq*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Log: { break;
     }
@@ -2034,7 +2177,14 @@ static json write(const Node& n, bool binary_constant_data)
         node["padding_above"] = tmp->get_padding_above();
         break;
     }
-    case OP_TYPEID::Maximum: { break;
+    case OP_TYPEID::Maximum:
+    {
+        auto tmp = dynamic_cast<const op::Maximum*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Min:
     {
@@ -2042,9 +2192,23 @@ static json write(const Node& n, bool binary_constant_data)
         node["reduction_axes"] = tmp->get_reduction_axes();
         break;
     }
-    case OP_TYPEID::Minimum: { break;
+    case OP_TYPEID::Minimum:
+    {
+        auto tmp = dynamic_cast<const op::Minimum*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
-    case OP_TYPEID::Multiply: { break;
+    case OP_TYPEID::Multiply:
+    {
+        auto tmp = dynamic_cast<const op::Multiply*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::MVN:
     {
@@ -2064,7 +2228,14 @@ static json write(const Node& n, bool binary_constant_data)
         node["eps"] = tmp->get_eps();
         break;
     }
-    case OP_TYPEID::NotEqual: { break;
+    case OP_TYPEID::NotEqual:
+    {
+        auto tmp = dynamic_cast<const op::NotEqual*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Not: { break;
     }
@@ -2075,7 +2246,14 @@ static json write(const Node& n, bool binary_constant_data)
         node["one_hot_axis"] = tmp->get_one_hot_axis();
         break;
     }
-    case OP_TYPEID::Or: { break;
+    case OP_TYPEID::Or:
+    {
+        auto tmp = dynamic_cast<const op::Or*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Pad:
     {
@@ -2118,7 +2296,14 @@ static json write(const Node& n, bool binary_constant_data)
         node["reduction_axes"] = tmp->get_reduction_axes();
         break;
     }
-    case OP_TYPEID::Power: { break;
+    case OP_TYPEID::Power:
+    {
+        auto tmp = dynamic_cast<const op::Power*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Quantize:
     {
@@ -2188,7 +2373,11 @@ static json write(const Node& n, bool binary_constant_data)
         node["output_shape"] = tmp->get_output_shape();
         break;
     }
-    case OP_TYPEID::Result: { break;
+    case OP_TYPEID::Result:
+    {
+        auto tmp = dynamic_cast<const op::Result*>(&n);
+        node["needs_default_layout"] = tmp->needs_default_layout();
+        break;
     }
     case OP_TYPEID::Reverse:
     {
@@ -2268,7 +2457,14 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::StopGradient: { break;
     }
-    case OP_TYPEID::Subtract: { break;
+    case OP_TYPEID::Subtract:
+    {
+        auto tmp = dynamic_cast<const op::Subtract*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::Sum:
     {

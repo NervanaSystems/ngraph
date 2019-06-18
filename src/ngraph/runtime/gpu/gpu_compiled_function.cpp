@@ -35,6 +35,7 @@
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
@@ -172,6 +173,7 @@ void runtime::gpu::GPUCompiledFunction::compile()
     pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
+    pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
     pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
@@ -182,11 +184,7 @@ void runtime::gpu::GPUCompiledFunction::compile()
     string dump_filename = file_util::path_join(get_output_dir(), m_function_name + "_ops.txt");
     pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
-
-    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
-    {
-        m_function_ordered_ops.emplace(current_function, current_function->get_ordered_ops());
-    }
+    m_function_ordered_ops.emplace(m_function, m_function->get_ordered_ops());
 
     add_passes(pass_manager);
     emit();

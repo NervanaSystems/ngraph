@@ -387,8 +387,13 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
         }
         else if (std::dynamic_pointer_cast<op::Divide>(binary))
         {
-            runtime::reference::divide<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            shared_ptr<op::Divide> divop = std::dynamic_pointer_cast<op::Divide>(binary);
+            bool pythondiv = divop->is_pythondiv();
+            runtime::reference::divide<T>(a->get_data_ptr<T>(),
+                                          b->get_data_ptr<T>(),
+                                          out_vec.data(),
+                                          shape_size(out_shape),
+                                          pythondiv);
         }
         else if (std::dynamic_pointer_cast<op::Minimum>(binary))
         {

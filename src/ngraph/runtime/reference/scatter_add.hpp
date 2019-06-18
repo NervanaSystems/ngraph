@@ -103,6 +103,10 @@ namespace ngraph
                     auto updates_inner_coord_iter = updates_inner_transform.begin();
                     for (const Coordinate& out_coord : out_transform)
                     {
+                        if (updates_inner_coord_iter == updates_inner_transform.end())
+                        {
+                            break;
+                        }
                         out[out_transform.index(out_coord)] +=
                             updates[updates_inner_transform.index(*updates_inner_coord_iter)];
                         updates_inner_coord_iter++;
