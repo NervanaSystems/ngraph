@@ -108,33 +108,6 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
     }
 }
 
-void ngraph::traverse_functions(std::shared_ptr<ngraph::Function> p,
-                                std::function<void(shared_ptr<Function>)> f)
-{
-    std::unordered_set<shared_ptr<Function>> instances_seen;
-    deque<shared_ptr<Function>> stack;
-
-    stack.push_front(p);
-
-    while (stack.size() > 0)
-    {
-        shared_ptr<Function> func = stack.front();
-        if (instances_seen.find(func) == instances_seen.end())
-        {
-            instances_seen.insert(func);
-            f(func);
-        }
-        stack.pop_front();
-        for (shared_ptr<Node> op : func->get_ops())
-        {
-            for (shared_ptr<Function> fp : op->get_functions())
-            {
-                stack.push_front(fp);
-            }
-        }
-    }
-}
-
 NodeVector ngraph::find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
 {
     std::unordered_set<std::shared_ptr<Node>> target_args;
@@ -249,10 +222,16 @@ std::list<std::shared_ptr<ngraph::Node>>
             }
             auto cloned_node = node->copy_with_new_args(cloned_args);
 
-            //copy control dependencies
+            // copy control dependencies
             for (auto cdep : node->get_control_dependencies())
             {
                 cloned_node->add_control_dependency(node_map.at(cdep.get()));
+            }
+
+            if (node->get_friendly_name() != node->get_name())
+            {
+                // There is a friendly name for this node so copy it
+                cloned_node->set_friendly_name(node->get_friendly_name());
             }
             node_map[node.get()] = cloned_node;
         }

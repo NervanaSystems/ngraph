@@ -18,6 +18,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <random>
+#include <vector>
 
 // CBLAS types and wrappers
 
@@ -225,6 +227,16 @@ namespace ngraph
                 template <typename ElementType>
                 void reference_erf(void* arg, void* out, size_t count);
 
+                template <typename ElementType>
+                void tile_rank_0(void* input, void* output, size_t repeats);
+
+                template <typename ElementType, unsigned int Rank>
+                void tile(void* input,
+                          void* output,
+                          const Shape& input_shape,
+                          const Shape& output_shape,
+                          int arena);
+
                 template <typename ElementType,
                           typename IndicesType,
                           unsigned int Rank1,
@@ -235,6 +247,7 @@ namespace ngraph
                             const Shape& inputs_shape,
                             const Shape& indices_shape,
                             const Shape& output_shape,
+                            size_t axis,
                             int arena);
 
                 template <typename ElementType,
@@ -249,6 +262,15 @@ namespace ngraph
                                  const Shape& indices_shape,
                                  const Shape& updates_shape,
                                  int arena);
+
+                template <typename T>
+                void generate_dropout(T* input,
+                                      T* out0,
+                                      T* out1_mask,
+                                      size_t nelems,
+                                      bool training,
+                                      const double value,
+                                      const std::vector<std::minstd_rand>& vmsr);
             }
         }
     }

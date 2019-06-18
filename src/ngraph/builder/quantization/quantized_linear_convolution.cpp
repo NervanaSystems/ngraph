@@ -54,9 +54,9 @@ namespace ngraph
                 auto mybias = bias;
                 if (bias->get_element_type() != element::i32)
                 {
-                    auto zero = make_constant(element::i32, input_scale->get_shape(), 0);
-                    AxisSet quantization_axes;
-                    auto bias_scale = input_scale * filter_scale;
+                    const auto zero = make_constant(element::i32, input_scale->get_shape(), 0);
+                    const AxisSet quantization_axes;
+                    const auto bias_scale = input_scale * filter_scale;
                     op::Quantize::RoundMode round_mode =
                         op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 

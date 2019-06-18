@@ -30,15 +30,42 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
                      const Shape& padding_above,
-                     const PadType& pad_type)
+                     const PadType& pad_type,
+                     bool ceil_mode)
     : Op("MaxPool", check_single_output_args({arg}))
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_pad_type(pad_type)
+    , m_ceil_mode(ceil_mode)
 {
     constructor_validate_and_infer_types();
+}
+
+op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+                     const Shape& window_shape,
+                     const Strides& window_movement_strides,
+                     const Shape& padding_below,
+                     const Shape& padding_above,
+                     const PadType& pad_type)
+    : MaxPool(
+          arg, window_shape, window_movement_strides, padding_below, padding_above, pad_type, false)
+{
+}
+
+op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+                     const Shape& window_shape,
+                     const Strides& window_movement_strides,
+                     const Shape& padding_below,
+                     const Shape& padding_above)
+    : MaxPool(arg,
+              window_shape,
+              window_movement_strides,
+              padding_below,
+              padding_above,
+              PadType::EXPLICIT)
+{
 }
 
 void op::MaxPool::validate_and_infer_types()
@@ -90,7 +117,8 @@ void op::MaxPool::validate_and_infer_types()
                                                   padding_above,
                                                   m_window_shape,
                                                   m_window_movement_strides,
-                                                  true));
+                                                  true,
+                                                  m_ceil_mode));
 }
 
 op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
@@ -112,7 +140,9 @@ shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_window_shape,
                                 m_window_movement_strides,
                                 m_padding_below,
-                                m_padding_above);
+                                m_padding_above,
+                                m_pad_type,
+                                m_ceil_mode);
 }
 
 op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
@@ -218,6 +248,11 @@ shared_ptr<Node> op::MaxPoolBackprop::copy_with_new_args(const NodeVector& new_a
 
 void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    if (m_ceil_mode)
+    {
+        throw ngraph_error("Autodiff not supported on MaxPool with ceil_mode set");
+    }
+
     auto delta = deltas.at(0);
 
     auto operand = get_argument(0);

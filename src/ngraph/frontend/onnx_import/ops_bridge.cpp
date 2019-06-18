@@ -41,6 +41,7 @@
 #include "op/concat.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
+#include "op/conv_integer.hpp"
 #include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
 #include "op/cosh.hpp"
@@ -70,6 +71,7 @@
 #include "op/lrn.hpp"
 #include "op/lstm.hpp"
 #include "op/matmul.hpp"
+#include "op/matmul_integer.hpp"
 #include "op/max.hpp"
 #include "op/max_pool.hpp"
 #include "op/mean.hpp"
@@ -83,15 +85,16 @@
 #include "op/pad.hpp"
 #include "op/pow.hpp"
 #include "op/prelu.hpp"
+#include "op/qlinear_matmul.hpp"
 #include "op/quant_conv.hpp"
 #include "op/quantize_linear.hpp"
-#include "op/quantized_matmul.hpp"
 #include "op/reciprocal.hpp"
 #include "op/reduce.hpp"
 #include "op/relu.hpp"
 #include "op/reshape.hpp"
 #include "op/selu.hpp"
 #include "op/shape.hpp"
+#include "op/shrink.hpp"
 #include "op/sigmoid.hpp"
 #include "op/sign.hpp"
 #include "op/sin.hpp"
@@ -243,6 +246,7 @@ namespace ngraph
             REGISTER_OPERATOR("Concat", 1, concat);
             REGISTER_OPERATOR("Constant", 1, constant);
             REGISTER_OPERATOR("Conv", 1, conv);
+            REGISTER_OPERATOR("ConvInteger", 1, conv_integer);
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
             REGISTER_OPERATOR("Cosh", 1, cosh);
@@ -273,6 +277,7 @@ namespace ngraph
             REGISTER_OPERATOR("LRN", 1, lrn);
             REGISTER_OPERATOR("LSTM", 1, lstm);
             REGISTER_OPERATOR("MatMul", 1, matmul);
+            REGISTER_OPERATOR("MatMulInteger", 1, matmul_integer);
             REGISTER_OPERATOR("MaxPool", 1, max_pool);
             REGISTER_OPERATOR("Max", 1, max);
             REGISTER_OPERATOR("Max", 8, max);
@@ -290,7 +295,7 @@ namespace ngraph
             REGISTER_OPERATOR("Pow", 1, pow);
             REGISTER_OPERATOR("PRelu", 1, prelu);
             REGISTER_OPERATOR("QLinearConv", 1, quant_conv);
-            REGISTER_OPERATOR("QLinearMatMul", 1, quantized_matmul);
+            REGISTER_OPERATOR("QLinearMatMul", 1, qlinear_matmul);
             REGISTER_OPERATOR("QuantizeLinear", 1, quantize_linear);
             REGISTER_OPERATOR("Reciprocal", 1, reciprocal);
             REGISTER_OPERATOR("ReduceLogSum", 1, reduce_log_sum);
@@ -307,6 +312,7 @@ namespace ngraph
             REGISTER_OPERATOR("Reshape", 1, reshape);
             REGISTER_OPERATOR("Selu", 1, selu);
             REGISTER_OPERATOR("Shape", 1, shape);
+            REGISTER_OPERATOR("Shrink", 1, shrink);
             REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
             REGISTER_OPERATOR("Sign", 1, sign);
             REGISTER_OPERATOR("Sin", 1, sin);
