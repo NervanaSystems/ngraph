@@ -3635,6 +3635,14 @@ TEST(type_prop, tensor_constant_bad_count)
     }
 }
 
+TEST(type_prop, constant_zero_elements_one_string)
+{
+    auto c =
+        make_shared<op::Constant>(element::i64, Shape{2, 0, 2, 2}, std::vector<std::string>{"42"});
+    ASSERT_EQ(c->get_element_type(), element::i64);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 0, 2, 2}));
+}
+
 TEST(type_prop, replace_slice_deduce_vector)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6});
