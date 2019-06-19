@@ -246,6 +246,8 @@ set (SRC
     op/product.hpp
     op/quantize.cpp
     op/quantize.hpp
+    op/recv.cpp
+    op/recv.hpp
     op/relu.cpp
     op/relu.hpp
     op/replace_slice.cpp
@@ -264,6 +266,8 @@ set (SRC
     op/scatter_nd_add.hpp
     op/select.cpp
     op/select.hpp
+    op/send.cpp
+    op/send.hpp
     op/sigmoid.cpp
     op/sigmoid.hpp
     op/sign.cpp
