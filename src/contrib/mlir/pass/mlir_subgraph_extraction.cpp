@@ -56,6 +56,17 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& other)
     add_inputs(other.get_input_nodes());
 }
 
+// The sub-graph construction algorithm is as follows
+// For each node, check its predecessors, if 
+// - all predecessors in sub-graphs belong to the same sub-graph (graph ID), then extend the sub-graph to include the current node.
+//   Predecessors outside sub-graphs are marked as input to the sub-graph. 
+// - predecessors in sub-graphs belong to different sub-graphs, then merge all the sub-graphs into one, and add current node to it.
+//   Predecessors outside sub-graphs are marked as input to the sub-graph. 
+//
+// For each sub-graph construction, build a CompiledKernel(CK) node around it as follows
+// - all inputs edges to the sub-graph are cloned as inputs to CK node as well.
+// - all outputs edges from the sub-graph are removed and added as outputs to CK node instead.
+// - CK will internally have lists record graph nodes, and graph output nodes.
 bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 {
     for (auto op : func->get_ordered_ops())
@@ -74,9 +85,6 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         }
 
         // supported op
-        // go over all its inputs and figure out which graph ID it belongs to
-        // if all inputs are outside any sub-graph, we assign a new graph ID to that node
-        // if some inputs belong to different sub-graphs, we merge those sub-graphs into the first one
         for (auto pred : op->get_arguments())
         {
             int pred_graph_id = get_subgraph(pred);
@@ -130,22 +138,22 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         NodeVector& nodes_list = sg.get_nodes();
 
         NGRAPH_DEBUG << "[CK Extract] Graph ID = " << sg.get_id() << std::endl;
-        NGRAPH_DEBUG << "Graph Nodes: " << std::endl;
+        NGRAPH_DEBUG << "[CK Extract] Graph Nodes: " << std::endl;
         for (auto node : nodes_list) 
         {
-            NGRAPH_DEBUG << node << std::endl;
+            NGRAPH_DEBUG << "[CK Extract] " << *node << std::endl;
         }
 
-        NGRAPH_DEBUG << "Input Nodes: " << std::endl;
+        NGRAPH_DEBUG << "[CK Extract] Input Nodes: " << std::endl;
         for (auto node : sg.get_input_nodes()) 
         {
-            NGRAPH_DEBUG << node << std::endl;
+            NGRAPH_DEBUG << "[CK Extract] " << *node << std::endl;
         }
 
-        NGRAPH_DEBUG << "Output Nodes: " << std::endl;
+        NGRAPH_DEBUG << "[CK Extract] Output Nodes: " << std::endl;
         for (auto node : outputs) 
         {
-            NGRAPH_DEBUG << node << std::endl;
+            NGRAPH_DEBUG << "[CK Extract] " << *node << std::endl;
         }
 
         // Connect CompiledKernel to output nodes by replacing the output descriptors of the output

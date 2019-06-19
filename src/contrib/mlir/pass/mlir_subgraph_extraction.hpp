@@ -22,8 +22,7 @@ namespace ngraph
 {
     namespace pass
     {
-        /// This pass creates CompiledKernel ops enclosing sub-graphs that will be compiled and
-        /// executed by MLIR.
+        /// This pass creates CompiledKernel ops enclosing maximal sub-graphs of ops that are supported by MLIR
         class MLIRSubgraphExtractionPass : public ngraph::pass::FunctionPass
         {
         private:
