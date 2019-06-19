@@ -33,7 +33,6 @@ from test.ngraph.util import run_op_numeric_data, run_op_node
     (ng.exp, np.exp, -100., 100.),
     (ng.floor, np.floor, -100., 100.),
     (ng.log, np.log, 0, 100.),
-    (ng.logical_not, np.logical_not, -10, 10),
     (ng.relu, lambda x: np.maximum(0, x), -100., 100.),
     (ng.sign, np.sign, -100., 100.),
     (ng.sin, np.sin, -100., 100.),
@@ -68,7 +67,6 @@ def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     (ng.exp, np.exp, np.float32(1.5)),
     (ng.floor, np.floor, np.float32(1.5)),
     (ng.log, np.log, np.float32(1.5)),
-    (ng.logical_not, np.logical_not, np.int32(0)),
     (ng.relu, lambda x: np.maximum(0, x), np.float32(-0.125)),
     (ng.sign, np.sign, np.float32(0.)),
     (ng.sin, np.sin, np.float32(np.pi / 4.0)),
@@ -86,3 +84,19 @@ def test_unary_op_scalar(ng_api_fn, numpy_fn, input_data):
 
     result = run_op_numeric_data(input_data, ng_api_fn)
     assert np.allclose(result, expected)
+
+
+@pytest.mark.parametrize('input_data', [
+    (np.array([True, False, True, False])),
+    (np.array(True)),
+    (np.array(False)),
+])
+@pytest.mark.skip_on_gpu
+def test_logical_not(input_data):
+    expected = np.logical_not(input_data)
+
+    result = run_op_node([input_data], ng.logical_not)[0]
+
+    assert np.array_equal(result, expected)
+    result = run_op_numeric_data(input_data, ng.logical_not)[0]
+    assert np.array_equal(result, expected)

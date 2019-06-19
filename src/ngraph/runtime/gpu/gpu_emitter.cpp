@@ -609,11 +609,6 @@ std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_DynRange(EMIT_ARGS)
-{
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
-}
-
 std::string runtime::gpu::GPU_Emitter::emit_DynReshape(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
@@ -995,6 +990,11 @@ std::string runtime::gpu::GPU_Emitter::emit_QuantizedDotBias(EMIT_ARGS)
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedMaxPool(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Range(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }

@@ -180,7 +180,7 @@ static PartialShape infer_output_shape(const op::Range* node, const element::Typ
 
         T strided = adjust_for_step_and_sign<T>(span, step);
 
-        result = PartialShape{static_cast<int64_t>(strided)};
+        result = PartialShape{Dimension(static_cast<int64_t>(strided))};
     }
 
     return result;

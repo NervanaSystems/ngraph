@@ -211,14 +211,6 @@
         KV = K<ET, 2, R2>;                                                                         \
     else if (R1 == 3)                                                                              \
         KV = K<ET, 3, R2>;                                                                         \
-    else if (R1 == 4)                                                                              \
-        KV = K<ET, 4, R2>;                                                                         \
-    else if (R1 == 5)                                                                              \
-        KV = K<ET, 5, R2>;                                                                         \
-    else if (R1 == 6)                                                                              \
-        KV = K<ET, 6, R2>;                                                                         \
-    else if (R1 == 7)                                                                              \
-        KV = K<ET, 7, R2>;                                                                         \
     else                                                                                           \
         throw ngraph_error("Unsupported first rank " + std::to_string(R1) + " for kernel " #K);
 
@@ -234,22 +226,6 @@
     else if (R2 == 3)                                                                              \
     {                                                                                              \
         SELECT_RANK1(KV, ET, R1, 3, K);                                                            \
-    }                                                                                              \
-    else if (R2 == 4)                                                                              \
-    {                                                                                              \
-        SELECT_RANK1(KV, ET, R1, 4, K);                                                            \
-    }                                                                                              \
-    else if (R2 == 5)                                                                              \
-    {                                                                                              \
-        SELECT_RANK1(KV, ET, R1, 5, K);                                                            \
-    }                                                                                              \
-    else if (R2 == 6)                                                                              \
-    {                                                                                              \
-        SELECT_RANK1(KV, ET, R1, 6, K);                                                            \
-    }                                                                                              \
-    else if (R2 == 7)                                                                              \
-    {                                                                                              \
-        SELECT_RANK1(KV, ET, R1, 7, K);                                                            \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \
@@ -269,6 +245,10 @@
     else if (ET == element::u8)                                                                    \
     {                                                                                              \
         SELECT_2RANKS(KV, uint8_t, R1, R2, K);                                                     \
+    }                                                                                              \
+    else if (ET == element::i8)                                                                    \
+    {                                                                                              \
+        SELECT_2RANKS(KV, int8_t, R1, R2, K);                                                      \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \
