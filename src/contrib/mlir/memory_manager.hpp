@@ -18,7 +18,7 @@
 
 #include <stdint.h>
 #include <vector>
-
+#include <stdlib.h>
 namespace ngraph
 {
     namespace runtime

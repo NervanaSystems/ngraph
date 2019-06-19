@@ -266,16 +266,26 @@ void MLIRCompiler::build_ng_dialect()
     create_return();
 }
 
-template <>
-mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
-{
-    return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
-}
 
-template <>
-mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
+namespace ngraph
 {
-    return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
+    namespace runtime
+    {
+        namespace ngmlir
+        {
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
+            {
+                return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
+            {
+                return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
+            }
+        }
+    }
 }
 
 const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
