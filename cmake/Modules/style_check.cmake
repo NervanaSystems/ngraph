@@ -27,7 +27,9 @@ macro(STYLE_CHECK_FILE PATH)
 endmacro()
 
 set(DIRECTORIES_OF_INTEREST
-    src
+    ngraph
+    resource
+    tools
     doc
     test
     python/pyngraph

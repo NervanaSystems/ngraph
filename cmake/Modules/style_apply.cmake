@@ -20,7 +20,9 @@ function(STYLE_APPLY_FILE PATH)
 endfunction()
 
 set(DIRECTORIES_OF_INTEREST
-    src
+    ngraph
+    resource
+    tools
     doc
     test
     python/pyngraph
