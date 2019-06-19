@@ -40,7 +40,9 @@ namespace ngraph
 enum class ngraph::runtime::interpreter::OP_TYPEID
 {
 #include "ngraph/op/op_tbl.hpp"
+#ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/op_tbl.hpp"
+#endif
 };
 #undef NGRAPH_OP
 

@@ -19,17 +19,45 @@
 using namespace std;
 using namespace ngraph;
 
-op::GenerateMask::GenerateMask(const std::shared_ptr<Node>& training,
+const string op::GenerateMask::type_name{"GenerateMask"};
+
+op::GenerateMask::GenerateMask()
+    : Op()
+{
+}
+
+#if 0
+// Not supported until all transformers use nodes instead of attributes
+op::GenerateMask::GenerateMask(const Output<Node>& training,
+                               const Output<Node>& shape,
+                               const Output<Node>& probability,
+                               const Output<Node>& seed,
+                               const Output<Node>& use_seed,
+                               const element::Type& element_type)
+    : Op({training, shape, probability, seed, use_seed})
+    , m_element_type(element_type)
+{
+}
+#endif
+
+op::GenerateMask::GenerateMask(const Output<Node>& training,
                                const Shape& shape,
                                const element::Type& element_type,
-                               unsigned int seed,
-                               double prob)
-    : Op("GenerateMask", check_single_output_args({training}))
-    , m_shape(shape)
+                               uint64_t seed,
+                               double prob,
+                               bool use_seed)
+    : Op({training})
     , m_element_type(element_type)
+    , m_shape(shape)
+    , m_use_seed(use_seed)
     , m_seed(seed)
     , m_probability(prob)
 {
+    set_argument(1, make_shared<op::Constant>(element::u64, Shape{shape.size()}, shape));
+    set_argument(2,
+                 make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{use_seed}));
+    set_argument(3, make_shared<op::Constant>(element::u64, Shape{}, std::vector<uint64_t>{seed}));
+    set_argument(4, make_shared<op::Constant>(element::f64, Shape{}, std::vector<double>{prob}));
     constructor_validate_and_infer_types();
 }
 
@@ -37,7 +65,7 @@ shared_ptr<Node> op::GenerateMask::copy_with_new_args(const NodeVector& new_args
 {
     check_new_args_count(this, new_args);
     return make_shared<GenerateMask>(
-        new_args.at(0), m_shape, m_element_type, m_seed, m_probability);
+        new_args.at(0), m_shape, m_element_type, m_seed, m_probability, m_use_seed);
 }
 
 void ngraph::op::GenerateMask::validate_and_infer_types()

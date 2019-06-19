@@ -19,6 +19,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -3632,6 +3633,14 @@ TEST(type_prop, tensor_constant_bad_count)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, constant_zero_elements_one_string)
+{
+    auto c =
+        make_shared<op::Constant>(element::i64, Shape{2, 0, 2, 2}, std::vector<std::string>{"42"});
+    ASSERT_EQ(c->get_element_type(), element::i64);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 0, 2, 2}));
 }
 
 TEST(type_prop, replace_slice_deduce_vector)
@@ -7578,6 +7587,26 @@ TEST(type_prop, max_pool_3d_deduce_strided_small)
     EXPECT_EQ(max_pool->get_window_shape(), (Shape{2, 3, 2}));
 }
 
+TEST(type_prop, max_pool_ceil_mode)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 10});
+    Shape window_shape{2};
+    auto move_strides = Strides{4};
+    Shape padding_below{4};
+    Shape padding_above{5};
+    auto max_pool = make_shared<op::MaxPool>(param,
+                                             window_shape,
+                                             move_strides,
+                                             padding_below,
+                                             padding_above,
+                                             op::PadType::EXPLICIT,
+                                             true);
+
+    // ceil((10 + 9 - 2)/4) + 1
+    EXPECT_EQ(max_pool->get_shape(), (Shape{64, 3, 6}));
+}
+
 TEST(type_prop, max_pool_invalid_0d_input)
 {
     // Deduce type
@@ -8647,6 +8676,27 @@ TEST(type_prop, avg_pool_3d_deduce_strided_padded_small)
     EXPECT_EQ(avg_pool->get_padding_above(), (Shape{6, 4, 5}));
 }
 
+TEST(type_prop, avg_pool_ceil_mode)
+{
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 10});
+    Shape window_shape{2};
+    auto move_strides = Strides{4};
+    Shape padding_below{4};
+    Shape padding_above{5};
+    auto avg_pool = make_shared<op::AvgPool>(param,
+                                             window_shape,
+                                             move_strides,
+                                             padding_below,
+                                             padding_above,
+                                             true,
+                                             op::PadType::EXPLICIT,
+                                             true);
+
+    // ceil((10 + 9 - 2)/4) + 1
+    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 6}));
+}
+
 TEST(type_prop, avg_pool_invalid_0d_input)
 {
     // Deduce type
@@ -9656,6 +9706,16 @@ TEST(type_prop, sum_axis_oob)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, sum_dynamic_axes)
+{
+    auto param = make_shared<op::Parameter>(element::f32, Shape{3, 4, 5});
+    auto summation_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto sum = make_shared<op::Sum>(param, summation_axes);
+
+    EXPECT_EQ(sum->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(sum->get_output_partial_shape(0).rank().is_dynamic());
 }
 
 TEST(type_prop, sum_partial_rank_dynamic)
@@ -14809,6 +14869,120 @@ TEST(type_prop, split)
     EXPECT_EQ(split->output(1).get_element_type(), element::i32);
 }
 
+TEST(type_prop, lstm_cell)
+{
+    const size_t batch_size = 2;
+    const size_t input_size = 3;
+    const size_t hidden_size = 3;
+    const size_t gates_count = 4;
+
+    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto W =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+    const auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+
+    const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+    EXPECT_EQ(lstm_cell->output(0).get_element_type(), element::f32);
+    EXPECT_EQ(lstm_cell->output(0).get_shape(), (Shape{batch_size, hidden_size}));
+    EXPECT_EQ(lstm_cell->output(1).get_element_type(), element::f32);
+    EXPECT_EQ(lstm_cell->output(1).get_shape(), (Shape{batch_size, hidden_size}));
+}
+
+TEST(type_prop, lstm_cell_invalid_input)
+{
+    const size_t batch_size = 2;
+    const size_t input_size = 3;
+    const size_t hidden_size = 3;
+    const size_t gates_count = 4;
+
+    auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+
+    // Invalid W tensor shape.
+    auto W = make_shared<op::Parameter>(element::f32, Shape{1 * hidden_size, input_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor W must have shape"));
+    }
+
+    // Invalid R tensor shape.
+    W = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+    R = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, 1});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor R must have shape"));
+    }
+
+    // Invalid H_t tensor shape.
+    R = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    H_t = make_shared<op::Parameter>(element::f32, Shape{4, hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor H_t must have shape"));
+    }
+
+    // Invalid C_t tensor shape.
+    H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    C_t = make_shared<op::Parameter>(element::f32, Shape{4, hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor C_t must have shape"));
+    }
+
+    // Invalid B tensor shape.
+    C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
+    auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size, B, P);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor B must have shape"));
+    }
+
+    // Invalid P tensor shape.
+    B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    P = make_shared<op::Parameter>(element::f32, Shape{hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size, B, P);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor P must have shape"));
+    }
+}
+
 TEST(type_prop, fake_quantize)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
@@ -14897,5 +15071,195 @@ TEST(type_prop, fake_quantize_invalid_rank)
         EXPECT_HAS_SUBSTRING(error.what(),
                              std::string("must either be a scalar or a vector of size equal "
                                          "to number of channels."));
+    }
+}
+
+TEST(type_prop, group_conv_transpose)
+{
+    // C x M / group x kH x kW
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{16, 2, 3, 3});
+    // N x C x H x W
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 16, 6, 6});
+    auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                          weights,
+                                                          Strides{1, 1},
+                                                          Strides{1, 1},
+                                                          CoordinateDiff{0, 0},
+                                                          CoordinateDiff{0, 0},
+                                                          CoordinateDiff{0, 0},
+                                                          2);
+    EXPECT_EQ(gct->get_element_type(), element::f32);
+    EXPECT_EQ(gct->get_shape(), (Shape{1, 4, 8, 8}));
+    EXPECT_EQ(gct->get_strides(), (Strides{1, 1}));
+    EXPECT_EQ(gct->get_dilations(), (Strides{1, 1}));
+    EXPECT_EQ(gct->get_padding_begin(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_padding_end(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_output_padding(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_groups(), size_t(2));
+    EXPECT_EQ(gct->get_pad_type(), op::PadType::EXPLICIT);
+}
+
+TEST(type_prop, group_conv_transpose_output_shape)
+{
+    // N x C x H x W
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 16, 5, 5});
+    // C x M / group x kH x kW
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{16, 2, 3, 3});
+    auto gct = make_shared<op::GroupConvolutionTranspose>(
+        data, weights, Strides{1, 1}, Strides{1, 1}, CoordinateDiff{0, 0}, Shape{1, 2, 3, 3}, 1);
+    EXPECT_EQ(gct->get_element_type(), element::f32);
+    EXPECT_EQ(gct->get_shape(), (Shape{1, 2, 3, 3}));
+    EXPECT_EQ(gct->get_strides(), (Strides{1, 1}));
+    EXPECT_EQ(gct->get_dilations(), (Strides{1, 1}));
+    EXPECT_EQ(gct->get_padding_begin(), (CoordinateDiff{2, 2}));
+    EXPECT_EQ(gct->get_padding_end(), (CoordinateDiff{2, 2}));
+    EXPECT_EQ(gct->get_output_padding(), (CoordinateDiff{0, 0}));
+    EXPECT_EQ(gct->get_groups(), size_t(1));
+    EXPECT_EQ(gct->get_pad_type(), op::PadType::EXPLICIT);
+}
+
+TEST(type_prop, group_conv_transpose_invalid_params)
+{
+    // C x M / group x kH x kW
+    auto weights = make_shared<op::Parameter>(element::f32, Shape{16, 20, 3, 3});
+    // N x C x H x W
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 16, 5, 5});
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    21);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Incorrect value of groups:"));
+    }
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    5);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Number of data channels not a multiple of group size."));
+    }
+
+    try
+    {
+        // C x M / group x kH x kW
+        auto bad_weights = make_shared<op::Parameter>(element::f32, Shape{10, 20, 3, 3});
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    bad_weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    8);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Number of filters channels must be equal to number of ") +
+                                 std::string("data channels"));
+    }
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    4,
+                                                                    op::PadType::SAME_UPPER);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Currently only eplicit pad type is supported."));
+    }
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    4);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Strides should be of number of input data features size."));
+    }
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0},
+                                                                    4);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Dilations should be of number of input data features size."));
+    }
+
+    try
+    {
+        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
+                                                                    weights,
+                                                                    Strides{1, 1},
+                                                                    Strides{1, 1},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{2, 2},
+                                                                    CoordinateDiff{0, 0, 1, 1},
+                                                                    4);
+        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
+                                   "Node was created with incorrect params.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Output padding should be of number of input data features size."));
     }
 }

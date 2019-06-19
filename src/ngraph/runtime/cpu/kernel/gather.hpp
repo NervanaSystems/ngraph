@@ -31,12 +31,15 @@ namespace ngraph
         {
             namespace kernel
             {
+                // Calculate the indices from position 0 to rank-1.
                 static void
-                    get_leading_indices(const Shape& shape, int index, std::vector<int>& indices)
+                    get_indices(const Shape& shape, int index, std::vector<int>& indices, int rank)
                 {
-                    auto rank = shape.size();
+                    if (rank == 0)
+                    {
+                        return;
+                    }
                     std::vector<int> partial_sum(rank);
-
                     partial_sum[rank - 1] = 1;
                     for (int j = rank - 2; j >= 0; j--)
                     {
@@ -49,6 +52,7 @@ namespace ngraph
                     }
                 }
 
+                // Gather use indices to get slices of inputs.
                 template <typename ElementType,
                           typename IndicesType,
                           unsigned int Rank1,
@@ -59,6 +63,7 @@ namespace ngraph
                             const Shape& inputs_shape,
                             const Shape& indices_shape,
                             const Shape& output_shape,
+                            size_t axis,
                             int arena)
                 {
                     Eigen::array<Eigen::Index, Rank1> in_dims;
@@ -80,60 +85,119 @@ namespace ngraph
 
                     auto indices_ptr = static_cast<IndicesType*>(indices);
                     auto indices_rank = indices_shape.size();
+                    auto outer_loop_num = 1;
+                    for (int i = 0; i < axis; i++)
+                    {
+                        outer_loop_num *= inputs_shape[i];
+                    }
 
                     if (indices_rank == 0)
-                    {
-                        Eigen::array<Eigen::Index, Rank1> in_extents, in_offsets;
-                        Eigen::array<Eigen::Index, Rank2> out_extents, out_offsets;
-
-                        for (int i = 0; i < Rank1; i++)
-                        {
-                            in_extents[i] = inputs_shape[i];
-                            in_offsets[i] = 0;
-                        }
-                        in_extents[0] = 1;
-                        in_offsets[0] = indices_ptr[0];
-                        for (int i = 0; i < Rank2; i++)
-                        {
-                            out_extents[i] = output_shape[i];
-                            out_offsets[i] = 0;
-                        }
-
-                        out.slice(out_offsets, out_extents)
-                            .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
-                                arena)) = in.slice(in_offsets, in_extents).reshape(out_extents);
-                    }
-                    else
                     {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-                        for (int i = 0; i < shape_size(indices_shape); i++)
+                        for (int i = 0; i < outer_loop_num; i++)
                         {
-                            // Declare these inside the loop for omp parallel
                             Eigen::array<Eigen::Index, Rank1> in_extents, in_offsets;
                             Eigen::array<Eigen::Index, Rank2> out_extents, out_offsets;
-                            std::vector<int> leading_indices(indices_rank);
+                            // indices_before_axis depends on inputs_shape[0,..., axis-1] and i.
+                            // if axis is 0, indices_before_axis is empty.
+                            std::vector<int> indices_before_axis(axis);
+                            get_indices(inputs_shape, i, indices_before_axis, axis);
 
-                            for (int r = 0; r < Rank1; r++)
+                            // before axis
+                            for (int r = 0; r < axis; r++)
+                            {
+                                in_extents[r] = 1;
+                                in_offsets[r] = indices_before_axis[r];
+                            }
+                            // from axis
+                            for (int r = axis; r < Rank1; r++)
                             {
                                 in_extents[r] = inputs_shape[r];
                                 in_offsets[r] = 0;
                             }
-                            in_extents[0] = 1;
-                            in_offsets[0] = indices_ptr[i];
+                            // at axis
+                            in_extents[axis] = 1;
+                            // at axis, get the value from indices arg
+                            in_offsets[axis] = indices_ptr[0];
 
-                            for (int r = 0; r < Rank2; r++)
+                            // before axis
+                            for (int r = 0; r < axis; r++)
+                            {
+                                out_extents[r] = 1;
+                                out_offsets[r] = indices_before_axis[r];
+                            }
+                            // after axis
+                            for (int r = axis; r < Rank2; r++)
                             {
                                 out_extents[r] = output_shape[r];
                                 out_offsets[r] = 0;
                             }
-                            get_leading_indices(indices_shape, i, leading_indices);
+
+                            out.slice(out_offsets, out_extents)
+                                .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
+                                    arena)) = in.slice(in_offsets, in_extents).reshape(out_extents);
+                        }
+                    }
+                    else
+                    {
+                        auto num_indices = shape_size(indices_shape);
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+                        for (int i = 0; i < outer_loop_num * num_indices; i++)
+                        {
+                            Eigen::array<Eigen::Index, Rank1> in_extents, in_offsets;
+                            Eigen::array<Eigen::Index, Rank2> out_extents, out_offsets;
+                            std::vector<int> indices_before_axis(axis);
+                            // indices_before_axis depends on inputs_shape[0,..., axis-1] and i / num_indices.
+                            // if axis is 0, indices_before_axis is empty.
+                            get_indices(inputs_shape, i / num_indices, indices_before_axis, axis);
+                            std::vector<int> indices_from_indices_arg(indices_rank);
+
+                            // before axis
+                            for (int r = 0; r < axis; r++)
+                            {
+                                in_extents[r] = 1;
+                                in_offsets[r] = indices_before_axis[r];
+                            }
+                            // from axis
+                            for (int r = axis; r < Rank1; r++)
+                            {
+                                in_extents[r] = inputs_shape[r];
+                                in_offsets[r] = 0;
+                            }
+                            // at axis
+                            in_extents[axis] = 1;
+                            // before axis
+                            for (int r = 0; r < axis; r++)
+                            {
+                                out_extents[r] = 1;
+                                out_offsets[r] = indices_before_axis[r];
+                            }
+                            // from axis
+                            for (int r = axis; r < Rank2; r++)
+                            {
+                                out_extents[r] = output_shape[r];
+                                out_offsets[r] = 0;
+                            }
+                            // at axis, get the value from indices arg
+                            int k = i % num_indices;
+                            in_offsets[axis] = indices_ptr[k];
+
+                            // indices_from_indices_arg depends on indices_shape and k.
+                            // suppose the inputs has shape {3, 3, 3}, indices has shape {2, 2}, and axis is 1,
+                            // the output would have shape {3, 2, 2, 3} and
+                            // indices_from_indices_arg would contain indices at position 1 and 2 for output slice offsets.
+                            get_indices(indices_shape, k, indices_from_indices_arg, indices_rank);
                             for (int j = 0; j < indices_rank; j++)
                             {
-                                out_extents[j] = 1;
-                                out_offsets[j] = leading_indices[j];
+                                out_extents[j + axis] = 1;
+                                out_offsets[j + axis] = indices_from_indices_arg[j];
                             }
+
                             out.slice(out_offsets, out_extents)
                                 .device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                                     arena)) = in.slice(in_offsets, in_extents).reshape(out_extents);
@@ -148,10 +212,17 @@ namespace ngraph
                                 const Shape& inputs_shape,
                                 const Shape& indices_shape,
                                 const Shape& output_shape,
+                                size_t axis,
                                 int arena)
                 {
-                    gather<ElementType, int64_t, Rank1, Rank2>(
-                        inputs, indices, output, inputs_shape, indices_shape, output_shape, arena);
+                    gather<ElementType, int64_t, Rank1, Rank2>(inputs,
+                                                               indices,
+                                                               output,
+                                                               inputs_shape,
+                                                               indices_shape,
+                                                               output_shape,
+                                                               axis,
+                                                               arena);
                 }
 
                 template <typename ElementType, unsigned int Rank1, unsigned int Rank2>
@@ -161,10 +232,17 @@ namespace ngraph
                                 const Shape& inputs_shape,
                                 const Shape& indices_shape,
                                 const Shape& output_shape,
+                                size_t axis,
                                 int arena)
                 {
-                    gather<ElementType, int32_t, Rank1, Rank2>(
-                        inputs, indices, output, inputs_shape, indices_shape, output_shape, arena);
+                    gather<ElementType, int32_t, Rank1, Rank2>(inputs,
+                                                               indices,
+                                                               output,
+                                                               inputs_shape,
+                                                               indices_shape,
+                                                               output_shape,
+                                                               axis,
+                                                               arena);
                 }
             }
         }

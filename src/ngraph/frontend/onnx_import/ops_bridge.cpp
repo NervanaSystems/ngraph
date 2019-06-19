@@ -41,6 +41,7 @@
 #include "op/concat.hpp"
 #include "op/constant.hpp"
 #include "op/conv.hpp"
+#include "op/conv_integer.hpp"
 #include "op/conv_transpose.hpp"
 #include "op/cos.hpp"
 #include "op/cosh.hpp"
@@ -93,6 +94,7 @@
 #include "op/reshape.hpp"
 #include "op/selu.hpp"
 #include "op/shape.hpp"
+#include "op/shrink.hpp"
 #include "op/sigmoid.hpp"
 #include "op/sign.hpp"
 #include "op/sin.hpp"
@@ -244,6 +246,7 @@ namespace ngraph
             REGISTER_OPERATOR("Concat", 1, concat);
             REGISTER_OPERATOR("Constant", 1, constant);
             REGISTER_OPERATOR("Conv", 1, conv);
+            REGISTER_OPERATOR("ConvInteger", 1, conv_integer);
             REGISTER_OPERATOR("ConvTranspose", 1, conv_transpose);
             REGISTER_OPERATOR("Cos", 1, cos);
             REGISTER_OPERATOR("Cosh", 1, cosh);
@@ -309,6 +312,7 @@ namespace ngraph
             REGISTER_OPERATOR("Reshape", 1, reshape);
             REGISTER_OPERATOR("Selu", 1, selu);
             REGISTER_OPERATOR("Shape", 1, shape);
+            REGISTER_OPERATOR("Shrink", 1, shrink);
             REGISTER_OPERATOR("Sigmoid", 1, sigmoid);
             REGISTER_OPERATOR("Sign", 1, sign);
             REGISTER_OPERATOR("Sin", 1, sin);

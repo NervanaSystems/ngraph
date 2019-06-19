@@ -14,32 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/hybrid/pass/default_placement.hpp"
-#include "ngraph/log.hpp"
+#pragma once
+
+#include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/runtime/backend.hpp"
 
-using namespace ngraph;
-using namespace std;
-
-runtime::hybrid::pass::DefaultPlacement::DefaultPlacement(
-    const vector<shared_ptr<runtime::Backend>>& placement_backends)
-    : m_placement_backends(placement_backends)
+namespace ngraph
 {
-}
-
-bool runtime::hybrid::pass::DefaultPlacement::run_on_node(shared_ptr<Node> node)
-{
-    size_t backend_index = 0;
-    for (auto backend : m_placement_backends)
+    namespace onnx_import
     {
-        if (backend->is_supported(*node))
+        namespace op
         {
-            node->set_placement_index(backend_index);
-            return false;
-        }
-        backend_index++;
-    }
-    throw runtime_error("Node " + node->get_name() + " not supported by any backend");
-}
+            namespace set_1
+            {
+                /// \brief Performs ONNX ConvInteger operation.
+                ///
+                /// \param node   The ONNX node object representing this operation.
+                ///
+                /// \return The vector containing Ngraph nodes producing output of quantized ONNX convolution
+                ///         operation.
+                NodeVector conv_integer(const Node& node);
+
+            } // namespace set_1
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

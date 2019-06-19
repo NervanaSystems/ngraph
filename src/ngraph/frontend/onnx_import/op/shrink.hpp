@@ -16,31 +16,28 @@
 
 #pragma once
 
-#include <exception>
-#include <functional>
-#include <sstream>
-
-#include "ngraph/pass/pass.hpp"
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace onnx_import
     {
-        namespace hybrid
+        namespace op
         {
-            namespace pass
+            namespace set_1
             {
-                class FixGetOutputElement;
-            }
-        }
-    }
-}
+                /// @brief ONNX Shrink operator
+                ///
+                /// @note It operates on a single input tensor and two attributes: lambd and bias.
+                ///       Input values greater or equal to '-lambd' and less or equal to 'lambd' are zeroed-out.
+                ///       'Bias' is added to the values that are less than '-lambd'
+                ///       and subtracted from values greater than 'lambd'.
+                NodeVector shrink(const Node& node);
+            } // namespace set_1
 
-class ngraph::runtime::hybrid::pass::FixGetOutputElement : public ngraph::pass::NodePass
-{
-public:
-    FixGetOutputElement();
+        } //namespace op
 
-private:
-    bool run_on_node(std::shared_ptr<Node> node) override;
-};
+    } // namespace onnx_import
+
+} // namespace ngraph
