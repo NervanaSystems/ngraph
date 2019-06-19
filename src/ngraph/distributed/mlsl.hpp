@@ -65,8 +65,11 @@ namespace ngraph
                 std::printf("%s [MLSL RANK: %d]: %s\n", timestamp.c_str(), get_rank(), buf.data());
             }
 
-            void
-                all_reduce(void* in, void* out, element::Type_t element_type, size_t count) override
+            void all_reduce(void* in,
+                            void* out,
+                            element::Type_t element_type,
+                            reduction::Type reduce_type,
+                            size_t count) override
             {
                 auto data_type = MLSL::DT_FLOAT;
 
@@ -83,10 +86,29 @@ namespace ngraph
                     throw std::runtime_error("AllReduce op supports only f32 and f64 types");
                 }
 
+                decltype(MLSL::RT_SUM) mlsl_reduce_type;
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+                switch (reduce_type.get_type())
+                {
+                case reduction::Type_t::sum: mlsl_reduce_type = MLSL::RT_SUM; break;
+                case reduction::Type_t::prod:
+                    throw std::runtime_error("MLSL doesn't support allreduce prod");
+                    break;
+                case reduction::Type_t::min: mlsl_reduce_type = MLSL::RT_MIN; break;
+                case reduction::Type_t::max: mlsl_reduce_type = MLSL::RT_MAX; break;
+                }
+#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
+
                 MLSL::Environment& env = MLSL::Environment::GetEnv();
                 MLSL::Distribution* distribution = env.CreateDistribution(env.GetProcessCount(), 1);
-                MLSL::CommReq* req =
-                    distribution->AllReduce(in, out, count, data_type, MLSL::RT_SUM, MLSL::GT_DATA);
+                MLSL::CommReq* req = distribution->AllReduce(
+                    in, out, count, data_type, mlsl_reduce_type, MLSL::GT_DATA);
                 env.Wait(req);
                 env.DeleteDistribution(distribution);
             }
