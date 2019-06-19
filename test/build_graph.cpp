@@ -191,3 +191,19 @@ TEST(build_graph, tensor_iterator)
         OutputVector{// axis=1, start=0, stride=1, part_size=1, end=40
                      make_shared<op::SliceOutput>(Yseq, 1, 0, 1, 1, 40)});
 }
+
+TEST(build_graph, multi_output_split)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{64, 8, 100, 150});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
+    const auto split = make_shared<op::Split>(data, 1, 2);
+    auto conv = make_shared<op::GroupConvolution>(split->output(1),
+                                                  filters,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1},
+                                                  2);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+}

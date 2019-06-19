@@ -122,6 +122,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
@@ -1845,6 +1846,7 @@ namespace ngraph
                     writer << "                   {" << join(args[0].get_shape()) << "},\n";
                     writer << "                   {" << join(args[1].get_shape()) << "},\n";
                     writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                   " << gather->get_axis() << ",\n";
                     writer << "                   0);\n";
                 }
                 else
@@ -4000,6 +4002,12 @@ namespace ngraph
                 writer << "           training, seed, keep_prob);\n";
                 writer << "}\n";
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Dropout)
+            {
+                throw ngraph_error("Not yet implemented");
             }
 
             template <>

@@ -529,7 +529,6 @@ def test_sum():
     result_arr = np.array([0], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 4)
     handle = backend.compile(function)
-    handle.get_performance_data()
     handle.call([result], [a])
     result.read(util.numpy_to_c(result_arr), 4)
 
