@@ -2054,6 +2054,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::DepthToSpace:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::DynPad:
+        case OP_TYPEID::DynReplaceSlice:
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:
         case OP_TYPEID::Elu:

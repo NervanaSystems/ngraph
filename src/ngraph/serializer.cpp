@@ -52,6 +52,7 @@
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
+#include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
@@ -941,6 +942,25 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::DynPad>(args[0], args[1], args[2], args[3]);
                 break;
             }
+            case OP_TYPEID::DynReplaceSlice:
+            {
+                auto lower_bounds_mask = node_js.at("lower_bounds_mask").get<set<size_t>>();
+                auto upper_bounds_mask = node_js.at("upper_bounds_mask").get<set<size_t>>();
+                auto new_axis = node_js.at("new_axis").get<set<size_t>>();
+                auto shrink_axis = node_js.at("shrink_axis").get<set<size_t>>();
+                auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<size_t>>();
+                node = make_shared<op::DynReplaceSlice>(args[0],
+                                                        args[1],
+                                                        args[2],
+                                                        args[3],
+                                                        args[4],
+                                                        lower_bounds_mask,
+                                                        upper_bounds_mask,
+                                                        new_axis,
+                                                        shrink_axis,
+                                                        ellipsis_mask);
+                break;
+            }
             case OP_TYPEID::DynReshape:
             {
                 node = make_shared<op::DynReshape>(args[0], args[1]);
@@ -948,7 +968,20 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::DynSlice:
             {
-                node = make_shared<op::DynSlice>(args[0], args[1], args[2], args[3]);
+                auto lower_bounds_mask = node_js.at("lower_bounds_mask").get<set<size_t>>();
+                auto upper_bounds_mask = node_js.at("upper_bounds_mask").get<set<size_t>>();
+                auto new_axis = node_js.at("new_axis").get<set<size_t>>();
+                auto shrink_axis = node_js.at("shrink_axis").get<set<size_t>>();
+                auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<size_t>>();
+                node = make_shared<op::DynSlice>(args[0],
+                                                 args[1],
+                                                 args[2],
+                                                 args[3],
+                                                 lower_bounds_mask,
+                                                 upper_bounds_mask,
+                                                 new_axis,
+                                                 shrink_axis,
+                                                 ellipsis_mask);
                 break;
             }
             case OP_TYPEID::Elu:
@@ -2012,9 +2045,27 @@ static json write(const Node& n, bool binary_constant_data)
     }
     case OP_TYPEID::DynPad: { break;
     }
+    case OP_TYPEID::DynReplaceSlice:
+    {
+        auto tmp = dynamic_cast<const op::DynReplaceSlice*>(&n);
+        node["lower_bounds_mask"] = tmp->get_lower_bounds_mask();
+        node["upper_bounds_mask"] = tmp->get_upper_bounds_mask();
+        node["new_axis"] = tmp->get_new_axis();
+        node["shrink_axis"] = tmp->get_shrink_axis();
+        node["ellipsis_mask"] = tmp->get_ellipsis_mask();
+        break;
+    }
     case OP_TYPEID::DynReshape: { break;
     }
-    case OP_TYPEID::DynSlice: { break;
+    case OP_TYPEID::DynSlice:
+    {
+        auto tmp = dynamic_cast<const op::DynSlice*>(&n);
+        node["lower_bounds_mask"] = tmp->get_lower_bounds_mask();
+        node["upper_bounds_mask"] = tmp->get_upper_bounds_mask();
+        node["new_axis"] = tmp->get_new_axis();
+        node["shrink_axis"] = tmp->get_shrink_axis();
+        node["ellipsis_mask"] = tmp->get_ellipsis_mask();
+        break;
     }
     case OP_TYPEID::Elu: { break;
     }
