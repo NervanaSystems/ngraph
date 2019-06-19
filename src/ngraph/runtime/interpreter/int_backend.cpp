@@ -20,6 +20,7 @@
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/runtime/interpreter/static_initialize.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -40,6 +41,17 @@ extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
     static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
         new INTBackendConstructor());
     return s_backend_constructor.get();
+}
+
+void runtime::interpreter::static_initialize()
+{
+    static bool s_is_initialized = false;
+    if (!s_is_initialized)
+    {
+        NGRAPH_INFO << "INTERPRETER static initialize";
+        s_is_initialized = true;
+        BackendManager::register_backend("INTERPRETER", get_backend_constructor_pointer());
+    }
 }
 
 runtime::interpreter::INTBackend::INTBackend()

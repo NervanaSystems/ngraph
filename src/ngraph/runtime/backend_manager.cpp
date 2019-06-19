@@ -25,6 +25,7 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/interpreter/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -41,6 +42,35 @@ using namespace ngraph;
 unordered_map<string, runtime::BackendConstructor*>& runtime::BackendManager::get_registry()
 {
     static unordered_map<string, BackendConstructor*> s_registered_backend;
+    static bool s_static_initialization_called = false;
+    if (!s_static_initialization_called)
+    {
+        s_static_initialization_called = true;
+#ifdef INTERPRETER_BACKEND_STATIC
+        runtime::interpreter::static_initialize();
+#endif
+        // #ifdef CPU_BACKEND_STATIC
+        //     runtime::cpu::static_initialize();
+        // #endif
+        // #ifdef INTELGPU_BACKEND_STATIC
+        //     runtime::intelgpu::static_initialize();
+        // #endif
+        // #ifdef GPU_BACKEND_STATIC
+        //     runtime::gpu::static_initialize();
+        // #endif
+        // #ifdef NOP_BACKEND_STATIC
+        //     runtime::nop::static_initialize();
+        // #endif
+        // #ifdef GPUH_BACKEND_STATIC
+        //     runtime::gpuh::static_initialize();
+        // #endif
+        // #ifdef GENERIC_CPU_BACKEND_STATIC
+        //     runtime::cpu::static_initialize();
+        // #endif
+        // #ifdef PLAIDML_BACKEND_STATIC
+        //     runtime::plaidml::static_initialize();
+        // #endif
+    }
     return s_registered_backend;
 }
 
@@ -79,6 +109,11 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     }
 
     auto registry = get_registry();
+    NGRAPH_INFO << type;
+    for (auto t : registry)
+    {
+        NGRAPH_INFO << t.first;
+    }
     auto it = registry.find(type);
     if (it != registry.end())
     {
