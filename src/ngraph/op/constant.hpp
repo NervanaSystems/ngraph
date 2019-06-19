@@ -102,10 +102,7 @@ namespace ngraph
                         std::vector<int64_t> dvalues = parse_string<int64_t>(values);
                         if (values.size() == 1 && shape_size(m_shape) != 1)
                         {
-                            for (size_t i = 1; i < shape_size(m_shape); i++)
-                            {
-                                dvalues.push_back(dvalues[0]);
-                            }
+                            dvalues = std::vector<int64_t>(shape_size(m_shape), dvalues[0]);
                         }
                         write_values(dvalues);
                     }
@@ -114,10 +111,7 @@ namespace ngraph
                         std::vector<uint64_t> dvalues = parse_string<uint64_t>(values);
                         if (values.size() == 1 && shape_size(m_shape) != 1)
                         {
-                            for (size_t i = 1; i < shape_size(m_shape); i++)
-                            {
-                                dvalues.push_back(dvalues[0]);
-                            }
+                            dvalues = std::vector<uint64_t>(shape_size(m_shape), dvalues[0]);
                         }
                         write_values(dvalues);
                     }
@@ -127,10 +121,7 @@ namespace ngraph
                     std::vector<double> dvalues = parse_string<double>(values);
                     if (values.size() == 1 && shape_size(m_shape) != 1)
                     {
-                        for (size_t i = 1; i < shape_size(m_shape); i++)
-                        {
-                            dvalues.push_back(dvalues[0]);
-                        }
+                        dvalues = std::vector<double>(shape_size(m_shape), dvalues[0]);
                     }
                     write_values(dvalues);
                 }
