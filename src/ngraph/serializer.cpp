@@ -77,6 +77,7 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
@@ -1126,6 +1127,29 @@ static shared_ptr<ngraph::Function>
                 node = make_shared<op::LRN>(args[0], alpha, beta, bias, nsize);
                 break;
             }
+            case OP_TYPEID::LSTMCell:
+            {
+                auto hidden_size = node_js.at("hidden_size").get<size_t>();
+                auto clip = node_js.at("clip").get<float>();
+                auto activations = node_js.at("activations").get<vector<string>>();
+                auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
+                auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
+                auto input_forget = node_js.at("input_forget").get<bool>();
+                node = make_shared<op::LSTMCell>(args[0],
+                                                 args[1],
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 hidden_size,
+                                                 args[5],
+                                                 args[6],
+                                                 activations,
+                                                 activation_alpha,
+                                                 activation_beta,
+                                                 clip,
+                                                 input_forget);
+                break;
+            }
             case OP_TYPEID::Max:
             {
                 auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
@@ -2150,6 +2174,17 @@ static json write(const Node& n, bool binary_constant_data)
         node["beta"] = tmp->get_beta();
         node["bias"] = tmp->get_bias();
         node["nsize"] = tmp->get_nsize();
+        break;
+    }
+    case OP_TYPEID::LSTMCell:
+    {
+        auto tmp = dynamic_cast<const op::LSTMCell*>(&n);
+        node["hidden_size"] = tmp->get_hidden_size();
+        node["clip"] = tmp->get_clip();
+        node["activations"] = tmp->get_activations();
+        node["activation_alpha"] = tmp->get_activation_alpha();
+        node["activation_beta"] = tmp->get_activation_beta();
+        node["input_forget"] = tmp->get_input_forget();
         break;
     }
     case OP_TYPEID::Max:
