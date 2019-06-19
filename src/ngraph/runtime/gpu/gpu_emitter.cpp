@@ -1239,6 +1239,16 @@ std::string runtime::gpu::GPU_Emitter::emit_ScatterNDAdd(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_SequencePushFront(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_SequenceRepeat(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Select>(compiled_function, function_name, node, args, out);
@@ -1305,6 +1315,16 @@ std::string runtime::gpu::GPU_Emitter::emit_Slice(EMIT_ARGS)
                                           result_shape);
     }
     return compiled_function->add_to_runtime(index, function_name, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_SliceInput(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_SliceOutput(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Softmax(EMIT_ARGS)
@@ -1412,6 +1432,11 @@ std::string runtime::gpu::GPU_Emitter::emit_Tan(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Tanh(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Tanh>(compiled_function, function_name, node, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_TensorIterator(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)

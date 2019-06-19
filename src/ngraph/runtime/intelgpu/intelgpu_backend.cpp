@@ -2092,7 +2092,8 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScatterAdd:
         case OP_TYPEID::ScatterNDAdd:
         case OP_TYPEID::SequencePushFront:
-        case OP_TYPEID::SequenceRepeat; case OP_TYPEID::ShapeOf:
+        case OP_TYPEID::SequenceRepeat:
+        case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SliceInput:
         case OP_TYPEID::SliceOutput:
