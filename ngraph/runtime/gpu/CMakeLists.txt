@@ -56,7 +56,7 @@ if (NOT NGRAPH_DEX_ONLY)
 endif()
 
 set(CUDA_INC
-    ${PROJECT_SOURCE_DIR}/src/
+    ${PROJECT_SOURCE_DIR}/
     )
 set(CUDA_SRC
     nvcc/example.cu.cpp

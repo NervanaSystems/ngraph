@@ -56,7 +56,7 @@ message(STATUS "NGRAPH_WHEEL_VERSION ${NGRAPH_WHEEL_VERSION}")
 message(STATUS "NGRAPH_API_VERSION ${NGRAPH_API_VERSION}")
 
 set(NGRAPH_INCLUDE_PATH
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 if (APPLE)
@@ -443,7 +443,7 @@ message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 
-set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
+set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/ngraph)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
 if(WIN32)
     set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
