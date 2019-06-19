@@ -535,8 +535,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node_reference(json& j)
 shared_ptr<Function> JSONDeserializer::deserialize_function(json& func_js)
 {
     string func_name = func_js.at("name").get<string>();
-    vector<json> func_parameters = func_js.at("parameters"); //.get<vector<json>>();
-    vector<json> func_result = func_js.at("result");         //.get<vector<json>>();
+    vector<json> func_parameters = func_js.at("parameters");
+    vector<json> func_result = func_js.at("result");
     for (json node_js : func_js.at("ops"))
     {
         deserialize_node(node_js);
@@ -564,7 +564,7 @@ shared_ptr<Function> JSONDeserializer::deserialize_function(json& func_js)
     if (results != 0 && results != func_result.size())
     {
         throw ngraph_error(
-            " Graph serialization is inconsistent. Some op::Results appear to be missing");
+            "Graph serialization is inconsistent. Some op::Results appear to be missing");
     }
 
     std::vector<std::shared_ptr<op::Parameter>> params;
@@ -953,7 +953,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
         }
         case OP_TYPEID::Cosh:
         {
-            node = make_shared<op::Cos>(args[0]);
+            node = make_shared<op::Cosh>(args[0]);
             break;
         }
         case OP_TYPEID::DepthToSpace:
