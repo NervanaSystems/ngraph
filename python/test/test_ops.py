@@ -818,6 +818,7 @@ def test_slice():
 
 
 @pytest.mark.skip_on_gpu
+@pytest.mark.skip_on_intelgpu
 def test_replace_slice():
 
     element_type = Type.f32
