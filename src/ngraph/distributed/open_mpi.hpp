@@ -77,8 +77,11 @@ namespace ngraph
                     "%s [OpenMPI RANK: %d]: %s\n", timestamp.c_str(), get_rank(), buf.data());
             }
 
-            void
-                all_reduce(void* in, void* out, element::Type_t element_type, size_t count) override
+            void all_reduce(void* in,
+                            void* out,
+                            element::Type_t element_type,
+                            reduction::Type reduce_type,
+                            size_t count) override
             {
                 auto data_type = MPI_FLOAT;
 
@@ -95,7 +98,24 @@ namespace ngraph
                     throw std::runtime_error("AllReduce op supports only f32 and f64 types");
                 }
 
-                MPI_Allreduce(in, out, count, data_type, MPI_SUM, MPI_COMM_WORLD);
+                decltype(MPI_SUM) mpi_reduce_type;
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+                switch (reduce_type.get_type())
+                {
+                case reduction::Type_t::sum: mpi_reduce_type = MPI_SUM; break;
+                case reduction::Type_t::prod: mpi_reduce_type = MPI_PROD; break;
+                case reduction::Type_t::min: mpi_reduce_type = MPI_MIN; break;
+                case reduction::Type_t::max: mpi_reduce_type = MPI_MAX; break;
+                }
+#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
+
+                MPI_Allreduce(in, out, count, data_type, mpi_reduce_type, MPI_COMM_WORLD);
             }
 
             void broadcast(void* in,
