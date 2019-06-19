@@ -29,31 +29,89 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(distributed_${BACKEND_NAME}, allreduce)
+static void test_allreduce_common(reduction::Type reduce_type)
 {
     auto comm_size = get_distributed_interface()->get_size();
     if (comm_size > 1)
     {
         auto shape = Shape{2, 2};
         auto A = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::AllReduce>(A), ParameterVector{A});
+        auto f =
+            make_shared<Function>(make_shared<op::AllReduce>(A, reduce_type), ParameterVector{A});
 
         auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
         auto v = vector<float>{1, 2, 3, 4};
         auto a = backend->create_tensor(element::f32, shape);
-        copy_data(a, vector<float>{1, 2, 3, 4});
-
         auto result = backend->create_tensor(element::f32, shape);
 
-        std::transform(
-            v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+        switch (reduce_type.get_type())
+        {
+        case reduction::Type_t::sum:
+            copy_data(a, v);
+            std::transform(
+                v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
+            break;
+        case reduction::Type_t::prod:
+            copy_data(a, v);
+            std::transform(v.begin(), v.end(), v.begin(), [&](float elm) -> float {
+                return pow(elm, comm_size);
+            });
+            break;
+        case reduction::Type_t::min:
+        case reduction::Type_t::max:
+            auto shift = get_distributed_interface()->get_rank();
+            std::rotate(v.begin(), v.begin() + shift % v.size(), v.end());
+            copy_data(a, v);
+            if (reduce_type == reduction::Type_t::min)
+            {
+                std::fill(v.begin(), v.end(), 1);
+                for (int i = 1; i < static_cast<int>(v.size()) - comm_size + 1; i++)
+                    v[i] = i + 1;
+            }
+            else
+            {
+                std::fill(v.begin(), v.end(), v.size());
+                for (int i = 0; i < static_cast<int>(v.size()) - comm_size; i++)
+                    v[i] = i + 2;
+            }
+        }
+#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
 
         auto handle = backend->compile(f);
         handle->call_with_validate({result}, {a});
         EXPECT_TRUE(test::all_close_f(v, read_vector<float>(result)));
     }
 }
+
+TEST(distributed_${BACKEND_NAME}, allreduce_sum)
+{
+    test_allreduce_common(reduction::sum);
+}
+
+TEST(distributed_${BACKEND_NAME}, allreduce_min)
+{
+    test_allreduce_common(reduction::min);
+}
+
+TEST(distributed_${BACKEND_NAME}, allreduce_max)
+{
+    test_allreduce_common(reduction::max);
+}
+
+#if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+TEST(distributed_${BACKEND_NAME}, allreduce_prod)
+{
+    test_allreduce_common(reduction::prod);
+}
+#endif
 
 TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
 {
