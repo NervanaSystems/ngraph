@@ -150,3 +150,19 @@ TEST(build_graph, no_arg_construction)
     validate_nodes_and_infer_types(ops);
     ASSERT_EQ(add1->get_output_shape(0), Shape{7});
 }
+
+TEST(build_graph, multi_output_split)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{64, 8, 100, 150});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
+    const auto split = make_shared<op::Split>(data, 1, 2);
+    auto conv = make_shared<op::GroupConvolution>(split->output(1),
+                                                  filters,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1},
+                                                  2);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+}
