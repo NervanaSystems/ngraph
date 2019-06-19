@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <mutex>
 #include <tbb/tbb_stddef.h>
 
 #include "cpu_backend_visibility.h"
@@ -28,10 +27,6 @@
 
 using namespace ngraph;
 using namespace std;
-
-// this mutex will be used to protect the addition and deletion
-// of function to m_exec_map across multiple threads
-std::mutex exec_map_mutex;
 
 extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
@@ -95,7 +90,7 @@ shared_ptr<runtime::Executable>
                                        ngraph::pass::PassConfig& pass_config,
                                        bool performance_counters_enabled)
 {
-    std::lock_guard<std::mutex> guard(exec_map_mutex);
+    std::lock_guard<std::mutex> guard(m_exec_map_mutex);
     shared_ptr<runtime::Executable> rc;
     auto it = m_exec_map.find(func);
     if (it != m_exec_map.end())
@@ -150,7 +145,7 @@ bool runtime::cpu::CPU_Executable::call(const vector<shared_ptr<runtime::Tensor>
 
 void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> exec)
 {
-    std::lock_guard<std::mutex> guard(exec_map_mutex);
+    std::lock_guard<std::mutex> guard(m_exec_map_mutex);
     for (auto it = m_exec_map.begin(); it != m_exec_map.end(); ++it)
     {
         if (it->second == exec)
