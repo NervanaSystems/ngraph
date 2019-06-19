@@ -1174,6 +1174,11 @@ private:
             throw unsupported_op("Unsupported op '" + node.description() +
                                  "' in Interpreter back end.");
         }
+        case OP_TYPEID::Range:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
+        }
         case OP_TYPEID::Relu:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
