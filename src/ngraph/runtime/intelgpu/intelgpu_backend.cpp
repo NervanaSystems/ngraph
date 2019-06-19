@@ -2091,13 +2091,18 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::ScaleShift:
         case OP_TYPEID::ScatterAdd:
         case OP_TYPEID::ScatterNDAdd:
+        case OP_TYPEID::SequencePushFront:
+        case OP_TYPEID::SequenceRepeat;
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShuffleChannels:
+        case OP_TYPEID::SliceInput:
+        case OP_TYPEID::SliceOutput:
         case OP_TYPEID::SpaceToDepth:
         case OP_TYPEID::Split:
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::StopGradient:
+        case OP_TYPEID::TensorIterator:
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::Unsqueeze:
