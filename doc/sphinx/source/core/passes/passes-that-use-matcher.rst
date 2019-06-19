@@ -78,7 +78,7 @@ Pattern for capturing
             auto max = make_shared(skip_broadcast, val);
 
         pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) { 
-                #define NGRAPH_DEBUG << "In a callback for construct_relu_pattern against "
+                NGRAPH_DEBUG << "In a callback for construct_relu_pattern against "
                             << m.get_match_root()->get_name();
 
                 auto pattern_map = m.get_pattern_map();

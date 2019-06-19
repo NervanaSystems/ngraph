@@ -53,9 +53,9 @@ using llvm::make_unique;
 using namespace ngraph::runtime::ngmlir;
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
-    create_op<op_name>(MLIRCompiler & compiler, ngraph::Node* ng_node)
+    create_op<op_name>(MLIRCompiler & compiler, const ngraph::Node* ng_node)
 
-MLIRCompiler::MLIRCompiler(ngraph::op::CompiledKernel* compiled_kernel,
+MLIRCompiler::MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
                            const std::vector<void*>& external_tensors)
     : m_compiled_kernel(compiled_kernel)
     , m_external_tensors(external_tensors)
@@ -210,13 +210,6 @@ MLIRCompiler::TensorInfo MLIRCompiler::get_tensor_value(descriptor::Tensor* tens
     return it->second;
 }
 
-MLIRCompiler::TensorInfo MLIRCompiler::get_tensor_value(Node* node, int arg_no)
-{
-    descriptor::Tensor* tensor;
-    tensor = node->get_argument(arg_no)->get_output_tensor_ptr().get();
-    return get_tensor_value(tensor);
-}
-
 // Lowers nGraph dialect to affine dialect.
 void MLIRCompiler::lower_ng_dialect()
 {
@@ -300,10 +293,12 @@ const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
 };
 
 template <typename BinOp>
-mlir::Value* MLIRCompiler::create_binary_op(ngraph::Node* ng_node)
+mlir::Value* MLIRCompiler::create_binary_op(const ngraph::Node* ng_node)
 {
-    auto lhs_v = get_tensor_value(ng_node, 0).m_value;
-    auto rhs_v = get_tensor_value(ng_node, 1).m_value;
+    auto lhs = ng_node->get_argument(0)->get_output_tensor_ptr();
+    auto rhs = ng_node->get_argument(1)->get_output_tensor_ptr();
+    auto lhs_v = get_tensor_value(lhs.get()).m_value;
+    auto rhs_v = get_tensor_value(rhs.get()).m_value;
     auto res_type = get_mlir_type(ng_node->get_output_tensor_ptr().get());
     return m_builder->create<BinOp>(mlir::UnknownLoc::get(&m_context), res_type, lhs_v, rhs_v)
         .getResult();

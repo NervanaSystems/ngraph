@@ -60,7 +60,7 @@ namespace ngraph
                 using TensorList = std::vector<descriptor::Tensor*>;
                 using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
-                MLIRCompiler(ngraph::op::CompiledKernel* compiled_kernel,
+                MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
                              const std::vector<void*>& external_tensors);
 
                 /// Compiles and runs a subgraph in MLIR.
@@ -92,20 +92,19 @@ namespace ngraph
                 mlir::Type get_mlir_type(const descriptor::Tensor* tensor);
                 mlir::Type get_mlir_type(const element::Type& type);
                 TensorInfo get_tensor_value(descriptor::Tensor* tensor);
-                TensorInfo get_tensor_value(Node* node, int arg_no);
                 void update_tensor_value(descriptor::Tensor* tensor, mlir::Value* value);
 
                 void build_ng_dialect();
 
                 template <typename OP>
-                static mlir::Value* create_op(MLIRCompiler& compiler, ngraph::Node* ng_node)
+                static mlir::Value* create_op(MLIRCompiler& compiler, const ngraph::Node* ng_node)
                 {
                     throw std::runtime_error("Unimplemented op '" + ng_node->description() +
                                              "' in MLIR Compiler");
                 }
 
                 template <typename BinOp>
-                mlir::Value* create_binary_op(ngraph::Node* ng_node);
+                mlir::Value* create_binary_op(const ngraph::Node* ng_node);
 
                 void create_return();
 
@@ -120,7 +119,7 @@ namespace ngraph
 
             private:
                 // Sub-graph to be compiled and executed with MLIR.
-                ngraph::op::CompiledKernel* m_compiled_kernel;
+                const ngraph::op::CompiledKernel* m_compiled_kernel;
 
                 // Pointers to externally allocated memory for sub-graph's input and output tensors.
                 const std::vector<void*>& m_external_tensors;
@@ -139,7 +138,7 @@ namespace ngraph
                 using TensorToInfo = std::pair<descriptor::Tensor*, TensorInfo>;
                 using TensorToInfoMap = std::unordered_map<descriptor::Tensor*, TensorInfo>;
                 using MLIRCompOpFunction =
-                    std::function<mlir::Value*(MLIRCompiler& compiler, ngraph::Node*)>;
+                    std::function<mlir::Value*(MLIRCompiler& compiler, const ngraph::Node*)>;
                 using MLIRCompOpMap = std::unordered_map<std::type_index, MLIRCompOpFunction>;
 
                 // Maps tensor to the value it represents in the IR

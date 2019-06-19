@@ -191,7 +191,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_add_2_subgraphs_2)
 
 NGRAPH_TEST(${BACKEND_NAME}, dot_add_3_subgraphs)
 {
-    // Tests 2 sub-graphs merged at a join point into one. 
+    // Tests 3 distinct sub-graphs
     Shape shape_in1{2, 3};
     Shape shape_in2{3, 3};
     Shape shape_out{2, 3};

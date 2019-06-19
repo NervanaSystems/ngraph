@@ -41,19 +41,12 @@ namespace ngraph
                 {
                     m_graph_id = MLIRSubgraph::get_new_graph_id();
                 }
-                /// Create a sub-graph with a specific ID.
-                MLIRSubgraph(int graph_id) : m_graph_id(graph_id) {}
                 /// Get graph id
                 int get_id() const      { return m_graph_id; }
                 /// Get all nodes in the sub-graph.
                 NodeVector& get_nodes() { return m_nodes; }
                 /// Get input nodes. Predecessors to head nodes. 
                 NodeVector& get_input_nodes() { return m_input_nodes; }
-                /// Checks if a node is an input node.
-                bool is_input_node(std::shared_ptr<Node> node)
-                {
-                    return std::find(m_input_nodes.begin(), m_input_nodes.end(), node) != m_input_nodes.end();
-                }
                 /// Add a list of input nodes to the graph.
                 void add_inputs(NodeVector &inputs);
                 /// Add one node to the sub-graph.
@@ -75,31 +68,36 @@ namespace ngraph
             bool run_on_function(std::shared_ptr<Function> func) override;
             /// Checks if an ngraph node is supported by MLIR backend
             bool is_supported_mlir_op(std::shared_ptr<Node> node);
+            /// Get the sub-graph a node belongs to
             int get_subgraph(std::shared_ptr<Node> node)
             {
                 auto it = m_node_to_graph.find(node);
                 return (it == m_node_to_graph.end()) ? -1 : it->second;
             }
+            /// Get sub-graph by ID
             MLIRSubgraph& get_subgraph(int id)
             {
                 auto it = m_id_to_graph.find(id);
                 NGRAPH_CHECK(it != m_id_to_graph.end(), "Cannot find subgraph with ID: ", id);
                 return it->second;
             }
-            // Stores a sub-graph in the map and associates its nodes to it
+            /// Stores a sub-graph in the map
             void add_subgraph(MLIRSubgraph sg)
             {
                 m_id_to_graph.emplace(sg.get_id(), sg);
             }
+            /// Adds a node to the sub-graph
             void add_node_to_subgraph(MLIRSubgraph& sg, std::shared_ptr<Node> node)
             {
                 sg.add_node(node);
                 m_node_to_graph[node] = sg.get_id();
             }
+            /// Adds a list of input nodes to a sub-graph
             void add_inputs_to_subgraph(MLIRSubgraph& sg, NodeVector& inputs)
             {
                 sg.add_inputs(inputs);
             }
+            /// Merge two sub-graphs and update maps accordingly
             void merge_subgraphs(MLIRSubgraph& sg1, MLIRSubgraph& sg2)
             {
                 sg1.merge(sg2);

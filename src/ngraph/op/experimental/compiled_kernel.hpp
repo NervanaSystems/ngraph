@@ -40,7 +40,6 @@ namespace ngraph
 
             const NodeVector& get_node_list() const { return m_node_list; }
             const NodeVector& get_kernel_outputs() const { return m_output_nodes; }
-
         private:
             NodeVector m_node_list;
             NodeVector m_output_nodes;
