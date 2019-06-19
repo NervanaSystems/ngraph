@@ -109,11 +109,6 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     }
 
     auto registry = get_registry();
-    NGRAPH_INFO << type;
-    for (auto t : registry)
-    {
-        NGRAPH_INFO << t.first;
-    }
     auto it = registry.find(type);
     if (it != registry.end())
     {

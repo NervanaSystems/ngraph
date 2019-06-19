@@ -48,7 +48,6 @@ void runtime::interpreter::static_initialize()
     static bool s_is_initialized = false;
     if (!s_is_initialized)
     {
-        NGRAPH_INFO << "INTERPRETER static initialize";
         s_is_initialized = true;
         BackendManager::register_backend("INTERPRETER", get_backend_constructor_pointer());
     }
