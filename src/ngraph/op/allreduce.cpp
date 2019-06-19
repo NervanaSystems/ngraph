@@ -22,11 +22,13 @@ using namespace ngraph;
 const string op::AllReduce::type_name{"AllReduce"};
 
 op::AllReduce::AllReduce()
+    : m_reduce_type(reduction::sum)
 {
 }
 
-op::AllReduce::AllReduce(const shared_ptr<Node>& arg)
+op::AllReduce::AllReduce(const shared_ptr<Node>& arg, const reduction::Type reduce_type)
     : Op(check_single_output_args({arg}))
+    , m_reduce_type(reduce_type)
 {
     constructor_validate_and_infer_types();
 }
@@ -47,5 +49,10 @@ void op::AllReduce::validate_and_infer_types()
 shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<AllReduce>(new_args.at(0));
+    return make_shared<AllReduce>(new_args.at(0), get_reduce_type());
+}
+
+reduction::Type op::AllReduce::get_reduce_type() const
+{
+    return m_reduce_type;
 }

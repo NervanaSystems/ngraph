@@ -37,6 +37,9 @@ namespace ngraph
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto count = static_cast<int>(out[0].get_size());
                 auto data_type = args[0].get_element_type().get_type_enum();
+                const ngraph::op::AllReduce* allreduce =
+                    static_cast<const ngraph::op::AllReduce*>(node);
+                auto reduce_type = allreduce->get_reduce_type();
 
                 auto external_function_name = external_function->get_function_name();
                 NGRAPH_DEBUG_PRINT(
@@ -48,13 +51,15 @@ namespace ngraph
                     node->get_friendly_name().c_str(),
                     count);
 
-                auto functor = [&, count, data_type, arg_buffer_index, out_buffer_index](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                    get_distributed_interface()->all_reduce(ctx->buffer_data[arg_buffer_index],
-                                                            ctx->buffer_data[out_buffer_index],
-                                                            data_type,
-                                                            count);
-                };
+                auto functor =
+                    [&, count, reduce_type, data_type, arg_buffer_index, out_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        get_distributed_interface()->all_reduce(ctx->buffer_data[arg_buffer_index],
+                                                                ctx->buffer_data[out_buffer_index],
+                                                                data_type,
+                                                                reduce_type,
+                                                                count);
+                    };
                 functors.emplace_back(functor);
             }
 
