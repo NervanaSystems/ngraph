@@ -28,7 +28,7 @@ namespace ngraph
         public:
             /// \brief Constructs a quantized convolution operation.
             ///
-            /// \param data_batch The node producing the input data batch tensor.
+            /// \param input The node producing the input data batch tensor.
             /// \param filters The node producing the filters tensor.
             /// \param window_movement_strides The window movement strides.
             /// \param window_dilation_strides The window dilation strides.
