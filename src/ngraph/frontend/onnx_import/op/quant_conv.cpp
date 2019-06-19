@@ -258,11 +258,7 @@ namespace ngraph
                             data_dilations,
                             groups,
                             OpScale{data_scale, filters_scale, output_scale},
-                            OpZeroPoint{data_zero_point, filters_zero_point, output_zero_point},
-                            output_type,
-                            ngraph::AxisSet{},
-                            ngraph::AxisSet{},
-                            ngraph::AxisSet{});
+                            OpZeroPoint{data_zero_point, filters_zero_point, output_zero_point});
                     }
 
                     return {conv_node};
