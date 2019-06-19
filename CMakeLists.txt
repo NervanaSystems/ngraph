@@ -532,7 +532,18 @@ if (NGRAPH_HALIDE)
     include(cmake/external_halide.cmake)
 endif()
 
-add_subdirectory(src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+add_subdirectory(resource)
+
+add_subdirectory(ngraph)
+
+if (NGRAPH_TOOLS_ENABLE)
+    add_subdirectory(tools)
+    message(STATUS "tools enabled")
+else()
+    message(STATUS "tools disabled")
+endif()
 
 add_subdirectory(test)
 

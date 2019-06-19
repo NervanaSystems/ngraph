@@ -16,8 +16,8 @@
 
 #include <random>
 
-#include "except.hpp"
-#include "rng_state.hpp"
+#include "ngraph/except.hpp"
+#include "ngraph/state/rng_state.hpp"
 
 using namespace std;
 using namespace ngraph;

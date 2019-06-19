@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+add_definitions(-DIN_NGRAPH_LIBRARY)
+
 if(NOT NGRAPH_CODEGEN_ENABLE)
     return()
 endif()

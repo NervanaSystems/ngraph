@@ -91,7 +91,7 @@ if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
 endif()
 
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
-    NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
+    NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/ngraph")
 
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
@@ -204,7 +204,7 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     endif()
 
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
-    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    set(MANIFEST ${PROJECT_SOURCE_DIR}/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
         string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
@@ -290,7 +290,7 @@ endif()
 # If all the runtime libraries are installed into one location, that will make life easier.
 if (MSVS)
     add_custom_target(unit-test-check
-        COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
+        COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
         COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
         DEPENDS unit-test
     )

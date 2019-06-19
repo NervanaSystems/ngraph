@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+add_definitions(-DIN_NGRAPH_LIBRARY)
+
 if(LINUX)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 endif()

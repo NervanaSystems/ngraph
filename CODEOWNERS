@@ -2,63 +2,63 @@
 # that applies.
 
 # Default rule: @diyessi gets everything.
-*                                   @diyessi
+*                                            @diyessi
 
-/cmake/                             @rkimballn1 @silee2 @aslepko
+/cmake/                                      @rkimballn1 @silee2 @aslepko
 
-/.ci/                               @aslepko
-/.ci/travis/                        @aslepko @postrational
-/.ci/onnx/                          @aslepko @postrational
-/contrib/docker/                    @aslepko
-/.travis.yml                        @aslepko @postrational
+/.ci/                                        @aslepko
+/.ci/travis/                                 @aslepko @postrational
+/.ci/onnx/                                   @aslepko @postrational
+/contrib/docker/                             @aslepko
+/.travis.yml                                 @aslepko @postrational
 
-/.clang-format                      @rkimballn1
-/.gitattributes                     @rkimballn1
-/.gitignore                         @rkimballn1
-/VERSION.in                         @rkimballn1 @silee2
+/.clang-format                               @rkimballn1
+/.gitattributes                              @rkimballn1
+/.gitignore                                  @rkimballn1
+/VERSION.in                                  @rkimballn1 @silee2
 
-/doc/                               @indie
-/doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
-/README.md                          @indie
-/changes.md                         @indie @diyessi
-/INSTALL.md                         @indie
-/CONTRIB.md                         @indie
+/doc/                                        @indie
+/doc/examples/mnist_mlp/dist_*               @wenzhe-nrv @indie
+/README.md                                   @indie
+/changes.md                                  @indie @diyessi
+/INSTALL.md                                  @indie
+/CONTRIB.md                                  @indie
 
-/licenses/                          @diyessi @raramer01 @aslepko
-/LICENSE                            @diyessi @raramer01 @aslepko
+/licenses/                                   @diyessi @raramer01 @aslepko
+/LICENSE                                     @diyessi @raramer01 @aslepko
 
-/python/                            @postrational
+/python/                                     @postrational
 
-/src/resource/                      @rkimballn1
-/src/tools/                         @rkimballn1
-/src/ngraph/autodiff/               @diyessi
-/src/ngraph/builder/                @sfvaroglu
-/src/ngraph/codegen/                @rkimballn1
-/src/ngraph/distributed.*           @wenzhe-nrv @diyessi
-/src/ngraph/frontend/               @postrational
-/src/ngraph/op/                     @diyessi @aprocter
-/src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi @aprocter
-/src/ngraph/op/experimental/layers  @ilyachur
-/src/ngraph/pass/                   @jbobba
-/src/ngraph/pattern/                @jbobba @aprocter
-/src/ngraph/runtime/                @rkimballn1 @jbobba
-/src/ngraph/runtime/cpu/            @jbobba
-/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba
-/src/ngraph/runtime/dynamic/        @aprocter
-/src/ngraph/runtime/gpu/            @rkimballn1
-/src/ngraph/runtime/hybrid/         @rkimballn1
-/src/ngraph/runtime/intelgpu/       @dmyershov
-/src/ngraph/runtime/interpreter/    @rkimballn1
-/src/ngraph/runtime/plaidml/        @earhart
-/src/ngraph/runtime/reference/      @aprocter
-/src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @aprocter
-/src/ngraph/type/                   @diyessi
-/src/ngraph/serializer.*pp          @rkimballn1
+/resource/                                   @rkimballn1
+/tools/                                      @rkimballn1
+/ngraph/autodiff/                            @diyessi
+/ngraph/builder/                             @sfvaroglu
+/ngraph/codegen/                             @rkimballn1
+/ngraph/distributed.*                        @wenzhe-nrv @diyessi
+/ngraph/frontend/                            @postrational
+/ngraph/op/                                  @diyessi @aprocter
+/ngraph/op/allreduce.*pp                     @wenzhe-nrv @diyessi @aprocter
+/ngraph/op/experimental/layers               @ilyachur
+/ngraph/pass/                                @jbobba
+/ngraph/pattern/                             @jbobba @aprocter
+/ngraph/runtime/                             @rkimballn1 @jbobba
+/ngraph/runtime/cpu/                         @jbobba
+/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba
+/ngraph/runtime/dynamic/                     @aprocter
+/ngraph/runtime/gpu/                         @rkimballn1
+/ngraph/runtime/hybrid/                      @rkimballn1
+/ngraph/runtime/intelgpu/                    @dmyershov
+/ngraph/runtime/interpreter/                 @rkimballn1
+/ngraph/runtime/plaidml/                     @earhart
+/ngraph/runtime/reference/                   @aprocter
+/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @aprocter
+/ngraph/type/                                @diyessi
+/ngraph/serializer.*pp                       @rkimballn1
 
-/test/distributed.in.cpp            @wenzhe-nrv @diyessi @jianyinglang
+/test/distributed.in.cpp                     @wenzhe-nrv @diyessi @jianyinglang
 
 # Putting this last so it's not overridden by directory rules
-CMakeLists.txt                      @rkimballn1 @silee2
+CMakeLists.txt                               @rkimballn1 @silee2
 
 # Putting this last to make sure nothing else overrides.
-/CODEOWNERS                         @diyessi
+/CODEOWNERS                                  @diyessi

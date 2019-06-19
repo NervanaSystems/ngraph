@@ -68,8 +68,8 @@ descriptions:
    ``runtime``, The objects and methods used for executing the graph, `runtime`_, :doc:`../backend-support/cpp-api`
 
 
-.. _ngraph: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph
-.. _builder: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/builder
-.. _descriptor: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/descriptor
-.. _op: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/op
-.. _runtime: https://github.com/NervanaSystems/ngraph/tree/master/src/ngraph/runtime
+.. _ngraph: https://github.com/NervanaSystems/ngraph/tree/master/ngraph
+.. _builder: https://github.com/NervanaSystems/ngraph/tree/master/ngraph/builder
+.. _descriptor: https://github.com/NervanaSystems/ngraph/tree/master/ngraph/descriptor
+.. _op: https://github.com/NervanaSystems/ngraph/tree/master/ngraph/op
+.. _runtime: https://github.com/NervanaSystems/ngraph/tree/master/ngraph/runtime

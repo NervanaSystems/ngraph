@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+add_definitions(-DIN_NGRAPH_LIBRARY)
+
 set (SRC
     assertion.hpp
     autodiff/adjoints.cpp
@@ -590,7 +592,7 @@ install(DIRECTORY
         PATTERN "*.hpp"
         PATTERN "*.h"
 )
-install(FILES ${CMAKE_BINARY_DIR}/src/ngraph/version.hpp
+install(FILES ${CMAKE_BINARY_DIR}/ngraph/version.hpp
     DESTINATION "${NGRAPH_INSTALL_INCLUDE}/ngraph")
 
 set(CPACK_GENERATOR "DEB")
