@@ -76,9 +76,9 @@ namespace ngraph
                             ngraph::AxisSet{})};
                     }
 
+                    input_zero_point = inputs.at(2);
                     if (num_inputs == 4)
                     {
-                        input_zero_point = inputs.at(2);
                         filters_zero_point = inputs.at(3);
                     }
 
