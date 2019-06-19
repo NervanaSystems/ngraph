@@ -1,0 +1,121 @@
+//*****************************************************************************
+// Copyright 2017-2019 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
+
+#include <algorithm>
+#include <cstdio>
+#include <iostream>
+#include <list>
+#include <memory>
+#include <stdio.h>
+#include <fstream>
+#include <vector>
+
+
+#include "gtest/gtest.h"
+#include "misc.hpp"
+#include "ngraph/autodiff/adjoints.hpp"
+#include "ngraph/file_util.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/ngraph.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
+#include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
+#include "ngraph/util.hpp"
+#include "util/test_tools.hpp"
+
+
+using namespace ngraph;
+using namespace std;
+
+
+TEST(cpu_degub_tracer, check_flow_with_external_function)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
+
+    copy_data(a, vector<float>{0, 1, 2, 3});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+
+    const char* trace_log_file = "trace_meta.log";
+    const char* bin_log_file = "trace_bin.log";
+
+    set_environment("NGRAPH_TRACER_LOG", trace_log_file, 1);
+    set_environment("NGRAPH_BIN_TRACER_LOG", bin_log_file, 1);
+
+    shared_ptr<runtime::Executable> handle = backend->compile(f);
+    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
+
+    cf->call({result}, {a,b});
+
+    //open two logs and parse them
+    ifstream f_meta;
+    ifstream f_bin;
+
+    f_meta.open(trace_log_file);
+    f_bin.open(bin_log_file, std::ios::binary);
+
+    ASSERT_TRUE(f_meta.is_open());
+    ASSERT_TRUE(f_bin.is_open());
+
+    string line;
+
+    getline(f_meta, line);
+    auto str_mean = line.substr(line.find("mean"));
+    auto mean  = std::stod(str_mean.substr(str_mean.find("=") + 1, str_mean.find(" ") - str_mean.find("=")));
+
+    //mean value of first tensor - a
+    EXPECT_EQ(mean, 1.5);
+
+    getline(f_meta, line);
+    auto str_var = line.substr(line.find("var"));
+    auto var  = std::stod(str_var.substr(str_var.find("=") + 1));
+
+    //variance value of second tensor - b
+    EXPECT_EQ(var, 1.25);
+
+    getline(f_meta, line);
+    auto str_bin_offset = line.substr(line.find("bin_data"));
+    auto bin_offset  = std::stod(str_bin_offset.substr(str_bin_offset.find("=") + 1,
+                                str_bin_offset.find(" ") - str_bin_offset.find("=")));
+
+    //check output tensor from binary data
+    f_bin.seekg(bin_offset);
+
+    std::vector<unsigned char> v_c((std::istreambuf_iterator<char>(f_bin)),
+                         std::istreambuf_iterator<char>());
+
+    vector<float> v_f(4);
+    memcpy(&v_f[0], &v_c[0], sizeof(float)*4);
+
+    EXPECT_EQ((vector<float>{1, 3, 5, 7}), (v_f));
+
+    remove(trace_log_file);
+    remove(bin_log_file);
+
+}

@@ -93,7 +93,7 @@ void runtime::cpu::CPU_DebugTracer::dump_one_tensor(
 
     m_tracer_stream << " size=" << size << " " << shape << " ";
 
-    m_tracer_stream << " bin_data_offset=" << m_tracer_bin_stream.tellp();
+    m_tracer_stream << "bin_data_offset=" << m_tracer_bin_stream.tellp();
     m_tracer_bin_stream.write(reinterpret_cast<const char*>(float_data.data()),
                               float_data.size() * sizeof(float));
 
