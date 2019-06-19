@@ -34,7 +34,7 @@
 /src/ngraph/autodiff/               @diyessi
 /src/ngraph/builder/                @sfvaroglu
 /src/ngraph/codegen/                @rkimballn1
-/src/ngraph/distributed.*           @wenzhe-nrv @diyessi @avijit-nervana
+/src/ngraph/distributed.*           @wenzhe-nrv @diyessi
 /src/ngraph/frontend/               @postrational
 /src/ngraph/op/                     @diyessi @aprocter
 /src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi @aprocter
@@ -43,7 +43,7 @@
 /src/ngraph/pattern/                @jbobba @aprocter
 /src/ngraph/runtime/                @rkimballn1 @jbobba
 /src/ngraph/runtime/cpu/            @jbobba
-/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba @avijit-nervana
+/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba
 /src/ngraph/runtime/dynamic/        @aprocter
 /src/ngraph/runtime/gpu/            @rkimballn1
 /src/ngraph/runtime/hybrid/         @rkimballn1
@@ -51,11 +51,11 @@
 /src/ngraph/runtime/interpreter/    @rkimballn1
 /src/ngraph/runtime/plaidml/        @earhart
 /src/ngraph/runtime/reference/      @aprocter
-/src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @aprocter @avijit-nervana
+/src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @aprocter
 /src/ngraph/type/                   @diyessi
 /src/ngraph/serializer.*pp          @rkimballn1
 
-/test/distributed.in.cpp            @wenzhe-nrv @diyessi @avijit-nervana @jianyinglang
+/test/distributed.in.cpp            @wenzhe-nrv @diyessi @jianyinglang
 
 # Putting this last so it's not overridden by directory rules
 CMakeLists.txt                      @rkimballn1 @silee2

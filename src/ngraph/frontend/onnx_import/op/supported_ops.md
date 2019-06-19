@@ -84,6 +84,7 @@ opset versions starting from `1` to `6` and to the latest opset version.
 | Relu | 1-6- | 
 | Selu | 1-6- | 
 | Shape | 1- | 
+| Shrink | 1- | 
 | Sigmoid | 1-6- | 
 | Sign | 9- |
 | Sin | 7- | 

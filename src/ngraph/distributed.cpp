@@ -22,6 +22,41 @@
 
 using namespace ngraph;
 
+NGRAPH_API const reduction::Type reduction::sum(reduction::Type_t::sum);
+NGRAPH_API const reduction::Type reduction::prod(reduction::Type_t::prod);
+NGRAPH_API const reduction::Type reduction::min(reduction::Type_t::min);
+NGRAPH_API const reduction::Type reduction::max(reduction::Type_t::max);
+
+std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& obj)
+{
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+    switch (obj.get_type())
+    {
+    case reduction::Type_t::sum: out << "sum"; break;
+    case reduction::Type_t::prod: out << "prod"; break;
+    case reduction::Type_t::min: out << "min"; break;
+    case reduction::Type_t::max: out << "max"; break;
+    }
+#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
+    return out;
+};
+
+bool reduction::Type::operator==(const reduction::Type& other) const
+{
+    return m_type == other.m_type;
+}
+
+reduction::Type_t reduction::Type::get_type() const
+{
+    return m_type;
+}
+
 static std::unique_ptr<DistributedInterface> s_distributed_interface;
 
 void ngraph::set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface)
