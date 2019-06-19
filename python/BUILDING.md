@@ -14,16 +14,15 @@ with two important differences:
 
     `$ cmake ../ -DNGRAPH_PYTHON_BUILD_ENABLE=ON -DNGRAPH_ONNX_IMPORT_ENABLE=ON -DNGRAPH_USE_PREBUILT_LLVM=ON`
 
-     `$ make python_wheel`
+    `$ make python_wheel`
 
 After this procedure completes, the `ngraph/build/python/dist` directory should 
 contain the Python packages of the version you cloned. For example, if you 
-checked out and built 0.21, you may see something like: 
+checked out and built `0.21`, you may see something like: 
 
     $ ls python/dist/
     ngraph-core-0.21.0rc0.tar.gz  
     ngraph_core-0.21.0rc0-cp37-cp37m-linux_x86_64.whl  
-    ngraph_core-0.21.0rc0-cp35-cp35m-linux_x86_64.whl
 
 ### Using a virtualenv (optional)
 
