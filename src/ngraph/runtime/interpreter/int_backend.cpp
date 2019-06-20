@@ -27,8 +27,7 @@
 using namespace std;
 using namespace ngraph;
 
-static runtime::BackendConstructor*
-    interpreter_get_backend_constructor_pointer()
+static runtime::BackendConstructor* interpreter_get_backend_constructor_pointer()
 {
     class INTBackendConstructor : public runtime::BackendConstructor
     {
@@ -45,11 +44,10 @@ static runtime::BackendConstructor*
 }
 
 #ifdef INTERPRETER_BACKEND_STATIC
-extern "C" runtime::BackendConstructor*
-    get_backend_constructor_pointer()
-    {
-        return interpreter_get_backend_constructor_pointer();
-    }
+extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+{
+    return interpreter_get_backend_constructor_pointer();
+}
 #endif
 
 void runtime::interpreter::static_initialize()
@@ -58,7 +56,8 @@ void runtime::interpreter::static_initialize()
     if (!s_is_initialized)
     {
         s_is_initialized = true;
-        BackendManager::register_backend("INTERPRETER", get_backend_constructor_pointer());
+        BackendManager::register_backend("INTERPRETER",
+                                         interpreter_get_backend_constructor_pointer());
     }
 }
 
