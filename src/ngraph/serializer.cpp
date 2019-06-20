@@ -1528,28 +1528,28 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
             auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
             auto data_dilation_strides = node_js["data_dilation_strides"];
-                            auto output_type = read_element_type(node_js.at("output_type"));
-                auto input_axes = node_js.at("input_axes").get<set<size_t>>();
-                auto filter_axes = node_js.at("filter_axes").get<set<size_t>>();
-                auto output_axes = node_js.at("output_axes").get<set<size_t>>();
-                node = make_shared<op::QuantizedConvolution>(
-                    args[0],
-                    args[1],
-                    window_movement_strides,
-                    window_dilation_strides,
-                    padding_below,
-                    padding_above,
-                    data_dilation_strides.get<std::vector<size_t>>(),
-                    args[2],
-                    args[3],
-                    args[4],
-                    args[5],
-                    args[6],
-                    args[7],
-                    output_type,
-                    input_axes,
-                    filter_axes,
-                    output_axes);
+            auto output_type = read_element_type(node_js.at("output_type"));
+            auto input_axes = node_js.at("input_axes").get<set<size_t>>();
+            auto filter_axes = node_js.at("filter_axes").get<set<size_t>>();
+            auto output_axes = node_js.at("output_axes").get<set<size_t>>();
+            node = make_shared<op::QuantizedConvolution>(
+                args[0],
+                args[1],
+                window_movement_strides,
+                window_dilation_strides,
+                padding_below,
+                padding_above,
+                data_dilation_strides.get<std::vector<size_t>>(),
+                args[2],
+                args[3],
+                args[4],
+                args[5],
+                args[6],
+                args[7],
+                output_type,
+                input_axes,
+                filter_axes,
+                output_axes);
 
             break;
         }
