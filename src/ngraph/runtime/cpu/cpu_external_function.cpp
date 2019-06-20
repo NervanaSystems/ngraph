@@ -1498,8 +1498,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             case TensorRole::INTERMEDIATE: return string("TensorRole::INTERMEDIATE");
             case TensorRole::CONSTANT: return string("TensorRole::CONSTANT");
             case TensorRole::OUTPUT: return string("TensorRole::OUTPUT");
+            default: throw runtime_error("unhandled CPU tensor role");
             }
-            throw runtime_error("unhandled CPU tensor role");
         };
 
         //dump the tensor roles to debug manifest

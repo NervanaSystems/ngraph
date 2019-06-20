@@ -14,6 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
+#ifndef NGRAPH_OP
+#error "NGRAPH_OP not defined"
+#define NGRAPH_OP(x, y)
+#endif
+
 // This collection contains one entry for each fused op.
 //
 
