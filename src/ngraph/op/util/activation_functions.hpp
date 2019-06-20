@@ -31,19 +31,19 @@
 // Prevents the compiler from complaining about or optimizing away variables
 // that appear unused on Linux
 #if (defined(__GNUC__) && !defined(__clang__))
-#undef ONNX_ATTRIBUTE_UNUSED
-#define ONNX_ATTRIBUTE_UNUSED __attribute__((__unused__))
+#undef NG_ATTRIBUTE_UNUSED
+#define NG_ATTRIBUTE_UNUSED __attribute__((__unused__))
 #else
-#define ONNX_ATTRIBUTE_UNUSED
+#define NG_ATTRIBUTE_UNUSED
 #endif
 
-#define UNUSED_PARAMETER ONNX_ATTRIBUTE_UNUSED = 0
+#define UNUSED_PARAMETER NG_ATTRIBUTE_UNUSED = 0
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace op
     {
-        namespace rnn
+        namespace util
         {
             namespace error
             {
@@ -58,22 +58,26 @@ namespace ngraph
 
             namespace detail
             {
-                std::shared_ptr<ngraph::Node> sigmoid(const std::shared_ptr<ngraph::Node>& arg,
-                                                      float alpha UNUSED_PARAMETER,
-                                                      float beta UNUSED_PARAMETER);
-                std::shared_ptr<ngraph::Node> tanh(const std::shared_ptr<ngraph::Node>& arg,
-                                                   float alpha UNUSED_PARAMETER,
-                                                   float beta UNUSED_PARAMETER);
-                std::shared_ptr<ngraph::Node> relu(const std::shared_ptr<ngraph::Node>& arg,
-                                                   float alpha UNUSED_PARAMETER,
-                                                   float beta UNUSED_PARAMETER);
-                std::shared_ptr<ngraph::Node>
-                    hardsigmoid(const std::shared_ptr<ngraph::Node>& arg, float alpha, float beta);
+                std::shared_ptr<Node> sigmoid(const std::shared_ptr<Node>& arg,
+                                              float alpha UNUSED_PARAMETER,
+                                              float beta UNUSED_PARAMETER);
+                std::shared_ptr<Node> tanh(const std::shared_ptr<Node>& arg,
+                                           float alpha UNUSED_PARAMETER,
+                                           float beta UNUSED_PARAMETER);
+                std::shared_ptr<Node> relu(const std::shared_ptr<Node>& arg,
+                                           float alpha UNUSED_PARAMETER,
+                                           float beta UNUSED_PARAMETER);
+                std::shared_ptr<Node>
+                    hardsigmoid(const std::shared_ptr<Node>& arg, float alpha, float beta);
             }
 
-            using ActivationFunctionType = std::shared_ptr<ngraph::Node> (*)(
-                const std::shared_ptr<ngraph::Node>&, float, float);
+            using ActivationFunctionType = std::shared_ptr<Node> (*)(const std::shared_ptr<Node>&,
+                                                                     float,
+                                                                     float);
 
+            ///
+            /// \brief      Class representing activation function used in RNN cells.
+            ///
             class ActivationFunction
             {
             public:
@@ -81,14 +85,19 @@ namespace ngraph
                 ActivationFunction(ActivationFunctionType f, float alpha);
                 ActivationFunction(ActivationFunctionType f);
 
-                std::shared_ptr<ngraph::Node>
-                    operator()(const std::shared_ptr<ngraph::Node>& arg) const;
+                ///
+                /// \brief  Calls stored activation function with provided node argument.
+                ///
+                std::shared_ptr<Node> operator()(const std::shared_ptr<Node>& arg) const;
 
                 void set_alpha(float alpha) { m_alpha = alpha; }
                 void set_beta(float beta) { m_beta = beta; }
             private:
+                /// \brief Activation function wrapper.
                 ActivationFunctionType m_function;
+                /// \brief Activation function alpha parameter (may be unused).
                 float m_alpha;
+                /// \brief Activation function beta parameter (may be unused).
                 float m_beta;
             };
 
@@ -101,10 +110,9 @@ namespace ngraph
             /// \return     The activation function object.
             ///
             ActivationFunction get_activation_func_by_name(const std::string& func_name);
+        } // namespace util
 
-        } //namespace rnn
-
-    } // namespace onnx_import
+    } // namespace op
 
 } // namespace ngraph
 
@@ -115,6 +123,6 @@ namespace ngraph
 #ifdef UNUSED_PARAMETER
 #undef UNUSED_PARAMETER
 #endif
-#ifdef ONNX_ATTRIBUTE_UNUSED
-#undef ONNX_ATTRIBUTE_UNUSED
+#ifdef NG_ATTRIBUTE_UNUSED
+#undef NG_ATTRIBUTE_UNUSED
 #endif

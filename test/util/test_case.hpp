@@ -97,9 +97,8 @@ namespace ngraph
                              "All function results already have expected outputs.");
 
                 auto function_output_type = results.at(m_output_index)->get_element_type();
-                auto function_output_shape = results.at(m_output_index)->get_shape();
                 m_result_tensors.emplace_back(
-                    m_backend->create_tensor(function_output_type, function_output_shape));
+                    m_backend->create_tensor(function_output_type, expected_shape));
 
                 m_expected_outputs.emplace_back(std::make_shared<ngraph::op::Constant>(
                     function_output_type, expected_shape, values));

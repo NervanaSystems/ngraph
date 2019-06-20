@@ -74,8 +74,10 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
@@ -339,33 +341,24 @@ static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, s
     cpio::Writer writer(out);
     writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
 
-    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
-        traverse_nodes(const_cast<Function*>(f.get()),
-                       [&](shared_ptr<Node> node) {
-                           if (auto c = dynamic_pointer_cast<op::Constant>(node))
-                           {
-                               uint32_t size =
-                                   static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
-                                                         c->get_output_element_type(0).size());
-                               writer.write(c->get_name(), c->get_data_ptr(), size);
-                           }
-                       },
-                       true);
-    });
+    traverse_nodes(const_cast<Function*>(func.get()),
+                   [&](shared_ptr<Node> node) {
+                       if (auto c = dynamic_pointer_cast<op::Constant>(node))
+                       {
+                           uint32_t size =
+                               static_cast<uint32_t>(shape_size(c->get_output_shape(0)) *
+                                                     c->get_output_element_type(0).size());
+                           writer.write(c->get_name(), c->get_data_ptr(), size);
+                       }
+                   },
+                   true);
 }
 #endif
 
 static string serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data)
 {
     json j;
-    vector<json> functions;
-    traverse_functions(func, [&](shared_ptr<ngraph::Function> f) {
-        functions.push_back(write(*f, binary_constant_data));
-    });
-    for (auto it = functions.rbegin(); it != functions.rend(); it++)
-    {
-        j.push_back(*it);
-    }
+    j.push_back(write(*func, binary_constant_data));
 
     string rc;
     if (indent == 0)
@@ -1078,6 +1071,31 @@ static shared_ptr<ngraph::Function>
                                                          pad_type);
                 break;
             }
+            case OP_TYPEID::GroupConvolutionTranspose:
+            {
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto dilations = node_js.at("dilations").get<vector<size_t>>();
+                auto padding_begin = node_js.at("padding_begin").get<vector<ptrdiff_t>>();
+                auto padding_end = node_js.at("padding_end").get<vector<ptrdiff_t>>();
+                auto output_padding = node_js.at("output_padding").get<vector<ptrdiff_t>>();
+                auto groups = node_js.at("groups").get<size_t>();
+                op::PadType pad_type = node_js["pad_type"].empty()
+                                           ? op::PadType::EXPLICIT
+                                           : static_cast<op::PadType>(node_js.at("pad_type"));
+                auto output_shape = node_js.at("output_shape").get<vector<size_t>>();
+
+                node = make_shared<op::GroupConvolutionTranspose>(args[0],
+                                                                  args[1],
+                                                                  strides,
+                                                                  dilations,
+                                                                  padding_begin,
+                                                                  padding_end,
+                                                                  output_padding,
+                                                                  groups,
+                                                                  pad_type,
+                                                                  output_shape);
+                break;
+            }
             case OP_TYPEID::LeakyRelu:
             {
                 node = make_shared<op::LeakyRelu>(args[0], args[1]);
@@ -1107,6 +1125,29 @@ static shared_ptr<ngraph::Function>
                 auto bias = node_js.at("bias").get<double>();
                 auto nsize = node_js.at("nsize").get<size_t>();
                 node = make_shared<op::LRN>(args[0], alpha, beta, bias, nsize);
+                break;
+            }
+            case OP_TYPEID::LSTMCell:
+            {
+                auto hidden_size = node_js.at("hidden_size").get<size_t>();
+                auto clip = node_js.at("clip").get<float>();
+                auto activations = node_js.at("activations").get<vector<string>>();
+                auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
+                auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
+                auto input_forget = node_js.at("input_forget").get<bool>();
+                node = make_shared<op::LSTMCell>(args[0],
+                                                 args[1],
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 hidden_size,
+                                                 args[5],
+                                                 args[6],
+                                                 activations,
+                                                 activation_alpha,
+                                                 activation_beta,
+                                                 clip,
+                                                 input_forget);
                 break;
             }
             case OP_TYPEID::Max:
@@ -1417,7 +1458,9 @@ static shared_ptr<ngraph::Function>
             }
             case OP_TYPEID::Result:
             {
-                node = make_shared<op::Result>(args[0]);
+                auto needs_default_layout =
+                    get_or_default<bool>(node_js, "needs_default_layout", false);
+                node = make_shared<op::Result>(args[0], needs_default_layout);
                 break;
             }
             case OP_TYPEID::Reverse:
@@ -2089,6 +2132,19 @@ static json write(const Node& n, bool binary_constant_data)
         node["pad_type"] = tmp->get_pad_type();
         break;
     }
+    case OP_TYPEID::GroupConvolutionTranspose:
+    {
+        auto tmp = dynamic_cast<const op::GroupConvolutionTranspose*>(&n);
+        node["strides"] = tmp->get_strides();
+        node["dilations"] = tmp->get_dilations();
+        node["padding_begin"] = tmp->get_padding_begin();
+        node["padding_end"] = tmp->get_padding_end();
+        node["output_padding"] = tmp->get_output_padding();
+        node["groups"] = tmp->get_groups();
+        node["pad_type"] = tmp->get_pad_type();
+        node["output_shape"] = tmp->get_output_shape();
+        break;
+    }
     case OP_TYPEID::LeakyRelu: { break;
     }
     case OP_TYPEID::Less:
@@ -2118,6 +2174,17 @@ static json write(const Node& n, bool binary_constant_data)
         node["beta"] = tmp->get_beta();
         node["bias"] = tmp->get_bias();
         node["nsize"] = tmp->get_nsize();
+        break;
+    }
+    case OP_TYPEID::LSTMCell:
+    {
+        auto tmp = dynamic_cast<const op::LSTMCell*>(&n);
+        node["hidden_size"] = tmp->get_hidden_size();
+        node["clip"] = tmp->get_clip();
+        node["activations"] = tmp->get_activations();
+        node["activation_alpha"] = tmp->get_activation_alpha();
+        node["activation_beta"] = tmp->get_activation_beta();
+        node["input_forget"] = tmp->get_input_forget();
         break;
     }
     case OP_TYPEID::Max:
@@ -2341,7 +2408,11 @@ static json write(const Node& n, bool binary_constant_data)
         node["output_shape"] = tmp->get_output_shape();
         break;
     }
-    case OP_TYPEID::Result: { break;
+    case OP_TYPEID::Result:
+    {
+        auto tmp = dynamic_cast<const op::Result*>(&n);
+        node["needs_default_layout"] = tmp->needs_default_layout();
+        break;
     }
     case OP_TYPEID::Reverse:
     {
