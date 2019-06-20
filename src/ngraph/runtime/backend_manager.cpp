@@ -25,6 +25,7 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/runtime/interpreter/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
@@ -50,25 +51,25 @@ unordered_map<string, runtime::BackendConstructor*>& runtime::BackendManager::ge
         runtime::interpreter::static_initialize();
 #endif
         // #ifdef CPU_BACKEND_STATIC
-        //     runtime::cpu::static_initialize();
+        //         runtime::cpu::static_initialize();
         // #endif
         // #ifdef INTELGPU_BACKEND_STATIC
-        //     runtime::intelgpu::static_initialize();
+        //         runtime::intelgpu::static_initialize();
         // #endif
         // #ifdef GPU_BACKEND_STATIC
-        //     runtime::gpu::static_initialize();
+        //         runtime::gpu::static_initialize();
         // #endif
         // #ifdef NOP_BACKEND_STATIC
-        //     runtime::nop::static_initialize();
+        //         runtime::nop::static_initialize();
         // #endif
         // #ifdef GPUH_BACKEND_STATIC
-        //     runtime::gpuh::static_initialize();
+        //         runtime::gpuh::static_initialize();
         // #endif
         // #ifdef GENERIC_CPU_BACKEND_STATIC
-        //     runtime::cpu::static_initialize();
+        //         runtime::cpu::static_initialize();
         // #endif
         // #ifdef PLAIDML_BACKEND_STATIC
-        //     runtime::plaidml::static_initialize();
+        //         runtime::plaidml::static_initialize();
         // #endif
     }
     return s_registered_backend;
@@ -110,6 +111,10 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 
     auto registry = get_registry();
     auto it = registry.find(type);
+    for (auto x : registry)
+    {
+        NGRAPH_INFO << x.first;
+    }
     if (it != registry.end())
     {
         BackendConstructor* new_backend = it->second;

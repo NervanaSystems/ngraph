@@ -150,7 +150,11 @@ endif()
 if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-    add_library(cpu_backend SHARED ${SRC})
+    # if (NGRAPH_STATIC_LIB_ENABLE)
+    #     add_library(cpu_backend STATIC ${SRC})
+    # else()
+        add_library(cpu_backend SHARED ${SRC})
+    # endif()
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(cpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

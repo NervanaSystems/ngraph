@@ -23,12 +23,13 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+static runtime::BackendConstructor* cpu_get_backend_constructor_pointer()
 {
     class CPU_BackendConstructor : public runtime::BackendConstructor
     {
@@ -36,6 +37,7 @@ extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
         std::shared_ptr<runtime::Backend> create(const std::string& config) override
         {
             // Force TBB to link to the backend
+            NGRAPH_INFO;
             tbb::TBB_runtime_interface_version();
             return make_shared<runtime::cpu::CPU_Backend>();
         }
@@ -46,17 +48,22 @@ extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
     return s_backend_constructor.get();
 }
 
-namespace
+#ifndef CPU_BACKEND_STATIC
+extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
-    static class CPUStaticInit
+    return cpu_get_backend_constructor_pointer();
+}
+#endif
+
+void runtime::cpu::static_initialize()
+{
+    NGRAPH_INFO;
+    static bool s_is_initialized = false;
+    if (!s_is_initialized)
     {
-    public:
-        CPUStaticInit()
-        {
-            runtime::BackendManager::register_backend("CPU", get_backend_constructor_pointer());
-        }
-        ~CPUStaticInit() {}
-    } s_cpu_static_init;
+        s_is_initialized = true;
+        runtime::BackendManager::register_backend("CPU", cpu_get_backend_constructor_pointer());
+    }
 }
 
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
