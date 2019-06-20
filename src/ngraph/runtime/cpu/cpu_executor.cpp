@@ -78,6 +78,7 @@ namespace ngraph
                 CPUExecutor::CPUExecutor(int num_thread_pools)
                     : m_num_thread_pools(num_thread_pools)
                 {
+                    m_num_cores = GetNumCores();
                     for (int i = 0; i < num_thread_pools; i++)
                     {
                         int num_threads_per_pool;

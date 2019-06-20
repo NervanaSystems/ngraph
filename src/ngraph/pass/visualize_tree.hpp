@@ -50,6 +50,7 @@ public:
 private:
     std::string add_attributes(std::shared_ptr<Node> node);
     std::string get_attributes(std::shared_ptr<Node> node);
+    std::string get_node_name(std::shared_ptr<Node> node);
     void render() const;
 
     std::stringstream m_ss;

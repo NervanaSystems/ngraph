@@ -339,11 +339,6 @@ void Node::add_control_dependency(std::shared_ptr<Node> node)
     m_control_dependencies.insert(node);
 }
 
-std::vector<std::shared_ptr<Function>> Node::get_functions() const
-{
-    return std::vector<std::shared_ptr<Function>>{};
-}
-
 namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)

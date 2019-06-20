@@ -308,8 +308,12 @@ set (SRC
     op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/group_conv_transpose.hpp
+    op/fused/group_conv_transpose.cpp
     op/fused/leaky_relu.cpp
     op/fused/leaky_relu.hpp
+    op/fused/lstm_cell.cpp
+    op/fused/lstm_cell.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize.cpp
@@ -330,6 +334,8 @@ set (SRC
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
     op/fused/unsqueeze.hpp
+    op/util/activation_functions.cpp
+    op/util/activation_functions.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -347,6 +353,8 @@ set (SRC
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
     op/util/reshape.hpp
+    op/util/rnn_cell_base.cpp
+    op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
     partial_shape.cpp
@@ -383,7 +391,6 @@ set (SRC
     pass/liveness.hpp
     pass/manager.cpp
     pass/manager.hpp
-    pass/manager_state.cpp
     pass/manager_state.hpp
     pass/memory_layout.cpp
     pass/memory_layout.hpp
@@ -465,34 +472,14 @@ set (SRC
     )
 
 set(SRC ${SRC}
-    runtime/hybrid/hybrid_backend.cpp
-    runtime/hybrid/hybrid_backend.hpp
-    runtime/hybrid/hybrid_executable.cpp
-    runtime/hybrid/hybrid_executable.hpp
-    runtime/hybrid/hybrid_tensor.cpp
-    runtime/hybrid/hybrid_util.cpp
-    runtime/hybrid/hybrid_util.hpp
-    runtime/hybrid/op/function_call.cpp
-    runtime/hybrid/op/function_call.hpp
-    runtime/hybrid/pass/default_placement.cpp
-    runtime/hybrid/pass/default_placement.hpp
-    runtime/hybrid/pass/dump.cpp
-    runtime/hybrid/pass/dump.hpp
-    runtime/hybrid/pass/fix_get_output_element.cpp
-    runtime/hybrid/pass/fix_get_output_element.hpp
-    runtime/hybrid/pass/liveness.cpp
-    runtime/hybrid/pass/liveness.hpp
-    runtime/hybrid/pass/memory_layout.cpp
-    runtime/hybrid/pass/memory_layout.hpp
-    )
-
-set(SRC ${SRC}
     runtime/dynamic/dynamic_backend.cpp
     runtime/dynamic/dynamic_backend.hpp
     )
 
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
+else()
+    list(APPEND SRC serializer_stub.cpp)
 endif()
 
 configure_file(version.in.hpp version.hpp)
@@ -501,6 +488,10 @@ if (NGRAPH_STATIC_LIB_ENABLE)
     add_library(ngraph STATIC ${SRC})
 else()
     add_library(ngraph SHARED ${SRC})
+endif()
+
+if(NOT NGRAPH_JSON_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)

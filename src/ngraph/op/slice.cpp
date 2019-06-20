@@ -19,11 +19,17 @@
 using namespace std;
 using namespace ngraph;
 
-op::Slice::Slice(const shared_ptr<Node>& arg,
+const string op::Slice::type_name{"Slice"};
+
+op::Slice::Slice()
+{
+}
+
+op::Slice::Slice(const Output<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds,
                  const Strides& strides)
-    : Op("Slice", check_single_output_args({arg}))
+    : Op({arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(strides)
@@ -31,10 +37,10 @@ op::Slice::Slice(const shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::Slice::Slice(const shared_ptr<Node>& arg,
+op::Slice::Slice(const Output<Node>& arg,
                  const Coordinate& lower_bounds,
                  const Coordinate& upper_bounds)
-    : Op("Slice", check_single_output_args({arg}))
+    : Op({arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(Strides())

@@ -169,7 +169,8 @@ shared_ptr<Node> op::Convolution::copy_with_new_args(const NodeVector& new_args)
                                     m_window_dilation_strides,
                                     m_padding_below,
                                     m_padding_above,
-                                    m_data_dilation_strides);
+                                    m_data_dilation_strides,
+                                    m_pad_type);
 }
 
 void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
