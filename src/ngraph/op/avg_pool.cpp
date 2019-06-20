@@ -191,7 +191,7 @@ bool op::AvgPool::get_include_padding_in_avg_computation() const
     return m_include_padding_in_avg_computation;
 }
 
-void op::AvgPool::get_include_padding_in_avg_computation(bool include_padding_in_avg_computation)
+void op::AvgPool::set_include_padding_in_avg_computation(bool include_padding_in_avg_computation)
 {
     m_include_padding_in_avg_computation = include_padding_in_avg_computation;
 }

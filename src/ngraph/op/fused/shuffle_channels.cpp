@@ -13,9 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
 #include "ngraph/op/fused/shuffle_channels.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/util/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -77,10 +78,10 @@ NodeVector op::ShuffleChannels::decompose_op() const
     const auto data = get_argument(0);
     const auto& data_shape = data->get_shape();
 
-    const auto reshaped = util::reshape(data, get_pre_shuffle_shape(data_shape));
-    const auto shuffled = util::reorder_axes(reshaped, {0, 2, 1, 3});
+    const auto reshaped = builder::reshape(data, get_pre_shuffle_shape(data_shape));
+    const auto shuffled = builder::reorder_axes(reshaped, {0, 2, 1, 3});
 
-    return {util::reshape(shuffled, data_shape)};
+    return {builder::reshape(shuffled, data_shape)};
 }
 
 shared_ptr<Node> op::ShuffleChannels::copy_with_new_args(const NodeVector& new_args) const

@@ -198,8 +198,6 @@ add_library(onnx_import STATIC
         utils/reduction.hpp
         utils/reshape.cpp
         utils/reshape.hpp
-        utils/rnn/activation_functions.cpp
-        utils/rnn/activation_functions.hpp
         utils/variadic.hpp)
 
 set(ONNX_IMPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
