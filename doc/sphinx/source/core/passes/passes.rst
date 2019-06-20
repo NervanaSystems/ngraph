@@ -1,4 +1,4 @@
-.. core/passes:
+.. _passes:
 
 Compiler passes
 ===============

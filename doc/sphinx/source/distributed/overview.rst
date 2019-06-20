@@ -1,7 +1,7 @@
-.. distributed/overview.rst: 
+.. _distr: 
 
-About distributed training
-##########################
+Overview
+########
 
 Initial support for TensorFlow
 ==============================

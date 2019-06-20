@@ -1,4 +1,4 @@
-.. backend-support/plaidml.rst
+.. _plaidml_backend:
 
 PlaidML
 #######

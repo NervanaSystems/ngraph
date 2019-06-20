@@ -1,4 +1,4 @@
-.. backend-support/cpu.rst
+.. _cpu_backend:
 
 CPU backend
 ###########

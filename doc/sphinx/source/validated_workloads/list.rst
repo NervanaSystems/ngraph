@@ -1,8 +1,8 @@
-.. validated_workloads/list.rst: 
+.. _validated: 
 
 
 Validated workloads by framework
-#################################
+################################
 
 We validated performance [#f1]_ for the following TensorFlow\* and MXNet\* 
 workloads:
@@ -10,8 +10,6 @@ workloads:
 * :ref:`tensorflow_valid`
 * :ref:`mxnet_valid`
 * :ref:`onnx_valid`
-* :doc:`testing-latency`
-
 
 
 

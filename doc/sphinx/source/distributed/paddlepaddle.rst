@@ -1,4 +1,4 @@
-.. distributed/paddlepaddle.rst: 
+.. _distr_paddle: 
 
 PaddlePaddle
 ############

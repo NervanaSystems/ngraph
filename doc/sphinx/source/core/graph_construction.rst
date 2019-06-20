@@ -1,4 +1,4 @@
-.. core/graph_construction.rst: 
+.. _graph_construction: 
 
 Graph construction
 ##################

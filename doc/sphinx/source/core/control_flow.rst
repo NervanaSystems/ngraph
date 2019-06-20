@@ -1,4 +1,4 @@
-.. core/control_flow.rst: 
+.. _control_flow: 
 
 Control flow  
 ############

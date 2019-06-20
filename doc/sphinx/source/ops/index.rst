@@ -1,4 +1,4 @@
-   .. ops/index.rst
+.. _ops:
 
 ####################
 List of Core ``ops``

@@ -1,4 +1,4 @@
-.. _core_overview:
+.. _core:
 
 
 Overview

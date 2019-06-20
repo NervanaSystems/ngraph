@@ -1,14 +1,14 @@
-.. frameworks/overview.rst: 
+.. _frameworks: 
 
-Current framework integrations  
-==============================
+Overview  
+========
 
 .. toctree::
    :maxdepth: 1
    
-   tensorflow_connect.rst
-   onnx_integ.rst
-   paddle_integ.rst
+   tensorflow.rst
+   onnx.rst
+   paddlepaddle.rst
 
 
 A framework is "supported" when there is a framework :term:`bridge` that can

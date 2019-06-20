@@ -1,4 +1,4 @@
-.. backend-support/kernel_library.rst
+.. _kernel_backends:
 
 Kernel library backends
 #######################

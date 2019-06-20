@@ -1,4 +1,4 @@
-.. core/pattern-matcher.rst: 
+.. _pattern_matcher: 
 
 Pattern matcher  
 ###############

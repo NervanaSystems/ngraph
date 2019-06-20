@@ -1,4 +1,4 @@
-.. diagnostics/provenance.rst: 
+.. _provenance: 
 
 Provenance  
 ##########

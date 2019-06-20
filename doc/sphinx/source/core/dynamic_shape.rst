@@ -1,4 +1,4 @@
-.. core/dynamic_shape.rst: 
+.. _dynamic_shape: 
 
 Dynamic shape
 #############
