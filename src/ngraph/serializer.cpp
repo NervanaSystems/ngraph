@@ -195,7 +195,7 @@ static OP_TYPEID get_typeid(const string& s)
 }
 
 template <typename T>
-T get_or_default(nlohmann::json& j, const std::string& key, const T& default_value)
+T get_or_default(const json& j, const std::string& key, const T& default_value)
 {
     return j.count(key) != 0 ? j.at(key).get<T>() : default_value;
 }
@@ -216,6 +216,7 @@ public:
 
     json serialize_function(const Function& function);
     json serialize_output(const Output<Node>& output);
+    json serialize_output_vector(const OutputVector& output_vector);
     json serialize_node_reference(const Node& node);
     json serialize_node(const Node& node);
 
@@ -236,10 +237,11 @@ public:
         m_const_data_callback = const_data_callback;
     }
 
-    shared_ptr<Function> deserialize_function(json& j);
-    Output<Node> deserialize_output(json& j);
-    shared_ptr<Node> deserialize_node_reference(json& j);
-    shared_ptr<Node> deserialize_node(json& j);
+    shared_ptr<Function> deserialize_function(const json& j);
+    Output<Node> deserialize_output(const json& j);
+    OutputVector deserialize_output_vector(const json& j);
+    shared_ptr<Node> deserialize_node_reference(const json& j);
+    shared_ptr<Node> deserialize_node(const json& j);
 
 protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
@@ -533,13 +535,13 @@ T get_value(nlohmann::json js, const string& key)
     return rc;
 }
 
-shared_ptr<Node> JSONDeserializer::deserialize_node_reference(json& j)
+shared_ptr<Node> JSONDeserializer::deserialize_node_reference(const json& j)
 {
     const string& name = j;
     return m_node_map.at(name);
 }
 
-Output<Node> JSONDeserializer::deserialize_output(json& j)
+Output<Node> JSONDeserializer::deserialize_output(const json& j)
 {
     size_t index;
     json json_node_reference;
@@ -560,7 +562,17 @@ Output<Node> JSONDeserializer::deserialize_output(json& j)
     return Output<Node>(deserialize_node_reference(json_node_reference), index);
 }
 
-shared_ptr<Function> JSONDeserializer::deserialize_function(json& func_js)
+OutputVector JSONDeserializer::deserialize_output_vector(const json& j)
+{
+    OutputVector result;
+    for (const json& jelt : j)
+    {
+        result.push_back(deserialize_output(jelt));
+    }
+    return result;
+}
+
+shared_ptr<Function> JSONDeserializer::deserialize_function(const json& func_js)
 {
     string func_name = func_js.at("name").get<string>();
     vector<json> func_parameters = func_js.at("parameters");
@@ -648,7 +660,7 @@ struct OutputVectorHelper
     vector<OutputHelper> m_vector;
 };
 
-shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
+shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
 {
     shared_ptr<Node> node;
     try
