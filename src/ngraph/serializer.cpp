@@ -116,6 +116,7 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/recv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -125,6 +126,7 @@
 #include "ngraph/op/scatter_add.hpp"
 #include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
+#include "ngraph/op/send.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -1559,8 +1561,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
         }
         case OP_TYPEID::Recv:
         {
-            auto src_id = node_js.at("source_id").get<vector<size_t>>();
-            node = make_shared<op::Relu>(args[0], src_id);
+            auto src_id = node_js.at("source_id").get<size_t>();
+            node = make_shared<op::Recv>(args[0], src_id);
             break;
         }
         case OP_TYPEID::Relu:
@@ -1637,8 +1639,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
         }
         case OP_TYPEID::Send:
         {
-            auto dest_id = node_js.at("dest_id").get<vector<size_t>>();
-            node = make_shared<op::Relu>(args[0], dest_id);
+            auto dest_id = node_js.at("dest_id").get<size_t>();
+            node = make_shared<op::Send>(args[0], dest_id);
             break;
         }
         case OP_TYPEID::ShapeOf:

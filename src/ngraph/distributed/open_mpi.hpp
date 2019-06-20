@@ -137,6 +137,46 @@ namespace ngraph
                 MPI_Bcast(in, count, data_type, root_id, MPI_COMM_WORLD);
             }
 
+            void recv(void* in,
+                           element::Type_t element_type,
+                           size_t count,
+                           int src_id) override
+            {
+                auto data_type = MPI_FLOAT;
+
+                if (element_type == element::Type_t::f64)
+                {
+                    data_type = MPI_DOUBLE;
+                }
+                else if (element_type != element::Type_t::f32)
+                {
+                    throw std::runtime_error(
+                        "recv op supports only f32 and f64 types");
+                }
+
+                MPI_Recv(in, count, data_type, src_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            }
+
+            void send(void* in,
+                           element::Type_t element_type,
+                           size_t count,
+                           int dest_id) override
+            {
+                auto data_type = MPI_FLOAT;
+
+                if (element_type == element::Type_t::f64)
+                {
+                    data_type = MPI_DOUBLE;
+                }
+                else if (element_type != element::Type_t::f32)
+                {
+                    throw std::runtime_error(
+                        "send op supports only f32 and f64 types");
+                }
+
+                MPI_Send(in, count, data_type, dest_id, 0, MPI_COMM_WORLD);
+            }
+
         protected:
             std::string m_name;
             bool m_initialized_mpi = false;
