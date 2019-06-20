@@ -53,7 +53,7 @@ static void open_logs(ifstream& meta, ifstream& bin, const string& trace_log, co
     meta.open(trace_log);
     bin.open(bin_log, std::ios::binary);
 
-    ASSERT_TRUE(meta.is_open());
+    ASSERT_TRUE(meta.is_open());//TODO:why don't open?
     ASSERT_TRUE(bin.is_open());
 }
 

@@ -848,12 +848,15 @@ using namespace ngraph::runtime;
         vector<TensorViewWrapper> in;
         vector<string> node_input_names;
         vector<string> node_output_names;
+        vector<pair<size_t, ngraph::Shape>> t_in_attrs;
+        vector<pair<size_t, ngraph::Shape>> t_out_attrs;
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             in.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
             node_input_names.emplace_back(tv->get_name());
+            t_out_attrs.push_back(make_pair(in.back().get_size(), in.back().get_shape()));
         }
         vector<TensorViewWrapper> out;
         for (const descriptor::Output& output : node->get_outputs())
@@ -861,6 +864,7 @@ using namespace ngraph::runtime;
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             out.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
             node_output_names.emplace_back(tv->get_name());
+            t_out_attrs.push_back(make_pair(out.back().get_size(), out.back().get_shape()));
         }
 
         // Emit operation prologue
@@ -868,7 +872,11 @@ using namespace ngraph::runtime;
         {
             if (m_function->get_name() == m_function_name)
             {
-                m_op_attrs.emplace_back(node->description(), node_output_names, node_input_names);
+                m_op_attrs.emplace_back(node->description(),
+                                            node_output_names,
+                                            node_input_names,
+                                            t_out_attrs,
+                                            t_in_attrs);
             }
             if (m_use_tbb)
             {
@@ -904,57 +912,14 @@ using namespace ngraph::runtime;
         // Op Control
         if (!node->is_parameter() && !node->is_constant())
         {
-<<<<<<< HEAD
-            auto& n = *node; // Work around a compiler warning (*node inside typeid may have effects
-            // with shared pointers, which is fine here but clang doesn't like it.)
-            auto handler = dispatcher.find(type_index(typeid(n)));
-            if (handler == dispatcher.end())
-            {
-                throw unsupported_op(node->description());
-            }
-            vector<TensorViewWrapper> in;
-            vector<string> node_input_names;
-            vector<string> node_output_names;
-            vector<pair<size_t, ngraph::Shape>> t_in_attrs;
-            vector<pair<size_t, ngraph::Shape>> t_out_attrs;
-=======
             writer << "if (ctx->first_iteration ";
->>>>>>> master
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-<<<<<<< HEAD
-                in.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
-                node_input_names.emplace_back(tv->get_name());
-                t_out_attrs.push_back(make_pair(in.back().get_size(), in.back().get_shape()));
-            }
-            vector<TensorViewWrapper> out;
-            for (const descriptor::Output& output : node->get_outputs())
-            {
-                shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
-                out.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
-                node_output_names.emplace_back(tv->get_name());
-                t_out_attrs.push_back(make_pair(out.back().get_size(), out.back().get_shape()));
-            }
-
-            // Emit operation prologue
-            if (!node->is_parameter() && !node->is_constant())
-            {
-                if (current_function->get_name() == m_function_name)
-                {
-                    m_op_attrs.emplace_back(node->description(),
-                                            node_output_names,
-                                            node_input_names,
-                                            t_out_attrs,
-                                            t_in_attrs);
-                }
-                if (m_use_tbb)
-=======
                 auto input_name = tv->get_name();
 
                 if (output.get_node()->is_parameter())
->>>>>>> master
                 {
                     writer << " || ctx->p_en[" << param_index_map[input_name] << "]";
                 }
