@@ -873,10 +873,10 @@ using namespace ngraph::runtime;
             if (m_function->get_name() == m_function_name)
             {
                 m_op_attrs.emplace_back(node->description(),
-                                            node_output_names,
-                                            node_input_names,
-                                            t_out_attrs,
-                                            t_in_attrs);
+                                        node_output_names,
+                                        node_input_names,
+                                        t_out_attrs,
+                                        t_in_attrs);
             }
             if (m_use_tbb)
             {
@@ -1286,16 +1286,19 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     register_common_passes(pass_manager, pass_config);
     pass_manager.run_passes(m_function, false);
 
-    static const auto trace_log_file = std::getenv("NGRAPH_TRACER_LOG");
+    const auto trace_to_debug = std::getenv("NGRAPH_CPU_DEBUG_TRACER");
     auto& debug_tracer = runtime::cpu::CPU_DebugTracer::getInstance();
 
-    if (trace_log_file != nullptr)
+    if (trace_to_debug != nullptr)
     {
-        static auto bin_log_file = std::getenv("NGRAPH_BIN_TRACER_LOG");
+        static auto tracer_log_file = std::getenv("NGRAPH_CPU_TRACER_LOG");
+        static auto bin_log_file = std::getenv("NGRAPH_CPU_BIN_TRACER_LOG");
+        if (tracer_log_file == nullptr)
+            tracer_log_file = (char*)"trace_meta.log";
         if (bin_log_file == nullptr)
-            bin_log_file = (char*)"";
+            bin_log_file = (char*)"trace_bin_data.log";
 
-        debug_tracer.init_streams(trace_log_file, bin_log_file);
+        debug_tracer.init_streams(tracer_log_file, bin_log_file);
     }
 
     // Store layouts assigned for arguments
@@ -1787,14 +1790,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
 
                     CPUExecutionContext ectx{0};
 
-                    if (trace_log_file != nullptr)
+                    if (trace_to_debug != nullptr)
                     {
                         this->dump_one_kernel(debug_tracer, ctx, true);
                     }
 
                     executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
 
-                    if (trace_log_file != nullptr)
+                    if (trace_to_debug != nullptr)
                     {
                         this->dump_one_kernel(debug_tracer, ctx, false);
                     }

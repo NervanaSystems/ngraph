@@ -42,10 +42,18 @@
 using namespace ngraph;
 using namespace std;
 
-static void set_tracer_log(const string& trace_log, const string& bin_log)
+static void set_env_vars(const string& trace_log, const string& bin_log)
 {
-    set_environment("NGRAPH_TRACER_LOG", trace_log.c_str(), 1);
-    set_environment("NGRAPH_BIN_TRACER_LOG", bin_log.c_str(), 1);
+    set_environment("NGRAPH_CPU_DEBUG_TRACER", "1", 1);
+    set_environment("NGRAPH_CPU_TRACER_LOG", trace_log.c_str(), 1);
+    set_environment("NGRAPH_CPU_BIN_TRACER_LOG", bin_log.c_str(), 1);
+}
+
+static void unset_env_vars()
+{
+    unset_environment("NGRAPH_CPU_DEBUG_TRACER");
+    unset_environment("NGRAPH_CPU_TRACER_LOG");
+    unset_environment("NGRAPH_CPU_BIN_TRACER_LOG");
 }
 
 static void open_logs(ifstream& meta, ifstream& bin, const string& trace_log, const string& bin_log)
@@ -53,11 +61,11 @@ static void open_logs(ifstream& meta, ifstream& bin, const string& trace_log, co
     meta.open(trace_log);
     bin.open(bin_log, std::ios::binary);
 
-    ASSERT_TRUE(meta.is_open());//TODO:why don't open?
+    ASSERT_TRUE(meta.is_open()); //TODO:why don't open?
     ASSERT_TRUE(bin.is_open());
 }
 
-TEST(cpu_degub_tracer, check_flow_with_external_function)
+TEST(cpu_debug_tracer, check_flow_with_external_function)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -75,9 +83,9 @@ TEST(cpu_degub_tracer, check_flow_with_external_function)
     copy_data(b, vector<float>{1, 2, 3, 4});
 
     const string trace_log_file = "trace_meta.log";
-    const string bin_log_file = "trace_bin.log";
+    const string bin_log_file = "trace_bin_data.log";
 
-    set_tracer_log(trace_log_file, bin_log_file);
+    set_env_vars(trace_log_file, bin_log_file);
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
@@ -122,6 +130,7 @@ TEST(cpu_degub_tracer, check_flow_with_external_function)
 
     EXPECT_EQ((vector<float>{1, 3, 5, 7}), (v_f));
 
+    unset_env_vars();
     remove(trace_log_file.c_str());
     remove(bin_log_file.c_str());
 }
