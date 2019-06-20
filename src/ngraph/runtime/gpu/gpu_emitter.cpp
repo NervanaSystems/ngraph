@@ -994,6 +994,11 @@ std::string runtime::gpu::GPU_Emitter::emit_QuantizedMaxPool(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_Recv(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Relu(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Relu>(compiled_function, function_name, node, args, out);
@@ -1242,6 +1247,11 @@ std::string runtime::gpu::GPU_Emitter::emit_ScatterNDAdd(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Select>(compiled_function, function_name, node, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Send(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ShapeOf(EMIT_ARGS)
