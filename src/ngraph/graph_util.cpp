@@ -234,12 +234,12 @@ std::list<std::shared_ptr<ngraph::Node>>
                 cloned_node->set_friendly_name(node->get_friendly_name());
             }
 
-            if(!node->get_provenance_tags().empty())
+            if (!node->get_provenance_tags().empty())
             {
-              for(auto tag: node->get_provenance_tags())
-              {
-                cloned_node->add_provenance_tag(tag);
-              }
+                for (auto tag : node->get_provenance_tags())
+                {
+                    cloned_node->add_provenance_tag(tag);
+                }
             }
             node_map[node.get()] = cloned_node;
         }

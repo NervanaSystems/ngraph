@@ -1784,13 +1784,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
             node->set_friendly_name(node_name);
         }
         std::vector<json> prov_js = node_js.at("provenance_tags");
-            if (!prov_js.empty())
+        if (!prov_js.empty())
+        {
+            for (auto prov_tag : prov_js)
             {
-                for (auto prov_tag : prov_js)
-                {
-                    node->add_provenance_tag(prov_tag);
-                }
+                node->add_provenance_tag(prov_tag);
             }
+        }
         m_node_map[node_name] = node;
     }
     catch (...)
