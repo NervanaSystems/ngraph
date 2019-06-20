@@ -27,11 +27,9 @@ using namespace ngraph;
 op::QuantizedMatmul::QuantizedMatmul(const shared_ptr<Node>& data,
                                      const shared_ptr<Node>& weights,
                                      const shared_ptr<Node>& scale,
-                                     bool requantize,
-                                     bool with_relu)
+                                     const element::Type& output_type)
     : Op("QuantizedMatmul", check_single_output_args({data, weights, scale}))
-    , m_requantize(requantize)
-    , m_with_relu(with_relu)
+    , m_output_type(output_type)
 {
     constructor_validate_and_infer_types();
 
@@ -46,6 +44,5 @@ op::QuantizedMatmul::QuantizedMatmul(const shared_ptr<Node>& data,
                           " weights shape ",
                           weights_shape);
 
-    auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::i32;
-    set_output_type(0, output_et, Shape{data_shape[0], weights_shape[0]});
+    set_output_type(0, output_type, Shape{data_shape[0], weights_shape[0]});
 }

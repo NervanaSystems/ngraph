@@ -2394,6 +2394,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for Qdot against node = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
+        std::cout << "PATTERN MATCHED " << std::endl;
 
         auto qdot = std::static_pointer_cast<ngraph::op::QuantizedDot>(m.get_match_root());
         auto input_0 = pattern_map[input0];
@@ -2411,10 +2412,11 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
 
         auto reshape_input1 = std::make_shared<op::Reshape>(
             input_1, AxisVector{0, 1}, Shape{input_1->get_shape()[1], input_1->get_shape()[0]});
-        auto qmatmul =
-            std::make_shared<ngraph::op::QuantizedMatmul>(input_0, reshape_input1, scale_new);
+        auto qmatmul = std::make_shared<ngraph::op::QuantizedMatmul>(
+            input_0, reshape_input1, scale_new, qdot->get_output_type());
 
         ngraph::replace_node(m.get_match_root(), qmatmul);
+        std::cout << "PATTERN MATCHED  1" << std::endl;
         return true;
     };
 
