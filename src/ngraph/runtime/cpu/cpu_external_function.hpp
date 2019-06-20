@@ -80,12 +80,19 @@ namespace ngraph
                 std::string Description;
                 std::vector<std::string> Outputs;
                 std::vector<std::string> Inputs;
+                std::vector<std::pair<size_t, ngraph::Shape>> Outputs_tensor_attrs;
+                std::vector<std::pair<size_t, ngraph::Shape>> Inputs_tensor_attrs;
+
                 OpAttributes(const std::string& desc,
                              const std::vector<std::string>& outputs,
-                             const std::vector<std::string>& inputs)
+                             const std::vector<std::string>& inputs,
+                             const std::vector<std::pair<size_t, ngraph::Shape>>& out_t_attrs,
+                             const std::vector<std::pair<size_t, ngraph::Shape>>& in_t_attrs)
                     : Description(desc)
                     , Outputs(outputs)
                     , Inputs(inputs)
+                    , Outputs_tensor_attrs(out_t_attrs)
+                    , Inputs_tensor_attrs(in_t_attrs)
                 {
                 }
             };
@@ -266,8 +273,6 @@ namespace ngraph
                 LayoutDescriptorPtrs result_layout_descriptors;
                 std::vector<size_t> m_memory_buffer_sizes;
                 std::vector<OpAttributes> m_op_attrs;
-                std::vector<std::vector<TensorViewWrapper>> tv_inputs;
-                std::vector<std::vector<TensorViewWrapper>> tv_outputs;
 
                 std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;
 

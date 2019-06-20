@@ -44,14 +44,15 @@ namespace ngraph
 
                 static CPU_DebugTracer& getInstance();
 
-                void init_streams(const char*, const char*);
+                void init_streams(const std::string&, const std::string&);
 
                 void end_of_kernel();
 
+                template <typename T>
                 void dump_one_tensor(const std::string& kernel_name,
-                                     const ngraph::runtime::cpu::TensorViewWrapper& tv,
                                      const void* tensor,
                                      const std::string& tensor_name,
+                                     const std::pair<size_t, ngraph::Shape>& t_attrs,
                                      const std::string& in_out);
 
             private:
@@ -63,4 +64,62 @@ namespace ngraph
             };
         }
     }
+}
+
+// use of kahan sum to reduce numeric error
+template <typename T>
+static float find_variance(const std::vector<T>& f_data, float mean, size_t size)
+{
+    float sum = 0.0f;
+    float c = 0.0f;
+    for (auto num : f_data)
+    {
+        num = (num - mean) * (num - mean);
+        float y = num - c;
+        float t = sum + y;
+        c = (t - sum) - y;
+        sum = t;
+    }
+    return sum / size;
+}
+
+template <typename T>
+void ngraph::runtime::cpu::CPU_DebugTracer::dump_one_tensor(
+    const std::string& kernel_name,
+    const void* tensor,
+    const std::string& tensor_name,
+    const std::pair<size_t, ngraph::Shape>& t_attrs,
+    const std::string& in_out)
+{
+    const size_t size{t_attrs.first};
+    const ngraph::Shape& shape{t_attrs.second};
+
+    std::string tid{tensor_name.substr(1 + tensor_name.find("_"))};
+    size_t num_bytes{(size * sizeof(T))};
+
+    std::vector<T> tensor_data(size);
+
+    memcpy(&tensor_data[0], tensor, num_bytes);
+
+    m_tracer_stream << " K=" << std::left << std::setw(20) << kernel_name << " S=" << std::left
+                    << std::setw(10) << m_serial_number << " TID=" << std::left << std::setw(10)
+                    << tid << in_out;
+
+    m_tracer_bin_stream << "TID=" << tid << '\n';
+
+    m_tracer_stream << " size=" << size << " " << shape << " ";
+
+    m_tracer_stream << "bin_data_offset=" << m_tracer_bin_stream.tellp();
+    m_tracer_bin_stream.write(reinterpret_cast<const char*>(tensor_data.data()),
+                              tensor_data.size() * sizeof(T));
+
+    auto mean = std::accumulate(tensor_data.begin(), tensor_data.end(), 0.0f) / size;
+
+    auto var = find_variance<T>(tensor_data, mean, size);
+
+    m_tracer_stream << " mean=" << mean;
+    m_tracer_stream << " var=" << var;
+
+    m_tracer_bin_stream << "\n";
+    m_tracer_stream << "\n";
 }

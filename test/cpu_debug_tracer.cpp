@@ -42,6 +42,21 @@
 using namespace ngraph;
 using namespace std;
 
+static void set_tracer_log(const string& trace_log, const string& bin_log)
+{
+    set_environment("NGRAPH_TRACER_LOG", trace_log.c_str(), 1);
+    set_environment("NGRAPH_BIN_TRACER_LOG", bin_log.c_str(), 1);
+}
+
+static void open_logs(ifstream& meta, ifstream& bin, const string& trace_log, const string& bin_log)
+{
+    meta.open(trace_log);
+    bin.open(bin_log, std::ios::binary);
+
+    ASSERT_TRUE(meta.is_open());
+    ASSERT_TRUE(bin.is_open());
+}
+
 TEST(cpu_degub_tracer, check_flow_with_external_function)
 {
     Shape shape{2, 2};
@@ -59,11 +74,10 @@ TEST(cpu_degub_tracer, check_flow_with_external_function)
     copy_data(a, vector<float>{0, 1, 2, 3});
     copy_data(b, vector<float>{1, 2, 3, 4});
 
-    const char* trace_log_file = "trace_meta.log";
-    const char* bin_log_file = "trace_bin.log";
+    const string trace_log_file = "trace_meta.log";
+    const string bin_log_file = "trace_bin.log";
 
-    set_environment("NGRAPH_TRACER_LOG", trace_log_file, 1);
-    set_environment("NGRAPH_BIN_TRACER_LOG", bin_log_file, 1);
+    set_tracer_log(trace_log_file, bin_log_file);
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
@@ -73,12 +87,7 @@ TEST(cpu_degub_tracer, check_flow_with_external_function)
     //open two logs and parse them
     ifstream f_meta;
     ifstream f_bin;
-
-    f_meta.open(trace_log_file);
-    f_bin.open(bin_log_file, std::ios::binary);
-
-    ASSERT_TRUE(f_meta.is_open());
-    ASSERT_TRUE(f_bin.is_open());
+    open_logs(f_meta, f_bin, trace_log_file, bin_log_file);
 
     string line;
 
@@ -113,6 +122,6 @@ TEST(cpu_degub_tracer, check_flow_with_external_function)
 
     EXPECT_EQ((vector<float>{1, 3, 5, 7}), (v_f));
 
-    remove(trace_log_file);
-    remove(bin_log_file);
+    remove(trace_log_file.c_str());
+    remove(bin_log_file.c_str());
 }

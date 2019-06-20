@@ -865,12 +865,15 @@ using namespace ngraph::runtime;
             vector<TensorViewWrapper> in;
             vector<string> node_input_names;
             vector<string> node_output_names;
+            vector<pair<size_t, ngraph::Shape>> t_in_attrs;
+            vector<pair<size_t, ngraph::Shape>> t_out_attrs;
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 in.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
                 node_input_names.emplace_back(tv->get_name());
+                t_out_attrs.push_back(make_pair(in.back().get_size(), in.back().get_shape()));
             }
             vector<TensorViewWrapper> out;
             for (const descriptor::Output& output : node->get_outputs())
@@ -878,6 +881,7 @@ using namespace ngraph::runtime;
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 out.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
                 node_output_names.emplace_back(tv->get_name());
+                t_out_attrs.push_back(make_pair(out.back().get_size(), out.back().get_shape()));
             }
 
             // Emit operation prologue
@@ -885,8 +889,11 @@ using namespace ngraph::runtime;
             {
                 if (current_function->get_name() == m_function_name)
                 {
-                    m_op_attrs.emplace_back(
-                        node->description(), node_output_names, node_input_names);
+                    m_op_attrs.emplace_back(node->description(),
+                                            node_output_names,
+                                            node_input_names,
+                                            t_out_attrs,
+                                            t_in_attrs);
                 }
                 if (m_use_tbb)
                 {
@@ -1255,11 +1262,11 @@ void runtime::cpu::CPU_ExternalFunction::dump_one_kernel(CPU_DebugTracer& debug_
     {
         for (size_t i = 0; i < m_op_attrs.at(index).Inputs.size(); i++)
         {
-            debug_tracer.dump_one_tensor(
+            debug_tracer.dump_one_tensor<float>(
                 m_op_attrs.at(index).Description,
-                tv_inputs.at(index).at(i),
                 ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Inputs.at(i))],
                 m_op_attrs.at(index).Inputs.at(i),
+                m_op_attrs.at(index).Inputs_tensor_attrs.at(i),
                 ">>");
         }
     }
@@ -1267,11 +1274,11 @@ void runtime::cpu::CPU_ExternalFunction::dump_one_kernel(CPU_DebugTracer& debug_
     {
         for (size_t i = 0; i < m_op_attrs.at(index).Outputs.size(); i++)
         {
-            debug_tracer.dump_one_tensor(
+            debug_tracer.dump_one_tensor<float>(
                 m_op_attrs.at(index).Description,
-                tv_outputs.at(index).at(i),
                 ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Outputs.at(i))],
                 m_op_attrs.at(index).Outputs.at(i),
+                m_op_attrs.at(index).Outputs_tensor_attrs.at(i),
                 "<<");
         }
         debug_tracer.end_of_kernel();
@@ -1300,13 +1307,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     register_common_passes(pass_manager, pass_config);
     pass_manager.run_passes(m_function, false);
 
-    static const auto do_ngraph_trace = std::getenv("NGRAPH_TRACER_LOG");
+    static const auto trace_log_file = std::getenv("NGRAPH_TRACER_LOG");
     auto& debug_tracer = runtime::cpu::CPU_DebugTracer::getInstance();
 
-    if (do_ngraph_trace != nullptr)
+    if (trace_log_file != nullptr)
     {
-        const char* trace_log_file = std::getenv("NGRAPH_TRACER_LOG");
-        const char* bin_log_file = std::getenv("NGRAPH_BIN_TRACER_LOG");
+        static auto bin_log_file = std::getenv("NGRAPH_BIN_TRACER_LOG");
+        if (bin_log_file == nullptr)
+            bin_log_file = (char*)"";
 
         debug_tracer.init_streams(trace_log_file, bin_log_file);
     }
@@ -1455,32 +1463,30 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
         vector<TensorViewWrapper> in;
         vector<string> in_names;
+        vector<pair<size_t, ngraph::Shape>> t_in_attrs;
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             in.push_back(TensorViewWrapper(tv, tv->get_name()));
             in_names.push_back(tv->get_name());
+            t_in_attrs.push_back(make_pair(in.back().get_size(), in.back().get_shape()));
         }
         vector<TensorViewWrapper> out;
         vector<string> out_names;
+        vector<pair<size_t, ngraph::Shape>> t_out_attrs;
 
         for (const descriptor::Output& output : node->get_outputs())
         {
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             out.push_back(TensorViewWrapper(tv, tv->get_name()));
             out_names.push_back(tv->get_name());
+            t_out_attrs.push_back(make_pair(out.back().get_size(), out.back().get_shape()));
         }
 
-        m_op_attrs.emplace_back(node->description(), out_names, in_names);
+        m_op_attrs.emplace_back(node->description(), out_names, in_names, t_out_attrs, t_in_attrs);
         op_names.push_back(node->get_name());
         handler->second(this, node.get(), in, out);
-
-        if (do_ngraph_trace != nullptr)
-        {
-            tv_inputs.push_back(in);
-            tv_outputs.push_back(out);
-        }
 
         auto cacheable = true;
         auto reuse_memory = pass_config.get_pass_attribute("CPUMemoryAssignment::ReuseMemory") ||
@@ -1802,14 +1808,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
 
                     CPUExecutionContext ectx{0};
 
-                    if (do_ngraph_trace != nullptr)
+                    if (trace_log_file != nullptr)
                     {
                         this->dump_one_kernel(debug_tracer, ctx, true);
                     }
 
                     executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
 
-                    if (do_ngraph_trace != nullptr)
+                    if (trace_log_file != nullptr)
                     {
                         this->dump_one_kernel(debug_tracer, ctx, false);
                     }
