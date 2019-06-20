@@ -90,7 +90,6 @@ shared_ptr<runtime::Executable>
                                        ngraph::pass::PassConfig& pass_config,
                                        bool performance_counters_enabled)
 {
-    std::lock_guard<std::mutex> guard(m_exec_map_mutex);
     shared_ptr<runtime::Executable> rc;
     auto it = m_exec_map.find(func);
     if (it != m_exec_map.end())
@@ -100,6 +99,7 @@ shared_ptr<runtime::Executable>
     else
     {
         rc = make_shared<CPU_Executable>(func, pass_config, performance_counters_enabled);
+        std::lock_guard<std::mutex> guard(m_exec_map_mutex);
         m_exec_map.insert({func, rc});
     }
     return rc;
