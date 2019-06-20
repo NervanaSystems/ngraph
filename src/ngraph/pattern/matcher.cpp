@@ -298,9 +298,13 @@ namespace ngraph
 
             if (graph_node->is_commutative())
             {
-                std::sort(
-                    begin(pattern_args),
-                    end(pattern_args)); // TODO: [nikolayk] we don't really have to use lexicographically-based perms, heap's algo should be faster
+                // TODO: [nikolayk] we don't really have to use lexicographically-based perms, heap's algo should be faster
+                std::sort(begin(pattern_args),
+                          end(pattern_args),
+                          [](std::shared_ptr<ngraph::Node>& n1, std::shared_ptr<ngraph::Node>& n2) {
+                              return n1->get_instance_id() < n2->get_instance_id();
+
+                          });
                 do
                 {
                     NGRAPH_DEBUG << pad(2 * m_depth) << "Running a permutation for graph_node "
@@ -311,7 +315,12 @@ namespace ngraph
                         pattern_map.insert(begin(copy), end(copy));
                         return true;
                     }
-                } while (std::next_permutation(begin(pattern_args), end(pattern_args)));
+                } while (std::next_permutation(
+                    begin(pattern_args),
+                    end(pattern_args),
+                    [](std::shared_ptr<ngraph::Node>& n1, std::shared_ptr<ngraph::Node>& n2) {
+                        return n1->get_instance_id() < n2->get_instance_id();
+                    }));
             }
             else
             {
