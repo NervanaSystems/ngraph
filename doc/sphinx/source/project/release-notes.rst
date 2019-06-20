@@ -13,18 +13,43 @@ We are pleased to announce the release of version |version|-doc.
 
 ==============================
 
-0.22-doc
---------
-
-
-
-
 Core updates for |version|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
++ More ONNX ops
++ Optimizations
++ Don't reseed RNG on each use
+
+0.22-doc
+--------
+
++ Noted changes on graph inspection options resultant from PR 3016.
++ Placeholder doc for TensorFlow\* framework build options (TF owns 
+  file now and can update applicable versions as needed).
++ Added better detail to doc-contributor-README to help new contributors.
 
 
+.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
 
+
+Changelog on Previous Releases
+==============================
+
+For downloads formatted as ``.zip`` and ``tar.gz``, see 
+https://github.com/NervanaSystems/ngraph/releases.
+
+0.21
+----
+
++ The offset argument in tensor reads and writes has been remove
+d+ Save/load API
++ More ONNX ops
++ Better tensor creation
++ More shape support
++ Provenance improvements
++ offset arg for tensor creation is deprecated
++ static linking support
++ Intial test of 0.21-doc
 
 0.21-doc
 --------
@@ -42,28 +67,6 @@ Summary of documentation-related changes:
 + Consistent filenaming on all BE indexes.
 + Removed deprecated TensorAPI.
 
-
-.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
-
-
-Changelog on Previous Releases
-==============================
-
-For downloads formatted as ``.zip`` and ``tar.gz``, see 
-https://github.com/NervanaSystems/ngraph/releases.
-
-0.21
-----
-
-+ The offset argument in tensor reads and writes has been removed
-+ Save/load API
-+ More ONNX ops
-+ Better tensor creation
-+ More shape support
-+ Provenance improvements
-+ offset arg for tensor creation is deprecated
-+ static linking support
-+ Intial test of 0.21-doc
 
 0.20
 ----

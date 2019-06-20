@@ -16,12 +16,9 @@ is to use the latest `prebuilt nGraph-TensorFlow bridge`_. You can install
 TensorFlow and nGraph to a virtual environment; otherwise, the code will install 
 to a system location.
 
-.. important:: The latest version of TensorFlow may be greater than the version 
-   named below.
-
 .. code-block:: console
    
-   pip install -U tensorflow==1.13.1
+   pip install -U tensorflow==1.14
    pip install -U ngraph-tensorflow-bridge
 
 That's it!  Now you can test the installation by running the following command:
@@ -94,15 +91,15 @@ the script above with the ``--use_prebuilt_tensorflow`` option doesn't work.
 
       git clone https://github.com/tensorflow/ngraph-bridge.git
       cd ngraph-bridge
-      git checkout v0.14.1
+      git checkout v0.15.0
       cd ../
 
-#. Install Bazel v ``0.21.0``; Bazel is a TensorFlow dependency:
+#. Install Bazel v ``0.24.1``; Bazel is a TensorFlow dependency:
 
    .. code-block:: console
 
-      wget https://github.com/bazelbuild/bazel/releases/download/0.24.0/bazel-0.24.0-installer-linux-x86_64.sh      
-      chmod +x bazel-0.24.0-installer-linux-x86_64.sh
+      wget https://github.com/bazelbuild/bazel/releases/download/0.24.1/bazel-0.24.1-installer-linux-x86_64.sh      
+      chmod +x bazel-0.24.1-installer-linux-x86_64.sh
       ./bazel-0.24.0-installer-linux-x86_64.sh --user
       export PATH=$PATH:~/bin
       source ~/.bashrc 
