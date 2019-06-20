@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"

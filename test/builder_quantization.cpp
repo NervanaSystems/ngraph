@@ -23,8 +23,8 @@
 #include "gtest/gtest.h"
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
-#include "ngraph/builder/quantization/quantized_linear_matmul.hpp"
 #include "ngraph/builder/quantized_conv_builder.hpp"
+#include "ngraph/builder/quantized_dot_builder.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pass/constant_folding.hpp"
@@ -1087,6 +1087,7 @@ TEST(builder, scaled_quantize_concat_unsigned_varying)
               read_vector<uint8_t>(result));
 }
 
+#if 0
 TEST(builder, scaled_QDotInteger)
 {
     Shape shape_a{1, 2}; // input shape
@@ -1111,6 +1112,7 @@ TEST(builder, scaled_QDotInteger)
     handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<int32_t>{3, 13, 23}), read_vector<int32_t>(result));
 }
+#endif
 
 // QuantizedDot
 TEST(builder, dynamic_scaled_QD)
@@ -1122,7 +1124,7 @@ TEST(builder, dynamic_scaled_QD)
 
     Shape shape_r{4, 3}; // output shape
 
-    auto make_function = [shape_a, shape_b](bool requantize, bool with_relu) {
+    auto make_function = [shape_a, shape_b](const ngraph::element::Type& output_type) {
         auto A = make_shared<op::Parameter>(element::u8, shape_a);
         auto B = make_shared<op::Parameter>(element::i8, shape_b);
         auto C = make_shared<op::Parameter>(element::f32, Shape{1});
@@ -1131,8 +1133,8 @@ TEST(builder, dynamic_scaled_QD)
         auto F = make_shared<op::Parameter>(element::f32, Shape{1});
         auto G = make_shared<op::Parameter>(element::f32, Shape{1});
         auto H = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto CV =
-            ngraph::builder::ScaledQuantizedDot(A, B, C, D, E, F, G, H, requantize, with_relu);
+        auto CV = ngraph::builder::QuantizedDotBuilder(
+            A, B, C, D, E, F, G, H, output_type, AxisSet{}, AxisSet{}, AxisSet{});
         return make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
     };
 
@@ -1155,8 +1157,8 @@ TEST(builder, dynamic_scaled_QD)
     auto i = backend->create_tensor(element::f32, Shape{1});
     copy_data(i, vector<float>{2.236754f});
 
-    // QuantizedDot (no requantize, no relu)
-    auto f_nrequantize = make_function(false, false);
+#if 0
+    auto f_nrequantize = make_function(element::i32);
     auto f_nrequantize_r = backend->create_tensor(element::i32, shape_r);
     auto f_nrequantize_handle = backend->compile(f_nrequantize);
     f_nrequantize_handle->call_with_validate({f_nrequantize_r}, {a, b, d, e, e_a, g, h, i});
@@ -1164,16 +1166,17 @@ TEST(builder, dynamic_scaled_QD)
               read_vector<int32_t>(f_nrequantize_r));
 
     // QuantizedDot with relu
-    auto f_nrequantize_relu = make_function(false, true);
+    auto f_nrequantize_relu = make_function(element::i32);
     auto f_nrequantize_relu_r = backend->create_tensor(element::i32, shape_r);
     auto f_nrequantize_relu_handle = backend->compile(f_nrequantize_relu);
     f_nrequantize_relu_handle->call_with_validate({f_nrequantize_relu_r},
                                                   {a, b, d, e, e_a, g, h, i});
     EXPECT_EQ((vector<int32_t>{26, 34, 45, 71, 0, 106, 66, 38, 118, 63, 0, 124}),
               read_vector<int32_t>(f_nrequantize_relu_r));
+#endif
 
     // QuantizedDot with requantize and no relu
-    auto f_requantize = make_function(true, false);
+    auto f_requantize = make_function(ngraph::element::i8);
     auto f_requantize_r = backend->create_tensor(element::i8, shape_r);
     auto handle = backend->compile(f_requantize);
     handle->call_with_validate({f_requantize_r}, {a, b, d, e, e_a, g, h, i});
@@ -1181,7 +1184,7 @@ TEST(builder, dynamic_scaled_QD)
               read_vector<int8_t>(f_requantize_r));
 
     // QuantizedDot with requantize and relu
-    auto f_requantize_relu = make_function(true, true);
+    auto f_requantize_relu = make_function(ngraph::element::u8);
     auto f_requantize_relu_r = backend->create_tensor(element::u8, shape_r);
     auto f_requantize_relu_handle = backend->compile(f_requantize_relu);
     f_requantize_relu_handle->call_with_validate({f_requantize_relu_r}, {a, b, d, e, e_a, g, h, i});
@@ -1294,6 +1297,7 @@ TEST(builder, dynamic_scaled_QD_with_bias)
               read_vector<uint8_t>(f_requantize_relu_r));
 }
 
+#if 0
 TEST(builder, scaled_QDot_u8u8)
 {
     Shape shape_a{1, 2}; // input shape
@@ -1331,3 +1335,4 @@ TEST(builder, scaled_QDot_u8u8)
     handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<uint8_t>{3, 13, 23}), read_vector<uint8_t>(result));
 }
+#endif

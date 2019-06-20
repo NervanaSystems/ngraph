@@ -23,7 +23,6 @@
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -150,17 +149,6 @@ namespace ngraph
                                                      const std::shared_ptr<Node>& max_output,
                                                      const bool requantize = true,
                                                      const bool with_relu = false);
-
-        std::shared_ptr<Node> ScaledQuantizedDot(const std::shared_ptr<Node>& input,
-                                                 const std::shared_ptr<Node>& filters,
-                                                 const std::shared_ptr<Node>& min_input,
-                                                 const std::shared_ptr<Node>& max_input,
-                                                 const std::shared_ptr<Node>& min_filter,
-                                                 const std::shared_ptr<Node>& max_filter,
-                                                 const std::shared_ptr<Node>& min_output,
-                                                 const std::shared_ptr<Node>& max_output,
-                                                 const bool requantize = true,
-                                                 const bool with_relu = false);
 
     } // namespace builder
 } // namespace ngraph

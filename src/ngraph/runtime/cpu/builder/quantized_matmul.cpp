@@ -42,7 +42,12 @@ namespace ngraph
 
                 auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
-                auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto arg2_buffer_index =
+                    external_function->get_buffer_index(args[2].get_name()); // input0 scale
+                auto arg4_buffer_index =
+                    external_function->get_buffer_index(args[4].get_name()); // input1 scale
+                auto arg6_buffer_index =
+                    external_function->get_buffer_index(args[6].get_name()); // output scale
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 auto scales_size = shape_size(args[2].get_shape());
@@ -69,15 +74,17 @@ namespace ngraph
                                     arg0_buffer_index,
                                     arg1_buffer_index,
                                     arg2_buffer_index,
+                                    arg4_buffer_index,
+                                    arg6_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
                                                        CPUExecutionContext* ectx) mutable {
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;
-                            dyn_scales.assign(
-                                static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
-                                static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
-                                    scales_size);
+                            dyn_scales.push_back(
+                                *(static_cast<float*>(ctx->buffer_data[arg2_buffer_index])) *
+                                *(static_cast<float*>(ctx->buffer_data[arg4_buffer_index])) /
+                                *(static_cast<float*>(ctx->buffer_data[arg6_buffer_index])));
                             ip_attr.set_output_scales(0, dyn_scales);
                             mkldnn_emitter->build_inner_product_forward<false>(
                                 ctx->mkldnn_primitives,
