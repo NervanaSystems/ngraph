@@ -266,7 +266,6 @@ void MLIRCompiler::build_ng_dialect()
     create_return();
 }
 
-
 namespace ngraph
 {
     namespace runtime
@@ -347,6 +346,7 @@ void MLIRCompiler::bind_arguments()
     // malloc here since that's what allocateMemRefArguments use
     // TODO (nmostafa): Better way of doing this ? Use builder allocator ?
     MLIRMemMgr** mem_mgr_arg = reinterpret_cast<MLIRMemMgr**>(malloc(sizeof(void*)));
+    NGRAPH_CHECK(mem_mgr_arg != nullptr);
     *mem_mgr_arg = &get_mem_mgr();
     // inserting memory manager ptr in right location ?
     NGRAPH_CHECK(m_invoke_args.size() == get_mem_mgr_arg_id(func));
@@ -434,6 +434,7 @@ mlir::StaticFloatMemRef* MLIRCompiler::allocate_memref_descriptor(mlir::Type typ
     // We should expand this with different types and dynamic MemRefs
     auto* descriptor =
         reinterpret_cast<mlir::StaticFloatMemRef*>(malloc(sizeof(mlir::StaticFloatMemRef)));
+    NGRAPH_CHECK(descriptor != nullptr, "NULL MemRef descriptor");
     descriptor->data = nullptr;
     return descriptor;
 }
