@@ -301,7 +301,8 @@ namespace ngraph
                 // TODO: [nikolayk] we don't really have to use lexicographically-based perms, heap's algo should be faster
                 std::sort(begin(pattern_args),
                           end(pattern_args),
-                          [](std::shared_ptr<ngraph::Node>& n1, std::shared_ptr<ngraph::Node>& n2) {
+                          [](const std::shared_ptr<ngraph::Node>& n1,
+                             const std::shared_ptr<ngraph::Node>& n2) {
                               return n1->get_instance_id() < n2->get_instance_id();
 
                           });
@@ -315,12 +316,13 @@ namespace ngraph
                         pattern_map.insert(begin(copy), end(copy));
                         return true;
                     }
-                } while (std::next_permutation(
-                    begin(pattern_args),
-                    end(pattern_args),
-                    [](std::shared_ptr<ngraph::Node>& n1, std::shared_ptr<ngraph::Node>& n2) {
-                        return n1->get_instance_id() < n2->get_instance_id();
-                    }));
+                } while (std::next_permutation(begin(pattern_args),
+                                               end(pattern_args),
+                                               [](const std::shared_ptr<ngraph::Node>& n1,
+                                                  const std::shared_ptr<ngraph::Node>& n2) {
+                                                   return n1->get_instance_id() <
+                                                          n2->get_instance_id();
+                                               }));
             }
             else
             {
