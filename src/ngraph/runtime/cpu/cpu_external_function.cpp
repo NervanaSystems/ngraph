@@ -924,7 +924,8 @@ using namespace ngraph::runtime;
             // Always enable nodes computing output tensors or nodes whose outputs might get
             // overwritten due to inplace kernels
             // TODO (jbobba) - Do we need to handle cacheability
-            if (computes_result(node.get()) || possibly_overwritten(node.get()) || node->has_state())
+            if (computes_result(node.get()) || possibly_overwritten(node.get()) ||
+                node->has_state())
             {
                 writer << " || 1";
             }
