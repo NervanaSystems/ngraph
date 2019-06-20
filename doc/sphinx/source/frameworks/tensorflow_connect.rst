@@ -11,10 +11,9 @@ with the easiest and most straightforward options.
 Using ``pip`` install
 ----------------------
 
-If you are already familiar with TensorFlow\*, the easiest way to get started 
-is to use the latest `prebuilt nGraph-TensorFlow bridge`_. You can install 
-TensorFlow and nGraph to a virtual environment; otherwise, the code will install 
-to a system location.
+The easiest way to get started is to use the latest `prebuilt nGraph-TensorFlow bridge`_. 
+You can install TensorFlow and nGraph to a virtual environment; 
+otherwise, the code will install to a system location.
 
 .. important:: Other versions of TensorFlow may also work.
 
