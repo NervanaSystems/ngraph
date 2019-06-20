@@ -24,6 +24,7 @@
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/builder/quantized_conv_builder.hpp"
+#include "ngraph/builder/quantized_dot_builder.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
@@ -7764,4 +7765,78 @@ TEST(${BACKEND_NAME}, quantized_conv_int32_output)
     handle->call_with_validate({result}, {a, b, c, d, e});
     EXPECT_EQ((vector<int32_t>{22, 34, 30, 32, 38, 72, 90, 43, 33, 52, 43, 39}),
               read_vector<int32_t>(result));
+}
+
+TEST(${BACKEND_NAME}, quantized_dot)
+{
+    Shape shape_a{4, 3}; // input shape
+    vector<uint8_t> a_data = {209, 122, 39, 11, 33, 243, 250, 216, 159, 18, 181, 187};
+    Shape shape_b{3, 3}; // filter shape
+    vector<int8_t> b_data = {11, 15, 80, 50, -6, -3, -6, 78, 113};
+
+    Shape shape_r{4, 3}; // output shape
+    auto make_function = [shape_a, shape_b](const ngraph::element::Type& output_type) {
+        auto A = make_shared<op::Parameter>(element::u8, shape_a);
+        auto B = make_shared<op::Parameter>(element::i8, shape_b);
+        auto C = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto D = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto E = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto F = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto G = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto H = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto CV = ngraph::builder::QuantizedDotBuilder(
+            A, B, C, D, E, F, G, H, output_type, AxisSet{}, AxisSet{}, AxisSet{});
+        return make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
+    };
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u8, shape_a);
+    copy_data(a, a_data);
+    auto b = backend->create_tensor(element::i8, shape_b);
+    copy_data(b, b_data);
+    auto d = backend->create_tensor(element::f32, Shape{1});
+    copy_data(d, vector<float>{-127.0f});
+    auto e = backend->create_tensor(element::f32, Shape{1});
+    copy_data(e, vector<float>{127.0f});
+    auto e_a = backend->create_tensor(element::f32, Shape{1});
+    copy_data(e_a, vector<float>{0.1f});
+    auto g = backend->create_tensor(element::f32, Shape{1});
+    copy_data(g, vector<float>{0.9f});
+    auto h = backend->create_tensor(element::f32, Shape{1});
+    copy_data(h, vector<float>{37.618633f});
+    auto i = backend->create_tensor(element::f32, Shape{1});
+    copy_data(i, vector<float>{2.236754f});
+#if 0
+    auto f_nrequantize = make_function(element::i32);
+    auto f_nrequantize_r = backend->create_tensor(element::i32, shape_r);
+    auto f_nrequantize_handle = backend->compile(f_nrequantize);
+    f_nrequantize_handle->call_with_validate({f_nrequantize_r}, {a, b, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<int32_t>{26, 34, 45, 71, -1, 106, 66, 38, 118, 63, -3, 124}),
+              read_vector<int32_t>(f_nrequantize_r));
+
+    // QuantizedDot with relu
+    auto f_nrequantize_relu = make_function(element::i32);
+    auto f_nrequantize_relu_r = backend->create_tensor(element::i32, shape_r);
+    auto f_nrequantize_relu_handle = backend->compile(f_nrequantize_relu);
+    f_nrequantize_relu_handle->call_with_validate({f_nrequantize_relu_r},
+                                                  {a, b, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<int32_t>{26, 34, 45, 71, 0, 106, 66, 38, 118, 63, 0, 124}),
+              read_vector<int32_t>(f_nrequantize_relu_r));
+#endif
+    // QuantizedDot with requantize and no relu
+    auto f_requantize = make_function(ngraph::element::i8);
+    auto f_requantize_r = backend->create_tensor(element::i8, shape_r);
+    auto handle = backend->compile(f_requantize);
+    handle->call_with_validate({f_requantize_r}, {a, b, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<int8_t>{86, 114, 127, 127, -4, 127, 127, 127, 127, 127, -9, 127}),
+              read_vector<int8_t>(f_requantize_r));
+
+    // QuantizedDot with requantize and relu
+    auto f_requantize_relu = make_function(ngraph::element::u8);
+    auto f_requantize_relu_r = backend->create_tensor(element::u8, shape_r);
+    auto f_requantize_relu_handle = backend->compile(f_requantize_relu);
+    f_requantize_relu_handle->call_with_validate({f_requantize_relu_r}, {a, b, d, e, e_a, g, h, i});
+    EXPECT_EQ((vector<uint8_t>{173, 230, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255}),
+              read_vector<uint8_t>(f_requantize_relu_r));
 }

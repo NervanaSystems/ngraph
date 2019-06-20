@@ -277,6 +277,7 @@ namespace ngraph
 
                     mkldnn::post_ops ops;
 
+#if 0
                     if (has_relu<OP>(node))
                     {
                         const float ops_scale = 1.f;
@@ -285,7 +286,7 @@ namespace ngraph
                         ops.append_eltwise(
                             ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
                     }
-
+#endif
                     if (std::is_same<OP, ngraph::op::QuantizedDot>())
                     {
                         auto scale_val = extract_scale_value<OP>(node, 2);
@@ -1114,6 +1115,7 @@ namespace ngraph
                 {
                     mkldnn::post_ops ops;
 
+#if 0
                     if (has_relu<OP>(node))
                     {
                         const float ops_scale = 1.f;
@@ -1122,7 +1124,7 @@ namespace ngraph
                         ops.append_eltwise(
                             ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
                     }
-
+#endif
                     mkldnn::primitive_attr ip_attr;
                     ip_attr.set_post_ops(ops);
                     if (is_quantized_inner_product<OP>())

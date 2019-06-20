@@ -2400,7 +2400,7 @@ namespace ngraph
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 2 << "]);\n";
 
                     writer << "\nmkldnn::post_ops ops;\n";
-                    if (has_relu<OP>(node))
+                    if (false)
                     {
                         writer << "const float ops_scale = 1.f;\n";
                         writer << "const float ops_alpha = -0.f; // relu negative slope\n";
