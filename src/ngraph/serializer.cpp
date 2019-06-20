@@ -221,6 +221,7 @@ public:
 
     json serialize_function(const Function& function);
     json serialize_output(const Output<Node>& output);
+    json serialize_parameter_vector(const ParameterVector& parameters);
     json serialize_output_vector(const OutputVector& output_vector);
     json serialize_node_reference(const Node& node);
     json serialize_node(const Node& node);
@@ -245,6 +246,7 @@ public:
     shared_ptr<Function> deserialize_function(const json& j);
     Output<Node> deserialize_output(const json& j);
     OutputVector deserialize_output_vector(const json& j);
+    ParameterVector deserialize_parameter_vector(const json& j);
     shared_ptr<Node> deserialize_node_reference(const json& j);
     shared_ptr<Node> deserialize_node(const json& j);
 
@@ -341,6 +343,12 @@ static op::PadType read_pad_type(const json& node_js)
 {
     return has_key(node_js, "pad_type") ? static_cast<op::PadType>(node_js.at("pad_type"))
                                         : op::PadType::EXPLICIT;
+}
+
+static op::PadMode read_pad_mode(const json& node_js)
+{
+    return has_key(node_js, "pad_mode") ? static_cast<op::PadMode>(node_js.at("pad_mode"))
+                                        : op::PadMode::CONSTANT;
 }
 
 static json write_element_type(const ngraph::element::Type& n)
@@ -510,21 +518,24 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
             rc = deserializer.deserialize_function(func);
         }
     }
-
     return rc;
+}
+
+json JSONSerializer::serialize_parameter_vector(const ParameterVector& parameters)
+{
+    json json_parameters(nlohmann::detail::value_t::array);
+    for (auto param : parameters)
+    {
+        json_parameters.push_back(serialize_node_reference(*param));
+    }
+    return json_parameters;
 }
 
 json JSONSerializer::serialize_function(const Function& f)
 {
     json function;
     function["name"] = f.get_name();
-
-    vector<string> parameter_list;
-    for (auto param : f.get_parameters())
-    {
-        parameter_list.push_back(serialize_node_reference(*param));
-    }
-    function["parameters"] = parameter_list;
+    function["parameters"] = serialize_parameter_vector(f.get_parameters());
 
     // TODO Functions can return multiple results
     for (size_t i = 0; i < f.get_output_size(); ++i)
@@ -577,17 +588,30 @@ Output<Node> JSONDeserializer::deserialize_output(const json& j)
 OutputVector JSONDeserializer::deserialize_output_vector(const json& j)
 {
     OutputVector result;
-    for (const json& jelt : j)
+    if (j.is_array())
     {
-        result.push_back(deserialize_output(jelt));
+        for (const json& jelt : j)
+        {
+            result.push_back(deserialize_output(jelt));
+        }
     }
     return result;
+}
+
+ParameterVector JSONDeserializer::deserialize_parameter_vector(const json& json_parameters)
+{
+    std::vector<std::shared_ptr<op::Parameter>> params;
+    for (auto& param_ref : json_parameters)
+    {
+        params.push_back(
+            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(param_ref)));
+    }
+    return params;
 }
 
 shared_ptr<Function> JSONDeserializer::deserialize_function(const json& func_js)
 {
     string func_name = func_js.at("name").get<string>();
-    vector<json> func_parameters = func_js.at("parameters");
     vector<json> func_result = func_js.at("result");
     for (json node_js : func_js.at("ops"))
     {
@@ -619,12 +643,7 @@ shared_ptr<Function> JSONDeserializer::deserialize_function(const json& func_js)
             "Graph serialization is inconsistent. Some op::Results appear to be missing");
     }
 
-    std::vector<std::shared_ptr<op::Parameter>> params;
-    for (auto& param_ref : func_parameters)
-    {
-        params.push_back(
-            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(param_ref)));
-    }
+    ParameterVector params = deserialize_parameter_vector(func_js.at("parameters"));
 
     shared_ptr<Function> rc{make_shared<Function>(result, params, func_name)};
     m_function_map[func_name] = rc;
@@ -657,7 +676,12 @@ struct OutputHelper
 // when all op constructors use the new style arguments.
 struct OutputVectorHelper
 {
-    const OutputHelper& operator[](size_t i) const { return m_vector[i]; }
+    OutputVectorHelper(OutputVector output_vector)
+        : m_vector(output_vector)
+    {
+    }
+    OutputVectorHelper() = default;
+    OutputHelper operator[](size_t i) const { return OutputHelper(m_vector[i]); }
     void push_back(const Output<Node>& output) { m_vector.push_back(output); }
     size_t size() const { return m_vector.size(); }
     operator vector<shared_ptr<Node>>() const
@@ -665,11 +689,12 @@ struct OutputVectorHelper
         vector<shared_ptr<Node>> result;
         for (auto& o : m_vector)
         {
-            result.push_back(o);
+            result.push_back(OutputHelper(o));
         }
         return result;
     }
-    vector<OutputHelper> m_vector;
+    operator const OutputVector&() const { return m_vector; }
+    OutputVector m_vector;
 };
 
 shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
@@ -680,14 +705,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         string node_name = node_js.at("name").get<string>();
         string node_op = node_js.at("op").get<string>();
         string friendly_name = get_value<string>(node_js, "friendly_name");
-        vector<json> node_inputs = get_value<vector<json>>(node_js, "inputs");
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
-        OutputVectorHelper args;
-        for (auto& node_input : node_inputs)
-        {
-            args.push_back(deserialize_output(node_input));
-        }
+        OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
 #if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
@@ -1452,9 +1472,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
                                      [](size_t s) { return s == 0; }),
                          "Legacy padding_interior field must be zero everywhere.");
 
-            auto pad_mode = has_key(node_js, "pad_mode")
-                                ? static_cast<op::PadMode>(node_js.at("pad_mode"))
-                                : op::PadMode::CONSTANT;
+            auto pad_mode = read_pad_mode(node_js);
 
             node = make_shared<op::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
             break;
@@ -1779,7 +1797,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         }
         case OP_TYPEID::TensorIterator:
         {
-            // TODO
+            ParameterVector body_parameters =
+                deserialize_parameter_vector(node_js["body_parameter"]);
+            OutputVector body_outputs = deserialize_output_vector(node_js["body_outputs"]);
+            OutputVector outputs = deserialize_output_vector(node_js["outputs"]);
+            node = make_shared<op::TensorIterator>(args, body_parameters, body_outputs, outputs);
             break;
         }
 
@@ -2739,7 +2761,10 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::TensorIterator:
     {
-        // TODO
+        auto tmp = dynamic_cast<const op::TensorIterator*>(&n);
+        node["body_parameters"] = serialize_parameter_vector(tmp->get_body_parameters());
+        node["body_outputs"] = serialize_output_vector(tmp->get_body_outputs());
+        node["outputs"] = serialize_output_vector(tmp->get_outputs());
         break;
     }
     case OP_TYPEID::Tile: { break;
