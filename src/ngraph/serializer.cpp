@@ -1102,14 +1102,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
             auto shrink_axis = node_js.at("shrink_axis").get<set<size_t>>();
             auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<size_t>>();
             node = make_shared<op::DynSlice>(args[0],
-                                                args[1],
-                                                args[2],
-                                                args[3],
-                                                lower_bounds_mask,
-                                                upper_bounds_mask,
-                                                new_axis,
-                                                shrink_axis,
-                                                ellipsis_mask);
+                                             args[1],
+                                             args[2],
+                                             args[3],
+                                             lower_bounds_mask,
+                                             upper_bounds_mask,
+                                             new_axis,
+                                             shrink_axis,
+                                             ellipsis_mask);
             break;
         }
         case OP_TYPEID::Elu:
