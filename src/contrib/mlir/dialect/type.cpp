@@ -45,7 +45,7 @@ unsigned NGIntegerType::getWidth() const
     case NG_U32_TYPE_ID: return 32;
     case NG_I64_TYPE_ID:
     case NG_U64_TYPE_ID: return 64;
-    default: NGRAPH_FAIL() << "Invalid type ID";
+    default: NGRAPH_CHECK(false, "Invalid type ID");
     }
     return 0;
 }
@@ -62,7 +62,7 @@ bool NGIntegerType::isSigned() const
     case NG_U16_TYPE_ID:
     case NG_U32_TYPE_ID:
     case NG_U64_TYPE_ID: return false;
-    default: NGRAPH_FAIL() << "Invalid type ID";
+    default: NGRAPH_CHECK(false, "Invalid type ID");
     }
     return false;
 }
@@ -97,8 +97,8 @@ bool NGTensorType::isCompatibleShape(NGTensorType& other) const
 
     for (auto i = 0; i < shape.size(); i++)
     {
-        NGRAPH_ASSERT(shape[i] >= -1) << "Invalid tensor shape";
-        NGRAPH_ASSERT(otherShape[i] >= -1) << "Invalid tensor shape";
+        NGRAPH_CHECK(shape[i] >= -1, "Invalid tensor shape", shape[i]);
+        NGRAPH_CHECK(otherShape[i] >= -1, "Invalid tensor shape", otherShape[i]);
 
         if (shape[i] == -1 || otherShape[i] == -1 || shape[i] == otherShape[i])
             continue;

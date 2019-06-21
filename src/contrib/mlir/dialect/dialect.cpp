@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "dialect.hpp"
+#include "ngraph/check.hpp"
 #include "ops.hpp"
 #include "type.hpp"
 
@@ -66,7 +67,7 @@ void NGDialect::printType(mlir::Type type, raw_ostream& os) const
         os << "bool";
         return;
     }
-    default: { NGRAPH_ASSERT(0) << "Incorrect type to print?";
+    default: { NGRAPH_CHECK(false, "Incorrect type to print?");
     }
     }
 }

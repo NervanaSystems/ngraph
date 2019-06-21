@@ -82,6 +82,7 @@ set(SRC
     builder/softmax.cpp
     builder/get_output_element.cpp
     builder/sum.cpp
+    builder/tile.cpp
     builder/topk.cpp
     builder/update_slice.cpp
     kernel/pad.cpp

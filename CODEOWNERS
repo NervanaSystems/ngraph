@@ -38,6 +38,7 @@
 /src/ngraph/frontend/               @postrational
 /src/ngraph/op/                     @diyessi @aprocter
 /src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi @aprocter
+/src/ngraph/op/experimental/layers  @ilyachur
 /src/ngraph/pass/                   @jbobba
 /src/ngraph/pattern/                @jbobba @aprocter
 /src/ngraph/runtime/                @rkimballn1 @jbobba

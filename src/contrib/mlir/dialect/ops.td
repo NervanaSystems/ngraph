@@ -14,15 +14,15 @@
 // limitations under the License.
 //*****************************************************************************
 //
-// This is the NGraph Dialect operation definition file.
+// This is the nGraph Dialect operation definition file.
 //
 //===----------------------------------------------------------------------===//
 
 include "mlir/IR/OpBase.td"
 
-// NGraph Dialect operations definitions
+// nGraph Dialect operations definitions
 //
-// This files declares NGraph operations that table-gen uses to create C++ code
+// This files declares nGraph operations that table-gen uses to create C++ code
 // For more information about tablegen. See https://llvm.org/docs/TableGen/index.html
 //
 // The output files are ops.h.inc and ops.cpp.inc and are generated at build time
@@ -44,17 +44,17 @@ def NG_Dialect : Dialect {
 }
 
 
-// NGraph Types
-// This defines records equivalent to NGraph types. It doesn't generate code.
+// nGraph Types
+// This defines records equivalent to nGraph types. It doesn't generate code.
 // This is used as a type in the DAG input/outputs.
 // Constraints (CPred) are used to type-check args/results of that type during op verification
 def NG_TensorType : Type<CPred<"$_self.isa<mlir::NGTensorType>()">,
-                     "NGraph Tensor Type">;
+                     "nGraph Tensor Type">;
 
 // A generic un-typed MemRef. Used for Fake instructions inserted during dialect lowering
 def NG_MemRefType : Type<IsMemRefTypePred, "MemRef Type">;
 
-// NGraph operation base class.
+// nGraph operation base class.
 // Prepends "ng." to operation name
 class NG_Op<string mnemonic, list<OpTrait> traits = []> :
     Op<NG_Dialect, mnemonic, traits> {}
@@ -78,7 +78,7 @@ class NG_Unary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
       Arguments<(ins NG_TensorType:$arg)>
 {
   // TODO: Implement
-  let parser = [{ NGRAPH_FAIL() << "No parser support"; return mlir::failure(); }];
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
   let verifier = [{ return verifyUnaryArithOp(this); }];
 }
@@ -89,7 +89,7 @@ class NG_Binary_Op<string mnemonic, list<OpTrait> traits = []> :
       Arguments<(ins NG_TensorType:$lhs, NG_TensorType:$rhs)>
 {
   // TODO: Implement
-  let parser = [{ NGRAPH_FAIL() << "No parser support"; return mlir::failure(); }];
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 }
 
 // Base class for arithmetic binary operations with verifier.
@@ -98,7 +98,7 @@ class NG_Binary_Arith_Op<string mnemonic, list<OpTrait> traits = []> :
       Arguments<(ins NG_TensorType:$lhs, NG_TensorType:$rhs)>
 {
   // TODO: Implement
-  let parser = [{ NGRAPH_FAIL() << "No parser support"; return mlir::failure(); }];
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
   let verifier = [{ return verifyBinaryArithOp(this); }];
 }
@@ -109,7 +109,7 @@ class NG_Cmp_Op<string mnemonic, list<OpTrait> traits = []> :
       Arguments<(ins NG_TensorType:$lhs, NG_TensorType:$rhs)>
 {
   // TODO: Implement
-  let parser = [{ NGRAPH_FAIL() << "No parser support"; return mlir::failure(); }];
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
   let verifier = [{ return verifyCmpOp(this); }];
 }
@@ -120,7 +120,7 @@ class NG_Ternary_Op<string mnemonic, list<OpTrait> traits = []> :
       Arguments<(ins NG_TensorType:$op0, NG_TensorType:$op1, NG_TensorType:$op2)>
 {
   // TODO: Implement
-  let parser = [{ NGRAPH_FAIL() << "No parser support"; return mlir::failure(); }];
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 }
 
 
@@ -189,7 +189,7 @@ class NG_Axis_Reduction_Op<string mnemonic, list<OpTrait> traits = []> :
                 "across the axes of a  single tensor.";
   let description = "Axes are represented as an array of I64 attributes.";
 
-  let parser = [{ NGRAPH_FAIL() << "Parser not implemented"; return mlir::failure(); }];
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
   // TODO
   let verifier = [{ return verifyAxisReductionOp(this); }];

@@ -16,32 +16,36 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <vector>
+#include <memory>
+
+#include "ngraph/op/op.hpp"
+
 namespace ngraph
 {
     namespace runtime
     {
-        namespace ngmlir
+        namespace plaidml
         {
-            /// Memory manager for temporaries in MLIR compiled sub-graph
-            /// It handles call-backs from the code and returns pointer to allocated memory
-            /// Also, handles freeing up memory
-            class MLIRMemMgr
+            namespace op
             {
-            public:
-                /// Allocates data for temporary tensor. Currently, it is called for each
-                /// temp tensor defintion. Keeps track of each pointer and free them during cleanup.
-                // TODO: Use pre-allocation from framework memory manager
-                void* allocate(size_t size);
-
-                /// Frees all allocated pointers
-                void freeAll();
-
-            private:
-                std::vector<void*> ptrList;
-            };
+                // Implements NumPy-style broadcast semantics by passing its single argument through to its
+                // output and pretending that this changes the shape.  The creator of this node is responsible
+                // for ensuring that the downstream operation will perform a NumPy-style broadcast.
+                class ImplicitBroadcast;
+            }
         }
     }
 }
+
+class ngraph::runtime::plaidml::op::ImplicitBroadcast final : public ngraph::op::Op
+{
+public:
+    ImplicitBroadcast(std::shared_ptr<Node> input, const Shape& shape);
+
+    void validate_and_infer_types() final;
+
+    std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
+
+private:
+    Shape m_shape;
+};

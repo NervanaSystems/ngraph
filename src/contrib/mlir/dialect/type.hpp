@@ -15,7 +15,6 @@
 //*****************************************************************************
 #pragma once
 
-#include "assertion.hpp"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/Function.h"
 #include "mlir/IR/OpDefinition.h"
@@ -23,6 +22,7 @@
 #include "mlir/IR/StandardTypes.h"
 #include "mlir/IR/TypeSupport.h"
 #include "mlir/IR/Types.h"
+#include "ngraph/check.hpp"
 namespace mlir
 {
     using llvm::raw_ostream;
@@ -60,7 +60,7 @@ namespace mlir
 
         static NGIntegerType get(NGTypeKind kind, mlir::MLIRContext* context)
         {
-            NGRAPH_ASSERT(kindof(kind)) << "Not an integer kind.";
+            NGRAPH_CHECK(kindof(kind), "Not an integer kind.");
             return Base::get(context, kind);
         }
         /// Create signed Int8
@@ -154,7 +154,7 @@ namespace mlir
         using Base::Base;
         static NGBoolType get(NGTypeKind kind, mlir::MLIRContext* context)
         {
-            NGRAPH_ASSERT(kindof(kind)) << "Not a bool type.";
+            NGRAPH_CHECK(kindof(kind), "Not a bool type.");
             return Base::get(context, kind);
         }
 

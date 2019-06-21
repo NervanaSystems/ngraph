@@ -32,23 +32,47 @@ namespace ngraph
             // In English: return type is void and T must be an integral type.
             template <typename T>
             typename std::enable_if<std::is_integral<T>::value>::type
-                divide(const T* arg0, const T* arg1, T* out, size_t count)
+                divide(const T* arg0, const T* arg1, T* out, size_t count, bool pythondiv)
             {
-                for (size_t i = 0; i < count; i++)
+                if (pythondiv)
                 {
-                    if (arg1[i] == 0)
+                    for (size_t i = 0; i < count; i++)
                     {
-                        throw std::domain_error("integer division by zero");
+                        if (arg1[i] == 0)
+                        {
+                            throw std::domain_error("integer division by zero");
+                        }
+                        T quot = arg0[i] / arg1[i];
+                        T rem = arg0[i] % arg1[i];
+                        if ((rem != 0) && ((arg0[i] < 0) != (arg1[i] < 0)))
+                        {
+                            out[i] = quot - 1;
+                        }
+                        else
+                        {
+                            out[i] = quot;
+                        }
                     }
-                    out[i] = arg0[i] / arg1[i];
+                }
+                else
+                {
+                    for (size_t i = 0; i < count; i++)
+                    {
+                        if (arg1[i] == 0)
+                        {
+                            throw std::domain_error("integer division by zero");
+                        }
+                        out[i] = arg0[i] / arg1[i];
+                    }
                 }
             }
 
             // In English: return type is void and T must be a floating point type.
             template <typename T>
             typename std::enable_if<std::is_floating_point<T>::value>::type
-                divide(const T* arg0, const T* arg1, T* out, size_t count)
+                divide(const T* arg0, const T* arg1, T* out, size_t count, bool pythondiv)
             {
+                (void)pythondiv;
                 for (size_t i = 0; i < count; i++)
                 {
                     // TODO: Here we do not check for div by zero, so we'll get +-inf here

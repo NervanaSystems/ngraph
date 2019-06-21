@@ -61,9 +61,9 @@ MLIRCompiler::MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
     : m_compiled_kernel(compiled_kernel)
     , m_external_tensors(external_tensors)
 {
-    NGRAPH_ASSERT((m_compiled_kernel->get_arguments().size() +
-                   m_compiled_kernel->get_kernel_outputs().size()) == external_tensors.size())
-        << "Number of arguments and outputs doesn't match number of tensors";
+    NGRAPH_CHECK((m_compiled_kernel->get_arguments().size() +
+                  m_compiled_kernel->get_kernel_outputs().size()) == external_tensors.size(),
+                 "Number of arguments and outputs doesn't match number of tensors");
 }
 
 void MLIRCompiler::init_mlir()
@@ -104,8 +104,8 @@ void MLIRCompiler::build_ng_dialect_module()
     // Retrieve input and output tensors.
     const auto& kernel_inputs = m_compiled_kernel->get_arguments();
     const auto& kernel_outputs = m_compiled_kernel->get_kernel_outputs();
-    NGRAPH_ASSERT(kernel_inputs.size() != 0) << "Cannot have empty inputs list";
-    NGRAPH_ASSERT(kernel_outputs.size() != 0) << "Cannot have empty outputs list";
+    NGRAPH_CHECK(kernel_inputs.size() != 0, "Cannot have empty inputs list");
+    NGRAPH_CHECK(kernel_outputs.size() != 0, "Cannot have empty outputs list");
 
     for (auto input : kernel_inputs)
     {
@@ -139,7 +139,7 @@ void MLIRCompiler::build_ng_dialect_module()
     m_module->getFunctions().push_back(function.release());
     if (failed(m_module->verify()))
     {
-        NGRAPH_FAIL() << "Invalid module after lowering to NG dialect";
+        NGRAPH_CHECK(false, "Invalid module after lowering to NG dialect");
     }
 
     dump_mlir_module("nGraph Dialect Dump:");
@@ -171,7 +171,7 @@ mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
     {
     case ngraph::element::Type_t::undefined:
     case ngraph::element::Type_t::dynamic:
-    default: NGRAPH_FAIL() << "MLIR: Unsupported NGraph types"; break;
+    default: NGRAPH_CHECK(false, "MLIR: Unsupported NGraph types"); break;
     case ngraph::element::Type_t::bf16: return mlir::NGFloatType::getBF16(&m_context);
     case ngraph::element::Type_t::f16: return mlir::NGFloatType::getF16(&m_context);
     case ngraph::element::Type_t::f32: return mlir::NGFloatType::getF32(&m_context);
@@ -186,7 +186,7 @@ mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
     case ngraph::element::Type_t::i64: return mlir::NGIntegerType::getInt64(&m_context);
     case ngraph::element::Type_t::u64: return mlir::NGIntegerType::getUInt64(&m_context);
     }
-    NGRAPH_FAIL() << "Unreachable";
+    NGRAPH_CHECK(false, "Unreachable");
     return mlir::Type();
 
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
@@ -196,8 +196,8 @@ mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
 
 void MLIRCompiler::update_tensor_value(descriptor::Tensor* tensor, mlir::Value* value)
 {
-    NGRAPH_ASSERT(m_tensor_to_value_map.find(tensor) == m_tensor_to_value_map.end())
-        << "tensor value already defined";
+    NGRAPH_CHECK(m_tensor_to_value_map.find(tensor) == m_tensor_to_value_map.end(),
+                 "tensor value already defined");
     TensorInfo tensor_info{value};
     m_tensor_to_value_map.insert(TensorToInfo(tensor, tensor_info));
 }
@@ -206,7 +206,7 @@ MLIRCompiler::TensorInfo MLIRCompiler::get_tensor_value(descriptor::Tensor* tens
 {
     auto it = m_tensor_to_value_map.find(tensor);
 
-    NGRAPH_ASSERT(it != m_tensor_to_value_map.end()) << "Undefined tensor";
+    NGRAPH_CHECK(it != m_tensor_to_value_map.end(), "Undefined tensor");
 
     return it->second;
 }
@@ -222,7 +222,7 @@ void MLIRCompiler::lower_ng_dialect()
 
     if (failed(m_module->verify()))
     {
-        NGRAPH_FAIL() << "Incorrect module after dialect lowering";
+        NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
 
     dump_mlir_module("Affine Dialect Dump:");
@@ -237,7 +237,7 @@ void MLIRCompiler::optimize()
     // Lower affine ops
     pm.addPass(mlir::createLowerAffinePass());
     auto rr = pm.run(m_module.get());
-    NGRAPH_ASSERT(succeeded(rr)) << "Affine loop lowering failed";
+    NGRAPH_CHECK(succeeded(rr), "Affine loop lowering failed");
 
     dump_mlir_module("Standard Dialect Dump:");
 }
@@ -267,22 +267,31 @@ void MLIRCompiler::build_ng_dialect()
     create_return();
 }
 
-template <>
-mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
+namespace ngraph
 {
-    return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
-}
+    namespace runtime
+    {
+        namespace ngmlir
+        {
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
+            {
+                return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
+            }
 
-template <>
-mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Multiply)
-{
-    return compiler.create_binary_op<mlir::NGMulOp>(ng_node);
-}
-
-template <>
-mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
-{
-    return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
+            {
+                return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
+            }
+            
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Multiply)
+            {
+                return compiler.create_binary_op<mlir::NGMulOp>(ng_node);
+            }
+        }
+    }
 }
 
 const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
@@ -316,10 +325,10 @@ void MLIRCompiler::create_return()
 // helpers to be used inside the function.
 void MLIRCompiler::bind_arguments()
 {
-    NGRAPH_ASSERT(m_module && "MLIR module is not ready.");
+    NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
     mlir::Function* func = m_module->getNamedFunction("main");
-    NGRAPH_ASSERT(func && !func->getBlocks().empty()) << "Function not found";
+    NGRAPH_CHECK(func && !func->getBlocks().empty(), "Function not found");
 
     // Create list with a type-erased double pointer for each invocation arguments.
     // We currently use 'allocateMemRefArguments', which creates a
@@ -328,11 +337,11 @@ void MLIRCompiler::bind_arguments()
 
     // create MemRef args
     auto expected_arguments = allocate_memref_args(func);
-    NGRAPH_ASSERT(expected_arguments.size()) << "Arguments can't be created";
+    NGRAPH_CHECK(expected_arguments.size(), "Arguments can't be created");
     m_invoke_args = std::move(expected_arguments);
 
-    NGRAPH_ASSERT(m_invoke_args.size() == m_external_tensors.size())
-        << "Number of external tensors doesn't match number of function arguments";
+    NGRAPH_CHECK(m_invoke_args.size() == m_external_tensors.size(),
+                 "Number of external tensors doesn't match number of function arguments");
 
     // Assign external tensor pointers to invocation arguments.
     for (size_t i = 0, num_args = m_invoke_args.size(); i < num_args; ++i)
@@ -344,22 +353,23 @@ void MLIRCompiler::bind_arguments()
     // malloc here since that's what allocateMemRefArguments use
     // TODO (nmostafa): Better way of doing this ? Use builder allocator ?
     MLIRMemMgr** mem_mgr_arg = reinterpret_cast<MLIRMemMgr**>(malloc(sizeof(void*)));
+    NGRAPH_CHECK(mem_mgr_arg != nullptr);
     *mem_mgr_arg = &get_mem_mgr();
     // inserting memory manager ptr in right location ?
-    NGRAPH_ASSERT(m_invoke_args.size() == get_mem_mgr_arg_id(func));
+    NGRAPH_CHECK(m_invoke_args.size() == get_mem_mgr_arg_id(func));
     m_invoke_args.push_back(static_cast<void*>(mem_mgr_arg));
 }
 
 // Lowers standard dialect to LLVM dialect and uses the MLIR execution engine to execute the code.
 void MLIRCompiler::execute()
 {
-    NGRAPH_ASSERT(m_module && "MLIR module is not ready.");
+    NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
     // Lower Standard dialect to LLVM dialect.
     auto converter = mlir::createStdToLLVMConverter();
     auto r = converter->convert(m_module.get());
     (void)r;
-    NGRAPH_ASSERT(succeeded(r)) << "second conversion failed";
+    NGRAPH_CHECK(succeeded(r), "second conversion failed");
 
     dump_mlir_module("LLVM-IR Dialect Dump:");
 
@@ -372,7 +382,7 @@ void MLIRCompiler::execute()
     // LLVM optimizations at level 3.
     auto llvm_transformer = mlir::makeOptimizingTransformer(3 /*optLevel*/, 0 /*sizeLevel*/);
     auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
-    NGRAPH_ASSERT(maybeEngine) << "failed to construct an execution engine";
+    NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
 
     // Invoke the JIT-compiled function with the arguments. Note that, for API
@@ -380,7 +390,7 @@ void MLIRCompiler::execute()
     // Please, note that 'invoke' method is overloaded with a parameter pack version.
     // Make sure the MutableArrayRef version is invoked.
     auto invocationResult = m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invoke_args));
-    NGRAPH_ASSERT(!invocationResult) << "JIT invocation of 'main' failed\n";
+    NGRAPH_CHECK(!invocationResult, "JIT invocation of 'main' failed\n");
 }
 
 void MLIRCompiler::cleanup()
@@ -425,12 +435,13 @@ mlir::StaticFloatMemRef* MLIRCompiler::allocate_memref_descriptor(mlir::Type typ
     {
         return nullptr;
     }
-    NGRAPH_ASSERT(memRefType.getNumDynamicDims() == 0) << "No support for dynamic shapes";
+    NGRAPH_CHECK(memRefType.getNumDynamicDims() == 0, "No support for dynamic shapes");
 
     // We only use StaticFloatMemRef because that's what MLIR currently offers.
     // We should expand this with different types and dynamic MemRefs
     auto* descriptor =
         reinterpret_cast<mlir::StaticFloatMemRef*>(malloc(sizeof(mlir::StaticFloatMemRef)));
+    NGRAPH_CHECK(descriptor != nullptr, "NULL MemRef descriptor");
     descriptor->data = nullptr;
     return descriptor;
 }
