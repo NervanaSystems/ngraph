@@ -21,18 +21,14 @@ using namespace ngraph;
 
 const string op::TensorIterator::type_name{"TensorIterator"};
 
-op::TensorIterator::TensorIterator()
-{
-}
-
 op::TensorIterator::TensorIterator(const OutputVector& body_inputs,
                                    const ParameterVector& body_parameters,
                                    const OutputVector& body_outputs,
-                                   const OutputVector& outputs)
+                                   const OutputVector& tensor_iterator_outputs)
     : Op(body_inputs)
     , m_body_parameters(body_parameters)
     , m_body_outputs(body_outputs)
-    , m_outputs(outputs)
+    , m_tensor_iterator_outputs(tensor_iterator_outputs)
 {
 }
 
@@ -66,18 +62,19 @@ void op::TensorIterator::set_body_outputs(const OutputVector& body_outputs)
     m_body_outputs = body_outputs;
 }
 
-const OutputVector& op::TensorIterator::get_outputs() const
+const OutputVector& op::TensorIterator::get_tensor_iterator_outputs() const
 {
-    return m_outputs;
-}
-OutputVector& op::TensorIterator::get_outputs()
-{
-    return m_outputs;
+    return m_tensor_iterator_outputs;
 }
 
-void op::TensorIterator::set_outputs(const OutputVector& outputs)
+OutputVector& op::TensorIterator::get_tensor_iterator_outputs()
 {
-    m_outputs = outputs;
+    return m_tensor_iterator_outputs;
+}
+
+void op::TensorIterator::set_tensor_iterator_outputs(const OutputVector& tensor_iterator_outputs)
+{
+    m_tensor_iterator_outputs = tensor_iterator_outputs;
 }
 
 std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
@@ -86,6 +83,6 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
     result->set_arguments(new_args);
     result->set_body_parameters(m_body_parameters);
     result->set_body_outputs(m_body_outputs);
-    result->set_outputs(m_outputs);
+    result->set_tensor_iterator_outputs(m_tensor_iterator_outputs);
     return move(result);
 }

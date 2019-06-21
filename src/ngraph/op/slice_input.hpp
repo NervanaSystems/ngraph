@@ -30,7 +30,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an empty SliceInput operation
-            SliceInput();
+            SliceInput() = default;
 
             /// \brief Describes how to slice an input for iteration
             /// \param value The value to be sliced

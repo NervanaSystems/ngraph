@@ -31,7 +31,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an empty TensorIterator operation
-            TensorIterator();
+            TensorIterator() = default;
 
             TensorIterator(const OutputVector& body_arguments,
                            const ParameterVector& body_parameters,
@@ -46,16 +46,16 @@ namespace ngraph
             OutputVector& get_body_outputs();
             void set_body_outputs(const OutputVector& body_outputs);
 
-            const OutputVector& get_outputs() const;
-            OutputVector& get_outputs();
-            void set_outputs(const OutputVector& outputs);
+            const OutputVector& get_tensor_iterator_outputs() const;
+            OutputVector& get_tensor_iterator_outputs();
+            void set_tensor_iterator_outputs(const OutputVector& tensor_iterator_outputs);
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
             ParameterVector m_body_parameters;
             OutputVector m_body_outputs;
-            OutputVector m_outputs;
+            OutputVector m_tensor_iterator_outputs;
         };
     }
 }

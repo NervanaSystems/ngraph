@@ -30,7 +30,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an empty SliceOutput operation
-            SliceOutput();
+            SliceOutput() = default;
 
             /// \brief Describes how to combine iteration outputs as slices
             /// \param value The value to be combined

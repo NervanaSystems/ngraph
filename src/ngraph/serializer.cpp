@@ -523,7 +523,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(const string& s)
 
 json JSONSerializer::serialize_parameter_vector(const ParameterVector& parameters)
 {
-    json json_parameters(nlohmann::detail::value_t::array);
+    json json_parameters = json::array();
     for (auto param : parameters)
     {
         json_parameters.push_back(serialize_node_reference(*param));
@@ -1798,10 +1798,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         case OP_TYPEID::TensorIterator:
         {
             ParameterVector body_parameters =
-                deserialize_parameter_vector(node_js["body_parameter"]);
+                deserialize_parameter_vector(node_js["body_parameters"]);
             OutputVector body_outputs = deserialize_output_vector(node_js["body_outputs"]);
-            OutputVector outputs = deserialize_output_vector(node_js["outputs"]);
-            node = make_shared<op::TensorIterator>(args, body_parameters, body_outputs, outputs);
+            OutputVector tensor_iterator_outputs =
+                deserialize_output_vector(node_js["tensor_iterator_outputs"]);
+            node = make_shared<op::TensorIterator>(
+                args, body_parameters, body_outputs, tensor_iterator_outputs);
             break;
         }
 
@@ -2764,7 +2766,8 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::TensorIterator*>(&n);
         node["body_parameters"] = serialize_parameter_vector(tmp->get_body_parameters());
         node["body_outputs"] = serialize_output_vector(tmp->get_body_outputs());
-        node["outputs"] = serialize_output_vector(tmp->get_outputs());
+        node["tensor_iterator_outputs"] =
+            serialize_output_vector(tmp->get_tensor_iterator_outputs());
         break;
     }
     case OP_TYPEID::Tile: { break;

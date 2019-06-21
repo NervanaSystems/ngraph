@@ -21,10 +21,6 @@ using namespace ngraph;
 
 const string op::SequencePushFront::type_name("SequencePushFront");
 
-op::SequencePushFront::SequencePushFront()
-{
-}
-
 op::SequencePushFront::SequencePushFront(const Output<Node>& value, const Output<Node>& sequence)
     : Op({value, sequence})
 {

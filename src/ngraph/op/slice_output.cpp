@@ -21,10 +21,6 @@ using namespace ngraph;
 
 const string op::SliceOutput::type_name("SliceOutput");
 
-op::SliceOutput::SliceOutput()
-{
-}
-
 op::SliceOutput::SliceOutput(const Output<Node>& value,
                              std::ptrdiff_t axis,
                              std::ptrdiff_t start,

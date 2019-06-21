@@ -29,7 +29,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an empty SequenceRepeat operation
-            SequenceRepeat();
+            SequenceRepeat() = default;
 
             /// \brief Creates a repeating sequence of an op
             /// \param value The value to be repeated

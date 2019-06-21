@@ -21,10 +21,6 @@ using namespace ngraph;
 
 const string op::SequenceRepeat::type_name("SequenceRepeat");
 
-op::SequenceRepeat::SequenceRepeat()
-{
-}
-
 op::SequenceRepeat::SequenceRepeat(const Output<Node>& value)
     : Op({value})
 {

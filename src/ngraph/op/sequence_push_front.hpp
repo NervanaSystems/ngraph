@@ -30,7 +30,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Empty op
-            SequencePushFront();
+            SequencePushFront() = default;
 
             /// \brief Prepend a value to a sequence
             /// \param value The value to prepend
