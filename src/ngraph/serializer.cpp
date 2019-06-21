@@ -1902,12 +1902,15 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         node["output_shapes"] = output_shapes;
     }
-    json provenance_tags = json::array();
-    for (auto prov_tag : n.get_provenance_tags())
+    if (ngraph::get_provenance_enabled())
     {
-        provenance_tags.push_back(prov_tag);
+        json provenance_tags = json::array();
+        for (auto prov_tag : n.get_provenance_tags())
+        {
+            provenance_tags.push_back(prov_tag);
+        }
+        node["provenance_tags"] = provenance_tags;
     }
-    node["provenance_tags"] = provenance_tags;
 
     string node_op = n.description();
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
