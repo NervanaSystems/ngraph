@@ -19,10 +19,15 @@
 
 /doc/                               @indie
 /doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
-/README.md                          @indie
+/doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik @avijit-nervana @sayantan-nervana
+/doc/*/*/backends/plaidml-ng-api/   @flaub @brianretford @dgkutnic
+/doc/*/*/inspection/                @aproctor
+/doc/examples/onnx/                 @arogowie-intel @tsocha
+/README.md                          @adstraw
+project/introduction.rst            @adstraw
+project/governance.rst              @adstraw
 /changes.md                         @indie @diyessi
-/INSTALL.md                         @indie
-/CONTRIB.md                         @indie
+project/doc-contributor-README.rst  @indie
 
 /licenses/                          @diyessi @raramer01 @aslepko
 /LICENSE                            @diyessi @raramer01 @aslepko
