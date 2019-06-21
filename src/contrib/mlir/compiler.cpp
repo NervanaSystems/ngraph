@@ -27,6 +27,7 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>
@@ -289,6 +290,12 @@ namespace ngraph
             mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Multiply)
             {
                 return compiler.create_binary_op<mlir::NGMulOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Divide)
+            {
+                return compiler.create_binary_op<mlir::NGDivOp>(ng_node);
             }
         }
     }

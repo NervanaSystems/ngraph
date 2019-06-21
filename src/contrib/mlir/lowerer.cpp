@@ -61,6 +61,7 @@ namespace
         {
             RewriteListBuilder<NGAddOpConversion,
                                NGMulOpConversion,
+                               NGDivOpConversion,
                                NGDotOpConversion,
                                NGReturnOpConversion>::build(patterns, mlirContext, m_pass);
         }
@@ -334,6 +335,7 @@ namespace
     // Element-wise Operations
     ELTWISE_REWRITER(NGAddOp, +)
     ELTWISE_REWRITER(NGMulOp, *)
+    ELTWISE_REWRITER(NGDivOp, /)
     
 #undef ELTWISE_REWRITER
 
