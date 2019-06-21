@@ -1,5 +1,5 @@
 // INTEL CONFIDENTIAL
-// Copyright 2018-2019 Intel Corporation All Rights Reserved.
+// Copyright 2017-2019 Intel Corporation All Rights Reserved.
 // The source code contained or described herein and all documents related to the
 // source code ("Material") are owned by Intel Corporation or its suppliers or
 // licensors. Title to the Material remains with Intel Corporation or its
@@ -115,7 +115,7 @@ def prepareEnvironment(configurationMaps) {
         UTILS.propagateStatus("Run_docker_containers", configMap["dockerContainerName"])
         sh """
             docker cp ${CI_ROOT}/utils/docker.sh ${configMap["dockerContainerName"]}:/home
-            docker exec ${configMap["dockerContainerName"]} bash -c "/root/${CI_ROOT}/prepare_environment.sh"
+            docker exec ${configMap["dockerContainerName"]} bash -c "/root/${CI_ROOT}/prepare_environment.sh --no-incremental"
         """
     }
     UTILS.createStage("Prepare_environment", prepareEnvironmentMethod, configurationMaps)

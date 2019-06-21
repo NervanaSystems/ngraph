@@ -103,7 +103,6 @@ embedding_lookup_10x1_arbitrary
 embedding_lookup_10x1_arbitrary_index_type_int
 embedding_lookup_10x1_arbitrary_index_type_int64
 floor_int32
-gather
 gather_nd_scalar_from_2d
 gather_nd_1d_from_2d
 gather_nd_scalar_from_3d
@@ -115,12 +114,15 @@ gather_nd_batch_scalar_from_3d
 gather_nd_batch_1d_from_3d
 gather_nd_batch_2d_from_3d
 gather_nd_single_indices
-gather_scalar_indices
-gather_scalar_indices_no_axis
-gather_2d_indices_no_axis
-gather_3d_indices_no_axis
-gather_4d_indices_no_axis
 gather_4d_indices_no_axis_uint8
+gather_scalar_indices_axis_1_2d_input
+gather_1d_indices_axis_2_4d_input
+gather_2d_indices_axis_1_2d_input
+gather_scalar_indices_no_axis_2d_input
+gather_1d_indices_no_axis_1d_input
+gather_2d_indices_no_axis_2d_input
+gather_3d_indices_no_axis_2d_input
+gather_4d_indices_no_axis_2d_input
 scatter_add_4d_indices
 scatter_add_3d_indices
 scatter_add_2d_indices
@@ -257,4 +259,27 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
+
+# dgkutnic ww24.5: these tests are to be triaged by the PlaidML team
+# ww25.2: re-scrubbed this list of tests after fixing check_inputs
+# initial debug points to some of these failing due to precision issues
+sqrt
+batch_norm_inference_0eps_f32
+batch_norm_inference_f32
+batch_norm_training_0eps_f32
+argmin_trivial
+argmax_trivial
+argmin_trivial_in_i32
+sum_large_1d_to_scalar
+sum_stable_acc
+one_hot_scalar_2_in_3
+one_hot_scalar_1_in_3
+one_hot_scalar_0_in_3
+lstm_cell_no_bias_no_peepholes
+lstm_cell_bias_peepholes
+lstm_cell_bias_peepholes_clip_input_forget
+lstm_cell_activaction_functions
+group_conv_transpose
+group_conv_transpose_output_shape
+divide_python_rounding_int32
 backwards_batchmatmul_tensor2_tensor2

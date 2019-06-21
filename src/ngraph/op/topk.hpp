@@ -30,6 +30,21 @@ namespace ngraph
         class TopK : public Op
         {
         public:
+            enum class SortType
+            {
+                // Returned values are not sorted
+                NONE,
+                // Sort result based on element indices
+                SORT_INDICES,
+                // Sort result based on element values
+                SORT_VALUES,
+            };
+
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a TopK operation
+            TopK();
             /// \brief Constructs a TopK operation.
             ///
             /// \param arg The input tensor
@@ -37,26 +52,45 @@ namespace ngraph
             /// \param index_element_type produce indices. Currently, only int64 or int32 are supported
             /// \param k Number of top indices to compute. Compute all indices if k = 0
             /// \param compute_max Compute top k max or top k min?
-            TopK(const std::shared_ptr<Node>& arg,
+            /// \param sort SortType for sorting results, default - NONE
+            TopK(const Output<Node>& arg,
                  size_t top_k_axis,
                  const element::Type& index_element_type,
                  size_t k = 0,
-                 bool compute_max = true);
+                 bool compute_max = true,
+                 SortType sort = SortType::NONE);
+            /// \brief Constructs a TopK operation.
+            ///
+            /// \param arg The input tensor
+            /// \param k Number of top indices to compute. Compute all indices if k = 0
+            /// \param top_k_axis The axis along which to compute top k indices
+            /// \param index_element_type produce indices. Currently, only int64 or int32 are supported
+            /// \param compute_max Compute top k max or top k min?
+            /// \param sort SortType for sorting results, default - NONE
+            TopK(const Output<Node>& arg,
+                 const Output<Node>& k,
+                 size_t top_k_axis,
+                 const element::Type& index_element_type,
+                 bool compute_max = true,
+                 SortType sort = SortType::NONE);
 
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            size_t get_k() const;
+            void set_k(size_t k);
+
             size_t get_top_k_axis() const { return m_top_k_axis; }
             element::Type get_index_element_type() const { return m_index_element_type; }
-            size_t get_k() const { return m_k; }
             bool get_compute_max() const { return m_compute_max; }
+            SortType get_sort() const { return m_sort; }
         protected:
-            size_t m_top_k_axis;
+            size_t m_top_k_axis{0};
             element::Type m_index_element_type;
-            size_t m_k;
-            bool m_compute_max;
+            bool m_compute_max{false};
+            SortType m_sort;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };

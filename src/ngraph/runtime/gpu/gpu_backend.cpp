@@ -28,7 +28,6 @@
 #include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_tensor.hpp"
 #include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/runtime/hybrid/hybrid_backend.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -232,7 +231,8 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
                                    "EmbeddingLookup",
                                    "GenerateMask",
                                    "DynBroadcast",
-                                   "Transpose"};
+                                   "Transpose",
+                                   "Range"};
 
     set<string> float_only = {"MaxPoolBackprop", "AvgPoolBackprop", "MaxPool", "Dot"};
 
