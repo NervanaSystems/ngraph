@@ -22,6 +22,16 @@
 #include <string>
 #include "gtest/gtest.h"
 
+// clang-format off
+#ifdef ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#define DEFAULT_FLOAT_TOLERANCE_BITS ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#endif
+
+#ifdef ${BACKEND_NAME}_DOUBLE_TOLERANCE_BITS
+#define DEFAULT_DOUBLE_TOLERANCE_BITS ${BACKEND_NAME}_DOUBLE_TOLERANCE_BITS
+#endif
+// clang-format on
+
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -5234,7 +5244,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
     handle->call_with_validate({result}, {a, b});
 
     vector<float> expected{0.196612f, 0.0176627f, 0.196612f, 0.0176627f};
-    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, relu_2Dfprop)
@@ -5540,7 +5550,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_underflow)
     handle->call_with_validate({result}, {a});
     vector<float> expected{
         expf(low) / d0, expf(1) / d1, expf(2) / d2, expf(3) / d0, expf(4) / d1, expf(5) / d2};
-    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, softmax_overflow)

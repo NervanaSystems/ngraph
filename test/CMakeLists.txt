@@ -255,6 +255,8 @@ endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
     target_link_libraries(unit-test PRIVATE plaidml_backend)
+    # Some PlaidML devices aren't so precise, so we increase the allowable tolerance.
+    target_compile_definitions(unit-test PRIVATE "PlaidML_FLOAT_TOLERANCE_BITS=12")
 endif()
 
 if (NGRAPH_TBB_ENABLE)
