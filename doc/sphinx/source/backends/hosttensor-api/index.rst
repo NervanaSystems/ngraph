@@ -1,4 +1,4 @@
-.. backend-support/hosttensor-api/index.rst:
+.. backends/hosttensor-api/index.rst:
 
 
 HostTensor
