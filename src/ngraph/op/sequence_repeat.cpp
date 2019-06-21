@@ -28,6 +28,24 @@ op::SequenceRepeat::SequenceRepeat(const Output<Node>& value)
 
 void op::SequenceRepeat::validate_and_infer_types()
 {
+    PartialShape result_shape;
+    const PartialShape& value_shape = get_input_partial_shape(0);
+    if (value_shape.is_dynamic())
+    {
+        result_shape = PartialShape::dynamic();
+    }
+    else
+    {
+        vector<Dimension> result_dimensions;
+        result_dimensions.push_back(Dimension::dynamic());
+        for (size_t i = 0; i < static_cast<size_t>(value_shape.rank()); ++i)
+        {
+            result_dimensions.push_back(value_shape[i]);
+        }
+        result_shape = PartialShape(result_dimensions);
+    }
+    set_output_size(1);
+    set_output_type(0, get_input_element_type(0), result_shape);
 }
 
 shared_ptr<Node> op::SequenceRepeat::copy_with_new_args(const NodeVector& new_args) const
