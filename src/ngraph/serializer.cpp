@@ -880,7 +880,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         case OP_TYPEID::Concat:
         {
             auto axis = node_js.at("axis").get<size_t>();
-            node = make_shared<op::Concat>(args, axis);
+            node = make_shared<op::Concat>(static_cast<OutputVector>(args), axis);
             break;
         }
         case OP_TYPEID::Constant:
