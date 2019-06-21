@@ -49,6 +49,16 @@ TEST(backend_api, config)
     EXPECT_STREQ(error.c_str(), "");
 }
 
+TEST(backend_api, config_unsupported)
+{
+    auto backend = runtime::Backend::create("NOP");
+    string error;
+    string message = "hello";
+    map<string, string> config = {{"test_echo", message}};
+    EXPECT_FALSE(backend->set_config(config, error));
+    EXPECT_FALSE(error == "");
+}
+
 #ifndef NGRAPH_JSON_DISABLE
 TEST(backend_api, save_load)
 {
