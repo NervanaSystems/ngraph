@@ -76,11 +76,11 @@ namespace ngraph
                 // input count.
                 void check_inputs(std::size_t expected_input_count) const
                 {
-                    if (op().get_input_size() != expected_input_count)
+                    if (op().get_input_size() < expected_input_count)
                     {
                         std::ostringstream os;
                         os << "The PlaidML nGraph backend only supports " << op().description()
-                           << " operations with an input count == " << expected_input_count
+                           << " operations with an input count >= " << expected_input_count
                            << " (got " << op().get_input_size() << " inputs)";
                         throw std::runtime_error{os.str()};
                     }

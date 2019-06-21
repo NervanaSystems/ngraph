@@ -89,6 +89,7 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
@@ -427,6 +428,10 @@ shared_ptr<runtime::Executable>
 
     if (m_disable_backend_optimizations < 2)
     {
+        pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
+            IntelGPUBackend::is_supported_impl);
+        // Run this pass for the second time since, some fused operators like LSTMCell may use
+        // other fused operators inside.
         pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
             IntelGPUBackend::is_supported_impl);
         pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
@@ -2067,6 +2072,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::GroupConvolutionTranspose:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::LeakyRelu:
+        case OP_TYPEID::LSTMCell:
         case OP_TYPEID::MVN:
         case OP_TYPEID::Normalize:
         case OP_TYPEID::PRelu:
@@ -2187,6 +2193,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::GRN:
     case OP_TYPEID::GroupConvolutionTranspose:
     case OP_TYPEID::LeakyRelu:
+    case OP_TYPEID::LSTMCell:
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
