@@ -92,14 +92,14 @@ namespace ngraph
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-                switch (reduce_type.get_type())
+                switch (reduce_type)
                 {
-                case reduction::Type_t::sum: mlsl_reduce_type = MLSL::RT_SUM; break;
-                case reduction::Type_t::prod:
+                case reduction::sum: mlsl_reduce_type = MLSL::RT_SUM; break;
+                case reduction::prod:
                     throw std::runtime_error("MLSL doesn't support allreduce prod");
                     break;
-                case reduction::Type_t::min: mlsl_reduce_type = MLSL::RT_MIN; break;
-                case reduction::Type_t::max: mlsl_reduce_type = MLSL::RT_MAX; break;
+                case reduction::min: mlsl_reduce_type = MLSL::RT_MIN; break;
+                case reduction::max: mlsl_reduce_type = MLSL::RT_MAX; break;
                 }
 #if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
