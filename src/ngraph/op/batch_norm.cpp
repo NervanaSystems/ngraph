@@ -22,11 +22,13 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/validation_util.hpp"
 
-ngraph::op::BatchNormTraining::BatchNormTraining(std::shared_ptr<ngraph::Node> input,
-                                                 std::shared_ptr<ngraph::Node> gamma,
-                                                 std::shared_ptr<ngraph::Node> beta,
+const std::string ngraph::op::BatchNormTraining::type_name{"BatchNormTraining"};
+
+ngraph::op::BatchNormTraining::BatchNormTraining(Output<ngraph::Node> input,
+                                                 Output<ngraph::Node> gamma,
+                                                 Output<ngraph::Node> beta,
                                                  double epsilon)
-    : Op("BatchNormTraining", check_single_output_args({gamma, beta, input}))
+    : Op({gamma, beta, input})
     , m_epsilon(epsilon)
 {
     constructor_validate_and_infer_types();
@@ -34,10 +36,10 @@ ngraph::op::BatchNormTraining::BatchNormTraining(std::shared_ptr<ngraph::Node> i
 
 // DEPRECATED
 ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
-                                                 std::shared_ptr<ngraph::Node> gamma,
-                                                 std::shared_ptr<ngraph::Node> beta,
-                                                 std::shared_ptr<ngraph::Node> input)
-    : Op("BatchNormTraining", check_single_output_args({gamma, beta, input}))
+                                                 Output<ngraph::Node> gamma,
+                                                 Output<ngraph::Node> beta,
+                                                 Output<ngraph::Node> input)
+    : Op({gamma, beta, input})
     , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
@@ -111,13 +113,15 @@ void ngraph::op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoin
     adjoints.add_delta(beta, dbeta);
 }
 
-ngraph::op::BatchNormInference::BatchNormInference(std::shared_ptr<ngraph::Node> input,
-                                                   std::shared_ptr<ngraph::Node> gamma,
-                                                   std::shared_ptr<ngraph::Node> beta,
-                                                   std::shared_ptr<ngraph::Node> mean,
-                                                   std::shared_ptr<ngraph::Node> variance,
+const std::string ngraph::op::BatchNormInference::type_name{"BatchNormInference"};
+
+ngraph::op::BatchNormInference::BatchNormInference(Output<ngraph::Node> input,
+                                                   Output<ngraph::Node> gamma,
+                                                   Output<ngraph::Node> beta,
+                                                   Output<ngraph::Node> mean,
+                                                   Output<ngraph::Node> variance,
                                                    double epsilon)
-    : Op("BatchNormInference", check_single_output_args({gamma, beta, input, mean, variance}))
+    : Op({gamma, beta, input, mean, variance})
     , m_epsilon(epsilon)
 {
     constructor_validate_and_infer_types();
@@ -125,12 +129,12 @@ ngraph::op::BatchNormInference::BatchNormInference(std::shared_ptr<ngraph::Node>
 
 // DEPRECATED
 ngraph::op::BatchNormInference::BatchNormInference(double eps,
-                                                   std::shared_ptr<ngraph::Node> gamma,
-                                                   std::shared_ptr<ngraph::Node> beta,
-                                                   std::shared_ptr<ngraph::Node> input,
-                                                   std::shared_ptr<ngraph::Node> mean,
-                                                   std::shared_ptr<ngraph::Node> variance)
-    : Op("BatchNormInference", check_single_output_args({gamma, beta, input, mean, variance}))
+                                                   Output<ngraph::Node> gamma,
+                                                   Output<ngraph::Node> beta,
+                                                   Output<ngraph::Node> input,
+                                                   Output<ngraph::Node> mean,
+                                                   Output<ngraph::Node> variance)
+    : Op({gamma, beta, input, mean, variance})
     , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
@@ -167,16 +171,16 @@ std::shared_ptr<ngraph::Node>
         new_args.at(2), new_args.at(0), new_args.at(1), new_args.at(3), new_args.at(4), m_epsilon);
 }
 
-ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
-    std::shared_ptr<ngraph::Node> input,
-    std::shared_ptr<ngraph::Node> gamma,
-    std::shared_ptr<ngraph::Node> beta,
-    std::shared_ptr<ngraph::Node> mean,
-    std::shared_ptr<ngraph::Node> variance,
-    std::shared_ptr<ngraph::Node> delta,
-    double epsilon)
-    : Op("BatchNormTrainingBackprop",
-         check_single_output_args({gamma, beta, input, mean, variance, delta}))
+const std::string ngraph::op::BatchNormTrainingBackprop::type_name{"BatchNormTrainingBackprop"};
+
+ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(Output<ngraph::Node> input,
+                                                                 Output<ngraph::Node> gamma,
+                                                                 Output<ngraph::Node> beta,
+                                                                 Output<ngraph::Node> mean,
+                                                                 Output<ngraph::Node> variance,
+                                                                 Output<ngraph::Node> delta,
+                                                                 double epsilon)
+    : Op({gamma, beta, input, mean, variance, delta})
     , m_epsilon(epsilon)
 
 {
@@ -184,16 +188,14 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
     constructor_validate_and_infer_types();
 }
 
-ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(
-    double epsilon,
-    std::shared_ptr<ngraph::Node> gamma,
-    std::shared_ptr<ngraph::Node> beta,
-    std::shared_ptr<ngraph::Node> input,
-    std::shared_ptr<ngraph::Node> mean,
-    std::shared_ptr<ngraph::Node> variance,
-    std::shared_ptr<ngraph::Node> delta)
-    : Op("BatchNormTrainingBackprop",
-         check_single_output_args({gamma, beta, input, mean, variance, delta}))
+ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(double epsilon,
+                                                                 Output<ngraph::Node> gamma,
+                                                                 Output<ngraph::Node> beta,
+                                                                 Output<ngraph::Node> input,
+                                                                 Output<ngraph::Node> mean,
+                                                                 Output<ngraph::Node> variance,
+                                                                 Output<ngraph::Node> delta)
+    : Op({gamma, beta, input, mean, variance, delta})
     , m_epsilon(epsilon)
 
 {
