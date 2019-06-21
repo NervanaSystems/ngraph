@@ -75,6 +75,7 @@
 #include "op/max.hpp"
 #include "op/max_pool.hpp"
 #include "op/mean.hpp"
+#include "op/mean_variance_normalization.hpp"
 #include "op/min.hpp"
 #include "op/mul.hpp"
 #include "op/neg.hpp"
@@ -283,6 +284,8 @@ namespace ngraph
             REGISTER_OPERATOR("Max", 8, max);
             REGISTER_OPERATOR("Mean", 1, mean);
             REGISTER_OPERATOR("Mean", 8, mean);
+            REGISTER_OPERATOR("MeanVarianceNormalization", 1, mean_variance_normalization);
+            REGISTER_OPERATOR("MeanVarianceNormalization", 9, mean_variance_normalization);
             REGISTER_OPERATOR("Min", 1, min);
             REGISTER_OPERATOR("Min", 8, min);
             REGISTER_OPERATOR("Mul", 1, mul);
