@@ -22,7 +22,8 @@ using namespace ngraph;
 op::DynPad::DynPad(const std::shared_ptr<Node>& arg,
                    const std::shared_ptr<Node>& padding_below,
                    const std::shared_ptr<Node>& padding_above,
-                   const std::shared_ptr<Node>& padding_value)
+                   const std::shared_ptr<Node>& padding_value,
+                   op::PadMode pad_mode)
     : Op("DynPad", check_single_output_args({arg, padding_below, padding_above, padding_value}))
 {
     constructor_validate_and_infer_types();
@@ -102,7 +103,8 @@ void op::DynPad::validate_and_infer_types()
 shared_ptr<Node> op::DynPad::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<DynPad>(new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
+    return make_shared<DynPad>(
+        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), m_pad_mode);
 }
 
 // TODO: This function is not implemented!
