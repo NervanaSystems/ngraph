@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,9 +53,11 @@ namespace ngraph
 
                     if (is_int64)
                     {
-                        if (args[0].get_element_type() == element::f32 ||
-                            args[0].get_element_type() == element::f64 ||
-                            args[0].get_element_type() == element::u8)
+                        if ((args[0].get_element_type() == element::f32 ||
+                             args[0].get_element_type() == element::f64 ||
+                             args[0].get_element_type() == element::u8 ||
+                             args[0].get_element_type() == element::i8) &&
+                            params_shape.size() <= 3 && out_shape.size() <= 3)
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i64<float, 2, 2>)>
                                 kernel;
@@ -111,9 +113,11 @@ namespace ngraph
 
                     else
                     {
-                        if (args[0].get_element_type() == element::f32 ||
-                            args[0].get_element_type() == element::f64 ||
-                            args[0].get_element_type() == element::u8)
+                        if ((args[0].get_element_type() == element::f32 ||
+                             args[0].get_element_type() == element::f64 ||
+                             args[0].get_element_type() == element::u8 ||
+                             args[0].get_element_type() == element::i8) &&
+                            params_shape.size() <= 3 && out_shape.size() <= 3)
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i32<float, 2, 2>)>
                                 kernel;

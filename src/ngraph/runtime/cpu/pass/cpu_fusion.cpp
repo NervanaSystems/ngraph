@@ -2222,6 +2222,32 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
             std::dynamic_pointer_cast<ngraph::op::Add>(m.get_match_root()->get_argument(0));
         auto dq_l_m = std::dynamic_pointer_cast<ngraph::op::Dequantize>(pattern_map[dq_l_label]);
         auto dq_r_m = std::dynamic_pointer_cast<ngraph::op::Dequantize>(pattern_map[dq_r_label]);
+
+        // both left and right are QuantizedConvolutionBias
+        if (dq_r_m->get_argument(0)->description() == "QuantizedConvolutionBias")
+        {
+            for (auto user : m.get_match_root()->get_users())
+            {
+                auto q_m = std::dynamic_pointer_cast<ngraph::op::Quantize>(user);
+                if (q_m)
+                {
+                    auto q_m_scale = q_m->get_argument(1);
+                    auto dq_l_m_scale = dq_l_m->get_argument(1);
+                    auto dq_r_m_scale = dq_r_m->get_argument(1);
+                    if (!ngraph::compare_constants(q_m_scale, dq_l_m_scale) &&
+                        ngraph::compare_constants(q_m_scale, dq_r_m_scale))
+                    {
+                        NGRAPH_DEBUG << "Scales of Q and DQ of right branch match";
+                        // switch left and right branch
+                        auto temp = dq_l_m;
+                        dq_l_m = dq_r_m;
+                        dq_r_m = temp;
+                    }
+                    break;
+                }
+            }
+        }
+
         auto qconv =
             std::static_pointer_cast<ngraph::op::QuantizedConvolutionBias>(dq_l_m->get_argument(0));
         auto inplace_input = dq_r_m->get_argument(0);

@@ -263,10 +263,13 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::AllReduce)
             {
+                const ngraph::op::AllReduce* allreduce =
+                    static_cast<const ngraph::op::AllReduce*>(node);
                 writer << "ngraph::get_distributed_interface()->all_reduce(" << args[0].get_name()
                        << ", " << out[0].get_name() << ", "
                        << "ngraph::element::Type_t::" << args[0].get_element_type().get_type_name()
-                       << ", " << out[0].get_size() << ");\n";
+                       << ", " << out[0].get_size() << ", "
+                       << "ngraph::Reduce_t::" << allreduce->get_reduce_type() << ");\n";
             }
 
             template <>
@@ -1834,8 +1837,9 @@ namespace ngraph
                 writer.block_begin();
                 if ((args[0].get_element_type() == element::f64 ||
                      args[0].get_element_type() == element::f32 ||
-                     args[0].get_element_type() == element::u8) &&
-                    gather->get_axis() == 0)
+                     args[0].get_element_type() == element::u8 ||
+                     args[0].get_element_type() == element::i8) &&
+                    args[0].get_shape().size() <= 3 && out[0].get_shape().size() <= 3)
                 {
                     writer << "cpu::kernel::gather<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
@@ -1895,8 +1899,11 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                if (args[0].get_element_type() == element::f64 ||
-                    args[0].get_element_type() == element::f32)
+                if ((args[0].get_element_type() == element::f64 ||
+                     args[0].get_element_type() == element::f32 ||
+                     args[0].get_element_type() == element::u8 ||
+                     args[0].get_element_type() == element::i8) &&
+                    args[0].get_shape().size() <= 3 && args[2].get_shape().size() <= 3)
                 {
                     writer << "cpu::kernel::scatter_add<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
