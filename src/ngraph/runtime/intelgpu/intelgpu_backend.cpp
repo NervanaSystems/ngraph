@@ -2086,11 +2086,13 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedDot:
         case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::Recv:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
         case OP_TYPEID::ScatterAdd:
         case OP_TYPEID::ScatterNDAdd:
+        case OP_TYPEID::Send:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SpaceToDepth:
