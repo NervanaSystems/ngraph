@@ -123,18 +123,20 @@ else:
 
     # borrow this from the zephyr docs theme
     html_context = {
-        # 'show_license': html_show_license, we have custom footers to attribute 
-        # RTD, WTD, and Sphinx contributors; so we do not enable this
+        # 'show_license': html_show_license # we have custom footers to attribute 
+        # RTD, WTD, and Sphinx contributors, so we do not enable this
         'docs_title': docs_title,
         'is_release': is_release,
         'theme_logo_only': False,
         'current_version': version,
         'versions': ( ("latest", "../"),
-                     ("0.20.0", "/0.20.0/"), #not yet sure how we'll do this
+                     ("0.22", "/0.22/"), #not yet sure how we'll do this
+                     ("0.21.0", "/0.21.0/"), 
+                     ("0.20.0", "/0.20.0/"), 
                      ("0.19.0", "/0.19.0/"), 
                      ("0.18.0", "/0.18.0/"),
                      ("0.17.0", "/0.17.0/"),
-                     ("0.16.0", "/0.16.0/"),
+                     ("0.16.0", "/0.16.0/"),  
                     )
     }
 

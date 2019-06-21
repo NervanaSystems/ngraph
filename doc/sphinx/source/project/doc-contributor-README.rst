@@ -21,6 +21,7 @@ Contributing to documentation
 .. note:: Tips for contributors who are new to the highly-dynamic 
    environment of documentation in AI software:
 
+<<<<<<< HEAD
    * A good place to start is "document something you figured out how to 
      get working". Content changes and additions should be targeted at 
      something more specific than "developers". If you don't understand 
@@ -48,6 +49,9 @@ Contributing to documentation
      back to the stable ``op`` or Ops that you use in your project.
 
 For updates within the nGraph Library ``/doc`` repo, please submit a PR with 
+=======
+For updates to the nGraph Library ``/doc`` repo, please submit a PR with 
+>>>>>>> master
 any changes or ideas you'd like integrated. This helps us maintain trackability 
 with respect to changes made, additions, deletions, and feature requests.
 
@@ -58,19 +62,37 @@ files to another format with a tool like ``pypandoc`` and share a link
 to your efforts on our `wiki`_. 
 
 Another option is to fork the `ngraph repo`_, essentially snapshotting it at 
+<<<<<<< HEAD
 that point in time, and to build Jupyter\* notebook or other set of docs around 
+it for a specific use case. Add a note on our wiki to show us what you 
+did; new and novel applications may have their projects highlighted on an 
+upcoming `ngraph.ai`_ release.   
+=======
+that point in time, and to build a Jupyter\* notebook or other set of docs around 
 it for a specific use case. Add a note on our wiki to show us what you 
 did; new and novel applications may have their projects highlighted on an 
 upcoming `ngraph.ai`_ release.   
 
 
+.. note:: Please do not submit Jupyter* notebook code to the nGraph Library 
+   or core repos; best practice is to maintain any project-specific examples, 
+   tests, or walk-throughs in a separate repository.
+>>>>>>> master
+
+
 Documenting source code examples 
 --------------------------------
 
+<<<<<<< HEAD
 When **verbosely** documenting functionality of specific sections of code -- 
 whether they are entire code blocks within a file, or code strings that are 
 **outside** the nGraph Library's `documentation repo`_, here is an example 
 of best practice: 
+=======
+When **verbosely** documenting functionality of specific sections of code -- whether 
+they are entire code blocks within a file, or code strings that are **outside** 
+the nGraph Library's `documentation repo`_, here is an example of best practice: 
+>>>>>>> master
 
 Say a file has some interesting functionality that could benefit from more 
 explanation about one or more of the pieces in context. To keep the "in context" 
