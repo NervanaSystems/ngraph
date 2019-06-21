@@ -64,6 +64,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
@@ -1557,6 +1558,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
 
             break;
         }
+        case OP_TYPEID::Range:
+        {
+            node = make_shared<op::Range>(args[0], args[1], args[2]);
+            break;
+        }
         case OP_TYPEID::Relu:
         {
             node = make_shared<op::Relu>(args[0]);
@@ -2521,6 +2527,8 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         break;
+    }
+    case OP_TYPEID::Range: { break;
     }
     case OP_TYPEID::Relu: { break;
     }
