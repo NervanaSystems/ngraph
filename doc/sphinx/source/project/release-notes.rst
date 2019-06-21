@@ -41,15 +41,15 @@ https://github.com/NervanaSystems/ngraph/releases.
 0.21
 ----
 
-+ The offset argument in tensor reads and writes has been remove
-d+ Save/load API
++ The offset argument in tensor reads and writes has been removed
++ Save/load API
 + More ONNX ops
 + Better tensor creation
 + More shape support
 + Provenance improvements
 + offset arg for tensor creation is deprecated
 + static linking support
-+ Intial test of 0.21-doc
++ Initial test of 0.21-doc
 
 0.21-doc
 --------
