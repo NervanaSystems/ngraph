@@ -50,25 +50,25 @@ static void test_allreduce_common(reduction::Type reduce_type)
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-        switch (reduce_type.get_type())
+        switch (reduce_type)
         {
-        case reduction::Type_t::sum:
+        case reduction::Type::sum:
             copy_data(a, v);
             std::transform(
                 v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
             break;
-        case reduction::Type_t::prod:
+        case reduction::Type::prod:
             copy_data(a, v);
             std::transform(v.begin(), v.end(), v.begin(), [&](float elm) -> float {
                 return pow(elm, comm_size);
             });
             break;
-        case reduction::Type_t::min:
-        case reduction::Type_t::max:
+        case reduction::Type::min:
+        case reduction::Type::max:
             auto shift = get_distributed_interface()->get_rank();
             std::rotate(v.begin(), v.begin() + shift % v.size(), v.end());
             copy_data(a, v);
-            if (reduce_type == reduction::Type_t::min)
+            if (reduce_type == reduction::Type::min)
             {
                 std::fill(v.begin(), v.end(), 1);
                 for (int i = 1; i < static_cast<int>(v.size()) - comm_size + 1; i++)
@@ -93,23 +93,23 @@ static void test_allreduce_common(reduction::Type reduce_type)
 
 TEST(distributed_${BACKEND_NAME}, allreduce_sum)
 {
-    test_allreduce_common(reduction::sum);
+    test_allreduce_common(reduction::Type::sum);
 }
 
 TEST(distributed_${BACKEND_NAME}, allreduce_min)
 {
-    test_allreduce_common(reduction::min);
+    test_allreduce_common(reduction::Type::min);
 }
 
 TEST(distributed_${BACKEND_NAME}, allreduce_max)
 {
-    test_allreduce_common(reduction::max);
+    test_allreduce_common(reduction::Type::max);
 }
 
 #if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
 TEST(distributed_${BACKEND_NAME}, allreduce_prod)
 {
-    test_allreduce_common(reduction::prod);
+    test_allreduce_common(reduction::Type::prod);
 }
 #endif
 
