@@ -1783,9 +1783,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
         {
             node->set_friendly_name(node_name);
         }
-        std::vector<json> prov_js = node_js.at("provenance_tags");
-        if (!prov_js.empty())
+        if (ngraph::get_provenance_enabled())
         {
+            std::vector<json> prov_js = node_js.at("provenance_tags");
             for (auto prov_tag : prov_js)
             {
                 node->add_provenance_tag(prov_tag);
