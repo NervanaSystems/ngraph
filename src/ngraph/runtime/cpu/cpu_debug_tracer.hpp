@@ -39,28 +39,29 @@ namespace ngraph
             class CPU_DebugTracer
             {
             public:
-                CPU_DebugTracer(const CPU_DebugTracer&) = delete;
-                CPU_DebugTracer& operator=(const CPU_DebugTracer&) = delete;
+                CPU_DebugTracer();
 
-                static CPU_DebugTracer& getInstance();
+                void set_enable_tracing(bool new_state);
 
-                void init_streams(const std::string&, const std::string&);
-
+                bool tracing_is_enabled() { return enable_tracing; }
                 void end_of_kernel();
 
                 template <typename T>
                 void dump_one_tensor(const std::string& kernel_name,
                                      const void* tensor,
                                      const std::string& tensor_name,
-                                     const std::pair<size_t, ngraph::Shape>& t_attrs,
+                                     const size_t size,
+                                     const ngraph::Shape& shape,
                                      const std::string& in_out);
 
             private:
-                CPU_DebugTracer();
+                void init_streams();
 
                 size_t m_serial_number;
                 std::fstream m_tracer_stream;
                 std::fstream m_tracer_bin_stream;
+
+                bool enable_tracing = false;
             };
         }
     }
@@ -84,16 +85,13 @@ static float find_variance(const std::vector<T>& f_data, float mean, size_t size
 }
 
 template <typename T>
-void ngraph::runtime::cpu::CPU_DebugTracer::dump_one_tensor(
-    const std::string& kernel_name,
-    const void* tensor,
-    const std::string& tensor_name,
-    const std::pair<size_t, ngraph::Shape>& t_attrs,
-    const std::string& in_out)
+void ngraph::runtime::cpu::CPU_DebugTracer::dump_one_tensor(const std::string& kernel_name,
+                                                            const void* tensor,
+                                                            const std::string& tensor_name,
+                                                            const size_t size,
+                                                            const ngraph::Shape& shape,
+                                                            const std::string& in_out)
 {
-    const size_t size{t_attrs.first};
-    const ngraph::Shape& shape{t_attrs.second};
-
     std::string tid{tensor_name.substr(1 + tensor_name.find("_"))};
     size_t num_bytes{(size * sizeof(T))};
 

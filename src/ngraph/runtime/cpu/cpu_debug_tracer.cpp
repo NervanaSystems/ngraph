@@ -22,23 +22,40 @@ using namespace ngraph;
 runtime::cpu::CPU_DebugTracer::CPU_DebugTracer()
     : m_serial_number(0)
 {
+    if (std::getenv("NGRAPH_CPU_DEBUG_TRACER") != nullptr)
+    {
+        enable_tracing = true;
+
+        init_streams();
+    }
 }
 
-runtime::cpu::CPU_DebugTracer& runtime::cpu::CPU_DebugTracer::getInstance()
-{
-    static CPU_DebugTracer instance;
-    return instance;
-}
-
-void runtime::cpu::CPU_DebugTracer::init_streams(const string& trace_file_path,
-                                                 const string& trace_bin_file_path)
+void runtime::cpu::CPU_DebugTracer::init_streams()
 {
     if (m_tracer_stream.is_open())
     {
         return;
     }
+
+    static auto trace_file_path = std::getenv("NGRAPH_CPU_TRACER_LOG");
+    static auto trace_bin_file_path = std::getenv("NGRAPH_CPU_BIN_TRACER_LOG");
+    if (trace_file_path == nullptr)
+        trace_file_path = (char*)"trace_meta.log";
+    if (trace_bin_file_path == nullptr)
+        trace_bin_file_path = (char*)"trace_bin_data.log";
+
     m_tracer_stream.open(trace_file_path, ios_base::out | ios_base::ate);
     m_tracer_bin_stream.open(trace_bin_file_path, std::ios_base::out | std::ios_base::ate);
+}
+
+void runtime::cpu::CPU_DebugTracer::set_enable_tracing(bool new_state)
+{
+    if (!enable_tracing && new_state)
+    {
+        init_streams();
+    }
+
+    enable_tracing = new_state;
 }
 
 void runtime::cpu::CPU_DebugTracer::end_of_kernel()

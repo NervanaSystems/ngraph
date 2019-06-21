@@ -848,15 +848,16 @@ using namespace ngraph::runtime;
         vector<TensorViewWrapper> in;
         vector<string> node_input_names;
         vector<string> node_output_names;
-        vector<pair<size_t, ngraph::Shape>> t_in_attrs;
-        vector<pair<size_t, ngraph::Shape>> t_out_attrs;
+        vector<TensorTracerAttributes> t_in_attrs;
+        vector<TensorTracerAttributes> t_out_attrs;
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             in.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
             node_input_names.emplace_back(tv->get_name());
-            t_out_attrs.push_back(make_pair(in.back().get_size(), in.back().get_shape()));
+            t_in_attrs.push_back(TensorTracerAttributes(
+                in.back().get_size(), in.back().get_shape(), in.back().get_element_type()));
         }
         vector<TensorViewWrapper> out;
         for (const descriptor::Output& output : node->get_outputs())
@@ -864,7 +865,8 @@ using namespace ngraph::runtime;
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             out.push_back(TensorViewWrapper(tv, m_variable_name_map[tv->get_name()]));
             node_output_names.emplace_back(tv->get_name());
-            t_out_attrs.push_back(make_pair(out.back().get_size(), out.back().get_shape()));
+            t_out_attrs.push_back(TensorTracerAttributes(
+                out.back().get_size(), out.back().get_shape(), out.back().get_element_type()));
         }
 
         // Emit operation prologue
@@ -1232,6 +1234,30 @@ bool runtime::cpu::CPU_ExternalFunction::computes_result(Node* node)
     return false;
 }
 
+static void dump_one_kernel_with_type(runtime::cpu::CPU_DebugTracer& debug_tracer,
+                                      runtime::cpu::TensorTracerAttributes& t_attrs,
+                                      const std::string& kernel_name,
+                                      const void* tensor,
+                                      const std::string& tensor_name,
+                                      const std::string& in_out)
+{
+    switch (t_attrs.type_of_element.get_type_enum())
+    {
+    case element::Type_t::f32:
+        debug_tracer.dump_one_tensor<float>(
+            kernel_name, tensor, tensor_name, t_attrs.number_of_elements, t_attrs.shape, in_out);
+        break;
+    case element::Type_t::i8:
+        debug_tracer.dump_one_tensor<int8_t>(
+            kernel_name, tensor, tensor_name, t_attrs.number_of_elements, t_attrs.shape, in_out);
+        break;
+    case element::Type_t::u8:
+        debug_tracer.dump_one_tensor<uint8_t>(
+            kernel_name, tensor, tensor_name, t_attrs.number_of_elements, t_attrs.shape, in_out);
+        break;
+    }
+}
+
 void runtime::cpu::CPU_ExternalFunction::dump_one_kernel(CPU_DebugTracer& debug_tracer,
                                                          CPURuntimeContext* ctx,
                                                          bool is_it_input)
@@ -1241,11 +1267,12 @@ void runtime::cpu::CPU_ExternalFunction::dump_one_kernel(CPU_DebugTracer& debug_
     {
         for (size_t i = 0; i < m_op_attrs.at(index).Inputs.size(); i++)
         {
-            debug_tracer.dump_one_tensor<float>(
+            dump_one_kernel_with_type(
+                debug_tracer,
+                m_op_attrs.at(index).Inputs_tensor_attrs.at(i),
                 m_op_attrs.at(index).Description,
                 ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Inputs.at(i))],
                 m_op_attrs.at(index).Inputs.at(i),
-                m_op_attrs.at(index).Inputs_tensor_attrs.at(i),
                 ">>");
         }
     }
@@ -1253,11 +1280,12 @@ void runtime::cpu::CPU_ExternalFunction::dump_one_kernel(CPU_DebugTracer& debug_
     {
         for (size_t i = 0; i < m_op_attrs.at(index).Outputs.size(); i++)
         {
-            debug_tracer.dump_one_tensor<float>(
+            dump_one_kernel_with_type(
+                debug_tracer,
+                m_op_attrs.at(index).Outputs_tensor_attrs.at(i),
                 m_op_attrs.at(index).Description,
                 ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Outputs.at(i))],
                 m_op_attrs.at(index).Outputs.at(i),
-                m_op_attrs.at(index).Outputs_tensor_attrs.at(i),
                 "<<");
         }
         debug_tracer.end_of_kernel();
@@ -1286,19 +1314,10 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     register_common_passes(pass_manager, pass_config);
     pass_manager.run_passes(m_function, false);
 
-    const auto trace_to_debug = std::getenv("NGRAPH_CPU_DEBUG_TRACER");
-    auto& debug_tracer = runtime::cpu::CPU_DebugTracer::getInstance();
-
-    if (trace_to_debug != nullptr)
+    static runtime::cpu::CPU_DebugTracer debug_tracer;
+    if (std::getenv("NGRAPH_CPU_DEBUG_TRACER") != nullptr)
     {
-        static auto tracer_log_file = std::getenv("NGRAPH_CPU_TRACER_LOG");
-        static auto bin_log_file = std::getenv("NGRAPH_CPU_BIN_TRACER_LOG");
-        if (tracer_log_file == nullptr)
-            tracer_log_file = (char*)"trace_meta.log";
-        if (bin_log_file == nullptr)
-            bin_log_file = (char*)"trace_bin_data.log";
-
-        debug_tracer.init_streams(tracer_log_file, bin_log_file);
+        debug_tracer.set_enable_tracing(true);
     }
 
     // Store layouts assigned for arguments
@@ -1445,25 +1464,27 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
         vector<TensorViewWrapper> in;
         vector<string> in_names;
-        vector<pair<size_t, ngraph::Shape>> t_in_attrs;
+        vector<TensorTracerAttributes> t_in_attrs;
         for (const descriptor::Input& input : node->get_inputs())
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             in.push_back(TensorViewWrapper(tv, tv->get_name()));
             in_names.push_back(tv->get_name());
-            t_in_attrs.push_back(make_pair(in.back().get_size(), in.back().get_shape()));
+            t_in_attrs.push_back(TensorTracerAttributes(
+                in.back().get_size(), in.back().get_shape(), in.back().get_element_type()));
         }
         vector<TensorViewWrapper> out;
         vector<string> out_names;
-        vector<pair<size_t, ngraph::Shape>> t_out_attrs;
+        vector<TensorTracerAttributes> t_out_attrs;
 
         for (const descriptor::Output& output : node->get_outputs())
         {
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             out.push_back(TensorViewWrapper(tv, tv->get_name()));
             out_names.push_back(tv->get_name());
-            t_out_attrs.push_back(make_pair(out.back().get_size(), out.back().get_shape()));
+            t_out_attrs.push_back(TensorTracerAttributes(
+                out.back().get_size(), out.back().get_shape(), out.back().get_element_type()));
         }
 
         m_op_attrs.emplace_back(node->description(), out_names, in_names, t_out_attrs, t_in_attrs);
@@ -1790,14 +1811,14 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
 
                     CPUExecutionContext ectx{0};
 
-                    if (trace_to_debug != nullptr)
+                    if (debug_tracer.tracing_is_enabled())
                     {
                         this->dump_one_kernel(debug_tracer, ctx, true);
                     }
 
                     executor::GetCPUExecutor().execute(functors.at(ctx->pc), ctx, &ectx);
 
-                    if (trace_to_debug != nullptr)
+                    if (debug_tracer.tracing_is_enabled())
                     {
                         this->dump_one_kernel(debug_tracer, ctx, false);
                     }
