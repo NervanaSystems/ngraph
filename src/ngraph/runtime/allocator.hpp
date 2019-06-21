@@ -28,8 +28,8 @@ namespace ngraph
     {
         class Allocator;
         class DefaultAllocator;
-        /// \brief Returns a statically allocated default ngraph allocator
-        //         that calls into system allocation libraries
+        /// \brief Returns a pointer to a statically allocated singleton
+        ///        allocator that calls into system allocation libraries
         Allocator* get_default_allocator();
     }
 }
