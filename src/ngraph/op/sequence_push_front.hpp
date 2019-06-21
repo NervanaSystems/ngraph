@@ -35,10 +35,16 @@ namespace ngraph
             /// \brief Prepend a value to a sequence
             /// \param value The value to prepend
             /// \param sequence The sequence
-            SequencePushFront(const Output<Node>& value, const Output<Node>& sequence);
+            SequencePushFront(const Output<Node>& value,
+                              const Output<Node>& sequence,
+                              const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             void validate_and_infer_types() override;
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            const AutoBroadcastSpec& get_autob() const { return m_autob; }
+            void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
+        private:
+            AutoBroadcastSpec m_autob;
         };
     }
 }
