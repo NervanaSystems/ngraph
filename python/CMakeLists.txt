@@ -105,6 +105,7 @@ if(LINUX)
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/patchelf.timestamp
             WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
             COMMAND ${PATCHELF} --force-rpath --set-rpath \'$$ORIGIN\' ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
+            COMMAND ${PATCHELF} --set-soname ${MKLML_LIB}  ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
             COMMAND ${CMAKE_COMMAND} -E touch patchelf.timestamp
             DEPENDS ${WHEEL_DEP_LIBS} ${WHEEL_DEPS}
         )
