@@ -45,6 +45,8 @@ string to_cpp_string(T value)
     return rc;
 }
 
+const string op::Constant::type_name{"Constant"};
+
 op::Constant::~Constant()
 {
 }
