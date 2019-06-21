@@ -89,10 +89,10 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 
     auto registry = get_registry();
     auto it = registry.find(type);
-    for (auto x : registry)
-    {
-        NGRAPH_INFO << x.first;
-    }
+    // for (auto x : registry)
+    // {
+    //     NGRAPH_INFO << x.first;
+    // }
     if (it != registry.end())
     {
         BackendConstructor* new_backend = it->second;
@@ -100,6 +100,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     }
     else
     {
+        // NGRAPH_INFO << "open";
         DL_HANDLE handle = open_shared_library(type);
         if (!handle)
         {
@@ -120,6 +121,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         if (get_backend_constructor_pointer)
         {
             backend = get_backend_constructor_pointer()->create(config);
+            register_backend(type, get_backend_constructor_pointer());
         }
         else
         {
