@@ -39,7 +39,52 @@ op::SliceOutput::SliceOutput(const Output<Node>& value,
 
 void op::SliceOutput::validate_and_infer_types()
 {
-    validate_and_infer_elementwise_args();
+    // For now, keep things simple; no padding, forwards stepping, etc.
+    NODE_VALIDATION_CHECK(this, 0 <= m_axis, "Negative axis is not supported.");
+    NODE_VALIDATION_CHECK(this, 0 <= m_start, "Negative start is not supported.");
+    NODE_VALIDATION_CHECK(this, 0 <= m_end, "Negative end is not supported.");
+    NODE_VALIDATION_CHECK(this, 1 <= m_part_size, "Part size must be positive.");
+    NODE_VALIDATION_CHECK(this, 1 <= m_stride, "Stride must be positive.");
+
+    PartialShape result_shape;
+    const PartialShape& value_shape = get_input_partial_shape(0);
+
+    if (value_shape.is_dynamic())
+    {
+        result_shape = PartialShape::dynamic();
+    }
+    else
+    {
+        vector<Dimension> value_dimensions = static_cast<vector<Dimension>>(value_shape);
+        Dimension sequence_dimension = value_dimensions[0];
+        value_dimensions.erase(value_dimensions.begin());
+
+        NODE_VALIDATION_CHECK(this,
+                              m_axis < value_dimensions.size(),
+                              "Axis is not within the sequence element shape.");
+        Dimension value_dimension = value_dimensions.at(m_axis);
+
+        if (sequence_dimension.is_dynamic() || value_dimension.is_dynamic())
+        {
+            // Can't tell how long the result is
+            value_dimension = Dimension();
+        }
+        else
+        {
+            size_t sequence_size = static_cast<size_t>(sequence_dimension);
+            size_t value_size = static_cast<size_t>(value_dimension);
+            NODE_VALIDATION_CHECK(
+                this, m_start + m_part_size - 1 <= sequence_size, "start part is out of range.");
+            NODE_VALIDATION_CHECK(
+                this, m_end + m_part_size - 1 <= sequence_size, "end part is out of range.");
+            size_t number_slices = (m_end - m_start) / m_stride;
+            sequence_dimension = Dimension(number_slices * m_part_size * value_size);
+        }
+        value_dimensions[m_axis] = sequence_dimension;
+        result_shape = PartialShape(value_dimensions);
+    }
+    set_output_size(1);
+    set_output_type(0, get_input_element_type(0), result_shape);
 }
 
 shared_ptr<Node> op::SliceOutput::copy_with_new_args(const NodeVector& new_args) const

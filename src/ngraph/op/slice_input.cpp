@@ -75,7 +75,7 @@ void op::SliceInput::validate_and_infer_types()
                 this, m_start + m_part_size - 1 <= axis_size, "start part is out of range.");
             NODE_VALIDATION_CHECK(
                 this, m_end + m_part_size - 1 <= axis_size, "end part is out of range.");
-            size_t number_slices = (m_end - m_start) / m_part_size;
+            size_t number_slices = (m_end - m_start) / m_stride;
             sequence_dimension = Dimension(number_slices);
         }
         value_dimensions.insert(value_dimensions.begin(), sequence_dimension);
