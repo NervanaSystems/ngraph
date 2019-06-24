@@ -30,6 +30,12 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            /// \brief Constructs an unitialized recv operation.
+            Recv();
+            /// \brief Constructs a Recv operation.
+            ///
+            /// \param arg The node for tensor to receive data
+            /// \param src_id the source id which could be rank or node id.
             Recv(const std::shared_ptr<Node>& arg, int src_id);
 
             void validate_and_infer_types() override;
