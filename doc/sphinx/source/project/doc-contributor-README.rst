@@ -71,16 +71,11 @@ upcoming `ngraph.ai`_ release.
 Documenting source code examples 
 --------------------------------
 
-<<<<<<< HEAD
 When **verbosely** documenting functionality of specific sections of code -- 
 whether they are entire code blocks within a file, or code strings that are 
 **outside** the nGraph Library's `documentation repo`_, here is an example 
 of best practice: 
-=======
-When **verbosely** documenting functionality of specific sections of code -- whether 
-they are entire code blocks within a file, or code strings that are **outside** 
-the nGraph Library's `documentation repo`_, here is an example of best practice: 
->>>>>>> master
+
 
 Say a file has some interesting functionality that could benefit from more 
 explanation about one or more of the pieces in context. To keep the "in context" 
