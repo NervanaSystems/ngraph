@@ -34,11 +34,13 @@ op::TopK::TopK(const Output<Node>& arg,
                size_t top_k_axis,
                const element::Type& index_element_type,
                size_t k,
-               bool compute_max)
+               bool compute_max,
+               SortType sort)
     : Op({arg, op::Constant::create(element::i64, Shape{1}, {k})->output(0)})
     , m_top_k_axis(top_k_axis)
     , m_index_element_type(index_element_type)
     , m_compute_max(compute_max)
+    , m_sort(sort)
 {
     constructor_validate_and_infer_types();
 }
@@ -47,11 +49,13 @@ op::TopK::TopK(const Output<Node>& arg,
                const Output<Node>& k,
                size_t top_k_axis,
                const element::Type& index_element_type,
-               bool compute_max)
+               bool compute_max,
+               SortType sort)
     : Op({arg, k})
     , m_top_k_axis(top_k_axis)
     , m_index_element_type(index_element_type)
     , m_compute_max(compute_max)
+    , m_sort(sort)
 {
     constructor_validate_and_infer_types();
 }
@@ -130,7 +134,7 @@ shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<TopK>(
-        new_args.at(0), new_args.at(1), m_top_k_axis, m_index_element_type, m_compute_max);
+        new_args.at(0), new_args.at(1), m_top_k_axis, m_index_element_type, m_compute_max, m_sort);
 }
 
 void op::TopK::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

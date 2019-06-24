@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "ngraph/op/all.hpp"
+#include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
@@ -254,9 +255,12 @@ private:
         }
         case OP_TYPEID::AllReduce:
         {
+            const ngraph::op::AllReduce* allreduce =
+                static_cast<const ngraph::op::AllReduce*>(&node);
             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
                                     node.get_input_element_type(0).get_type_enum(),
+                                    allreduce->get_reduce_type(),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
             break;
         }
@@ -1173,6 +1177,11 @@ private:
         {
             throw unsupported_op("Unsupported op '" + node.description() +
                                  "' in Interpreter back end.");
+        }
+        case OP_TYPEID::Range:
+        {
+            throw unsupported_op("Unsupported op '" + node.description() + "'");
+            break;
         }
         case OP_TYPEID::Relu:
         {
