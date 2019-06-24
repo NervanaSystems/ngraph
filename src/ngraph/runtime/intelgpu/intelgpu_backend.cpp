@@ -2087,6 +2087,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::Recv:
+        case OP_TYPEID::Range:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:

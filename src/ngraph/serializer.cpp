@@ -64,6 +64,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
@@ -1383,9 +1384,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
         case OP_TYPEID::MVN:
         {
             auto normalize_variance = node_js.at("normalize_variance").get<bool>();
-            auto across_channels = node_js.at("across_channels").get<bool>();
+            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
             auto eps = node_js.at("eps").get<double>();
-            node = make_shared<op::MVN>(args[0], normalize_variance, across_channels, eps);
+            node = make_shared<op::MVN>(args[0], normalize_variance, normalize_variance, eps);
             break;
         }
         case OP_TYPEID::Negative:
@@ -1563,6 +1564,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
         {
             auto src_id = node_js.at("source_id").get<size_t>();
             node = make_shared<op::Recv>(args[0], src_id);
+            break;
+        }
+        case OP_TYPEID::Range:
+        {
+            node = make_shared<op::Range>(args[0], args[1], args[2]);
             break;
         }
         case OP_TYPEID::Relu:
@@ -2395,8 +2401,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::MVN:
     {
         auto tmp = dynamic_cast<const op::MVN*>(&n);
+        node["reduction_axes"] = tmp->get_reduction_axes();
         node["normalize_variance"] = tmp->get_normalize_variance();
-        node["across_channels"] = tmp->get_across_channels();
         node["eps"] = tmp->get_eps();
         break;
     }
@@ -2541,6 +2547,8 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Recv*>(&n);
         node["source_id"] = tmp->get_src_id();
         break;
+    }
+    case OP_TYPEID::Range: { break;
     }
     case OP_TYPEID::Relu: { break;
     }
