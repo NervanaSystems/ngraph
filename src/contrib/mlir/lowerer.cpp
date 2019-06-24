@@ -60,6 +60,7 @@ namespace
         void initConverters(OwningRewritePatternList& patterns, MLIRContext* mlirContext) override
         {
             RewriteListBuilder<NGAddOpConversion,
+                               NGSubOpConversion,
                                NGMulOpConversion,
                                NGDivOpConversion,
                                NGDotOpConversion,
@@ -334,9 +335,10 @@ namespace
 
     // Element-wise Operations
     ELTWISE_REWRITER(NGAddOp, +)
+    ELTWISE_REWRITER(NGSubOp, -)
     ELTWISE_REWRITER(NGMulOp, *)
     ELTWISE_REWRITER(NGDivOp, /)
-    
+
 #undef ELTWISE_REWRITER
 
     REWRITER(NGDotOp)

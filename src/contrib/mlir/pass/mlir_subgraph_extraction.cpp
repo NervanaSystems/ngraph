@@ -18,11 +18,12 @@
 #include "ngraph/assertion.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/divide.hpp"
+#include "ngraph/op/subtract.hpp"
 
 using namespace ngraph::descriptor;
 using namespace ngraph::op;

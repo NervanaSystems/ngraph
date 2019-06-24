@@ -4,6 +4,7 @@
 #endif
 
 MLIR_OP(Add)
+MLIR_OP(Subtract)
 MLIR_OP(Multiply)
 MLIR_OP(Divide)
 MLIR_OP(Dot)

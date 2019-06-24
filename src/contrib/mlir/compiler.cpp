@@ -24,10 +24,11 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/divide.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>
@@ -285,11 +286,17 @@ namespace ngraph
             {
                 return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
             }
-            
+
             template <>
             mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Multiply)
             {
                 return compiler.create_binary_op<mlir::NGMulOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Subtract)
+            {
+                return compiler.create_binary_op<mlir::NGSubOp>(ng_node);
             }
 
             template <>
