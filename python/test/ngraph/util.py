@@ -16,9 +16,9 @@
 
 import numpy as np
 import ngraph as ng
-
+from ngraph.utils.types import NumericData
 from string import ascii_uppercase
-
+from typing import Any, Callable, List
 import test
 
 
@@ -32,9 +32,14 @@ def get_runtime():
 
 
 def run_op_node(input_data, op_fun, *args):
+    # type: (NumericData, Callable, *Any) -> List[NumericData]
     """Run computation on node performing `op_fun`.
 
     `op_fun` has to accept a node as an argument.
+
+    This function detects whether input data are a Node or a raw passed data. In the latter
+    case the conversion to nGraph Constant or Parameter Node is performed and that form is passed
+    to `op_fun`.
 
     :param input_data: The input data for performed computation.
     :param op_fun: The function handler for operation we want to carry out.
@@ -46,7 +51,7 @@ def run_op_node(input_data, op_fun, *args):
     op_fun_args = []
     comp_inputs = []
     for idx, data in enumerate(input_data):
-        if np.isscalar(data):
+        if np.isscalar(data) or type(data) == np.ndarray:
             op_fun_args.append(ng.constant(data, _get_numpy_dtype(data)))
         else:
             node = ng.parameter(data.shape, name=ascii_uppercase[idx], dtype=data.dtype)
@@ -60,9 +65,14 @@ def run_op_node(input_data, op_fun, *args):
 
 
 def run_op_numeric_data(input_data, op_fun, *args):
+    # type: (NumericData, Callable, *Any) -> List[NumericData]
     """Run computation on node performing `op_fun`.
 
     `op_fun` has to accept a scalar or an array.
+
+    This function passess input data AS IS. This mean that in case they're a scalar (integral,
+    or floating point value) or a NumPy's ndarray object they will be automatically converted
+    to nGraph's Constant Nodes.
 
     :param input_data: The input data for performed computation.
     :param op_fun: The function handler for operation we want to carry out.
