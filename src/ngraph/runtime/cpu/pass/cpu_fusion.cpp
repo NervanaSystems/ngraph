@@ -1870,7 +1870,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
     auto input_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto filter_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto output_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
-    auto requantization_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto requant_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
     auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
     auto dq_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
@@ -1888,7 +1888,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
                                                                        CoordinateDiff{0, 0},
                                                                        CoordinateDiff{0, 0},
                                                                        Strides{1, 1},
-                                                                       requantization_scale,
+                                                                       requant_scale,
                                                                        false);
     }
     else
