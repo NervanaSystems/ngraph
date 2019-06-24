@@ -94,12 +94,12 @@ namespace ngraph
 #endif
                 switch (reduce_type)
                 {
-                case reduction::sum: mlsl_reduce_type = MLSL::RT_SUM; break;
-                case reduction::prod:
+                case reduction::SUM: mlsl_reduce_type = MLSL::RT_SUM; break;
+                case reduction::PROD:
                     throw std::runtime_error("MLSL doesn't support allreduce prod");
                     break;
-                case reduction::min: mlsl_reduce_type = MLSL::RT_MIN; break;
-                case reduction::max: mlsl_reduce_type = MLSL::RT_MAX; break;
+                case reduction::MIN: mlsl_reduce_type = MLSL::RT_MIN; break;
+                case reduction::MAX: mlsl_reduce_type = MLSL::RT_MAX; break;
                 }
 #if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop

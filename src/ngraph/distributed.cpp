@@ -31,10 +31,10 @@ std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& ob
 #endif
     switch (obj)
     {
-    case reduction::Type::sum: out << "sum"; break;
-    case reduction::Type::prod: out << "prod"; break;
-    case reduction::Type::min: out << "min"; break;
-    case reduction::Type::max: out << "max"; break;
+    case reduction::Type::SUM: out << "SUM"; break;
+    case reduction::Type::PROD: out << "PROD"; break;
+    case reduction::Type::MIN: out << "MIN"; break;
+    case reduction::Type::MAX: out << "MAX"; break;
     }
 #if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop

@@ -106,10 +106,10 @@ namespace ngraph
 #endif
                 switch (reduce_type)
                 {
-                case reduction::Type::sum: mpi_reduce_type = MPI_SUM; break;
-                case reduction::Type::prod: mpi_reduce_type = MPI_PROD; break;
-                case reduction::Type::min: mpi_reduce_type = MPI_MIN; break;
-                case reduction::Type::max: mpi_reduce_type = MPI_MAX; break;
+                case reduction::Type::SUM: mpi_reduce_type = MPI_SUM; break;
+                case reduction::Type::PROD: mpi_reduce_type = MPI_PROD; break;
+                case reduction::Type::MIN: mpi_reduce_type = MPI_MIN; break;
+                case reduction::Type::MAX: mpi_reduce_type = MPI_MAX; break;
                 }
 #if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
