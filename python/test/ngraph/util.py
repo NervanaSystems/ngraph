@@ -17,7 +17,6 @@
 import numpy as np
 import ngraph as ng
 from ngraph.utils.types import NumericData
-from string import ascii_uppercase
 from typing import Any, Callable, List
 import test
 
@@ -37,8 +36,7 @@ def run_op_node(input_data, op_fun, *args):
 
     `op_fun` has to accept a node as an argument.
 
-    This function detects whether input data are a Node or a raw passed data. In the latter
-    case the conversion to nGraph Constant or Parameter Node is performed and that form is passed
+    This function converts passed raw input data to nGraph Constant Node and that form is passed
     to `op_fun`.
 
     :param input_data: The input data for performed computation.
@@ -50,14 +48,8 @@ def run_op_node(input_data, op_fun, *args):
     comp_args = []
     op_fun_args = []
     comp_inputs = []
-    for idx, data in enumerate(input_data):
-        if np.isscalar(data) or type(data) == np.ndarray:
-            op_fun_args.append(ng.constant(data, _get_numpy_dtype(data)))
-        else:
-            node = ng.parameter(data.shape, name=ascii_uppercase[idx], dtype=data.dtype)
-            op_fun_args.append(node)
-            comp_args.append(node)
-            comp_inputs.append(data)
+    for data in input_data:
+        op_fun_args.append(ng.constant(data, _get_numpy_dtype(data)))
     op_fun_args.extend(args)
     node = op_fun(*op_fun_args)
     computation = runtime.computation(node, *comp_args)
