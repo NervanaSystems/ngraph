@@ -14,18 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
+#pragma once
+
 #include <memory>
 
-#include "ngraph/function.hpp"
-#include "ngraph/log.hpp"
+#include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/pass/manager_state.hpp"
 
-using namespace std;
-using namespace ngraph;
-
-const vector<shared_ptr<Function>>& pass::ManagerState::get_functions()
+namespace ngraph
 {
-    return m_function_list;
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector mean_variance_normalization(const Node& node);
+            } // namespace set_1
+
+            namespace set_9
+            {
+                NodeVector mean_variance_normalization(const Node& node);
+            } // namespace set_9
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

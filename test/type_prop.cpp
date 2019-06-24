@@ -3635,6 +3635,14 @@ TEST(type_prop, tensor_constant_bad_count)
     }
 }
 
+TEST(type_prop, constant_zero_elements_one_string)
+{
+    auto c =
+        make_shared<op::Constant>(element::i64, Shape{2, 0, 2, 2}, std::vector<std::string>{"42"});
+    ASSERT_EQ(c->get_element_type(), element::i64);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 0, 2, 2}));
+}
+
 TEST(type_prop, replace_slice_deduce_vector)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6});
@@ -10020,6 +10028,7 @@ TEST(type_prop, topk_rank_dynamic_ok)
     ASSERT_TRUE(topk->get_output_element_type(1) == element::f32);
     ASSERT_TRUE(topk->get_output_partial_shape(0).rank().is_dynamic());
     ASSERT_TRUE(topk->get_output_partial_shape(1).rank().is_dynamic());
+    ASSERT_TRUE(topk->get_sort() == op::TopK::SortType::NONE);
 }
 
 TEST(type_prop, topk_rank_dynamic_result_et_dynamic)
@@ -14861,6 +14870,120 @@ TEST(type_prop, split)
     EXPECT_EQ(split->output(1).get_element_type(), element::i32);
 }
 
+TEST(type_prop, lstm_cell)
+{
+    const size_t batch_size = 2;
+    const size_t input_size = 3;
+    const size_t hidden_size = 3;
+    const size_t gates_count = 4;
+
+    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto W =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+    const auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+
+    const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+    EXPECT_EQ(lstm_cell->output(0).get_element_type(), element::f32);
+    EXPECT_EQ(lstm_cell->output(0).get_shape(), (Shape{batch_size, hidden_size}));
+    EXPECT_EQ(lstm_cell->output(1).get_element_type(), element::f32);
+    EXPECT_EQ(lstm_cell->output(1).get_shape(), (Shape{batch_size, hidden_size}));
+}
+
+TEST(type_prop, lstm_cell_invalid_input)
+{
+    const size_t batch_size = 2;
+    const size_t input_size = 3;
+    const size_t hidden_size = 3;
+    const size_t gates_count = 4;
+
+    auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    auto R =
+        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+
+    // Invalid W tensor shape.
+    auto W = make_shared<op::Parameter>(element::f32, Shape{1 * hidden_size, input_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor W must have shape"));
+    }
+
+    // Invalid R tensor shape.
+    W = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+    R = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, 1});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor R must have shape"));
+    }
+
+    // Invalid H_t tensor shape.
+    R = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    H_t = make_shared<op::Parameter>(element::f32, Shape{4, hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor H_t must have shape"));
+    }
+
+    // Invalid C_t tensor shape.
+    H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    C_t = make_shared<op::Parameter>(element::f32, Shape{4, hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor C_t must have shape"));
+    }
+
+    // Invalid B tensor shape.
+    C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
+    auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size, B, P);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor B must have shape"));
+    }
+
+    // Invalid P tensor shape.
+    B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    P = make_shared<op::Parameter>(element::f32, Shape{hidden_size});
+    try
+    {
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size, B, P);
+        FAIL() << "LSTMCell node was created with invalid data.";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor P must have shape"));
+    }
+}
+
 TEST(type_prop, fake_quantize)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
@@ -15141,3 +15264,502 @@ TEST(type_prop, group_conv_transpose_invalid_params)
             std::string("Output padding should be of number of input data features size."));
     }
 }
+
+TEST(type_prop, range_nonconst_ok)
+{
+    auto start = make_shared<op::Parameter>(element::i32, Shape{});
+    auto stop = make_shared<op::Parameter>(element::i32, Shape{});
+    auto step = make_shared<op::Parameter>(element::i32, Shape{});
+
+    auto range = make_shared<op::Range>(start, stop, step);
+
+    EXPECT_EQ(range->get_element_type(), element::i32);
+    EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, range_nonconst_some_dyn_et_ok)
+{
+    auto start = make_shared<op::Parameter>(element::i32, Shape{});
+    auto stop = make_shared<op::Parameter>(element::dynamic, Shape{});
+    auto step = make_shared<op::Parameter>(element::i32, Shape{});
+
+    auto range = make_shared<op::Range>(start, stop, step);
+
+    EXPECT_EQ(range->get_element_type(), element::i32);
+    EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, range_nonconst_all_dyn_et_ok)
+{
+    auto start = make_shared<op::Parameter>(element::dynamic, Shape{});
+    auto stop = make_shared<op::Parameter>(element::dynamic, Shape{});
+    auto step = make_shared<op::Parameter>(element::dynamic, Shape{});
+
+    auto range = make_shared<op::Range>(start, stop, step);
+
+    EXPECT_EQ(range->get_element_type(), element::dynamic);
+    EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, range_nonconst_f32_ok)
+{
+    auto start = make_shared<op::Parameter>(element::dynamic, Shape{});
+    auto stop = make_shared<op::Parameter>(element::f32, Shape{});
+    auto step = make_shared<op::Parameter>(element::dynamic, Shape{});
+
+    auto range = make_shared<op::Range>(start, stop, step);
+
+    EXPECT_EQ(range->get_element_type(), element::f32);
+    EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, range_nonconst_boolean_fails)
+{
+    auto start = make_shared<op::Parameter>(element::dynamic, Shape{});
+    auto stop = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto step = make_shared<op::Parameter>(element::dynamic, Shape{});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "Boolean element type not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Element type for start, stop, and step, must not be boolean.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_some_const_ok)
+{
+    auto start = make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{3});
+    auto stop = make_shared<op::Parameter>(element::i32, Shape{});
+    auto step = make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{2});
+
+    auto range = make_shared<op::Range>(start, stop, step);
+
+    EXPECT_EQ(range->get_element_type(), element::i32);
+    EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
+}
+
+TEST(type_prop, range_some_const_zero_stride_fails)
+{
+    auto start = make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{3});
+    auto stop = make_shared<op::Parameter>(element::i32, Shape{});
+    auto step = make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{0});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "Zero stride not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'step' cannot be zero.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_some_const_plus_inf_start_fails)
+{
+    auto start = make_shared<op::Constant>(
+        element::f32, Shape{}, std::vector<float>{std::numeric_limits<float>::infinity()});
+    auto stop = make_shared<op::Parameter>(element::f32, Shape{});
+    auto step = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{1});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "+Infinity start not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'start' cannot be nan or infinite.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_some_const_minus_inf_start_fails)
+{
+    auto start = make_shared<op::Constant>(
+        element::f32, Shape{}, std::vector<float>{-std::numeric_limits<float>::infinity()});
+    auto stop = make_shared<op::Parameter>(element::f32, Shape{});
+    auto step = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{1});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "-Infinity start not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'start' cannot be nan or infinite.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_some_const_nan_start_fails)
+{
+    auto start =
+        make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{std::nanf("")});
+    auto stop = make_shared<op::Parameter>(element::f32, Shape{});
+    auto step = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{1});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "NaN start not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'start' cannot be nan or infinite.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_some_const_plus_inf_stop_fails)
+{
+    auto start = make_shared<op::Parameter>(element::f32, Shape{});
+    auto stop = make_shared<op::Constant>(
+        element::f32, Shape{}, std::vector<float>{std::numeric_limits<float>::infinity()});
+    auto step = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{1});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "+Infinity stop not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'stop' cannot be nan or infinite.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_some_const_minus_inf_stop_fails)
+{
+    auto start = make_shared<op::Parameter>(element::f32, Shape{});
+    auto stop = make_shared<op::Constant>(
+        element::f32, Shape{}, std::vector<float>{-std::numeric_limits<float>::infinity()});
+    auto step = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{1});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "-Infinity stop not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'stop' cannot be nan or infinite.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_some_const_nan_stio_fails)
+{
+    auto start = make_shared<op::Parameter>(element::f32, Shape{});
+    auto stop = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{std::nanf("")});
+    auto step = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{1});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "NaN stop not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'stop' cannot be nan or infinite.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_some_const_plus_inf_stride_fails)
+{
+    auto start = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{3});
+    auto stop = make_shared<op::Parameter>(element::f32, Shape{});
+    auto step = make_shared<op::Constant>(
+        element::f32, Shape{}, std::vector<float>{std::numeric_limits<float>::infinity()});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "+Infinity stride not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'step' cannot be zero, nan, or infinite.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_some_const_minus_inf_stride_fails)
+{
+    auto start = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{3});
+    auto stop = make_shared<op::Parameter>(element::f32, Shape{});
+    auto step = make_shared<op::Constant>(
+        element::f32, Shape{}, std::vector<float>{-std::numeric_limits<float>::infinity()});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "-Infinity stride not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'step' cannot be zero, nan, or infinite.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_some_const_nan_stride_fails)
+{
+    auto start = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{3});
+    auto stop = make_shared<op::Parameter>(element::f32, Shape{});
+    auto step = make_shared<op::Constant>(element::f32, Shape{}, std::vector<float>{std::nanf("")});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "NaN stride not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'step' cannot be zero, nan, or infinite.");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, range_all_const_zero_stride_fails)
+{
+    auto start = make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{3});
+    auto stop = make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{5});
+    auto step = make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{0});
+
+    try
+    {
+        auto range = make_shared<op::Range>(start, stop, step);
+        FAIL() << "Zero stride not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "'step' cannot be zero");
+    }
+    catch (...)
+    {
+        FAIL() << "Test failed for unexpected reason";
+    }
+}
+
+struct RangeParams
+{
+    double start;
+    double stop;
+    double step;
+    PartialShape expected_shape;
+};
+
+template <typename T>
+void run_range_test(const element::Type& et, const RangeParams& params)
+{
+    auto start =
+        make_shared<op::Constant>(et, Shape{}, std::vector<T>{static_cast<T>(params.start)});
+    auto stop = make_shared<op::Constant>(et, Shape{}, std::vector<T>{static_cast<T>(params.stop)});
+    auto step = make_shared<op::Constant>(et, Shape{}, std::vector<T>{static_cast<T>(params.step)});
+
+    auto range = make_shared<op::Range>(start, stop, step);
+
+    EXPECT_EQ(range->get_element_type(), et);
+    EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(params.expected_shape))
+        << "Expected shape " << params.expected_shape << " but got "
+        << range->get_output_partial_shape(0);
+}
+
+struct RangeTest : ::testing::TestWithParam<RangeParams>
+{
+};
+
+TEST_P(RangeTest, deduce_shape_i8)
+{
+    run_range_test<int8_t>(element::i8, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_i16)
+{
+    run_range_test<int16_t>(element::i16, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_i32)
+{
+    run_range_test<int32_t>(element::i32, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_i64)
+{
+    run_range_test<int64_t>(element::i64, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_u8)
+{
+    run_range_test<uint8_t>(element::u8, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_u16)
+{
+    run_range_test<uint16_t>(element::u16, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_u32)
+{
+    run_range_test<uint32_t>(element::u32, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_u64)
+{
+    run_range_test<uint64_t>(element::u64, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_bf16)
+{
+    run_range_test<bfloat16>(element::bf16, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_f16)
+{
+    run_range_test<float16>(element::f16, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_f32)
+{
+    run_range_test<float>(element::f32, GetParam());
+}
+
+TEST_P(RangeTest, deduce_shape_f64)
+{
+    run_range_test<double>(element::f64, GetParam());
+}
+
+INSTANTIATE_TEST_CASE_P(type_prop,
+                        RangeTest,
+                        ::testing::Values(RangeParams{0, 5, 1, PartialShape{5}},
+                                          RangeParams{0, 22, 2, PartialShape{11}},
+                                          RangeParams{1, 23, 2, PartialShape{11}},
+                                          RangeParams{1, 22, 2, PartialShape{11}},
+                                          RangeParams{0, 0, 1, PartialShape{0}},
+                                          RangeParams{1, 0, 2, PartialShape{0}}));
+
+struct RangeTestWithNegatives : ::testing::TestWithParam<RangeParams>
+{
+};
+
+TEST_P(RangeTestWithNegatives, deduce_shape_i8)
+{
+    run_range_test<int8_t>(element::i8, GetParam());
+}
+
+TEST_P(RangeTestWithNegatives, deduce_shape_i16)
+{
+    run_range_test<int16_t>(element::i16, GetParam());
+}
+
+TEST_P(RangeTestWithNegatives, deduce_shape_i32)
+{
+    run_range_test<int32_t>(element::i32, GetParam());
+}
+
+TEST_P(RangeTestWithNegatives, deduce_shape_i64)
+{
+    run_range_test<int64_t>(element::i64, GetParam());
+}
+
+TEST_P(RangeTestWithNegatives, deduce_shape_bf16)
+{
+    run_range_test<bfloat16>(element::bf16, GetParam());
+}
+
+TEST_P(RangeTestWithNegatives, deduce_shape_f16)
+{
+    run_range_test<float16>(element::f16, GetParam());
+}
+
+TEST_P(RangeTestWithNegatives, deduce_shape_f32)
+{
+    run_range_test<float>(element::f32, GetParam());
+}
+
+TEST_P(RangeTestWithNegatives, deduce_shape_f64)
+{
+    run_range_test<double>(element::f64, GetParam());
+}
+
+INSTANTIATE_TEST_CASE_P(type_prop,
+                        RangeTestWithNegatives,
+                        ::testing::Values(RangeParams{2, 0, -2, PartialShape{1}},
+                                          RangeParams{2, 0, -1, PartialShape{2}},
+                                          RangeParams{-19, 19, 1, PartialShape{38}},
+                                          RangeParams{-19, 19, 3, PartialShape{13}},
+                                          RangeParams{20, -19, 1, PartialShape{0}}));
+
+struct RangeTestFloating : ::testing::TestWithParam<RangeParams>
+{
+};
+
+TEST_P(RangeTestFloating, deduce_shape_bf16)
+{
+    run_range_test<bfloat16>(element::bf16, GetParam());
+}
+
+TEST_P(RangeTestFloating, deduce_shape_f16)
+{
+    run_range_test<float16>(element::f16, GetParam());
+}
+
+TEST_P(RangeTestFloating, deduce_shape_f32)
+{
+    run_range_test<float>(element::f32, GetParam());
+}
+
+TEST_P(RangeTestFloating, deduce_shape_f64)
+{
+    run_range_test<double>(element::f64, GetParam());
+}
+
+INSTANTIATE_TEST_CASE_P(type_prop,
+                        RangeTestFloating,
+                        ::testing::Values(RangeParams{0, 1, 0.25, PartialShape{4}},
+                                          RangeParams{-1, 1, 0.25, PartialShape{8}},
+                                          RangeParams{-1, 0.875, 0.25, PartialShape{8}}));
