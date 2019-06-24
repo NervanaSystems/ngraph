@@ -59,6 +59,11 @@ namespace
     } s_cpu_static_init;
 }
 
+runtime::cpu::CPU_Backend::~CPU_Backend()
+{
+    m_exec_map.clear();
+}
+
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
     ngraph::pass::PassConfig& pass_config,
@@ -159,19 +164,23 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> 
 
 runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
 {
-    if (m_allocator)
+    if (!m_allocator)
     {
-        return m_allocator.get();
+        m_allocator = std::move(create_default_allocator());
     }
-    else
-    {
-        return runtime::get_default_allocator();
-    }
+    return m_allocator.get();
 }
 
 void runtime::cpu::CPU_Backend::set_host_memory_allocator(
     std::unique_ptr<runtime::Allocator> allocator)
 {
+    if (m_allocator)
+    {
+        // Resources allocated with the existing allocator might still be around and expect it
+        // to be available for freeing. We cannot switch to the new allocator
+        throw ngraph_error(
+            "Allocator already exists. Changing allocators mid-execution is not permitted.");
+    }
     m_allocator = std::move(allocator);
 }
 

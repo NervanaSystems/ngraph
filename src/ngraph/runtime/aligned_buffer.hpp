@@ -34,11 +34,10 @@ namespace ngraph
 class ngraph::runtime::AlignedBuffer
 {
 public:
-    AlignedBuffer(size_t byte_size, size_t alignment);
     // Allocator objects and the allocation interfaces are owned by the
     // creators of AlignedBuffers. They need to ensure that the lifetime of
     // allocator exceeds the lifetime of this AlignedBuffer.
-    AlignedBuffer(size_t byte_size, size_t alignment, Allocator* allocator);
+    AlignedBuffer(size_t byte_size, size_t alignment, Allocator* allocator = nullptr);
 
     AlignedBuffer();
     ~AlignedBuffer();

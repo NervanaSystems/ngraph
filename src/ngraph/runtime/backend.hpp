@@ -143,11 +143,7 @@ public:
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
 
     /// \brief Returns memory allocator used by backend for host allocations
-    virtual Allocator* get_host_memory_allocator()
-    {
-        return ngraph::runtime::get_default_allocator();
-    }
-
+    virtual Allocator* get_host_memory_allocator() { return nullptr; }
     /// \brief Set the host memory allocator to be used by the backend
     /// \param allocator is pointer to host memory allocator object
     virtual void set_host_memory_allocator(std::unique_ptr<Allocator> allocator) {}

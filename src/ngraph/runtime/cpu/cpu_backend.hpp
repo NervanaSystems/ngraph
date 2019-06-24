@@ -36,6 +36,8 @@ namespace ngraph
             class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:
+                ~CPU_Backend() override;
+
                 std::shared_ptr<CPU_CallFrame>
                     make_call_frame(const std::shared_ptr<CPU_ExternalFunction>& external_function,
                                     ngraph::pass::PassConfig& pass_config,

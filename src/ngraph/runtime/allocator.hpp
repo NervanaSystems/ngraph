@@ -28,9 +28,9 @@ namespace ngraph
     {
         class Allocator;
         class DefaultAllocator;
-        /// \brief Returns a pointer to a statically allocated singleton
-        ///        allocator that calls into system allocation libraries
-        Allocator* get_default_allocator();
+        /// \brief Create a default allocator that calls into system
+        ///        allocation libraries
+        std::unique_ptr<Allocator> create_default_allocator();
     }
 }
 

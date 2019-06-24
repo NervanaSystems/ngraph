@@ -32,29 +32,20 @@ runtime::AlignedBuffer::AlignedBuffer()
 {
 }
 
-runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment)
-    : m_allocator(nullptr)
-    , m_byte_size(byte_size)
-{
-    m_byte_size = std::max<size_t>(1, byte_size);
-    size_t allocation_size = m_byte_size + alignment;
-    m_allocated_buffer = static_cast<char*>(malloc(allocation_size));
-    m_aligned_buffer = m_allocated_buffer;
-    size_t mod = size_t(m_aligned_buffer) % alignment;
-
-    if (mod != 0)
-    {
-        m_aligned_buffer += (alignment - mod);
-    }
-}
-
 runtime::AlignedBuffer::AlignedBuffer(size_t byte_size, size_t alignment, Allocator* allocator)
     : m_allocator(allocator)
     , m_byte_size(byte_size)
 {
     m_byte_size = std::max<size_t>(1, byte_size);
     size_t allocation_size = m_byte_size + alignment;
-    m_allocated_buffer = static_cast<char*>(m_allocator->malloc(allocation_size, alignment));
+    if (allocator)
+    {
+        m_allocated_buffer = static_cast<char*>(m_allocator->malloc(allocation_size, alignment));
+    }
+    else
+    {
+        m_allocated_buffer = static_cast<char*>(malloc(allocation_size));
+    }
     m_aligned_buffer = m_allocated_buffer;
     size_t mod = size_t(m_aligned_buffer) % alignment;
 
