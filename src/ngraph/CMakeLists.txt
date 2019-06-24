@@ -160,6 +160,8 @@ set (SRC
     op/experimental/quantized_conv_relu.hpp
     op/experimental/quantized_max_pool.cpp
     op/experimental/quantized_max_pool.hpp
+    op/experimental/range.cpp
+    op/experimental/range.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
     op/experimental/tile.cpp
@@ -312,6 +314,8 @@ set (SRC
     op/fused/group_conv_transpose.cpp
     op/fused/leaky_relu.cpp
     op/fused/leaky_relu.hpp
+    op/fused/lstm_cell.cpp
+    op/fused/lstm_cell.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize.cpp
@@ -332,6 +336,8 @@ set (SRC
     op/fused/squeeze.hpp
     op/fused/unsqueeze.cpp
     op/fused/unsqueeze.hpp
+    op/util/activation_functions.cpp
+    op/util/activation_functions.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
     op/util/binary_elementwise_arithmetic.cpp
@@ -349,6 +355,8 @@ set (SRC
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
     op/util/reshape.hpp
+    op/util/rnn_cell_base.cpp
+    op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
     partial_shape.cpp
@@ -472,6 +480,8 @@ set(SRC ${SRC}
 
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
+else()
+    list(APPEND SRC serializer_stub.cpp)
 endif()
 
 configure_file(version.in.hpp version.hpp)
