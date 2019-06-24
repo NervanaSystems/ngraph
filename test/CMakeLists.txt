@@ -240,6 +240,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
+# So many type_prop tests these days that we need to set /bigobj flag for MSVS.
+# We should probably split up type_prop.cpp.
+if (MSVS)
+    target_compile_options(unit-test PRIVATE "/bigobj")
+endif()
+
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
