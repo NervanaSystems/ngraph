@@ -139,4 +139,10 @@ public:
     /// \param op_name is the name of the backend specific op
     /// \returns a shared pointer to the op if found, else nullptr
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
+
+    static void set_backend_shared_library_search_directory(const std::string& path);
+    static const std::string& get_backend_shared_library_search_directory();
+
+private:
+    static std::string s_backend_shared_library_search_directory;
 };

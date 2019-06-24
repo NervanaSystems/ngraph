@@ -14,6 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
@@ -24,6 +30,28 @@
 
 using namespace std;
 using namespace ngraph;
+
+std::string runtime::Backend::s_backend_shared_library_search_directory;
+
+// This finds the full path of the containing shared library
+static string find_my_file()
+{
+#ifdef _WIN32
+    HMODULE hModule = GetModuleHandleW(L"ngraph.dll");
+    WCHAR wpath[MAX_PATH];
+    GetModuleFileNameW(hModule, wpath, MAX_PATH);
+    wstring ws(wpath);
+    string path(ws.begin(), ws.end());
+    replace(path.begin(), path.end(), '\\', '/');
+    path = file_util::get_directory(path);
+    path += "/";
+    return path;
+#else
+    Dl_info dl_info;
+    dladdr(reinterpret_cast<void*>(find_my_file), &dl_info);
+    return dl_info.dli_fname;
+#endif
+}
 
 runtime::Backend::~Backend()
 {
@@ -82,11 +110,21 @@ bool runtime::Backend::is_supported_property(const Property prop) const
     return false;
 }
 
-void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec)
-{
-}
-
 std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_stream)
 {
     throw runtime_error("load opertion unimplemented.");
+}
+
+void runtime::Backend::set_backend_shared_library_search_directory(const string& path)
+{
+    s_backend_shared_library_search_directory = path;
+}
+
+const string& runtime::Backend::get_backend_shared_library_search_directory()
+{
+    if (s_backend_shared_library_search_directory.empty())
+    {
+        s_backend_shared_library_search_directory = find_my_file();
+    }
+    return s_backend_shared_library_search_directory;
 }
