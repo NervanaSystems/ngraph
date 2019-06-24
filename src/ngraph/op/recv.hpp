@@ -30,7 +30,6 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-
             Recv(const std::shared_ptr<Node>& arg, int src_id);
 
             void validate_and_infer_types() override;
