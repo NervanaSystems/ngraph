@@ -19,8 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Send::type_name{"Send"};
+
 op::Send::Send(const shared_ptr<Node>& arg, int dest_id)
-    : Op("Send", check_single_output_args({arg}))
+    : Op(check_single_output_args({arg}))
     , m_dest_id(dest_id)
 {
     constructor_validate_and_infer_types();
