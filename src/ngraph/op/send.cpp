@@ -21,7 +21,7 @@ using namespace ngraph;
 
 const string op::Send::type_name{"Send"};
 
-op::Send::Send(const shared_ptr<Node>& arg, int dest_id)
+op::Send::Send(const Output<Node>& arg, int dest_id)
     : Op(check_single_output_args({arg}))
     , m_dest_id(dest_id)
 {

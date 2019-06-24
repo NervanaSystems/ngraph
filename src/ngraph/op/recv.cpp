@@ -21,7 +21,7 @@ using namespace ngraph;
 
 const string op::Recv::type_name{"Recv"};
 
-op::Recv::Recv(const shared_ptr<Node>& arg, int src_id)
+op::Recv::Recv(const Output<Node>& arg, int src_id)
     : Op(check_single_output_args({arg}))
     , m_src_id(src_id)
 {

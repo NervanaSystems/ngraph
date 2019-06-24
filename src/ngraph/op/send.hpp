@@ -36,7 +36,7 @@ namespace ngraph
             ///
             /// \param arg The node for input tensor
             /// \param dest_id the target id which could be rank of node id.
-            Send(const std::shared_ptr<Node>& arg, int dest_id);
+            Send(const Output<Node>& arg, int dest_id);
 
             void validate_and_infer_types() override;
 
