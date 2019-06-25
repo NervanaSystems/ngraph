@@ -32,10 +32,6 @@ using namespace ngraph;
 
 const string op::Atan::type_name{"Atan"};
 
-op::Atan::Atan()
-{
-}
-
 op::Atan::Atan(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {

@@ -29,16 +29,18 @@
 using namespace std;
 using namespace ngraph;
 
-op::Dot::Dot(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
+const string op::Dot::type_name{"Dot"};
+
+op::Dot::Dot(const Output<Node>& arg0, const Output<Node>& arg1)
     : Dot(arg0, arg1, 0, false)
 {
 }
 
-op::Dot::Dot(const shared_ptr<Node>& arg0,
-             const shared_ptr<Node>& arg1,
+op::Dot::Dot(const Output<Node>& arg0,
+             const Output<Node>& arg1,
              size_t reduction_axes_count,
              bool has_reduction_axes_count)
-    : Op("Dot", check_single_output_args({arg0, arg1}))
+    : Op({arg0, arg1})
     , m_reduction_axes_count(reduction_axes_count)
     , m_has_reduction_axes_count(has_reduction_axes_count)
 {
@@ -154,7 +156,7 @@ void op::Dot::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<op::Reshape> make_reshape_axes_to_front(const shared_ptr<Node>& n,
+shared_ptr<op::Reshape> make_reshape_axes_to_front(const Output<Node>& n,
                                                    const Shape& front_shape,
                                                    const Shape& back_shape)
 {

@@ -21,20 +21,21 @@
 using namespace std;
 using namespace ngraph;
 
-op::Divide::Divide(const shared_ptr<Node>& arg0,
-                   const shared_ptr<Node>& arg1,
+const string op::Divide::type_name{"Divide"};
+
+op::Divide::Divide(const Output<Node>& arg0,
+                   const Output<Node>& arg1,
                    const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic("Divide", arg0, arg1, autob)
-    , m_pythondiv(true)
+    : BinaryElementwiseArithmetic(arg0, arg1, autob)
 {
     constructor_validate_and_infer_types();
 }
 
-op::Divide::Divide(const shared_ptr<Node>& arg0,
-                   const shared_ptr<Node>& arg1,
+op::Divide::Divide(const Output<Node>& arg0,
+                   const Output<Node>& arg1,
                    bool pythondiv,
                    const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic("Divide", arg0, arg1, autob)
+    : BinaryElementwiseArithmetic(arg0, arg1, autob)
     , m_pythondiv(pythondiv)
 {
     constructor_validate_and_infer_types();
@@ -63,7 +64,7 @@ void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
     adjoints.add_delta(y, -delta * shared_from_this() / y);
 }
 
-shared_ptr<Node> ngraph::operator/(const shared_ptr<Node> arg0, const shared_ptr<Node> arg1)
+shared_ptr<Node> ngraph::operator/(const Output<Node> arg0, const Output<Node> arg1)
 {
     return make_shared<op::Divide>(arg0, arg1);
 }
