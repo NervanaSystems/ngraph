@@ -140,3 +140,37 @@ TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
         EXPECT_EQ(v, read_vector<float>(result));
     }
 }
+
+TEST(distributed_${BACKEND_NAME}, send_recv)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto comm_size = get_distributed_interface()->get_size();
+    if (comm_size != 2)
+    {
+        return;
+    }
+    auto rank = get_distributed_interface()->get_rank();
+    std::shared_ptr<Function> f;
+    if (rank == 0)
+    {
+        f = make_shared<Function>(make_shared<op::Send>(A, 1), ParameterVector{A});
+    }
+    else
+    {
+        f = make_shared<Function>(make_shared<op::Recv>(A, 0), ParameterVector{A});
+    }
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto v = vector<float>{1, 2, 3, 4};
+    auto result = backend->create_tensor(element::f32, shape);
+    copy_data(result, vector<float>(4, 0));
+
+    if (rank == 0)
+    {
+        copy_data(result, v);
+    }
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {result});
+    EXPECT_EQ(v, read_vector<float>(result));
+}

@@ -22,7 +22,7 @@ using namespace ngraph;
 const string op::Recv::type_name{"Recv"};
 
 op::Recv::Recv(const Output<Node>& arg, int src_id)
-    : Op(check_single_output_args({arg}))
+    : Op({arg})
     , m_src_id(src_id)
 {
     constructor_validate_and_infer_types();

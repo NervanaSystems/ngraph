@@ -22,7 +22,7 @@ using namespace ngraph;
 const string op::Send::type_name{"Send"};
 
 op::Send::Send(const Output<Node>& arg, int dest_id)
-    : Op(check_single_output_args({arg}))
+    : Op({arg})
     , m_dest_id(dest_id)
 {
     constructor_validate_and_infer_types();
