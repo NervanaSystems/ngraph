@@ -14,8 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
+if (NGRAPH_STATIC_LIB_ENABLE)
+    set(LIBRARY_TYPE STATIC)
+else()
+    set(LIBRARY_TYPE SHARED)
+endif()
+
 if (NGRAPH_INTERPRETER_ENABLE)
-    add_library(interpreter_backend STATIC int_backend.cpp node_wrapper.cpp int_executable.cpp)
+    add_library(interpreter_backend ${LIBRARY_TYPE} int_backend.cpp node_wrapper.cpp int_executable.cpp)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(interpreter_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

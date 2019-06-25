@@ -43,7 +43,7 @@ static runtime::BackendConstructor* interpreter_get_backend_constructor_pointer(
     return s_backend_constructor.get();
 }
 
-#ifdef INTERPRETER_BACKEND_STATIC
+#ifndef INTERPRETER_BACKEND_STATIC
 extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
     return interpreter_get_backend_constructor_pointer();
