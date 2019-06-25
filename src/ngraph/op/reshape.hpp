@@ -60,6 +60,11 @@ namespace ngraph
         class Reshape : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a reshape operation.
+            Reshape() = default;
             /// \brief Constructs a reshape operation.
             ///
             /// \param arg The tensor to be reshaped.
@@ -67,7 +72,7 @@ namespace ngraph
             ///                    sequence \f$(0,\dots,n-1)\f$ where \f$n\f$ is the rank of the input tensor.
             /// \param output_shape The output shape. If the input shape is \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
             ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
-            Reshape(const std::shared_ptr<Node>& arg,
+            Reshape(const Output<Node>& arg,
                     const AxisVector& input_order,
                     const Shape& output_shape);
 
@@ -78,15 +83,18 @@ namespace ngraph
 
             /// \return The order in which to iterate over input axes.
             const AxisVector& get_input_order() const { return m_input_order; }
+            void set_input_order(const AxisVector& input_order) { m_input_order = input_order; }
             /// \return The shape of the output tensor.
             const Shape& get_output_shape() const { return m_output_shape; }
+            void set_output_shape(const Shape& output_shape) { m_output_shape = output_shape; }
             bool get_is_transpose() const { return m_is_transpose; }
+            void set_is_transpose(bool is_transpose) { m_is_transpose = is_transpose; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
-            const AxisVector m_input_order;
-            const Shape m_output_shape;
+            AxisVector m_input_order;
+            Shape m_output_shape;
             bool m_is_transpose{false};
         };
     }
