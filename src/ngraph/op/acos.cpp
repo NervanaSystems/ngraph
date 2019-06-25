@@ -34,10 +34,6 @@ using namespace ngraph;
 
 const string op::Acos::type_name{"Acos"};
 
-op::Acos::Acos()
-{
-}
-
 op::Acos::Acos(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
