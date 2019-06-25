@@ -50,7 +50,7 @@ namespace ngraph
                     node->get_name().c_str(),
                     node->get_provenance_tags().size() == 1 ? 
                     (*(node->get_provenance_tags()).begin()).c_str() : 
-                    node->get_friendly_name().c_str()  ,
+                    node->get_friendly_name().c_str(),
                     count);
 
                 auto functor =
