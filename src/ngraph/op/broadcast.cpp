@@ -20,21 +20,20 @@
 using namespace std;
 using namespace ngraph;
 
-op::Broadcast::Broadcast(const std::string& name,
-                         const NodeVector& args,
+const string op::Broadcast::type_name{"Broadcast"};
+
+op::Broadcast::Broadcast(const OutputVector& args,
                          const Shape& shape,
                          const AxisSet& broadcast_axes)
-    : Op(name, check_single_output_args(args))
+    : Op(args)
     , m_shape(shape)
     , m_broadcast_axes(broadcast_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-op::Broadcast::Broadcast(const shared_ptr<Node>& arg,
-                         const Shape& shape,
-                         const AxisSet& broadcast_axes)
-    : Broadcast("Broadcast", {arg}, shape, broadcast_axes)
+op::Broadcast::Broadcast(const Output<Node>& arg, const Shape& shape, const AxisSet& broadcast_axes)
+    : Broadcast(OutputVector{arg}, shape, broadcast_axes)
 {
 }
 
@@ -96,10 +95,12 @@ void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
     adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
 }
 
-op::BroadcastLike::BroadcastLike(const std::shared_ptr<Node>& arg,
-                                 const std::shared_ptr<Node>& like_arg,
+const string op::BroadcastLike::type_name{"BroadcastLike"};
+
+op::BroadcastLike::BroadcastLike(const Output<Node>& arg,
+                                 const Output<Node>& like_arg,
                                  const AxisSet& initial_broadcast_axes)
-    : Broadcast("BroadcastLike", {arg, like_arg}, {}, {})
+    : Broadcast({arg, like_arg}, {}, {})
     , m_initial_broadcast_axes(initial_broadcast_axes)
 {
     constructor_validate_and_infer_types();
