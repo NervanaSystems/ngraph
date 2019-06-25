@@ -10,7 +10,6 @@ This section contains documentation about the project and how to contribute.
 .. toctree::
    :maxdepth: 2
 
-   release-notes.rst
    about.rst
    contribution-guide.rst
    governance.rst

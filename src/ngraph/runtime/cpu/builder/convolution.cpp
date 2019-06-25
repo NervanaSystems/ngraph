@@ -255,7 +255,7 @@ namespace ngraph
                 auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
                 auto arg3_buffer_index = external_function->get_buffer_index(args[3].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                size_t arg3_size = node->get_inputs()[3].get_tensor().size();
+                size_t arg3_size = node->input(3).get_tensor().size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -324,7 +324,7 @@ namespace ngraph
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
-                size_t arg2_size = node->get_inputs()[2].get_tensor().size();
+                size_t arg2_size = node->input(2).get_tensor().size();
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
@@ -402,8 +402,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropData>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropData>(node);
-                    // ConvolutionBackpropData needs 4 primitives: weights, delta, result,
-                    // and convolution_backward.
+                    // ConvolutionBackpropData needs 4 primitives: weights, diff_dst, diff_src,
+                    // and convolution_backward_data.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -502,7 +502,7 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropFilters>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropFilters>(node);
-                    // ConvolutionBackpropFilter needs 4 primitives: input, delta, weights_delta,
+                    // ConvolutionBackpropFilter needs 4 primitives: src, diff_dst, diff_weights,
                     // and convolution_backward_weights.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -598,8 +598,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
-                    // ConvolutionBiasBackpropFilter needs 5 primitives: input, delta, weights_delta,
-                    // bias_delta, and convolution_backward_weights.
+                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst, diff_weights,
+                    // diff_bias, and convolution_backward_weights.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 

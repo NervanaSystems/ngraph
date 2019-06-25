@@ -26,10 +26,15 @@ namespace ngraph
         class Exp : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs an exponential operation.
+            Exp() = default;
             /// \brief Constructs an exponential operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Exp(const std::shared_ptr<Node>& arg);
+            Exp(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

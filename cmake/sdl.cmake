@@ -23,7 +23,7 @@ endif()
 set(SDL_cmake_included true)
 
 if(UNIX)
-    set(SDL_CXX_FLAGS "-O2 -fPIC -Wformat -Wformat-security")
+    set(SDL_CXX_FLAGS "-O2 -Wformat -Wformat-security")
     set(SDL_CXX_FLAGS "${SDL_CXX_FLAGS} -D_FORTIFY_SOURCE=2")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_FORTIFY_SOURCE=2")
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")

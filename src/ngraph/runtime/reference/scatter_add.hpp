@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,6 +103,10 @@ namespace ngraph
                     auto updates_inner_coord_iter = updates_inner_transform.begin();
                     for (const Coordinate& out_coord : out_transform)
                     {
+                        if (updates_inner_coord_iter == updates_inner_transform.end())
+                        {
+                            break;
+                        }
                         out[out_transform.index(out_coord)] +=
                             updates[updates_inner_transform.index(*updates_inner_coord_iter)];
                         updates_inner_coord_iter++;

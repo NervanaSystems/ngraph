@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@ namespace ngraph
         class Gather : public Op
         {
         public:
-            // \param params The tensor from which slices are gathered
-            // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-            // \param axis Axis in params to gather
+            /// \param params The tensor from which slices are gathered
+            /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+            /// \param axis Axis in params to gather
             Gather(const std::shared_ptr<Node>& params,
                    const std::shared_ptr<Node>& indices,
                    size_t axis = 0)

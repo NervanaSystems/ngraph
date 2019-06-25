@@ -47,6 +47,7 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
+#include "ngraph/op/scatter_add.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -528,6 +529,21 @@ namespace ngraph
                 }
 
                 template <>
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::ScatterAdd)
+                {
+                    auto update_slice = static_cast<ngraph::op::ScatterAdd*>(node);
+
+                    auto op_annotations =
+                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
+                    if (get_user_count(node->get_argument(0).get()) == 1)
+                    {
+                        // Safe to overwrite input
+                        op_annotations->add_in_place_oi_pair({0, 0, true});
+                    }
+                    update_slice->set_op_annotations(op_annotations);
+                }
+
+                template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::LRN)
                 {
                     auto arg0_shape = node->get_input_shape(0);
@@ -706,9 +722,9 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::LeakyRelu)
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::CPULeakyRelu)
                 {
-                    auto leaky_relu = static_cast<ngraph::op::LeakyRelu*>(node);
+                    auto leaky_relu = static_cast<ngraph::op::CPULeakyRelu*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg0_rank = arg0_shape.size();
@@ -956,7 +972,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Relu>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReluBackprop>},
-    {TI(ngraph::op::LeakyRelu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::LeakyRelu>},
+    {TI(ngraph::op::CPULeakyRelu),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::CPULeakyRelu>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Sigmoid>},
     {TI(ngraph::op::SigmoidBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
@@ -997,6 +1014,8 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GetOutputElement>},
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::DeconvolutionBias>},
+    {TI(ngraph::op::ScatterAdd),
+     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ScatterAdd>},
 };
 
 bool runtime::cpu::pass::CPUAssignment::run_on_call_graph(

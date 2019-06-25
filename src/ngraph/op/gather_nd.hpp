@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ namespace ngraph
         class GatherND : public Op
         {
         public:
-            // \param params The tensor from which slices are gathered
-            // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+            /// \param params The tensor from which slices are gathered
+            /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
             GatherND(const std::shared_ptr<Node>& params, const std::shared_ptr<Node>& indices)
                 : Op("GatherND", check_single_output_args({params, indices}))
             {

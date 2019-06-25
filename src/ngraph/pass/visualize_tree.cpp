@@ -16,6 +16,7 @@
 
 #include <fstream>
 
+#include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -227,7 +228,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                     auto color = (arg->description() == "Parameter" ? "blue" : "black");
                     m_ss << "    " << clone_name
                          << "[shape=\"box\" style=\"dashed,filled\" color=\"" << color
-                         << "\" fillcolor=\"white\" label=\"" << arg->get_name() << "\"]\n";
+                         << "\" fillcolor=\"white\" label=\"" << get_node_name(arg) << "\"]\n";
                     m_ss << "    " << clone_name << " -> " << node->get_name()
                          << label_edge(arg, node, arg_index, jump_distance) << "\n";
                     fake_node_ctr++;
@@ -287,6 +288,41 @@ string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
     return rc;
 }
 
+static std::string pretty_partial_shape(const PartialShape& shape)
+{
+    std::stringstream ss;
+
+    if (shape.rank().is_dynamic())
+    {
+        ss << "?";
+    }
+    else
+    {
+        bool first = true;
+
+        ss << "[";
+        for (size_t i = 0; i < size_t(shape.rank()); i++)
+        {
+            if (!first)
+            {
+                ss << ",";
+            }
+            if (shape[i].is_dynamic())
+            {
+                ss << "?";
+            }
+            else
+            {
+                ss << size_t(shape[i]);
+            }
+            first = false;
+        }
+        ss << "]";
+    }
+
+    return ss.str();
+}
+
 string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 {
     vector<string> attributes;
@@ -305,15 +341,16 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     // Construct the label attribute
     {
         stringstream label;
-        label << "label=\"" << node->get_name();
+        label << "label=\"" << get_node_name(node);
 
         static const char* nvtos = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
         if (nvtos != nullptr)
         {
             // The shapes of the Outputs of a multi-output op
             // will be printed for its corresponding `GetOutputElement`s
-            label << " " << (node->get_output_size() != 1 ? string("[skipped]")
-                                                          : vector_to_string(node->get_shape()));
+            label << " " << (node->get_output_size() != 1
+                                 ? string("[skipped]")
+                                 : pretty_partial_shape(node->get_output_partial_shape(0)));
         }
 
         static const char* nvtot = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
@@ -347,25 +384,25 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     return ss.str();
 }
 
-string pass::VisualizeTree::get_file_ext()
+string pass::VisualizeTree::get_node_name(shared_ptr<Node> node)
 {
-    const char* format = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_FORMAT");
-    if (!format)
+    string rc = node->get_friendly_name();
+    if (node->get_friendly_name() != node->get_name())
     {
-        format = "dot";
+        rc += "\\n" + node->get_name();
     }
-
-    if (format[0] == '.')
-    {
-        format += 1;
-    }
-
-    return string(format);
+    return rc;
 }
 
 void pass::VisualizeTree::render() const
 {
-    auto dot_file = m_name + ".dot";
+    string ext = file_util::get_file_ext(m_name);
+    string output_format = ext.substr(1);
+    string dot_file = m_name;
+    if (to_lower(ext) != ".dot")
+    {
+        dot_file += ".dot";
+    }
     ofstream out(dot_file);
     if (out)
     {
@@ -374,12 +411,11 @@ void pass::VisualizeTree::render() const
         out << "}\n";
         out.close();
 
-        if (!m_dot_only && get_file_ext() != "dot")
+        if (!m_dot_only && to_lower(ext) != ".dot")
         {
 #ifndef _WIN32
             stringstream ss;
-            ss << "dot -T" << get_file_ext() << " " << dot_file << " -o" << m_name << "."
-               << get_file_ext();
+            ss << "dot -T" << output_format << " " << dot_file << " -o" << m_name;
             auto cmd = ss.str();
             auto stream = popen(cmd.c_str(), "r");
             if (stream)

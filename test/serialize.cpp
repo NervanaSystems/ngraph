@@ -25,6 +25,8 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/passthrough.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -261,9 +263,9 @@ TEST(serialize, passthrough)
 
 TEST(serialize, constant_infinity_nan)
 {
-    vector<float> a_data{123, 456, INFINITY, -INFINITY, NAN};
-    vector<float> b_data{5, 5, 5, 5, 5, 5};
-    vector<float> c_data{0.05, 0.05, 0.05, 0.05, 0.05, 0.05001, 0.05};
+    vector<float> a_data{123.f, 456.f, INFINITY, -INFINITY, NAN};
+    vector<float> b_data{5.f, 5.f, 5.f, 5.f, 5.f, 5.f};
+    vector<float> c_data{0.05f, 0.05f, 0.05f, 0.05f, 0.05f, 0.05001f, 0.05f};
     vector<int64_t> d_data{-100, -10, -1, 0, 50, 5000000000001};
     auto A = make_shared<op::Constant>(element::f32, Shape{5}, a_data);
     auto B = make_shared<op::Constant>(element::f32, Shape{6}, b_data);
@@ -309,4 +311,32 @@ TEST(serialize, constant_infinity_nan)
     EXPECT_TRUE(test::all_close_f(b->get_vector<float>(), b_data));
     EXPECT_TRUE(test::all_close_f(c->get_vector<float>(), c_data));
     EXPECT_EQ(d->get_vector<int64_t>(), d_data);
+
+    string filename = "constant_infinity_nan_test.dot";
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::VisualizeTree>(filename);
+    pass_manager.run_passes(g);
+    ifstream file(filename);
+    ASSERT_TRUE(file);
+    string str((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+    EXPECT_NE(str.find(R"(label="A)"), string::npos);
+    EXPECT_NE(str.find(R"(label="B)"), string::npos);
+    EXPECT_NE(str.find(R"(label="C)"), string::npos);
+    EXPECT_NE(str.find(R"(label="D)"), string::npos);
+}
+
+TEST(serialize, non_zero_node_output)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
+    auto topk = make_shared<op::TopK>(arg, 0, element::i32, 5, true);
+    auto abs = make_shared<op::Abs>(Output<Node>(topk, 1));
+    auto result = make_shared<op::Result>(abs);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_abs = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto topk_out = g_abs->input(0).get_source_output();
+    EXPECT_EQ(topk_out.get_index(), 1);
+    EXPECT_EQ(topk_out.get_node()->description(), "TopK");
 }

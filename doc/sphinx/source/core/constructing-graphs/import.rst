@@ -26,8 +26,7 @@ usually named ``<some_model>.onnx`` or ``<some_model>.onnx.pb``. These
    an ``.onnx.pb`` formatted file, you should be able to run the inference without
    needing to dig into anything from the "Frameworks" sections. You will, however, 
    need to have completed the steps outlined in our :doc:`../../buildlb` guide.  
-   If you intend to build nGraph for distributed-training, you will need 
-   to follow instructions on the documentation for :doc:`../../distr/index`.
+
 
 To demonstrate functionality, we'll use an already-serialized CIFAR10 model 
 trained via ResNet20. Remember that this model has already been trained and 
@@ -46,7 +45,7 @@ everything at once; if an `ngraph_dist` is already installed on your system,
 skip ahead to the next section, :ref:`install_ngonnx`.
    
 
-#. Install prerequisites for the system and install nGraph as ``ngraph_dist``:
+#. Install prerequisites for the system and install nGraph as ``ngraph_dist``. 
   
    .. code-block:: console
 
@@ -55,7 +54,7 @@ skip ahead to the next section, :ref:`install_ngonnx`.
       $ apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build
-      $ cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+      $ cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist
       $ make install
 
 #. Build the Python package (binary wheel) for ngraph and set up an env for ONNX;
@@ -78,8 +77,10 @@ skip ahead to the next section, :ref:`install_ngonnx`.
 
    .. code-block:: console
 
-      (onnx)$ pip install -U python/dist/ngraph-0.9.0-cp36-cp36m-linux_x86_64.whl    
+      (onnx)$ pip install -U python/dist/ngraph-[version]-cp36-cp36m-linux_x86_64.whl
 
+   Where ``[version]`` is the version number of the nGraph Python module 
+   you see in that directory.  
 
 #. Confirm ``ngraph`` is properly installed through a Python interpreter:
 

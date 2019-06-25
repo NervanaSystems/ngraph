@@ -37,23 +37,22 @@ namespace ngraph
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
 public:
-    CPUFusion(ngraph::pass::FusionType fusions = ngraph::pass::ALL_FUSIONS)
+    typedef ngraph::pass::FusionType FusionType;
+    typedef ngraph::pass::FusionTypeMask FusionTypeMask;
+    CPUFusion(FusionTypeMask fusions = FusionType::ALL_FUSIONS)
         : GraphRewrite()
     {
-        if (fusions & ngraph::pass::DIFFERENTIABLE_FUSIONS)
+        if (fusions.is_set(FusionType::DIFFERENTIABLE_FUSIONS))
         {
             construct_conv_bias(); // DEPRECATED - Use CoreFusion
             construct_sigmoid_multiply();
         }
 
-        if (fusions & ngraph::pass::REGULAR_FUSIONS)
+        if (fusions.is_set(FusionType::REGULAR_FUSIONS))
         {
             construct_matmul();
             construct_matmulbias();
             construct_fprop_bn();
-            construct_zero_padded_reshaped_conv();
-            construct_zero_padded_conv();
-            construct_zero_padded_conv_backprop_filters();
             construct_conv_bias_bprop();
             construct_conv_bias_folded_batch_norm();
             construct_conv_bias_affine_folding();
@@ -78,6 +77,7 @@ public:
                 construct_deconvolution_affine_folding();
                 construct_deconvolution_affine_folding_relu();
             }
+            construct_dropout();
         }
     }
 
@@ -88,9 +88,6 @@ private:
     void construct_conv_bias_bprop();
     void construct_fprop_bn();
     void construct_sigmoid_multiply();
-    void construct_zero_padded_reshaped_conv();
-    void construct_zero_padded_conv();
-    void construct_zero_padded_conv_backprop_filters();
     void construct_batch_norm_relu();
     void construct_batch_norm_relu_global_stats();
     void construct_conv_relu();
@@ -109,6 +106,7 @@ private:
     void construct_fuse_lstm_recurrent_state();
     void construct_deconvolution_affine_folding();
     void construct_deconvolution_affine_folding_relu();
+    void construct_dropout();
 };
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUQuantFusion : public ngraph::pass::GraphRewrite

@@ -20,22 +20,26 @@ Contributing to documentation
 
 .. important:: Read this for changes affecting **anything** in ``ngraph/doc``
 
-For updates to the Intel® nGraph Library ``/doc`` repo, please submit a PR with 
+For updates to the nGraph Library ``/doc`` repo, please submit a PR with 
 any changes or ideas you'd like integrated. This helps us maintain trackability 
-with respect to additions or feature requests.
+with respect to changes made, additions, deletions, and feature requests.
 
 If you prefer to use a containerized application, like Jupyter\* notebooks, 
-Google Docs\*, or MS Word\* to explain, write, or share documentation contributions, 
-you can convert the ``doc/sphinx/source/*.rst`` files to another format with a tool 
-like ``pypandoc`` and share a link to your docs on our `wiki`_.
+Google Docs\*, the GitHub* GUI, or MS Word\* to explain, write, or share 
+documentation contributions, you can convert the ``doc/sphinx/source/*.rst`` 
+files to another format with a tool like ``pypandoc`` and share a link   
+to your efforts on our `wiki`_. 
 
 Another option is to fork the `ngraph repo`_, essentially snapshotting it at 
 that point in time, and to build a Jupyter\* notebook or other set of docs around 
-it for a specific use case; then share a link with the community on our wiki.   
+it for a specific use case. Add a note on our wiki to show us what you 
+did; new and novel applications may have their projects highlighted on an 
+upcoming `ngraph.ai`_ release.   
 
-.. note:: Please do not submit Jupyter* notebook code to the Intel nGraph library 
+
+.. note:: Please do not submit Jupyter* notebook code to the nGraph Library 
    or core repos; best practice is to maintain any project-specific examples, 
-   tests, or walk-throughs separately. 
+   tests, or walk-throughs in a separate repository.
 
 
 Documenting source code examples 
@@ -43,7 +47,7 @@ Documenting source code examples
 
 When **verbosely** documenting functionality of specific sections of code -- whether 
 they are entire code blocks within a file, or code strings that are **outside** 
-the Intel nGraph `documentation repo`_, here is an example of best practice: 
+the nGraph Library's `documentation repo`_, here is an example of best practice: 
 
 Say a file has some interesting functionality that could benefit from more 
 explanation about one or more of the pieces in context. To keep the "in context" 
@@ -67,7 +71,6 @@ You can now verbosely explain the code block without worrying about breaking
 the code. The trick here is to add the file you want to reference relative to 
 the folder where the ``Makefile`` is that generates the documentation you're 
 writing. 
-
 
 See the **note** at the bottom of this page for more detail about how 
 this works in the current |version| version of Intel nGraph library 
@@ -136,7 +139,7 @@ To build documentation locally, run:
 
 Then point your browser at ``localhost:8000``.
 
-To build documentation in a python3 virtualenv, run: 
+To build documentation in a python3 virtualenv, try: 
 
    .. code-block:: console
 
@@ -151,7 +154,7 @@ To build documentation in a python3 virtualenv, run:
 Then point your browser at ``localhost:8000``.
 
 .. note:: For docs built in a virtual env, Sphinx latest changes may break 
-   documentation; try building with a specific version of Sphinx.  
+   documentation; try building with a specific version of Sphinx. 
 
 
 
@@ -159,6 +162,7 @@ For tips on writing reStructuredText-formatted documentation, see the `sphinx`_
 stable reST documentation.
 
 .. _ngraph repo: https://github.com/NervanaSystems/ngraph/
+.. _ngraph.ai: https://www.ngraph.ai
 .. _documentation repo: https://github.com/NervanaSystems/ngraph/tree/master/doc
 .. _sphinx: http://www.sphinx-doc.org/en/stable/rest.html
 .. _wiki: https://github.com/NervanaSystems/ngraph/wiki/
