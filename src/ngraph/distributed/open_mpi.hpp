@@ -104,12 +104,12 @@ namespace ngraph
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-                switch (reduce_type.get_type())
+                switch (reduce_type)
                 {
-                case reduction::Type_t::sum: mpi_reduce_type = MPI_SUM; break;
-                case reduction::Type_t::prod: mpi_reduce_type = MPI_PROD; break;
-                case reduction::Type_t::min: mpi_reduce_type = MPI_MIN; break;
-                case reduction::Type_t::max: mpi_reduce_type = MPI_MAX; break;
+                case reduction::Type::SUM: mpi_reduce_type = MPI_SUM; break;
+                case reduction::Type::PROD: mpi_reduce_type = MPI_PROD; break;
+                case reduction::Type::MIN: mpi_reduce_type = MPI_MIN; break;
+                case reduction::Type::MAX: mpi_reduce_type = MPI_MAX; break;
                 }
 #if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
