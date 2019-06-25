@@ -21,7 +21,7 @@ using namespace std;
 using namespace ngraph;
 
 pass::FusedOpDecomposition::FusedOpDecomposition(op_query_t callback)
-    : m_callback{callback}
+    : m_has_direct_support{callback}
 {
 }
 
@@ -31,7 +31,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
 
     if (auto fused_op = dynamic_pointer_cast<op::util::FusedOp>(node))
     {
-        if (m_callback && m_callback(*node))
+        if (m_has_direct_support && m_has_direct_support(*node))
         {
             // Op supported by backend. Do not decompose
             return modified;
@@ -44,7 +44,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
         {
             if (auto nested_fused_op = dynamic_pointer_cast<op::util::FusedOp>(subgraph_node))
             {
-                if (!(m_callback && m_callback(*nested_fused_op)))
+                if (!(m_has_direct_support && m_has_direct_support(*nested_fused_op)))
                 {
                     run_on_node(nested_fused_op);
                 }
