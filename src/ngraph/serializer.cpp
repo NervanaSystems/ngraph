@@ -690,7 +690,7 @@ struct OutputHelper
 // when all op constructors use the new style arguments.
 struct OutputVectorHelper
 {
-    OutputVectorHelper(OutputVector output_vector)
+    OutputVectorHelper(const OutputVector& output_vector)
         : m_vector(output_vector)
     {
     }
