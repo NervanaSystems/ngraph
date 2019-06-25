@@ -22,6 +22,26 @@
 
 using namespace ngraph;
 
+std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& obj)
+{
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+    switch (obj)
+    {
+    case reduction::Type::SUM: out << "SUM"; break;
+    case reduction::Type::PROD: out << "PROD"; break;
+    case reduction::Type::MIN: out << "MIN"; break;
+    case reduction::Type::MAX: out << "MAX"; break;
+    }
+#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
+    return out;
+};
+
 static std::unique_ptr<DistributedInterface> s_distributed_interface;
 
 void ngraph::set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface)

@@ -90,3 +90,9 @@ std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_strea
 {
     throw runtime_error("load opertion unimplemented.");
 }
+
+bool runtime::Backend::set_config(const map<string, string>& config, string& error)
+{
+    error = "set_config not supported";
+    return false;
+}

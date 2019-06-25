@@ -19,7 +19,7 @@ import test
 
 def pytest_addoption(parser):
     parser.addoption('--backend', default='INTERPRETER',
-                     choices=['INTERPRETER', 'CPU', 'GPU', 'NNP', 'PlaidML'],
+                     choices=['INTERPRETER', 'CPU', 'GPU', 'NNP', 'PlaidML', 'INTELGPU'],
                      help='Select from available backends')
 
 
@@ -31,20 +31,25 @@ def pytest_configure(config):
 def pytest_collection_modifyitems(config, items):
     backend_name = config.getvalue('backend')
 
-    gpu_skip = pytest.mark.skip(reason='Skipping test on the GPU backend.')
-    cpu_skip = pytest.mark.skip(reason='Skipping test on the CPU backend.')
-    nnp_skip = pytest.mark.skip(reason='Skipping test on the NNP backend.')
-    interpreter_skip = pytest.mark.skip(reason='Skipping test on the INTERPRETER backend.')
-    plaidml_skip = pytest.mark.skip(reason='Skipping test on the PlaidML backend.')
+    keywords = {
+        'GPU': 'skip_on_gpu',
+        'CPU': 'skip_on_cpu',
+        'NNP': 'skip_on_nnp',
+        'INTERPRETER': 'skip_on_interpreter',
+        'PlaidML': 'skip_on_plaidml',
+        'INTELGPU': 'skip_on_intelgpu',
+    }
+
+    skip_markers = {
+        'GPU': pytest.mark.skip(reason='Skipping test on the GPU backend.'),
+        'CPU': pytest.mark.skip(reason='Skipping test on the CPU backend.'),
+        'NNP': pytest.mark.skip(reason='Skipping test on the NNP backend.'),
+        'INTERPRETER': pytest.mark.skip(reason='Skipping test on the INTERPRETER backend.'),
+        'PlaidML': pytest.mark.skip(reason='Skipping test on the PlaidML backend.'),
+        'INTELGPU': pytest.mark.skip(reason='Skipping test on the INTELGPU backend.'),
+    }
 
     for item in items:
-        if backend_name == 'GPU' and 'skip_on_gpu' in item.keywords:
-            item.add_marker(gpu_skip)
-        if backend_name == 'CPU' and 'skip_on_cpu' in item.keywords:
-            item.add_marker(cpu_skip)
-        if backend_name == 'NNP' and 'skip_on_nnp' in item.keywords:
-            item.add_marker(nnp_skip)
-        if backend_name == 'INTERPRETER' and 'skip_on_interpreter' in item.keywords:
-            item.add_marker(interpreter_skip)
-        if backend_name == 'PlaidML' and 'skip_on_plaidml' in item.keywords:
-            item.add_marker(plaidml_skip)
+        skip_this_backend = keywords[backend_name]
+        if skip_this_backend in item.keywords:
+            item.add_marker(skip_markers[backend_name])
