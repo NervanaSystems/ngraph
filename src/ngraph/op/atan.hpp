@@ -33,7 +33,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an arctan operation.
-            Atan();
+            Atan() = default;
 
             /// \brief Constructs an arctan operation.
             ///

@@ -19,8 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::BroadcastDistributed::BroadcastDistributed(const shared_ptr<Node>& arg, int root_id)
-    : Op("BroadcastDistributed", check_single_output_args({arg}))
+const string op::BroadcastDistributed::type_name{"BroadcastDistributed"};
+
+op::BroadcastDistributed::BroadcastDistributed(const Output<Node>& arg, int root_id)
+    : Op({arg})
     , m_root_id(root_id)
 {
     constructor_validate_and_infer_types();
@@ -48,4 +50,9 @@ shared_ptr<Node> op::BroadcastDistributed::copy_with_new_args(const NodeVector& 
 int op::BroadcastDistributed::get_root_id() const
 {
     return m_root_id;
+}
+
+void op::BroadcastDistributed::set_root_id(int root_id)
+{
+    m_root_id = root_id;
 }

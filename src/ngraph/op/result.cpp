@@ -24,8 +24,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Result::Result(const shared_ptr<Node>& arg, bool needs_default_layout)
-    : Op("Result", check_single_output_args({arg}))
+const string op::Result::type_name{"Result"};
+
+op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
+    : Op({arg})
     , m_needs_default_layout(needs_default_layout)
 {
     constructor_validate_and_infer_types();

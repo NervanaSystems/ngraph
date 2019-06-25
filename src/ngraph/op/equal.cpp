@@ -19,10 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Equal::Equal(const shared_ptr<Node>& arg0,
-                 const shared_ptr<Node>& arg1,
-                 const AutoBroadcastSpec& autob)
-    : BinaryElementwiseComparison("Equal", arg0, arg1, autob)
+const string op::Equal::type_name{"Equal"};
+
+op::Equal::Equal(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
+    : BinaryElementwiseComparison(arg0, arg1, autob)
 {
     constructor_validate_and_infer_types();
 }

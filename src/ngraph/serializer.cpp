@@ -141,6 +141,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -1803,6 +1804,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json& node_js)
         {
             node->set_friendly_name(node_name);
         }
+        if (ngraph::get_provenance_enabled())
+        {
+            std::vector<json> prov_js = node_js.at("provenance_tags");
+            for (auto prov_tag : prov_js)
+            {
+                node->add_provenance_tag(prov_tag);
+            }
+        }
         m_node_map[node_name] = node;
     }
     catch (...)
@@ -1913,6 +1922,15 @@ json JSONSerializer::serialize_node(const Node& n)
             output_shapes.push_back(n.get_output_shape(i));
         }
         node["output_shapes"] = output_shapes;
+    }
+    if (ngraph::get_provenance_enabled())
+    {
+        json provenance_tags = json::array();
+        for (auto prov_tag : n.get_provenance_tags())
+        {
+            provenance_tags.push_back(prov_tag);
+        }
+        node["provenance_tags"] = provenance_tags;
     }
 
     string node_op = n.description();
