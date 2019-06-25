@@ -29,17 +29,17 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            AllReduce();
-            AllReduce(const std::shared_ptr<Node>& arg,
-                      const reduction::Type reduce_type = reduction::sum);
+            AllReduce() = default;
+            AllReduce(const Output<Node>& arg, reduction::Type reduce_type = reduction::Type::SUM);
 
             void validate_and_infer_types() override;
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
             reduction::Type get_reduce_type() const;
+            void set_reduce_type(reduction::Type reduce_type);
 
         private:
-            const reduction::Type m_reduce_type;
+            reduction::Type m_reduce_type{reduction::Type::SUM};
         };
     }
 }
