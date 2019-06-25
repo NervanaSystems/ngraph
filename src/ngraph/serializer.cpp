@@ -191,13 +191,13 @@ static OP_TYPEID get_typeid(const string& s)
     return rc;
 }
 
-bool has_key(const json& j, const std::string& key)
+bool has_key(json j, const std::string& key)
 {
     return j.count(key) != 0;
 }
 
 template <typename T>
-T get_or_default(const json& j, const std::string& key, const T& default_value)
+T get_or_default(json j, const std::string& key, const T& default_value)
 {
     return has_key(j, key) ? j.at(key).get<T>() : default_value;
 }
@@ -241,13 +241,13 @@ public:
         m_const_data_callback = const_data_callback;
     }
 
-    shared_ptr<Function> deserialize_function(const json& j);
-    Output<Node> deserialize_output(const json& j);
-    OutputVector deserialize_output_vector(const json& j);
-    ParameterVector deserialize_parameter_vector(const json& j);
-    shared_ptr<Node> deserialize_node_reference(const json& j);
-    shared_ptr<Node> deserialize_node(const json& j);
-    AxisSet deserialize_axis_set(const json& j);
+    shared_ptr<Function> deserialize_function(json j);
+    Output<Node> deserialize_output(json j);
+    OutputVector deserialize_output_vector(json j);
+    ParameterVector deserialize_parameter_vector(json j);
+    shared_ptr<Node> deserialize_node_reference(json j);
+    shared_ptr<Node> deserialize_node(json j);
+    AxisSet deserialize_axis_set(json j);
 
 protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
@@ -270,7 +270,7 @@ static json write_dimension(Dimension d)
     }
 }
 
-static Dimension read_dimension(const json& j)
+static Dimension read_dimension(json j)
 {
     if (j.is_null())
     {
@@ -299,7 +299,7 @@ static json write_partial_shape(const PartialShape& s)
     }
 }
 
-static PartialShape read_partial_shape(const json& j)
+static PartialShape read_partial_shape(json j)
 {
     if (j.is_null())
     {
@@ -324,7 +324,7 @@ static json write_auto_broadcast(const op::AutoBroadcastSpec& autob)
     return j;
 }
 
-static op::AutoBroadcastSpec read_auto_broadcast(const json& js_node, const std::string& attr)
+static op::AutoBroadcastSpec read_auto_broadcast(json js_node, const std::string& attr)
 {
     if (has_key(js_node, attr))
     {
@@ -338,13 +338,13 @@ static op::AutoBroadcastSpec read_auto_broadcast(const json& js_node, const std:
     }
 }
 
-static op::PadType read_pad_type(const json& node_js)
+static op::PadType read_pad_type(json node_js)
 {
     return has_key(node_js, "pad_type") ? static_cast<op::PadType>(node_js.at("pad_type"))
                                         : op::PadType::EXPLICIT;
 }
 
-static op::PadMode read_pad_mode(const json& node_js)
+static op::PadMode read_pad_mode(json node_js)
 {
     return has_key(node_js, "pad_mode") ? static_cast<op::PadMode>(node_js.at("pad_mode"))
                                         : op::PadMode::CONSTANT;
@@ -357,7 +357,7 @@ static json write_element_type(const ngraph::element::Type& n)
     return j;
 }
 
-static element::Type read_element_type(const json& j)
+static element::Type read_element_type(json j)
 {
     size_t bitwidth = 0;
     bool is_real = false;
@@ -546,7 +546,7 @@ json JSONSerializer::serialize_function(const Function& f)
 }
 
 template <typename T>
-T get_value(const json& js, const string& key)
+T get_value(json js, const string& key)
 {
     T rc;
     auto it = js.find(key);
@@ -557,13 +557,13 @@ T get_value(const json& js, const string& key)
     return rc;
 }
 
-shared_ptr<Node> JSONDeserializer::deserialize_node_reference(const json& j)
+shared_ptr<Node> JSONDeserializer::deserialize_node_reference(json j)
 {
     const string& name = j;
     return m_node_map.at(name);
 }
 
-Output<Node> JSONDeserializer::deserialize_output(const json& j)
+Output<Node> JSONDeserializer::deserialize_output(json j)
 {
     size_t index;
     json json_node_reference;
@@ -584,12 +584,12 @@ Output<Node> JSONDeserializer::deserialize_output(const json& j)
     return Output<Node>(deserialize_node_reference(json_node_reference), index);
 }
 
-OutputVector JSONDeserializer::deserialize_output_vector(const json& j)
+OutputVector JSONDeserializer::deserialize_output_vector(json j)
 {
     OutputVector result;
     if (j.is_array())
     {
-        for (const json& jelt : j)
+        for (json jelt : j)
         {
             result.push_back(deserialize_output(jelt));
         }
@@ -602,7 +602,7 @@ json JSONSerializer::serialize_axis_set(const AxisSet& axis_set)
     return static_cast<set<size_t>>(axis_set);
 }
 
-AxisSet JSONDeserializer::deserialize_axis_set(const json& j)
+AxisSet JSONDeserializer::deserialize_axis_set(json j)
 {
     AxisSet result;
     if (j.is_array())
@@ -612,7 +612,7 @@ AxisSet JSONDeserializer::deserialize_axis_set(const json& j)
     return result;
 }
 
-ParameterVector JSONDeserializer::deserialize_parameter_vector(const json& json_parameters)
+ParameterVector JSONDeserializer::deserialize_parameter_vector(json json_parameters)
 {
     std::vector<std::shared_ptr<op::Parameter>> params;
     for (auto& param_ref : json_parameters)
@@ -623,7 +623,7 @@ ParameterVector JSONDeserializer::deserialize_parameter_vector(const json& json_
     return params;
 }
 
-shared_ptr<Function> JSONDeserializer::deserialize_function(const json& func_js)
+shared_ptr<Function> JSONDeserializer::deserialize_function(json func_js)
 {
     string func_name = func_js.at("name").get<string>();
     vector<json> func_result = func_js.at("result");
@@ -711,7 +711,7 @@ struct OutputVectorHelper
     OutputVector m_vector;
 };
 
-shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
+shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 {
     shared_ptr<Node> node;
     try
