@@ -32,7 +32,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a ArgMax operation.
-            ArgMax();
+            ArgMax() = default;
             /// \brief Constructs a ArgMax operation.
             ///
             /// \param arg The input tensor

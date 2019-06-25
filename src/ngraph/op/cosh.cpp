@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Cosh::Cosh(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Cosh", arg)
+const string op::Cosh::type_name{"Cosh"};
+
+op::Cosh::Cosh(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }

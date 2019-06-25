@@ -27,7 +27,11 @@ namespace ngraph
         class Erf : public util::UnaryElementwiseArithmetic
         {
         public:
-            Erf(std::shared_ptr<Node> arg);
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            Erf() = default;
+            Erf(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
