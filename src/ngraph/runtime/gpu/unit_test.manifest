@@ -205,3 +205,4 @@ gather_no_axis_bool
 fake_quantize
 fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
+send_recv
