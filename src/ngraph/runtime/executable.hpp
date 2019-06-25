@@ -92,9 +92,6 @@ protected:
     /// \param func The function with Results fully resolved.
     void set_parameters_and_results(const Function& func);
 
-    bool begin_execute_helper(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                              const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
-
 private:
     ngraph::ParameterVector m_parameters;
     ngraph::ResultVector m_results;

@@ -130,21 +130,6 @@ void runtime::Executable::save(std::ostream& output_stream)
     throw runtime_error("save opertion unimplemented.");
 }
 
-bool runtime::Executable::begin_execute_helper(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
-{
-    bool rc = call(outputs, inputs);
-    for (const shared_ptr<runtime::Tensor>& t : outputs)
-    {
-        t->m_promise.set_value();
-    }
-    for (const shared_ptr<runtime::Tensor>& t : inputs)
-    {
-        t->m_promise.set_value();
-    }
-    return rc;
-}
-
 future<void> runtime::Executable::begin_execute(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                 const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
