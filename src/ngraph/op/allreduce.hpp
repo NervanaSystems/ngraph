@@ -30,7 +30,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             AllReduce() = default;
-            AllReduce(const Output<Node>& arg, reduction::Type reduce_type = reduction::Type::sum);
+            AllReduce(const Output<Node>& arg, reduction::Type reduce_type = reduction::Type::SUM);
 
             void validate_and_infer_types() override;
 
@@ -39,7 +39,7 @@ namespace ngraph
             void set_reduce_type(reduction::Type reduce_type);
 
         private:
-            reduction::Type m_reduce_type{reduction::Type::sum};
+            reduction::Type m_reduce_type{reduction::Type::SUM};
         };
     }
 }

@@ -28,10 +28,10 @@ namespace ngraph
     {
         enum class Type
         {
-            sum,
-            prod,
-            min,
-            max,
+            SUM,
+            PROD,
+            MIN,
+            MAX,
         };
 
         std::ostream& operator<<(std::ostream& out, const Type& obj);

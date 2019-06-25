@@ -52,23 +52,23 @@ static void test_allreduce_common(reduction::Type reduce_type)
 #endif
         switch (reduce_type)
         {
-        case reduction::Type::sum:
+        case reduction::Type::SUM:
             copy_data(a, v);
             std::transform(
                 v.begin(), v.end(), v.begin(), std::bind1st(std::multiplies<float>(), comm_size));
             break;
-        case reduction::Type::prod:
+        case reduction::Type::PROD:
             copy_data(a, v);
             std::transform(v.begin(), v.end(), v.begin(), [&](float elm) -> float {
                 return pow(elm, comm_size);
             });
             break;
-        case reduction::Type::min:
-        case reduction::Type::max:
+        case reduction::Type::MIN:
+        case reduction::Type::MAX:
             auto shift = get_distributed_interface()->get_rank();
             std::rotate(v.begin(), v.begin() + shift % v.size(), v.end());
             copy_data(a, v);
-            if (reduce_type == reduction::Type::min)
+            if (reduce_type == reduction::Type::MIN)
             {
                 std::fill(v.begin(), v.end(), 1);
                 for (int i = 1; i < static_cast<int>(v.size()) - comm_size + 1; i++)
@@ -93,23 +93,23 @@ static void test_allreduce_common(reduction::Type reduce_type)
 
 TEST(distributed_${BACKEND_NAME}, allreduce_sum)
 {
-    test_allreduce_common(reduction::Type::sum);
+    test_allreduce_common(reduction::Type::SUM);
 }
 
 TEST(distributed_${BACKEND_NAME}, allreduce_min)
 {
-    test_allreduce_common(reduction::Type::min);
+    test_allreduce_common(reduction::Type::MIN);
 }
 
 TEST(distributed_${BACKEND_NAME}, allreduce_max)
 {
-    test_allreduce_common(reduction::Type::max);
+    test_allreduce_common(reduction::Type::MAX);
 }
 
 #if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
 TEST(distributed_${BACKEND_NAME}, allreduce_prod)
 {
-    test_allreduce_common(reduction::Type::prod);
+    test_allreduce_common(reduction::Type::PROD);
 }
 #endif
 
