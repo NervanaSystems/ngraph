@@ -16,31 +16,37 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Elementwise natural exponential (exp) operation.
-        class Exp : public util::UnaryElementwiseArithmetic
+        /// \brief Range operation, analogous to `range()` in Python.
+        class Range : public Op
         {
         public:
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            /// \brief Constructs an exponential operation.
-            Exp() = default;
-            /// \brief Constructs an exponential operation.
+            /// \brief Constructs an unitialized range operation.
+            Range();
+
+            /// \brief Constructs a range operation.
             ///
-            /// \param arg Node that produces the input tensor.
-            Exp(const Output<Node>& arg);
+            /// \param start The tensor producing the start value. Must be a scalar of integer
+            ///              element type, and same element type as `stop` and `step`.
+            /// \param stop The tensor producing the stop value. Must be a scalar of integer
+            ///             element type, and same element type as `start` and `step`.
+            /// \param step The tensor producing the step value. Must be a scalar of integer
+            ///             element type, and same element type as `start` and `stop`.
+            Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step);
+
+            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
         };
     }
 }

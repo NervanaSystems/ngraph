@@ -14,31 +14,31 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/exp.hpp"
-#include "ngraph/op/multiply.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <memory>
 
-const string op::Exp::type_name{"Exp"};
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
-op::Exp::Exp(const Output<Node>& arg)
-    : UnaryElementwiseArithmetic(arg)
+namespace ngraph
 {
-    constructor_validate_and_infer_types();
-}
+    namespace onnx_import
+    {
+        namespace op
+        {
+            namespace set_1
+            {
+                NodeVector mean_variance_normalization(const Node& node);
+            } // namespace set_1
 
-shared_ptr<Node> op::Exp::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<Exp>(new_args.at(0));
-}
+            namespace set_9
+            {
+                NodeVector mean_variance_normalization(const Node& node);
+            } // namespace set_9
 
-void op::Exp::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
-{
-    auto delta = deltas.at(0);
+        } //namespace op
 
-    auto x = get_argument(0);
+    } // namespace onnx_import
 
-    adjoints.add_delta(x, delta * shared_from_this());
-}
+} // namespace ngraph
