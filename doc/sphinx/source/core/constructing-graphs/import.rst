@@ -45,7 +45,7 @@ everything at once; if an `ngraph_dist` is already installed on your system,
 skip ahead to the next section, :ref:`install_ngonnx`.
    
 
-#. Install prerequisites for the system and install nGraph as ``ngraph_dist``:
+#. Install prerequisites for the system and install nGraph as ``ngraph_dist``. 
   
    .. code-block:: console
 
@@ -54,7 +54,7 @@ skip ahead to the next section, :ref:`install_ngonnx`.
       $ apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
       $ git clone https://github.com/NervanaSystems/ngraph.git
       $ cd ngraph && mkdir build
-      $ cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist -DNGRAPH_USE_PREBUILT_LLVM=TRUE
+      $ cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist
       $ make install
 
 #. Build the Python package (binary wheel) for ngraph and set up an env for ONNX;
@@ -77,8 +77,10 @@ skip ahead to the next section, :ref:`install_ngonnx`.
 
    .. code-block:: console
 
-      (onnx)$ pip install -U python/dist/ngraph-0.9.0-cp36-cp36m-linux_x86_64.whl    
+      (onnx)$ pip install -U python/dist/ngraph-[version]-cp36-cp36m-linux_x86_64.whl
 
+   Where ``[version]`` is the version number of the nGraph Python module 
+   you see in that directory.  
 
 #. Confirm ``ngraph`` is properly installed through a Python interpreter:
 

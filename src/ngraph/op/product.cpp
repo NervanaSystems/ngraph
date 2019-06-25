@@ -19,8 +19,20 @@
 using namespace std;
 using namespace ngraph;
 
-op::Product::Product(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : ArithmeticReduction("Product", arg, reduction_axes)
+const string op::Product::type_name{"Product"};
+
+op::Product::Product()
+{
+}
+
+op::Product::Product(const Output<Node>& arg, const AxisSet& reduction_axes)
+    : ArithmeticReduction(arg, reduction_axes)
+{
+    constructor_validate_and_infer_types();
+}
+
+op::Product::Product(const Output<Node>& arg, const Output<Node>& reduction_axes)
+    : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
@@ -28,5 +40,5 @@ op::Product::Product(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
 shared_ptr<Node> op::Product::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Product>(new_args.at(0), m_reduction_axes);
+    return make_shared<Product>(new_args.at(0), get_reduction_axes());
 }

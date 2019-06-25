@@ -126,7 +126,7 @@ There are two backends for the CPU: the optimized ``"CPU"`` backend, which uses
 the `Intel MKL-DNN`_, and the ``"INTERPRETER"`` backend, which runs reference 
 versions of kernels that favor implementation clarity over speed. The 
 ``"INTERPRETER"`` backend can be slow, and is primarily intended for testing. 
-See the documentation on :doc:`runtime options for various backends <../../backend-support/index>` 
+See the documentation on :doc:`runtime options for various backends <../../backends/index>` 
 for additional details.
 
 To continue with our original example and select the ``"CPU_Backend"``: 
@@ -175,7 +175,7 @@ the three parameters and the return value.
 Each tensor is a shared pointer to a :term:`Tensorview`, which is the interface 
 backends implement for tensor use. When there are no more references to the 
 tensor view, it will be freed when convenient for the backend. See the 
-:doc:`../../backend-support/cpp-api` documentation for details on how to work 
+:doc:`../../backends/cpp-api` documentation for details on how to work 
 with ``Tensor``.
 
 

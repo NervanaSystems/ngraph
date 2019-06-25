@@ -34,6 +34,9 @@ namespace ngraph
         class Constant : public Node
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -78,7 +81,7 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param values A list of string values to use as the constant data.
             Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
-                : Node("Constant", {})
+                : Node({})
                 , m_element_type(type)
                 , m_shape(shape)
                 , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
@@ -102,10 +105,7 @@ namespace ngraph
                         std::vector<int64_t> dvalues = parse_string<int64_t>(values);
                         if (values.size() == 1 && shape_size(m_shape) != 1)
                         {
-                            for (size_t i = 1; i < shape_size(m_shape); i++)
-                            {
-                                dvalues.push_back(dvalues[0]);
-                            }
+                            dvalues = std::vector<int64_t>(shape_size(m_shape), dvalues[0]);
                         }
                         write_values(dvalues);
                     }
@@ -114,10 +114,7 @@ namespace ngraph
                         std::vector<uint64_t> dvalues = parse_string<uint64_t>(values);
                         if (values.size() == 1 && shape_size(m_shape) != 1)
                         {
-                            for (size_t i = 1; i < shape_size(m_shape); i++)
-                            {
-                                dvalues.push_back(dvalues[0]);
-                            }
+                            dvalues = std::vector<uint64_t>(shape_size(m_shape), dvalues[0]);
                         }
                         write_values(dvalues);
                     }
@@ -127,10 +124,7 @@ namespace ngraph
                     std::vector<double> dvalues = parse_string<double>(values);
                     if (values.size() == 1 && shape_size(m_shape) != 1)
                     {
-                        for (size_t i = 1; i < shape_size(m_shape); i++)
-                        {
-                            dvalues.push_back(dvalues[0]);
-                        }
+                        dvalues = std::vector<double>(shape_size(m_shape), dvalues[0]);
                     }
                     write_values(dvalues);
                 }
@@ -144,7 +138,7 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param data A void* to constant data.
             Constant(const element::Type& type, const Shape& shape, const void* data)
-                : Node("Constant", {})
+                : Node({})
                 , m_element_type(type)
                 , m_shape(shape)
                 , m_data(nullptr)
