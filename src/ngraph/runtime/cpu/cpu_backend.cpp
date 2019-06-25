@@ -166,7 +166,7 @@ runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
 {
     if (!m_allocator)
     {
-        m_allocator = std::move(create_default_allocator());
+        m_allocator = create_default_allocator();
     }
     return m_allocator.get();
 }
