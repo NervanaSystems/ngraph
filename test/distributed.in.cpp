@@ -141,6 +141,8 @@ TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
     }
 }
 
+//MLSL does not support send recv
+#if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
 TEST(distributed_${BACKEND_NAME}, send_recv)
 {
     auto shape = Shape{2, 2};
@@ -174,3 +176,4 @@ TEST(distributed_${BACKEND_NAME}, send_recv)
     handle->call_with_validate({result}, {result});
     EXPECT_EQ(v, read_vector<float>(result));
 }
+#endif
