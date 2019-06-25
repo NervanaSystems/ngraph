@@ -22,9 +22,9 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/op/fused/rnn_cell_base.hpp"
 #include "ngraph/op/util/activation_functions.hpp"
 #include "ngraph/op/util/fused_op.hpp"
+#include "ngraph/op/util/rnn_cell_base.hpp"
 
 namespace ngraph
 {
@@ -38,7 +38,7 @@ namespace ngraph
         ///
         ///             Note this class represents only single *cell* and not whole GRU *layer*.
         ///
-        class GRUCell : public util::FusedOp, public RNNCellBase
+        class GRUCell : public util::FusedOp, public util::RNNCellBase
         {
         public:
             ///
@@ -134,14 +134,17 @@ namespace ngraph
         private:
             std::shared_ptr<Node> get_bias() const;
 
+            /// brief Add and initialize bias input to all zeros.
+            void add_default_bias_input();
+
             ///
             /// \brief The Activation function f.
             ///
-            ActivationFunction m_activation_f;
+            util::ActivationFunction m_activation_f;
             ///
             /// \brief The Activation function g.
             ///
-            ActivationFunction m_activation_g;
+            util::ActivationFunction m_activation_g;
 
             static constexpr std::size_t m_gates_count{3};
             ///

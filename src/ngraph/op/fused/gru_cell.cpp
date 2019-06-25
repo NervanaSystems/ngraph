@@ -19,11 +19,11 @@
 #include <functional>
 
 #include "ngraph/builder/split.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -65,6 +65,7 @@ op::GRUCell::GRUCell(const shared_ptr<Node>& X,
     , m_activation_g{get_activation_function(1)}
     , m_linear_before_reset{linear_before_reset}
 {
+    add_default_bias_input();
     constructor_validate_and_infer_types();
 }
 
@@ -137,23 +138,20 @@ void op::GRUCell::pre_validate_and_infer_types()
                           w_shape,
                           ".");
 
-    if (get_input_size() == 5)
-    {
-        const auto& b_pshape = get_input_partial_shape(4);
+    const auto& b_pshape = get_input_partial_shape(4);
 
-        NODE_VALIDATION_CHECK(
-            this, b_pshape.is_static(), "GRUCell supports only static input tensors.");
+    NODE_VALIDATION_CHECK(
+        this, b_pshape.is_static(), "GRUCell supports only static input tensors.");
 
-        const Shape& b_shape{b_pshape.to_shape()};
+    const Shape& b_shape{b_pshape.to_shape()};
 
-        NODE_VALIDATION_CHECK(this,
-                              (b_shape == Shape{2 * m_gates_count * get_hidden_size()}),
-                              "Input tensor B must have shape (",
-                              2 * m_gates_count * get_hidden_size(),
-                              "). Actual shape is:",
-                              b_shape,
-                              ".");
-    }
+    NODE_VALIDATION_CHECK(this,
+                          (b_shape == Shape{2 * m_gates_count * get_hidden_size()}),
+                          "Input tensor B must have shape (",
+                          2 * m_gates_count * get_hidden_size(),
+                          "). Actual shape is:",
+                          b_shape,
+                          ".");
 }
 
 NodeVector op::GRUCell::decompose_op() const
@@ -225,7 +223,7 @@ NodeVector op::GRUCell::decompose_op() const
     const auto& R_h = R_zr_h.at(1);
 
     // Xt*(W^T)
-    auto Xt_W = make_shared<op::Dot>(X, op::util::transpose(W));
+    auto Xt_W = make_shared<op::Dot>(X, builder::transpose(W));
     // Split Xt_W into zr and h gates.
     NodeVector Xt_W_zr_h =
         builder::split(Xt_W, vector<size_t>{2 * get_hidden_size(), get_hidden_size()}, 1);
@@ -235,7 +233,7 @@ NodeVector op::GRUCell::decompose_op() const
     const auto& Xt_W_h = Xt_W_zr_h.at(1);
 
     // Ht-1*(R^T) for update and reset gates. Tensor shape: [batch_size, 2 * hidden_size]
-    auto Ht_R_zr = make_shared<op::Dot>(H_t, op::util::transpose(R_zr));
+    auto Ht_R_zr = make_shared<op::Dot>(H_t, builder::transpose(R_zr));
     // f(Xt*(W^T) + Ht-1*(R^T) + Wb + Rb) for update and reset gates.
     // Tensor shape: [batch_size, 2 * hidden_size]
     auto zr_t = m_activation_f(clip(add(Xt_W_zr, add(Ht_R_zr, add(Wb_zr, Rb_zr)))));
@@ -250,14 +248,14 @@ NodeVector op::GRUCell::decompose_op() const
     if (m_linear_before_reset)
     {
         // ht = g(Xt*(Wh^T) + (rt (.) (Ht-1*(Rh^T) + Rbh)) + Wbh)
-        auto Ht_Rh_Rb = add(make_shared<op::Dot>(H_t, op::util::transpose(R_h)), Rb_h);
+        auto Ht_Rh_Rb = add(make_shared<op::Dot>(H_t, builder::transpose(R_h)), Rb_h);
         h_t = m_activation_g(clip(add(Xt_W_h, add(mul(r_t, Ht_Rh_Rb), Wb_h))));
     }
     else
     {
         // ht = g(Xt*(Wh^T) + (rt (.) Ht-1)*(Rh^T) + Rbh + Wbh)
         auto rt_Ht = mul(r_t, H_t);
-        auto rt_Ht_Rh = make_shared<op::Dot>(rt_Ht, op::util::transpose(R_h));
+        auto rt_Ht_Rh = make_shared<op::Dot>(rt_Ht, builder::transpose(R_h));
         // Tensor shape: [batch_size, hidden_size]
         h_t = m_activation_g(clip(add(Xt_W_h, add(rt_Ht_Rh, add(Rb_h, Wb_h)))));
     }
@@ -275,18 +273,19 @@ NodeVector op::GRUCell::decompose_op() const
 shared_ptr<Node> op::GRUCell::get_bias() const
 {
     shared_ptr<Node> bias;
-    if (get_input_size() == 5)
-    {
-        bias = get_argument(4);
-    }
-    else
-    {
-        // As default bias is all zeros, thus just initialize it with appropriate shape and zeros.
-        bias = op::Constant::create(input(0).get_element_type(),
-                                    Shape{2 * m_gates_count * get_hidden_size()},
-                                    vector<float>(2 * m_gates_count * get_hidden_size(), 0.f));
-    }
+    // Split B onto Wb an Rb and add them.
+    NodeVector b_W_R = builder::split(get_argument(4), 2);
+    bias = b_W_R.at(0) + b_W_R.at(1);
     return bias;
+}
+
+void op::GRUCell::add_default_bias_input()
+{
+    shared_ptr<Node> B =
+        op::Constant::create(input(0).get_element_type(),
+                             Shape{2 * m_gates_count * get_hidden_size()},
+                             vector<float>(2 * m_gates_count * get_hidden_size(), 0.f));
+    set_argument(4, B->output(0));
 }
 
 shared_ptr<Node> op::GRUCell::copy_with_new_args(const NodeVector& new_args) const

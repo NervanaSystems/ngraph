@@ -326,8 +326,6 @@ set (SRC
     op/fused/prelu.hpp
     op/fused/rnn_cell.cpp
     op/fused/rnn_cell.hpp
-    op/fused/rnn_cell_base.cpp
-    op/fused/rnn_cell_base.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
     op/fused/shuffle_channels.cpp
