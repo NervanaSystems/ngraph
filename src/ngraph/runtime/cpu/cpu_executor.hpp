@@ -54,11 +54,13 @@ namespace ngraph
                                  CPUExecutionContext* ectx,
                                  bool use_tbb = false);
                     int get_num_thread_pools() { return m_num_thread_pools; }
+                    int get_num_cores() { return m_num_cores; }
                 private:
                     std::vector<std::unique_ptr<Eigen::ThreadPool>> m_thread_pools;
                     std::vector<std::unique_ptr<Eigen::ThreadPoolDevice>> m_thread_pool_devices;
                     std::vector<tbb::task_arena> m_tbb_arenas;
                     int m_num_thread_pools;
+                    int m_num_cores;
                 };
 
                 extern CPUExecutor& GetCPUExecutor();

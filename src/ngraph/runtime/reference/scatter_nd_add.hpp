@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,6 +81,11 @@ namespace ngraph
                 auto updates_outer_coord_iter = updates_outer_transform.begin();
                 for (const Coordinate& indices_coord : indices_outer_transform)
                 {
+                    if (updates_outer_coord_iter == updates_outer_transform.end())
+                    {
+                        break;
+                    }
+
                     Coordinate out_start_corner(out_ndim, 0);
                     Coordinate out_end_corner(out_shape);
                     auto indices_index = indices_outer_transform.index(indices_coord);

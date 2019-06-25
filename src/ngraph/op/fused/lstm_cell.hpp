@@ -23,9 +23,9 @@
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/fused/rnn_cell_base.hpp"
 #include "ngraph/op/util/activation_functions.hpp"
 #include "ngraph/op/util/fused_op.hpp"
+#include "ngraph/op/util/rnn_cell_base.hpp"
 
 namespace ngraph
 {
@@ -39,7 +39,7 @@ namespace ngraph
         ///
         ///             Note this class represents only single *cell* and not whole LSTM *layer*.
         ///
-        class LSTMCell : public util::FusedOp, public RNNCellBase
+        class LSTMCell : public util::FusedOp, public util::RNNCellBase
         {
         public:
             ///
@@ -110,7 +110,7 @@ namespace ngraph
             /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
             /// \param[in]  B                 The bias tensor for input gate with shape: [8*hidden_size].
             /// \param[in]  P                 The weight tensor for peepholes with shape:
-            ///                               [3*hidde_size] - 3 equals to only iof gates.
+            ///                               [3*hidden_size] - 3 equals to only iof gates.
             /// \param[in]  activations       The vector of activation functions used inside
             ///                               recurrent cell.
             /// \param[in]  activation_alpha  The vector of alpha parameters for activation
@@ -146,17 +146,23 @@ namespace ngraph
             std::shared_ptr<Node> get_bias() const;
             NodeVector get_peephole_weigths() const;
 
+            /// brief Add and initialize bias input to all zeros.
+            void add_default_bias_input();
+            /// brief Add and initialize peepholes weights input to all zeros.
+            void add_default_peepholes_input();
+
+            ///
             /// \brief The Activation function f.
             ///
-            ActivationFunction m_activation_f;
+            util::ActivationFunction m_activation_f;
             ///
             /// \brief The Activation function g.
             ///
-            ActivationFunction m_activation_g;
+            util::ActivationFunction m_activation_g;
             ///
             /// \brief The Activation function h.
             ///
-            ActivationFunction m_activation_h;
+            util::ActivationFunction m_activation_h;
             ///
             /// \brief      Controls whether to couple input and forget gates.
             ///

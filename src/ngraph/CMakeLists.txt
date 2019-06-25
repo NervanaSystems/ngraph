@@ -38,6 +38,8 @@ set (SRC
     builder/quantization_util.hpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
+    builder/reshape.cpp
+    builder/reshape.hpp
     builder/split.cpp
     builder/split.hpp
     builder/tensor_mask.hpp
@@ -158,6 +160,8 @@ set (SRC
     op/experimental/quantized_conv_relu.hpp
     op/experimental/quantized_max_pool.cpp
     op/experimental/quantized_max_pool.hpp
+    op/experimental/range.cpp
+    op/experimental/range.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
     op/experimental/tile.cpp
@@ -298,12 +302,16 @@ set (SRC
     op/fused/depth_to_space.hpp
     op/fused/elu.cpp
     op/fused/elu.hpp
+    op/fused/fake_quantize.cpp
+    op/fused/fake_quantize.hpp
     op/fused/gemm.cpp
     op/fused/gemm.hpp
     op/fused/grn.cpp
     op/fused/grn.hpp
     op/fused/group_conv.hpp
     op/fused/group_conv.cpp
+    op/fused/group_conv_transpose.hpp
+    op/fused/group_conv_transpose.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
     op/fused/leaky_relu.cpp
@@ -322,6 +330,8 @@ set (SRC
     op/fused/rnn_cell_base.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
+    op/fused/shuffle_channels.cpp
+    op/fused/shuffle_channels.hpp
     op/fused/space_to_depth.cpp
     op/fused/space_to_depth.hpp
     op/fused/split.cpp
@@ -350,8 +360,9 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
-    op/util/reshape.cpp
     op/util/reshape.hpp
+    op/util/rnn_cell_base.cpp
+    op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
     partial_shape.cpp
@@ -359,6 +370,8 @@ set (SRC
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
+    pass/implicit_broadcast_elimination.hpp
+    pass/implicit_broadcast_elimination.cpp
     pass/batch_fusion.hpp
     pass/batch_fusion.cpp
     pass/common_function_collection.cpp
@@ -386,7 +399,6 @@ set (SRC
     pass/liveness.hpp
     pass/manager.cpp
     pass/manager.hpp
-    pass/manager_state.cpp
     pass/manager_state.hpp
     pass/memory_layout.cpp
     pass/memory_layout.hpp
@@ -468,39 +480,27 @@ set (SRC
     )
 
 set(SRC ${SRC}
-    runtime/hybrid/hybrid_backend.cpp
-    runtime/hybrid/hybrid_backend.hpp
-    runtime/hybrid/hybrid_executable.cpp
-    runtime/hybrid/hybrid_executable.hpp
-    runtime/hybrid/hybrid_tensor.cpp
-    runtime/hybrid/hybrid_util.cpp
-    runtime/hybrid/hybrid_util.hpp
-    runtime/hybrid/op/function_call.cpp
-    runtime/hybrid/op/function_call.hpp
-    runtime/hybrid/pass/default_placement.cpp
-    runtime/hybrid/pass/default_placement.hpp
-    runtime/hybrid/pass/dump.cpp
-    runtime/hybrid/pass/dump.hpp
-    runtime/hybrid/pass/fix_get_output_element.cpp
-    runtime/hybrid/pass/fix_get_output_element.hpp
-    runtime/hybrid/pass/liveness.cpp
-    runtime/hybrid/pass/liveness.hpp
-    runtime/hybrid/pass/memory_layout.cpp
-    runtime/hybrid/pass/memory_layout.hpp
-    )
-
-set(SRC ${SRC}
     runtime/dynamic/dynamic_backend.cpp
     runtime/dynamic/dynamic_backend.hpp
     )
 
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp event_tracing.cpp event_tracing.hpp)
+else()
+    list(APPEND SRC serializer_stub.cpp)
 endif()
 
 configure_file(version.in.hpp version.hpp)
 
-add_library(ngraph SHARED ${SRC})
+if (NGRAPH_STATIC_LIB_ENABLE)
+    add_library(ngraph STATIC ${SRC})
+else()
+    add_library(ngraph SHARED ${SRC})
+endif()
+
+if(NOT NGRAPH_JSON_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
+endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     if(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
@@ -524,7 +524,7 @@ endif()
 
 if(NGRAPH_ADDRESS_SANITIZER)
     message(STATUS "Enable Address Sanitizer")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fsanitize=address -fno-omit-frame-pointer")
+    add_compile_options(-g -fsanitize=address -fno-omit-frame-pointer)
 endif()
 
 add_subdirectory(codegen)

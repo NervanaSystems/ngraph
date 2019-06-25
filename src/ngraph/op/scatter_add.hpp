@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@ namespace ngraph
         class ScatterAdd : public Op
         {
         public:
-            // \param inputs Tensor
-            // \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-            // \param update Tensor: Must have same type as inputs
+            /// \param inputs Tensor
+            /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+            /// \param updates Tensor: Must have same type as inputs
             ScatterAdd(const std::shared_ptr<Node>& inputs,
                        const std::shared_ptr<Node>& indices,
                        const std::shared_ptr<Node>& updates)

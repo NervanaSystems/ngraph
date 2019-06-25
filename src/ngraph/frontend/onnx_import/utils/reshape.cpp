@@ -23,8 +23,8 @@
 #include <vector>
 
 #include "exceptions.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "utils/common.hpp"
 #include "utils/reshape.hpp"
 
@@ -110,7 +110,7 @@ namespace ngraph
                         output_shape.push_back(axis);
                     }
                 }
-                return ngraph::op::util::reshape(node, output_shape);
+                return ngraph::builder::reshape(node, output_shape);
             }
 
             std::shared_ptr<ngraph::Node> collapse(const std::shared_ptr<ngraph::Node>& node,
@@ -128,7 +128,7 @@ namespace ngraph
                 output_shape.insert(std::end(output_shape),
                                     std::next(std::begin(shape), end_axis + 1),
                                     std::end(shape));
-                return ngraph::op::util::reshape(node, output_shape);
+                return ngraph::builder::reshape(node, output_shape);
             }
 
             std::shared_ptr<ngraph::Node> expand_dims(const std::shared_ptr<ngraph::Node>& node,
@@ -158,7 +158,7 @@ namespace ngraph
                              "Scalar value can't be derived from a node with ",
                              node_shape);
 
-                return ngraph::op::util::reshape(node, Shape{});
+                return ngraph::builder::reshape(node, Shape{});
             }
 
         } // namespace  reshape

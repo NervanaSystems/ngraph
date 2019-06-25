@@ -21,8 +21,22 @@
 using namespace std;
 using namespace ngraph;
 
-op::Divide::Divide(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : BinaryElementwiseArithmetic("Divide", arg0, arg1)
+const string op::Divide::type_name{"Divide"};
+
+op::Divide::Divide(const Output<Node>& arg0,
+                   const Output<Node>& arg1,
+                   const AutoBroadcastSpec& autob)
+    : BinaryElementwiseArithmetic(arg0, arg1, autob)
+{
+    constructor_validate_and_infer_types();
+}
+
+op::Divide::Divide(const Output<Node>& arg0,
+                   const Output<Node>& arg1,
+                   bool pythondiv,
+                   const AutoBroadcastSpec& autob)
+    : BinaryElementwiseArithmetic(arg0, arg1, autob)
+    , m_pythondiv(pythondiv)
 {
     constructor_validate_and_infer_types();
 }
@@ -30,11 +44,17 @@ op::Divide::Divide(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
 shared_ptr<Node> op::Divide::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Divide>(new_args.at(0), new_args.at(1));
+    return make_shared<Divide>(
+        new_args.at(0), new_args.at(1), this->is_pythondiv(), this->get_autob());
 }
 
 void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    if (get_autob().m_type != op::AutoBroadcastType::NONE)
+    {
+        throw ngraph_error("Autodiff not supported with auto broadcasting");
+    }
+
     auto delta = deltas.at(0);
 
     auto x = get_argument(0);
@@ -44,7 +64,7 @@ void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
     adjoints.add_delta(y, -delta * shared_from_this() / y);
 }
 
-shared_ptr<Node> ngraph::operator/(const shared_ptr<Node> arg0, const shared_ptr<Node> arg1)
+shared_ptr<Node> ngraph::operator/(const Output<Node> arg0, const Output<Node> arg1)
 {
     return make_shared<op::Divide>(arg0, arg1);
 }

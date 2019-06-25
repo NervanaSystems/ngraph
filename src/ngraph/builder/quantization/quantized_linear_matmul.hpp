@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018-2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,12 @@ namespace ngraph
 
             std::shared_ptr<Node> QuantizedLinearMatmulInteger(const std::shared_ptr<Node>& input0,
                                                                const std::shared_ptr<Node>& input1);
+
+            std::shared_ptr<Node>
+                QuantizedLinearMatmulInteger(const std::shared_ptr<Node>& input0,
+                                             const std::shared_ptr<Node>& input1,
+                                             const std::shared_ptr<Node>& input0_zero_point,
+                                             const std::shared_ptr<Node>& input1_zero_point);
         }
     }
 }

@@ -61,6 +61,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -121,6 +122,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/loop_kernel.hpp"
@@ -261,10 +263,13 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::AllReduce)
             {
+                const ngraph::op::AllReduce* allreduce =
+                    static_cast<const ngraph::op::AllReduce*>(node);
                 writer << "ngraph::get_distributed_interface()->all_reduce(" << args[0].get_name()
                        << ", " << out[0].get_name() << ", "
                        << "ngraph::element::Type_t::" << args[0].get_element_type().get_type_name()
-                       << ", " << out[0].get_size() << ");\n";
+                       << ", " << out[0].get_size() << ", "
+                       << "ngraph::Reduce_t::" << allreduce->get_reduce_type() << ");\n";
             }
 
             template <>
@@ -1085,7 +1090,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Divide)
             {
                 writer.block_begin();
-                if (node->get_element_type().is_real() == false)
+                bool integral_type = !node->get_element_type().is_real();
+                if (integral_type)
                 {
                     // Check for divide by zero for integer types only
                     size_t element_count = args[1].get_size();
@@ -1095,11 +1101,25 @@ namespace ngraph
                            << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
                     writer.block_end();
                 }
+                auto divop = static_cast<const ngraph::op::Divide*>(node);
+                bool pythondiv = divop->is_pythondiv();
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
-                       << args[1].get_name() << "[i];\n";
+                if (integral_type && pythondiv)
+                {
+                    writer << out[0].get_name() << "[i] = ((" << args[0].get_name() << "[i] % "
+                           << args[1].get_name() << "[i] != 0) && (" << args[0].get_name()
+                           << "[i] < 0 != " << args[1].get_name() << "[i] < 0)) ?"
+                           << args[0].get_name() << "[i] / " << args[1].get_name()
+                           << "[i] - 1 :" << args[0].get_name() << "[i] / " << args[1].get_name()
+                           << "[i];\n";
+                }
+                else
+                {
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] / "
+                           << args[1].get_name() << "[i];\n";
+                }
                 writer.block_end();
                 writer.block_end();
             }
@@ -1815,15 +1835,36 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                writer << "reference::gather<" << args[0].get_type() << ", "
-                       << args[1].get_element_type().c_type_string() << ">(" << args[0].get_name()
-                       << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
-                writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   {" << join(args[0].get_shape()) << "},\n";
-                writer << "                   {" << join(args[1].get_shape()) << "},\n";
-                writer << "                   {" << join(out[0].get_shape()) << "},\n";
-                writer << "                   " << gather->get_axis() << ");\n";
+                if ((args[0].get_element_type() == element::f64 ||
+                     args[0].get_element_type() == element::f32 ||
+                     args[0].get_element_type() == element::u8 ||
+                     args[0].get_element_type() == element::i8) &&
+                    args[0].get_shape().size() <= 3 && out[0].get_shape().size() <= 3)
+                {
+                    writer << "cpu::kernel::gather<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ", "
+                           << args[0].get_shape().size() << ", " << out[0].get_shape().size()
+                           << ">(" << args[0].get_name() << ",\n";
+                    writer << "                   " << args[1].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                    writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                   " << gather->get_axis() << ",\n";
+                    writer << "                   0);\n";
+                }
+                else
+                {
+                    writer << "reference::gather<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ">("
+                           << args[0].get_name() << ",\n";
+                    writer << "                   " << args[1].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                    writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                   " << gather->get_axis() << ");\n";
+                }
                 writer.block_end();
             }
 
@@ -1858,16 +1899,37 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                writer << "reference::scatter_add<" << args[0].get_type() << ", "
-                       << args[1].get_element_type().c_type_string() << ">(" << args[0].get_name()
-                       << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
-                writer << "                   " << args[2].get_name() << ",\n";
-                writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   {" << join(args[0].get_shape()) << "},\n";
-                writer << "                   {" << join(args[1].get_shape()) << "},\n";
-                writer << "                   {" << join(args[2].get_shape()) << "},\n";
-                writer << "                   {" << join(out[0].get_shape()) << "});\n";
+                if ((args[0].get_element_type() == element::f64 ||
+                     args[0].get_element_type() == element::f32 ||
+                     args[0].get_element_type() == element::u8 ||
+                     args[0].get_element_type() == element::i8) &&
+                    args[0].get_shape().size() <= 3 && args[2].get_shape().size() <= 3)
+                {
+                    writer << "cpu::kernel::scatter_add<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ", "
+                           << args[0].get_shape().size() << ", " << args[2].get_shape().size()
+                           << ">(" << args[0].get_name() << ",\n";
+                    writer << "                   " << args[1].get_name() << ",\n";
+                    writer << "                   " << args[2].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[2].get_shape()) << "},\n";
+                    writer << "                   0);\n";
+                }
+                else
+                {
+                    writer << "reference::scatter_add<" << args[0].get_type() << ", "
+                           << args[1].get_element_type().c_type_string() << ">("
+                           << args[0].get_name() << ",\n";
+                    writer << "                   " << args[1].get_name() << ",\n";
+                    writer << "                   " << args[2].get_name() << ",\n";
+                    writer << "                   " << out[0].get_name() << ",\n";
+                    writer << "                   {" << join(args[0].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[1].get_shape()) << "},\n";
+                    writer << "                   {" << join(args[2].get_shape()) << "},\n";
+                    writer << "                   {" << join(out[0].get_shape()) << "});\n";
+                }
                 writer.block_end();
             }
 
@@ -2003,8 +2065,8 @@ namespace ngraph
                            << "auto pos_raw = " << emit_vector(args[0]) << "(0, 0);\n"
                            << "if (floor(pos_raw) != pos_raw)\n";
                     writer.block_begin();
-                    writer
-                        << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+                    writer << "throw(std::range_error(\"One-hot: non-integral value in "
+                              "input\"));\n";
                     writer.block_end();
 
                     writer << "size_t pos = pos_raw;\n"
@@ -2031,8 +2093,8 @@ namespace ngraph
 
                     writer << "if (floor(pos_raw) != pos_raw)\n";
                     writer.block_begin();
-                    writer
-                        << "throw(std::range_error(\"One-hot: non-integral value in input\"));\n";
+                    writer << "throw(std::range_error(\"One-hot: non-integral value in "
+                              "input\"));\n";
                     writer.block_end();
 
                     writer << "size_t pos = pos_raw;\n";
@@ -2468,7 +2530,8 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error(
-                        "QuantizedConvolutionBiasAdd is only supported with MKLDNN kernel.");
+                        "QuantizedConvolutionBiasAdd is only supported with MKLDNN "
+                        "kernel.");
                 }
             }
 
@@ -2500,7 +2563,8 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error(
-                        "QuantizedConvolutionBiasSignedAdd is only supported with MKLDNN kernel.");
+                        "QuantizedConvolutionBiasSignedAdd is only supported with MKLDNN "
+                        "kernel.");
                 }
             }
 
@@ -2682,7 +2746,8 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error(
-                        "ConvolutionBiasBackpropFiltersBias is only supported with MKLDNN kernel.");
+                        "ConvolutionBiasBackpropFiltersBias is only supported with MKLDNN "
+                        "kernel.");
                 }
             }
 
@@ -3924,11 +3989,32 @@ namespace ngraph
                 writer << "auto state = static_cast<ngraph::RNGState*>(ctx->states[" << index
                        << "]);\n";
                 writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
-                writer << "reference::generate_mask(";
-                writer << "            " << out[0].get_name() << ",\n";
-                writer << "            " << out[0].get_size() << ",\n";
-                writer << "            state, training);\n";
+                writer << "bool use_seed = static_cast<bool>(" << args[2].get_name() << "[0]);\n";
+
+                writer << "uint64_t seed = static_cast<uint64_t>(" << args[3].get_name()
+                       << "[0]);\n";
+                writer << "double keep_prob = static_cast<double>(" << args[4].get_name()
+                       << "[0]);\n";
+                writer << "if (use_seed == false) \n";
+                writer << "{\n";
+                writer << "    reference::generate_mask(\n";
+                writer << "                " << out[0].get_name() << ",\n";
+                writer << "                " << out[0].get_size() << ",\n";
+                writer << "                state, training);\n";
+                writer << "}\n";
+                writer << "else {\n";
+                writer << "       reference::generate_mask_no_state(\n";
+                writer << "           " << out[0].get_name() << ",\n";
+                writer << "           " << out[0].get_size() << ",\n";
+                writer << "           training, seed, keep_prob);\n";
+                writer << "}\n";
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Dropout)
+            {
+                throw ngraph_error("Not yet implemented");
             }
 
             template <>
@@ -4019,6 +4105,37 @@ namespace ngraph
                 else
                 {
                     throw ngraph_error("unsupported parameters for QuantizedConcat via DEX");
+                }
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Tile)
+            {
+                auto arg_shape = args[0].get_shape();
+                auto arg_rank = arg_shape.size();
+                auto out_shape = out[0].get_shape();
+                const element::Type& et = args[0].get_element_type();
+
+                if (arg_rank == 0)
+                {
+                    size_t repeats = shape_size(out_shape);
+
+                    writer.block_begin();
+                    writer << "cpu::kernel::tile_rank_0<" << et.c_type_string() << ">("
+                           << args[0].get_name() << ", " << out[0].get_name() << ", "
+                           << std::to_string(repeats) << ");\n";
+
+                    writer.block_end();
+                }
+                else
+                {
+                    writer.block_begin();
+                    writer << "cpu::kernel::tile<" << et.c_type_string() << ", "
+                           << std::to_string(arg_rank) << ">(" << args[0].get_name() << ", "
+                           << out[0].get_name() << ", {" << join(arg_shape) << "}, {"
+                           << join(out_shape) << "}, 0);\n";
+
+                    writer.block_end();
                 }
             }
 

@@ -19,8 +19,16 @@
 using namespace std;
 using namespace ngraph;
 
-op::All::All(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
-    : LogicalReduction("All", arg, reduction_axes)
+const string op::All::type_name{"All"};
+
+op::All::All(const Output<Node>& arg, const AxisSet& reduction_axes)
+    : LogicalReduction(arg, reduction_axes)
+{
+    constructor_validate_and_infer_types();
+}
+
+op::All::All(const Output<Node>& arg, const Output<Node>& reduction_axes)
+    : LogicalReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
@@ -28,5 +36,5 @@ op::All::All(const shared_ptr<Node>& arg, const AxisSet& reduction_axes)
 shared_ptr<Node> op::All::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<All>(new_args.at(0), m_reduction_axes);
+    return make_shared<All>(new_args.at(0), new_args.at(1));
 }

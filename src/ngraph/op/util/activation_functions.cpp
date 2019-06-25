@@ -49,43 +49,43 @@ static shared_ptr<Node> hardsigmoid(const shared_ptr<Node>& arg, float alpha, fl
     return make_shared<op::HardSigmoid>(arg, alpha, beta);
 }
 
-op::ActivationFunction::ActivationFunction(ActivationFunctionType f, float alpha, float beta)
+op::util::ActivationFunction::ActivationFunction(ActivationFunctionType f, float alpha, float beta)
     : m_function{f}
     , m_alpha{alpha}
     , m_beta{beta}
 {
 }
 
-op::ActivationFunction::ActivationFunction(ActivationFunctionType f, float alpha)
+op::util::ActivationFunction::ActivationFunction(ActivationFunctionType f, float alpha)
     : ActivationFunction(f, alpha, nanf(""))
 {
 }
 
-op::ActivationFunction::ActivationFunction(ActivationFunctionType f)
+op::util::ActivationFunction::ActivationFunction(ActivationFunctionType f)
     : ActivationFunction(f, nanf(""), nanf(""))
 {
 }
 
-shared_ptr<Node> op::ActivationFunction::operator()(const shared_ptr<Node>& arg) const
+shared_ptr<Node> op::util::ActivationFunction::operator()(const shared_ptr<Node>& arg) const
 {
     return m_function(arg, m_alpha, m_beta);
 }
 
-op::ActivationFunction op::get_activation_func_by_name(const string& func_name)
+op::util::ActivationFunction op::util::get_activation_func_by_name(const string& func_name)
 {
-    using ActivationFunctionMap = unordered_map<string, op::ActivationFunction>;
+    using ActivationFunctionMap = unordered_map<string, op::util::ActivationFunction>;
 
     static ActivationFunctionMap func_map{
-        {"sigmoid", op::ActivationFunction{sigmoid}},
-        {"tanh", op::ActivationFunction{tanh}},
-        {"relu", op::ActivationFunction{relu}},
-        {"hardsigmoid", op::ActivationFunction{hardsigmoid, 0.2f, 0.5f}},
+        {"sigmoid", op::util::ActivationFunction{sigmoid}},
+        {"tanh", op::util::ActivationFunction{tanh}},
+        {"relu", op::util::ActivationFunction{relu}},
+        {"hardsigmoid", op::util::ActivationFunction{hardsigmoid, 0.2f, 0.5f}},
     };
 
     auto func_it = func_map.find(func_name);
     if (func_it == end(func_map))
     {
-        throw error::UnknownActivationFunction(func_name);
+        throw op::util::error::UnknownActivationFunction(func_name);
     }
     return func_it->second;
 }

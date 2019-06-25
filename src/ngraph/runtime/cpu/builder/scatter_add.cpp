@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 #include "ngraph/op/scatter_add.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/reference/scatter_add.hpp"
+#include "ngraph/runtime/cpu/kernel/scatter_add.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -33,129 +33,112 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::ScatterAdd)
             {
                 auto& functors = external_function->get_functors();
-                CPUKernelFunctor functor;
 
                 auto inputs_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto indices_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto updates_buffer_index = external_function->get_buffer_index(args[2].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
+
                 if (args[1].get_element_type() != element::i64 &&
                     args[1].get_element_type() != element::i32)
                 {
                     throw ngraph_error("Unsupported index element type");
                 }
+
+                if (args[0].get_element_type() != element::f64 &&
+                    args[0].get_element_type() != element::f32 &&
+                    args[0].get_element_type() != element::u8 &&
+                    args[0].get_element_type() != element::i8)
+                {
+                    throw ngraph_error("Unsupported type in CPU Builder for ScatterAdd");
+                }
+
                 bool is_int64 = args[1].get_element_type() == element::i64;
                 auto inputs_shape = args[0].get_shape();
                 auto indices_shape = args[1].get_shape();
                 auto updates_shape = args[2].get_shape();
                 auto out_shape = out[0].get_shape();
                 auto element_type = args[0].get_element_type();
-                if (element_type == element::f32)
+
+                if (is_int64)
                 {
-                    if (is_int64)
+                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 3)
                     {
-                        functor = [&,
+                        std::function<decltype(runtime::cpu::kernel::scatter_add_i64<float, 2, 2>)>
+                            kernel;
+
+                        SELECT_KERNEL_BY_2RANKS(kernel,
+                                                args[0].get_element_type(),
+                                                inputs_shape.size(),
+                                                updates_shape.size(),
+                                                runtime::cpu::kernel::scatter_add_i64);
+
+                        auto functor = [&,
+                                        kernel,
+                                        inputs_shape,
+                                        indices_shape,
+                                        updates_shape,
+                                        inputs_buffer_index,
+                                        indices_buffer_index,
+                                        updates_buffer_index,
+                                        out_buffer_index](CPURuntimeContext* ctx,
+                                                          CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[inputs_buffer_index],
+                                   ctx->buffer_data[indices_buffer_index],
+                                   ctx->buffer_data[updates_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
                                    inputs_shape,
                                    indices_shape,
                                    updates_shape,
-                                   out_shape,
-                                   inputs_buffer_index,
-                                   indices_buffer_index,
-                                   updates_buffer_index,
-                                   out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::scatter_add<float, int64_t>(
-                                static_cast<float*>(ctx->buffer_data[inputs_buffer_index]),
-                                static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
-                                static_cast<float*>(ctx->buffer_data[updates_buffer_index]),
-                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
-                                inputs_shape,
-                                indices_shape,
-                                updates_shape,
-                                out_shape);
+                                   ectx->arena);
                         };
+                        functors.emplace_back(functor);
                     }
                     else
                     {
-                        functor = [&,
-                                   inputs_shape,
-                                   indices_shape,
-                                   updates_shape,
-                                   out_shape,
-                                   inputs_buffer_index,
-                                   indices_buffer_index,
-                                   updates_buffer_index,
-                                   out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::scatter_add<float, int32_t>(
-                                static_cast<float*>(ctx->buffer_data[inputs_buffer_index]),
-                                static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
-                                static_cast<float*>(ctx->buffer_data[updates_buffer_index]),
-                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
-                                inputs_shape,
-                                indices_shape,
-                                updates_shape,
-                                out_shape);
-                        };
-                    }
-                }
-                else if (element_type == element::f64)
-                {
-                    if (is_int64)
-                    {
-                        functor = [&,
-                                   inputs_shape,
-                                   indices_shape,
-                                   updates_shape,
-                                   out_shape,
-                                   inputs_buffer_index,
-                                   indices_buffer_index,
-                                   updates_buffer_index,
-                                   out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::scatter_add<double, int64_t>(
-                                static_cast<double*>(ctx->buffer_data[inputs_buffer_index]),
-                                static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
-                                static_cast<double*>(ctx->buffer_data[updates_buffer_index]),
-                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
-                                inputs_shape,
-                                indices_shape,
-                                updates_shape,
-                                out_shape);
-                        };
-                    }
-                    else
-                    {
-                        functor = [&,
-                                   inputs_shape,
-                                   indices_shape,
-                                   updates_shape,
-                                   out_shape,
-                                   inputs_buffer_index,
-                                   indices_buffer_index,
-                                   updates_buffer_index,
-                                   out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
-                            ngraph::runtime::reference::scatter_add<double, int32_t>(
-                                static_cast<double*>(ctx->buffer_data[inputs_buffer_index]),
-                                static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
-                                static_cast<double*>(ctx->buffer_data[updates_buffer_index]),
-                                static_cast<double*>(ctx->buffer_data[out_buffer_index]),
-                                inputs_shape,
-                                indices_shape,
-                                updates_shape,
-                                out_shape);
-                        };
+                        throw ngraph_error("Unsupported ranks in CPU Builder for ScatterAdd");
                     }
                 }
                 else
                 {
-                    throw ngraph_error("Unsupported type in CPU Builder for ScatterAdd");
+                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 3)
+                    {
+                        std::function<decltype(runtime::cpu::kernel::scatter_add_i32<float, 2, 2>)>
+                            kernel;
+
+                        SELECT_KERNEL_BY_2RANKS(kernel,
+                                                args[0].get_element_type(),
+                                                inputs_shape.size(),
+                                                updates_shape.size(),
+                                                runtime::cpu::kernel::scatter_add_i32);
+
+                        auto functor = [&,
+                                        kernel,
+                                        inputs_shape,
+                                        indices_shape,
+                                        updates_shape,
+                                        inputs_buffer_index,
+                                        indices_buffer_index,
+                                        updates_buffer_index,
+                                        out_buffer_index](CPURuntimeContext* ctx,
+                                                          CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[inputs_buffer_index],
+                                   ctx->buffer_data[indices_buffer_index],
+                                   ctx->buffer_data[updates_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   inputs_shape,
+                                   indices_shape,
+                                   updates_shape,
+                                   ectx->arena);
+                        };
+                        functors.emplace_back(functor);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Unsupported ranks in CPU Builder for ScatterAdd");
+                    }
                 }
-
-                functors.emplace_back(functor);
             }
-
             REGISTER_OP_BUILDER(ScatterAdd);
         }
     }

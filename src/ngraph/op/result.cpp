@@ -24,8 +24,11 @@
 using namespace std;
 using namespace ngraph;
 
-op::Result::Result(const shared_ptr<Node>& arg)
-    : Op("Result", check_single_output_args({arg}))
+const string op::Result::type_name{"Result"};
+
+op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
+    : Op({arg})
+    , m_needs_default_layout(needs_default_layout)
 {
     constructor_validate_and_infer_types();
     // always borrow the placement conf even the default one
@@ -44,11 +47,7 @@ shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) cons
 {
     check_new_args_count(this, new_args);
 
-    auto res = make_shared<Result>(new_args.at(0));
-    if (res)
-    {
-        res->set_needs_default_layout(m_needs_default_layout);
-    }
+    auto res = make_shared<Result>(new_args.at(0), m_needs_default_layout);
     return std::move(res);
 }
 

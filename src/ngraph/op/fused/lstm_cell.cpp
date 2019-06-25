@@ -18,12 +18,12 @@
 #include <cmath>
 #include <functional>
 
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -69,6 +69,8 @@ op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
     , m_activation_h{get_activation_function(2)}
     , m_input_forget{input_forget}
 {
+    add_default_bias_input();
+    add_default_peepholes_input();
     constructor_validate_and_infer_types();
 }
 
@@ -155,34 +157,31 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           w_shape,
                           ".");
 
-    if (get_input_size() == 7)
-    {
-        const auto& b_pshape = get_input_partial_shape(5);
-        const auto& p_pshape = get_input_partial_shape(6);
+    const auto& b_pshape = get_input_partial_shape(5);
+    const auto& p_pshape = get_input_partial_shape(6);
 
-        NODE_VALIDATION_CHECK(this,
-                              (b_pshape.is_static() || p_pshape.is_static()),
-                              "LSTMCell supports only static input tensors.");
+    NODE_VALIDATION_CHECK(this,
+                          (b_pshape.is_static() || p_pshape.is_static()),
+                          "LSTMCell supports only static input tensors.");
 
-        const Shape& b_shape{b_pshape.to_shape()};
-        const Shape& p_shape{p_pshape.to_shape()};
+    const Shape& b_shape{b_pshape.to_shape()};
+    const Shape& p_shape{p_pshape.to_shape()};
 
-        NODE_VALIDATION_CHECK(this,
-                              (b_shape == Shape{2 * m_gates_count * get_hidden_size()}),
-                              "Input tensor B must have shape (",
-                              8 * get_hidden_size(),
-                              "). Actual shape is:",
-                              b_shape,
-                              ".");
+    NODE_VALIDATION_CHECK(this,
+                          (b_shape == Shape{2 * m_gates_count * get_hidden_size()}),
+                          "Input tensor B must have shape (",
+                          8 * get_hidden_size(),
+                          "). Actual shape is:",
+                          b_shape,
+                          ".");
 
-        NODE_VALIDATION_CHECK(this,
-                              (p_shape == Shape{m_peepholes_count * get_hidden_size()}),
-                              "Input tensor P must have shape (",
-                              m_peepholes_count * get_hidden_size(),
-                              "). Actual shape is:",
-                              p_shape,
-                              ".");
-    }
+    NODE_VALIDATION_CHECK(this,
+                          (p_shape == Shape{m_peepholes_count * get_hidden_size()}),
+                          "Input tensor P must have shape (",
+                          m_peepholes_count * get_hidden_size(),
+                          "). Actual shape is:",
+                          p_shape,
+                          ".");
 }
 
 NodeVector op::LSTMCell::decompose_op() const
@@ -238,9 +237,9 @@ NodeVector op::LSTMCell::decompose_op() const
     const auto& p_f = p_iof.at(2);
 
     // Xt*(W^T) -- for [iofc] gates.
-    auto Xt_W = make_shared<op::Dot>(X, op::util::transpose(W));
+    auto Xt_W = make_shared<op::Dot>(X, builder::transpose(W));
     // Ht-1*(R^T)  -- for [iofc] gates.
-    auto Ht_R = make_shared<op::Dot>(H_t, op::util::transpose(R));
+    auto Ht_R = make_shared<op::Dot>(H_t, builder::transpose(R));
     // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
     auto gates = add(Xt_W, add(Ht_R, bias));
 
@@ -278,36 +277,35 @@ NodeVector op::LSTMCell::decompose_op() const
 shared_ptr<Node> op::LSTMCell::get_bias() const
 {
     shared_ptr<Node> bias;
-    if (get_input_size() == 7)
-    {
-        // Split B onto Wb an Rb and add them.
-        NodeVector b_W_R = builder::split(get_argument(5), 2);
-        bias = b_W_R.at(0) + b_W_R.at(1);
-    }
-    else
-    {
-        // As default bias is all zeros, thus just initialize it with appropriate shape and zeros.
-        bias = op::Constant::create(input(0).get_element_type(),
-                                    Shape{m_gates_count * get_hidden_size()},
-                                    vector<float>(m_gates_count * get_hidden_size(), 0.f));
-    }
+    // Split B onto Wb an Rb and add them.
+    NodeVector b_W_R = builder::split(get_argument(5), 2);
+    bias = b_W_R.at(0) + b_W_R.at(1);
     return bias;
 }
 
 NodeVector op::LSTMCell::get_peephole_weigths() const
 {
     shared_ptr<Node> P;
-    if (get_input_size() == 7)
-    {
-        P = get_argument(6);
-    }
-    else
-    {
-        P = op::Constant::create(input(0).get_element_type(),
-                                 Shape{m_peepholes_count * get_hidden_size()},
-                                 vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
-    }
+    P = get_argument(6);
     return builder::split(P, m_peepholes_count);
+}
+
+void op::LSTMCell::add_default_bias_input()
+{
+    shared_ptr<Node> B =
+        op::Constant::create(input(0).get_element_type(),
+                             Shape{2 * m_gates_count * get_hidden_size()},
+                             vector<float>(2 * m_gates_count * get_hidden_size(), 0.f));
+    set_argument(5, B->output(0));
+}
+
+void op::LSTMCell::add_default_peepholes_input()
+{
+    shared_ptr<Node> P =
+        op::Constant::create(input(0).get_element_type(),
+                             Shape{m_peepholes_count * get_hidden_size()},
+                             vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
+    set_argument(6, P->output(0));
 }
 
 shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) const
