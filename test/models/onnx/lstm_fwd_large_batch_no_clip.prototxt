@@ -23,11 +23,6 @@ graph {
       i: 3
       type: INT
     }
-    attribute {
-      name: "input_forget"
-      i: 0
-      type: INT
-    }
   }
   name: "compute_graph"
   input {
