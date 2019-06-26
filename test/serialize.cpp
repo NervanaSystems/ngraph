@@ -355,7 +355,7 @@ TEST(serialize, tensor_iterator)
     // Set up the cell body, a function from (Hi, Xi) -> (Ho, Yo)
     // Cell parameters
     auto Hi = make_shared<op::Parameter>(element::f32, Shape{32, 20});
-    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 10});
+    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 10});
 
     // Body
     auto Ho = make_shared<op::Relu>(make_shared<op::Dot>(Xi, WX) + make_shared<op::Dot>(Hi, WH) +

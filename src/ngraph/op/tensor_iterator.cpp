@@ -39,16 +39,16 @@ op::TensorIterator::TensorIterator(const OutputVector& body_inputs,
 
 void op::TensorIterator::validate_and_infer_types()
 {
+    NODE_VALIDATION_CHECK(this,
+                          get_input_size() == m_body_parameters.size(),
+                          "Number of inputs must be the same as number of body parameters");
+
     // The number of iterations is determined by the shortest sequence input
     size_t iteration_count{0};
     // If true, iteration count is dynamic
     bool iteration_count_dynamic{false};
     // true when we something about the count
     bool iteration_count_valid{false};
-    // Shapes of the inputs that would be passed to iterator. 
-    // For sequences, the sequence axis is removed, for everything
-    // else, the shape is unchanged.
-    vector<PartialShape> iterator_shapes;
     for (size_t axis = 0; axis < get_input_size(); ++axis)
     {
         PartialShape sequence_shape = get_input_partial_shape(axis);
@@ -90,9 +90,11 @@ void op::TensorIterator::validate_and_infer_types()
                 }
             }
         }
-        iterator_shapes.push_back(iterator_shape);
+        NODE_VALIDATION_CHECK(
+            this,
+            iterator_shape.compatible(m_body_parameters.at(axis)->get_partial_shape()),
+            "Iterator body param is not compatible with value");
     }
-    // Now we make sure the parameters match.
 }
 
 const ParameterVector& op::TensorIterator::get_body_parameters() const
