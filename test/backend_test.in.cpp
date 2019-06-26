@@ -5243,7 +5243,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
     auto handle = backend->compile(func);
     handle->call_with_validate({result}, {a, b});
 
-    vector<float> expected{0.196612f, 0.0176627f, 0.196612f, 0.0176627f};
+    vector<float> expected{0.1966119f, 0.01766273f, 0.1966119f, 0.01766273f};
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
