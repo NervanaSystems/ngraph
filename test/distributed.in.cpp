@@ -25,6 +25,7 @@
 #include "ngraph/serializer.hpp"
 #include "util/all_close_f.hpp"
 #include "util/random.hpp"
+#include "util/test_control.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -93,29 +94,29 @@ static void test_allreduce_common(reduction::Type reduce_type)
     }
 }
 
-TEST(distributed_${BACKEND_NAME}, allreduce_sum)
+NGRAPH_TEST(distributed_${BACKEND_NAME}, allreduce_sum)
 {
     test_allreduce_common(reduction::Type::SUM);
 }
 
-TEST(distributed_${BACKEND_NAME}, allreduce_min)
+NGRAPH_TEST(distributed_${BACKEND_NAME}, allreduce_min)
 {
     test_allreduce_common(reduction::Type::MIN);
 }
 
-TEST(distributed_${BACKEND_NAME}, allreduce_max)
+NGRAPH_TEST(distributed_${BACKEND_NAME}, allreduce_max)
 {
     test_allreduce_common(reduction::Type::MAX);
 }
 
 #if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-TEST(distributed_${BACKEND_NAME}, allreduce_prod)
+NGRAPH_TEST(distributed_${BACKEND_NAME}, allreduce_prod)
 {
     test_allreduce_common(reduction::Type::PROD);
 }
 #endif
 
-TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
+NGRAPH_TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -145,7 +146,7 @@ TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
 
 //MLSL does not support send recv
 #if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-TEST(distributed_${BACKEND_NAME}, send_recv)
+NGRAPH_TEST(distributed_${BACKEND_NAME}, send_recv)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
