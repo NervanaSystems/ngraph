@@ -196,13 +196,13 @@ static OP_TYPEID get_typeid(const string& s)
     return rc;
 }
 
-bool has_key(const json& j, const std::string& key)
+bool has_key(json j, const std::string& key)
 {
     return j.count(key) != 0;
 }
 
 template <typename T>
-T get_or_default(const json& j, const std::string& key, const T& default_value)
+T get_or_default(json j, const std::string& key, const T& default_value)
 {
     return has_key(j, key) ? j.at(key).get<T>() : default_value;
 }
@@ -246,13 +246,13 @@ public:
         m_const_data_callback = const_data_callback;
     }
 
-    shared_ptr<Function> deserialize_function(const json& j);
-    Output<Node> deserialize_output(const json& j);
-    OutputVector deserialize_output_vector(const json& j);
-    ParameterVector deserialize_parameter_vector(const json& j);
-    shared_ptr<Node> deserialize_node_reference(const json& j);
-    shared_ptr<Node> deserialize_node(const json& j);
-    AxisSet deserialize_axis_set(const json& j);
+    shared_ptr<Function> deserialize_function(json j);
+    Output<Node> deserialize_output(json j);
+    OutputVector deserialize_output_vector(json j);
+    ParameterVector deserialize_parameter_vector(json j);
+    shared_ptr<Node> deserialize_node_reference(json j);
+    shared_ptr<Node> deserialize_node(json j);
+    AxisSet deserialize_axis_set(json j);
 
 protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
@@ -275,7 +275,7 @@ static json write_dimension(Dimension d)
     }
 }
 
-static Dimension read_dimension(const json& j)
+static Dimension read_dimension(json j)
 {
     if (j.is_null())
     {
@@ -304,7 +304,7 @@ static json write_partial_shape(const PartialShape& s)
     }
 }
 
-static PartialShape read_partial_shape(const json& j)
+static PartialShape read_partial_shape(json j)
 {
     if (j.is_null())
     {
@@ -329,7 +329,7 @@ static json write_auto_broadcast(const op::AutoBroadcastSpec& autob)
     return j;
 }
 
-static op::AutoBroadcastSpec read_auto_broadcast(const json& js_node, const std::string& attr)
+static op::AutoBroadcastSpec read_auto_broadcast(json js_node, const std::string& attr)
 {
     if (has_key(js_node, attr))
     {
@@ -343,13 +343,13 @@ static op::AutoBroadcastSpec read_auto_broadcast(const json& js_node, const std:
     }
 }
 
-static op::PadType read_pad_type(const json& node_js)
+static op::PadType read_pad_type(json node_js)
 {
     return has_key(node_js, "pad_type") ? static_cast<op::PadType>(node_js.at("pad_type"))
                                         : op::PadType::EXPLICIT;
 }
 
-static op::PadMode read_pad_mode(const json& node_js)
+static op::PadMode read_pad_mode(json node_js)
 {
     return has_key(node_js, "pad_mode") ? static_cast<op::PadMode>(node_js.at("pad_mode"))
                                         : op::PadMode::CONSTANT;
@@ -362,7 +362,7 @@ static json write_element_type(const ngraph::element::Type& n)
     return j;
 }
 
-static element::Type read_element_type(const json& j)
+static element::Type read_element_type(json j)
 {
     size_t bitwidth = 0;
     bool is_real = false;
@@ -551,7 +551,7 @@ json JSONSerializer::serialize_function(const Function& f)
 }
 
 template <typename T>
-T get_value(const json& js, const string& key)
+T get_value(json js, const string& key)
 {
     T rc;
     auto it = js.find(key);
@@ -562,13 +562,13 @@ T get_value(const json& js, const string& key)
     return rc;
 }
 
-shared_ptr<Node> JSONDeserializer::deserialize_node_reference(const json& j)
+shared_ptr<Node> JSONDeserializer::deserialize_node_reference(json j)
 {
     const string& name = j;
     return m_node_map.at(name);
 }
 
-Output<Node> JSONDeserializer::deserialize_output(const json& j)
+Output<Node> JSONDeserializer::deserialize_output(json j)
 {
     size_t index;
     json json_node_reference;
@@ -589,12 +589,12 @@ Output<Node> JSONDeserializer::deserialize_output(const json& j)
     return Output<Node>(deserialize_node_reference(json_node_reference), index);
 }
 
-OutputVector JSONDeserializer::deserialize_output_vector(const json& j)
+OutputVector JSONDeserializer::deserialize_output_vector(json j)
 {
     OutputVector result;
     if (j.is_array())
     {
-        for (const json& jelt : j)
+        for (json jelt : j)
         {
             result.push_back(deserialize_output(jelt));
         }
@@ -607,17 +607,17 @@ json JSONSerializer::serialize_axis_set(const AxisSet& axis_set)
     return static_cast<set<size_t>>(axis_set);
 }
 
-AxisSet JSONDeserializer::deserialize_axis_set(const json& j)
+AxisSet JSONDeserializer::deserialize_axis_set(json j)
 {
     AxisSet result;
-    if (j.is_object())
+    if (j.is_array())
     {
         result = j.get<set<size_t>>();
     }
     return result;
 }
 
-ParameterVector JSONDeserializer::deserialize_parameter_vector(const json& json_parameters)
+ParameterVector JSONDeserializer::deserialize_parameter_vector(json json_parameters)
 {
     std::vector<std::shared_ptr<op::Parameter>> params;
     for (auto& param_ref : json_parameters)
@@ -628,7 +628,7 @@ ParameterVector JSONDeserializer::deserialize_parameter_vector(const json& json_
     return params;
 }
 
-shared_ptr<Function> JSONDeserializer::deserialize_function(const json& func_js)
+shared_ptr<Function> JSONDeserializer::deserialize_function(json func_js)
 {
     string func_name = func_js.at("name").get<string>();
     vector<json> func_result = func_js.at("result");
@@ -716,7 +716,7 @@ struct OutputVectorHelper
     OutputVector m_vector;
 };
 
-shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
+shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 {
     shared_ptr<Node> node;
     try
@@ -752,7 +752,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         }
         case OP_TYPEID::All:
         {
-            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
             node = make_shared<op::All>(args[0], reduction_axes);
             break;
         }
@@ -768,7 +768,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         }
         case OP_TYPEID::Any:
         {
-            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
             node = make_shared<op::Any>(args[0], reduction_axes);
             break;
         }
@@ -868,7 +868,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         case OP_TYPEID::Broadcast:
         {
             auto shape = node_js.at("shape").get<vector<size_t>>();
-            auto axes = node_js.at("axes").get<set<size_t>>();
+            auto axes = deserialize_axis_set(node_js.at("axes"));
             node = make_shared<op::Broadcast>(args[0], shape, axes);
             break;
         }
@@ -879,7 +879,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         }
         case OP_TYPEID::BroadcastLike:
         {
-            auto initial_axes = node_js.at("initial_axes").get<set<size_t>>();
+            auto initial_axes = deserialize_axis_set(node_js.at("initial_axes"));
             node = make_shared<op::BroadcastLike>(args[0], args[1], initial_axes);
             break;
         }
@@ -1095,7 +1095,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         case OP_TYPEID::Dequantize:
         {
             auto type = read_element_type(node_js.at("type"));
-            auto axes = node_js.at("axes").get<set<size_t>>();
+            auto axes = deserialize_axis_set(node_js.at("axes"));
             node = make_shared<op::Dequantize>(args[0], args[1], args[2], type, axes);
             break;
         }
@@ -1339,7 +1339,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         }
         case OP_TYPEID::Max:
         {
-            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
             node = make_shared<op::Max>(args[0], reduction_axes);
             break;
         }
@@ -1416,7 +1416,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         }
         case OP_TYPEID::Min:
         {
-            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
             node = make_shared<op::Min>(args[0], reduction_axes);
             break;
         }
@@ -1435,7 +1435,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         case OP_TYPEID::MVN:
         {
             auto normalize_variance = node_js.at("normalize_variance").get<bool>();
-            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
             auto eps = node_js.at("eps").get<double>();
             node = make_shared<op::MVN>(args[0], normalize_variance, normalize_variance, eps);
             break;
@@ -1534,14 +1534,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         }
         case OP_TYPEID::Product:
         {
-            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
             node = make_shared<op::Product>(args[0], reduction_axes);
             break;
         }
         case OP_TYPEID::Quantize:
         {
             auto type = read_element_type(node_js.at("type"));
-            auto axes = node_js.at("axes").get<set<size_t>>();
+            auto axes = deserialize_axis_set(node_js.at("axes"));
             auto round_mode = node_js.at("round_mode").get<op::Quantize::RoundMode>();
             node = make_shared<op::Quantize>(args[0], args[1], args[2], type, axes, round_mode);
             break;
@@ -1649,7 +1649,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         }
         case OP_TYPEID::Reverse:
         {
-            auto reversed_axes = node_js.at("reversed_axes").get<set<size_t>>();
+            auto reversed_axes = deserialize_axis_set(node_js.at("reversed_axes"));
             node = make_shared<op::Reverse>(args[0], reversed_axes);
             break;
         }
@@ -1765,7 +1765,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
 
         case OP_TYPEID::Softmax:
         {
-            auto softmax_axes = node_js.at("softmax_axes").get<set<size_t>>();
+            auto softmax_axes = deserialize_axis_set(node_js.at("softmax_axes"));
             node = make_shared<op::Softmax>(args[0], softmax_axes);
             break;
         }
@@ -1805,7 +1805,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(const json& node_js)
         }
         case OP_TYPEID::Sum:
         {
-            auto reduction_axes = node_js.at("reduction_axes").get<set<size_t>>();
+            auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
             node = make_shared<op::Sum>(args[0], reduction_axes);
             break;
         }
@@ -2069,7 +2069,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::All:
     {
         auto tmp = dynamic_cast<const op::All*>(&n);
-        node["reduction_axes"] = tmp->get_reduction_axes();
+        node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
     case OP_TYPEID::AllReduce: { break;
@@ -2086,7 +2086,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Any:
     {
         auto tmp = dynamic_cast<const op::Any*>(&n);
-        node["reduction_axes"] = tmp->get_reduction_axes();
+        node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
     case OP_TYPEID::Asin: { break;
@@ -2142,7 +2142,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Broadcast:
     {
         auto tmp = dynamic_cast<const op::Broadcast*>(&n);
-        node["axes"] = tmp->get_broadcast_axes();
+        node["axes"] = serialize_axis_set(tmp->get_broadcast_axes());
         node["shape"] = tmp->get_broadcast_shape();
         break;
     }
@@ -2151,7 +2151,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::BroadcastLike:
     {
         auto tmp = dynamic_cast<const op::BroadcastLike*>(&n);
-        node["initial_axes"] = tmp->get_initial_broadcast_axes();
+        node["initial_axes"] = serialize_axis_set(tmp->get_initial_broadcast_axes());
         break;
     }
     case OP_TYPEID::Ceiling: { break;
@@ -2265,7 +2265,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = dynamic_cast<const op::Dequantize*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
-        node["axes"] = tmp->get_axes();
+        node["axes"] = serialize_axis_set(tmp->get_axes());
         break;
     }
     case OP_TYPEID::DepthToSpace:
@@ -2458,7 +2458,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Max:
     {
         auto tmp = dynamic_cast<const op::Max*>(&n);
-        node["reduction_axes"] = tmp->get_reduction_axes();
+        node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
     case OP_TYPEID::MaxPool:
@@ -2492,7 +2492,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Min:
     {
         auto tmp = dynamic_cast<const op::Min*>(&n);
-        node["reduction_axes"] = tmp->get_reduction_axes();
+        node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
     case OP_TYPEID::Minimum:
@@ -2516,7 +2516,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::MVN:
     {
         auto tmp = dynamic_cast<const op::MVN*>(&n);
-        node["reduction_axes"] = tmp->get_reduction_axes();
+        node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         node["normalize_variance"] = tmp->get_normalize_variance();
         node["eps"] = tmp->get_eps();
         break;
@@ -2596,7 +2596,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Product:
     {
         auto tmp = dynamic_cast<const op::Product*>(&n);
-        node["reduction_axes"] = tmp->get_reduction_axes();
+        node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
     case OP_TYPEID::Power:
@@ -2612,7 +2612,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = dynamic_cast<const op::Quantize*>(&n);
         node["type"] = write_element_type(tmp->get_element_type());
-        node["axes"] = tmp->get_axes();
+        node["axes"] = serialize_axis_set(tmp->get_axes());
         node["round_mode"] = tmp->get_round_mode();
         break;
     }
@@ -2687,7 +2687,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Reverse:
     {
         auto tmp = dynamic_cast<const op::Reverse*>(&n);
-        node["reversed_axes"] = tmp->get_reversed_axes();
+        node["reversed_axes"] = serialize_axis_set(tmp->get_reversed_axes());
         break;
     }
     case OP_TYPEID::ReverseSequence:
@@ -2798,13 +2798,13 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Sum:
     {
         auto tmp = dynamic_cast<const op::Sum*>(&n);
-        node["reduction_axes"] = tmp->get_reduction_axes();
+        node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
     case OP_TYPEID::Softmax:
     {
         auto tmp = dynamic_cast<const op::Softmax*>(&n);
-        node["softmax_axes"] = tmp->get_axes();
+        node["softmax_axes"] = serialize_axis_set(tmp->get_axes());
         break;
     }
     case OP_TYPEID::Tan: { break;
