@@ -23,6 +23,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -31,8 +32,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
-#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_loop_kernel_fusion.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_compiled_kernel_fusion.hpp"
 
 #define TI(x) std::type_index(typeid(x))
 
@@ -49,10 +49,10 @@ struct LKGraph
     NodeVector m_nodes;
 };
 
-class LoopKernelCollector
+class CompiledKernelCollector
 {
 public:
-    LoopKernelCollector(std::shared_ptr<Function> f, size_t min_nodes_to_fuse)
+    CompiledKernelCollector(std::shared_ptr<Function> f, size_t min_nodes_to_fuse)
     {
         for (auto n : f->get_ordered_ops())
         {
@@ -70,13 +70,13 @@ public:
                 else
                 {
                     auto smallest_head = m_heads.at(arg_from_fusible_group);
-                    auto& lkgraph = m_graphs.at(smallest_head);
-                    lkgraph.m_nodes.push_back(n);
+                    auto& ckgraph = m_graphs.at(smallest_head);
+                    ckgraph.m_nodes.push_back(n);
                     for (auto arg : n->get_arguments())
                     {
                         if (is_leaf(arg))
                         {
-                            lkgraph.m_inputs.push_back(arg);
+                            ckgraph.m_inputs.push_back(arg);
                         }
                     }
                     m_heads.insert(std::make_pair(n, smallest_head));
@@ -88,18 +88,18 @@ public:
         prune_graphs(min_nodes_to_fuse);
     }
 
-    const std::vector<std::shared_ptr<runtime::cpu::op::LoopKernel>> get_loop_kernels() const
+    const std::vector<std::shared_ptr<op::CompiledKernel>> get_compiled_kernels() const
     {
-        std::vector<std::shared_ptr<runtime::cpu::op::LoopKernel>> lks;
+        std::vector<std::shared_ptr<op::CompiledKernel>> cks;
         for (auto e : m_graphs)
         {
-            auto& lkg = e.second;
-            NodeVector member_outputs = ngraph::get_subgraph_outputs(lkg.m_nodes, NodeVector{});
-            auto lk = std::make_shared<runtime::cpu::op::LoopKernel>(
-                lkg.m_nodes, member_outputs, lkg.m_inputs);
-            lks.push_back(lk);
+            auto& ckg = e.second;
+            NodeVector member_outputs = ngraph::get_subgraph_outputs(ckg.m_nodes, NodeVector{});
+            auto ck =
+                std::make_shared<op::CompiledKernel>(ckg.m_nodes, member_outputs, ckg.m_inputs);
+            cks.push_back(ck);
         }
-        return lks;
+        return cks;
     }
 
 private:
@@ -172,20 +172,20 @@ private:
     std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>> m_heads;
 };
 
-bool ngraph::runtime::cpu::pass::CPULoopKernelFusion::run_on_function(
+bool ngraph::runtime::cpu::pass::CPUCompiledKernelFusion::run_on_function(
     std::shared_ptr<ngraph::Function> function)
 {
-    LoopKernelCollector lkc(function, m_min_kernel_size);
-    auto loop_kernels = lkc.get_loop_kernels();
+    CompiledKernelCollector ckc(function, m_min_kernel_size);
+    auto compiled_kernels = ckc.get_compiled_kernels();
 
-    for (auto lk : loop_kernels)
+    for (auto ck : compiled_kernels)
     {
-        auto outputs = lk->get_kernel_outputs();
-        std::set<std::shared_ptr<Node>> lk_nodes_set(lk->get_node_list().begin(),
-                                                     lk->get_node_list().end());
+        auto outputs = ck->get_kernel_outputs();
+        std::set<std::shared_ptr<Node>> ck_nodes_set(ck->get_node_list().begin(),
+                                                     ck->get_node_list().end());
         for (size_t i = 0; i < outputs.size(); i++)
         {
-            auto ith_goe = std::make_shared<ngraph::op::GetOutputElement>(lk, i);
+            auto ith_goe = std::make_shared<ngraph::op::GetOutputElement>(ck, i);
             auto& ith_output = ith_goe->get_outputs().at(0);
 
             if (outputs.at(i)->get_outputs().size() > 1)
@@ -203,8 +203,8 @@ bool ngraph::runtime::cpu::pass::CPULoopKernelFusion::run_on_function(
             for (auto input : inputs_copy)
             {
                 // this user is NOT internal to this loop kernel
-                // so it needs to be replaced with corresponding lk's GOE
-                if (lk_nodes_set.count(input->get_node()) == 0)
+                // so it needs to be replaced with corresponding ck's GOE
+                if (ck_nodes_set.count(input->get_node()) == 0)
                 {
                     input->replace_output(ith_output);
                 }
@@ -212,5 +212,5 @@ bool ngraph::runtime::cpu::pass::CPULoopKernelFusion::run_on_function(
         }
     }
 
-    return !loop_kernels.empty();
+    return !compiled_kernels.empty();
 }

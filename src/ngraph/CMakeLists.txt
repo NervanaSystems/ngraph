@@ -170,6 +170,8 @@ set (SRC
     op/experimental/quantized_dot.hpp
     op/experimental/quantized_dot_bias.cpp
     op/experimental/quantized_dot_bias.hpp
+    op/experimental/compiled_kernel.cpp
+    op/experimental/compiled_kernel.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
     op/experimental/layers/ctc_greedy_decoder.cpp

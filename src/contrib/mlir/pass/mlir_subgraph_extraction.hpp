@@ -13,35 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include <memory>
 
-#include "cast.hpp"
-#include "exceptions.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/type/element_type.hpp"
-#include "utils/common.hpp"
+#pragma once
+
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace pass
     {
-        namespace op
+        /// This pass creates CompiledKernel ops enclosing sub-graphs that will be compiled and
+        /// executed by MLIR.
+        // TODO: WIP. Currently we only create a single CompiledKernel op for the whole function
+        // body.
+        class MLIRSubgraphExtractionPass : public ngraph::pass::FunctionPass
         {
-            namespace set_1
-            {
-                NodeVector cast(const Node& node)
-                {
-                    auto data = node.get_ng_inputs().at(0);
-                    int64_t target_type = node.get_attribute_value<int64_t>("to");
-                    element::Type elem_type = common::get_ngraph_element_type(target_type);
+        public:
+            MLIRSubgraphExtractionPass() {}
+            bool run_on_function(std::shared_ptr<Function> func) override;
+            /// Checks if an ngraph node is supported by MLIR backend
+            bool is_supported_mlir_op(std::shared_ptr<Node> node);
 
-                    return {std::make_shared<ngraph::op::Convert>(data, elem_type)};
-                }
-
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+        private:
+            static const std::set<std::type_index> m_supported_ops;
+        };
+    }
+}
