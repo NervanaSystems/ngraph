@@ -13,13 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include <memory>
 
-#include "cast.hpp"
-#include "exceptions.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/type/element_type.hpp"
-#include "utils/common.hpp"
+#pragma once
+
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
@@ -29,15 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector cast(const Node& node)
-                {
-                    auto data = node.get_ng_inputs().at(0);
-                    int64_t target_type = node.get_attribute_value<int64_t>("to");
-                    element::Type elem_type = common::get_ngraph_element_type(target_type);
-
-                    return {std::make_shared<ngraph::op::Convert>(data, elem_type)};
-                }
-
+                NodeVector eye_like(const Node& node);
             } // namespace set_1
 
         } //namespace op

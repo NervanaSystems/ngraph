@@ -216,6 +216,7 @@ namespace ngraph
         virtual bool is_op() const { return false; }
         virtual bool is_commutative() { return false; }
         virtual bool is_dynamic() const;
+        virtual bool has_state() const { return false; }
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
         virtual std::ostream& write_short_description(std::ostream&) const;
