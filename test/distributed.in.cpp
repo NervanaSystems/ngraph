@@ -151,6 +151,7 @@ NGRAPH_TEST(${BACKEND_NAME}, send_recv)
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto comm_size = get_distributed_interface()->get_size();
+    // this test only works for 2 nodes
     if (comm_size != 2)
     {
         return;
@@ -188,6 +189,12 @@ NGRAPH_TEST(${BACKEND_NAME}, send_recv_ring)
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto comm_size = get_distributed_interface()->get_size();
+    // test only works for at least 2 nodes
+    if (comm_size < 2)
+    {
+        return;
+    }
+
     auto rank = get_distributed_interface()->get_rank();
     std::shared_ptr<Function> f_send;
     std::shared_ptr<Function> f_recv;
