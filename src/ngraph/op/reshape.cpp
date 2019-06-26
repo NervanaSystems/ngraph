@@ -24,10 +24,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::Reshape::Reshape(const shared_ptr<Node>& arg,
+const string op::Reshape::type_name{"Reshape"};
+
+op::Reshape::Reshape(const Output<Node>& arg,
                      const AxisVector& input_order,
                      const Shape& output_shape)
-    : Op("Reshape", check_single_output_args({arg}))
+    : Op({arg})
     , m_input_order(input_order)
     , m_output_shape(output_shape)
 {
