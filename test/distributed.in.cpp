@@ -166,7 +166,7 @@ NGRAPH_TEST(distributed_${BACKEND_NAME}, send_recv)
         f = make_shared<Function>(make_shared<op::Recv>(A, 0), ParameterVector{A});
     }
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
-    auto v = vector<float>{1, 2, 3, 4};
+    auto v = vector<float>{1.0, 2.4, 3.5, 4.3};
     auto result = backend->create_tensor(element::f32, shape);
     copy_data(result, vector<float>(4, 0));
 
