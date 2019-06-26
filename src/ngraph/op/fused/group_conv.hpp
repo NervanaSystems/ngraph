@@ -70,8 +70,8 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-            size_t m_groups;
-            PadType m_pad_type;
+            size_t m_groups{0};
+            PadType m_pad_type{PadType::NOTSET};
         };
     }
 }
