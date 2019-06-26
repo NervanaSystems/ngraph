@@ -18,8 +18,8 @@
 #include <cmath>
 #include <functional>
 
-#include "ngraph/builder/split.hpp"
 #include "ngraph/builder/reshape.hpp"
+#include "ngraph/builder/split.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"

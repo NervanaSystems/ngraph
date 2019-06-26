@@ -59,7 +59,10 @@ namespace ngraph
                 std::size_t get_hidden_size() const { return m_hidden_size; }
                 float get_clip() const { return m_clip; }
                 const std::vector<std::string>& get_activations() const { return m_activations; }
-                const std::vector<float>& get_activation_alpha() const { return m_activation_alpha; }
+                const std::vector<float>& get_activation_alpha() const
+                {
+                    return m_activation_alpha;
+                }
                 const std::vector<float>& get_activation_beta() const { return m_activation_beta; }
             protected:
                 ///

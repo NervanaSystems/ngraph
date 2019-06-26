@@ -18,8 +18,8 @@
 #include <cmath>
 #include <functional>
 
-#include "ngraph/builder/split.hpp"
 #include "ngraph/builder/reshape.hpp"
+#include "ngraph/builder/split.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
@@ -191,19 +191,6 @@ NodeVector op::RNNCell::decompose_op() const
 
 shared_ptr<Node> op::RNNCell::get_bias() const
 {
-    // shared_ptr<Node> bias;
-    // if (get_input_size() == 5)
-    // {
-    //     bias = get_argument(4);
-    // }
-    // else
-    // {
-    //     // As default bias is all zeros, thus just initialize it with appropriate shape and zeros.
-    //     bias = op::Constant::create(input(0).get_element_type(),
-    //                                 Shape{2 * get_hidden_size()},
-    //                                 vector<float>(2 * get_hidden_size(), 0.f));
-    // }
-    // return bias;
     shared_ptr<Node> bias;
     // Split B onto Wb an Rb and add them.
     NodeVector b_W_R = builder::split(get_argument(4), 2);

@@ -36,7 +36,6 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/util/reshape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "utils/reshape.hpp"

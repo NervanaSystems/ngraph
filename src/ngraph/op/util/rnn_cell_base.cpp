@@ -69,20 +69,22 @@ op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size
     return afunc;
 }
 
-
-shared_ptr<Node> op::util::RNNCellBase::add(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
+shared_ptr<Node> op::util::RNNCellBase::add(const shared_ptr<Node>& lhs,
+                                            const shared_ptr<Node>& rhs)
 {
     auto args = op::numpy_style_broadcast({lhs, rhs});
     return {make_shared<op::Add>(args.at(0), args.at(1))};
 }
 
-shared_ptr<Node> op::util::RNNCellBase::sub(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
+shared_ptr<Node> op::util::RNNCellBase::sub(const shared_ptr<Node>& lhs,
+                                            const shared_ptr<Node>& rhs)
 {
     auto args = op::numpy_style_broadcast({lhs, rhs});
     return {make_shared<op::Subtract>(args.at(0), args.at(1))};
 }
 
-shared_ptr<Node> op::util::RNNCellBase::mul(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
+shared_ptr<Node> op::util::RNNCellBase::mul(const shared_ptr<Node>& lhs,
+                                            const shared_ptr<Node>& rhs)
 {
     auto args = op::numpy_style_broadcast({lhs, rhs});
     return {make_shared<op::Multiply>(args.at(0), args.at(1))};
