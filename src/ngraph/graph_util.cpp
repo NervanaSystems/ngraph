@@ -233,6 +233,11 @@ std::list<std::shared_ptr<ngraph::Node>>
                 // There is a friendly name for this node so copy it
                 cloned_node->set_friendly_name(node->get_friendly_name());
             }
+
+            for (auto tag : node->get_provenance_tags())
+            {
+                cloned_node->add_provenance_tag(tag);
+            }
             node_map[node.get()] = cloned_node;
         }
     }
