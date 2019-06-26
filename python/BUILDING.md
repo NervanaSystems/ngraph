@@ -2,8 +2,8 @@
 
 ## Building nGraph Python Wheels
 
-If you want to try a newer version of nGraph's Python API than is available from
-PyPI, you can build your own latest version from the source code. This 
+If you want to try a newer version of nGraph's Python API than is available 
+from PyPI, you can build your own latest version from the source code. This 
 process is very similar to what is outlined in our [ngraph_build] instructions 
 with two important differences:
 
