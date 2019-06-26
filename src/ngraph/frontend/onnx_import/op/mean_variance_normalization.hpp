@@ -16,23 +16,29 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
-#include "ngraph/util.hpp"
+#include <memory>
+
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace onnx_import
     {
-        class DynElimination : public GraphRewrite
+        namespace op
         {
-        public:
-            DynElimination();
+            namespace set_1
+            {
+                NodeVector mean_variance_normalization(const Node& node);
+            } // namespace set_1
 
-        private:
-            void construct_transpose();
-            void construct_broadcast();
-            void construct_dyn_reshape();
-            void construct_range();
-        };
-    }
-}
+            namespace set_9
+            {
+                NodeVector mean_variance_normalization(const Node& node);
+            } // namespace set_9
+
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph
