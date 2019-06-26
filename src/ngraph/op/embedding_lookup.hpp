@@ -28,6 +28,11 @@ namespace ngraph
         class EmbeddingLookup : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a EmbeddingLookup operation.
+            EmbeddingLookup() = default;
             /// \brief Constructs a EmbeddingLookup operation.
             ///
             /// EmbeddingLookup constructs an output tensor by replacing every index in a given input tensor
@@ -36,8 +41,8 @@ namespace ngraph
             /// \param data The input indices for tokens to be translated into embeddings
             /// \param weights is a dense matrix [N,M] where each row 0..N
             /// corresponds to an embedding (i.e. typically, a vector of real numbers) of length M
-            EmbeddingLookup(const std::shared_ptr<Node>& data, const std::shared_ptr<Node>& weights)
-                : Op("EmbeddingLookup", check_single_output_args({data, weights}))
+            EmbeddingLookup(const Output<Node>& data, const Output<Node>& weights)
+                : Op({data, weights})
             {
                 constructor_validate_and_infer_types();
             }

@@ -1,7 +1,8 @@
-.. backend-support/index.rst
+.. backends/index.rst
 
-About backends
-##############
+#################################
+Developer Resources for Backends
+#################################
 
 * :ref:`what_is_backend`
 * :ref:`how_to_use`

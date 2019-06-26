@@ -73,6 +73,8 @@ namespace ngraph
                                                          size_t i);
     const NodeVector& check_single_output_args(const NodeVector& args);
 
+    OutputVector as_output_vector(const NodeVector& args);
+
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
@@ -488,7 +490,7 @@ namespace ngraph
         /// \param node A pointer to the node for the output handle.
         /// \param index The index of the output.
         Output(NodeType* node, size_t index)
-            : m_node(node)
+            : m_node(node->shared_from_this())
             , m_index(index)
         {
         }
@@ -499,7 +501,7 @@ namespace ngraph
         ///
         /// TODO: Make a plan to deprecate this.
         Output(const std::shared_ptr<NodeType>& node, size_t index)
-            : m_node(node.get())
+            : m_node(node)
             , m_index(index)
         {
         }
@@ -512,12 +514,15 @@ namespace ngraph
         {
         }
 
+        // A null output
+        Output() = default;
+
         /// \return A pointer to the node referred to by this output handle.
-        NodeType* get_node() const { return m_node; }
+        NodeType* get_node() const { return m_node.get(); }
         /// \return A `shared_ptr` to the node referred to by this output handle.
         ///
         /// TODO: Make a plan to deprecate this.
-        std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node->shared_from_this(); }
+        std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node; }
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const { return m_index; }
         /// \return A reference to the tensor descriptor for this output.
@@ -569,8 +574,8 @@ namespace ngraph
         bool operator<=(const Output& other) const { return !(*this > other); }
         bool operator>=(const Output& other) const { return !(*this < other); }
     private:
-        NodeType* const m_node;
-        const size_t m_index;
+        std::shared_ptr<NodeType> m_node;
+        size_t m_index{0};
     };
 
     inline Input<Node> Node::input(size_t input_index)

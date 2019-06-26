@@ -1,4 +1,4 @@
-.. plaidml-ng-api/index.rst:
+.. backends/plaidml-ng-api/index.rst:
 
 
 PlaidML from nGraph

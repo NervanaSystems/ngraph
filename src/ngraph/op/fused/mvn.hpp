@@ -41,18 +41,31 @@ namespace ngraph
                 bool normalize_variance = true,
                 double eps = 1e-9);
 
+            /// \brief Constructs an MVN operation.
+            ///
+            /// \param data Input tensor with data
+            /// \param reduction_axes A list of axes, along which to reduce.
+            /// \param normalize_variance flag that denotes whether to perform variance normalization.
+            /// \param eps the number to be added to the variance to avoid division by zero when normalizing the value
+            ///
+            MVN(const std::shared_ptr<ngraph::Node>& data,
+                AxisSet reduction_axes,
+                bool normalize_variance = true,
+                double eps = 1e-9);
+
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             double get_eps() const { return m_eps; }
-            bool get_across_channels() const { return m_across_channels; }
             bool get_normalize_variance() const { return m_normalize_variance; }
+            AxisSet get_reduction_axes() const { return m_reduction_axes; }
         private:
             const double m_eps;
             const bool m_across_channels;
             const bool m_normalize_variance;
+            AxisSet m_reduction_axes;
         };
     } // namespace op
 } // namespace ngraph

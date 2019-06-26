@@ -72,6 +72,13 @@ void op::Split::pre_validate_and_infer_types()
                               dimension_at_axis,
                               " has to be equal to the sum of splits passed to the op: ",
                               sum_splits);
+
+        const bool all_splits_positive =
+            all_of(begin(m_splits), end(m_splits), [](const size_t v) { return v > 0; });
+
+        NODE_VALIDATION_CHECK(this,
+                              all_splits_positive == true,
+                              "All values of the 'splits' attribute must be greater than zero");
     }
 }
 
