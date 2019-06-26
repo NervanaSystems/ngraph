@@ -37,6 +37,28 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
     , m_normalize_variance{normalize_variance}
 {
     constructor_validate_and_infer_types();
+
+    // if m_across_channels is true we should calculate mean and variance per batch
+    // else we calculate these per channel
+    m_reduction_axes.insert(0);
+    size_t start_axis = m_across_channels ? 1 : 2;
+    for (size_t i = start_axis; i < data->get_shape().size(); ++i)
+    {
+        m_reduction_axes.insert(i);
+    }
+}
+
+op::MVN::MVN(const std::shared_ptr<Node>& data,
+             AxisSet reduction_axes,
+             bool normalize_variance,
+             double eps)
+    : FusedOp("MVN", {data})
+    , m_eps{eps}
+    , m_across_channels{false}
+    , m_normalize_variance{normalize_variance}
+    , m_reduction_axes{reduction_axes}
+{
+    constructor_validate_and_infer_types();
 }
 
 NodeVector op::MVN::decompose_op() const
@@ -44,18 +66,9 @@ NodeVector op::MVN::decompose_op() const
     auto data = get_argument(0);
     auto data_shape = data->get_shape(); // assume that data has n and c channels.
 
-    // if m_across_channels is true we should calculate mean and variance per batch
-    // else we calculate these per channel
-    AxisSet reduction_axes;
-    size_t start_axis = m_across_channels ? 1 : 2;
-    for (size_t i = start_axis; i < data_shape.size(); ++i)
-    {
-        reduction_axes.insert(i);
-    }
-
     // calculate mean normalization
-    auto mean = builder::mean(data, reduction_axes);
-    mean = legacy_style_broadcast_for_binary_operation(data, mean, 0).at(1);
+    auto mean = builder::mean(data, m_reduction_axes);
+    mean = std::make_shared<op::Broadcast>(mean, data_shape, m_reduction_axes);
     auto mean_normalization = data - mean;
 
     if (!m_normalize_variance)
@@ -65,14 +78,13 @@ NodeVector op::MVN::decompose_op() const
     else
     {
         // calculate variance
-        auto variance = builder::variance(mean_normalization, reduction_axes);
+        auto variance = builder::variance(data, m_reduction_axes);
         variance = make_shared<op::Sqrt>(variance);
         // add epsilon
         auto eps_node = op::Constant::create(
             data->get_element_type(), variance->get_shape(), vector<double>{m_eps});
         variance = variance + eps_node;
-        variance =
-            legacy_style_broadcast_for_binary_operation(mean_normalization, variance, 0).at(1);
+        variance = std::make_shared<op::Broadcast>(variance, data_shape, m_reduction_axes);
 
         return {mean_normalization / variance};
     }
@@ -84,5 +96,5 @@ shared_ptr<Node> op::MVN::copy_with_new_args(const NodeVector& new_args) const
                           new_args.size() == 1,
                           "Expected 1 element in new_args for the MVN op but got ",
                           new_args.size());
-    return make_shared<MVN>(new_args.at(0), m_across_channels, m_normalize_variance, m_eps);
+    return make_shared<MVN>(new_args.at(0), m_reduction_axes, m_normalize_variance, m_eps);
 }

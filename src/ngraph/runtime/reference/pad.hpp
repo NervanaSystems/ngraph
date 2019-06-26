@@ -162,6 +162,11 @@ namespace ngraph
                         v = arg0[input_transform.index(c)];
                         break;
                     }
+                    case op::PadMode::SYMMETRIC:
+                    {
+                        // TODO: Add support for Symmetric mode
+                        throw ngraph_error("Symmetric mode padding not supported");
+                    }
                     }
 
                     out[output_transform.index(out_coord)] = v;
