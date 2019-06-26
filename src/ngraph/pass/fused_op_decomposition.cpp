@@ -13,37 +13,52 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-
 #include "ngraph/pass/fused_op_decomposition.hpp"
-
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/op/util/fused_op.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-bool ngraph::pass::FusedOpDecomposition::run_on_node(std::shared_ptr<ngraph::Node> node)
+pass::FusedOpDecomposition::FusedOpDecomposition(op_query_t callback)
+    : m_has_direct_support{callback}
+{
+}
+
+bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 
-    if (auto fused_op = std::dynamic_pointer_cast<ngraph::op::util::FusedOp>(node))
+    if (auto fused_op = dynamic_pointer_cast<op::util::FusedOp>(node))
     {
-        if (m_callback && m_callback(*node))
+        if (m_has_direct_support && m_has_direct_support(*node))
         {
             // Op supported by backend. Do not decompose
             return modified;
         }
+
         auto subgraph_outputs = fused_op->decompose_op();
+        // Run recursively untill no more fused ops
+        auto subgraph = extract_subgraph(subgraph_outputs, fused_op->get_arguments());
+        for (auto subgraph_node : subgraph)
+        {
+            if (auto nested_fused_op = dynamic_pointer_cast<op::util::FusedOp>(subgraph_node))
+            {
+                if (!(m_has_direct_support && m_has_direct_support(*nested_fused_op)))
+                {
+                    run_on_node(nested_fused_op);
+                }
+            }
+        }
+
         size_t i = 0;
         for (auto output_node : subgraph_outputs)
         {
             for (size_t j = 0; j < output_node->get_outputs().size(); j++, i++)
             {
                 // TODO: Provenance
-                std::set<ngraph::descriptor::Input*> fop_users{
-                    begin(fused_op->get_outputs().at(i).get_inputs()),
-                    end(fused_op->get_outputs().at(i).get_inputs())};
+                set<descriptor::Input*> fop_users{begin(fused_op->get_outputs().at(i).get_inputs()),
+                                                  end(fused_op->get_outputs().at(i).get_inputs())};
                 for (auto fop_user : fop_users)
                 {
                     if (auto goe =
@@ -52,7 +67,7 @@ bool ngraph::pass::FusedOpDecomposition::run_on_node(std::shared_ptr<ngraph::Nod
                         if (goe->get_n() == i && !goe->get_output_inputs(0).empty())
                         {
                             // Replace GOE users
-                            std::set<ngraph::descriptor::Input*> goe_users{
+                            set<descriptor::Input*> goe_users{
                                 begin(goe->get_outputs().at(0).get_inputs()),
                                 end(goe->get_outputs().at(0).get_inputs())};
                             for (auto goe_user : goe_users)
@@ -79,9 +94,4 @@ bool ngraph::pass::FusedOpDecomposition::run_on_node(std::shared_ptr<ngraph::Nod
     }
 
     return modified;
-}
-
-pass::FusedOpDecomposition::FusedOpDecomposition(op_query_t callback)
-    : m_callback{callback}
-{
 }

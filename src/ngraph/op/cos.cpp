@@ -22,8 +22,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Cos::Cos(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Cos", arg)
+const string op::Cos::type_name{"Cos"};
+
+op::Cos::Cos(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
