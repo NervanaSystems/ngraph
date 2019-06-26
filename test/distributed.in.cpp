@@ -215,7 +215,8 @@ NGRAPH_TEST(${BACKEND_NAME}, send_recv_ring)
         copy_data(result, v);
     }
 
-    f_send = make_shared<Function>(make_shared<op::Send>(A, rank + 1), ParameterVector{A});
+    f_send =
+        make_shared<Function>(make_shared<op::Send>(A, (rank + 1) % comm_size), ParameterVector{A});
     auto handle = backend->compile(f_send);
     handle->call_with_validate({result}, {result});
 
