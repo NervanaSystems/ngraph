@@ -20,13 +20,43 @@ something like:
 
 
 Find or display nGraph Version
--------------------------------
+==============================
 
-
+If you're working with the :doc:`../python_api/index`, the following command 
+may be useful:
 
 .. code-block:: console
 
    python3 -c "import ngraph as ng; print('nGraph version: ',ng.__version__)";
+
+
+Localize environmental variables
+================================
+
+Another generic configuration option is to activate ``NGRAPH_CPU_DEBUG_TRACER``, 
+a runtime environment variable and useful tool for data scientists. 
+
+To activate this tool, set the ``env`` var ``NGRAPH_CPU_DEBUG_TRACER=1``.
+It will dump ``trace_meta.log`` and ``trace_bin_data.log``. 
+
+To specify the names of logs with those flags:
+
+:: 
+
+  NGRAPH_TRACER_LOG = "meta.log"
+  NGRAPH_BIN_TRACER_LOG = "bin.log"
+
+The meta_log line contains::
+ 
+  kernel_name, serial_number_of_op, tensor_id, symbol_of_in_out, num_elements, shape, binary_data_offset, mean_of_tensor, variance_of_tensor
+
+A line example from unit-test might look like::
+
+  K=Add S=0 TID=0_0 >> size=4 Shape{2, 2} bin_data_offset=8 mean=1.5 var=1.25
+
+The binary_log line contains::
+
+  tensor_id, binary data (tensor data)
 
 
 FMV
