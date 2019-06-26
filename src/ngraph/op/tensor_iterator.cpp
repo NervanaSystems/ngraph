@@ -39,6 +39,60 @@ op::TensorIterator::TensorIterator(const OutputVector& body_inputs,
 
 void op::TensorIterator::validate_and_infer_types()
 {
+    // The number of iterations is determined by the shortest sequence input
+    size_t iteration_count{0};
+    // If true, iteration count is dynamic
+    bool iteration_count_dynamic{false};
+    // true when we something about the count
+    bool iteration_count_valid{false};
+    // Shapes of the inputs that would be passed to iterator. 
+    // For sequences, the sequence axis is removed, for everything
+    // else, the shape is unchanged.
+    vector<PartialShape> iterator_shapes;
+    for (size_t axis = 0; axis < get_input_size(); ++axis)
+    {
+        PartialShape sequence_shape = get_input_partial_shape(axis);
+        PartialShape iterator_shape = sequence_shape;
+        Rank sequence_rank = sequence_shape.rank();
+
+        if (m_sequence_inputs.find(axis) != m_sequence_inputs.end())
+        {
+            if (sequence_rank.is_dynamic())
+            {
+                // Can't determine the sequence length
+                iteration_count_dynamic = true;
+            }
+            else
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      static_cast<size_t>(sequence_shape.rank()) != 0,
+                                      "Input ",
+                                      axis,
+                                      " is specified to be a sequence but is scalar.");
+                Dimension sequence_dim = sequence_shape[0];
+                vector<Dimension> dimensions = static_cast<vector<Dimension>>(sequence_shape);
+                dimensions.erase(dimensions.begin());
+                iterator_shape = PartialShape(dimensions);
+
+                if (sequence_dim.is_dynamic())
+                {
+                    // Can't determine the sequence length
+                    iteration_count_dynamic = true;
+                }
+                else
+                {
+                    size_t sequence_length = static_cast<size_t>(sequence_dim);
+                    if (!iteration_count_valid || (sequence_length < iteration_count))
+                    {
+                        iteration_count = sequence_length;
+                        iteration_count_valid = true;
+                    }
+                }
+            }
+        }
+        iterator_shapes.push_back(iterator_shape);
+    }
+    // Now we make sure the parameters match.
 }
 
 const ParameterVector& op::TensorIterator::get_body_parameters() const
