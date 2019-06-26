@@ -206,3 +206,4 @@ fake_quantize
 fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
 send_recv
+send_recv_ring

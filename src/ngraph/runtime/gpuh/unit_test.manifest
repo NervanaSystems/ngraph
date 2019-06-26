@@ -3,3 +3,4 @@ tensorview_custom_mem
 batch_norm_inference_f64
 batch_norm_inference_f32
 send_recv
+send_recv_ring
