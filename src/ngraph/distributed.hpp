@@ -26,34 +26,15 @@ namespace ngraph
 {
     namespace reduction
     {
-        enum class Type_t
+        enum class Type
         {
-            sum,
-            prod,
-            min,
-            max,
+            SUM,
+            PROD,
+            MIN,
+            MAX,
         };
 
-        class Type
-        {
-        public:
-            Type(const Type_t t)
-                : m_type(t)
-            {
-            }
-            friend std::ostream& operator<<(std::ostream&, const Type&);
-            bool operator==(const Type& other) const;
-            bool operator!=(const Type& other) const { return !(*this == other); }
-            Type_t get_type() const;
-
-        private:
-            Type_t m_type;
-        };
         std::ostream& operator<<(std::ostream& out, const Type& obj);
-        extern NGRAPH_API const Type sum;
-        extern NGRAPH_API const Type prod;
-        extern NGRAPH_API const Type min;
-        extern NGRAPH_API const Type max;
     }
 
     class DistributedInterface
