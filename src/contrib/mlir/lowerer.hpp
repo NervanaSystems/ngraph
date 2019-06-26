@@ -13,35 +13,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include <memory>
 
-#include "cast.hpp"
-#include "exceptions.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/type/element_type.hpp"
-#include "utils/common.hpp"
+#pragma once
+
+#include "contrib/mlir/compiler.hpp"
+
+#include <mlir/Pass/Pass.h>
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace runtime
     {
-        namespace op
+        namespace ngmlir
         {
-            namespace set_1
-            {
-                NodeVector cast(const Node& node)
-                {
-                    auto data = node.get_ng_inputs().at(0);
-                    int64_t target_type = node.get_attribute_value<int64_t>("to");
-                    element::Type elem_type = common::get_ngraph_element_type(target_type);
+            class MLIRCompiler;
+        }
+    }
+}
 
-                    return {std::make_shared<ngraph::op::Convert>(data, elem_type)};
-                }
-
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+namespace mlir
+{
+    mlir::Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
+}
