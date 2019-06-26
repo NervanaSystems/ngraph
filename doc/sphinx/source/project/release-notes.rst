@@ -11,38 +11,23 @@ This page includes additional documentation updates.
 We are pleased to announce the release of version |version|-doc.
 
 
-0.21-doc
---------
-
-Documentation updates
-~~~~~~~~~~~~~~~~~~~~~
-
-Summary of documentation-related changes:
-
-+ Update :doc:`doc-contributor-README` for new community-based contributions. 
-+ Added instructions on how to test or display the installed nGraph version.
-+ Added instructions on building nGraph bridge (ngraph-bridge).
-+ Updated Backend Developer Guides and ToC structure.
-+ Tested documentation build on Clear Linux OS; it works.
-+ Fixed a few links and redirs affected by filename changes.
-+ Some coding adjustments for options to render math symbols, so they can be 
-  documented more clearly and without excessive JS (see replacements.txt).
-+ Consistent filenaming on all BE indexes.
-+ Remove deprecated TensorAPI.
-+ 
-
+==============================
 
 Core updates for |version|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+ The offset argument in tensor reads and writes has been removed
-+ Save/load API
 + More ONNX ops
-+ Better tensor creation
-+ More shape support
-+ Provenance improvements
-+ offset arg for tensor creation is deprecated
-+ static linking support
++ Optimizations
++ Don't reseed RNG on each use
+
+0.22-doc
+--------
+
++ Initial doc on iGPU. 
++ Improve Backend APIs with new DynamicBackend API.
++ Note deprecation of support of MXNet's ``ngraph-mxnet`` PyPI.
++ Noted changes on graph inspection options resultant from PR 3016.
++ Added better tips and details to doc-contributor-README.
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
@@ -53,6 +38,36 @@ Changelog on Previous Releases
 
 For downloads formatted as ``.zip`` and ``tar.gz``, see 
 https://github.com/NervanaSystems/ngraph/releases.
+
+0.21
+----
+
++ The offset argument in tensor reads and writes has been removed
++ Save/load API
++ More ONNX ops
++ Better tensor creation
++ More shape support
++ Provenance improvements
++ offset arg for tensor creation is deprecated
++ static linking support
++ Initial test of 0.21-doc
+
+0.21-doc
+--------
+
+Summary of documentation-related changes:
+
++ Updated :doc:`doc-contributor-README` for new community-based contributions. 
++ Added instructions on how to test or display the installed nGraph version.
++ Added instructions on building nGraph bridge (ngraph-bridge).
++ Updated Backend Developer Guides and ToC structure.
++ Tested documentation build on Clear Linux OS; it works.
++ Fixed a few links and redirs affected by filename changes.
++ Some coding adjustments for options to render math symbols, so they can be 
+  documented more clearly and without excessive JS (see replacements.txt).
++ Consistent filenaming on all BE indexes.
++ Removed deprecated TensorAPI.
+
 
 0.20
 ----
