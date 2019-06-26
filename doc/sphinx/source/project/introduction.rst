@@ -18,7 +18,7 @@ Many companies, ranging from startups to established manufacturers such as
 Intel, are actively developing Application Specific Integrated Circuits (ASICs)
 to accelerate the performance of deep learning for both training and inference.
 
-**Optimize software to accelerate performance
+**Optimize software to accelerate performance**
 
 nGraph Compiler, an open source deep learning compiler, is Intel's solution to
 deliver performance via software optimization. nGraph provides developers with a
