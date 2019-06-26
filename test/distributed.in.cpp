@@ -29,6 +29,8 @@
 using namespace std;
 using namespace ngraph;
 
+static string s_manifest = "${MANIFEST}";
+
 static void test_allreduce_common(reduction::Type reduce_type)
 {
     auto comm_size = get_distributed_interface()->get_size();
