@@ -31,7 +31,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an unitialized send operation.
-            Send();
+            Send() = default;
             /// \brief Constructs a send operation.
             ///
             /// \param arg The node for input tensor

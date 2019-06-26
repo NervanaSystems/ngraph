@@ -31,7 +31,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an unitialized recv operation.
-            Recv();
+            Recv() = default;
             /// \brief Constructs a Recv operation.
             ///
             /// \param arg The node for tensor to receive data
