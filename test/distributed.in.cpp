@@ -94,29 +94,29 @@ static void test_allreduce_common(reduction::Type reduce_type)
     }
 }
 
-NGRAPH_TEST(distributed_${BACKEND_NAME}, allreduce_sum)
+NGRAPH_TEST(${BACKEND_NAME}, allreduce_sum)
 {
     test_allreduce_common(reduction::Type::SUM);
 }
 
-NGRAPH_TEST(distributed_${BACKEND_NAME}, allreduce_min)
+NGRAPH_TEST(${BACKEND_NAME}, allreduce_min)
 {
     test_allreduce_common(reduction::Type::MIN);
 }
 
-NGRAPH_TEST(distributed_${BACKEND_NAME}, allreduce_max)
+NGRAPH_TEST(${BACKEND_NAME}, allreduce_max)
 {
     test_allreduce_common(reduction::Type::MAX);
 }
 
 #if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-NGRAPH_TEST(distributed_${BACKEND_NAME}, allreduce_prod)
+NGRAPH_TEST(${BACKEND_NAME}, allreduce_prod)
 {
     test_allreduce_common(reduction::Type::PROD);
 }
 #endif
 
-NGRAPH_TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
+NGRAPH_TEST(${BACKEND_NAME}, broadcastdistributed)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -146,7 +146,7 @@ NGRAPH_TEST(distributed_${BACKEND_NAME}, broadcastdistributed)
 
 //MLSL does not support send recv
 #if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-NGRAPH_TEST(distributed_${BACKEND_NAME}, send_recv)
+NGRAPH_TEST(${BACKEND_NAME}, send_recv)
 {
     auto shape = Shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -178,5 +178,47 @@ NGRAPH_TEST(distributed_${BACKEND_NAME}, send_recv)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {result});
     EXPECT_EQ(v, read_vector<float>(result));
+}
+#endif
+
+//MLSL does not support send recv
+#if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
+NGRAPH_TEST(${BACKEND_NAME}, send_recv_ring)
+{
+    auto shape = Shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto comm_size = get_distributed_interface()->get_size();
+    auto rank = get_distributed_interface()->get_rank();
+    std::shared_ptr<Function> f_send;
+    std::shared_ptr<Function> f_recv;
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto v = vector<float>{1, 2, 3, 4};
+    auto result = backend->create_tensor(element::f32, shape);
+    copy_data(result, vector<float>(4, 0));
+
+    if (rank != 0)
+    {
+        f_recv = make_shared<Function>(make_shared<op::Recv>(A, rank - 1), ParameterVector{A});
+        auto handle = backend->compile(f_recv);
+        handle->call_with_validate({result}, {result});
+        EXPECT_EQ(v, read_vector<float>(result));
+    }
+    else
+    {
+        copy_data(result, v);
+    }
+
+    f_send = make_shared<Function>(make_shared<op::Send>(A, rank + 1), ParameterVector{A});
+    auto handle = backend->compile(f_send);
+    handle->call_with_validate({result}, {result});
+
+    if (rank == 0)
+    {
+        f_recv = make_shared<Function>(make_shared<op::Recv>(A, comm_size - 1), ParameterVector{A});
+        auto handle = backend->compile(f_recv);
+        copy_data(result, vector<float>(4, 0));
+        handle->call_with_validate({result}, {result});
+        EXPECT_EQ(v, read_vector<float>(result));
+    }
 }
 #endif
