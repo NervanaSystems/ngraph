@@ -85,6 +85,8 @@ add_library(onnx_import STATIC
         op/equal.hpp
         op/erf.hpp
         op/exp.hpp
+        op/eye_like.cpp
+        op/eye_like.hpp
         op/flatten.cpp
         op/flatten.hpp
         op/floor.hpp
@@ -191,6 +193,7 @@ add_library(onnx_import STATIC
         op/xor.hpp
         ops_bridge.cpp
         ops_bridge.hpp
+        utils/common.cpp
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
