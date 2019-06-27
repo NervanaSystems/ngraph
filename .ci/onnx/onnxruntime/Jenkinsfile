@@ -20,7 +20,7 @@ NGRPAH_REPOSITORY = "https://github.com/NervanaSystems/ngraph.git"
 NGRAPH_COMMIT_HASH = "${ghprbActualCommit}" // particular nGraph PR commit hash 
 
 ONNX_REPOSITORY = "https://github.com/NervanaSystems/onnxruntime.git"
-ONNX_RUNTIME_BRANCH = "master"
+ONNX_RUNTIME_BRANCH = "release"
 
 def main(){
     timeout(activity: true, time: 15) {
