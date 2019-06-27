@@ -5250,8 +5250,8 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
     float dt = 1.0f;
     float sigma1 = 1.0f / (1.0f + std::exp(-x1));
     float sigma2 = 1.0f / (1.0f + std::exp(-x2));
-    float bprop1 = sigma1 * ( 1 - sigma1 ) * dt;
-    float bprop2 = sigma2 * ( 1 - sigma2 ) * dt;
+    float bprop1 = sigma1 * (1 - sigma1) * dt;
+    float bprop2 = sigma2 * (1 - sigma2) * dt;
 
     vector<float> dataA{x1, x2, x1, x2};
     vector<float> dataB{dt, dt, dt, dt};
