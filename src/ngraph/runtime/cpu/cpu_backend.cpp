@@ -25,6 +25,10 @@
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
 #include "ngraph/util.hpp"
 
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/compiler.hpp"
+#endif
+
 using namespace ngraph;
 using namespace std;
 
@@ -90,6 +94,14 @@ shared_ptr<runtime::Executable>
                                        ngraph::pass::PassConfig& pass_config,
                                        bool performance_counters_enabled)
 {
+#ifdef NGRAPH_MLIR_ENABLE
+    if (std::getenv("NGRAPH_MLIR") != nullptr)
+    {
+        // Initialize MLIR compiler
+        ngmlir::MLIRCompiler::init_mlir();
+    }
+#endif
+
     shared_ptr<runtime::Executable> rc;
     auto it = m_exec_map.find(func);
     if (it != m_exec_map.end())
