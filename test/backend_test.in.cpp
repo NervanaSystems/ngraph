@@ -5194,12 +5194,17 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h2w2)
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, input->get_shape());
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, input->get_shape());
 
-    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    float x1 = 1.0f;
+    float x2 = 4.0f;
+    float sigma1 = 1.0f / (1.0f + std::exp(-x1));
+    float sigma2 = 1.0f / (1.0f + std::exp(-x2));
+
+    vector<float> dataA{x1, x2, x1, x2};
     copy_data(a, dataA);
 
     auto handle = backend->compile(func);
     handle->call_with_validate({result}, {a});
-    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+    vector<float> expected{sigma1, sigma2, sigma1, sigma2};
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
@@ -5214,12 +5219,17 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, input->get_shape());
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, input->get_shape());
 
-    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    float x1 = 1.0f;
+    float x2 = 4.0f;
+    float sigma1 = 1.0f / (1.0f + std::exp(-x1));
+    float sigma2 = 1.0f / (1.0f + std::exp(-x2));
+
+    vector<float> dataA{x1, x2, x1, x2};
     copy_data(a, dataA);
 
     auto handle = backend->compile(func);
     handle->call_with_validate({result}, {a});
-    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+    vector<float> expected{sigma1, sigma2, sigma1, sigma2};
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
@@ -5235,15 +5245,23 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, delta->get_shape());
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, input->get_shape());
 
-    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
-    vector<float> dataB{1.0f, 1.0f, 1.0f, 1.0f};
+    float x1 = 1.0f;
+    float x2 = 4.0f;
+    float dt = 1.0f;
+    float sigma1 = 1.0f / (1.0f + std::exp(-x1));
+    float sigma2 = 1.0f / (1.0f + std::exp(-x2));
+    float bprop1 = sigma1 * ( 1 - sigma1 ) * dt;
+    float bprop2 = sigma2 * ( 1 - sigma2 ) * dt;
+
+    vector<float> dataA{x1, x2, x1, x2};
+    vector<float> dataB{dt, dt, dt, dt};
 
     copy_data(a, dataA);
     copy_data(b, dataB);
     auto handle = backend->compile(func);
     handle->call_with_validate({result}, {a, b});
 
-    vector<float> expected{0.1966119f, 0.01766273f, 0.1966119f, 0.01766273f};
+    vector<float> expected{bprop1, bprop2, bprop1, bprop2};
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
