@@ -88,8 +88,7 @@ def pullImage(configurationMaps) {
             ${CI_ROOT}/utils/docker.sh pull \
                                 --docker_registry=${DOCKER_REGISTRY} \
                                 --name=${configMap["projectName"]} \
-                                --version=${configMap["name"]} \
-                                --tag=ci_test || return 1
+                                --version=${configMap["name"]} || return 1
         """
     }
     UTILS.createStage("Pull_image", pullMethod, configurationMaps)
@@ -104,7 +103,6 @@ def runDockerContainers(configurationMaps) {
                                 --docker_registry=${DOCKER_REGISTRY} \
                                 --name=${configMap["projectName"]} \
                                 --version=${configMap["name"]} \
-                                --tag=ci_test \
                                 --container_name=${configMap["dockerContainerName"]} \
                                 --volumes="-v ${WORKSPACE}/${BUILD_NUMBER}:/logs -v ${HOME}/ONNX_CI:/home -v ${WORKDIR}:/root"
         """
