@@ -163,12 +163,12 @@ namespace ngraph
                         auto in1_2exp = (in1 * 2.f).exp();
                         auto in1_tanh_denominator = in1_2exp + 1.f;
 
-                        auto i0 = delta * ((in1_2exp - 1.f) * in0_neg_exp) /
-                                  (in1_tanh_denominator *
-                                   in0_log_denominator * in0_log_denominator);
-                        auto i1 = delta * (4.f * in1_2exp) /
-                                  (in0_log_denominator *
-                                   in1_tanh_denominator * in1_tanh_denominator);
+                        auto i0 =
+                            delta * ((in1_2exp - 1.f) * in0_neg_exp) /
+                            (in1_tanh_denominator * in0_log_denominator * in0_log_denominator);
+                        auto i1 =
+                            delta * (4.f * in1_2exp) /
+                            (in0_log_denominator * in1_tanh_denominator * in1_tanh_denominator);
                         i0_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
                             arena)) = i0;
                         i1_delta.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(
