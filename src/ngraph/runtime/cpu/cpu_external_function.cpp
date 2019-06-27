@@ -1125,7 +1125,7 @@ using namespace ngraph::runtime;
     }
 
     m_is_compiled = true;
-    if (m_release_function)
+    if (m_release_function && !m_emit_timing)
     {
         release_function();
     }
@@ -1891,6 +1891,10 @@ const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::g
                     m_perf_counters[i].m_call_count = get_call_count(i);
                 }
             }
+        }
+        if (m_release_function)
+        {
+            release_function();
         }
     }
 #endif

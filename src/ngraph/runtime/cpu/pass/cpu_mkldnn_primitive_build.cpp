@@ -55,17 +55,7 @@
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 
-#define WRITE_MKLDNN_DIMS(X)                                                                       \
-    writer << "mkldnn::memory::dims{";                                                             \
-    if (X.size() > 1)                                                                              \
-    {                                                                                              \
-        for (auto i = 0; i < X.size() - 1; i++)                                                    \
-        {                                                                                          \
-            writer << std::to_string(X[i]) << ", ";                                                \
-        }                                                                                          \
-    }                                                                                              \
-    writer << std::to_string(X[X.size() - 1]);                                                     \
-    writer << "}, \n"
+#define WRITE_MKLDNN_DIMS(X) writer << "mkldnn::memory::dims{" << join(X) << "}, \n";
 
 using namespace ngraph;
 using namespace ngraph::op;
@@ -780,21 +770,10 @@ namespace ngraph
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
                     writer << "\n// create memory primitive descriptors\n";
-                    // FIXME
-                    // clang generates 16 bytes aligned store with unaligned address,
-                    // which results in segmentation fault.
-                    // Workaround for now: Use push_back to avoid generating such store.
-                    writer << "mkldnn::memory::dims dims1;\n";
-                    for (auto i = 0; i < result_shape.size(); i++)
-                    {
-                        writer << "dims1.push_back(" << std::to_string(result_shape[i]) << ");\n";
-                    }
 
-                    writer << "\nmkldnn::memory::dims dims2;\n";
-                    for (auto i = 0; i < lower_bounds.size(); i++)
-                    {
-                        writer << "dims2.push_back(" << std::to_string(lower_bounds[i]) << ");\n";
-                    }
+                    writer << "mkldnn::memory::dims dims1{" << join(result_shape) << "};\n";
+                    writer << "mkldnn::memory::dims dims2{" << join(lower_bounds) << "};\n";
+                    ;
 
                     writer << "mkldnn::memory::primitive_desc input_pd = "
                               "mkldnn::memory::primitive_desc(*cg_ctx->mkldnn_descriptors["
