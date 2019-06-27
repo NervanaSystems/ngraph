@@ -37,6 +37,7 @@ NodeInput = Union[Node, NumericData]
 
 ngraph_to_numpy_types_map = [
     (NgraphType.boolean, np.bool),
+    (NgraphType.f16, np.float16),
     (NgraphType.f32, np.float32),
     (NgraphType.f64, np.float64),
     (NgraphType.i8, np.int8),
