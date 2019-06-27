@@ -64,10 +64,12 @@
 #include "op/hard_sigmoid.hpp"
 #include "op/hardmax.hpp"
 #include "op/identity.hpp"
+#include "op/instance_norm.hpp"
 #include "op/leaky_relu.hpp"
 #include "op/less.hpp"
 #include "op/log.hpp"
 #include "op/log_softmax.hpp"
+#include "op/lp_norm.hpp"
 #include "op/lp_pool.hpp"
 #include "op/lrn.hpp"
 #include "op/lstm.hpp"
@@ -273,10 +275,12 @@ namespace ngraph
             REGISTER_OPERATOR("Hardmax", 1, hardmax);
             REGISTER_OPERATOR("HardSigmoid", 1, hard_sigmoid);
             REGISTER_OPERATOR("Identity", 1, identity);
+            REGISTER_OPERATOR("InstanceNormalization", 1, instance_norm);
             REGISTER_OPERATOR("LeakyRelu", 1, leaky_relu);
             REGISTER_OPERATOR("Less", 1, less);
             REGISTER_OPERATOR("Log", 1, log);
             REGISTER_OPERATOR("LogSoftmax", 1, log_softmax);
+            REGISTER_OPERATOR("LpNormalization", 1, lp_norm);
             REGISTER_OPERATOR("LRN", 1, lrn);
             REGISTER_OPERATOR("LSTM", 1, lstm);
             REGISTER_OPERATOR("MatMul", 1, matmul);
