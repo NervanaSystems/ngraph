@@ -33,10 +33,6 @@ using namespace ngraph;
 
 const string op::Asin::type_name{"Asin"};
 
-op::Asin::Asin()
-{
-}
-
 op::Asin::Asin(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {

@@ -38,6 +38,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -104,9 +105,12 @@
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/halide_op.hpp"
-#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/compiler.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -472,8 +476,8 @@ namespace ngraph
             {
                 static BuildOpMap build_dispatcher{
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
-                    {TI(ngraph::runtime::cpu::op::LoopKernel),
-                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::LoopKernel>},
+                    {TI(ngraph::op::CompiledKernel),
+                     &runtime::cpu::Builder::build<ngraph::op::CompiledKernel>},
                     {TI(ngraph::runtime::cpu::op::HalideOp),
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
 

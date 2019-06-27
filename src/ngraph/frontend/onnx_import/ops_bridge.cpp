@@ -53,6 +53,7 @@
 #include "op/equal.hpp"
 #include "op/erf.hpp"
 #include "op/exp.hpp"
+#include "op/eye_like.hpp"
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
 #include "op/gather.hpp"
@@ -260,6 +261,7 @@ namespace ngraph
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Erf", 1, erf);
             REGISTER_OPERATOR("Exp", 1, exp);
+            REGISTER_OPERATOR("EyeLike", 1, eye_like);
             REGISTER_OPERATOR("Flatten", 1, flatten);
             REGISTER_OPERATOR("Floor", 1, floor);
             REGISTER_OPERATOR("Gather", 1, gather);

@@ -19,6 +19,7 @@
 #include <algorithm>   // std::generate
 #include <cmath>       // std::floor, std::min
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::int64_t
 #include <iterator>    // std::begin, std::end
 #include <memory>      // std::shared_ptr, std::make_shared
 #include <type_traits> // std::enable_if
@@ -27,6 +28,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
@@ -34,6 +36,8 @@ namespace ngraph
     {
         namespace common
         {
+            const ngraph::element::Type& get_ngraph_element_type(std::int64_t onnx_type);
+
             /// \brief      Return a monotonic sequence.
             ///
             /// \note       Limitations: this function may not work for very large integer values
@@ -86,6 +90,43 @@ namespace ngraph
                 }
             }
 
+            /// \brief Creates a shifted square identity matrix.
+            /// \note Shifting in the context of this operator means that
+            ///       the matrix can be created with elements equal to 1 not only in the main diagonal.
+            ///       Shifting adds an offset and moves the diagonal up or down
+            ///
+            /// \param[in] output_shape Shape of the resulting matrix.
+            /// \param[in] output_type Element type of the resulting matrix.
+            /// \param[in] shift Shifting of diagonal.
+            ///
+            /// \return A Constant node representing shifted identity matrix.
+            template <typename T = double>
+            std::shared_ptr<ngraph::op::Constant>
+                shifted_square_identity(const Shape output_shape,
+                                        const element::Type& output_type,
+                                        const std::int64_t shift)
+            {
+                std::vector<T> identity_matrix(shape_size(output_shape), T{0});
+                std::int64_t rows = output_shape[0];
+                std::int64_t cols = output_shape[1];
+                for (std::int64_t row = 0; row < rows; ++row)
+                {
+                    const std::int64_t diagonal_element_idx = (row * cols) + row + shift;
+                    if (row + shift < 0)
+                    {
+                        continue;
+                    }
+                    else if (row + shift >= cols)
+                    {
+                        break;
+                    }
+                    identity_matrix.at(diagonal_element_idx) = T{1};
+                }
+
+                return std::make_shared<ngraph::op::Constant>(
+                    output_type, output_shape, identity_matrix);
+            }
+
             /// \brief Creates a square identity matrix.
             ///
             /// \param[in] n Order of the resulting matrix.
@@ -95,16 +136,9 @@ namespace ngraph
             std::shared_ptr<ngraph::op::Constant> square_identity(const size_t n,
                                                                   const element::Type& type)
             {
-                std::vector<T> identity_matrix(n * n, T{0});
-
-                for (size_t row = 0; row < n; ++row)
-                {
-                    const size_t diagonal_element = (n * row) + row;
-                    identity_matrix.at(diagonal_element) = T{1};
-                }
-
-                return std::make_shared<ngraph::op::Constant>(type, Shape{{n, n}}, identity_matrix);
+                return shifted_square_identity(Shape{n, n}, type, 0);
             }
+
         } // namespace  common
     }     // namespace onnx_import
 } // namespace ngraph
