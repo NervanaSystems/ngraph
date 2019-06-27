@@ -19,6 +19,15 @@ something like:
    export LD_LIBRARY_PATH=path/to/ngraph_dist/lib/
 
 
+Find or display nGraph Version
+-------------------------------
+
+
+
+.. code-block:: console
+
+   python3 -c "import ngraph as ng; print('nGraph version: ',ng.__version__)";
+
 
 FMV
 ---

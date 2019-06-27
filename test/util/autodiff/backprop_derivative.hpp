@@ -90,20 +90,7 @@ namespace ngraph
             auto c_vec = read_vector<T>(c_arg);
             fill(c_vec.begin(), c_vec.end(), static_cast<T>(0));
 
-            static std::unordered_map<std::shared_ptr<Function>,
-                                      std::shared_ptr<runtime::Executable>>
-                s_compiled_functions;
-            auto it = s_compiled_functions.find(df);
-            std::shared_ptr<runtime::Executable> df_handle;
-            if (it == s_compiled_functions.end())
-            {
-                df_handle = backend->compile(df);
-                s_compiled_functions.insert({df, df_handle});
-            }
-            else
-            {
-                df_handle = it->second;
-            }
+            auto df_handle = backend->compile(df);
 
             // for each element of the adjoint
             // same as saying for each element of y
@@ -212,20 +199,7 @@ namespace ngraph
                 s_clone_fwd_map[f] = clone_function(*fprop_cache.fprop);
             }
             auto clone_fwd = s_clone_fwd_map[f];
-            static std::unordered_map<std::shared_ptr<Function>,
-                                      std::shared_ptr<runtime::Executable>>
-                s_compiled_functions;
-            auto it = s_compiled_functions.find(clone_fwd);
-            std::shared_ptr<runtime::Executable> clone_fwd_handle;
-            if (it == s_compiled_functions.end())
-            {
-                clone_fwd_handle = backend->compile(clone_fwd);
-                s_compiled_functions.insert({clone_fwd, clone_fwd_handle});
-            }
-            else
-            {
-                clone_fwd_handle = it->second;
-            }
+            auto clone_fwd_handle = backend->compile(clone_fwd);
 
             clone_fwd_handle->call_with_validate(mod_f_output_args, f_input_args);
 

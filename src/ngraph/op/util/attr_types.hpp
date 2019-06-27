@@ -27,7 +27,8 @@ namespace ngraph
         {
             CONSTANT = 0,
             EDGE,
-            REFLECT
+            REFLECT,
+            SYMMETRIC
         };
 
         /// \brief Padding Type used for `Convolution` and `Pooling`

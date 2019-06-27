@@ -31,13 +31,17 @@ namespace ngraph
         class BatchNormTraining : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            BatchNormTraining() = default;
             /// \param input Must have rank >= 2, [., C, ...]
             /// \param gamma gamma scaling for normalized value. [C]
             /// \param beta bias added to the scaled normalized value [C]
             /// \param epsilon Avoids divsion by 0 if input has 0 variance
-            BatchNormTraining(std::shared_ptr<Node> input,
-                              std::shared_ptr<Node> gamma,
-                              std::shared_ptr<Node> beta,
+            BatchNormTraining(Output<Node> input,
+                              Output<Node> gamma,
+                              Output<Node> beta,
                               double epsilon);
 
             NGRAPH_DEPRECATED_DOC
@@ -62,13 +66,14 @@ namespace ngraph
             ///   output[2]: shall have rank 1, with the same span as input's channel axis.
             NGRAPH_DEPRECATED("Use another constructor")
             BatchNormTraining(double eps,
-                              std::shared_ptr<Node> gamma,
-                              std::shared_ptr<Node> beta,
-                              std::shared_ptr<Node> input);
+                              Output<Node> gamma,
+                              Output<Node> beta,
+                              Output<Node> input);
 
             void validate_and_infer_types() override;
 
             double get_eps_value() const { return m_epsilon; }
+            void set_eps_value(double epsilon) { m_epsilon = epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -87,17 +92,20 @@ namespace ngraph
         class BatchNormInference : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            BatchNormInference() = default;
             /// \param input [., C, ...]
             /// \param gamma gamma scaling for normalized value. [C]
             /// \param beta bias added to the scaled normalized value [C]
             /// \param mean value for mean normalization [C]
             /// \param variance value for variance normalization [C]
             /// \param epsilon Avoids divsion by 0 if input has 0 variance
-            BatchNormInference(std::shared_ptr<ngraph::Node> input,
-                               std::shared_ptr<ngraph::Node> gamma,
-                               std::shared_ptr<ngraph::Node> beta,
-                               std::shared_ptr<ngraph::Node> mean,
-                               std::shared_ptr<ngraph::Node> variance,
+            BatchNormInference(Output<ngraph::Node> input,
+                               Output<ngraph::Node> gamma,
+                               Output<ngraph::Node> beta,
+                               Output<ngraph::Node> mean,
+                               Output<ngraph::Node> variance,
                                double epsilon);
 
             NGRAPH_DEPRECATED_DOC
@@ -120,15 +128,16 @@ namespace ngraph
             ///   output:   shall have the same shape as 'input'.
             NGRAPH_DEPRECATED("Use another constructor")
             BatchNormInference(double eps,
-                               std::shared_ptr<ngraph::Node> gamma,
-                               std::shared_ptr<ngraph::Node> beta,
-                               std::shared_ptr<ngraph::Node> input,
-                               std::shared_ptr<ngraph::Node> mean,
-                               std::shared_ptr<ngraph::Node> variance);
+                               Output<ngraph::Node> gamma,
+                               Output<ngraph::Node> beta,
+                               Output<ngraph::Node> input,
+                               Output<ngraph::Node> mean,
+                               Output<ngraph::Node> variance);
 
             void validate_and_infer_types() override;
 
             double get_eps_value() const { return m_epsilon; }
+            void set_eps_value(double epsilon) { m_epsilon = epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -152,28 +161,33 @@ namespace ngraph
         class BatchNormTrainingBackprop : public Op
         {
         public:
-            BatchNormTrainingBackprop(std::shared_ptr<Node> input,
-                                      std::shared_ptr<Node> gamma,
-                                      std::shared_ptr<Node> beta,
-                                      std::shared_ptr<Node> mean,
-                                      std::shared_ptr<Node> variance,
-                                      std::shared_ptr<Node> delta,
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            BatchNormTrainingBackprop() = default;
+            BatchNormTrainingBackprop(Output<Node> input,
+                                      Output<Node> gamma,
+                                      Output<Node> beta,
+                                      Output<Node> mean,
+                                      Output<Node> variance,
+                                      Output<Node> delta,
                                       double epsilon);
 
             NGRAPH_DEPRECATED_DOC
             NGRAPH_DEPRECATED("Use another constructor")
             BatchNormTrainingBackprop(double epsilon,
-                                      std::shared_ptr<Node> gamma,
-                                      std::shared_ptr<Node> beta,
-                                      std::shared_ptr<Node> input,
+                                      Output<Node> gamma,
+                                      Output<Node> beta,
+                                      Output<Node> input,
 
-                                      std::shared_ptr<Node> mean,
-                                      std::shared_ptr<Node> variance,
-                                      std::shared_ptr<Node> delta);
+                                      Output<Node> mean,
+                                      Output<Node> variance,
+                                      Output<Node> delta);
 
             void validate_and_infer_types() override;
 
             double get_eps_value() const { return m_epsilon; }
+            void set_eps_value(double epsilon) { m_epsilon = epsilon; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
