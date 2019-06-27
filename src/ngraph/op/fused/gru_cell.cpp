@@ -191,7 +191,7 @@ NodeVector op::GRUCell::decompose_op() const
     std::shared_ptr<Node> W = get_argument(1);
     std::shared_ptr<Node> R = get_argument(2);
     std::shared_ptr<Node> H_t = get_argument(3);
-    std::shared_ptr<Node> B = get_bias();
+    std::shared_ptr<Node> B = get_argument(4);
 
     // Get W and R biases separately.
     NodeVector b_W_R = builder::split(B, 2);
@@ -268,15 +268,6 @@ NodeVector op::GRUCell::decompose_op() const
     H_t = add(mul(sub(one, z_t), h_t), mul(z_t, H_t));
 
     return {H_t};
-}
-
-shared_ptr<Node> op::GRUCell::get_bias() const
-{
-    shared_ptr<Node> bias;
-    // Split B onto Wb an Rb and add them.
-    NodeVector b_W_R = builder::split(get_argument(4), 2);
-    bias = b_W_R.at(0) + b_W_R.at(1);
-    return bias;
 }
 
 void op::GRUCell::add_default_bias_input()

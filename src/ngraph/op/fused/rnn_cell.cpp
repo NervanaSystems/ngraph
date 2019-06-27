@@ -171,10 +171,7 @@ NodeVector op::RNNCell::decompose_op() const
     std::shared_ptr<Node> W = get_argument(1);
     std::shared_ptr<Node> R = get_argument(2);
     std::shared_ptr<Node> H_t = get_argument(3);
-    std::shared_ptr<Node> B = get_bias();
-
-    NodeVector b_W_R = builder::split(B, 2);
-    auto bias = b_W_R.at(0) + b_W_R.at(1);
+    std::shared_ptr<Node> bias = get_bias();
 
     // Xt*(W^T)
     auto Xt_W = std::make_shared<op::Dot>(X, builder::transpose(W));

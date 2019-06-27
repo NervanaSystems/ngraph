@@ -132,8 +132,6 @@ namespace ngraph
 
             bool get_linear_before_reset() const { return m_linear_before_reset; }
         private:
-            std::shared_ptr<Node> get_bias() const;
-
             /// brief Add and initialize bias input to all zeros.
             void add_default_bias_input();
 
