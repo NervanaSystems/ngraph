@@ -99,8 +99,8 @@ shared_ptr<runtime::Executable>
         if (it != m_exec_map.end())
         {
             rc = it->second;
+            return rc;
         }
-        return rc;
     }
     rc = make_shared<CPU_Executable>(func, pass_config, performance_counters_enabled);
     {
