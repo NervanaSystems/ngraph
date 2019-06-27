@@ -15,8 +15,20 @@
 //*****************************************************************************
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace ngraph;
+
+namespace ngraph
+{
+    namespace op
+    {
+        namespace util
+        {
+            REGISTER_OP_VALIDATOR(OpValidator<UnaryElementwiseArithmetic>, UnaryElementwiseArithmeticValidator);
+        }
+    }
+}
 
 op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic()
     : Op()
@@ -39,7 +51,7 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::stri
 {
 }
 
-void op::util::UnaryElementwiseArithmetic::validate_and_infer_types()
+void op::util::UnaryElementwiseArithmeticValidator::validate()
 {
-    validate_and_infer_elementwise_arithmetic();
+    node->validate_and_infer_elementwise_arithmetic();
 }

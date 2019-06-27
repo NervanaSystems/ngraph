@@ -20,6 +20,12 @@
 using namespace std;
 using namespace ngraph;
 
+ngraph::op::OpValidatorMap* ngraph::op::get_validator_map()
+{
+    static OpValidatorMap validator_map;
+    return &validator_map;
+}
+
 Strides ngraph::conv_default_strides(const Node* node,
                                      const PartialShape& data_batch_shape,
                                      const PartialShape& filters_shape)

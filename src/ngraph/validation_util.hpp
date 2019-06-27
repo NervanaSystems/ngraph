@@ -17,11 +17,78 @@
 #pragma once
 
 #include <tuple>
+#include <memory>
+#include <typeindex>
+#include <unordered_map>
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+
+namespace ngraph
+{
+    namespace op
+    {
+        template <class OP_T>
+        class OpValidator
+        {
+        public:
+            using op_t = OP_T;
+            virtual ~OpValidator() {}
+            virtual void validate() = 0;
+            void set(OP_T* op) { node = op; }
+        protected:
+            op_t* node = nullptr;
+        };
+
+        class OpValidationBase
+        {
+        public:
+            virtual ~OpValidationBase() {}
+            virtual void validate(ngraph::Node* node) = 0;
+        };
+
+        template <class OP_VALIDATOR>
+        class OpValidationHelper : public OpValidationBase
+        {
+        public:
+            using validator_t = OP_VALIDATOR;
+            virtual void validate(ngraph::Node* node)
+            {
+                validator_t validator;
+                validator.set(static_cast<typename validator_t::op_t*>(node));
+                validator.validate();
+            }
+        };
+
+        using OpValidatorMap = std::unordered_map<std::type_index, std::unique_ptr<OpValidationBase>>;
+        OpValidatorMap* get_validator_map();
+
+        template <class OP_VALIDATION_HELPER>
+        class OpValidationHelperRegistration
+        {
+        public:
+            OpValidationHelperRegistration()
+            {
+                get_validator_map()->emplace(std::type_index{typeid(typename OP_VALIDATION_HELPER::validator_t::op_t)},
+                                             std::unique_ptr<OpValidationBase>{new OP_VALIDATION_HELPER()});
+            }
+        };
+    }
+}
+
+#define REGISTER_OP_VALIDATOR(_OpTypeValidator, _UserValidator)                                \
+    class _UserValidator : public _OpTypeValidator                                               \
+    {                                                                                              \
+    public:                                                                                        \
+        void validate();                                                                           \
+    };                                                                                             \
+                                                                                                   \
+    namespace                                                                                      \
+    {                                                                                              \
+        OpValidationHelperRegistration<OpValidationHelper<_UserValidator>> register_##_UserValidator; \
+    }
 
 namespace ngraph
 {

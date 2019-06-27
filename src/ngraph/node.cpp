@@ -27,6 +27,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -192,6 +193,16 @@ void Node::set_output_size(size_t n)
 
 void Node::validate_and_infer_types()
 {
+    auto validation_map = ngraph::op::get_validator_map();
+    auto it = validation_map->find(std::type_index(typeid(this)));
+    if (it != validation_map->end())
+    {
+        it->second->validate(this);
+    }
+    else
+    {
+        NGRAPH_INFO << "Validation called for node with no registered NodeValidator: " + get_name();
+    }
 }
 
 void Node::set_input_is_relevant_to_shape(size_t i, bool relevant)
