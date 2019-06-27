@@ -1484,7 +1484,6 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shrink_int)
     test_case.run();
 }
 
-<<<<<<< HEAD
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lp_norm_p1)
 {
     const auto lp_norm_fn = onnx_import::import_onnx_model(
