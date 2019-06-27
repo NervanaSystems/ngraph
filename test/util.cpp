@@ -394,6 +394,25 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     ASSERT_EQ(expected, sorted);
 }
 
+TEST(graph_util, test_subgraph_topological_sort_control_dependencies_replace_node)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto D = make_shared<op::Abs>(A);
+    auto E = make_shared<op::Abs>(A);
+    auto add = A + B;
+    add->add_control_dependency(D);
+    auto f = make_shared<Function>(D, ParameterVector{A});
+    replace_node(D,E);
+    auto mul = C * add;
+    auto result = make_shared<op::Result>(mul);
+    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, E}, true);
+    std::list<std::shared_ptr<Node>> expected{A, E, add, mul};
+    ASSERT_EQ(expected, sorted);
+}
+
 TEST(util, enum_mask_construction)
 {
     enum class Type : uint32_t
