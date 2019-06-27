@@ -73,9 +73,8 @@ namespace ngraph
         public:
             OpValidationHelperRegistration()
             {
-                get_validator_map()->emplace(
-                    std::type_index(typeid(typename OP_VALIDATION_HELPER::validator_t::op_t)),
-                    std::shared_ptr<OpValidationBase>(new PARENT_OP_VALIDATION_HELPER()));
+                get_validator_map()->operator[](std::type_index(typeid(typename OP_VALIDATION_HELPER::validator_t::op_t))) =
+                    std::shared_ptr<OpValidationBase>(new PARENT_OP_VALIDATION_HELPER());
             }
         };
     }
