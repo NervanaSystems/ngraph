@@ -458,9 +458,10 @@ bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
     return result_bool;
 }
 
-NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
+NodeVector ngraph:: get_subgraph_outputs(const NodeVector& nodes,
                                         const NodeVector& exclusions,
-                                        bool ignore_unused)
+                                        bool ignore_unused, 
+                                        bool ignore_output_duplicates)
 {
     std::set<shared_ptr<Node>> exclusions_set(exclusions.begin(), exclusions.end());
     std::set<shared_ptr<Node>> nodes_set(nodes.begin(), nodes.end());
@@ -476,7 +477,10 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
 
         for (const auto& u : n->get_users())
         {
-            if (nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get())))
+            bool add_output = nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get()));
+            // check if output is already captured
+            add_output &= (ignore_output_duplicates || std::find(outputs.begin(), outputs.end(), n) == outputs.end());
+            if (add_output)
             {
                 outputs.push_back(n);
             }
