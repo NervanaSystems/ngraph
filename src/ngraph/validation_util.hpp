@@ -62,32 +62,38 @@ namespace ngraph
             }
         };
 
-        using OpValidatorMap = std::unordered_map<std::type_index, std::unique_ptr<OpValidationBase>>;
+        using OpValidatorMap = std::unordered_map<std::type_index, std::shared_ptr<OpValidationBase>>;
         OpValidatorMap* get_validator_map();
 
-        template <class OP_VALIDATION_HELPER>
+        template <class OP_VALIDATION_HELPER, class PARENT_OP_VALIDATION_HELPER = OP_VALIDATION_HELPER>
         class OpValidationHelperRegistration
         {
         public:
             OpValidationHelperRegistration()
             {
-                get_validator_map()->emplace(std::type_index{typeid(typename OP_VALIDATION_HELPER::validator_t::op_t)},
-                                             std::unique_ptr<OpValidationBase>{new OP_VALIDATION_HELPER()});
+                get_validator_map()->emplace(std::type_index(typeid(typename OP_VALIDATION_HELPER::validator_t::op_t)),
+                                             std::shared_ptr<OpValidationBase>(new PARENT_OP_VALIDATION_HELPER()));
             }
         };
     }
 }
 
-#define REGISTER_OP_VALIDATOR(_OpTypeValidator, _UserValidator)                                \
-    class _UserValidator : public _OpTypeValidator                                               \
+#define REGISTER_OP_VALIDATOR(_OpType, _UserValidator)                                \
+    class _UserValidator : public OpValidator<_OpType>                                               \
     {                                                                                              \
     public:                                                                                        \
         void validate();                                                                           \
     };                                                                                             \
-                                                                                                   \
     namespace                                                                                      \
     {                                                                                              \
         OpValidationHelperRegistration<OpValidationHelper<_UserValidator>> register_##_UserValidator; \
+    }
+
+#define INHERIT_OP_VALIDATOR(_OpType, _ParentValidator, _UserValidator)        \
+    class _UserValidator : public OpValidator<_OpType> {};                                         \
+    namespace                                                                                      \
+    {                                                                                              \
+        OpValidationHelperRegistration<OpValidationHelper<_UserValidator>, OpValidationHelper<_ParentValidator>> register_##_UserValidator; \
     }
 
 namespace ngraph

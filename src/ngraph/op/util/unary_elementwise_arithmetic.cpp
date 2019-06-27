@@ -15,20 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
-#include "ngraph/validation_util.hpp"
 
 using namespace ngraph;
-
-namespace ngraph
-{
-    namespace op
-    {
-        namespace util
-        {
-            REGISTER_OP_VALIDATOR(OpValidator<UnaryElementwiseArithmetic>, UnaryElementwiseArithmeticValidator);
-        }
-    }
-}
 
 op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic()
     : Op()

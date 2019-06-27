@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -61,6 +62,8 @@ namespace ngraph
                 UnaryElementwiseArithmetic(const std::string& node_type,
                                            const std::shared_ptr<Node>& arg);
             };
+
+            REGISTER_OP_VALIDATOR(UnaryElementwiseArithmetic, UnaryElementwiseArithmeticValidator);
         }
     }
 }

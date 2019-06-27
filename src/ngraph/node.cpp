@@ -194,7 +194,7 @@ void Node::set_output_size(size_t n)
 void Node::validate_and_infer_types()
 {
     auto validation_map = ngraph::op::get_validator_map();
-    auto it = validation_map->find(std::type_index(typeid(this)));
+    auto it = validation_map->find(std::type_index(typeid(*this)));
     if (it != validation_map->end())
     {
         it->second->validate(this);
