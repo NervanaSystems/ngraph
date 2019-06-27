@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -24,6 +25,7 @@ namespace ngraph
     {
         namespace util
         {
+            REGISTER_OP_VALIDATOR(BinaryElementwiseLogical, BinaryElementwiseLogicalValidator);
             /// \brief Abstract base class for elementwise binary logical operations, i.e., operations where the same
             ///        scalar binary logical operation is applied to each corresponding pair of elements in two
             ///        boolean input tensors. Implicit broadcast of input tensors is supported through one of the AutoBroadcast modes
@@ -47,6 +49,7 @@ namespace ngraph
             /// | \f$\texttt{bool}[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape as the input tensors, and the element type `bool`. |
             class BinaryElementwiseLogical : public Op
             {
+                friend class BinaryElementwiseLogicalValidator;
             protected:
                 BinaryElementwiseLogical();
 
@@ -77,12 +80,11 @@ namespace ngraph
                                          const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             public:
-                void validate_and_infer_types() override;
-
                 const AutoBroadcastSpec& get_autob() const { return m_autob; }
                 void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
             private:
                 AutoBroadcastSpec m_autob;
+
             };
         }
     }

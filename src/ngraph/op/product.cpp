@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Product, util::ArithmeticReductionValidator, ProductValidator);
+    }
+}
+
 const string op::Product::type_name{"Product"};
 
 op::Product::Product()

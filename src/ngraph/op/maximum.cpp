@@ -25,6 +25,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Maximum, util::BinaryElementwiseArithmeticValidator, MaximumValidator);
+    }
+}
+
 op::Maximum::Maximum(const shared_ptr<Node>& arg0,
                      const shared_ptr<Node>& arg1,
                      const AutoBroadcastSpec& autob)

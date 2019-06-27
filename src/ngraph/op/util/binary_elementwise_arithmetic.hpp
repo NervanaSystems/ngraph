@@ -18,6 +18,7 @@
 
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -25,6 +26,7 @@ namespace ngraph
     {
         namespace util
         {
+            REGISTER_OP_VALIDATOR(BinaryElementwiseArithmetic, BinaryElementwiseArithmeticValidator);
             /// \brief Abstract base class for elementwise binary arithmetic operations, i.e., operations where the same
             ///        scalar binary arithmetic operation is applied to each corresponding pair of elements in the two
             ///        input tensors. Implicit broadcast of input tensors is supported through one of the AutoBroadcast modes
@@ -47,6 +49,7 @@ namespace ngraph
             /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \mathit{op}(\texttt{arg0}[i_1,\dots,i_n],\texttt{arg1}[i_1,\dots,i_n])\f$. This will always have the same shape and element type as the input tensors (after auto broadcasting). |
             class BinaryElementwiseArithmetic : public Op
             {
+                friend class BinaryElementwiseArithmeticValidator;
             protected:
                 /// \brief Constructs a binary elementwise arithmetic operation.
                 BinaryElementwiseArithmetic();
@@ -74,8 +77,6 @@ namespace ngraph
                                             const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             public:
-                void validate_and_infer_types() override;
-
                 const AutoBroadcastSpec& get_autob() const { return m_autob; }
                 void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
             private:

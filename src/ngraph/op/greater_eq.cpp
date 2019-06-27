@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(GreaterEq, util::BinaryElementwiseComparisonValidator, GreaterEqValidator);
+    }
+}
+
 op::GreaterEq::GreaterEq(const shared_ptr<Node>& arg0,
                          const shared_ptr<Node>& arg1,
                          const AutoBroadcastSpec& autob)

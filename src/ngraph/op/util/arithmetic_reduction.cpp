@@ -61,21 +61,21 @@ void op::util::ArithmeticReduction::set_reduction_axes(const AxisSet& reduction_
             ->output(0));
 }
 
-void op::util::ArithmeticReduction::validate_and_infer_types()
+void op::util::ArithmeticReductionValidator::validate()
 {
-    auto reduction_axes = get_reduction_axes();
-    auto input_shape = get_input_partial_shape(0);
+    auto reduction_axes = node->get_reduction_axes();
+    auto input_shape = node->get_input_partial_shape(0);
     auto input_rank = input_shape.rank();
 
     PartialShape result_shape{PartialShape::dynamic()};
 
-    if (input_rank.is_static() && reduction_axes_constant())
+    if (input_rank.is_static() && node->reduction_axes_constant())
     {
         std::vector<Dimension> dims;
 
         for (auto axis : reduction_axes)
         {
-            NODE_VALIDATION_CHECK(this,
+            NODE_VALIDATION_CHECK(node,
                                   axis < size_t(input_rank),
                                   "Reduction axis (",
                                   axis,
@@ -98,7 +98,7 @@ void op::util::ArithmeticReduction::validate_and_infer_types()
         result_shape = PartialShape(dims);
     }
 
-    set_input_is_relevant_to_shape(1);
+    node->set_input_is_relevant_to_shape(1);
 
-    set_output_type(0, get_input_element_type(0), result_shape);
+    node->set_output_type(0, node->get_input_element_type(0), result_shape);
 }

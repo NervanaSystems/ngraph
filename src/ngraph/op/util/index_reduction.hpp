@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -29,8 +30,11 @@ namespace ngraph
     {
         namespace util
         {
+            REGISTER_OP_VALIDATOR(IndexReduction, IndexReductionValidator);
+
             class IndexReduction : public Op
             {
+                friend class IndexReductionValidator;
             protected:
                 IndexReduction();
 
@@ -57,7 +61,6 @@ namespace ngraph
                 size_t m_axis{0};
                 element::Type m_index_element_type;
 
-                void validate_and_infer_types() override;
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
             };

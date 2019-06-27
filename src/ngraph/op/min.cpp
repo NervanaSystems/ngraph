@@ -20,6 +20,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Min, util::ArithmeticReductionValidator, MinValidator);
+    }
+}
+
 const string op::Min::type_name{"Min"};
 
 op::Min::Min()

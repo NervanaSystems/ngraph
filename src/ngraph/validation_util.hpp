@@ -82,6 +82,7 @@ namespace ngraph
 }
 
 #define REGISTER_OP_VALIDATOR(_OpType, _UserValidator)                                             \
+    class _OpType;                                                                                 \
     class _UserValidator : public OpValidator<_OpType>                                             \
     {                                                                                              \
     public:                                                                                        \

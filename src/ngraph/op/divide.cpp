@@ -21,6 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Divide, util::BinaryElementwiseArithmeticValidator, DivideValidator);
+    }
+}
+
 const string op::Divide::type_name{"Divide"};
 
 op::Divide::Divide(const Output<Node>& arg0,

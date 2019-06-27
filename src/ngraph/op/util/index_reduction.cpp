@@ -70,23 +70,23 @@ void op::util::IndexReduction::set_index_element_type(const element::Type& index
     m_index_element_type = index_element_type;
 }
 
-void op::util::IndexReduction::validate_and_infer_types()
+void op::util::IndexReductionValidator::validate()
 {
     // TODO(amprocte): Should reject if size of reduction axis is zero.
-    const PartialShape& arg_shape = get_input_partial_shape(0);
+    const PartialShape& arg_shape = node->get_input_partial_shape(0);
     Rank rank = arg_shape.rank();
 
-    NODE_VALIDATION_CHECK(this, rank.is_dynamic() || size_t(rank) >= 1, "Argument rank is zero.");
-    NODE_VALIDATION_CHECK(this,
-                          rank.is_dynamic() || m_axis < size_t(rank),
+    NODE_VALIDATION_CHECK(node, rank.is_dynamic() || size_t(rank) >= 1, "Argument rank is zero.");
+    NODE_VALIDATION_CHECK(node,
+                          rank.is_dynamic() || node->m_axis < size_t(rank),
                           "Reduction axis (",
-                          m_axis,
+                          node->m_axis,
                           ") is not less than argument rank (",
                           rank,
                           ").");
-    NODE_VALIDATION_CHECK(this,
-                          m_index_element_type == element::i32 ||
-                              m_index_element_type == element::i64,
+    NODE_VALIDATION_CHECK(node,
+                          node->m_index_element_type == element::i32 ||
+                              node->m_index_element_type == element::i64,
                           "Index element is neither i64 or i32.");
 
     PartialShape output_shape{PartialShape::dynamic()};
@@ -98,7 +98,7 @@ void op::util::IndexReduction::validate_and_infer_types()
 
         for (size_t i = 0; i < size_t(rank) - 1; i++)
         {
-            if (j == m_axis)
+            if (j == node->m_axis)
             {
                 j++;
             }
@@ -108,7 +108,7 @@ void op::util::IndexReduction::validate_and_infer_types()
         output_shape = PartialShape(output_dims);
     }
 
-    set_output_type(0, m_index_element_type, output_shape);
+    node->set_output_type(0, node->m_index_element_type, output_shape);
 }
 
 void op::util::IndexReduction::generate_adjoints(autodiff::Adjoints& adjoints,

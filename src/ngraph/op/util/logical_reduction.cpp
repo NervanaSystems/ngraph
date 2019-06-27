@@ -60,21 +60,21 @@ void op::util::LogicalReduction::set_reduction_axes(const AxisSet& reduction_axe
             ->output(0));
 }
 
-void op::util::LogicalReduction::validate_and_infer_types()
+void op::util::LogicalReductionValidator::validate()
 {
-    auto reduction_axes = get_reduction_axes();
-    auto input_shape = get_input_partial_shape(0);
+    auto reduction_axes = node->get_reduction_axes();
+    auto input_shape = node->get_input_partial_shape(0);
     auto input_rank = input_shape.rank();
 
     PartialShape result_shape{PartialShape::dynamic()};
 
-    if (input_rank.is_static() && reduction_axes_constant())
+    if (input_rank.is_static() && node->reduction_axes_constant())
     {
         std::vector<Dimension> dims;
 
         for (auto axis : reduction_axes)
         {
-            NODE_VALIDATION_CHECK(this,
+            NODE_VALIDATION_CHECK(node,
                                   axis < size_t(input_rank),
                                   "Reduction axis (",
                                   axis,
@@ -97,11 +97,11 @@ void op::util::LogicalReduction::validate_and_infer_types()
         result_shape = PartialShape(dims);
     }
 
-    set_input_is_relevant_to_shape(1);
+    node->set_input_is_relevant_to_shape(1);
 
-    NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(0).compatible(element::boolean),
+    NODE_VALIDATION_CHECK(node,
+                          node->get_input_element_type(0).compatible(element::boolean),
                           "Input element type must be boolean.");
 
-    set_output_type(0, element::boolean, result_shape);
+    node->set_output_type(0, element::boolean, result_shape);
 }

@@ -20,6 +20,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Sum, util::ArithmeticReductionValidator, SumValidator);
+    }
+}
+
 const string op::Sum::type_name{"Sum"};
 
 op::Sum::Sum()

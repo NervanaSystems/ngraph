@@ -25,6 +25,7 @@ namespace ngraph
     namespace op
     {
         INHERIT_OP_VALIDATOR(Relu, util::UnaryElementwiseArithmeticValidator, ReluValidator);
+        INHERIT_OP_VALIDATOR(ReluBackprop, util::BinaryElementwiseArithmeticValidator, ReluBackpropValidator);
     }
 }
 

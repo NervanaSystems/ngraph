@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Add, util::BinaryElementwiseArithmeticValidator, AddValidator);
+    }
+}
+
 const string op::Add::type_name{"Add"};
 
 op::Add::Add(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)

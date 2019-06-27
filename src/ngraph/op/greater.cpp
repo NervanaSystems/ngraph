@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Greater, util::BinaryElementwiseComparisonValidator, GreaterValidator);
+    }
+}
+
 op::Greater::Greater(const shared_ptr<Node>& arg0,
                      const shared_ptr<Node>& arg1,
                      const AutoBroadcastSpec& autob)
