@@ -21,6 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Sinh, util::UnaryElementwiseArithmeticValidator, SinhValidator);
+    }
+}
+
 op::Sinh::Sinh(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Sinh", arg)
 {

@@ -21,6 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(StopGradient, util::UnaryElementwiseArithmeticValidator, StopGradientValidator);
+    }
+}
+
 op::StopGradient::StopGradient(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("StopGradient", arg)
 {

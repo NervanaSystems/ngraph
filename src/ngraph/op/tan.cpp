@@ -22,6 +22,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Tan, util::UnaryElementwiseArithmeticValidator, TanValidator);
+    }
+}
+
 op::Tan::Tan(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Tan", arg)
 {

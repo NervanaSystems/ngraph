@@ -21,6 +21,15 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Tanh, util::UnaryElementwiseArithmeticValidator, TanhValidator);
+    }
+}
+
+
 op::Tanh::Tanh(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Tanh", arg)
 {

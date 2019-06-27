@@ -32,6 +32,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Acos, util::UnaryElementwiseArithmeticValidator, AcosValidator);
+    }
+}
+
 const string op::Acos::type_name{"Acos"};
 
 op::Acos::Acos(const Output<Node>& arg)

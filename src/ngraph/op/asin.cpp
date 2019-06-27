@@ -31,6 +31,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Asin, util::UnaryElementwiseArithmeticValidator, AsinValidator);
+    }
+}
+
 const string op::Asin::type_name{"Asin"};
 
 op::Asin::Asin(const Output<Node>& arg)

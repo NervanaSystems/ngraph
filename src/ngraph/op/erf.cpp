@@ -21,6 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Erf, util::UnaryElementwiseArithmeticValidator, ErfValidator);
+    }
+}
+
 const string op::Erf::type_name{"Erf"};
 
 shared_ptr<Node> op::Erf::copy_with_new_args(const NodeVector& new_args) const

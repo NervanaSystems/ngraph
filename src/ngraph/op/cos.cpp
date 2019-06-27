@@ -22,6 +22,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Cos, util::UnaryElementwiseArithmeticValidator, CosValidator);
+    }
+}
+
 const string op::Cos::type_name{"Cos"};
 
 op::Cos::Cos(const Output<Node>& arg)

@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(CPULeakyRelu, util::UnaryElementwiseArithmeticValidator, CPULeakyReluValidator);
+    }
+}
+
 op::CPULeakyRelu::CPULeakyRelu(shared_ptr<Node> arg, float alpha)
     : UnaryElementwiseArithmetic("CPULeakyRelu", {arg})
     , m_alpha(alpha)

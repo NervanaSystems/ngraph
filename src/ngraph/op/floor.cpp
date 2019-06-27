@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Floor, util::UnaryElementwiseArithmeticValidator, FloorValidator);
+    }
+}
+
 const string op::Floor::type_name{"Floor"};
 
 op::Floor::Floor(const Output<Node>& arg)

@@ -20,6 +20,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(LRN, util::UnaryElementwiseArithmeticValidator, LRNValidator);
+    }
+}
+
 op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double bias, size_t nsize)
     : UnaryElementwiseArithmetic("LRN", arg)
     , m_alpha(alpha)

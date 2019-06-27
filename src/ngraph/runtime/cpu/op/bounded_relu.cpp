@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(BoundedRelu, util::UnaryElementwiseArithmeticValidator, BoundedReluValidator);
+    }
+}
+
 op::BoundedRelu::BoundedRelu(shared_ptr<Node> arg, float alpha)
     : UnaryElementwiseArithmetic("BoundedRelu", {arg})
     , m_alpha(alpha)

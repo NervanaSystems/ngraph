@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Sign, util::UnaryElementwiseArithmeticValidator, SignValidator);
+    }
+}
+
 op::Sign::Sign(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Sign", arg)
 {
