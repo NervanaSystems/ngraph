@@ -2238,8 +2238,6 @@ namespace ngraph
                     auto arg1_shape = args[1].get_shape();
                     auto result_shape = out[0].get_shape();
 
-                    auto scales_size = shape_size(node->get_input_shape(2));
-
                     writer << "reference::convolution<" << args[0].get_type() << " , "
                            << args[1].get_type() << " , " << out[0].get_type() << ", int32_t>("
                            << args[0].get_name() << ",\n";
