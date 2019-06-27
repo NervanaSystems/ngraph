@@ -95,6 +95,7 @@ namespace ngraph
     }
 
 #define INHERIT_OP_VALIDATOR(_OpType, _ParentValidator, _UserValidator)                            \
+    class _OpType;                                                                                 \
     class _UserValidator : public OpValidator<_OpType>                                             \
     {                                                                                              \
     };                                                                                             \

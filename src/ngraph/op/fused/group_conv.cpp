@@ -27,6 +27,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(GroupConvolution, util::FusedOpValidator, GroupConvolutionValidator);
+    }
+}
+
 const string op::GroupConvolution::type_name{"GroupConvolution"};
 
 op::GroupConvolution::GroupConvolution()

@@ -24,6 +24,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(SquaredDifference, util::FusedOpValidator, SquaredDifferenceValidator);
+    }
+}
+
 op::SquaredDifference::SquaredDifference(const shared_ptr<Node>& x1, const shared_ptr<Node>& x2)
     : FusedOp("SquaredDifference", {x1, x2})
 {

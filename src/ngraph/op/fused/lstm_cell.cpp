@@ -36,6 +36,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(LSTMCell, util::FusedOpValidator, LSTMCellValidator);
+    }
+}
+
 // ------------- HELPER FUNCTIONS ---------------------------------------------
 
 static shared_ptr<Node> add(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)

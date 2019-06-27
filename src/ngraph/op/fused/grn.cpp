@@ -27,6 +27,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(GRN, util::FusedOpValidator, GRNValidator);
+    }
+}
+
 op::GRN::GRN(const shared_ptr<Node>& data, float bias)
     : FusedOp("GRN", {data})
     , m_bias(bias)

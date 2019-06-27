@@ -26,6 +26,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Normalize, util::FusedOpValidator, NormalizeValidator);
+    }
+}
+
 op::Normalize::Normalize(const shared_ptr<ngraph::Node>& data,
                          const shared_ptr<ngraph::Node>& scale,
                          bool across_spatial,

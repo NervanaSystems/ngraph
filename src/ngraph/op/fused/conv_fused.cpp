@@ -25,7 +25,6 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -120,56 +119,56 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
 ///
 /// This implementation handles partial shapes and adjust conv attributes
 /// to support simplified ConvolutionBias op construction
-void op::ConvolutionBias::validate_and_infer_types()
+void op::ConvolutionBiasValidator::validate()
 {
-    const PartialShape& data_batch_shape = get_input_partial_shape(0);
-    element::Type data_batch_et = get_input_element_type(0);
-    const PartialShape& filters_shape = get_input_partial_shape(1);
-    element::Type filters_et = get_input_element_type(1);
-    const PartialShape& bias_shape = get_input_partial_shape(2);
-    element::Type bias_et = get_input_element_type(2);
+    const PartialShape& data_batch_shape = node->get_input_partial_shape(0);
+    element::Type data_batch_et = node->get_input_element_type(0);
+    const PartialShape& filters_shape = node->get_input_partial_shape(1);
+    element::Type filters_et = node->get_input_element_type(1);
+    const PartialShape& bias_shape = node->get_input_partial_shape(2);
+    element::Type bias_et = node->get_input_element_type(2);
 
-    validate_convbias_shapes(this, filters_et, bias_et, filters_shape, bias_shape);
+    validate_convbias_shapes(node, filters_et, bias_et, filters_shape, bias_shape);
 
-    if (m_data_dilation_strides.size() == 0)
+    if (node->m_data_dilation_strides.size() == 0)
     {
-        m_data_dilation_strides = conv_default_strides(this, data_batch_shape, filters_shape);
+        node->m_data_dilation_strides = conv_default_strides(node, data_batch_shape, filters_shape);
     }
 
-    if (m_window_movement_strides.size() == 0)
+    if (node->m_window_movement_strides.size() == 0)
     {
-        m_window_movement_strides = conv_default_strides(this, data_batch_shape, filters_shape);
+        node->m_window_movement_strides = conv_default_strides(node, data_batch_shape, filters_shape);
     }
 
-    if (m_window_dilation_strides.size() == 0)
+    if (node->m_window_dilation_strides.size() == 0)
     {
-        m_window_dilation_strides = conv_default_strides(this, data_batch_shape, filters_shape);
+        node->m_window_dilation_strides = conv_default_strides(node, data_batch_shape, filters_shape);
     }
 
-    if (m_padding_below.size() == 0)
+    if (node->m_padding_below.size() == 0)
     {
-        m_padding_below = conv_default_padding(this, data_batch_shape, filters_shape);
+        node->m_padding_below = conv_default_padding(node, data_batch_shape, filters_shape);
     }
 
-    if (m_padding_above.size() == 0)
+    if (node->m_padding_above.size() == 0)
     {
-        m_padding_above = conv_default_padding(this, data_batch_shape, filters_shape);
+        node->m_padding_above = conv_default_padding(node, data_batch_shape, filters_shape);
     }
 
     element::Type result_et;
     PartialShape result_shape;
 
-    std::tie(result_et, result_shape) = infer_convolution_forward(this,
+    std::tie(result_et, result_shape) = infer_convolution_forward(node,
                                                                   data_batch_et,
                                                                   filters_et,
                                                                   data_batch_shape,
-                                                                  m_data_dilation_strides,
-                                                                  m_padding_below,
-                                                                  m_padding_above,
+                                                                  node->m_data_dilation_strides,
+                                                                  node->m_padding_below,
+                                                                  node->m_padding_above,
                                                                   filters_shape,
-                                                                  m_window_movement_strides,
-                                                                  m_window_dilation_strides);
-    set_output_type(0, result_et, result_shape);
+                                                                  node->m_window_movement_strides,
+                                                                  node->m_window_dilation_strides);
+    node->set_output_type(0, result_et, result_shape);
 }
 
 shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
@@ -393,32 +392,32 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::Convolution
 /// based on FusedOp decomposition.
 ///
 /// This implementation handles partial shapes
-void op::ConvolutionBiasAdd::validate_and_infer_types()
+void op::ConvolutionBiasAddValidator::validate()
 {
-    const PartialShape& data_batch_shape = get_input_partial_shape(0);
-    element::Type data_batch_et = get_input_element_type(0);
-    const PartialShape& filters_shape = get_input_partial_shape(1);
-    element::Type filters_et = get_input_element_type(1);
-    const PartialShape& bias_shape = get_input_partial_shape(2);
-    element::Type bias_et = get_input_element_type(2);
+    const PartialShape& data_batch_shape = node->get_input_partial_shape(0);
+    element::Type data_batch_et = node->get_input_element_type(0);
+    const PartialShape& filters_shape = node->get_input_partial_shape(1);
+    element::Type filters_et = node->get_input_element_type(1);
+    const PartialShape& bias_shape = node->get_input_partial_shape(2);
+    element::Type bias_et = node->get_input_element_type(2);
 
-    validate_convbias_shapes(this, filters_et, bias_et, filters_shape, bias_shape);
+    validate_convbias_shapes(node, filters_et, bias_et, filters_shape, bias_shape);
 
     element::Type result_et;
     PartialShape result_shape;
 
-    std::tie(result_et, result_shape) = infer_convolution_forward(this,
+    std::tie(result_et, result_shape) = infer_convolution_forward(node,
                                                                   data_batch_et,
                                                                   filters_et,
                                                                   data_batch_shape,
-                                                                  m_data_dilation_strides,
-                                                                  m_padding_below,
-                                                                  m_padding_above,
+                                                                  node->m_data_dilation_strides,
+                                                                  node->m_padding_below,
+                                                                  node->m_padding_above,
                                                                   filters_shape,
-                                                                  m_window_movement_strides,
-                                                                  m_window_dilation_strides);
+                                                                  node->m_window_movement_strides,
+                                                                  node->m_window_dilation_strides);
     // TODO: Check result_shape is compatible with add_input
-    set_output_type(0, result_et, result_shape);
+    node->set_output_type(0, result_et, result_shape);
 }
 
 std::shared_ptr<Node> op::ConvolutionBiasAdd::copy_with_new_args(const NodeVector& new_args) const

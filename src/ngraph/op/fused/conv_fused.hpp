@@ -24,9 +24,11 @@ namespace ngraph
 {
     namespace op
     {
+        REGISTER_OP_VALIDATOR(ConvolutionBias, ConvolutionBiasValidator);
         /// \brief Convolution + bias forward prop for batched convolution operation.
         class ConvolutionBias : public ngraph::op::util::FusedOp
         {
+            friend class ConvolutionBiasValidator;
         public:
             ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
                             const std::shared_ptr<Node>& bias,
@@ -60,8 +62,6 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
-            virtual void validate_and_infer_types() override;
-
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
@@ -74,6 +74,7 @@ namespace ngraph
             bool m_with_relu;
         };
 
+        INHERIT_OP_VALIDATOR(ConvolutionBiasBackpropFiltersBias, ngraph::op::util::FusedOpValidator, ConvolutionBiasBackpropFiltersBiasValidator);
         /// \brief Filters and bias backprop for batched convolution operation. Data backprop is
         /// the same as regular convolution backprop for data.
         class ConvolutionBiasBackpropFiltersBias : public ngraph::op::util::FusedOp
@@ -166,8 +167,10 @@ namespace ngraph
             Strides m_data_dilation_strides_backward;
         };
 
+        REGISTER_OP_VALIDATOR(ConvolutionBiasAdd, ConvolutionBiasAddValidator);
         class ConvolutionBiasAdd : public ngraph::op::util::FusedOp
         {
+            friend class ConvolutionBiasAddValidator;
         public:
             ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
                                const std::shared_ptr<Node>& sum_input,
@@ -196,8 +199,6 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             virtual NodeVector decompose_op() const override;
-
-            virtual void validate_and_infer_types() override;
 
         protected:
             Strides m_window_movement_strides;

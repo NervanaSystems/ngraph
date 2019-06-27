@@ -25,6 +25,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Gemm, util::FusedOpValidator, GemmValidator);
+    }
+}
+
 op::Gemm::Gemm(const std::shared_ptr<ngraph::Node>& A,
                const std::shared_ptr<ngraph::Node>& B,
                const std::shared_ptr<ngraph::Node>& C,

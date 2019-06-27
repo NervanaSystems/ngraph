@@ -25,6 +25,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(DepthToSpace, util::FusedOpValidator, DepthToSpaceValidator);
+    }
+}
+
 op::DepthToSpace::DepthToSpace(const shared_ptr<Node>& data, const size_t block_size)
     : FusedOp("DepthToSpace", {data})
     , m_blocksize(block_size)

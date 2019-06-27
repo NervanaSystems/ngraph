@@ -27,6 +27,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(GroupConvolutionTranspose, util::FusedOpValidator, GroupConvolutionTransposeValidator);
+    }
+}
+
 op::GroupConvolutionTranspose::GroupConvolutionTranspose(const shared_ptr<Node>& data,
                                                          const shared_ptr<Node>& filters,
                                                          const Strides& strides,

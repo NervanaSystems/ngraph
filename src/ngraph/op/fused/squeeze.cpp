@@ -26,6 +26,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Squeeze, util::FusedOpValidator, SqueezeValidator);
+    }
+}
+
 op::Squeeze::Squeeze(const shared_ptr<Node>& data, const shared_ptr<Node>& axes)
     : FusedOp("Squeeze", {data, axes})
 {

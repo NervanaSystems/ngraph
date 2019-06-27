@@ -36,6 +36,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(FakeQuantize, util::FusedOpValidator, FakeQuantizeValidator);
+    }
+}
+
 op::FakeQuantize::FakeQuantize(const shared_ptr<Node>& data,
                                const shared_ptr<Node>& input_low,
                                const shared_ptr<Node>& input_high,
