@@ -52,6 +52,7 @@
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
@@ -117,6 +118,7 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/recv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -126,6 +128,7 @@
 #include "ngraph/op/scatter_add.hpp"
 #include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
+#include "ngraph/op/send.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -1604,6 +1607,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             break;
         }
+        case OP_TYPEID::Recv:
+        {
+            auto src_id = node_js.at("source_id").get<size_t>();
+            node = make_shared<op::Recv>(args[0], src_id);
+            break;
+        }
         case OP_TYPEID::Range:
         {
             node = make_shared<op::Range>(args[0], args[1], args[2]);
@@ -1679,6 +1688,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Select:
         {
             node = make_shared<op::Select>(args[0], args[1], args[2]);
+            break;
+        }
+        case OP_TYPEID::Send:
+        {
+            auto dest_id = node_js.at("dest_id").get<size_t>();
+            node = make_shared<op::Send>(args[0], dest_id);
             break;
         }
         case OP_TYPEID::ShapeOf:
@@ -2601,6 +2616,12 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_above"] = tmp->get_padding_above();
         break;
     }
+    case OP_TYPEID::Recv:
+    {
+        auto tmp = dynamic_cast<const op::Recv*>(&n);
+        node["source_id"] = tmp->get_src_id();
+        break;
+    }
     case OP_TYPEID::Range: { break;
     }
     case OP_TYPEID::Relu: { break;
@@ -2656,6 +2677,12 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::ScatterNDAdd: { break;
     }
     case OP_TYPEID::Select: { break;
+    }
+    case OP_TYPEID::Send:
+    {
+        auto tmp = dynamic_cast<const op::Send*>(&n);
+        node["dest_id"] = tmp->get_dest_id();
+        break;
     }
     case OP_TYPEID::ShapeOf: { break;
     }
