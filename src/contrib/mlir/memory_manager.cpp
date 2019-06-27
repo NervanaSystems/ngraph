@@ -14,33 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "memory_manager.hpp"
+#include <memory>
+#include "ngraph/ngraph_visibility.hpp"
 
-#include "ngraph/pass/pass.hpp"
+using namespace ngraph::runtime::ngmlir;
 
-namespace ngraph
+/// Call back to allocate memory for temps from JIT'ed code
+extern "C" NGRAPH_API void* __mlir_allocate(MLIRMemMgr* mem_mgr, size_t size)
 {
-    namespace runtime
+    return mem_mgr->allocate(size);
+}
+
+void* MLIRMemMgr::allocate(size_t size)
+{
+    void* ptr = malloc(size);
+    ptrList.push_back(ptr);
+    return ptr;
+}
+
+void MLIRMemMgr::freeAll()
+{
+    for (auto p : ptrList)
     {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class CPULoopKernelFusion : public ngraph::pass::FunctionPass
-                {
-                public:
-                    CPULoopKernelFusion(size_t min_kernel_size = 2)
-                        : FunctionPass()
-                        , m_min_kernel_size(min_kernel_size)
-                    {
-                    }
-
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-
-                protected:
-                    size_t m_min_kernel_size;
-                };
-            }
-        }
+        free(p);
     }
 }
