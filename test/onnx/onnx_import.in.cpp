@@ -20,6 +20,7 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -1483,45 +1484,96 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_shrink_int)
     test_case.run();
 }
 
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lp_norm_p1)
+{
+    const auto lp_norm_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/lp_norm_p1.prototxt"));
+
+    Shape data_shape{2, 3, 4};
+    std::vector<float> data(shape_size(data_shape));
+    std::iota(std::begin(data), std::end(data), 1);
+
+    auto test_case = ngraph::test::NgraphTestCase(lp_norm_fn, "${BACKEND_NAME}");
+    test_case.add_input<float>(data);
+    test_case.add_expected_output<float>(
+        data_shape, {0.07142857f, 0.125f,      0.16666667f, 0.2f,    0.22727273f, 0.25f,
+                     0.26923078f, 0.2857143f,  0.3f,        0.3125f, 0.32352942f, 0.33333334f,
+                     0.9285714f,  0.875f,      0.8333333f,  0.8f,    0.77272725f, 0.75f,
+                     0.7307692f,  0.71428573f, 0.7f,        0.6875f, 0.6764706f,  0.6666667f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lp_norm_p2)
+{
+    const auto lp_norm_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/lp_norm_p2.prototxt"));
+
+    Shape data_shape{2, 3, 4};
+    std::vector<float> data(shape_size(data_shape));
+    std::iota(std::begin(data), std::end(data), 1);
+
+    auto test_case = ngraph::test::NgraphTestCase(lp_norm_fn, "${BACKEND_NAME}");
+    test_case.add_input<float>(data);
+    test_case.add_expected_output<float>(
+        data_shape, {0.0766965f,  0.14142136f, 0.19611613f, 0.24253564f, 0.28216633f, 0.31622776f,
+                     0.34570536f, 0.37139067f, 0.39391932f, 0.41380295f, 0.4314555f,  0.4472136f,
+                     0.9970545f,  0.98994946f, 0.9805807f,  0.97014254f, 0.9593655f,  0.9486833f,
+                     0.9383431f,  0.9284767f,  0.91914505f, 0.9103665f,  0.9021342f,  0.8944272f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lp_norm_default)
+{
+    const auto lp_norm_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/lp_norm_default.prototxt"));
+
+    Shape data_shape{2, 3, 4};
+    std::vector<float> data(shape_size(data_shape));
+    std::iota(std::begin(data), std::end(data), 1);
+
+    auto test_case = ngraph::test::NgraphTestCase(lp_norm_fn, "${BACKEND_NAME}");
+    test_case.add_input<float>(data);
+    test_case.add_expected_output<float>(
+        data_shape, {0.18257418f, 0.36514837f, 0.5477225f,  0.73029673f, 0.37904903f, 0.45485884f,
+                     0.5306686f,  0.60647845f, 0.42616236f, 0.47351375f, 0.5208651f,  0.5682165f,
+                     0.4469492f,  0.48132992f, 0.51571065f, 0.5500913f,  0.45862272f, 0.48560053f,
+                     0.5125783f,  0.53955615f, 0.46609157f, 0.4882864f,  0.51048124f, 0.5326761f});
+
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_instance_normalization)
+{
+    const auto instance_norm_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/instance_norm.prototxt"));
+
+    Shape data_shape{1, 2, 3, 4};
+    std::vector<float> data(shape_size(data_shape));
+    std::iota(std::begin(data), std::end(data), 1);
+
+    auto test_case = ngraph::test::NgraphTestCase(instance_norm_fn, "${BACKEND_NAME}");
+    test_case.add_input<float>(data);
+    test_case.add_input<float>(std::vector<float>{2.134f, 3.256f});
+    test_case.add_input<float>(std::vector<float>{0.765f, 1.055f});
+    test_case.add_expected_output<float>(
+        data_shape, {-2.6335807f, -2.015657f,  -1.3977331f, -0.77980936f, -0.16188562f, 0.45603812f,
+                     1.0739619f,  1.6918856f,  2.3098092f,  2.927733f,    3.5456567f,   4.1635804f,
+                     -4.130463f,  -3.1876516f, -2.2448401f, -1.3020288f,  -0.35921717f, 0.5835942f,
+                     1.5264057f,  2.469217f,   3.4120288f,  4.35484f,     5.2976513f,   6.240463f});
+    test_case.run();
+}
+
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_eye_like)
 {
     const auto eye_like_fn = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/eye_like.prototxt"));
 
     auto test_case = ngraph::test::NgraphTestCase(eye_like_fn, "${BACKEND_NAME}");
-    test_case.add_input<float>({
-        0.f,
-        0.f,
-        0.f,
-        0.f,
-
-        0.f,
-        0.f,
-        0.f,
-        0.f,
-
-        0.f,
-        0.f,
-        0.f,
-        0.f,
-    });
-    test_case.add_expected_output<float>(Shape{3, 4},
-                                         {
-                                             0.f,
-                                             0.f,
-                                             0.f,
-                                             0.f,
-
-                                             1.f,
-                                             0.f,
-                                             0.f,
-                                             0.f,
-
-                                             0.f,
-                                             1.f,
-                                             0.f,
-                                             0.f,
-                                         });
+    test_case.add_input<float>({0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f});
+    test_case.add_expected_output<float>(
+        Shape{3, 4}, {0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f});
 
     test_case.run();
 }
