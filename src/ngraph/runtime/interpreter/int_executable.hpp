@@ -55,11 +55,13 @@
 #include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/recv.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
+#include "ngraph/op/send.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
@@ -127,6 +129,7 @@
 #include "ngraph/runtime/reference/power.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
+#include "ngraph/runtime/reference/recv.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/replace_slice.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
@@ -136,6 +139,7 @@
 #include "ngraph/runtime/reference/scatter_add.hpp"
 #include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/select.hpp"
+#include "ngraph/runtime/reference/send.hpp"
 #include "ngraph/runtime/reference/shape_of.hpp"
 #include "ngraph/runtime/reference/sigmoid.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
@@ -1178,6 +1182,21 @@ private:
             throw unsupported_op("Unsupported op '" + node.description() +
                                  "' in Interpreter back end.");
         }
+        case OP_TYPEID::Recv:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            size_t memSize = element_count * sizeof(T);
+            const auto* op = static_cast<const ngraph::op::Recv*>(&node);
+            int src_id = op->get_src_id();
+
+            reference::recv<T>(args[0]->get_data_ptr<T>(),
+                               node.get_input_element_type(0).get_type_enum(),
+                               element_count,
+                               src_id);
+
+            memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            break;
+        }
         case OP_TYPEID::Range:
         {
             throw unsupported_op("Unsupported op '" + node.description() + "'");
@@ -1329,13 +1348,27 @@ private:
                                  element_count);
             break;
         }
+        case OP_TYPEID::Send:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            size_t memSize = element_count * sizeof(T);
+            const auto* op = static_cast<const ngraph::op::Send*>(&node);
+            int dest_id = op->get_dest_id();
+
+            reference::send<T>(args[0]->get_data_ptr<const T>(),
+                               node.get_input_element_type(0).get_type_enum(),
+                               element_count,
+                               dest_id);
+
+            memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            break;
+        }
         case OP_TYPEID::SequencePushFront:
         case OP_TYPEID::SequenceRepeat:
         {
             throw unsupported_op("Unsupported op '" + node.description() +
                                  "' in Interpreter back end.");
         }
-
         case OP_TYPEID::ShapeOf:
         {
             reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
