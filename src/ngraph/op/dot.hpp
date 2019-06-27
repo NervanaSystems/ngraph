@@ -28,13 +28,18 @@ namespace ngraph
         class Dot : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a dot product operation.
+            Dot() = default;
             /// \brief Constructs a dot product operation.
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
             /// \param reduction_axes_count The number of axes to dot.
-            Dot(const std::shared_ptr<Node>& arg0,
-                const std::shared_ptr<Node>& arg1,
+            Dot(const Output<Node>& arg0,
+                const Output<Node>& arg1,
                 size_t reduction_axes_count,
                 bool has_reduction_axes_count = true);
 
@@ -48,11 +53,20 @@ namespace ngraph
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
-            Dot(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            Dot(const Output<Node>& arg0, const Output<Node>& arg1);
 
             void validate_and_infer_types() override;
 
             size_t get_reduction_axes_count() const { return m_reduction_axes_count; }
+            void get_reduction_axes_count(size_t reduction_axes_count)
+            {
+                m_reduction_axes_count = reduction_axes_count;
+            }
+            bool get_has_reduction_axes_count() const { return m_has_reduction_axes_count; }
+            void set_has_reduction_axes_count(bool has_reduction_axes_count)
+            {
+                m_has_reduction_axes_count = has_reduction_axes_count;
+            }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override
             {

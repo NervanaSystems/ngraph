@@ -104,7 +104,6 @@ set(SRC
     op/group_conv_bias.cpp
     op/halide_op.cpp
     op/leaky_relu.cpp
-    op/loop_kernel.cpp
     op/lstm.cpp
     op/matmul_bias.cpp
     op/max_pool_with_indices.cpp
@@ -114,10 +113,10 @@ set(SRC
     op/update_slice.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
+    pass/cpu_compiled_kernel_fusion.cpp
     pass/cpu_fusion.cpp
     pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
-    pass/cpu_loop_kernel_fusion.cpp
     pass/cpu_mat_fusion.cpp
     pass/cpu_memory_assignment.cpp
     pass/cpu_memory_optimization.cpp
@@ -140,10 +139,17 @@ endif()
 if (NGRAPH_HALIDE)
     set(SRC
         ${SRC}
+        builder/compiled_kernel.cpp
         builder/halide_op.cpp
-        builder/loop_kernel.cpp
         builder/halide_generators.cpp
         pass/halide_subgraph_extraction.cpp
+        )
+endif()
+
+if (NGRAPH_MLIR_ENABLE)
+    set(SRC
+        ${SRC}
+        builder/mlir_cpu_compiled_kernel.cpp
         )
 endif()
 
@@ -203,6 +209,7 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PUBLIC codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
+
     if (NOT APPLE AND NOT MSVS)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
         # exported by other DSOs as well. In the absence of versioning, this could lead to the
@@ -212,5 +219,23 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
+    if (NGRAPH_MLIR_ENABLE)
+        # TODO: can we get away without LLVM/MLIR include path. 
+        # Currently mlir backend compiler.hpp include LLVM/MLIR files
+        get_directory_property(MLIR_LLVM_INCLUDEPATH
+                               DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}
+                               DEFINITION MLIR_LLVM_INCLUDEPATH)
+        
+        message(STATUS "Building CPU backend with MLIR")
+        message(STATUS "MLIR INCLUDE DIRS: ${MLIR_INCLUDE_PATHS}")
+        message(STATUS "LLVM INCLUDE DIRS: ${MLIR_LLVM_INCLUDEPATH}")
+        add_dependencies(cpu_backend mlir_backend)
+        target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDEPATH})
+        target_link_libraries(cpu_backend PUBLIC mlir_backend)
+        # TODO: Get rid of the compile time def, and move all MLIR code to separate src files
+        # and add them to cpu_backend here instead.
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_MLIR_ENABLE")
+    endif()
+    
     install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
