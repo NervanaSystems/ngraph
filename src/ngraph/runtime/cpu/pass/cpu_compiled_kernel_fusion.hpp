@@ -16,8 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/op.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
@@ -25,24 +24,21 @@ namespace ngraph
     {
         namespace cpu
         {
-            namespace op
+            namespace pass
             {
-                /// \brief LoopKernel represents graphs consisting
-                /// of arithmetic operations that can be executed in the same loop
-                class LoopKernel : public ngraph::op::Op
+                class CPUCompiledKernelFusion : public ngraph::pass::FunctionPass
                 {
                 public:
-                    LoopKernel(const NodeVector& node_list,
-                               const NodeVector& outputs,
-                               const NodeVector& args);
-                    virtual std::shared_ptr<Node>
-                        copy_with_new_args(const NodeVector& new_args) const override;
+                    CPUCompiledKernelFusion(size_t min_kernel_size = 2)
+                        : FunctionPass()
+                        , m_min_kernel_size(min_kernel_size)
+                    {
+                    }
 
-                    const NodeVector& get_node_list() const { return m_node_list; }
-                    const NodeVector& get_kernel_outputs() const { return m_output_nodes; }
-                private:
-                    NodeVector m_node_list;
-                    NodeVector m_output_nodes;
+                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+
+                protected:
+                    size_t m_min_kernel_size;
                 };
             }
         }
