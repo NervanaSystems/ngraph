@@ -26,6 +26,7 @@ def buildImage(configurationMaps) {
                                 --docker_registry=${DOCKER_REGISTRY} \
                                 --name=${configMap["projectName"]} \
                                 --version=${configMap["name"]} \
+                                --tag=ci_test \
                                 --dockerfile_path=${configMap["dockerfilePath"]} || return 1
         """
     }
@@ -43,7 +44,8 @@ def pushImage(configurationMaps) {
                 ${CI_ROOT}/utils/docker.sh push \
                                     --docker_registry=${DOCKER_REGISTRY} \
                                     --name=${configMap["projectName"]} \
-                                    --version=${configMap["name"]} || return 1
+                                    --version=${configMap["name"]} \
+                                    --tag=ci_test || return 1
             """
         }
     }
