@@ -91,18 +91,23 @@ shared_ptr<runtime::Executable>
                                        bool performance_counters_enabled)
 {
     shared_ptr<runtime::Executable> rc;
-    auto it = m_exec_map.find(func);
-    if (it != m_exec_map.end())
+    // we will protect the access to map (m_exec_map) across multiple threads by creating a lock_gaurd
+    // m_exec_map_mutex will be released once the object `guard` goes out of scope
     {
-        rc = it->second;
+        std::lock_guard<std::mutex> guard(m_exec_map_mutex);
+        auto it = m_exec_map.find(func);
+        if (it != m_exec_map.end())
+        {
+            rc = it->second;
+        }
+        return rc;
     }
-    else
+    rc = make_shared<CPU_Executable>(func, pass_config, performance_counters_enabled);
     {
-        rc = make_shared<CPU_Executable>(func, pass_config, performance_counters_enabled);
         std::lock_guard<std::mutex> guard(m_exec_map_mutex);
         m_exec_map.insert({func, rc});
+        return rc;
     }
-    return rc;
 }
 
 runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
