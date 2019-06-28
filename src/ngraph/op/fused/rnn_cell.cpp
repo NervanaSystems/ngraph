@@ -199,8 +199,8 @@ void op::RNNCell::add_default_bias_input()
 {
     shared_ptr<Node> B =
         op::Constant::create(input(0).get_element_type(),
-                             Shape{2 * m_gates_count * get_hidden_size()},
-                             vector<float>(2 * m_gates_count * get_hidden_size(), 0.f));
+                             Shape{2 * s_gates_count * get_hidden_size()},
+                             vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
     set_argument(4, B->output(0));
 }
 

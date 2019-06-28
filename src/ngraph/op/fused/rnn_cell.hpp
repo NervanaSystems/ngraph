@@ -134,7 +134,7 @@ namespace ngraph
             ///
             util::ActivationFunction m_activation_f;
 
-            static constexpr std::size_t m_gates_count{1};
+            static constexpr std::size_t s_gates_count{1};
         };
     }
 }

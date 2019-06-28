@@ -111,18 +111,18 @@ void op::GRUCell::pre_validate_and_infer_types()
     const Shape& ht_shape{ht_pshape.to_shape()};
 
     NODE_VALIDATION_CHECK(this,
-                          (w_shape == Shape{m_gates_count * get_hidden_size(), input_size}),
+                          (w_shape == Shape{s_gates_count * get_hidden_size(), input_size}),
                           "Input tensor W must have shape (",
-                          m_gates_count * get_hidden_size(),
+                          s_gates_count * get_hidden_size(),
                           ", ",
                           input_size,
                           "). Actual shape is:",
                           w_shape,
                           ".");
     NODE_VALIDATION_CHECK(this,
-                          (r_shape == Shape{m_gates_count * get_hidden_size(), get_hidden_size()}),
+                          (r_shape == Shape{s_gates_count * get_hidden_size(), get_hidden_size()}),
                           "Input tensor R must have shape (",
-                          m_gates_count * get_hidden_size(),
+                          s_gates_count * get_hidden_size(),
                           ", ",
                           get_hidden_size(),
                           "). Actual shape is:",
@@ -146,9 +146,9 @@ void op::GRUCell::pre_validate_and_infer_types()
     const Shape& b_shape{b_pshape.to_shape()};
 
     NODE_VALIDATION_CHECK(this,
-                          (b_shape == Shape{2 * m_gates_count * get_hidden_size()}),
+                          (b_shape == Shape{2 * s_gates_count * get_hidden_size()}),
                           "Input tensor B must have shape (",
-                          2 * m_gates_count * get_hidden_size(),
+                          2 * s_gates_count * get_hidden_size(),
                           "). Actual shape is:",
                           b_shape,
                           ".");
@@ -274,8 +274,8 @@ void op::GRUCell::add_default_bias_input()
 {
     shared_ptr<Node> B =
         op::Constant::create(input(0).get_element_type(),
-                             Shape{2 * m_gates_count * get_hidden_size()},
-                             vector<float>(2 * m_gates_count * get_hidden_size(), 0.f));
+                             Shape{2 * s_gates_count * get_hidden_size()},
+                             vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
     set_argument(4, B->output(0));
 }
 

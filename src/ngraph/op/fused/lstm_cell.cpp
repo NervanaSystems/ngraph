@@ -121,18 +121,18 @@ void op::LSTMCell::pre_validate_and_infer_types()
     const Shape& ct_shape{ct_pshape.to_shape()};
 
     NODE_VALIDATION_CHECK(this,
-                          (w_shape == Shape{m_gates_count * get_hidden_size(), input_size}),
+                          (w_shape == Shape{s_gates_count * get_hidden_size(), input_size}),
                           "Input tensor W must have shape (",
-                          m_gates_count * get_hidden_size(),
+                          s_gates_count * get_hidden_size(),
                           ", ",
                           input_size,
                           "). Actual shape is:",
                           w_shape,
                           ".");
     NODE_VALIDATION_CHECK(this,
-                          (r_shape == Shape{m_gates_count * get_hidden_size(), get_hidden_size()}),
+                          (r_shape == Shape{s_gates_count * get_hidden_size(), get_hidden_size()}),
                           "Input tensor R must have shape (",
-                          m_gates_count * get_hidden_size(),
+                          s_gates_count * get_hidden_size(),
                           ", ",
                           get_hidden_size(),
                           "). Actual shape is:",
@@ -168,7 +168,7 @@ void op::LSTMCell::pre_validate_and_infer_types()
     const Shape& p_shape{p_pshape.to_shape()};
 
     NODE_VALIDATION_CHECK(this,
-                          (b_shape == Shape{2 * m_gates_count * get_hidden_size()}),
+                          (b_shape == Shape{2 * s_gates_count * get_hidden_size()}),
                           "Input tensor B must have shape (",
                           8 * get_hidden_size(),
                           "). Actual shape is:",
@@ -176,9 +176,9 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           ".");
 
     NODE_VALIDATION_CHECK(this,
-                          (p_shape == Shape{m_peepholes_count * get_hidden_size()}),
+                          (p_shape == Shape{s_peepholes_count * get_hidden_size()}),
                           "Input tensor P must have shape (",
-                          m_peepholes_count * get_hidden_size(),
+                          s_peepholes_count * get_hidden_size(),
                           "). Actual shape is:",
                           p_shape,
                           ".");
@@ -287,15 +287,15 @@ NodeVector op::LSTMCell::get_peephole_weigths() const
 {
     shared_ptr<Node> P;
     P = get_argument(6);
-    return builder::split(P, m_peepholes_count);
+    return builder::split(P, s_peepholes_count);
 }
 
 void op::LSTMCell::add_default_bias_input()
 {
     shared_ptr<Node> B =
         op::Constant::create(input(0).get_element_type(),
-                             Shape{2 * m_gates_count * get_hidden_size()},
-                             vector<float>(2 * m_gates_count * get_hidden_size(), 0.f));
+                             Shape{2 * s_gates_count * get_hidden_size()},
+                             vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
     set_argument(5, B->output(0));
 }
 
@@ -303,8 +303,8 @@ void op::LSTMCell::add_default_peepholes_input()
 {
     shared_ptr<Node> P =
         op::Constant::create(input(0).get_element_type(),
-                             Shape{m_peepholes_count * get_hidden_size()},
-                             vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
+                             Shape{s_peepholes_count * get_hidden_size()},
+                             vector<float>(s_peepholes_count * get_hidden_size(), 0.f));
     set_argument(6, P->output(0));
 }
 
