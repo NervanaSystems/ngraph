@@ -73,6 +73,7 @@
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
+#include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
@@ -104,6 +105,7 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/recv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -113,6 +115,7 @@
 #include "ngraph/op/scatter_add.hpp"
 #include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
+#include "ngraph/op/send.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
@@ -1000,6 +1003,16 @@ std::string runtime::gpu::GPU_Emitter::emit_QuantizedMaxPool(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
+std::string runtime::gpu::GPU_Emitter::emit_Recv(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Range(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
 std::string runtime::gpu::GPU_Emitter::emit_Relu(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Relu>(compiled_function, function_name, node, args, out);
@@ -1248,6 +1261,11 @@ std::string runtime::gpu::GPU_Emitter::emit_ScatterNDAdd(EMIT_ARGS)
 std::string runtime::gpu::GPU_Emitter::emit_Select(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Select>(compiled_function, function_name, node, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Send(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ShapeOf(EMIT_ARGS)

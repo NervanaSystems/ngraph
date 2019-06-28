@@ -17,9 +17,11 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "ngraph/node.hpp"
 #include "ngraph/op/util/activation_functions.hpp"
 
 namespace ngraph
@@ -71,10 +73,48 @@ namespace ngraph
                 /// \return     The object representing activation function.
                 ///
                 ActivationFunction get_activation_function(std::size_t idx) const;
+                ///
+                /// \brief      Creates node with element-wise add operation with numpy broadcasting.
+                ///
+                /// \param[in]  lhs   The left hand side argument node.
+                /// \param[in]  rhs   The right hand side argument node.
+                ///
+                /// \return     Node with element-wise add operation.
+                ///
+                static std::shared_ptr<Node> add(const std::shared_ptr<Node>& lhs,
+                                                 const std::shared_ptr<Node>& rhs);
+                ///
+                /// \brief      Creates node with element-wise subtract operation with numpy broadcasting.
+                ///
+                /// \param[in]  lhs   The left hand side argument node.
+                /// \param[in]  rhs   The right hand side argument node.
+                ///
+                /// \return     Node with element-wise subtract operation.
+                ///
+                static std::shared_ptr<Node> sub(const std::shared_ptr<Node>& lhs,
+                                                 const std::shared_ptr<Node>& rhs);
+                ///
+                /// \brief      Creates node with element-wise multiply operation with numpy broadcasting.
+                ///
+                /// \param[in]  lhs   The left hand side argument node.
+                /// \param[in]  rhs   The right hand side argument node.
+                ///
+                /// \return     Node with element-wise multiply operation.
+                ///
+                static std::shared_ptr<Node> mul(const std::shared_ptr<Node>& lhs,
+                                                 const std::shared_ptr<Node>& rhs);
+                ///
+                /// \brief      Creates node with element-wise clip operation with numpy broadcasting.
+                ///
+                /// \param[in]  data   The input tensor for clipping.
+                ///
+                /// \return     Node with element-wise clip operation.
+                ///
+                std::shared_ptr<Node> clip(const std::shared_ptr<Node>& data) const;
 
             private:
-                std::size_t m_hidden_size = 0.f;
-                float m_clip = 0.f;
+                const std::size_t m_hidden_size;
+                const float m_clip;
                 const std::vector<std::string> m_activations;
                 const std::vector<float> m_activation_alpha;
                 const std::vector<float> m_activation_beta;

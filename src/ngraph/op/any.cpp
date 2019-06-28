@@ -21,10 +21,6 @@ using namespace ngraph;
 
 const string op::Any::type_name{"Any"};
 
-op::Any::Any()
-{
-}
-
 op::Any::Any(const Output<Node>& arg, const AxisSet& reduction_axes)
     : LogicalReduction(arg, reduction_axes)
 {

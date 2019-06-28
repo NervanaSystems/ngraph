@@ -34,6 +34,9 @@ namespace ngraph
         class Constant : public Node
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -78,7 +81,7 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param values A list of string values to use as the constant data.
             Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
-                : Node("Constant", {})
+                : Node({})
                 , m_element_type(type)
                 , m_shape(shape)
                 , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
@@ -135,7 +138,7 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param data A void* to constant data.
             Constant(const element::Type& type, const Shape& shape, const void* data)
-                : Node("Constant", {})
+                : Node({})
                 , m_element_type(type)
                 , m_shape(shape)
                 , m_data(nullptr)

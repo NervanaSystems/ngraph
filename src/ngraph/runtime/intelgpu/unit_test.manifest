@@ -107,6 +107,8 @@ gather_no_axis_bool
 fake_quantize
 fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
+send_recv
+send_recv_ring
 
 # Not supported quant ops
 model_dequantize_linear_1d_zero_scale_int8

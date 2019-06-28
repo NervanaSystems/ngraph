@@ -26,10 +26,15 @@ namespace ngraph
         class Cosh : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a hyperbolic cosine operation.
+            Cosh() = default;
             /// \brief Constructs a hyperbolic cosine operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Cosh(const std::shared_ptr<Node>& arg);
+            Cosh(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
