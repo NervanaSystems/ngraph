@@ -5262,7 +5262,8 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
     handle->call_with_validate({result}, {a, b});
 
     vector<float> expected{bprop1, bprop2, bprop1, bprop2};
-    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result),
+                                  DEFAULT_FLOAT_TOLERANCE_BITS + 3));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, relu_2Dfprop)
