@@ -23,8 +23,8 @@ Core updates for |version|
 0.22-doc
 --------
 
-+ Initial doc on iGPU. 
-+ Improve Backend APIs with new DynamicBackend API.
++ Initial doc and API for IntelGPU backend. 
++ DynamicBackend API.
 + Note deprecation of support of MXNet's ``ngraph-mxnet`` PyPI.
 + Noted changes on graph inspection options resultant from PR 3016.
 + Added better tips and details to doc-contributor-README.
