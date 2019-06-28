@@ -1,10 +1,9 @@
-.. core/overview.rst:
-
+.. _core:
 
 Overview
 ========
 
-.. figure:: ../graphics/whole-stack.png
+.. figure:: ../graphics/2019_06_11_WholeStack.png
    :alt: The whole stack
 
    The whole nGraph Compiler stack  
