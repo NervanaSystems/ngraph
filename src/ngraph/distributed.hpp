@@ -53,6 +53,9 @@ namespace ngraph
                                 size_t count) = 0;
         virtual void
             broadcast(void* in, element::Type_t element_type, size_t count, int root_id) = 0;
+        virtual void recv(void* in, element::Type_t element_type, size_t count, int src_id) = 0;
+        virtual void
+            send(const void* in, element::Type_t element_type, size_t count, int dest_id) = 0;
     };
 
     void set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface);

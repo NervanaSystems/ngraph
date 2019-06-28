@@ -87,11 +87,13 @@
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
+#include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
@@ -2070,6 +2072,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::GRN:
         case OP_TYPEID::GroupConvolutionTranspose:
+        case OP_TYPEID::GRUCell:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::LeakyRelu:
         case OP_TYPEID::LSTMCell:
@@ -2077,6 +2080,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Normalize:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
+        case OP_TYPEID::RNNCell:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedConvolutionBias:
@@ -2086,12 +2090,14 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedDot:
         case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::Recv:
         case OP_TYPEID::Range:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
         case OP_TYPEID::ScatterAdd:
         case OP_TYPEID::ScatterNDAdd:
+        case OP_TYPEID::Send:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SpaceToDepth:
@@ -2193,11 +2199,13 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::Gemm:
     case OP_TYPEID::GRN:
     case OP_TYPEID::GroupConvolutionTranspose:
+    case OP_TYPEID::GRUCell:
     case OP_TYPEID::LeakyRelu:
     case OP_TYPEID::LSTMCell:
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
+    case OP_TYPEID::RNNCell:
     case OP_TYPEID::ScaleShift:
     case OP_TYPEID::ShuffleChannels:
     case OP_TYPEID::SpaceToDepth:

@@ -334,9 +334,54 @@ const std::set<std::shared_ptr<Node>>& Node::get_control_dependencies() const
     return m_control_dependencies;
 }
 
+const std::set<Node*>& Node::get_control_dependents() const
+{
+    return m_control_dependents;
+}
+
 void Node::add_control_dependency(std::shared_ptr<Node> node)
 {
     m_control_dependencies.insert(node);
+    node->m_control_dependents.insert(this);
+}
+
+void Node::add_node_control_dependencies(std::shared_ptr<Node> source_node)
+{
+    for (auto& node : source_node->get_control_dependencies())
+    {
+        add_control_dependency(node);
+    }
+}
+
+void Node::add_node_control_dependents(std::shared_ptr<Node> source_node)
+{
+    for (Node* node : source_node->get_control_dependents())
+    {
+        node->add_control_dependency(shared_from_this());
+    }
+}
+
+void Node::remove_control_dependency(std::shared_ptr<Node> node)
+{
+    m_control_dependencies.erase(node);
+    node->m_control_dependents.erase(this);
+}
+
+void Node::clear_control_dependencies()
+{
+    for (auto& node : m_control_dependencies)
+    {
+        node->m_control_dependents.erase(this);
+    }
+    m_control_dependencies.clear();
+}
+
+void Node::clear_control_dependents()
+{
+    while (!m_control_dependents.empty())
+    {
+        (*m_control_dependents.begin())->remove_control_dependency(shared_from_this());
+    }
 }
 
 namespace ngraph
