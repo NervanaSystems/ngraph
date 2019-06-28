@@ -238,12 +238,26 @@ namespace ngraph
         /// Get control dependencies registered on the node
         const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
 
+        /// Get nodes dependent on this node
+        const std::set<Node*>& get_control_dependents() const;
+
+        /// This node cannot execute until node executes
         void add_control_dependency(std::shared_ptr<Node> node);
 
-        void remove_control_dependency(std::shared_ptr<Node> node)
-        {
-            m_control_dependencies.erase(node);
-        }
+        /// Remove the dependency of this node on node
+        void remove_control_dependency(std::shared_ptr<Node> node);
+
+        /// Remove all dependencies from this node
+        void clear_control_dependencies();
+
+        /// Remove this node as a dependency from all dependent nodes
+        void clear_control_dependents();
+
+        /// This node aborbs the control dependencies of source_node
+        void add_node_control_dependencies(std::shared_ptr<Node> source_node);
+
+        /// This node becomes a dependent of every node dependent on source_node
+        void add_node_control_dependents(std::shared_ptr<Node> source_node);
 
         /// Returns the number of outputs from the node.
         size_t get_output_size() const;
@@ -391,6 +405,7 @@ namespace ngraph
         descriptor::Output& get_output_descriptor(size_t position);
 
         std::set<std::shared_ptr<Node>> m_control_dependencies;
+        std::set<Node*> m_control_dependents;
         const std::string m_node_type;
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
