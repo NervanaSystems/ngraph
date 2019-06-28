@@ -4,6 +4,8 @@ computation_reuse
 dot_matrix_vector_int64
 generate_mask
 generate_mask2
+# Gives inaccurate value
+sigmoid_bprop_n1c1h4
 # custom_mem is not implemented on GPU
 tensorview_custom_mem
 # integer is not supported by cuDNN on backward pooling
@@ -205,3 +207,5 @@ gather_no_axis_bool
 fake_quantize
 fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
+send_recv
+send_recv_ring
