@@ -79,12 +79,14 @@
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
+#include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/prelu.hpp"
+#include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
@@ -1230,13 +1232,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::GRN>(args[0], bias);
             break;
         }
-        case OP_TYPEID::HardSigmoid:
-        {
-            auto alpha = node_js.at("alpha").get<float>();
-            auto beta = node_js.at("beta").get<float>();
-            node = make_shared<op::HardSigmoid>(args[0], alpha, beta);
-            break;
-        }
         case OP_TYPEID::GroupConvolution:
         {
             auto window_movement_strides =
@@ -1283,6 +1278,35 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                               output_shape);
             break;
         }
+        case OP_TYPEID::GRUCell:
+        {
+            auto hidden_size = node_js.at("hidden_size").get<size_t>();
+            auto clip = node_js.at("clip").get<float>();
+            auto activations = node_js.at("activations").get<vector<string>>();
+            auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
+            auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
+            auto linear_before_reset = node_js.at("linear_before_reset").get<bool>();
+            node = make_shared<op::GRUCell>(args[0],
+                                            args[1],
+                                            args[2],
+                                            args[3],
+                                            hidden_size,
+                                            args[4],
+                                            activations,
+                                            activation_alpha,
+                                            activation_beta,
+                                            clip,
+                                            linear_before_reset);
+            break;
+        }
+        case OP_TYPEID::HardSigmoid:
+        {
+            auto alpha = node_js.at("alpha").get<float>();
+            auto beta = node_js.at("beta").get<float>();
+            node = make_shared<op::HardSigmoid>(args[0], alpha, beta);
+            break;
+        }
+
         case OP_TYPEID::LeakyRelu:
         {
             node = make_shared<op::LeakyRelu>(args[0], args[1]);
@@ -1662,6 +1686,25 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto batch_axis = node_js.at("batch_axis").get<size_t>();
             auto sequence_axis = node_js.at("sequence_axis").get<size_t>();
             node = make_shared<op::ReverseSequence>(args[0], args[1], batch_axis, sequence_axis);
+            break;
+        }
+        case OP_TYPEID::RNNCell:
+        {
+            auto hidden_size = node_js.at("hidden_size").get<size_t>();
+            auto clip = node_js.at("clip").get<float>();
+            auto activations = node_js.at("activations").get<vector<string>>();
+            auto activation_alpha = node_js.at("activation_alpha").get<vector<float>>();
+            auto activation_beta = node_js.at("activation_beta").get<vector<float>>();
+            node = make_shared<op::RNNCell>(args[0],
+                                            args[1],
+                                            args[2],
+                                            args[3],
+                                            hidden_size,
+                                            args[4],
+                                            activations,
+                                            activation_alpha,
+                                            activation_beta,
+                                            clip);
             break;
         }
         case OP_TYPEID::ScalarConstantLike:
@@ -2340,11 +2383,15 @@ json JSONSerializer::serialize_node(const Node& n)
         node["bias"] = tmp->get_bias();
         break;
     }
-    case OP_TYPEID::HardSigmoid:
+    case OP_TYPEID::GRUCell:
     {
-        auto tmp = dynamic_cast<const op::HardSigmoid*>(&n);
-        node["alpha"] = tmp->get_alpha();
-        node["beta"] = tmp->get_beta();
+        auto tmp = dynamic_cast<const op::GRUCell*>(&n);
+        node["hidden_size"] = tmp->get_hidden_size();
+        node["clip"] = tmp->get_clip();
+        node["activations"] = tmp->get_activations();
+        node["activation_alpha"] = tmp->get_activation_alpha();
+        node["activation_beta"] = tmp->get_activation_beta();
+        node["linear_before_reset"] = tmp->get_linear_before_reset();
         break;
     }
     case OP_TYPEID::GroupConvolution:
@@ -2370,6 +2417,13 @@ json JSONSerializer::serialize_node(const Node& n)
         node["groups"] = tmp->get_groups();
         node["pad_type"] = tmp->get_pad_type();
         node["output_shape"] = tmp->get_output_shape();
+        break;
+    }
+    case OP_TYPEID::HardSigmoid:
+    {
+        auto tmp = dynamic_cast<const op::HardSigmoid*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        node["beta"] = tmp->get_beta();
         break;
     }
     case OP_TYPEID::LeakyRelu: { break;
@@ -2660,6 +2714,16 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::ReverseSequence*>(&n);
         node["batch_axis"] = tmp->get_batch_axis();
         node["sequence_axis"] = tmp->get_sequence_axis();
+        break;
+    }
+    case OP_TYPEID::RNNCell:
+    {
+        auto tmp = dynamic_cast<const op::RNNCell*>(&n);
+        node["hidden_size"] = tmp->get_hidden_size();
+        node["clip"] = tmp->get_clip();
+        node["activations"] = tmp->get_activations();
+        node["activation_alpha"] = tmp->get_activation_alpha();
+        node["activation_beta"] = tmp->get_activation_beta();
         break;
     }
     case OP_TYPEID::ScalarConstantLike:
