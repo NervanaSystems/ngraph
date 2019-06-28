@@ -20,6 +20,15 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/validation_util.hpp"
+
+namespace ngraph
+{
+    namespace op
+    {
+        REGISTER_OP_VALIDATOR(Result, ResultValidator);
+    }
+}
 
 using namespace std;
 using namespace ngraph;
@@ -35,7 +44,12 @@ op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
     set_placement_index(get_argument(0)->get_placement_index());
 }
 
-void op::Result::validate_and_infer_types()
+void op::ResultValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Result::validate_and_infer_element_types()
 {
     NODE_VALIDATION_CHECK(
         this, get_input_size() == 1, "Argument has ", get_input_size(), " outputs (1 expected).");

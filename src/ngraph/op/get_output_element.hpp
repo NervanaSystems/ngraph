@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -36,7 +37,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             /// \return The index of the tuple element to get.
             size_t get_n() const { return m_n; }
@@ -47,6 +48,8 @@ namespace ngraph
                                            const NodeVector& deltas) override;
             size_t m_n;
         };
+
+        REGISTER_OP_VALIDATOR(GetOutputElement, GetOutputElementValidator);
     }
 
     inline std::shared_ptr<Node> get_output_element(const std::shared_ptr<Node> node, size_t i = 0)

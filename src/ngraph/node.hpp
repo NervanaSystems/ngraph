@@ -104,13 +104,6 @@ namespace ngraph
         // Called in constructors during transition
         void constructor_validate_and_infer_types();
 
-        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
-            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
-        void validate_and_infer_elementwise_arithmetic(
-            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
-        void validate_and_infer_elementwise_logical(
-            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
-
         /// \brief Construct an unitialized Node
         Node() {}
         /// \brief Construct an unitialized Node
@@ -385,6 +378,13 @@ namespace ngraph
         /// \return A handle to the `output_index`th output of this node.
         /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
         Output<const Node> output(size_t output_index) const;
+
+        std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
+            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
+        void validate_and_infer_elementwise_arithmetic(
+            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
+        void validate_and_infer_elementwise_logical(
+            const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());
 
     private:
         descriptor::Input& get_input_descriptor(size_t position);

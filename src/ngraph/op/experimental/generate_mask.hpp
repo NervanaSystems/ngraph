@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/state/rng_state.hpp"
+#include "ngraph/validation_util.hpp"
 namespace ngraph
 {
     namespace op
@@ -74,13 +75,14 @@ namespace ngraph
             bool get_use_seed() const { return m_use_seed; }
             /// GenerateMask has state.
             bool has_state() const override { return true; }
+            void validate_and_infer_element_types();
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override
             {
             }
 
-            void validate_and_infer_types() override;
             element::Type m_element_type;
             // These will be deprecated
             Shape m_shape;
@@ -88,5 +90,7 @@ namespace ngraph
             uint64_t m_seed{0};
             double m_probability{0.0};
         };
+
+        REGISTER_OP_VALIDATOR(GenerateMask, GenerateMaskValidator);
     }
 }

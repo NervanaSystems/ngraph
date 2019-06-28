@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -52,7 +53,7 @@ namespace ngraph
             /// \param reversed_axes The axes to reverse.
             Reverse(const std::shared_ptr<Node>& arg, const AxisSet& reversed_axes);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -65,5 +66,7 @@ namespace ngraph
 
             const AxisSet m_reversed_axes;
         };
+
+        REGISTER_OP_VALIDATOR(Reverse, ReverseValidator);
     }
 }

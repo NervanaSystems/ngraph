@@ -16,12 +16,120 @@
 
 #pragma once
 
+#include <memory>
 #include <tuple>
+#include <typeindex>
+#include <unordered_map>
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+
+namespace ngraph
+{
+    namespace op
+    {
+        /// An op type specific validator implementation.
+        /// A users op validator inherits from this specialized
+        /// over the op type
+        template <class OP_T>
+        class OpValidator
+        {
+        public:
+            using op_t = OP_T;
+            virtual ~OpValidator() {}
+            virtual void validate() = 0;
+            void set(OP_T* op) { node = op; }
+        protected:
+            op_t* node = nullptr;
+        };
+
+        /// Non-templated base helper used for type_traits
+        /// erasure in the global validator map
+        /// Method: validate - The virtual function implemented
+        ///                    by each user for validation
+        class OpValidationBase
+        {
+        public:
+            virtual ~OpValidationBase() {}
+            virtual void validate(ngraph::Node* node) = 0;
+        };
+
+        /// The validation helper which is templated over the
+        /// user defined validator that inherits from OpValidator<OP_T>.
+        /// Method: validate - Implemented here to cast the node to the
+        ///                    derived op type, cast and set the
+        ///                    OpValidator<OP_T>::node and call the user's
+        ///                    validator
+        template <class OP_VALIDATOR>
+        class OpValidationHelper : public OpValidationBase
+        {
+        public:
+            using validator_t = OP_VALIDATOR;
+            virtual void validate(ngraph::Node* node)
+            {
+                validator_t validator;
+                validator.set(static_cast<typename validator_t::op_t*>(node));
+                validator.validate();
+            }
+        };
+
+        using OpValidatorMap =
+            std::unordered_map<std::type_index, std::shared_ptr<OpValidationBase>>;
+        /// Getter for the global validator map;
+        /// The map utilizes std::type_index keys for each registered op type,
+        /// and user defined validation functions for values.
+        OpValidatorMap* get_validator_map();
+
+        /// \brief Class to register the user defined op validator upon instantiation.
+        ///        If an op would like to use the validator definition of a parent,
+        ///        the optional PARENT_OP_VALIDATION_HELPER default parameter can be specified
+        template <class OP_VALIDATION_HELPER,
+                  class PARENT_OP_VALIDATION_HELPER = OP_VALIDATION_HELPER>
+        class OpValidationHelperRegistration
+        {
+        public:
+            OpValidationHelperRegistration()
+            {
+                get_validator_map()->operator[](
+                    std::type_index(typeid(typename OP_VALIDATION_HELPER::validator_t::op_t))) =
+                    std::shared_ptr<OpValidationBase>(new PARENT_OP_VALIDATION_HELPER());
+            }
+        };
+    }
+}
+
+/// \brief Macro to register a user implementation of an op validator for a specific op type.
+/// \param OpType The ngraph operator type
+/// \param UserValidator The desired name of the user defined validation class
+#define REGISTER_OP_VALIDATOR(OpType, UserValidator)                                               \
+    class UserValidator : public OpValidator<OpType>                                               \
+    {                                                                                              \
+    public:                                                                                        \
+        void validate();                                                                           \
+    };                                                                                             \
+    namespace                                                                                      \
+    {                                                                                              \
+        OpValidationHelperRegistration<OpValidationHelper<UserValidator>>                          \
+            register_##UserValidator;                                                              \
+    }
+
+/// \brief Macro to reuse the user implementation of an op validator for a different op type.
+/// \param OpType The ngraph operator type
+/// \param ParentValidator The name of the user defined validation class to use in place of
+///        a separately defined user validator for the given op type
+/// \param UserValidator The desired name of the user defined validation class
+#define INHERIT_OP_VALIDATOR(OpType, ParentValidator, UserValidator)                               \
+    class UserValidator : public OpValidator<OpType>                                               \
+    {                                                                                              \
+    };                                                                                             \
+    namespace                                                                                      \
+    {                                                                                              \
+        OpValidationHelperRegistration<OpValidationHelper<UserValidator>,                          \
+                                       OpValidationHelper<ParentValidator>>                        \
+            register_##UserValidator;                                                              \
+    }
 
 namespace ngraph
 {

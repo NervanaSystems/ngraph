@@ -30,7 +30,12 @@ shared_ptr<Node> op::ScatterAdd::copy_with_new_args(const NodeVector& new_args) 
     return make_shared<ScatterAdd>(new_args.at(INPUTS), new_args.at(INDICES), new_args.at(UPDATES));
 }
 
-void op::ScatterAdd::validate_and_infer_types()
+void op::ScatterAddValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::ScatterAdd::validate_and_infer_element_types()
 {
     element::Type inputs_et = get_input_element_type(INPUTS);
     element::Type indices_et = get_input_element_type(INDICES);

@@ -18,6 +18,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -38,7 +39,7 @@ namespace ngraph
                          const std::shared_ptr<Node>& shape,
                          const std::shared_ptr<Node>& broadcast_axes);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -47,5 +48,7 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
+
+        REGISTER_OP_VALIDATOR(DynBroadcast, DynBroadcastValidator);
     }
 }

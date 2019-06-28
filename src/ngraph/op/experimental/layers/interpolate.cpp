@@ -30,7 +30,12 @@ op::Interpolate::Interpolate(const std::shared_ptr<Node>& image,
     constructor_validate_and_infer_types();
 }
 
-void op::Interpolate::validate_and_infer_types()
+void op::InterpolateValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Interpolate::validate_and_infer_element_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(1).compatible(element::Type_t::i64),

@@ -28,7 +28,12 @@ op::DynBroadcast::DynBroadcast(const shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::DynBroadcast::validate_and_infer_types()
+void op::DynBroadcastValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::DynBroadcast::validate_and_infer_element_types()
 {
     // shape node should have integer data type. For now we only allow i64
     //TODO: potenially make the type more flexible to include other integer types

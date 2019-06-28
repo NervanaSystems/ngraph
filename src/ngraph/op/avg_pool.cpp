@@ -77,7 +77,12 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
 {
 }
 
-void op::AvgPool::validate_and_infer_types()
+void op::AvgPoolValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::AvgPool::validate_and_infer_element_types()
 {
     if (0 == m_window_movement_strides.size())
     {
@@ -245,7 +250,12 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
     constructor_validate_and_infer_types();
 }
 
-void op::AvgPoolBackprop::validate_and_infer_types()
+void op::AvgPoolBackpropValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::AvgPoolBackprop::validate_and_infer_element_types()
 {
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).

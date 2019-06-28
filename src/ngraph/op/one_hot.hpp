@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -59,11 +60,13 @@ namespace ngraph
 
             /// \return The index of the one-hot axis.
             size_t get_one_hot_axis() const { return m_one_hot_axis; }
-        protected:
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
+        protected:
             PartialShape m_shape;
             size_t m_one_hot_axis;
         };
+
+        REGISTER_OP_VALIDATOR(OneHot, OneHotValidator);
     }
 }

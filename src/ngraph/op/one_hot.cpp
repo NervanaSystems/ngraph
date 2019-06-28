@@ -27,8 +27,11 @@ op::OneHot::OneHot(const shared_ptr<Node>& arg, const PartialShape& shape, size_
 {
     constructor_validate_and_infer_types();
 }
-
-void op::OneHot::validate_and_infer_types()
+void op::OneHotValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+void op::OneHot::validate_and_infer_element_types()
 {
     element::Type arg_et = get_input_element_type(0);
     PartialShape arg_shape = get_input_partial_shape(0);

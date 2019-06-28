@@ -17,6 +17,15 @@
 #include <utility>
 
 #include "ngraph/op/passthrough.hpp"
+#include "ngraph/validation_util.hpp"
+
+namespace ngraph
+{
+    namespace op
+    {
+        REGISTER_OP_VALIDATOR(Passthrough, PassthroughValidator);
+    }
+}
 
 ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
                                      const std::string& language,
@@ -33,7 +42,12 @@ ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
     constructor_validate_and_infer_types();
 }
 
-void ngraph::op::Passthrough::validate_and_infer_types()
+void ngraph::op::PassthroughValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void ngraph::op::Passthrough::validate_and_infer_element_types()
 {
     // N.B. It would be useful to have the backend deduce the output
     //      shapes, instead of having them passed in via the

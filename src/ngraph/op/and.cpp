@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(And, util::BinaryElementwiseLogicalValidator, AndValidator);
+    }
+}
+
 const string op::And::type_name{"And"};
 
 op::And::And(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)

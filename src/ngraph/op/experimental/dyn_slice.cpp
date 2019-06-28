@@ -178,7 +178,12 @@ Shape op::DynSlice::compute_output_shape() const
     return Shape{};
 }
 
-void op::DynSlice::validate_and_infer_types()
+void op::DynSliceValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::DynSlice::validate_and_infer_element_types()
 {
     auto lower_bounds_et = get_input_element_type(1);
     auto upper_bounds_et = get_input_element_type(2);

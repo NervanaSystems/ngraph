@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Ceiling, util::UnaryElementwiseArithmeticValidator, CeilingValidator);
+    }
+}
+
 const string op::Ceiling::type_name{"Ceiling"};
 
 op::Ceiling::Ceiling(const Output<Node>& arg)

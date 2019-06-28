@@ -50,7 +50,12 @@ op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(
 {
 }
 
-void op::util::BinaryElementwiseArithmetic::validate_and_infer_types()
+void op::util::BinaryElementwiseArithmeticValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::util::BinaryElementwiseArithmetic::validate_and_infer_element_types()
 {
     validate_and_infer_elementwise_arithmetic(m_autob);
 }

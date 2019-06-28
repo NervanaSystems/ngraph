@@ -44,7 +44,7 @@ public:
                 const NodeVector& args,
                 std::vector<std::tuple<element::Type, PartialShape>> outputs);
 
-    void validate_and_infer_types() final;
+    void validate_and_infer_element_types();
 
     std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const final;
 

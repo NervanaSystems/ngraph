@@ -16,9 +16,18 @@
 
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace ngraph;
 using namespace std;
+
+namespace ngraph
+{
+    namespace op
+    {
+        REGISTER_OP_VALIDATOR(Not, NotValidator);
+    }
+}
 
 op::Not::Not(const shared_ptr<Node>& arg)
     : Op("Not", check_single_output_args({arg}))
@@ -26,8 +35,13 @@ op::Not::Not(const shared_ptr<Node>& arg)
     constructor_validate_and_infer_types();
 }
 
+void op::NotValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
 // TODO(amprocte): Update this to allow only boolean, for consistency with logical binops.
-void op::Not::validate_and_infer_types()
+void op::Not::validate_and_infer_element_types()
 {
     auto args_et_pshape = validate_and_infer_elementwise_args();
     element::Type& args_et = std::get<0>(args_et_pshape);

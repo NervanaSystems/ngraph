@@ -18,6 +18,7 @@
 
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -80,13 +81,16 @@ namespace ngraph
                                             const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             public:
-                void validate_and_infer_types() override;
+                void validate_and_infer_element_types();
 
                 const AutoBroadcastSpec& get_autob() const { return m_autob; }
                 void set_autob(const AutoBroadcastSpec& autob) { m_autob = autob; }
             private:
                 AutoBroadcastSpec m_autob;
             };
+
+            REGISTER_OP_VALIDATOR(BinaryElementwiseComparison,
+                                  BinaryElementwiseComparisonValidator);
         }
     }
 }

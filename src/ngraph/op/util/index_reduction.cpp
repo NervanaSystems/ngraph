@@ -70,7 +70,12 @@ void op::util::IndexReduction::set_index_element_type(const element::Type& index
     m_index_element_type = index_element_type;
 }
 
-void op::util::IndexReduction::validate_and_infer_types()
+void op::util::IndexReductionValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::util::IndexReduction::validate_and_infer_element_types()
 {
     // TODO(amprocte): Should reject if size of reduction axis is zero.
     const PartialShape& arg_shape = get_input_partial_shape(0);

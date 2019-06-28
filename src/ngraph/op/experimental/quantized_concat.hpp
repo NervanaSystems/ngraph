@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -34,7 +35,7 @@ namespace ngraph
             /// \param concatenation_axis The axis along which to concatenate the input tensors.
             QuantizedConcat(const NodeVector& args, size_t concatenation_axis);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -44,5 +45,7 @@ namespace ngraph
         protected:
             const size_t m_concatenation_axis;
         };
+
+        REGISTER_OP_VALIDATOR(QuantizedConcat, QuantizedConcatValidator);
     }
 }

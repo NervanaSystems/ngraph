@@ -48,7 +48,12 @@ op::Slice::Slice(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::Slice::validate_and_infer_types()
+void op::SliceValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Slice::validate_and_infer_element_types()
 {
     // An empty stride vector with lower_bounds/upper_bounds filled in means that we need to
     // construct the default value.

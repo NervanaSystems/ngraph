@@ -28,7 +28,12 @@ op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
     constructor_validate_and_infer_types();
 }
 
-void op::GetOutputElement::validate_and_infer_types()
+void op::GetOutputElementValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::GetOutputElement::validate_and_infer_element_types()
 {
     NODE_VALIDATION_CHECK(this,
                           m_n < get_input_size(),

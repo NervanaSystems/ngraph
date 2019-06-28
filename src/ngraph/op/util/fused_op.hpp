@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -35,7 +36,7 @@ namespace ngraph
                 ///         tensors must match the match output tensors of the FusedOp
                 virtual NodeVector decompose_op() const = 0;
 
-                void validate_and_infer_types() override;
+                void validate_and_infer_element_types();
 
                 /// Pre and post validation hooks for op-specific actions
                 virtual void pre_validate_and_infer_types() {}
@@ -58,6 +59,8 @@ namespace ngraph
                 /// \param args Nodes that produce the input tensors for the fused op
                 FusedOp(const std::string& node_type, const NodeVector& args);
             };
+
+            REGISTER_OP_VALIDATOR(FusedOp, FusedOpValidator);
         }
     }
 }

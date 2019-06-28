@@ -20,6 +20,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -133,7 +134,7 @@ namespace ngraph
             ///
             Convolution(const Output<Node>& data_batch, const Output<Node>& filters);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -215,7 +216,7 @@ namespace ngraph
                                     const CoordinateDiff& padding_above_forward,
                                     const Strides& data_dilation_strides_forward);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
             virtual std::shared_ptr<Node>
@@ -314,7 +315,7 @@ namespace ngraph
                                        const CoordinateDiff& padding_above_forward,
                                        const Strides& data_dilation_strides_forward);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -378,6 +379,10 @@ namespace ngraph
             CoordinateDiff m_padding_above_forward;
             Strides m_data_dilation_strides_forward;
         };
+
+        REGISTER_OP_VALIDATOR(Convolution, ConvolutionValidator);
+        REGISTER_OP_VALIDATOR(ConvolutionBackpropData, ConvolutionBackpropDataValidator);
+        REGISTER_OP_VALIDATOR(ConvolutionBackpropFilters, ConvolutionBackpropFiltersValidator);
 
         namespace util
         {

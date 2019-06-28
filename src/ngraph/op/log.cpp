@@ -20,6 +20,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Log, util::UnaryElementwiseArithmeticValidator, LogValidator);
+    }
+}
+
 op::Log::Log(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Log", arg)
 {

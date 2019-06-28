@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -32,8 +33,9 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
         };
+
+        REGISTER_OP_VALIDATOR(ShapeOf, ShapeOfValidator);
     }
 }

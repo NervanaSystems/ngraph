@@ -22,6 +22,14 @@ using namespace ngraph;
 
 const string op::Broadcast::type_name{"Broadcast"};
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(BroadcastLike, BroadcastValidator, BroadcastLikeValidator);
+    }
+}
+
 op::Broadcast::Broadcast(const OutputVector& args,
                          const Shape& shape,
                          const AxisSet& broadcast_axes)
@@ -37,7 +45,12 @@ op::Broadcast::Broadcast(const Output<Node>& arg, const Shape& shape, const Axis
 {
 }
 
-void op::Broadcast::validate_and_infer_types()
+void op::BroadcastValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Broadcast::validate_and_infer_element_types()
 {
     infer_shape();
 

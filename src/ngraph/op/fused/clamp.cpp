@@ -22,6 +22,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Clamp, util::FusedOpValidator, ClampValidator);
+    }
+}
+
 op::Clamp::Clamp(const shared_ptr<Node>& data, const double min, const double max)
     : FusedOp("Clamp", {data})
     , m_min{min}

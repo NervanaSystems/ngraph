@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(All, util::LogicalReductionValidator, AllValidator);
+    }
+}
+
 const string op::All::type_name{"All"};
 
 op::All::All(const Output<Node>& arg, const AxisSet& reduction_axes)

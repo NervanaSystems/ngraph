@@ -68,7 +68,12 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
 {
 }
 
-void op::MaxPool::validate_and_infer_types()
+void op::MaxPoolValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::MaxPool::validate_and_infer_element_types()
 {
     if (0 == m_window_movement_strides.size())
     {
@@ -176,7 +181,12 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
     constructor_validate_and_infer_types();
 }
 
-void op::MaxPoolBackprop::validate_and_infer_types()
+void op::MaxPoolBackpropValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::MaxPoolBackprop::validate_and_infer_element_types()
 {
     element::Type forward_arg_et = get_input_element_type(0);
     element::Type delta_et = get_input_element_type(1);

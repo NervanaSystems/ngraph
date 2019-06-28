@@ -19,6 +19,16 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Multiply,
+                             util::BinaryElementwiseArithmeticValidator,
+                             MultiplyValidator);
+    }
+}
+
 op::Multiply::Multiply(const shared_ptr<Node>& arg0,
                        const shared_ptr<Node>& arg1,
                        const AutoBroadcastSpec& autob)

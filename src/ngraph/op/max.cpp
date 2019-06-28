@@ -20,6 +20,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Max, util::ArithmeticReductionValidator, MaxValidator);
+    }
+}
+
 const string op::Max::type_name{"Max"};
 
 op::Max::Max()

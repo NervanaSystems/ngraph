@@ -27,7 +27,12 @@ op::Tile::Tile(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& re
     constructor_validate_and_infer_types();
 }
 
-void op::Tile::validate_and_infer_types()
+void op::TileValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Tile::validate_and_infer_element_types()
 {
     auto arg_et = get_input_element_type(0);
 

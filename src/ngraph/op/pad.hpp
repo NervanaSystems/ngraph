@@ -19,6 +19,7 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -56,8 +57,9 @@ namespace ngraph
             /// \return The default value for Pad.
             virtual std::shared_ptr<Node> get_default_value() const override;
 
+            void validate_and_infer_element_types();
+
         protected:
-            void validate_and_infer_types() override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
             CoordinateDiff m_padding_below;
@@ -65,5 +67,7 @@ namespace ngraph
             Shape m_padding_interior_fake; // LEGACY: This is all zeros.
             PadMode m_pad_mode;
         };
+
+        REGISTER_OP_VALIDATOR(Pad, PadValidator);
     }
 }

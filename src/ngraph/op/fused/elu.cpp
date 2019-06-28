@@ -28,6 +28,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Elu, util::FusedOpValidator, EluValidator);
+    }
+}
+
 op::Elu::Elu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
     : FusedOp("Elu", {data, alpha})
 {

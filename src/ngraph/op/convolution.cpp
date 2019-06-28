@@ -48,7 +48,12 @@ op::Convolution::Convolution(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 }
 
-void op::Convolution::validate_and_infer_types()
+void op::ConvolutionValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Convolution::validate_and_infer_element_types()
 {
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);
@@ -227,7 +232,12 @@ op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_sha
     constructor_validate_and_infer_types();
 }
 
-void op::ConvolutionBackpropData::validate_and_infer_types()
+void op::ConvolutionBackpropDataValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::ConvolutionBackpropData::validate_and_infer_element_types()
 {
     // Backprop to data is itself convolution, with inputs/outputs/attributes transmogrified as
     // follows.
@@ -448,7 +458,12 @@ op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     constructor_validate_and_infer_types();
 }
 
-void op::ConvolutionBackpropFilters::validate_and_infer_types()
+void op::ConvolutionBackpropFiltersValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::ConvolutionBackpropFilters::validate_and_infer_element_types()
 {
     // Backprop to filters is itself convolution, with inputs/outputs/attributes transmogrified as
     // follows.

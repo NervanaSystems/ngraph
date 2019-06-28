@@ -18,6 +18,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -45,7 +46,7 @@ namespace ngraph
                        const std::shared_ptr<Node>& pattern,
                        bool zero_flag = false);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -59,5 +60,7 @@ namespace ngraph
         private:
             bool m_zero_flag;
         };
+
+        REGISTER_OP_VALIDATOR(DynReshape, DynReshapeValidator);
     }
 }

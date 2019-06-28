@@ -19,6 +19,16 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Negative,
+                             util::UnaryElementwiseArithmeticValidator,
+                             NegativeValidator);
+    }
+}
+
 op::Negative::Negative(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Negative", arg)
 {

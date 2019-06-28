@@ -36,7 +36,12 @@ shared_ptr<Node> op::BatchMatMul::copy_with_new_args(const NodeVector& new_args)
     return make_shared<BatchMatMul>(new_args.at(0), new_args.at(1));
 }
 
-void op::BatchMatMul::validate_and_infer_types()
+void op::BatchMatMulValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::BatchMatMul::validate_and_infer_element_types()
 {
     // Check input types
     const auto& arg0_et = get_input_element_type(0);

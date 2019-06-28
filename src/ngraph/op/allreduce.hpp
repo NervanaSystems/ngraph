@@ -18,6 +18,7 @@
 
 #include <memory>
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -32,7 +33,7 @@ namespace ngraph
             AllReduce() = default;
             AllReduce(const Output<Node>& arg, reduction::Type reduce_type = reduction::Type::SUM);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
             reduction::Type get_reduce_type() const;
@@ -41,5 +42,7 @@ namespace ngraph
         private:
             reduction::Type m_reduce_type{reduction::Type::SUM};
         };
+
+        REGISTER_OP_VALIDATOR(AllReduce, AllReduceValidator);
     }
 }

@@ -28,7 +28,12 @@ op::AllReduce::AllReduce(const Output<Node>& arg, reduction::Type reduce_type)
     constructor_validate_and_infer_types();
 }
 
-void op::AllReduce::validate_and_infer_types()
+void op::AllReduceValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::AllReduce::validate_and_infer_element_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(0).is_dynamic() ||

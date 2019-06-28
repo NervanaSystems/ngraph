@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -49,7 +50,7 @@ namespace ngraph
                              const Shape& padding_below,
                              const Shape& padding_above,
                              bool include_padding_in_avg_computation);
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             /// \return The window shape.
@@ -72,5 +73,7 @@ namespace ngraph
             Shape m_padding_above;
             bool m_include_padding_in_avg_computation;
         };
+
+        REGISTER_OP_VALIDATOR(QuantizedAvgPool, QuantizedAvgPoolValidator);
     }
 }

@@ -19,6 +19,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -73,7 +74,7 @@ namespace ngraph
                     const Shape& padding_below,
                     const Shape& padding_above);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             /// \brief Constructs a batched, unpadded max pooling operation (i.e., all padding shapes are set to 0).
             ///
@@ -144,7 +145,7 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             const Shape& get_window_shape() const { return m_window_shape; }
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -156,5 +157,8 @@ namespace ngraph
             Shape m_padding_below;
             Shape m_padding_above;
         };
+
+        REGISTER_OP_VALIDATOR(MaxPool, MaxPoolValidator);
+        REGISTER_OP_VALIDATOR(MaxPoolBackprop, MaxPoolBackpropValidator);
     }
 }

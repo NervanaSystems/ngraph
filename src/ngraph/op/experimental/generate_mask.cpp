@@ -68,7 +68,12 @@ shared_ptr<Node> op::GenerateMask::copy_with_new_args(const NodeVector& new_args
         new_args.at(0), m_shape, m_element_type, m_seed, m_probability, m_use_seed);
 }
 
-void ngraph::op::GenerateMask::validate_and_infer_types()
+void op::GenerateMaskValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void ngraph::op::GenerateMask::validate_and_infer_element_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_partial_shape(0).compatible(PartialShape{}),

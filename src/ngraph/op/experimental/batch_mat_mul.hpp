@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -38,7 +39,7 @@ namespace ngraph
             /// \param arg1 The node producing the second argument.
             BatchMatMul(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
 
-            virtual void validate_and_infer_types() override;
+            virtual void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -47,6 +48,8 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
+
+        REGISTER_OP_VALIDATOR(BatchMatMul, BatchMatMulValidator);
 
         namespace util
         {

@@ -44,7 +44,7 @@ namespace ngraph
                       const PartialShape& pshape,
                       const bool cacheable = false);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             bool get_cacheable() const { return m_cacheable; }
             virtual std::shared_ptr<Node>

@@ -40,7 +40,12 @@ op::util::FusedOp::FusedOp(const std::string& node_type, const NodeVector& args)
 {
 }
 
-void op::util::FusedOp::validate_and_infer_types()
+void op::util::FusedOpValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::util::FusedOp::validate_and_infer_element_types()
 {
     pre_validate_and_infer_types();
 

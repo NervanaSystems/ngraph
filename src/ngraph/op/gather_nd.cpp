@@ -29,7 +29,12 @@ shared_ptr<Node> op::GatherND::copy_with_new_args(const NodeVector& new_args) co
     return make_shared<GatherND>(new_args.at(PARAMS), new_args.at(INDICES));
 }
 
-void op::GatherND::validate_and_infer_types()
+void op::GatherNDValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::GatherND::validate_and_infer_element_types()
 {
     element::Type result_et = get_input_element_type(PARAMS);
     element::Type indices_et = get_input_element_type(INDICES);

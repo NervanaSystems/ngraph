@@ -20,6 +20,17 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Relu, util::UnaryElementwiseArithmeticValidator, ReluValidator);
+        INHERIT_OP_VALIDATOR(ReluBackprop,
+                             util::BinaryElementwiseArithmeticValidator,
+                             ReluBackpropValidator);
+    }
+}
+
 op::Relu::Relu(shared_ptr<Node> arg)
     : UnaryElementwiseArithmetic("Relu", {arg})
 {

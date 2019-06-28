@@ -39,7 +39,12 @@ op::RegionYolo::RegionYolo(const shared_ptr<Node>& input,
     constructor_validate_and_infer_types();
 }
 
-void op::RegionYolo::validate_and_infer_types()
+void op::RegionYoloValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::RegionYolo::validate_and_infer_element_types()
 {
     auto input_et = get_input_element_type(0);
     if (get_input_partial_shape(0).is_static())

@@ -186,7 +186,12 @@ static PartialShape infer_output_shape(const op::Range* node, const element::Typ
     return result;
 }
 
-void op::Range::validate_and_infer_types()
+void op::RangeValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Range::validate_and_infer_element_types()
 {
     set_input_is_relevant_to_shape(0);
     set_input_is_relevant_to_shape(1);

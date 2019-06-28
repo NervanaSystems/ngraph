@@ -42,7 +42,12 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
     }
 }
 
-void op::QuantizedAvgPool::validate_and_infer_types()
+void op::QuantizedAvgPoolValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::QuantizedAvgPool::validate_and_infer_element_types()
 {
     auto& arg_shape = get_input_shape(0);
 

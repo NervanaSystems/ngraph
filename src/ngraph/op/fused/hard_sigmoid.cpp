@@ -27,6 +27,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(HardSigmoid, util::FusedOpValidator, HardSigmoidValidator);
+    }
+}
+
 op::HardSigmoid::HardSigmoid(const shared_ptr<Node>& data, float alpha, float beta)
     : FusedOp("HardSigmoid", {data})
     , m_alpha(alpha)

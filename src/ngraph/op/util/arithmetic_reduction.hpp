@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -44,7 +45,7 @@ namespace ngraph
                 ArithmeticReduction(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
             public:
-                void validate_and_infer_types() override;
+                void validate_and_infer_element_types();
 
                 /// \return true if reduction axes are constant else false.
                 bool reduction_axes_constant() const;
@@ -57,6 +58,8 @@ namespace ngraph
                 /// \brief Change the reduction axes
                 void set_reduction_axes(const AxisSet& reduction_axes);
             };
+
+            REGISTER_OP_VALIDATOR(ArithmeticReduction, ArithmeticReductionValidator);
         }
     }
 }

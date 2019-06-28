@@ -31,7 +31,12 @@ op::Proposal::Proposal(const std::shared_ptr<Node>& class_probs,
     constructor_validate_and_infer_types();
 }
 
-void op::Proposal::validate_and_infer_types()
+void op::ProposalValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Proposal::validate_and_infer_element_types()
 {
     // shape node should have integer data type. For now we only allow i64
     auto image_shape_et = get_input_element_type(2);

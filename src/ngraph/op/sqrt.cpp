@@ -21,6 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Sqrt, util::UnaryElementwiseArithmeticValidator, SqrtValidator);
+    }
+}
+
 op::Sqrt::Sqrt(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Sqrt", arg)
 {

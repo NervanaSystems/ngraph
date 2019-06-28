@@ -21,6 +21,17 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Sigmoid, util::UnaryElementwiseArithmeticValidator, SigmoidValidator);
+        INHERIT_OP_VALIDATOR(SigmoidBackprop,
+                             util::BinaryElementwiseArithmeticValidator,
+                             SigmoidBackpropValidator);
+    }
+}
+
 shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);

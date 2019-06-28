@@ -26,7 +26,12 @@ op::ShapeOf::ShapeOf(const shared_ptr<Node>& arg)
     constructor_validate_and_infer_types();
 }
 
-void op::ShapeOf::validate_and_infer_types()
+void op::ShapeOfValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::ShapeOf::validate_and_infer_element_types()
 {
     set_input_is_relevant_to_value(0, false);
     set_output_type(0, element::i64, PartialShape{get_input_partial_shape(0).rank()});

@@ -21,6 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Split, util::FusedOpValidator, SplitValidator);
+    }
+}
+
 op::Split::Split(const shared_ptr<Node>& data, const int axis, const size_t num_split)
     : FusedOp("Split", {data})
     , m_split_evenly{true}

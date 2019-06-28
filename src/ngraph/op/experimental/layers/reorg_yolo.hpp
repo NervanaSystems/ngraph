@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -31,7 +32,7 @@ namespace ngraph
             /// \param strides        Stride to reorganize input by
             ReorgYolo(const std::shared_ptr<Node>& input, const Strides& strides);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -40,5 +41,7 @@ namespace ngraph
         private:
             Strides m_strides;
         };
+
+        REGISTER_OP_VALIDATOR(ReorgYolo, ReorgYoloValidator);
     }
 }

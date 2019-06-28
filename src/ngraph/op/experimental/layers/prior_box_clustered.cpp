@@ -30,7 +30,12 @@ op::PriorBoxClustered::PriorBoxClustered(const shared_ptr<Node>& layer_shape,
     constructor_validate_and_infer_types();
 }
 
-void op::PriorBoxClustered::validate_and_infer_types()
+void op::PriorBoxClusteredValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::PriorBoxClustered::validate_and_infer_element_types()
 {
     // shape node should have integer data type. For now we only allow i64
     auto layer_shape_et = get_input_element_type(0);

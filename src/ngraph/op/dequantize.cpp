@@ -35,7 +35,12 @@ op::Dequantize::Dequantize(const Output<Node>& input,
     constructor_validate_and_infer_types();
 }
 
-void op::Dequantize::validate_and_infer_types()
+void op::DequantizeValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Dequantize::validate_and_infer_element_types()
 {
     enum
     {

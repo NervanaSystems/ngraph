@@ -23,6 +23,14 @@ using namespace ngraph;
 
 const string op::Abs::type_name{"Abs"};
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Abs, util::UnaryElementwiseArithmeticValidator, AbsValidator);
+    }
+}
+
 op::Abs::Abs(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {

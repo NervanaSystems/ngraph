@@ -21,6 +21,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -74,7 +75,7 @@ namespace ngraph
                  bool compute_max = true,
                  SortType sort = SortType::NONE);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -94,5 +95,7 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
+
+        REGISTER_OP_VALIDATOR(TopK, TopKValidator);
     }
 }

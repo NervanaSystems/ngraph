@@ -115,12 +115,17 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
 {
 }
 
+void op::ConvolutionBiasValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
 /// Overrides the default shape inference utility provided by FusedOp
 /// based on FusedOp decomposition.
 ///
 /// This implementation handles partial shapes and adjust conv attributes
 /// to support simplified ConvolutionBias op construction
-void op::ConvolutionBias::validate_and_infer_types()
+void op::ConvolutionBias::validate_and_infer_element_types()
 {
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);
@@ -389,11 +394,16 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::Convolution
 {
 }
 
+void op::ConvolutionBiasAddValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
 /// Overrides the default shape inference utility provided by FusedOp
 /// based on FusedOp decomposition.
 ///
 /// This implementation handles partial shapes
-void op::ConvolutionBiasAdd::validate_and_infer_types()
+void op::ConvolutionBiasAdd::validate_and_infer_element_types()
 {
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);

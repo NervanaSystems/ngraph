@@ -28,7 +28,12 @@ op::BroadcastDistributed::BroadcastDistributed(const Output<Node>& arg, int root
     constructor_validate_and_infer_types();
 }
 
-void op::BroadcastDistributed::validate_and_infer_types()
+void op::BroadcastDistributedValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::BroadcastDistributed::validate_and_infer_element_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(0).is_dynamic() ||

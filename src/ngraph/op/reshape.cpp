@@ -36,7 +36,12 @@ op::Reshape::Reshape(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::Reshape::validate_and_infer_types()
+void op::ReshapeValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Reshape::validate_and_infer_element_types()
 {
     auto& input_shape = get_input_partial_shape(0);
     auto input_rank = input_shape.rank();

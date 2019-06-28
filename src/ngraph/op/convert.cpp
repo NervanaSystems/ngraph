@@ -30,7 +30,12 @@ op::Convert::Convert(const Output<Node>& arg, const element::Type& element_type)
     constructor_validate_and_infer_types();
 }
 
-void op::Convert::validate_and_infer_types()
+void op::ConvertValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Convert::validate_and_infer_element_types()
 {
     set_output_type(0, m_element_type, get_input_partial_shape(0));
 }

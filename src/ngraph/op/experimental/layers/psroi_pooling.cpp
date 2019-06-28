@@ -36,7 +36,12 @@ op::PSROIPooling::PSROIPooling(const shared_ptr<Node>& input,
     constructor_validate_and_infer_types();
 }
 
-void op::PSROIPooling::validate_and_infer_types()
+void op::PSROIPoolingValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::PSROIPooling::validate_and_infer_element_types()
 {
     auto input_et = get_input_element_type(0);
     if (get_input_partial_shape(0).is_static() && get_input_partial_shape(1).is_static())

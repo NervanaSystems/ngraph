@@ -37,7 +37,7 @@ namespace ngraph
             /// \param arg Node that produces the input tensor.
             Result(const Output<Node>& arg, bool needs_default_layout = false);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

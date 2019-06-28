@@ -41,7 +41,12 @@ op::QuantizedMaxPool::QuantizedMaxPool(const shared_ptr<Node>& arg,
     }
 }
 
-void op::QuantizedMaxPool::validate_and_infer_types()
+void op::QuantizedMaxPoolValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::QuantizedMaxPool::validate_and_infer_element_types()
 {
     auto& arg_shape = get_input_shape(0);
 

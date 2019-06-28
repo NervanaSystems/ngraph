@@ -28,7 +28,12 @@ op::Transpose::Transpose(const shared_ptr<Node>& arg, const shared_ptr<Node>& in
     constructor_validate_and_infer_types();
 }
 
-void op::Transpose::validate_and_infer_types()
+void op::TransposeValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Transpose::validate_and_infer_element_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(1).compatible(element::i64),

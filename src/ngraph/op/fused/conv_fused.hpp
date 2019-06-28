@@ -60,7 +60,7 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
-            virtual void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -197,7 +197,7 @@ namespace ngraph
 
             virtual NodeVector decompose_op() const override;
 
-            virtual void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
         protected:
             Strides m_window_movement_strides;
@@ -207,5 +207,11 @@ namespace ngraph
             Strides m_data_dilation_strides;
             bool m_with_relu;
         };
+
+        REGISTER_OP_VALIDATOR(ConvolutionBias, ConvolutionBiasValidator);
+        INHERIT_OP_VALIDATOR(ConvolutionBiasBackpropFiltersBias,
+                             util::FusedOpValidator,
+                             ConvolutionBiasBackpropFiltersBiasValidator);
+        REGISTER_OP_VALIDATOR(ConvolutionBiasAdd, ConvolutionBiasAddValidator);
     }
 }

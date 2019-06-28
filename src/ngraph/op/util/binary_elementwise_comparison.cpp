@@ -48,7 +48,12 @@ op::util::BinaryElementwiseComparison::BinaryElementwiseComparison(const string&
 {
 }
 
-void op::util::BinaryElementwiseComparison::validate_and_infer_types()
+void op::util::BinaryElementwiseComparisonValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::util::BinaryElementwiseComparison::validate_and_infer_element_types()
 {
     auto args_et_pshape = validate_and_infer_elementwise_args(m_autob);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);

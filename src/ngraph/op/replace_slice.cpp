@@ -46,7 +46,12 @@ op::ReplaceSlice::ReplaceSlice(const shared_ptr<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-void op::ReplaceSlice::validate_and_infer_types()
+void op::ReplaceSliceValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::ReplaceSlice::validate_and_infer_element_types()
 {
     // An empty stride vector with lower_bounds/upper_bounds filled in means that we need to
     // construct the default value.

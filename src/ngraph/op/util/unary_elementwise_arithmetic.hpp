@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -25,7 +26,7 @@ namespace ngraph
         namespace util
         {
             /// \brief Abstract base class for elementwise unary arithmetic operations, i.e., operations where the same
-            ///        scalar arithmetic operation is applied to each element.
+            ///        scalar arithmetic operation is applied to each element.x
             ///
             /// For example, if the underlying operation (determined by the subclass) is \f$\mathit{op}(x)\f$, the input tensor
             /// \f$[[x,y],[z,w]]\f$ will be mapped to \f$[[\mathit{op}(x),\mathit{op}(y)],[\mathit{op}(z),\mathit{op}(w)]]\f$.
@@ -62,8 +63,10 @@ namespace ngraph
                                            const std::shared_ptr<Node>& arg);
 
             public:
-                void validate_and_infer_types() override;
+                void validate_and_infer_element_types();
             };
+
+            REGISTER_OP_VALIDATOR(UnaryElementwiseArithmetic, UnaryElementwiseArithmeticValidator);
         }
     }
 }

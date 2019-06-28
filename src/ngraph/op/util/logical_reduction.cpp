@@ -60,7 +60,12 @@ void op::util::LogicalReduction::set_reduction_axes(const AxisSet& reduction_axe
             ->output(0));
 }
 
-void op::util::LogicalReduction::validate_and_infer_types()
+void op::util::LogicalReductionValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::util::LogicalReduction::validate_and_infer_element_types()
 {
     auto reduction_axes = get_reduction_axes();
     auto input_shape = get_input_partial_shape(0);

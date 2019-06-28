@@ -18,6 +18,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -57,10 +58,11 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            void validate_and_infer_element_types();
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void validate_and_infer_types() override;
 
         private:
             /// Helper method to compute output shape
@@ -72,5 +74,7 @@ namespace ngraph
             AxisSet m_shrink_axis;
             AxisSet m_ellipsis_mask;
         };
+
+        REGISTER_OP_VALIDATOR(DynSlice, DynSliceValidator);
     }
 }

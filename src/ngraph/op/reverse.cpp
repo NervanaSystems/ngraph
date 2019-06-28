@@ -30,7 +30,12 @@ op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
     constructor_validate_and_infer_types();
 }
 
-void op::Reverse::validate_and_infer_types()
+void op::ReverseValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Reverse::validate_and_infer_element_types()
 {
     auto input_shape = get_input_partial_shape(0);
     Dimension input_rank = input_shape.rank();

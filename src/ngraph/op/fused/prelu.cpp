@@ -29,6 +29,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(PRelu, util::FusedOpValidator, PReluValidator);
+    }
+}
+
 op::PRelu::PRelu(const shared_ptr<Node>& data, const shared_ptr<Node>& slope)
     : FusedOp("PRelu", {data, slope})
 {

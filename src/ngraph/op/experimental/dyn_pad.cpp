@@ -29,7 +29,12 @@ op::DynPad::DynPad(const std::shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::DynPad::validate_and_infer_types()
+void op::DynPadValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::DynPad::validate_and_infer_element_types()
 {
     auto arg_t = get_input_element_type(0);
     auto padding_value_t = get_input_element_type(3);

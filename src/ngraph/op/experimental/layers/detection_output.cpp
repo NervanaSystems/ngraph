@@ -35,7 +35,12 @@ op::DetectionOutput::DetectionOutput(const std::shared_ptr<Node>& box_logits,
     constructor_validate_and_infer_types();
 }
 
-void op::DetectionOutput::validate_and_infer_types()
+void op::DetectionOutputValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::DetectionOutput::validate_and_infer_element_types()
 {
     if (get_input_partial_shape(0).is_static())
     {

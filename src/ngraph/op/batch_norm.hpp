@@ -22,6 +22,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -70,7 +71,7 @@ namespace ngraph
                               Output<Node> beta,
                               Output<Node> input);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             double get_eps_value() const { return m_epsilon; }
             void set_eps_value(double epsilon) { m_epsilon = epsilon; }
@@ -134,7 +135,7 @@ namespace ngraph
                                Output<ngraph::Node> mean,
                                Output<ngraph::Node> variance);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             double get_eps_value() const { return m_epsilon; }
             void set_eps_value(double epsilon) { m_epsilon = epsilon; }
@@ -184,7 +185,7 @@ namespace ngraph
                                       Output<Node> variance,
                                       Output<Node> delta);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             double get_eps_value() const { return m_epsilon; }
             void set_eps_value(double epsilon) { m_epsilon = epsilon; }
@@ -201,5 +202,9 @@ namespace ngraph
 
             double m_epsilon;
         };
+
+        REGISTER_OP_VALIDATOR(BatchNormTraining, BatchNormTrainingValidator);
+        REGISTER_OP_VALIDATOR(BatchNormInference, BatchNormInferenceValidator);
+        REGISTER_OP_VALIDATOR(BatchNormTrainingBackprop, BatchNormTrainingBackpropValidator);
     }
 }

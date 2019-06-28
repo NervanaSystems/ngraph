@@ -23,6 +23,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(LeakyRelu, util::FusedOpValidator, LeakyReluValidator);
+    }
+}
+
 op::LeakyRelu::LeakyRelu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
     : FusedOp("LeakyRelu", {data, alpha})
 {

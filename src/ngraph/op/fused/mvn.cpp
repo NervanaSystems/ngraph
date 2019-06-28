@@ -27,6 +27,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(MVN, util::FusedOpValidator, MVNValidator);
+    }
+}
+
 op::MVN::MVN(const std::shared_ptr<Node>& data,
              bool across_channels,
              bool normalize_variance,

@@ -39,7 +39,12 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::stri
 {
 }
 
-void op::util::UnaryElementwiseArithmetic::validate_and_infer_types()
+void op::util::UnaryElementwiseArithmeticValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::util::UnaryElementwiseArithmetic::validate_and_infer_element_types()
 {
     validate_and_infer_elementwise_arithmetic();
 }

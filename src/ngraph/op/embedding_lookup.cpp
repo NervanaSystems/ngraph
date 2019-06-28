@@ -21,7 +21,12 @@ using namespace ngraph;
 
 const string op::EmbeddingLookup::type_name{"EmbeddingLookup"};
 
-void op::EmbeddingLookup::validate_and_infer_types()
+void op::EmbeddingLookupValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::EmbeddingLookup::validate_and_infer_element_types()
 {
     element::Type result_et = get_input_element_type(1);
 

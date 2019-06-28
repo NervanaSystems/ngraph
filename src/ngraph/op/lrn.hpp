@@ -54,10 +54,11 @@ namespace ngraph
             double get_beta() const { return m_beta; }
             double get_bias() const { return m_bias; }
             size_t get_nsize() const { return m_size; }
+            void validate_and_infer_element_types();
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void validate_and_infer_types() override;
 
             double m_alpha;
             double m_beta;

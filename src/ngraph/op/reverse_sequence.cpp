@@ -36,7 +36,12 @@ op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
     constructor_validate_and_infer_types();
 }
 
-void op::ReverseSequence::validate_and_infer_types()
+void op::ReverseSequenceValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::ReverseSequence::validate_and_infer_element_types()
 {
     auto input_shape = get_input_partial_shape(0);
     auto input_rank = input_shape.rank();

@@ -20,9 +20,27 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace ngraph;
 using namespace std;
+
+namespace ngraph
+{
+    namespace op
+    {
+        REGISTER_OP_VALIDATOR(Constant, ConstantValidator);
+        INHERIT_OP_VALIDATOR(ScalarConstantLikeBase,
+                             ConstantValidator,
+                             ScalarConstantLikeBaseValidator);
+        INHERIT_OP_VALIDATOR(ScalarConstantLike, ConstantValidator, ScalarConstantLikeValidator);
+    }
+}
+
+void op::ConstantValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
 
 template <typename T>
 string to_cpp_string(T value)

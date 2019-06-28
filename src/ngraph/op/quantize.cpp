@@ -35,7 +35,12 @@ op::Quantize::Quantize(const shared_ptr<Node>& input,
     constructor_validate_and_infer_types();
 }
 
-void op::Quantize::validate_and_infer_types()
+void op::QuantizeValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Quantize::validate_and_infer_element_types()
 {
     enum
     {

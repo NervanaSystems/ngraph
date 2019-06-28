@@ -18,6 +18,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -43,10 +44,12 @@ namespace ngraph
             ///             element type, and same element type as `start` and `stop`.
             Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
         };
+
+        REGISTER_OP_VALIDATOR(Range, RangeValidator);
     }
 }

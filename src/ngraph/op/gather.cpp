@@ -23,13 +23,18 @@ using namespace ngraph;
 static int PARAMS = 0;
 static int INDICES = 1;
 
+void op::GatherValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
 shared_ptr<Node> op::Gather::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Gather>(new_args.at(PARAMS), new_args.at(INDICES), m_axis);
 }
 
-void op::Gather::validate_and_infer_types()
+void op::Gather::validate_and_infer_element_types()
 {
     element::Type result_et = get_input_element_type(PARAMS);
     element::Type indices_et = get_input_element_type(INDICES);

@@ -30,6 +30,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Atan, util::UnaryElementwiseArithmeticValidator, AtanValidator);
+    }
+}
+
 const string op::Atan::type_name{"Atan"};
 
 op::Atan::Atan(const Output<Node>& arg)

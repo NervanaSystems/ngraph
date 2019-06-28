@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -38,7 +39,7 @@ namespace ngraph
                 constructor_validate_and_infer_types();
             }
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override
             {
@@ -52,5 +53,7 @@ namespace ngraph
         protected:
             size_t m_axis;
         };
+
+        REGISTER_OP_VALIDATOR(Gather, GatherValidator);
     }
 }

@@ -33,7 +33,12 @@ op::DynReshape::DynReshape(const shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::DynReshape::validate_and_infer_types()
+void op::DynReshapeValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::DynReshape::validate_and_infer_element_types()
 {
     auto pattern_et = get_input_element_type(1);
     // check data types

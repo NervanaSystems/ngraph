@@ -29,6 +29,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Softmax, util::UnaryElementwiseArithmeticValidator, SoftmaxValidator);
+    }
+}
+
 op::Softmax::Softmax(const shared_ptr<Node>& arg, const AxisSet& axes)
     : UnaryElementwiseArithmetic("Softmax", arg)
     , m_axes(axes)

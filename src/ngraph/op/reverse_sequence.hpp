@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -35,7 +36,7 @@ namespace ngraph
                             size_t batch_axis,
                             size_t seq_axis);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -50,5 +51,7 @@ namespace ngraph
             size_t m_batch_axis{0};
             size_t m_seq_axis{0};
         };
+
+        REGISTER_OP_VALIDATOR(ReverseSequence, ReverseSequenceValidator);
     }
 }

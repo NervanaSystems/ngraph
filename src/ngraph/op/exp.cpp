@@ -20,6 +20,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Exp, util::UnaryElementwiseArithmeticValidator, ExpValidator);
+    }
+}
+
 const string op::Exp::type_name{"Exp"};
 
 op::Exp::Exp(const Output<Node>& arg)

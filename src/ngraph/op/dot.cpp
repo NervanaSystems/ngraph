@@ -47,7 +47,12 @@ op::Dot::Dot(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-void op::Dot::validate_and_infer_types()
+void op::DotValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Dot::validate_and_infer_element_types()
 {
     element::Type result_et;
 

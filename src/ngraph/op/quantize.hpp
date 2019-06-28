@@ -19,6 +19,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -89,7 +90,7 @@ namespace ngraph
                      const ngraph::AxisSet& axes,
                      RoundMode round_mode);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -105,5 +106,7 @@ namespace ngraph
             ngraph::AxisSet m_axes;
             RoundMode m_round_mode;
         };
+
+        REGISTER_OP_VALIDATOR(Quantize, QuantizeValidator);
     }
 }

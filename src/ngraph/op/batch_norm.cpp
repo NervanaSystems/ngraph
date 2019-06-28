@@ -45,7 +45,12 @@ ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
     constructor_validate_and_infer_types();
 }
 
-void ngraph::op::BatchNormTraining::validate_and_infer_types()
+void ngraph::op::BatchNormTrainingValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void ngraph::op::BatchNormTraining::validate_and_infer_element_types()
 {
     element::Type result_et;
     PartialShape result_batch_shape;
@@ -140,7 +145,12 @@ ngraph::op::BatchNormInference::BatchNormInference(double eps,
     constructor_validate_and_infer_types();
 }
 
-void ngraph::op::BatchNormInference::validate_and_infer_types()
+void ngraph::op::BatchNormInferenceValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void ngraph::op::BatchNormInference::validate_and_infer_element_types()
 {
     element::Type result_et;
     PartialShape result_batch_shape;
@@ -203,7 +213,12 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(double epsilon,
     constructor_validate_and_infer_types();
 }
 
-void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
+void ngraph::op::BatchNormTrainingBackpropValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_element_types()
 {
     PartialShape input_and_delta_shape{get_input_partial_shape(INPUT_DATA)};
 

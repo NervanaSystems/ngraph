@@ -61,7 +61,12 @@ void op::util::ArithmeticReduction::set_reduction_axes(const AxisSet& reduction_
             ->output(0));
 }
 
-void op::util::ArithmeticReduction::validate_and_infer_types()
+void op::util::ArithmeticReductionValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::util::ArithmeticReduction::validate_and_infer_element_types()
 {
     auto reduction_axes = get_reduction_axes();
     auto input_shape = get_input_partial_shape(0);

@@ -21,6 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(ShuffleChannels, util::FusedOpValidator, ShuffleChannelsValidator);
+    }
+}
+
 op::ShuffleChannels::ShuffleChannels(const shared_ptr<Node>& data,
                                      const int axis,
                                      const size_t groups)

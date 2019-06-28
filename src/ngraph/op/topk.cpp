@@ -80,7 +80,12 @@ void op::TopK::set_k(size_t k)
         op::Constant::create(element::i64, Shape{1}, {k})->output(0));
 }
 
-void op::TopK::validate_and_infer_types()
+void op::TopKValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::TopK::validate_and_infer_element_types()
 {
     const PartialShape& input_shape = get_input_partial_shape(0);
     Rank input_rank = input_shape.rank();

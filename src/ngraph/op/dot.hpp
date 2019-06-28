@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -55,7 +56,7 @@ namespace ngraph
             /// \param arg1 The node producing the second argument.
             Dot(const Output<Node>& arg0, const Output<Node>& arg1);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             size_t get_reduction_axes_count() const { return m_reduction_axes_count; }
             void get_reduction_axes_count(size_t reduction_axes_count)
@@ -82,5 +83,7 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
+
+        REGISTER_OP_VALIDATOR(Dot, DotValidator);
     }
 }

@@ -48,7 +48,12 @@ op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const string& node_
 {
 }
 
-void op::util::BinaryElementwiseLogical::validate_and_infer_types()
+void op::util::BinaryElementwiseLogicalValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::util::BinaryElementwiseLogical::validate_and_infer_element_types()
 {
     validate_and_infer_elementwise_logical(m_autob);
 }

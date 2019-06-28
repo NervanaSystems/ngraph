@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(ArgMin, util::IndexReductionValidator, ArgMinValidator);
+    }
+}
+
 const string op::ArgMin::type_name{"ArgMin"};
 
 op::ArgMin::ArgMin(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)

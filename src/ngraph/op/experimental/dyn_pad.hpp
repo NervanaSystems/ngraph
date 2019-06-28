@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -41,7 +42,7 @@ namespace ngraph
                    PadMode pad_mode = PadMode::CONSTANT);
 
             PadMode get_pad_mode() const { return m_pad_mode; }
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -53,5 +54,7 @@ namespace ngraph
         private:
             PadMode m_pad_mode;
         };
+
+        REGISTER_OP_VALIDATOR(DynPad, DynPadValidator);
     }
 }

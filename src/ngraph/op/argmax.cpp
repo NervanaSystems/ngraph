@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(ArgMax, util::IndexReductionValidator, ArgMaxValidator);
+    }
+}
+
 const string op::ArgMax::type_name{"ArgMax"};
 
 op::ArgMax::ArgMax(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)

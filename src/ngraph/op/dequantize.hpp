@@ -19,6 +19,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -48,7 +49,7 @@ namespace ngraph
                        const element::Type& type,
                        const AxisSet& axes);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -65,5 +66,7 @@ namespace ngraph
             element::Type m_type;
             AxisSet m_axes;
         };
+
+        REGISTER_OP_VALIDATOR(Dequantize, DequantizeValidator);
     }
 }

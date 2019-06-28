@@ -21,6 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(ScaleShift, util::FusedOpValidator, ScaleShiftValidator);
+    }
+}
+
 op::ScaleShift::ScaleShift(const std::shared_ptr<ngraph::Node>& data,
                            const std::shared_ptr<ngraph::Node>& scale,
                            const std::shared_ptr<ngraph::Node>& shift)

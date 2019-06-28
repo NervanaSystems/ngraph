@@ -21,6 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Cosh, util::UnaryElementwiseArithmeticValidator, CoshValidator);
+    }
+}
+
 const string op::Cosh::type_name{"Cosh"};
 
 op::Cosh::Cosh(const Output<Node>& arg)

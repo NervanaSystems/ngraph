@@ -35,7 +35,12 @@ op::Pad::Pad(const shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::Pad::validate_and_infer_types()
+void op::PadValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::Pad::validate_and_infer_element_types()
 {
     element::Type result_et;
 

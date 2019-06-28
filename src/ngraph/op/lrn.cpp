@@ -20,6 +20,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        REGISTER_OP_VALIDATOR(LRN, LRNValidator);
+    }
+}
+
 op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double bias, size_t nsize)
     : UnaryElementwiseArithmetic("LRN", arg)
     , m_alpha(alpha)
@@ -30,9 +38,14 @@ op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double
     constructor_validate_and_infer_types();
 }
 
-void op::LRN::validate_and_infer_types()
+void op::LRNValidator::validate()
 {
-    UnaryElementwiseArithmetic::validate_and_infer_types();
+    node->validate_and_infer_element_types();
+}
+
+void op::LRN::validate_and_infer_element_types()
+{
+    UnaryElementwiseArithmetic::validate_and_infer_element_types();
 
     const PartialShape& input_shape = get_input_partial_shape(0);
 

@@ -19,6 +19,7 @@
 #include "ngraph/coordinate.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/strides.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -85,14 +86,17 @@ namespace ngraph
             const Coordinate& get_upper_bounds() const { return m_upper_bounds; }
             /// \return The slicing strides.
             const Strides& get_strides() const { return m_strides; }
+            void validate_and_infer_element_types();
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void validate_and_infer_types() override;
 
             Coordinate m_lower_bounds;
             Coordinate m_upper_bounds;
             Strides m_strides;
         };
+
+        REGISTER_OP_VALIDATOR(ReplaceSlice, ReplaceSliceValidator);
     }
 }

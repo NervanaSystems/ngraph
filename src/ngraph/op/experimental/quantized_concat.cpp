@@ -30,7 +30,12 @@ op::QuantizedConcat::QuantizedConcat(const NodeVector& args, size_t concatenatio
     constructor_validate_and_infer_types();
 }
 
-void op::QuantizedConcat::validate_and_infer_types()
+void op::QuantizedConcatValidator::validate()
+{
+    node->validate_and_infer_element_types();
+}
+
+void op::QuantizedConcat::validate_and_infer_element_types()
 {
     NODE_VALIDATION_CHECK(this, get_input_size() >= 1, "At least one argument required.");
 

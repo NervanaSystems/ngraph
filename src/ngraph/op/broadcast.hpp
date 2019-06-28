@@ -18,6 +18,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -40,7 +41,7 @@ namespace ngraph
             ///                        remaining axes in shape must be the same as the shape of arg.
             Broadcast(const Output<Node>& arg, const Shape& shape, const AxisSet& broadcast_axes);
 
-            void validate_and_infer_types() override;
+            void validate_and_infer_element_types();
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -99,5 +100,7 @@ namespace ngraph
         protected:
             AxisSet m_initial_broadcast_axes;
         };
+
+        REGISTER_OP_VALIDATOR(Broadcast, BroadcastValidator);
     }
 }

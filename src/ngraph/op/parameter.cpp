@@ -17,9 +17,18 @@
 #include <sstream>
 
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+namespace ngraph
+{
+    namespace op
+    {
+        REGISTER_OP_VALIDATOR(Parameter, ParameterValidator);
+    }
+}
 
 op::Parameter::Parameter(const element::Type& element_type,
                          const PartialShape& pshape,
@@ -33,9 +42,13 @@ op::Parameter::Parameter(const element::Type& element_type,
     constructor_validate_and_infer_types();
 }
 
-void op::Parameter::validate_and_infer_types()
+void op::ParameterValidator::validate()
 {
-    Op::validate_and_infer_types();
+    node->validate_and_infer_element_types();
+}
+
+void op::Parameter::validate_and_infer_element_types()
+{
     set_output_type(0, m_element_type, m_partial_shape);
 }
 

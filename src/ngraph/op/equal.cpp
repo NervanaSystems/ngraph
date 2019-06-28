@@ -19,6 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(Equal, util::BinaryElementwiseComparisonValidator, EqualValidator);
+    }
+}
+
 const string op::Equal::type_name{"Equal"};
 
 op::Equal::Equal(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
