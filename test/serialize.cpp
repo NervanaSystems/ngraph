@@ -358,8 +358,9 @@ TEST(serialize, tensor_iterator)
     auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 10});
 
     // Body
-    auto Ho = make_shared<op::Relu>(make_shared<op::Dot>(Xi, WX) + make_shared<op::Dot>(Hi, WH) +
-                                    make_shared<op::Broadcast>(bH, Shape{32, 20}, AxisSet{0}));
+    auto Ho = make_shared<op::Relu>(
+        make_shared<op::Dot>(make_shared<op::Reshape>(Xi, AxisVector{0, 1, 2}, Shape{32, 10}), WX) +
+        make_shared<op::Dot>(Hi, WH) + make_shared<op::Broadcast>(bH, Shape{32, 20}, AxisSet{0}));
     auto Yo = make_shared<op::Relu>(make_shared<op::Dot>(Ho, WY) +
                                     make_shared<op::Broadcast>(bY, Shape{32, 5}, AxisSet{0}));
 
