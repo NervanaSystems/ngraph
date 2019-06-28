@@ -37,6 +37,7 @@ add_library(onnx_import STATIC
         core/operator_set.hpp
         core/tensor.hpp
         core/value_info.hpp
+        exceptions.cpp
         exceptions.hpp
         op/acos.hpp
         op/acosh.cpp
@@ -103,11 +104,15 @@ add_library(onnx_import STATIC
         op/hardmax.cpp
         op/hardmax.hpp
         op/identity.hpp
+        op/instance_norm.cpp
+        op/instance_norm.hpp
         op/leaky_relu.cpp
         op/leaky_relu.hpp
         op/less.hpp
         op/log.hpp
         op/log_softmax.hpp
+        op/lp_norm.cpp
+        op/lp_norm.hpp
         op/lp_pool.cpp
         op/lp_pool.hpp
         op/lrn.cpp

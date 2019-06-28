@@ -27,23 +27,17 @@ namespace ngraph
         {
             namespace set_1
             {
-                /// \brief      Creates nGraph node representing ONNX GlobalLpPool operator.
+                /// \brief      Creates nGraph node representing ONNX InstanceNormalization operator.
                 ///
-                /// \note       This functions calculates "entrywise" norms in spatial/feature
-                ///             dimensions. That is it treats matrix/tensor in spatial/feature
-                ///             dimensions as a vector and applies apropriate norm on it. The
-                ///             result is a scalar.
-                ///
-                ///             Suppose A contains spatial dimensions of input tensor, then
-                ///             for matrix A we have p-norm defined as following double sum over
-                ///             all elements:
-                ///             ||A||_p = ||vec(A)||_p = [sum_{i=1}^m sum_{j=1}^n abs(a_{i,j})^p]^{1/p}
+                /// \note       The resulting node represents following equation:
+                ///             y = scale * (x - mean) / sqrt(variance + epsilon) + B
+                ///             where mean and variance are computed per instance per channel.
                 ///
                 /// \param[in]  node  The input ONNX node representing this operation.
                 ///
                 /// \return     Vector of nodes containting resulting nGraph nodes.
                 ///
-                NodeVector global_lp_pool(const Node& node);
+                NodeVector instance_norm(const Node& node);
             } // namespace set_1
 
         } //namespace op
