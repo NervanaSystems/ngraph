@@ -20,8 +20,8 @@ This section discusses how to use nGraph to create a Pass Manager for your
 backend, and provides both a simple and a complex example to follow.
 
 The pass manager infrastructure in nGraph makes it easy to reuse and mix the
-generic optimization passes. It also permits you to roll your own device-
-specific  optimizations; that is, the same unified interface and APIs may be
+generic optimization passes. It also permits you to roll your own device-specific
+optimizations; that is, the same unified interface and APIs may be
 used to  cover both things.
 
 Invoking these passes is fairly straightforward, illustrated by the following
@@ -57,8 +57,7 @@ capabilities.
 When, for example, the device is an Intel® Architecture :abbr:`IA (Intel®
 Architecture)`  CPU, it can support a fused ``ConvolutionBiasReLU`` kernel. The
 backend is able  to rewrite the graph into its own custom ops that more closely
-match the  hardware-specific primitives; here they get matched via Intel® MKL-
-DNN.
+match the  hardware-specific primitives; here they get matched via Intel® MKL-DNN.
 
 .. _figure-simple-compiler:
 
