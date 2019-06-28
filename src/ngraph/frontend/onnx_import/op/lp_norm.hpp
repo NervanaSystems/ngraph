@@ -27,12 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                /// \brief      Creates nGraph node representing ONNX GlobalLpPool operator.
-                ///
-                /// \note       This functions calculates "entrywise" norms in spatial/feature
-                ///             dimensions. That is it treats matrix/tensor in spatial/feature
-                ///             dimensions as a vector and applies apropriate norm on it. The
-                ///             result is a scalar.
+                /// \brief      Creates nGraph node representing ONNX LpNormalization operator.
                 ///
                 ///             Suppose A contains spatial dimensions of input tensor, then
                 ///             for matrix A we have p-norm defined as following double sum over
@@ -43,7 +38,7 @@ namespace ngraph
                 ///
                 /// \return     Vector of nodes containting resulting nGraph nodes.
                 ///
-                NodeVector global_lp_pool(const Node& node);
+                NodeVector lp_norm(const Node& node);
             } // namespace set_1
 
         } //namespace op
