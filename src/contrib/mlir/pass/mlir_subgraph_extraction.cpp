@@ -147,9 +147,9 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
     // get output nodes for each sub-graph. Do this before attachin CK nodes since we will 
     // remove output edges from the sub-graphs. 
-    for (auto it : m_id_to_graph)
+    for (IDGraphMap::iterator it = m_id_to_graph.begin(); it != m_id_to_graph.end(); it++)
     {
-        MLIRSubgraph& sg = it.second;
+        MLIRSubgraph& sg = it->second;
         NodeVector outputs = std::move(get_subgraph_outputs(sg.get_nodes(), {} /*exclusions*/, false /* ignore unused */, false /* ignore output duplicates */));
         sg.add_outputs(outputs);
     }
