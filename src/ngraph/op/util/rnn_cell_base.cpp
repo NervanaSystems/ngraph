@@ -17,6 +17,14 @@
 #include <algorithm>
 #include <iterator>
 
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/fused/clamp.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/op/util/rnn_cell_base.hpp"
 #include "ngraph/util.hpp"
 
@@ -59,4 +67,35 @@ op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size
     }
 
     return afunc;
+}
+
+shared_ptr<Node> op::util::RNNCellBase::add(const shared_ptr<Node>& lhs,
+                                            const shared_ptr<Node>& rhs)
+{
+    auto args = op::numpy_style_broadcast({lhs, rhs});
+    return {make_shared<op::Add>(args.at(0), args.at(1))};
+}
+
+shared_ptr<Node> op::util::RNNCellBase::sub(const shared_ptr<Node>& lhs,
+                                            const shared_ptr<Node>& rhs)
+{
+    auto args = op::numpy_style_broadcast({lhs, rhs});
+    return {make_shared<op::Subtract>(args.at(0), args.at(1))};
+}
+
+shared_ptr<Node> op::util::RNNCellBase::mul(const shared_ptr<Node>& lhs,
+                                            const shared_ptr<Node>& rhs)
+{
+    auto args = op::numpy_style_broadcast({lhs, rhs});
+    return {make_shared<op::Multiply>(args.at(0), args.at(1))};
+}
+
+shared_ptr<Node> op::util::RNNCellBase::clip(const shared_ptr<Node>& data) const
+{
+    if (m_clip == 0.f)
+    {
+        return data;
+    }
+
+    return make_shared<op::Clamp>(data, -m_clip, m_clip);
 }
