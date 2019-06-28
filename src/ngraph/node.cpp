@@ -201,7 +201,7 @@ void Node::validate_and_infer_types()
     }
     else
     {
-        NGRAPH_INFO << "Validation called for node with no registered NodeValidator: " + get_name();
+        NGRAPH_DEBUG << "Validation called for node with no registered validator: " + get_name();
     }
 }
 

@@ -98,7 +98,6 @@ namespace ngraph
         friend class Output;
 
     protected:
-        /// Throws if the node is invalid.
         virtual void validate_and_infer_types();
 
         // Called in constructors during transition

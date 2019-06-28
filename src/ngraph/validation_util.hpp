@@ -45,7 +45,7 @@ namespace ngraph
             op_t* node = nullptr;
         };
 
-        /// Non-templated base helper used for type_traits
+        /// Non-templated base helper used for type
         /// erasure in the global validator map
         /// Method: validate - The virtual function implemented
         ///                    by each user for validation
@@ -58,8 +58,7 @@ namespace ngraph
 
         /// The validation helper which is templated over the
         /// user defined validator that inherits from OpValidator<OP_T>.
-        /// Method: validate - Implemented here to cast the node to the
-        ///                    derived op type, cast and set the
+        /// Method: validate - Implemented here to cast and set the
         ///                    OpValidator<OP_T>::node and call the user's
         ///                    validator
         template <class OP_VALIDATOR>

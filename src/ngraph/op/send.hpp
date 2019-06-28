@@ -16,24 +16,36 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
-#include "ngraph/util.hpp"
+#include <memory>
+
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace op
     {
-        class DynElimination : public GraphRewrite
+        class Send : public Op
         {
         public:
-            DynElimination();
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs an unitialized send operation.
+            Send() = default;
+            /// \brief Constructs a send operation.
+            ///
+            /// \param arg The node for input tensor
+            /// \param dest_id the target id which could be rank of node id.
+            Send(const Output<Node>& arg, int dest_id);
+
+            void validate_and_infer_element_types();
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+            int get_dest_id() const;
 
         private:
-            void construct_transpose();
-            void construct_broadcast();
-            void construct_dyn_slice();
-            void construct_dyn_reshape();
-            void construct_range();
+            const int m_dest_id;
         };
     }
 }

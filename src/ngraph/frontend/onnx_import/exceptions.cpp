@@ -14,26 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <sstream>
 
-#include "ngraph/pass/graph_rewrite.hpp"
-#include "ngraph/util.hpp"
+#include "exceptions.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace onnx_import
     {
-        class DynElimination : public GraphRewrite
+        namespace error
         {
-        public:
-            DynElimination();
-
-        private:
-            void construct_transpose();
-            void construct_broadcast();
-            void construct_dyn_slice();
-            void construct_dyn_reshape();
-            void construct_range();
-        };
+            namespace detail
+            {
+                std::string get_error_msg_prefix(const Node& node)
+                {
+                    std::stringstream ss;
+                    ss << "While validating ONNX node '" << node << "'";
+                    return ss.str();
+                }
+            }
+        }
     }
 }

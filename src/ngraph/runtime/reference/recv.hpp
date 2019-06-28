@@ -16,24 +16,19 @@
 
 #pragma once
 
-#include "ngraph/pass/graph_rewrite.hpp"
-#include "ngraph/util.hpp"
+#include "ngraph/distributed.hpp"
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class DynElimination : public GraphRewrite
+        namespace reference
         {
-        public:
-            DynElimination();
-
-        private:
-            void construct_transpose();
-            void construct_broadcast();
-            void construct_dyn_slice();
-            void construct_dyn_reshape();
-            void construct_range();
-        };
+            template <typename T>
+            void recv(T* arg, const element::Type_t element_type, size_t count, int src_id)
+            {
+                get_distributed_interface()->recv(arg, element_type, count, src_id);
+            }
+        }
     }
 }
