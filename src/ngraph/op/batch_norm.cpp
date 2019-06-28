@@ -45,25 +45,25 @@ ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
     constructor_validate_and_infer_types();
 }
 
-void ngraph::op::BatchNormTraining::validate_and_infer_types()
+void ngraph::op::BatchNormTrainingValidator::validate()
 {
     element::Type result_et;
     PartialShape result_batch_shape;
     PartialShape result_channel_shape;
 
-    set_output_size(3);
+    node->set_output_size(3);
     std::tie(result_et, result_batch_shape, result_channel_shape) =
-        infer_batch_norm_forward(this,
-                                 get_input_element_type(INPUT_DATA),
-                                 get_input_element_type(INPUT_GAMMA),
-                                 get_input_element_type(INPUT_BETA),
-                                 get_input_partial_shape(INPUT_DATA),
-                                 get_input_partial_shape(INPUT_GAMMA),
-                                 get_input_partial_shape(INPUT_BETA));
+        infer_batch_norm_forward(node,
+                                 node->get_input_element_type(node->INPUT_DATA),
+                                 node->get_input_element_type(node->INPUT_GAMMA),
+                                 node->get_input_element_type(node->INPUT_BETA),
+                                 node->get_input_partial_shape(node->INPUT_DATA),
+                                 node->get_input_partial_shape(node->INPUT_GAMMA),
+                                 node->get_input_partial_shape(node->INPUT_BETA));
 
-    set_output_type(0, result_et, result_batch_shape);
-    set_output_type(1, result_et, result_channel_shape);
-    set_output_type(2, result_et, result_channel_shape);
+    node->set_output_type(0, result_et, result_batch_shape);
+    node->set_output_type(1, result_et, result_channel_shape);
+    node->set_output_type(2, result_et, result_channel_shape);
 }
 
 std::shared_ptr<ngraph::Node>
@@ -140,27 +140,27 @@ ngraph::op::BatchNormInference::BatchNormInference(double eps,
     constructor_validate_and_infer_types();
 }
 
-void ngraph::op::BatchNormInference::validate_and_infer_types()
+void ngraph::op::BatchNormInferenceValidator::validate()
 {
     element::Type result_et;
     PartialShape result_batch_shape;
     PartialShape result_channel_shape; // unused here
 
-    set_output_size(1);
+    node->set_output_size(1);
     std::tie(result_et, result_batch_shape, result_channel_shape) =
-        infer_batch_norm_forward(this,
-                                 get_input_element_type(INPUT_DATA),
-                                 get_input_element_type(INPUT_GAMMA),
-                                 get_input_element_type(INPUT_BETA),
-                                 get_input_element_type(INPUT_MEAN),
-                                 get_input_element_type(INPUT_VARIANCE),
-                                 get_input_partial_shape(INPUT_DATA),
-                                 get_input_partial_shape(INPUT_GAMMA),
-                                 get_input_partial_shape(INPUT_BETA),
-                                 get_input_partial_shape(INPUT_MEAN),
-                                 get_input_partial_shape(INPUT_VARIANCE));
+        infer_batch_norm_forward(node,
+                                 node->get_input_element_type(node->INPUT_DATA),
+                                 node->get_input_element_type(node->INPUT_GAMMA),
+                                 node->get_input_element_type(node->INPUT_BETA),
+                                 node->get_input_element_type(node->INPUT_MEAN),
+                                 node->get_input_element_type(node->INPUT_VARIANCE),
+                                 node->get_input_partial_shape(node->INPUT_DATA),
+                                 node->get_input_partial_shape(node->INPUT_GAMMA),
+                                 node->get_input_partial_shape(node->INPUT_BETA),
+                                 node->get_input_partial_shape(node->INPUT_MEAN),
+                                 node->get_input_partial_shape(node->INPUT_VARIANCE));
 
-    set_output_type(0, result_et, result_batch_shape);
+    node->set_output_type(0, result_et, result_batch_shape);
 }
 
 std::shared_ptr<ngraph::Node>
@@ -203,29 +203,29 @@ ngraph::op::BatchNormTrainingBackprop::BatchNormTrainingBackprop(double epsilon,
     constructor_validate_and_infer_types();
 }
 
-void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
+void ngraph::op::BatchNormTrainingBackpropValidator::validate()
 {
-    PartialShape input_and_delta_shape{get_input_partial_shape(INPUT_DATA)};
+    PartialShape input_and_delta_shape{node->get_input_partial_shape(node->INPUT_DATA)};
 
     NODE_VALIDATION_CHECK(
-        this,
-        PartialShape::merge_into(input_and_delta_shape, get_input_partial_shape(INPUT_DELTA)),
+        node,
+        PartialShape::merge_into(input_and_delta_shape, node->get_input_partial_shape(node->INPUT_DELTA)),
         "Shape of delta does not match the shape of the input data (input data shape: ",
-        get_input_partial_shape(INPUT_DATA),
+        node->get_input_partial_shape(node->INPUT_DATA),
         ", delta shape: ",
-        get_input_partial_shape(INPUT_DELTA),
+        node->get_input_partial_shape(node->INPUT_DELTA),
         ").");
 
     element::Type input_and_delta_et;
 
-    NODE_VALIDATION_CHECK(this,
+    NODE_VALIDATION_CHECK(node,
                           element::Type::merge(input_and_delta_et,
-                                               get_input_element_type(INPUT_DATA),
-                                               get_input_element_type(INPUT_DELTA)),
+                                               node->get_input_element_type(node->INPUT_DATA),
+                                               node->get_input_element_type(node->INPUT_DELTA)),
                           "Element type for input (",
-                          get_input_element_type(INPUT_DATA),
+                          node->get_input_element_type(node->INPUT_DATA),
                           ") does not match element type for delta (",
-                          get_input_element_type(INPUT_DATA),
+                          node->get_input_element_type(node->INPUT_DATA),
                           ").");
 
     element::Type result_et;
@@ -233,21 +233,21 @@ void ngraph::op::BatchNormTrainingBackprop::validate_and_infer_types()
     PartialShape result_channel_shape;
 
     std::tie(result_et, result_batch_shape, result_channel_shape) =
-        infer_batch_norm_forward(this,
+        infer_batch_norm_forward(node,
                                  input_and_delta_et,
-                                 get_input_element_type(INPUT_GAMMA),
-                                 get_input_element_type(INPUT_BETA),
-                                 get_input_element_type(INPUT_MEAN),
-                                 get_input_element_type(INPUT_VARIANCE),
+                                 node->get_input_element_type(node->INPUT_GAMMA),
+                                 node->get_input_element_type(node->INPUT_BETA),
+                                 node->get_input_element_type(node->INPUT_MEAN),
+                                 node->get_input_element_type(node->INPUT_VARIANCE),
                                  input_and_delta_shape,
-                                 get_input_partial_shape(INPUT_GAMMA),
-                                 get_input_partial_shape(INPUT_BETA),
-                                 get_input_partial_shape(INPUT_MEAN),
-                                 get_input_partial_shape(INPUT_VARIANCE));
+                                 node->get_input_partial_shape(node->INPUT_GAMMA),
+                                 node->get_input_partial_shape(node->INPUT_BETA),
+                                 node->get_input_partial_shape(node->INPUT_MEAN),
+                                 node->get_input_partial_shape(node->INPUT_VARIANCE));
 
-    set_output_type(0, result_et, result_batch_shape);
-    set_output_type(1, result_et, result_channel_shape);
-    set_output_type(2, result_et, result_channel_shape);
+    node->set_output_type(0, result_et, result_batch_shape);
+    node->set_output_type(1, result_et, result_channel_shape);
+    node->set_output_type(2, result_et, result_channel_shape);
 }
 
 std::shared_ptr<ngraph::Node>

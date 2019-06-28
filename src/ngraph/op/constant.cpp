@@ -20,9 +20,20 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace ngraph;
 using namespace std;
+
+namespace ngraph
+{
+    namespace op
+    {
+        REGISTER_OP_VALIDATOR(Constant, ConstantValidator);
+        INHERIT_OP_VALIDATOR(ScalarConstantLikeBase, ConstantValidator, ScalarConstantLikeBaseValidator);
+        INHERIT_OP_VALIDATOR(ScalarConstantLike, ConstantValidator, ScalarConstantLikeValidator);
+    }
+}
 
 template <typename T>
 string to_cpp_string(T value)
@@ -43,6 +54,12 @@ string to_cpp_string(T value)
         rc = ss.str();
     }
     return rc;
+}
+
+void op::ConstantValidator::validate()
+{
+    node->infer_element_type();
+    node->set_output_type(0, node->m_element_type, node->m_shape);
 }
 
 const string op::Constant::type_name{"Constant"};

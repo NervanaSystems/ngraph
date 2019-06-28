@@ -28,17 +28,17 @@ op::BroadcastDistributed::BroadcastDistributed(const Output<Node>& arg, int root
     constructor_validate_and_infer_types();
 }
 
-void op::BroadcastDistributed::validate_and_infer_types()
+void op::BroadcastDistributedValidator::validate()
 {
-    NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(0).is_dynamic() ||
-                              get_input_element_type(0) == element::f32 ||
-                              get_input_element_type(0) == element::f64,
+    NODE_VALIDATION_CHECK(node,
+                          node->get_input_element_type(0).is_dynamic() ||
+                              node->get_input_element_type(0) == element::f32 ||
+                              node->get_input_element_type(0) == element::f64,
                           "Only element types f32 and f64 are supported (argument element type: ",
-                          get_input_element_type(0),
+                          node->get_input_element_type(0),
                           ").");
 
-    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
+    node->set_output_type(0, node->get_input_element_type(0), node->get_input_partial_shape(0));
 }
 
 shared_ptr<Node> op::BroadcastDistributed::copy_with_new_args(const NodeVector& new_args) const

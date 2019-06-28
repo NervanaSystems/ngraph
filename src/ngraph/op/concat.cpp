@@ -36,24 +36,24 @@ op::Concat::Concat(const NodeVector& args, size_t concatenation_axis)
 {
 }
 
-void op::Concat::validate_and_infer_types()
+void op::ConcatValidator::validate()
 {
-    NODE_VALIDATION_CHECK(this, get_input_size() >= 1, "At least one argument required.");
+    NODE_VALIDATION_CHECK(node, node->get_input_size() >= 1, "At least one argument required.");
 
     PartialShape inputs_shape_scheme{PartialShape::dynamic()};
     element::Type inputs_et{element::dynamic};
     Dimension concatenation_axis_output_dim{0};
 
-    for (auto i = 0; i < get_input_size(); i++)
+    for (auto i = 0; i < node->get_input_size(); i++)
     {
-        PartialShape this_input_shape = get_input_partial_shape(i);
+        PartialShape this_input_shape = node->get_input_partial_shape(i);
         Dimension this_input_rank = this_input_shape.rank();
         if (this_input_rank.is_static())
         {
-            NODE_VALIDATION_CHECK(this,
-                                  m_concatenation_axis < size_t(this_input_rank),
+            NODE_VALIDATION_CHECK(node,
+                                  node->m_concatenation_axis < size_t(this_input_rank),
                                   "Concatenation axis (",
-                                  m_concatenation_axis,
+                                  node->m_concatenation_axis,
                                   ") is out of bounds for ",
                                   "argument ",
                                   i,
@@ -61,20 +61,20 @@ void op::Concat::validate_and_infer_types()
                                   this_input_shape,
                                   ".");
 
-            concatenation_axis_output_dim += this_input_shape[m_concatenation_axis];
-            this_input_shape[m_concatenation_axis] = Dimension::dynamic();
+            concatenation_axis_output_dim += this_input_shape[node->m_concatenation_axis];
+            this_input_shape[node->m_concatenation_axis] = Dimension::dynamic();
 
             NODE_VALIDATION_CHECK(
-                this,
+                node,
                 PartialShape::merge_into(inputs_shape_scheme, this_input_shape),
                 "Argument shapes are inconsistent; they must have the same rank, and must have ",
                 "equal dimension everywhere except on the concatenation axis (axis ",
-                m_concatenation_axis,
+                node->m_concatenation_axis,
                 ").");
 
             NODE_VALIDATION_CHECK(
-                this,
-                element::Type::merge(inputs_et, inputs_et, get_input_element_type(i)),
+                node,
+                element::Type::merge(inputs_et, inputs_et, node->get_input_element_type(i)),
                 "Argument element types are inconsistent.");
         }
         else
@@ -87,10 +87,10 @@ void op::Concat::validate_and_infer_types()
 
     if (concatenated_shape.rank().is_static())
     {
-        concatenated_shape[m_concatenation_axis] = concatenation_axis_output_dim;
+        concatenated_shape[node->m_concatenation_axis] = concatenation_axis_output_dim;
     }
 
-    set_output_type(0, inputs_et, concatenated_shape);
+    node->set_output_type(0, inputs_et, concatenated_shape);
 }
 
 shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const

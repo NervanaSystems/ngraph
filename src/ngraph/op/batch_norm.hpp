@@ -22,14 +22,17 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
+        REGISTER_OP_VALIDATOR(BatchNormTraining, BatchNormTrainingValidator);
         /// \brief Batchnorm for training operation
         class BatchNormTraining : public Op
         {
+            friend class BatchNormTrainingValidator;
         public:
             NGRAPH_API
             static const std::string type_name;
@@ -70,8 +73,6 @@ namespace ngraph
                               Output<Node> beta,
                               Output<Node> input);
 
-            void validate_and_infer_types() override;
-
             double get_eps_value() const { return m_epsilon; }
             void set_eps_value(double epsilon) { m_epsilon = epsilon; }
             virtual std::shared_ptr<Node>
@@ -89,8 +90,10 @@ namespace ngraph
             double m_epsilon;
         };
 
+        REGISTER_OP_VALIDATOR(BatchNormInference, BatchNormInferenceValidator);
         class BatchNormInference : public Op
         {
+            friend class BatchNormInferenceValidator;
         public:
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
@@ -134,8 +137,6 @@ namespace ngraph
                                Output<ngraph::Node> mean,
                                Output<ngraph::Node> variance);
 
-            void validate_and_infer_types() override;
-
             double get_eps_value() const { return m_epsilon; }
             void set_eps_value(double epsilon) { m_epsilon = epsilon; }
             virtual std::shared_ptr<Node>
@@ -158,8 +159,10 @@ namespace ngraph
             double m_epsilon;
         };
 
+        REGISTER_OP_VALIDATOR(BatchNormTrainingBackprop, BatchNormTrainingBackpropValidator);
         class BatchNormTrainingBackprop : public Op
         {
+            friend class BatchNormTrainingBackpropValidator;
         public:
             NGRAPH_API
             static const std::string type_name;
@@ -179,12 +182,9 @@ namespace ngraph
                                       Output<Node> gamma,
                                       Output<Node> beta,
                                       Output<Node> input,
-
                                       Output<Node> mean,
                                       Output<Node> variance,
                                       Output<Node> delta);
-
-            void validate_and_infer_types() override;
 
             double get_eps_value() const { return m_epsilon; }
             void set_eps_value(double epsilon) { m_epsilon = epsilon; }

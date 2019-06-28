@@ -15,9 +15,18 @@
 //*****************************************************************************
 
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+namespace ngraph
+{
+    namespace op
+    {
+        REGISTER_OP_VALIDATOR(AllReduce, AllReduceValidator);
+    }
+}
 
 const string op::AllReduce::type_name{"AllReduce"};
 
@@ -28,17 +37,17 @@ op::AllReduce::AllReduce(const Output<Node>& arg, reduction::Type reduce_type)
     constructor_validate_and_infer_types();
 }
 
-void op::AllReduce::validate_and_infer_types()
+void op::AllReduceValidator::validate()
 {
-    NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(0).is_dynamic() ||
-                              get_input_element_type(0) == element::f32 ||
-                              get_input_element_type(0) == element::f64,
+    NODE_VALIDATION_CHECK(node,
+                          node->get_input_element_type(0).is_dynamic() ||
+                              node->get_input_element_type(0) == element::f32 ||
+                              node->get_input_element_type(0) == element::f64,
                           "Only element types f32 and f64 are supported (argument element type: ",
-                          get_input_element_type(0),
+                          node->get_input_element_type(0),
                           ").");
 
-    set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
+    node->set_output_type(0, node->get_input_element_type(0), node->get_input_partial_shape(0));
 }
 
 shared_ptr<Node> op::AllReduce::copy_with_new_args(const NodeVector& new_args) const

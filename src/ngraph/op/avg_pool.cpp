@@ -16,7 +16,6 @@
 
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -77,57 +76,57 @@ op::AvgPool::AvgPool(const Output<Node>& arg,
 {
 }
 
-void op::AvgPool::validate_and_infer_types()
+void op::AvgPoolValidator::validate()
 {
-    if (0 == m_window_movement_strides.size())
+    if (0 == node->m_window_movement_strides.size())
     {
-        m_window_movement_strides = Strides(m_window_shape.size(), 1);
+        node->m_window_movement_strides = Strides(node->m_window_shape.size(), 1);
     }
 
-    if (0 == m_padding_below.size())
+    if (0 == node->m_padding_below.size())
     {
-        m_padding_below = Shape(m_window_shape.size(), 0);
+        node->m_padding_below = Shape(node->m_window_shape.size(), 0);
     }
 
-    if (0 == m_padding_above.size())
+    if (0 == node->m_padding_above.size())
     {
-        m_padding_above = Shape(m_window_shape.size(), 0);
+        node->m_padding_above = Shape(node->m_window_shape.size(), 0);
     }
 
-    const PartialShape& arg_shape = get_input_partial_shape(0);
+    const PartialShape& arg_shape = node->get_input_partial_shape(0);
 
-    if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
+    if (node->m_pad_type == PadType::SAME_UPPER || node->m_pad_type == PadType::SAME_LOWER)
     {
         if (arg_shape.is_static())
         {
             CoordinateDiff padding_above, padding_below;
             infer_auto_padding(arg_shape.to_shape(),
-                               m_window_shape,
-                               m_window_movement_strides,
-                               Strides(m_window_shape.size(), 1), // No dilation
-                               m_pad_type,
+                               node->m_window_shape,
+                               node->m_window_movement_strides,
+                               Strides(node->m_window_shape.size(), 1), // No dilation
+                               node->m_pad_type,
                                padding_above,
                                padding_below);
-            m_padding_above = Shape(padding_above.begin(), padding_above.end());
-            m_padding_below = Shape(padding_below.begin(), padding_below.end());
+            node->m_padding_above = Shape(padding_above.begin(), padding_above.end());
+            node->m_padding_below = Shape(padding_below.begin(), padding_below.end());
         }
     }
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
-    CoordinateDiff padding_below(m_padding_below.begin(), m_padding_below.end());
-    CoordinateDiff padding_above(m_padding_above.begin(), m_padding_above.end());
+    CoordinateDiff padding_below(node->m_padding_below.begin(), node->m_padding_below.end());
+    CoordinateDiff padding_above(node->m_padding_above.begin(), node->m_padding_above.end());
 
-    set_output_type(0,
-                    get_input_element_type(0),
-                    infer_batched_pooling_forward(this,
+    node->set_output_type(0,
+                    node->get_input_element_type(0),
+                    infer_batched_pooling_forward(node,
                                                   arg_shape,
                                                   padding_below,
                                                   padding_above,
-                                                  m_window_shape,
-                                                  m_window_movement_strides,
-                                                  m_include_padding_in_avg_computation,
-                                                  m_ceil_mode));
+                                                  node->m_window_shape,
+                                                  node->m_window_movement_strides,
+                                                  node->m_include_padding_in_avg_computation,
+                                                  node->m_ceil_mode));
 }
 
 op::AvgPool::AvgPool(const Output<Node>& arg,
@@ -245,26 +244,26 @@ op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
     constructor_validate_and_infer_types();
 }
 
-void op::AvgPoolBackprop::validate_and_infer_types()
+void op::AvgPoolBackpropValidator::validate()
 {
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
-    CoordinateDiff padding_below(m_padding_below.begin(), m_padding_below.end());
-    CoordinateDiff padding_above(m_padding_above.begin(), m_padding_above.end());
+    CoordinateDiff padding_below(node->m_padding_below.begin(), node->m_padding_below.end());
+    CoordinateDiff padding_above(node->m_padding_above.begin(), node->m_padding_above.end());
 
     PartialShape forward_result_shape =
-        infer_batched_pooling_forward(this,
-                                      m_forward_arg_shape,
+        infer_batched_pooling_forward(node,
+                                      node->m_forward_arg_shape,
                                       padding_below,
                                       padding_above,
-                                      m_window_shape,
-                                      m_window_movement_strides,
-                                      m_include_padding_in_avg_computation);
+                                      node->m_window_shape,
+                                      node->m_window_movement_strides,
+                                      node->m_include_padding_in_avg_computation);
 
-    const PartialShape& delta_shape = get_input_partial_shape(0);
+    const PartialShape& delta_shape = node->get_input_partial_shape(0);
 
     NODE_VALIDATION_CHECK(
-        this,
+        node,
         forward_result_shape.compatible(delta_shape),
         "Inferred forward output shape does not match delta shape (inferred forward output ",
         "shape: ",
@@ -276,7 +275,7 @@ void op::AvgPoolBackprop::validate_and_infer_types()
     // TODO(amprocte): Once m_forward_arg_shape is allowed to be dynamic, we may technically be
     // able to infer some extra information from forward_result_shape that was not present in the
     // forward arg shape---namely batch size and channel count. Merge that info in.
-    set_output_type(0, get_input_element_type(0), m_forward_arg_shape);
+    node->set_output_type(0, node->get_input_element_type(0), node->m_forward_arg_shape);
 }
 
 const Shape& op::AvgPoolBackprop::get_forward_arg_shape() const

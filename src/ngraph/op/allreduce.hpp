@@ -32,8 +32,6 @@ namespace ngraph
             AllReduce() = default;
             AllReduce(const Output<Node>& arg, reduction::Type reduce_type = reduction::Type::SUM);
 
-            void validate_and_infer_types() override;
-
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
             reduction::Type get_reduce_type() const;
             void set_reduce_type(reduction::Type reduce_type);

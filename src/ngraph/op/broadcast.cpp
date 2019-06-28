@@ -37,26 +37,26 @@ op::Broadcast::Broadcast(const Output<Node>& arg, const Shape& shape, const Axis
 {
 }
 
-void op::Broadcast::validate_and_infer_types()
+void op::BroadcastValidator::validate()
 {
-    infer_shape();
+    node->infer_shape();
 
-    for (auto axis : m_broadcast_axes)
+    for (auto axis : node->m_broadcast_axes)
     {
-        NODE_VALIDATION_CHECK(this,
-                              axis < m_shape.size(),
+        NODE_VALIDATION_CHECK(node,
+                              axis < node->m_shape.size(),
                               "Broadcast axis index (",
                               axis,
                               ") exceeds specified output shape rank ",
                               "(broadcast axes: ",
-                              m_broadcast_axes,
+                              node->m_broadcast_axes,
                               ", output shape: ",
-                              m_shape,
+                              node->m_shape,
                               ").");
     }
 
-    Shape required_input_shape = m_shape;
-    for (auto i = m_broadcast_axes.rbegin(); i != m_broadcast_axes.rend(); ++i)
+    Shape required_input_shape = node->m_shape;
+    for (auto i = node->m_broadcast_axes.rbegin(); i != node->m_broadcast_axes.rend(); ++i)
     {
         required_input_shape.erase(required_input_shape.begin() + *i);
     }
@@ -66,18 +66,18 @@ void op::Broadcast::validate_and_infer_types()
     // one fell swoop by this check: either the number of broadcast axes is not
     // enough, or there is a mismatch with one of the pre-broadcast axis lengths.
     NODE_VALIDATION_CHECK(
-        this,
-        get_input_partial_shape(0).compatible(required_input_shape),
+        node,
+        node->get_input_partial_shape(0).compatible(required_input_shape),
         "Broadcast argument shape, specified output shape, and axes are incompatible ",
         "(argument shape: ",
-        get_input_partial_shape(0),
+        node->get_input_partial_shape(0),
         ", output shape: ",
-        m_shape,
+        node->m_shape,
         ", broadcast axes: ",
-        m_broadcast_axes,
+        node->m_broadcast_axes,
         ").");
 
-    set_output_type(0, get_input_element_type(0), m_shape);
+    node->set_output_type(0, node->get_input_element_type(0), node->m_shape);
 }
 
 shared_ptr<Node> op::Broadcast::copy_with_new_args(const NodeVector& new_args) const
@@ -93,6 +93,14 @@ void op::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVe
     auto x = get_argument(0);
 
     adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
+}
+
+namespace ngraph
+{
+    namespace op
+    {
+        INHERIT_OP_VALIDATOR(BroadcastLike, BroadcastValidator, BroadcastLikeValidator);
+    }
 }
 
 const string op::BroadcastLike::type_name{"BroadcastLike"};

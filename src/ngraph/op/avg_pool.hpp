@@ -19,15 +19,18 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
+        REGISTER_OP_VALIDATOR(AvgPool, AvgPoolValidator);
         /// \brief Batched average pooling operation, with optional padding and window stride.
         ///
         class AvgPool : public Op
         {
+            friend class AvgPoolValidator;
         public:
             NGRAPH_API
             static const std::string type_name;
@@ -127,8 +130,6 @@ namespace ngraph
             /// `[n]`
             AvgPool(const Output<Node>& arg, const Shape& window_shape);
 
-            void validate_and_infer_types() override;
-
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -170,8 +171,10 @@ namespace ngraph
             bool m_ceil_mode{false};
         };
 
+        REGISTER_OP_VALIDATOR(AvgPoolBackprop, AvgPoolBackpropValidator);
         class AvgPoolBackprop : public Op
         {
+            friend class AvgPoolBackpropValidator;
         public:
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
@@ -183,8 +186,6 @@ namespace ngraph
                             const Shape& padding_below,
                             const Shape& padding_above,
                             bool include_padding_in_avg_computation);
-
-            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

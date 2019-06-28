@@ -19,14 +19,17 @@
 #include <memory>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
+        REGISTER_OP_VALIDATOR(Concat, ConcatValidator);
         /// \brief Concatenation operation.
         class Concat : public Op
         {
+            friend class ConcatValidator;
         public:
             NGRAPH_API
             static const std::string type_name;
@@ -44,8 +47,6 @@ namespace ngraph
             /// \param args               The nodes producing the input tensors.
             /// \param concatenation_axis The axis along which to concatenate the input tensors.
             Concat(const NodeVector& args, size_t concatenation_axis);
-
-            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

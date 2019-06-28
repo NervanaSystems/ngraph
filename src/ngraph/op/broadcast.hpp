@@ -18,14 +18,17 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
     namespace op
     {
+        REGISTER_OP_VALIDATOR(Broadcast, BroadcastValidator);
         /// \brief Operation which "adds" axes to an input tensor, replicating elements from the input as needed along the new axes.
         class Broadcast : public Op
         {
+            friend class BroadcastValidator;
         public:
             NGRAPH_API
             static const std::string type_name;
@@ -39,8 +42,6 @@ namespace ngraph
             /// \param broadcast_axes The axis positions (0-based) in the result that are being broadcast. The
             ///                        remaining axes in shape must be the same as the shape of arg.
             Broadcast(const Output<Node>& arg, const Shape& shape, const AxisSet& broadcast_axes);
-
-            void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

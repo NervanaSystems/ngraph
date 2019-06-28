@@ -30,9 +30,11 @@ namespace ngraph
 {
     namespace op
     {
+        class ConstantValidator;
         /// \brief Class for constants.
         class Constant : public Node
         {
+            friend class ConstantValidator;
         public:
             NGRAPH_API
             static const std::string type_name;
@@ -151,12 +153,6 @@ namespace ngraph
             }
 
             virtual ~Constant() override;
-
-            void validate_and_infer_types() override
-            {
-                infer_element_type();
-                set_output_type(0, m_element_type, m_shape);
-            }
 
             /// \brief Returns the value of the constant node as a Shape object
             ///        Can only be used on element::i64 nodes and interprets
