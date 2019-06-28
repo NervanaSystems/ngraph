@@ -44,12 +44,12 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/op/                     @diyessi @aprocter
 /src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi @aprocter
 /src/ngraph/op/experimental/layers  @ilyachur
-/src/ngraph/pass/                   @jbobba
-/src/ngraph/pattern/                @jbobba @aprocter
-/src/ngraph/runtime/                @rkimballn1 @jbobba
-/src/ngraph/runtime/cpu/            @jbobba
+/src/ngraph/pass/                   @diyessi
+/src/ngraph/pattern/                @aprocter
+/src/ngraph/runtime/                @rkimballn1
+/src/ngraph/runtime/cpu/            @nmostafa
 /src/contrib/mlir/                  @nmostafa @dcaballe
-/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba @avijit-nervana
+/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @nmostafa @avijit-nervana
 /src/ngraph/runtime/dynamic/        @aprocter
 /src/ngraph/runtime/gpu/            @rkimballn1
 /src/ngraph/runtime/hybrid/         @rkimballn1
