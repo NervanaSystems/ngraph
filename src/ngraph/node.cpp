@@ -559,6 +559,16 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
     return args;
 }
 
+OutputVector ngraph::as_output_vector(const NodeVector& args)
+{
+    OutputVector output_vector;
+    for (auto& arg : check_single_output_args(args))
+    {
+        output_vector.push_back(arg);
+    }
+    return output_vector;
+}
+
 std::tuple<element::Type, PartialShape>
     Node::validate_and_infer_elementwise_args(const op::AutoBroadcastSpec& autob)
 {

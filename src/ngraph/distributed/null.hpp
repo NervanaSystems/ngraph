@@ -52,6 +52,19 @@ namespace ngraph
                 throw ngraph_error("Distributed Library not supported/mentioned");
             }
 
+            void recv(void* in, element::Type_t element_type, size_t count, int src_id) override
+            {
+                throw ngraph_error("Distributed Library not supported/mentioned");
+            }
+
+            void send(const void* in,
+                      element::Type_t element_type,
+                      size_t count,
+                      int dest_id) override
+            {
+                throw ngraph_error("Distributed Library not supported/mentioned");
+            }
+
         protected:
             std::string m_name{"NULL"};
         };

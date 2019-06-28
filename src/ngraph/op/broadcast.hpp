@@ -27,15 +27,18 @@ namespace ngraph
         class Broadcast : public Op
         {
         public:
-            /// \brief Constructs a conversion operation.
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a broadcast operation.
+            Broadcast() = default;
+            /// \brief Constructs a broadcast operation.
             ///
             /// \param arg            Node that produces the input tensor to be broadcast.
             /// \param shape          The shape of the output tensor.
             /// \param broadcast_axes The axis positions (0-based) in the result that are being broadcast. The
             ///                        remaining axes in shape must be the same as the shape of arg.
-            Broadcast(const std::shared_ptr<Node>& arg,
-                      const Shape& shape,
-                      const AxisSet& broadcast_axes);
+            Broadcast(const Output<Node>& arg, const Shape& shape, const AxisSet& broadcast_axes);
 
             void validate_and_infer_types() override;
 
@@ -44,12 +47,14 @@ namespace ngraph
 
             /// \return A set containing the indices of the broadcast axes (0-based).
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
+            void set_broadcast_axes(const AxisSet& broadcast_axes)
+            {
+                m_broadcast_axes = broadcast_axes;
+            }
             const Shape& get_broadcast_shape() const { return m_shape; }
+            void set_broadcast_shape(const Shape& shape) { m_shape = shape; }
         protected:
-            Broadcast(const std::string& node_type,
-                      const NodeVector& args,
-                      const Shape& shape,
-                      const AxisSet& broadcast_axes);
+            Broadcast(const OutputVector& args, const Shape& shape, const AxisSet& broadcast_axes);
 
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
@@ -63,6 +68,11 @@ namespace ngraph
         class BroadcastLike : public Broadcast
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Broadcast arg to the same shape as like_arg.
+            BroadcastLike() = default;
             /// \brief Broadcast arg to the same shape as like_arg.
             ///
             /// Once the shape of like_arg is known, this op will be replaced with an equivalent
@@ -72,8 +82,8 @@ namespace ngraph
             /// \param like_arg Provides the shape for the result.
             /// \param initial_broadcast_axes indicates which axes will be broadcast. If empty,
             ///        arg must be scalar and all axes are broadcast.
-            BroadcastLike(const std::shared_ptr<Node>& arg,
-                          const std::shared_ptr<Node>& like_arg,
+            BroadcastLike(const Output<Node>& arg,
+                          const Output<Node>& like_arg,
                           const AxisSet& initial_broadcast_axes);
 
             virtual std::shared_ptr<Node>
@@ -81,6 +91,11 @@ namespace ngraph
 
             void infer_shape() override;
             const AxisSet& get_initial_broadcast_axes() const { return m_initial_broadcast_axes; }
+            void set_initial_broadcast_axes(const AxisSet& initial_broadcast_axes)
+            {
+                m_initial_broadcast_axes = initial_broadcast_axes;
+            }
+
         protected:
             AxisSet m_initial_broadcast_axes;
         };
