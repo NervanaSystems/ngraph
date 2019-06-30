@@ -3063,7 +3063,10 @@ span[id*='MathJax-Span'] {
 }
 
 .wy-nav-content {
-  padding: 1.618em 3.236em;
+/*  padding: 1.618em 3.236em; padding-top specified to make top-nav appear sticky
+*/
+  padding-top: 0px;
+  padding-bottom: 10px;
   height: 100%;
   max-width: 979px !important;
   margin: auto;
@@ -3200,14 +3203,17 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
    }
 
 .padding-md--left-right {
-    padding-left: 2.6%;
-    padding-right: 2.6%;
+    padding-left: 1.5%; /* Changed from 2.6% */
+    padding-right: 1.5%; /* Changed from 2.6% */
+    padding-top: 1%;/* Added setting */
     display: flex;
     justify-content: space-between;
 }
 
 .header__site_info {
   display: inline-block;
+  /* Added justify content */
+  justify-content: flex-start;
 }
 
 .header__site_img_object {
@@ -3225,11 +3231,11 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
 }
 
 #header__site_info_name a:visited {
-  color: black;
+  color: gray;
 }
 
 .header__menu {
-    text-align: right;
+    text-align: center;
     display: inline-block;
 }
 
@@ -3239,7 +3245,7 @@ footer span.commit code, footer span.commit .rst-content tt, .rst-content footer
 }
 
 .header__menu_list li a {
-  color: black;
+  color: white;
 }
 
 .header__menu_list_item {
