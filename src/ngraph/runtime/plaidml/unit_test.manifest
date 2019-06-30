@@ -259,6 +259,12 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
+rnn_cell_no_bias
+rnn_cell_bias_clip
+rnn_cell_activation_function
+gru_cell_bias_clip
+gru_cell_linear_before_reset
+gru_cell_activation_function
 
 # dgkutnic ww24.5: these tests are to be triaged by the PlaidML team
 # ww25.2: re-scrubbed this list of tests after fixing check_inputs
