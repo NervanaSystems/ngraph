@@ -252,7 +252,12 @@ namespace ngraph
                            arg1_shape,
                            result_shape,
                            reduction_axes_count,
-                           1.0f); // Requantization scale (1 for non quant dot)
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           nullptr); // Requantization scale (1 for non quant dot)
                 };
                 functors.emplace_back(functor);
             }

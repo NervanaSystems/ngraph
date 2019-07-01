@@ -124,8 +124,11 @@ namespace ngraph
                 auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto arg3_buffer_index = external_function->get_buffer_index(args[3].get_name());
                 auto arg4_buffer_index = external_function->get_buffer_index(args[4].get_name());
+                auto arg5_buffer_index = external_function->get_buffer_index(args[5].get_name());
                 auto arg6_buffer_index = external_function->get_buffer_index(args[6].get_name());
+                auto arg7_buffer_index = external_function->get_buffer_index(args[7].get_name());
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 std::function<decltype(
@@ -142,14 +145,13 @@ namespace ngraph
                                 arg0_buffer_index,
                                 arg1_buffer_index,
                                 arg2_buffer_index,
+                                arg3_buffer_index,
                                 arg4_buffer_index,
+                                arg5_buffer_index,
                                 arg6_buffer_index,
+                                arg7_buffer_index,
                                 out0_buffer_index](CPURuntimeContext* ctx,
                                                    CPUExecutionContext* ectx) {
-
-                    float dyn_scale = *(static_cast<float*>(ctx->buffer_data[arg2_buffer_index])) *
-                                      *(static_cast<float*>(ctx->buffer_data[arg4_buffer_index])) /
-                                      *(static_cast<float*>(ctx->buffer_data[arg6_buffer_index]));
 
                     kernel(ctx->buffer_data[arg0_buffer_index],
                            ctx->buffer_data[arg1_buffer_index],
@@ -158,7 +160,12 @@ namespace ngraph
                            arg1_shape,
                            result_shape,
                            1,
-                           dyn_scale);
+                           ctx->buffer_data[arg2_buffer_index],
+                           ctx->buffer_data[arg3_buffer_index],
+                           ctx->buffer_data[arg4_buffer_index],
+                           ctx->buffer_data[arg5_buffer_index],
+                           ctx->buffer_data[arg6_buffer_index],
+                           ctx->buffer_data[arg7_buffer_index]);
                 };
                 functors.emplace_back(functor);
             }
