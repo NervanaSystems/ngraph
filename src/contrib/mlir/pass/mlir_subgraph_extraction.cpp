@@ -15,9 +15,9 @@
 //*****************************************************************************
 
 #include "mlir_subgraph_extraction.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/assertion.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
@@ -44,22 +44,6 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::add_inputs(T& inputs)
     }
 }
 
-void MLIRSubgraphExtractionPass::merge_subgraphs(MLIRSubgraph& sg1, MLIRSubgraph& sg2)
-{
-    NGRAPH_CHECK(&sg1 != &sg2, "Cannot merge a graph into itself");
-    // Associate nodes of second sub-graph to first one
-    auto sg_nodes = sg2.get_nodes();
-    for (auto node : sg_nodes)
-    {
-        NGRAPH_DEBUG << *node; 
-        m_node_to_graph[node] = sg1.get_id();
-    }
-    sg1.merge(sg2);
-    // Remove sub-graph from map
-    m_id_to_graph.erase(sg2.get_id());
-}
-
-
 template <typename T>
 void MLIRSubgraphExtractionPass::MLIRSubgraph::add_outputs(T& outputs)
 {
@@ -70,26 +54,38 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::add_node(std::shared_ptr<Node> no
 {
     NGRAPH_CHECK(m_nodes.find(node) == m_nodes.end(), "node added to graph before");
     m_nodes.insert(node);
+    m_pass.m_node_to_graph[node] = get_id();
 }
 
-void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& other)
+void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
 {
-    NGRAPH_CHECK (&other != this, "Cannot merge a sub-graph into itself");
+    NGRAPH_CHECK(&sg2 != this, "Cannot merge a sub-graph into itself");
+
+    // Associate nodes of second sub-graph to first one
+    auto sg_nodes = sg2.get_nodes();
+    for (auto node : sg_nodes)
+    {
+        NGRAPH_DEBUG << *node;
+        m_pass.m_node_to_graph[node] = get_id();
+    }
 
     // nodes  of sub-graphs are exclusive
-    m_nodes.insert(other.get_nodes().begin(), other.get_nodes().end());
+    m_nodes.insert(sg2.get_nodes().begin(), sg2.get_nodes().end());
     // merge inputs
-    add_inputs(other.get_inputs());
+    add_inputs(sg2.get_inputs());
+
+    // Remove sub-graph from map
+    m_pass.m_id_to_graph.erase(sg2.get_id());
 }
 
 // The sub-graph construction algorithm is as follows
-// For each node, check its predecessors, if 
+// For each node, check its predecessors, if
 // - all predecessors in sub-graphs belong to the same sub-graph (graph ID), then extend the sub-graph to include the current node.
-//   Predecessors outside sub-graphs are marked as input to the sub-graph. 
+//   Predecessors outside sub-graphs are marked as input to the sub-graph.
 // - predecessors in sub-graphs belong to different sub-graphs, then merge all the sub-graphs into one, and add current node to it.
-//   Predecessors outside sub-graphs are marked as input to the sub-graph. 
+//   Predecessors outside sub-graphs are marked as input to the sub-graph.
 //
-// If the nodes has any external inputs, then it possible that the input may come from one of the predecessor sub-graphs (cycle). 
+// If the nodes has any external inputs, then it possible that the input may come from one of the predecessor sub-graphs (cycle).
 // If a cycle is found, always start a new sub-graph.
 //
 // For each sub-graph found build a CompiledKernel(CK) node around it as follows
@@ -98,7 +94,6 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& other)
 // - CK will internally have lists record graph nodes, and graph output nodes.
 bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 {
-
     NGRAPH_DEBUG << "[CK Extract] Construct sub-graphs" << std::endl;
     for (auto op : func->get_ordered_ops())
     {
@@ -124,8 +119,8 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
             {
                 // predecessor doesn't belong to any sub-graph, it is an input
                 inputs.push_back(pred);
-            } 
-            else 
+            }
+            else
             {
                 // record sub-graph id of the predecessor
                 subgraph_ids.push_back(pred_subgraph_id);
@@ -136,19 +131,19 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
             NGRAPH_DEBUG << "[CK Extract] Start new sub-graph " << std::endl;
             // we couldn't find any predecessor sub-graphs to extend with this node
             // create a new sub-graph
-            MLIRSubgraph sg = create_subgraph();
+            MLIRSubgraph sg = MLIRSubgraph::create(this);
             sg.add_inputs(inputs);
-            add_node_to_subgraph(sg, op);
+            sg.add_node(op);
             add_subgraph(sg);
-        } 
+        }
         else
         {
-            // we have sub-graphs. 
+            // we have sub-graphs.
             // check if adding this node to the sub-graph will create a cycle in the DAG
             NGRAPH_DEBUG << "[CK Extract] Extending sub-graph. Check for cycles " << std::endl;
             if (!check_cycles(inputs, subgraph_ids))
             {
-                NGRAPH_DEBUG<< "[CK Extract] Merging subgraphs";
+                NGRAPH_DEBUG << "[CK Extract] Merging subgraphs";
                 // merge sub-graphs if needed
                 MLIRSubgraph& first_subgraph = get_subgraph(subgraph_ids[0]);
                 NGRAPH_CHECK(first_subgraph.get_id() == subgraph_ids[0]);
@@ -156,21 +151,21 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
                 {
                     MLIRSubgraph& subgraph = get_subgraph(subgraph_ids[i]);
                     NGRAPH_CHECK(subgraph.get_id() == subgraph_ids[i]);
-                    merge_subgraphs(first_subgraph, subgraph);
+                    first_subgraph.merge(subgraph);
                 }
 
-                add_node_to_subgraph(first_subgraph, op);
+                first_subgraph.add_node(op);
                 first_subgraph.add_inputs(inputs);
             }
             else
             {
                 // we have a cycle, start a new sub-graph
-                MLIRSubgraph sg = create_subgraph();
-                NGRAPH_DEBUG<< "[CK Extract] Cycle found. Start a new subgraph";
-                // use all predecessors as graph inputs 
+                MLIRSubgraph sg = MLIRSubgraph::create(this);
+                NGRAPH_DEBUG << "[CK Extract] Cycle found. Start a new subgraph";
+                // use all predecessors as graph inputs
                 NodeVector inputs = op->get_arguments();
                 sg.add_inputs(inputs);
-                add_node_to_subgraph(sg, op);
+                sg.add_node(op);
                 add_subgraph(sg);
             }
         }
@@ -178,13 +173,16 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     }
 
     NGRAPH_DEBUG << "[CK Extract] Get subgraphs output nodes" << std::endl;
-    // get output nodes for each sub-graph. Do this before attaching CK nodes since we will 
-    // remove output edges from the sub-graphs. 
+    // get output nodes for each sub-graph. Do this before attaching CK nodes since we will
+    // remove output edges from the sub-graphs.
     for (IDGraphMap::iterator it = m_id_to_graph.begin(); it != m_id_to_graph.end(); it++)
     {
         MLIRSubgraph& sg = it->second;
         auto& nodes = sg.get_nodes();
-        NodeVector outputs = std::move(get_subgraph_outputs(NodeVector(nodes.begin(), nodes.end()), {} /*exclusions*/, false /* ignore unused */, false /* ignore output duplicates */));
+        NodeVector outputs = std::move(get_subgraph_outputs(NodeVector(nodes.begin(), nodes.end()),
+                                                            {} /*exclusions*/,
+                                                            false /* ignore unused */,
+                                                            false /* ignore output duplicates */));
         sg.add_outputs(outputs);
     }
 
@@ -196,29 +194,29 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         auto& inputs = sg.get_inputs();
         auto& outputs = sg.get_outputs();
         auto& nodes = sg.get_nodes();
-        
+
         NodeVector inputs_vector(inputs.begin(), inputs.end());
         NodeVector outputs_vector(outputs.begin(), outputs.end());
         // must store nodes in topological order
-        auto nodes_list = topological_sort(nodes);
+        auto nodes_list = subgraph_topological_sort(nodes);
         NodeVector nodes_vector(nodes_list.begin(), nodes_list.end());
         auto ck = std::make_shared<CompiledKernel>(nodes_vector, outputs_vector, inputs_vector);
 
         NGRAPH_DEBUG << "[CK Extract] Graph ID = " << sg.get_id() << std::endl;
         NGRAPH_DEBUG << "[CK Extract] Graph Nodes: " << std::endl;
-        for (auto node : nodes) 
+        for (auto node : nodes)
         {
             NGRAPH_DEBUG << "[CK Extract] " << *node << std::endl;
         }
 
         NGRAPH_DEBUG << "[CK Extract] Input Nodes: " << std::endl;
-        for (auto node : inputs) 
+        for (auto node : inputs)
         {
             NGRAPH_DEBUG << "[CK Extract] " << *node << std::endl;
         }
 
         NGRAPH_DEBUG << "[CK Extract] Output Nodes: " << std::endl;
-        for (auto node : outputs) 
+        for (auto node : outputs)
         {
             NGRAPH_DEBUG << "[CK Extract] " << *node << std::endl;
         }
@@ -277,11 +275,12 @@ bool MLIRSubgraphExtractionPass::check_cycles(NodeVector& inputs, std::vector<in
     NodeVector work_list;
     NGRAPH_DEBUG << "[CK Extract] Inputs size: " << inputs.size() << std::endl;
     work_list.insert(work_list.end(), inputs.begin(), inputs.end());
-    while(!work_list.empty())
+    while (!work_list.empty())
     {
         auto node = work_list.back();
         work_list.pop_back();
-        if (std::find(subgraph_ids.begin(), subgraph_ids.end(), get_subgraph(node)) != subgraph_ids.end())
+        if (std::find(subgraph_ids.begin(), subgraph_ids.end(), get_subgraph(node)) !=
+            subgraph_ids.end())
         {
             // we hit one of the sub-graphs we want to extend. we have a cycle.
             NGRAPH_DEBUG << "[CK Extract] Cycle found when trying to add node" << std::endl;

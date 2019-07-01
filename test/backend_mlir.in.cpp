@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 // End to end test for MLIR. Add tests here that are specific to test MLIR functionality
-// MLIR is implicitly tested during other unit-tests as well. 
+// MLIR is implicitly tested during other unit-tests as well.
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
@@ -29,7 +29,6 @@ using namespace std;
 using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
-
 
 // Combined ops test
 NGRAPH_TEST(${BACKEND_NAME}, mlir_dot_add)
@@ -75,7 +74,6 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add)
     auto P3 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto dot = make_shared<op::Dot>(P1, P2);
     auto sg1_output = make_shared<op::Add>(dot, P3);
-    
 
     // sub-graph 2
     auto P4 = make_shared<op::Parameter>(element::f32, shape_in1);
@@ -109,13 +107,13 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {p1, p2, p3, p4, p5, p6});
-    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
-                   vector<float>{35, 40, 45, 68, 82, 96}));
+    EXPECT_TRUE(
+        test::all_close_f(read_vector<float>(result), vector<float>{35, 40, 45, 68, 82, 96}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add_2)
 {
-    // Tests 2 sub-graphs merged at a join point into one. 
+    // Tests 2 sub-graphs merged at a join point into one.
     Shape shape_in1{2, 3};
     Shape shape_in2{3, 3};
     Shape shape_out{2, 3};
@@ -126,7 +124,6 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add_2)
     auto P3 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto dot = make_shared<op::Dot>(P1, P2);
     auto sg1_output = make_shared<op::Add>(dot, P3);
-    
 
     // sub-graph 2
     auto P4 = make_shared<op::Parameter>(element::f32, shape_in1);
@@ -161,8 +158,8 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add_2)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {p1, p2, p3, p4, p5, p6});
-    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
-                vector<float>{38, 46, 54, 80, 97, 114}));
+    EXPECT_TRUE(
+        test::all_close_f(read_vector<float>(result), vector<float>{38, 46, 54, 80, 97, 114}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add_3)
@@ -178,7 +175,6 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add_3)
     auto P3 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto dot = make_shared<op::Dot>(P1, P2);
     auto sg1_output = make_shared<op::Add>(dot, P3);
-    
 
     // sub-graph 2
     auto P4 = make_shared<op::Parameter>(element::f32, shape_in1);
@@ -213,8 +209,8 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add_3)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {p1, p2, p3, p4, p5, p6});
-    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
-                vector<float>{70, 80, 90, 136, 164, 192}));
+    EXPECT_TRUE(
+        test::all_close_f(read_vector<float>(result), vector<float>{70, 80, 90, 136, 164, 192}));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_cycle)
@@ -249,6 +245,6 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_cycle)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {p1, p2, p3});
-    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
-                vector<float>{70, 80, 90, 136, 164, 192}));
+    EXPECT_TRUE(
+        test::all_close_f(read_vector<float>(result), vector<float>{70, 80, 90, 136, 164, 192}));
 }
