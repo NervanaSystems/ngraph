@@ -60,37 +60,7 @@ generate_mask
 generate_mask2
 avg_pool_3d
 avg_pool_3d_uneven_strided_padded_include_in_computation
-quantize_dynamic_offset                 # Quantization/Dequantization is unimplemented
-dequantize_dynamic_offset               # Quantization/Dequantization is unimplemented
-dequantize_int8_zero_offset             # Quantization/Dequantization is unimplemented
-dequantize_int32                        # Quantization/Dequantization is unimplemented
-dequantize_int32_zero_offset            # Quantization/Dequantization is unimplemented
-dequantize_zero_offset                  # Quantization/Dequantization is unimplemented
-quantize_ROUND_NEAREST_TOWARD_ZERO      # Quantization/Dequantization is unimplemented
-quantize_ROUND_NEAREST_UPWARD           # Quantization/Dequantization is unimplemented
-quantize_ROUND_NEAREST_DOWNWARD         # Quantization/Dequantization is unimplemented
-quantize_ROUND_NEAREST_TOWARD_EVEN      # Quantization/Dequantization is unimplemented
-quantize_ROUND_NEAREST_TOWARD_INFINITY  # Quantization/Dequantization is unimplemented
-quantize_ROUND_TOWARD_INFINITY          # Quantization/Dequantization is unimplemented
-quantize_ROUND_TOWARD_ZERO              # Quantization/Dequantization is unimplemented
-quantize_ROUND_UP                       # Quantization/Dequantization is unimplemented
-quantize_ROUND_DOWN                     # Quantization/Dequantization is unimplemented
-quantize                                # Quantization/Dequantization is unimplemented
-quantize_zero_offset                    # Quantization/Dequantization is unimplemented
-quantize_axes                           # Quantization/Dequantization is unimplemented
-quantize_dynamic_offset                 # Quantization/Dequantization is unimplemented
-quantize_int8                           # Quantization/Dequantization is unimplemented
-quantize_int8_zero_offset               # Quantization/Dequantization is unimplemented
-quantize_int32                          # Quantization/Dequantization is unimplemented
-quantize_int32_zero_offset              # Quantization/Dequantization is unimplemented
-quantize_clamp                          # Quantization/Dequantization is unimplemented
-quantize_clamp_int8                     # Quantization/Dequantization is unimplemented
-quantize_clamp_int32                    # Quantization/Dequantization is unimplemented
-quantize_clamp_int32_zero_offset        # Quantization/Dequantization is unimplemented
-quantize_clamp_uint8                    # Quantization/Dequantization is unimplemented
-dequantize                              # Quantization/Dequantization is unimplemented
-dequantize_axes                         # Quantization/Dequantization is unimplemented
-dequantize_int8                         # Quantization/Dequantization is unimplemented
+quantize_clamp_int32                    # Requires fp64 inputs, which won't work on GPUs
 numeric_float_nan
 numeric_double_nan
 shape_of_scalar
