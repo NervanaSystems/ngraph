@@ -50,6 +50,10 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& input0,
     , m_output_axes(output_axes)
 {
     constructor_validate_and_infer_types();
+    auto& input0_shape = input0->get_shape();
+    auto& input1_shape = input1->get_shape();
+
+    set_output_type(0, output_type, Shape{input0_shape[0], input1_shape[1]});
 }
 
 void op::QuantizedDot::validate_and_infer_types()

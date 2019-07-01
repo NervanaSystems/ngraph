@@ -1087,33 +1087,6 @@ TEST(builder, scaled_quantize_concat_unsigned_varying)
               read_vector<uint8_t>(result));
 }
 
-#if 0
-TEST(builder, scaled_QDotInteger)
-{
-    Shape shape_a{1, 2}; // input shape
-    vector<uint8_t> a_data = {2, 3};
-    Shape shape_b{2, 3}; // filter shape
-    vector<int8_t> b_data = {0, 1, 2, 3, 4, 5};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-
-    Shape shape_r{1, 3}; // output shape
-    auto QD = ngraph::builder::quantization::QuantizedLinearMatmulInteger(A, B);
-    auto f = make_shared<Function>(NodeVector{QD}, ParameterVector{A, B});
-    constant_fold(f);
-    auto backend = runtime::Backend::create("CPU");
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::u8, shape_a);
-    copy_data(a, a_data);
-    auto b = backend->create_tensor(element::i8, shape_b);
-    copy_data(b, b_data);
-    auto result = backend->create_tensor(element::i32, shape_r);
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<int32_t>{3, 13, 23}), read_vector<int32_t>(result));
-}
-#endif
-
 // QuantizedDotBias
 TEST(builder, dynamic_scaled_QD_with_bias)
 {
@@ -1218,43 +1191,3 @@ TEST(builder, dynamic_scaled_QD_with_bias)
     EXPECT_EQ((vector<uint8_t>{178, 231, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255}),
               read_vector<uint8_t>(f_requantize_relu_r));
 }
-
-#if 0
-TEST(builder, scaled_QDot_u8u8)
-{
-    Shape shape_a{1, 2}; // input shape
-    vector<uint8_t> a_data = {2, 3};
-    Shape shape_b{2, 3}; // filter shape
-    vector<uint8_t> b_data = {0, 2, 4, 1, 3, 5};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::u8, shape_b);
-    auto input_scale = op::Constant::create(element::f32, Shape{}, {2});
-    auto input_zero_point = op::Constant::create(element::u8, Shape{}, {0});
-    auto filter_scale = op::Constant::create(element::f32, Shape{}, {1});
-    auto filter_zero_point = op::Constant::create(element::u8, Shape{}, {0});
-    auto output_scale = op::Constant::create(element::f32, Shape{}, {2});
-    auto output_zero_point = op::Constant::create(element::u8, Shape{}, {0});
-
-    Shape shape_r{1, 3}; // output shape
-    auto QD = ngraph::builder::quantization::QuantizedLinearMatmul(A,
-                                                                   B,
-                                                                   input_scale,
-                                                                   input_zero_point,
-                                                                   filter_scale,
-                                                                   filter_zero_point,
-                                                                   output_scale,
-                                                                   output_zero_point);
-    auto f = make_shared<Function>(NodeVector{QD}, ParameterVector{A, B});
-    constant_fold(f);
-    auto backend = runtime::Backend::create("CPU");
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::u8, shape_a);
-    copy_data(a, a_data);
-    auto b = backend->create_tensor(element::u8, shape_b);
-    copy_data(b, b_data);
-    auto result = backend->create_tensor(element::u8, shape_r);
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<uint8_t>{3, 13, 23}), read_vector<uint8_t>(result));
-}
-#endif
