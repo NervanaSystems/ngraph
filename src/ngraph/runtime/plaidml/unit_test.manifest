@@ -285,24 +285,27 @@ divide_python_rounding_int32
 backwards_batchmatmul_tensor2_tensor2
 
 # unsupported ops: 'QuantizedConvolution', 'QuantizedDot', 'TopK', 'Erf', 'EmbeddingLookup'
-onnx_PlaidML.model_quant_conv_linear
-onnx_PlaidML.model_conv_integer_no_zero_point
-onnx_PlaidML.model_matmul_integer_no_zero_point
-onnx_PlaidML.model_matmul_integer_4d_no_zero_point
-onnx_PlaidML.model_top_k
-onnx_PlaidML.model_erf
-onnx_PlaidML.model_erf_int32
-onnx_PlaidML.model_hardmax
+model_quant_conv_linear
+model_conv_integer_no_zero_point
+model_matmul_integer_no_zero_point
+model_matmul_integer_4d_no_zero_point
+model_top_k
+model_erf
+model_erf_int32
+model_hardmax
 
 # node validation error: "Argument shapes are inconsistent."
-onnx_PlaidML.model_lstm_fwd_with_clip
-onnx_PlaidML.model_lstm_fwd_mixed_seq
-onnx_PlaidML.model_lstm_fwd_hardsigmoid_activation
-onnx_PlaidML.model_reduce_log_sum
-onnx_PlaidML.model_reduce_log_sum_exp
-onnx_PlaidML.model_reduce_mean
+model_lstm_fwd_with_clip
+model_lstm_fwd_mixed_seq
+model_lstm_fwd_hardsigmoid_activation
+model_reduce_log_sum
+model_reduce_log_sum_exp
+model_reduce_mean
 
 # result mismatch
-onnx_PlaidML.model_dequantize_linear_scalar_zero_scale_int8
-onnx_PlaidML.model_softmax
+model_dequantize_linear_scalar_zero_scale_int8
+model_softmax
 avg_pool_3d_uneven_strided_padded
+rnn_cell_activation_function
+gru_cell_bias_clip
+gru_cell_linear_before_reset
