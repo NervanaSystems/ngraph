@@ -19,10 +19,12 @@
 #include "dyn_elimination.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
@@ -36,7 +38,8 @@ pass::DynElimination::DynElimination()
     : GraphRewrite()
 {
     construct_transpose();
-    construct_broadcast();
+    construct_dyn_broadcast();
+    construct_dyn_replace_slice();
     construct_dyn_slice();
     construct_dyn_reshape();
     construct_range();
@@ -89,7 +92,7 @@ void pass::DynElimination::construct_transpose()
     add_matcher(transpose_matcher, transpose_callback, all_pass_property_off);
 }
 
-void pass::DynElimination::construct_broadcast()
+void pass::DynElimination::construct_dyn_broadcast()
 {
     auto data_arg_label = make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 3});
     auto shape_arg_label =
@@ -442,6 +445,92 @@ void pass::DynElimination::construct_dyn_slice()
     auto dyn_slice_matcher =
         make_shared<pattern::Matcher>(dyn_slice_pat, "DynElimination.DynSlice");
     add_matcher(dyn_slice_matcher, dyn_slice_callback, all_pass_property_off);
+}
+
+void pass::DynElimination::construct_dyn_replace_slice()
+{
+    auto data_arg_label = make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 3});
+    auto replacement_arg_label = make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 3});
+    auto begins_arg_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
+    auto ends_arg_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
+    auto strides_arg_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
+
+    auto dyn_replace_slice_pat = make_shared<op::DynReplaceSlice>(data_arg_label,
+                                                                  replacement_arg_label,
+                                                                  begins_arg_label,
+                                                                  ends_arg_label,
+                                                                  strides_arg_label,
+                                                                  AxisSet{},
+                                                                  AxisSet{},
+                                                                  AxisSet{},
+                                                                  AxisSet{},
+                                                                  AxisSet{});
+    auto dyn_replace_slice_callback = [data_arg_label,
+                                       replacement_arg_label,
+                                       begins_arg_label,
+                                       ends_arg_label,
+                                       strides_arg_label](pattern::Matcher& m) {
+        auto pattern_map = m.get_pattern_map();
+
+        auto data_arg = pattern_map[data_arg_label];
+        auto replacement_arg = pattern_map[replacement_arg_label];
+        auto begins_arg = static_pointer_cast<op::Constant>(pattern_map[begins_arg_label]);
+        auto ends_arg = static_pointer_cast<op::Constant>(pattern_map[ends_arg_label]);
+        auto strides_arg = static_pointer_cast<op::Constant>(pattern_map[strides_arg_label]);
+        auto dyn_replace_slice = static_pointer_cast<op::DynReplaceSlice>(m.get_match_root());
+
+        if (data_arg->get_output_partial_shape(0).is_dynamic() ||
+            replacement_arg->get_output_partial_shape(0).is_dynamic() ||
+            begins_arg->get_element_type() != element::i64 ||
+            ends_arg->get_element_type() != element::i64 ||
+            strides_arg->get_element_type() != element::i64)
+        {
+            return false;
+        }
+
+        SlicePlan p = make_plan(data_arg->get_output_shape(0),
+                                begins_arg->get_vector<int64_t>(),
+                                ends_arg->get_vector<int64_t>(),
+                                strides_arg->get_vector<int64_t>(),
+                                dyn_replace_slice->get_lower_bounds_mask(),
+                                dyn_replace_slice->get_upper_bounds_mask(),
+                                dyn_replace_slice->get_new_axis(),
+                                dyn_replace_slice->get_shrink_axis(),
+                                dyn_replace_slice->get_ellipsis_mask());
+
+        shared_ptr<Node> substitute_replacement_arg = replacement_arg;
+
+        if (!p.reverse_axes.empty())
+        {
+            substitute_replacement_arg =
+                make_shared<op::Reverse>(substitute_replacement_arg, p.reverse_axes);
+        }
+
+        if (p.reshape_in_shape != p.reshape_out_shape)
+        {
+            substitute_replacement_arg =
+                make_shared<op::Reshape>(substitute_replacement_arg,
+                                         ngraph::get_default_order(p.reshape_out_shape),
+                                         p.reshape_in_shape);
+        }
+
+        auto substitute_rsl =
+            make_shared<op::ReplaceSlice>(data_arg,
+                                          substitute_replacement_arg,
+                                          Coordinate(p.begins.begin(), p.begins.end()),
+                                          Coordinate(p.ends.begin(), p.ends.end()),
+                                          Strides(p.strides.begin(), p.strides.end()));
+
+        replace_node(m.get_match_root(), substitute_rsl);
+        return true;
+    };
+
+    auto dyn_replace_slice_matcher =
+        make_shared<pattern::Matcher>(dyn_replace_slice_pat, "DynElimination.DynReplaceShape");
+    add_matcher(dyn_replace_slice_matcher, dyn_replace_slice_callback, all_pass_property_off);
 }
 
 void pass::DynElimination::construct_dyn_reshape()
