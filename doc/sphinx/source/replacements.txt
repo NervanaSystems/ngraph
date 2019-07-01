@@ -1,0 +1,61 @@
+   
+.. |codename| replace:: nGraph
+.. |project| replace:: nGraph Compiler stack
+.. |Intel| replace:: Intel® 
+
+
+.. Replacement strings for commonly-used math symbols; renders in default font
+
+.. |lcsigma|    unicode:: U+03C3      .. sigma σ
+.. |sigma|      unicode:: U+03A3      .. Sigma Σ
+
+.. |lcdelta|    unicode:: U+03B4      .. delta δ
+.. |delta|      unicode:: U+0394      .. Delta Δ
+
+.. |lcgamma|    unicode:: U+03B3      .. gamma γ
+.. |gamma|      unicode:: U+0393      .. Gamma Γ
+
+.. |lcphi|      unicode:: U+03C6      .. phi φ
+.. |sphi|       unicode:: U+03D5      .. ϕ 
+.. |phi|        unicode:: U+03A6      .. Phi Φ
+
+.. |lcpi|       unicode:: U+03C0      .. pi π
+.. |pi|         unicode:: U+03A0      .. Pi Π
+
+.. |lctheta|    unicode:: U+03B8      .. theta θ
+.. |theta|      unicode:: U+03F4      .. Theta ϴ
+
+.. |lclambda|   unicode:: U+03BB      .. lambda λ
+.. |lambda|     unicode:: U+039B      .. Lambda Λ
+
+.. |vmlt|       unicode:: U+22D8      .. very much less than ⋘
+.. |vmgt|       unicode:: U+22D9      .. very much greater than ⋙
+
+
+.. Miscellaneous IP-related substitutions
+
+.. |trade|  unicode:: U+02122 .. TRADEMARK SIGN
+   :ltrim:
+.. |reg|    unicode:: U+000AE .. REGISTERED TRADEMARK SIGN
+   :ltrim:
+.. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
+   :ltrim:
+
+
+.. Default substitutions 
+
+.. |bullet|     unicode:: U+2022      .. BULLET
+.. |bulletop|   unicode:: U+2219      .. BULLET OPERATOR
+
+
+.. |micro|      unicode:: U+000B5     .. MICRO SIGN
+   :rtrim:
+
+.. |sup2|       unicode:: U+00B2      .. SUPERSCRIPT TWO
+   :ltrim:
+
+.. |deg|        unicode:: U+000B0     .. DEGREE SIGN
+   :ltrim:
+
+.. |plusminus|  unicode:: U+000B1     .. PLUS-MINUS SIGN
+   :rtrim:

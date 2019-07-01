@@ -1,6 +1,6 @@
-.. contribution/governance.rst: 
+.. _governance:
 
-Governance  
+Governance
 ##########
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor

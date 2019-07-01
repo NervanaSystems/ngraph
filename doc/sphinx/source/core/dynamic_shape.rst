@@ -1,4 +1,4 @@
-.. _dynamic_shape: 
+.. _dynamic_shape:
 
 Dynamic shape
 #############

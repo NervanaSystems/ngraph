@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 #include "exceptions.hpp"
 #include "lp_pool.hpp"

@@ -1,6 +1,6 @@
-.. diagnostics/netron.rst: 
+.. _netron:
 
-Netron  
+Netron
 ######
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor

@@ -3,58 +3,59 @@
 Introduction
 ############
 
-Future developments in Artificial Intelligence (AI) will require better
-methods to accelerate the performance of deep learning workloads. Deep
-learning models are becoming more complex and the sizes of their data sets are
-rapidly increasing, making the deployment of scalable AI solutions a greater
-challenge. 
+Future developments in Artificial Intelligence (AI) will require better methods
+to accelerate the performance of deep learning workloads. Deep learning models
+are becoming more complex and the sizes of their data sets are rapidly
+increasing, making the deployment of scalable AI solutions a greater challenge.
 
-Currently, two standard approaches for developers to accelerate deep
-learning performance are:
+Currently, two standard approaches for developers to accelerate deep learning
+performance are:
 
 **Design hardware solutions dedicated to deep learning computation**
 
 Many companies, ranging from startups to established manufacturers such as
-Intel, are actively developing Application Specific Integrated Circuits 
-(ASICs) to accelerate the performance of deep learning for both training and
-inference.
+Intel, are actively developing Application Specific Integrated Circuits (ASICs)
+to accelerate the performance of deep learning for both training and inference.
 
 **Optimize software to accelerate performance**
 
 nGraph Compiler, an open source deep learning compiler, is Intel's solution to
-deliver performance via software optimization. nGraph provides
-developers with a way to accelerate the performance of deep learning
-ASICs via software and to provide a significant increase in performance for
-standard hardware targets such as CPUs and GPUs. For deploying scalable AI
-solutions, nGraph uses kernel libraries, which is a popular method to improve deep learning performance. Where kernel libraries are available and perform well, we use them. Where they are not available or do not perform well, we can build on PlaidML.
+deliver performance via software optimization. nGraph provides developers with
+a way to accelerate the performance of deep learning ASICs via software and to
+provide a significant increase in performance for standard hardware targets
+such as CPUs and GPUs. For deploying scalable AI solutions, nGraph uses kernel
+libraries, which are a popular method to improve deep learning performance.
+Where kernel libraries are available and perform well, we use them.
 
-Motivations
+Motivations 
 ===========
 
-The current state-of-the-art software solution for speeding up deep learning
-computation is to integrate kernel libraries such as Intel® Math Kernel
-Library for Deep Neural Networks (Intel® MKL DNN) and Nvidia\*'s CuDNN into
-deep learning frameworks. These kernel libraries offer a performance boost
-during runtime on specific hardware targets through highly-optimized kernels
-and other operator-level optimizations.
+The current state-of-the-art software solution for
+speeding up deep learning computation is to integrate kernel libraries such as
+Intel® Math Kernel Library for Deep Neural Networks (Intel® MKL DNN) and
+Nvidia\*'s CuDNN into deep learning frameworks. These kernel libraries offer a
+performance boost during runtime on specific hardware targets through 
+highly-optimized kernels and other operator-level optimizations.
 
-However, kernel libraries have three main problems: 
+However, kernel libraries have three main problems:
 
-#. Kernel libraries do not support graph-level optimizations.
-#. Framework integration of kernel libraries does not scale.
+#. Kernel libraries do not support graph-level optimizations. 
+#. Framework integration of kernel libraries does not scale. 
 #. The number of required kernels keeps growing.
 
-The nGraph Compiler addresses the first two problems, and nGraph
-combined with PlaidML addresses the third problem. nGraph applies
-graph-level optimizations by taking the computational graph from a deep
-learning framework such as TensorFlow\* and reconstructs it with nGraph :abbr:
-`IR (Intermediate Representation)`. nGraph IR centralizes computational graphs
-from various frameworks and provides a unified way to connect backends for
-targeted hardware. To address the third problem, nGraph is integrated with
-PlaidML, a tensor compiler, which generates code in LLVM, OpenCL, OpenGL,
-and Metal. Low-level optimizations are automatically applied to the generated
-code, resulting in a more efficient execution that does not require manual
-kernel integration for most hardware targets. 
+nGraph Compiler addresses the first two problems, and nGraph Compiler combined
+with PlaidML addresses the third problem. nGraph applies graph-level
+optimizations by taking the computational graph from a deep learning framework
+such as TensorFlow\* and reconstructs it with nGraph :abbr: `IR (Intermediate
+Representation)`. nGraph IR centralizes computational graphs from various
+frameworks and provides a unified way to connect backends for targeted
+hardware.
+
+To address the third problem, nGraph is integrated with PlaidML, a tensor
+compiler, which generates code in LLVM, OpenCL, OpenGL, and Metal. Low-level
+optimizations are automatically applied to the generated code, resulting in a
+more efficient execution that does not require manual kernel integration for
+most hardware targets.
 
 The following three sections explore the main problems of kernel libraries in
 more detail and describe how nGraph addresses them.
@@ -70,7 +71,7 @@ graph, but the choice of operations in the graph may not be optimal.
 
 .. figure:: ../graphics/kernel-problem-1.png
    :width: 555px
-   :alt: 
+   :alt:
 
 The computation is constructed to execute ``(A+B)*C``. With nGraph, we can
 further optimize the graph to be represented as ``A*C``. From the first graph
@@ -79,7 +80,7 @@ compile time (an optimization known as *constant folding*). The graph can be
 further simplified to the one on the right because the constant has a value of
 zero (known as *algebraic simplification*). Without such graph-level
 optimizations, a deep learning framework with a kernel library will compute
-all operations, resulting in suboptimal execution. 
+all operations, resulting in suboptimal execution.
 
 Problem 2: Framework integration of kernel libraries does not scale
 -------------------------------------------------------------------
@@ -89,13 +90,13 @@ kernel libraries with frameworks has become increasingly more difficult. For
 each new deep learning accelerator, a custom kernel library integration must
 be implemented by a team of experts. This labor-intensive work is further
 complicated by the number of frameworks, as illustrated in the following
-diagram using orange lines. 
+diagram using orange lines.
 
 .. _figure-B:
 
 .. figure:: ../graphics/kernel-problem-2.png
    :width: 555px
-   :alt: 
+   :alt:
 
 Each framework must be manually integrated with each hardware-specific kernel
 library. Additionally, each integration is unique to the framework and its set
@@ -109,10 +110,11 @@ few primitive nGraph operations. With a unified computational graph, kernel
 libraries no longer need to be separately integrated into each deep learning
 framework. Instead, the libraries only need to support nGraph primitive
 operations, and this approach streamlines the integration process for the
-backend.  
+backend.
+
 
 Problem 3: The number of required kernels keeps growing
-----------------------------------------------------------------------------
+-------------------------------------------------------
 
 Integrating kernel libraries with multiple deep learning frameworks is a
 difficult task that becomes more complex with the growing number of
@@ -122,38 +124,34 @@ GEMM, etc.). But as AI research advances and industrial deep learning
 applications continue to develop, the number of required kernels continues to
 increase exponentially. The number of required kernels is based on the number
 of chip designs, data types, operations, and the cardinality of each parameter
-per operation. 
+per operation. Each connection in the following diagram represents significant 
+work for what will ultimately be a fragile setup that is costly to maintain.
 
 .. _figure-C:
 
 .. figure:: ../graphics/kernel-problem-3.png
    :width: 555px
-   :alt: 
-
-   Each connection represents significant work for what will
-   ultimately be a fragile setup that is costly to maintain.
+   :alt:
 
 Integrating PlaidML with nGraph provides flexbility to support the latest deep
 learning models in the absence of hand-optimized kernels for new operations.
 PlaidML works together with nGraph to address the exponential growth of
-kernels. 
+kernels.
 
 PlaidML takes two inputs: the operation defined by the user and the machine
 description of the hardware target. It then automatically generates kernels
 that are iteratively optimized through an IR known as `Stripe`_. Integration of
 PlaidML with nGraph allows users to choose the hardware and framework that
-suits their needs, resulting in freedom from kernel libraries. 
+suits their needs, resulting in freedom from kernel libraries.
 
 Solution: nGraph and PlaidML
 ============================
 
 We developed nGraph and integrated it with PlaidML to allow developers to
 accelerate deep learning performance and address the problem of scalable
-kernel libraries. 
-
-To address the problem of scaling backends, nGraph applies graph-level
-optimizations to deep learning computations and unifies computational graphs
-from deep learning frameworks with nGraph IR. 
+kernel libraries. To address the problem of scaling backends, nGraph applies 
+graph-level optimizations to deep learning computations and unifies 
+computational graphsfrom deep learning frameworks with nGraph IR.
 
 In conjunction with nGraph's graph-level optimizations, PlaidML automatically
 applies low-level optimizations to improve deep learning performance.
@@ -169,14 +167,12 @@ hardware. Together, nGraph and PlaidML provide the best of both worlds.
 This documentation provides technical details of nGraph's core functionality
 as well as framework and backend integrations. Creating a compiler stack like
 nGraph and PlaidML requires expert knowledge, and we're confident that nGraph
-and PlaidML will make life easier for many kinds of developers: 
+and PlaidML will make life easier for many kinds of developers:
 
 #. Framework owners looking to support new hardware and custom chips.
 #. Data scientists and ML developers wishing to accelerate deep learning
    performance.
 #. New DL accelerator developers creating an end-to-end software stack from a
-   deep learning framework to their silicon.  
+   deep learning framework to their silicon.
 
 .. _Stripe: https://arxiv.org/abs/1903.06498
-
-

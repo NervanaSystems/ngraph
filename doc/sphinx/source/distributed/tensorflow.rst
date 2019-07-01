@@ -1,4 +1,4 @@
-.. _distr_tensorflow: 
+.. _distr_tensorflow:
 
 TensorFlow
 ##########

@@ -1,6 +1,6 @@
-.. _control_flow: 
+.. _control_flow:
 
-Control flow  
+Control flow
 ############
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor

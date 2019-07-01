@@ -7,13 +7,8 @@ Validated workloads by framework
 We validated performance [#f1]_ for the following TensorFlow\* and MXNet\* 
 workloads:
 
-* :ref:`tensorflow_valid`
-* :ref:`mxnet_valid`
-* :ref:`onnx_valid`
-
-
-
-.. _tensorflow_valid:
+.. contents::
+   :local:
 
 TensorFlow 
 ==========
@@ -45,8 +40,6 @@ TensorFlow
    A3C, Reinforcement learning
 
 
-.. _mxnet_valid:
-
 MXNet
 =====
 
@@ -74,8 +67,6 @@ MXNet
    DCGAN, Generative adversarial network
    A3C, Reinforcement learning
 
-
-.. _onnx_valid:
 
 ONNX
 ====
@@ -135,4 +126,3 @@ Additionally, we validated the following workloads are functional through
    microarchitecture are reserved for Intel microprocessors. Please refer to
    the applicable product User and Reference Guides for more information
    regarding the specific instruction sets covered by this notice.
-

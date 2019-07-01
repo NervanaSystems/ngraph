@@ -24,57 +24,12 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
-#include "ngraph/op/maximum.hpp"
-#include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-// ------------- HELPER FUNCTIONS ---------------------------------------------
-
-static shared_ptr<Node> add(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
-{
-    auto args = op::numpy_style_broadcast({lhs, rhs});
-    return {make_shared<op::Add>(args.at(0), args.at(1))};
-}
-
-static shared_ptr<Node> sub(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
-{
-    auto args = op::numpy_style_broadcast({lhs, rhs});
-    return {make_shared<op::Subtract>(args.at(0), args.at(1))};
-}
-
-static shared_ptr<Node> mul(const shared_ptr<Node>& lhs, const shared_ptr<Node>& rhs)
-{
-    auto args = op::numpy_style_broadcast({lhs, rhs});
-    return {make_shared<op::Multiply>(args.at(0), args.at(1))};
-}
-
-static shared_ptr<Node> clip(const shared_ptr<Node>& data, float threshold)
-{
-    if (threshold == 0.f)
-    {
-        return data;
-    }
-
-    float min_val = -threshold;
-    float max_val = threshold;
-    size_t size = shape_size(data->get_shape());
-    const shared_ptr<Node> min_val_node = op::Constant::create(
-        data->get_element_type(), data->get_shape(), vector<float>(size, min_val));
-    const shared_ptr<Node> max_val_node = op::Constant::create(
-        data->get_element_type(), data->get_shape(), vector<float>(size, max_val));
-
-    return make_shared<op::Minimum>(max_val_node, make_shared<op::Maximum>(data, min_val_node));
-}
-
-// ------------- LSTM_CELL ----------------------------------------------------
 
 op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
                        const shared_ptr<Node>& W,
@@ -166,18 +121,18 @@ void op::LSTMCell::pre_validate_and_infer_types()
     const Shape& ct_shape{ct_pshape.to_shape()};
 
     NODE_VALIDATION_CHECK(this,
-                          (w_shape == Shape{m_gates_count * get_hidden_size(), input_size}),
+                          (w_shape == Shape{s_gates_count * get_hidden_size(), input_size}),
                           "Input tensor W must have shape (",
-                          m_gates_count * get_hidden_size(),
+                          s_gates_count * get_hidden_size(),
                           ", ",
                           input_size,
                           "). Actual shape is:",
                           w_shape,
                           ".");
     NODE_VALIDATION_CHECK(this,
-                          (r_shape == Shape{m_gates_count * get_hidden_size(), get_hidden_size()}),
+                          (r_shape == Shape{s_gates_count * get_hidden_size(), get_hidden_size()}),
                           "Input tensor R must have shape (",
-                          m_gates_count * get_hidden_size(),
+                          s_gates_count * get_hidden_size(),
                           ", ",
                           get_hidden_size(),
                           "). Actual shape is:",
@@ -213,7 +168,7 @@ void op::LSTMCell::pre_validate_and_infer_types()
     const Shape& p_shape{p_pshape.to_shape()};
 
     NODE_VALIDATION_CHECK(this,
-                          (b_shape == Shape{2 * m_gates_count * get_hidden_size()}),
+                          (b_shape == Shape{2 * s_gates_count * get_hidden_size()}),
                           "Input tensor B must have shape (",
                           8 * get_hidden_size(),
                           "). Actual shape is:",
@@ -221,9 +176,9 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           ".");
 
     NODE_VALIDATION_CHECK(this,
-                          (p_shape == Shape{m_peepholes_count * get_hidden_size()}),
+                          (p_shape == Shape{s_peepholes_count * get_hidden_size()}),
                           "Input tensor P must have shape (",
-                          m_peepholes_count * get_hidden_size(),
+                          s_peepholes_count * get_hidden_size(),
                           "). Actual shape is:",
                           p_shape,
                           ".");
@@ -295,7 +250,7 @@ NodeVector op::LSTMCell::decompose_op() const
     auto c_t = split_gates.at(3);
 
     // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Pi (.) Ct-1 + Wbi + Rbi)
-    i_t = m_activation_f(clip(add(i_t, mul(p_i, C_t)), get_clip()));
+    i_t = m_activation_f(clip(add(i_t, mul(p_i, C_t))));
     if (m_input_forget)
     {
         // Couple input with forget gate: 1 - i_t
@@ -307,14 +262,14 @@ NodeVector op::LSTMCell::decompose_op() const
     else
     {
         // f(Xt*(Wf^T) + Ht-1*(Rf^T) + Pf (.) Ct-1 + Wbf + Rbf)
-        f_t = m_activation_f(clip(add(f_t, mul(p_f, C_t)), get_clip()));
+        f_t = m_activation_f(clip(add(f_t, mul(p_f, C_t))));
     }
     // ft (.) Ct-1 + it (.) ct
-    auto C = add(mul(f_t, C_t), mul(i_t, m_activation_g(clip(c_t, get_clip()))));
+    auto C = add(mul(f_t, C_t), mul(i_t, m_activation_g(clip(c_t))));
     // f(Xt*(Wo^T) + Ht-1*(Ro^T) + Po (.) Ct + Wbo + Rbo)
-    o_t = m_activation_f(clip(add(o_t, mul(p_o, C)), get_clip()));
+    o_t = m_activation_f(clip(add(o_t, mul(p_o, C))));
     // ot (.) h(Ct)
-    auto H = mul(o_t, m_activation_h(clip(C, get_clip())));
+    auto H = mul(o_t, m_activation_h(clip(C)));
 
     return {H, C};
 }
@@ -332,15 +287,15 @@ NodeVector op::LSTMCell::get_peephole_weigths() const
 {
     shared_ptr<Node> P;
     P = get_argument(6);
-    return builder::split(P, m_peepholes_count);
+    return builder::split(P, s_peepholes_count);
 }
 
 void op::LSTMCell::add_default_bias_input()
 {
     shared_ptr<Node> B =
         op::Constant::create(input(0).get_element_type(),
-                             Shape{2 * m_gates_count * get_hidden_size()},
-                             vector<float>(2 * m_gates_count * get_hidden_size(), 0.f));
+                             Shape{2 * s_gates_count * get_hidden_size()},
+                             vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
     set_argument(5, B->output(0));
 }
 
@@ -348,8 +303,8 @@ void op::LSTMCell::add_default_peepholes_input()
 {
     shared_ptr<Node> P =
         op::Constant::create(input(0).get_element_type(),
-                             Shape{m_peepholes_count * get_hidden_size()},
-                             vector<float>(m_peepholes_count * get_hidden_size(), 0.f));
+                             Shape{s_peepholes_count * get_hidden_size()},
+                             vector<float>(s_peepholes_count * get_hidden_size(), 0.f));
     set_argument(6, P->output(0));
 }
 

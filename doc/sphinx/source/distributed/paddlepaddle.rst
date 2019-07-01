@@ -1,4 +1,5 @@
-.. _distr_paddle: 
+.. _distr_paddle:
+
 
 PaddlePaddle
 ############

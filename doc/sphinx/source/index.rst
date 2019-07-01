@@ -17,13 +17,13 @@
 .. This documentation is available online at
 .. https://ngraph.nervanasys.com/docs/latest
 
-nGraph Compiler stack 
+nGraph Compiler stack
 #####################
 
 
 nGraph is an open-source graph compiler for :abbr:`Artificial Neural Networks (
 ANNs)`. The nGraph Compiler stack provides an inherently efficient graph-based
-compilation infrastructure designed to be compatible with many upcoming 
+compilation infrastructure designed to be compatible with many upcoming
 :abbr:`Application-Specific Integrated Circuits (ASICs)`, like the Intel®
 Nervana™ Neural Network Processor (Intel® Nervana™ NNP), while also unlocking
 a massive performance boost on any existing hardware targets for your neural
@@ -40,15 +40,18 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
    :maxdepth: 1
    :caption: Introduction
    :glob:
-   
+
    introduction/*
 
 
 .. toctree::
    :maxdepth: 1
    :caption: Connecting Frameworks
-   
+
    frameworks/overview.rst
+   frameworks/tensorflow.rst
+   frameworks/onnx.rst
+   frameworks/paddlepaddle.rst
 
 
 .. toctree::
@@ -56,23 +59,23 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
    :caption: nGraph Core
 
    core/overview.rst
-   core/pattern-matcher.rst 
+   core/pattern-matcher.rst
    core/graph_construction.rst
    core/passes/passes.rst
    nGraph Core Ops <ops/index.rst>
-   core/quantization.rst
-   core/dynamic_shape.rst
-   core/control_flow.rst
-   
+.. core/quantization.rst
+.. core/dynamic_shape.rst
+.. core/control_flow.rst
+
 
 .. toctree::
    :maxdepth: 1
    :caption: Backend Support
 
    backend-support/overview.rst
-   backend-support/cpu.rst
-   backend-support/kernel_library.rst
-   backend-support/plaidml.rst
+.. backend-support/cpu.rst
+.. backend-support/kernel_library.rst
+.. backend-support/plaidml.rst
 
 
 .. toctree::
@@ -80,8 +83,8 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
    :caption: Distributed Training
 
    distributed/overview.rst
-   distributed/tensorflow.rst
-   distributed/paddlepaddle.rst
+.. distributed/tensorflow.rst
+.. distributed/paddlepaddle.rst
 
 
 .. toctree::
@@ -95,9 +98,9 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
    :maxdepth: 1
    :caption: Diagnostics and Visualization
 
-   diagnostics/nbench.rst
-   diagnostics/provenance.rst
-   diagnostics/netron.rst
+..  diagnostics/nbench.rst
+..  diagnostics/provenance.rst
+..  diagnostics/netron.rst
 
 
 .. toctree::
@@ -105,16 +108,7 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
    :caption: Contribution
 
    contribution/guide.rst
-   contribution/governance.rst
-
-
-Indices and tables
-==================
-
-   * :ref:`search`
-   * :ref:`genindex`
-
-
+.. contribution/governance.rst
 
 
 .. nGraph: https://www.ngraph.ai

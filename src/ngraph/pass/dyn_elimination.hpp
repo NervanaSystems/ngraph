@@ -31,7 +31,9 @@ namespace ngraph
         private:
             void construct_transpose();
             void construct_broadcast();
+            void construct_dyn_slice();
             void construct_dyn_reshape();
+            void construct_range();
         };
     }
 }
