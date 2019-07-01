@@ -22,6 +22,16 @@
 #include <string>
 #include "gtest/gtest.h"
 
+// clang-format off
+#ifdef ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#define DEFAULT_FLOAT_TOLERANCE_BITS ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#endif
+
+#ifdef ${BACKEND_NAME}_DOUBLE_TOLERANCE_BITS
+#define DEFAULT_DOUBLE_TOLERANCE_BITS ${BACKEND_NAME}_DOUBLE_TOLERANCE_BITS
+#endif
+// clang-format on
+
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -5184,12 +5194,17 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h2w2)
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, input->get_shape());
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, input->get_shape());
 
-    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    float x1 = 1.0f;
+    float x2 = 4.0f;
+    float sigma1 = 1.0f / (1.0f + std::exp(-x1));
+    float sigma2 = 1.0f / (1.0f + std::exp(-x2));
+
+    vector<float> dataA{x1, x2, x1, x2};
     copy_data(a, dataA);
 
     auto handle = backend->compile(func);
     handle->call_with_validate({result}, {a});
-    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+    vector<float> expected{sigma1, sigma2, sigma1, sigma2};
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
@@ -5204,12 +5219,17 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, input->get_shape());
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, input->get_shape());
 
-    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
+    float x1 = 1.0f;
+    float x2 = 4.0f;
+    float sigma1 = 1.0f / (1.0f + std::exp(-x1));
+    float sigma2 = 1.0f / (1.0f + std::exp(-x2));
+
+    vector<float> dataA{x1, x2, x1, x2};
     copy_data(a, dataA);
 
     auto handle = backend->compile(func);
     handle->call_with_validate({result}, {a});
-    vector<float> expected{0.73105858f, 0.98201379f, 0.73105858f, 0.98201379f};
+    vector<float> expected{sigma1, sigma2, sigma1, sigma2};
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
@@ -5225,16 +5245,24 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, delta->get_shape());
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, input->get_shape());
 
-    vector<float> dataA{1.0f, 4.0f, 1.0f, 4.0f};
-    vector<float> dataB{1.0f, 1.0f, 1.0f, 1.0f};
+    float x1 = 1.0f;
+    float x2 = 4.0f;
+    float dt = 1.0f;
+    float sigma1 = 1.0f / (1.0f + std::exp(-x1));
+    float sigma2 = 1.0f / (1.0f + std::exp(-x2));
+    float bprop1 = sigma1 * (1 - sigma1) * dt;
+    float bprop2 = sigma2 * (1 - sigma2) * dt;
+
+    vector<float> dataA{x1, x2, x1, x2};
+    vector<float> dataB{dt, dt, dt, dt};
 
     copy_data(a, dataA);
     copy_data(b, dataB);
     auto handle = backend->compile(func);
     handle->call_with_validate({result}, {a, b});
 
-    vector<float> expected{0.196612f, 0.0176627f, 0.196612f, 0.0176627f};
-    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+    vector<float> expected{bprop1, bprop2, bprop1, bprop2};
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, relu_2Dfprop)
@@ -5540,7 +5568,7 @@ NGRAPH_TEST(${BACKEND_NAME}, softmax_underflow)
     handle->call_with_validate({result}, {a});
     vector<float> expected{
         expf(low) / d0, expf(1) / d1, expf(2) / d2, expf(3) / d0, expf(4) / d1, expf(5) / d2};
-    EXPECT_TRUE(test::all_close(expected, read_vector<float>(result)));
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, softmax_overflow)
