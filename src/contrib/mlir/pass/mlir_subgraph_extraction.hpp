@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/pass/pass.hpp"
-
+#include <mutex>
 namespace ngraph
 {
     namespace pass
@@ -25,95 +25,35 @@ namespace ngraph
         /// This pass creates CompiledKernel ops enclosing maximal sub-graphs of ops that are supported by MLIR
         class MLIRSubgraphExtractionPass : public ngraph::pass::FunctionPass
         {
-        private:
-            class MLIRSubgraph
-            {
-            private:
-                static int get_new_graph_id()
-                {
-                    static int graph_id = 0;
-                    return graph_id++;
-                }
+            using NodeSet = std::set<std::shared_ptr<Node>>;
 
-            public:
-                /// Create a sub-graph with a new ID.
-                MLIRSubgraph() 
-                {
-                    m_graph_id = MLIRSubgraph::get_new_graph_id();
-                }
-                /// Get graph id
-                int get_id() const      { return m_graph_id; }
-                /// Get all nodes in the sub-graph.
-                NodeVector& get_nodes() { return m_nodes; }
-                /// Get input nodes. Predecessors to head nodes. 
-                NodeVector& get_inputs() { return m_input_nodes; }
-                NodeVector& get_outputs() { return m_output_nodes; }
-                /// Add a list of input nodes to the graph.
-                void add_inputs(NodeVector &inputs);
-                /// Add one node to the sub-graph.
-                void add_node(std::shared_ptr<Node> node);
-                /// Merges sub-graph (other) into this sub-graph.
-                void merge(MLIRSubgraph& other);
-                void add_outputs(NodeVector &outputs);
-
-            private:
-                // Unique ID for this sub-graph. 
-                int m_graph_id;
-                // Actual nodes of the sub-graph
-                NodeVector m_nodes;
-                // Predecessor to head nodes in the sub-graph. 
-                NodeVector m_input_nodes;
-                NodeVector m_output_nodes;
-            };
+            class MLIRSubgraph;
 
         public:
             MLIRSubgraphExtractionPass() {}
             bool run_on_function(std::shared_ptr<Function> func) override;
             /// Checks if an ngraph node is supported by MLIR backend
             bool is_supported_mlir_op(std::shared_ptr<Node> node);
-            /// Get the sub-graph a node belongs to
+            /// Get the sub-graph that a node belongs to
             int get_subgraph(std::shared_ptr<Node> node)
             {
                 auto it = m_node_to_graph.find(node);
                 return (it == m_node_to_graph.end()) ? -1 : it->second;
             }
+            /// Creates a new sub-graph with unique ID
+            MLIRSubgraph create_subgraph() 
+            {
+                std::lock_guard<std::mutex> lock(m_subgraph_mutex);
+                return MLIRSubgraph();
+            }
             /// Get sub-graph by ID
-            MLIRSubgraph& get_subgraph(int id)
-            {
-                auto it = m_id_to_graph.find(id);
-                NGRAPH_CHECK(it != m_id_to_graph.end(), "Cannot find subgraph with ID: ", id);
-                return it->second;
-            }
+            MLIRSubgraph& get_subgraph(int id);
             /// Stores a sub-graph in the map
-            void add_subgraph(MLIRSubgraph sg)
-            {
-                m_id_to_graph.emplace(sg.get_id(), sg);
-            }
+            void add_subgraph(MLIRSubgraph sg);
             /// Adds a node to the sub-graph
-            void add_node_to_subgraph(MLIRSubgraph& sg, std::shared_ptr<Node> node)
-            {
-                sg.add_node(node);
-                m_node_to_graph[node] = sg.get_id();
-            }
-            /// Adds a list of input nodes to a sub-graph
-            void add_inputs_to_subgraph(MLIRSubgraph& sg, NodeVector& inputs)
-            {
-                sg.add_inputs(inputs);
-            }
-            /// Merge two sub-graphs and update maps accordingly
-            void merge_subgraphs(MLIRSubgraph& sg1, MLIRSubgraph& sg2)
-            {
-                NGRAPH_CHECK(&sg1 != &sg2, "Cannot merge a graph into itself");
-                sg1.merge(sg2);
-                // Remove sub-graph from map
-                m_id_to_graph.erase(sg2.get_id());
-                // Associate nodes of second sub-graph to first one
-                auto sg_nodes = sg2.get_nodes();
-                for (auto node : sg_nodes)
-                {
-                    m_node_to_graph[node] = sg1.get_id();
-                }
-            }
+            void add_node_to_subgraph(MLIRSubgraph& sg, std::shared_ptr<Node> node);
+            /// Merge two sub-graphs and update maps accordingly. sg2 will be destroyed. 
+            void merge_subgraphs(MLIRSubgraph& sg1, MLIRSubgraph& sg2);
 
             /// Checks if adding a node to an extracted sub-graph will cause a DAG cycle
             /// inputs: are the list of input nodes outside sub-graphs to the node we want to add.
@@ -132,12 +72,58 @@ namespace ngraph
             bool check_cycles(NodeVector& inputs, std::vector<int>& subgraph_ids);
 
         private:
+            static const std::set<std::type_index> m_supported_ops;
+
+            class MLIRSubgraph
+            {
+            private:
+                friend MLIRSubgraph MLIRSubgraphExtractionPass::create_subgraph();
+                friend void MLIRSubgraphExtractionPass::add_node_to_subgraph(MLIRSubgraph& sg, std::shared_ptr<Node> node);
+                friend void MLIRSubgraphExtractionPass::merge_subgraphs(MLIRSubgraph& sg1, MLIRSubgraph& sg2);
+
+                static int get_new_graph_id()
+                {
+                    return m_curr_graph_id++;
+                }
+                /// Merges sub-graph (other) into this sub-graph.
+                void merge(MLIRSubgraph& other);
+                /// Add one node to the sub-graph.
+                void add_node(std::shared_ptr<Node> node);
+                /// Create a sub-graph with a new ID.
+                MLIRSubgraph() : m_graph_id( MLIRSubgraph::get_new_graph_id()) {}
+            public:
+                /// Get sub-graph id
+                int get_id() const     { return m_graph_id; }
+                /// Get all nodes in the sub-graph.
+                NodeSet& get_nodes()   { return m_nodes; }
+                /// Get input nodes. Predecessors to head nodes. 
+                NodeSet& get_inputs()  { return m_input_nodes; }
+                /// Get output nodes. Nodes in the sub-graph with edges to external nodes. 
+                NodeSet& get_outputs() { return m_output_nodes; }
+                /// Add a list of input nodes to the sub-graph.
+                template<typename T>
+                void add_inputs(T &inputs);
+                /// Add a list of output nodes to the sub-graph.
+                template<typename T>
+                void add_outputs(T &outputs);
+
+            private:
+                // Unique ID for this sub-graph. 
+                int m_graph_id;
+                // Actual nodes of the sub-graph
+                NodeSet m_nodes;
+                // Predecessor to head nodes in the sub-graph. 
+                NodeSet m_input_nodes;
+                NodeSet m_output_nodes;
+                static int m_curr_graph_id;
+            };
+        private:
             using IDGraphMap = std::unordered_map<int, MLIRSubgraph>;
             using NodeGraphMap = std::unordered_map<std::shared_ptr<Node>, int>;
             IDGraphMap m_id_to_graph;
             NodeGraphMap m_node_to_graph;
-        private:
-            static const std::set<std::type_index> m_supported_ops;
+            // Mutex over sub-graph IDs
+            std::mutex m_subgraph_mutex;
         };
     }
 }
