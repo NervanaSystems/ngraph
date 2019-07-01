@@ -167,6 +167,7 @@ set(MULTI_TEST_SRC
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
+    dyn_replace_slice_test.in.cpp
     dyn_slice_test.in.cpp
     dynamic.in.cpp
 )
