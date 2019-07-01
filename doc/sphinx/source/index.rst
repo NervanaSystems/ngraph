@@ -83,8 +83,8 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
    :caption: Distributed Training
 
    distributed/overview.rst
-   distributed/tensorflow.rst
-   distributed/paddlepaddle.rst
+.. distributed/tensorflow.rst
+.. distributed/paddlepaddle.rst
 
 
 .. toctree::
@@ -98,9 +98,9 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
    :maxdepth: 1
    :caption: Diagnostics and Visualization
 
-   diagnostics/nbench.rst
-   diagnostics/provenance.rst
-   diagnostics/netron.rst
+..  diagnostics/nbench.rst
+..  diagnostics/provenance.rst
+..  diagnostics/netron.rst
 
 
 .. toctree::
@@ -108,7 +108,7 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
    :caption: Contribution
 
    contribution/guide.rst
-   contribution/governance.rst
+.. contribution/governance.rst
 
 
 Indices and tables
