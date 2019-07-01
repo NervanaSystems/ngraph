@@ -35,8 +35,11 @@ namespace ngraph
             {
                 std::printf("%s: %s\n", timestamp.c_str(), buf.data());
             }
-            void
-                all_reduce(void* in, void* out, element::Type_t element_type, size_t count) override
+            void all_reduce(void* in,
+                            void* out,
+                            element::Type_t element_type,
+                            reduction::Type reduce_type,
+                            size_t count) override
             {
                 throw ngraph_error("Distributed Library not supported/mentioned");
             }
@@ -45,6 +48,19 @@ namespace ngraph
                            element::Type_t element_type,
                            size_t count,
                            int root_id) override
+            {
+                throw ngraph_error("Distributed Library not supported/mentioned");
+            }
+
+            void recv(void* in, element::Type_t element_type, size_t count, int src_id) override
+            {
+                throw ngraph_error("Distributed Library not supported/mentioned");
+            }
+
+            void send(const void* in,
+                      element::Type_t element_type,
+                      size_t count,
+                      int dest_id) override
             {
                 throw ngraph_error("Distributed Library not supported/mentioned");
             }

@@ -131,3 +131,90 @@ TEST(dyn_elimination, slice)
     ASSERT_EQ(f->get_results().at(0)->get_element_type(), element::f32);
     ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 4, 2, 2, 1, 2, 2}));
 }
+
+TEST(dyn_elimination, reshape)
+{
+    auto input_arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto shape_arg = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{0, 6, -1});
+
+    auto r = make_shared<op::DynReshape>(input_arg, shape_arg, true);
+
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{2, 6, 32}));
+
+    auto f = make_shared<Function>(r, ParameterVector{input_arg});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::DynElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::DynReshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
+
+    ASSERT_EQ(f->get_results().at(0)->get_element_type(), element::f32);
+    ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 6, 32}));
+}
+
+TEST(dyn_elimination, range)
+{
+    auto constant_start = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{0});
+    auto constant_stop = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{5});
+    auto constant_step = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{2});
+
+    auto range = make_shared<op::Range>(constant_start, constant_stop, constant_step);
+
+    ASSERT_EQ(range->get_element_type(), element::i64);
+    ASSERT_EQ(range->get_shape(), (Shape{3}));
+
+    auto f = make_shared<Function>(range, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::DynElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Range>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto replacement = dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+
+    ASSERT_NE(replacement, nullptr);
+    ASSERT_EQ(replacement->get_element_type(), element::i64);
+    ASSERT_EQ(replacement->get_shape(), (Shape{3}));
+
+    auto vals = replacement->get_vector<int64_t>();
+
+    ASSERT_EQ(vals, (vector<int64_t>{0, 2, 4}));
+}
+
+TEST(dyn_elimination, range_f64)
+{
+    auto constant_start = make_shared<op::Constant>(element::f64, Shape{}, vector<double>{-0.5});
+    auto constant_stop = make_shared<op::Constant>(element::f64, Shape{}, vector<double>{2});
+    auto constant_step = make_shared<op::Constant>(element::f64, Shape{}, vector<double>{0.25});
+
+    auto range = make_shared<op::Range>(constant_start, constant_stop, constant_step);
+
+    ASSERT_EQ(range->get_element_type(), element::f64);
+    ASSERT_EQ(range->get_shape(), (Shape{10}));
+
+    auto f = make_shared<Function>(range, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::DynElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Range>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto replacement = dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+
+    ASSERT_NE(replacement, nullptr);
+    ASSERT_EQ(replacement->get_element_type(), element::f64);
+    ASSERT_EQ(replacement->get_shape(), (Shape{10}));
+
+    auto vals = replacement->get_vector<double>();
+
+    ASSERT_TRUE(test::all_close_f(
+        vals, vector<double>{-0.5, -0.25, 0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75}));
+}

@@ -2407,9 +2407,10 @@ div[class^='highlight'] pre {
 }
 .rst-content h1 .headerlink:after, .rst-content h2 .headerlink:after, .rst-content .toctree-wrapper p.caption .headerlink:after, .rst-content h3 .headerlink:after, .rst-content h4 .headerlink:after, .rst-content h5 .headerlink:after, .rst-content h6 .headerlink:after, .rst-content dl dt .headerlink:after, .rst-content p.caption .headerlink:after {
   visibility: visible;
-  content: "";
   font-family: "NeoSansIntel";
   display: inline-block;
+  background-color: #27ae41;
+  font-size: 0.93em;
 }
 .rst-content h1:hover .headerlink, .rst-content h2:hover .headerlink, .rst-content .toctree-wrapper p.caption:hover .headerlink, .rst-content h3:hover .headerlink, .rst-content h4:hover .headerlink, .rst-content h5:hover .headerlink, .rst-content h6:hover .headerlink, .rst-content dl dt:hover .headerlink, .rst-content p.caption:hover .headerlink {
   display: inline-block;
@@ -2727,7 +2728,6 @@ span[id*='MathJax-Span'] {
 }
 .wy-menu-horiz:before, .wy-menu-horiz:after {
   display: table;
-  content: "";
 }
 .wy-menu-horiz:after {
   clear: both;

@@ -53,6 +53,7 @@
 #include "op/equal.hpp"
 #include "op/erf.hpp"
 #include "op/exp.hpp"
+#include "op/eye_like.hpp"
 #include "op/flatten.hpp"
 #include "op/floor.hpp"
 #include "op/gather.hpp"
@@ -63,10 +64,12 @@
 #include "op/hard_sigmoid.hpp"
 #include "op/hardmax.hpp"
 #include "op/identity.hpp"
+#include "op/instance_norm.hpp"
 #include "op/leaky_relu.hpp"
 #include "op/less.hpp"
 #include "op/log.hpp"
 #include "op/log_softmax.hpp"
+#include "op/lp_norm.hpp"
 #include "op/lp_pool.hpp"
 #include "op/lrn.hpp"
 #include "op/lstm.hpp"
@@ -75,6 +78,7 @@
 #include "op/max.hpp"
 #include "op/max_pool.hpp"
 #include "op/mean.hpp"
+#include "op/mean_variance_normalization.hpp"
 #include "op/min.hpp"
 #include "op/mul.hpp"
 #include "op/neg.hpp"
@@ -259,6 +263,7 @@ namespace ngraph
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Erf", 1, erf);
             REGISTER_OPERATOR("Exp", 1, exp);
+            REGISTER_OPERATOR("EyeLike", 1, eye_like);
             REGISTER_OPERATOR("Flatten", 1, flatten);
             REGISTER_OPERATOR("Floor", 1, floor);
             REGISTER_OPERATOR("Gather", 1, gather);
@@ -270,10 +275,12 @@ namespace ngraph
             REGISTER_OPERATOR("Hardmax", 1, hardmax);
             REGISTER_OPERATOR("HardSigmoid", 1, hard_sigmoid);
             REGISTER_OPERATOR("Identity", 1, identity);
+            REGISTER_OPERATOR("InstanceNormalization", 1, instance_norm);
             REGISTER_OPERATOR("LeakyRelu", 1, leaky_relu);
             REGISTER_OPERATOR("Less", 1, less);
             REGISTER_OPERATOR("Log", 1, log);
             REGISTER_OPERATOR("LogSoftmax", 1, log_softmax);
+            REGISTER_OPERATOR("LpNormalization", 1, lp_norm);
             REGISTER_OPERATOR("LRN", 1, lrn);
             REGISTER_OPERATOR("LSTM", 1, lstm);
             REGISTER_OPERATOR("MatMul", 1, matmul);
@@ -283,6 +290,8 @@ namespace ngraph
             REGISTER_OPERATOR("Max", 8, max);
             REGISTER_OPERATOR("Mean", 1, mean);
             REGISTER_OPERATOR("Mean", 8, mean);
+            REGISTER_OPERATOR("MeanVarianceNormalization", 1, mean_variance_normalization);
+            REGISTER_OPERATOR("MeanVarianceNormalization", 9, mean_variance_normalization);
             REGISTER_OPERATOR("Min", 1, min);
             REGISTER_OPERATOR("Min", 8, min);
             REGISTER_OPERATOR("Mul", 1, mul);
