@@ -132,6 +132,30 @@ TEST(dyn_elimination, slice)
     ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 4, 2, 2, 1, 2, 2}));
 }
 
+TEST(dyn_elimination, reshape)
+{
+    auto input_arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto shape_arg = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{0, 6, -1});
+
+    auto r = make_shared<op::DynReshape>(input_arg, shape_arg, true);
+
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{2, 6, 32}));
+
+    auto f = make_shared<Function>(r, ParameterVector{input_arg});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::DynElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::DynReshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
+
+    ASSERT_EQ(f->get_results().at(0)->get_element_type(), element::f32);
+    ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 6, 32}));
+}
+
 TEST(dyn_elimination, range)
 {
     auto constant_start = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{0});
