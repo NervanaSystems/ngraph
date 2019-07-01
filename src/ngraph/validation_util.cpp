@@ -142,8 +142,8 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t data_padded_dilated_dim = -1;
             if (data_dim_static)
             {
-                data_padded_dilated_dim = (static_cast<ptrdiff_t>(data_dilation[i]) *
-                                           (static_cast<ptrdiff_t>(data_shape[i]) - 1)) +
+                data_padded_dilated_dim = (static_cast<int64_t>(data_dilation[i]) *
+                                           (static_cast<int64_t>(data_shape[i]) - 1)) +
                                           1 + data_padding_below[i] + data_padding_above[i];
                 NODE_VALIDATION_CHECK(
                     node,
@@ -158,8 +158,8 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
             ptrdiff_t window_dilated_dim = -1;
             if (window_dim_static)
             {
-                window_dilated_dim = static_cast<ptrdiff_t>(window_dilation[i]) *
-                                         (static_cast<ptrdiff_t>(window_shape[i]) - 1) +
+                window_dilated_dim = static_cast<int64_t>(window_dilation[i]) *
+                                         (static_cast<int64_t>(window_shape[i]) - 1) +
                                      1;
 
                 NODE_VALIDATION_CHECK(node,
@@ -627,4 +627,258 @@ void ngraph::infer_auto_padding(const Shape& image_shape,
         padding_below.push_back(pad_type == op::PadType::SAME_UPPER ? padding_lhs : padding_rhs);
         padding_above.push_back(pad_type == op::PadType::SAME_UPPER ? padding_rhs : padding_lhs);
     }
+}
+
+PartialShape ngraph::infer_slice_shape(const Node* node,
+                                       const PartialShape& input_shape,
+                                       const std::vector<int64_t>& lb,
+                                       const std::vector<int64_t>& ub,
+                                       const std::vector<int64_t>& str,
+                                       const AxisSet& lb_mask,
+                                       const AxisSet& ub_mask,
+                                       const AxisSet& new_axis,
+                                       const AxisSet& shrink_axis,
+                                       const AxisSet& ellipsis_mask)
+{
+    if (lb.size() && ub.size())
+    {
+        NODE_VALIDATION_CHECK(node,
+                              lb.size() == ub.size(),
+                              "Lower bounds and Upper bounds needs to have same number of values");
+    }
+    if (lb.size() && str.size())
+    {
+        NODE_VALIDATION_CHECK(node,
+                              lb.size() == str.size(),
+                              "Lower bounds and strides needs to have same number of values");
+    }
+    if (ub.size() && str.size())
+    {
+        NODE_VALIDATION_CHECK(node,
+                              ub.size() == str.size(),
+                              "Upper bounds and strides needs to have same number of values");
+    }
+
+    if (input_shape.rank().is_dynamic())
+    {
+        return PartialShape::dynamic();
+    }
+
+    int max_dims = size_t(input_shape.rank()) + new_axis.size();
+
+    int bounds_size =
+        lb.size() ? lb.size() : (ub.size() ? ub.size() : (str.size() ? str.size() : 0));
+
+    int ellipsis_pos1 = ellipsis_mask.size() ? *ellipsis_mask.begin() : max_dims;
+
+    int ellipsis_pos2 = max_dims;
+    bounds_size -= ellipsis_pos1;
+    if (bounds_size > 0 && (max_dims - bounds_size) > ellipsis_pos1)
+    {
+        ellipsis_pos2 = max_dims - bounds_size;
+    }
+
+    std::vector<Dimension> begin_dms(max_dims, 0);
+    std::vector<Dimension> end_dms(max_dims, -1);
+    std::vector<Dimension> stride_dms(max_dims, 1);
+
+    std::vector<Dimension> out_dims;
+
+    int j = 0;
+    int k = 0;
+    int bj = 0;
+    int ej = 0;
+    int sj = 0;
+
+    for (int i = 0; i < max_dims; i++)
+    {
+        if (i >= ellipsis_pos1 && i < ellipsis_pos2)
+        {
+            if (new_axis.find(i) == new_axis.end())
+            {
+                if (end_dms[i].is_static() && int64_t(end_dms[i]) < 0)
+                {
+                    end_dms[i] = input_shape[j++] + end_dms[i];
+                }
+            }
+            else
+            {
+                end_dms[i] = begin_dms[i];
+            }
+
+            if (end_dms[i].is_dynamic() || begin_dms[i].is_dynamic() || stride_dms[i].is_dynamic())
+            {
+                out_dims.push_back(Dimension::dynamic());
+            }
+            else
+            {
+                out_dims.push_back(static_cast<int64_t>(
+                    ceil(static_cast<float>(abs(int64_t(end_dms[i]) - int64_t(begin_dms[i])) + 1) /
+                         static_cast<float>(abs(int64_t(stride_dms[i]))))));
+            }
+            k = ellipsis_pos1;
+            continue;
+        }
+        stride_dms[i] = (str.size() > sj && str[sj] != 0) ? str[sj++] : 1;
+
+        // Use lower_bounds if mask is not set
+        if (lb_mask.find(j) == lb_mask.end())
+        {
+            if (lb.size() > bj)
+            {
+                begin_dms[i] = lb[bj];
+            }
+            else if (stride_dms[i].is_dynamic())
+            {
+                begin_dms[i] = Dimension::dynamic();
+            }
+            else if (int64_t(stride_dms[i]) > 0)
+            {
+                begin_dms[i] = 0;
+            }
+            else
+            {
+                begin_dms[i] = -1;
+            }
+        }
+        else if (stride_dms[i].is_dynamic())
+        {
+            begin_dms[i] = Dimension::dynamic();
+        }
+        else if (int64_t(stride_dms[i]) > 0)
+        {
+            begin_dms[i] = 0;
+        }
+        else
+        {
+            begin_dms[i] = -1;
+        }
+
+        bj++;
+
+        if (begin_dms[i].is_static() && int64_t(begin_dms[i]) < 0)
+        {
+            begin_dms[i] = input_shape[j] + begin_dms[i];
+        }
+        // Clipping 'begin'
+        if (begin_dms[i].is_static())
+        {
+            if (int64_t(begin_dms[i]) < 0)
+            {
+                begin_dms[i] = 0;
+            }
+            else if (input_shape[j].is_dynamic())
+            {
+                begin_dms[i] = Dimension::dynamic();
+            }
+            else if (int64_t(begin_dms[i]) >= int64_t(input_shape[j]))
+            {
+                begin_dms[i] = input_shape[j] - 1;
+            }
+        }
+
+        // Use upper_bounds if mask is not set
+        if (ub_mask.find(j) == ub_mask.end())
+        {
+            Dimension end_dms_tmp;
+
+            if (ub.size() <= ej)
+            {
+                end_dms_tmp = end_dms[i];
+            }
+            else if (stride_dms[i].is_dynamic())
+            {
+                end_dms_tmp = Dimension::dynamic();
+            }
+            else if (int64_t(stride_dms[i]) > 0)
+            {
+                end_dms_tmp = ub[ej] - 1;
+            }
+            else
+            {
+                end_dms_tmp = ub[ej] + 1;
+            }
+
+            if (ub.size() > ej)
+            {
+                end_dms[i] = end_dms_tmp;
+            }
+            else if (stride_dms[i].is_dynamic())
+            {
+                end_dms[i] = Dimension::dynamic();
+            }
+            else if (int64_t(stride_dms[i]) > 0)
+            {
+                end_dms[i] = -1;
+            }
+            else
+            {
+                end_dms[i] = 0;
+            }
+        }
+        else
+        {
+            if (stride_dms[i].is_dynamic())
+            {
+                end_dms[i] = Dimension::dynamic();
+            }
+            else if (int64_t(stride_dms[i]) > 0)
+            {
+                end_dms[i] = -1;
+            }
+            else
+            {
+                end_dms[i] = 0;
+            }
+        }
+        ej++;
+
+        if (end_dms[i].is_static() && int64_t(end_dms[i]) < 0)
+        {
+            end_dms[i] = input_shape[j] + end_dms[i];
+        }
+        // Clipping 'end'
+        if (end_dms[i].is_static())
+        {
+            if (int64_t(end_dms[i]) < 0)
+            {
+                end_dms[i] = 0;
+            }
+            else if (input_shape[j].is_dynamic())
+            {
+                end_dms[i] = Dimension::dynamic();
+            }
+            else if (int64_t(end_dms[i]) >= int64_t(input_shape[j]))
+            {
+                end_dms[i] = input_shape[j] - 1;
+            }
+        }
+
+        if (new_axis.find(i) == new_axis.end())
+        {
+            j++;
+        }
+        else
+        {
+            end_dms[i] = 0;
+        }
+
+        if (shrink_axis.find(k) != shrink_axis.end())
+        {
+            end_dms[i] = begin_dms[i];
+        }
+        else if (end_dms[i].is_dynamic() || begin_dms[i].is_dynamic() || stride_dms[i].is_dynamic())
+        {
+            out_dims.push_back(Dimension::dynamic());
+        }
+        else
+        {
+            out_dims.push_back(static_cast<int64_t>(
+                ceil(static_cast<float>(abs(int64_t(end_dms[i]) - int64_t(begin_dms[i])) + 1) /
+                     static_cast<float>(abs(int64_t(stride_dms[i]))))));
+        }
+
+        k++;
+    }
+    return out_dims;
 }
