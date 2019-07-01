@@ -259,12 +259,6 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
-rnn_cell_no_bias
-rnn_cell_bias_clip
-rnn_cell_activation_function
-gru_cell_bias_clip
-gru_cell_linear_before_reset
-gru_cell_activation_function
 
 # dgkutnic ww24.5: these tests are to be triaged by the PlaidML team
 # ww25.2: re-scrubbed this list of tests after fixing check_inputs
@@ -290,45 +284,25 @@ group_conv_transpose_output_shape
 divide_python_rounding_int32
 backwards_batchmatmul_tensor2_tensor2
 
-# ONNX importer related tests
-onnx_PlaidML.model_quantize_linear
-onnx_PlaidML.model_quantize_linear_zero_point
-onnx_PlaidML.model_quantize_linear_axis_zero
-onnx_PlaidML.model_quantize_linear_axis_negative
-onnx_PlaidML.model_dequantize_linear
-onnx_PlaidML.model_dequantize_linear_scalar_zero_scale_uint8
-onnx_PlaidML.model_dequantize_linear_scalar_zero_scale_int8
-onnx_PlaidML.model_dequantize_linear_1d_zero_scale_uint8
-onnx_PlaidML.model_dequantize_linear_1d_zero_scale_int8
-onnx_PlaidML.model_dequantize_linear_1d_zero_scale_int8_4d
-onnx_PlaidML.model_dequantize_linear_1d_zero_scale_uint8_negative_axis
+# unsupported ops: 'QuantizedConvolution', 'QuantizedDot', 'TopK', 'Erf', 'EmbeddingLookup'
 onnx_PlaidML.model_quant_conv_linear
-onnx_PlaidML.model_quant_conv_linear_2d
-onnx_PlaidML.model_quant_conv_linear_3d
-onnx_PlaidML.model_qlinear_matmul
-onnx_PlaidML.model_qlinear_matmul_3d
-onnx_PlaidML.model_conv_integer
-onnx_PlaidML.model_conv_integer_zero_point_zero
 onnx_PlaidML.model_conv_integer_no_zero_point
-onnx_PlaidML.model_conv_integer_pads
-onnx_PlaidML.model_matmul_integer
-onnx_PlaidML.model_matmul_integer_zero_point_zero
 onnx_PlaidML.model_matmul_integer_no_zero_point
-onnx_PlaidML.model_matmul_integer_scalar
-onnx_PlaidML.model_matmul_integer_4d
-onnx_PlaidML.model_matmul_integer_4d_zero_point
 onnx_PlaidML.model_matmul_integer_4d_no_zero_point
-onnx_PlaidML.model_lstm_fwd_with_clip
-onnx_PlaidML.model_lstm_fwd_mixed_seq
-onnx_PlaidML.model_lstm_fwd_hardsigmoid_activation
-onnx_PlaidML.model_softmax
-onnx_PlaidML.model_reduce_log_sum
-onnx_PlaidML.model_reduce_log_sum_exp
-onnx_PlaidML.model_reduce_mean
 onnx_PlaidML.model_top_k
 onnx_PlaidML.model_erf
 onnx_PlaidML.model_erf_int32
 onnx_PlaidML.model_hardmax
 
-# AveragePool tests - results mismatch
+# node validation error: "Argument shapes are inconsistent."
+onnx_PlaidML.model_lstm_fwd_with_clip
+onnx_PlaidML.model_lstm_fwd_mixed_seq
+onnx_PlaidML.model_lstm_fwd_hardsigmoid_activation
+onnx_PlaidML.model_reduce_log_sum
+onnx_PlaidML.model_reduce_log_sum_exp
+onnx_PlaidML.model_reduce_mean
+
+# result mismatch
+onnx_PlaidML.model_dequantize_linear_scalar_zero_scale_int8
+onnx_PlaidML.model_softmax
 avg_pool_3d_uneven_strided_padded
