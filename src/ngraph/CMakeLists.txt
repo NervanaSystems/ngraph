@@ -170,6 +170,8 @@ set (SRC
     op/experimental/quantized_dot.hpp
     op/experimental/quantized_dot_bias.cpp
     op/experimental/quantized_dot_bias.hpp
+    op/experimental/compiled_kernel.cpp
+    op/experimental/compiled_kernel.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
     op/experimental/layers/ctc_greedy_decoder.cpp
@@ -248,6 +250,8 @@ set (SRC
     op/product.hpp
     op/quantize.cpp
     op/quantize.hpp
+    op/recv.cpp
+    op/recv.hpp
     op/relu.cpp
     op/relu.hpp
     op/replace_slice.cpp
@@ -266,6 +270,8 @@ set (SRC
     op/scatter_nd_add.hpp
     op/select.cpp
     op/select.hpp
+    op/send.cpp
+    op/send.hpp
     op/sigmoid.cpp
     op/sigmoid.hpp
     op/sign.cpp
@@ -312,6 +318,8 @@ set (SRC
     op/fused/group_conv.cpp
     op/fused/group_conv_transpose.hpp
     op/fused/group_conv_transpose.cpp
+    op/fused/gru_cell.cpp
+    op/fused/gru_cell.hpp
     op/fused/leaky_relu.cpp
     op/fused/leaky_relu.hpp
     op/fused/lstm_cell.cpp
@@ -322,6 +330,8 @@ set (SRC
     op/fused/normalize.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/rnn_cell.cpp
+    op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
     op/fused/shuffle_channels.cpp

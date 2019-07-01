@@ -42,13 +42,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
         auto subgraph = extract_subgraph(subgraph_outputs, fused_op->get_arguments());
         for (auto subgraph_node : subgraph)
         {
-            if (auto nested_fused_op = dynamic_pointer_cast<op::util::FusedOp>(subgraph_node))
-            {
-                if (!(m_has_direct_support && m_has_direct_support(*nested_fused_op)))
-                {
-                    run_on_node(nested_fused_op);
-                }
-            }
+            run_on_node(subgraph_node);
         }
 
         size_t i = 0;

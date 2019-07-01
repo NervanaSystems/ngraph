@@ -168,8 +168,8 @@ namespace ngraph
             ///
             bool m_input_forget = false;
 
-            static constexpr std::size_t m_gates_count{4};
-            static constexpr std::size_t m_peepholes_count{3};
+            static constexpr std::size_t s_gates_count{4};
+            static constexpr std::size_t s_peepholes_count{3};
         };
     }
 }

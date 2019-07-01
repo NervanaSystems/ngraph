@@ -421,6 +421,32 @@ NGRAPH_TEST(${BACKEND_NAME}, dot2d)
     EXPECT_TRUE(test::all_close_f((vector<float>{19, 22, 43, 50}), read_vector<float>(result)));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, dot2d_non_square)
+{
+    Shape shape_in1{2, 3};
+    Shape shape_in2{3, 3};
+    Shape shape_out{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_in1);
+    auto B = make_shared<op::Parameter>(element::f32, shape_in2);
+    auto dot = make_shared<op::Dot>(A, B);
+    auto f = make_shared<Function>(dot, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape_in1);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape_in2);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape_out);
+
+    copy_data(a, vector<float>{1.f, 2.f, 3.f, 4.f, 5.f, 6.f});
+    copy_data(b, vector<float>{1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
+                                  vector<float>{30.f, 36.f, 42.f, 66.f, 81.f, 96.f}));
+}
+
 //
 // Here is what numpy does:
 //

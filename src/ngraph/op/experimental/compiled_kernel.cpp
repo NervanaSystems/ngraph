@@ -14,15 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
+
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-shared_ptr<Node>
-    ngraph::runtime::cpu::op::LoopKernel::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector& new_args) const
 {
     auto args = get_arguments();
     if (new_args.size() != args.size())
@@ -56,13 +57,13 @@ shared_ptr<Node>
         new_outputs.push_back(nm.at(o.get()));
     }
 
-    return std::make_shared<LoopKernel>(new_node_list, new_outputs, new_args);
+    return std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
 }
 
-ngraph::runtime::cpu::op::LoopKernel::LoopKernel(const NodeVector& node_list,
-                                                 const NodeVector& outputs,
-                                                 const NodeVector& args)
-    : Op("LoopKernel", check_single_output_args({args}))
+ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
+                                           const NodeVector& outputs,
+                                           const NodeVector& args)
+    : Op("CompiledKernel", check_single_output_args({args}))
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {
