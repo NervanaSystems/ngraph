@@ -3,6 +3,12 @@
 Overview
 ========
 
+.. toctree::
+   :maxdepth: 1
+   
+   tensorflow.rst
+   onnx.rst
+   paddlepaddle.rst
 
 A framework is "supported" when there is a framework :term:`bridge` that can be
 cloned from one of our GitHub repos and built to connect to nGraph device
