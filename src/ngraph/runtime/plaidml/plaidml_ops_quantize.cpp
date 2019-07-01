@@ -211,9 +211,6 @@ void ngraph::runtime::plaidml::ImplQuantize::Apply()
             q_max = (1 << (8 * type.size())) - 1;
             q_min = 0;
         }
-        if (!type.is_signed())
-        {
-        }
         clamp_formula << "Uncast < " << q_min << " ? " << q_min << " : "
                       << "(Uncast > " << q_max << " ? " << q_max << " : Uncast)";
     }
