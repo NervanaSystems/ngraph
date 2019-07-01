@@ -18,6 +18,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 
 #include "cpu_backend_visibility.h"
 #include "ngraph/pass/pass_config.hpp"
@@ -63,6 +64,9 @@ namespace ngraph
                 bool is_supported_property(const Property prop) const override;
 
             private:
+                // this mutex will be used to protect the addition and deletion
+                // of function to m_exec_map across multiple threads
+                std::mutex m_exec_map_mutex;
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;
             };
