@@ -132,14 +132,20 @@ void op::QuantizedConvolution::validate_and_infer_types()
                           "Input scale and input zero point shape must be same and 1");
 
     NODE_VALIDATION_CHECK(this,
-                          get_input_partial_shape(4).compatible(PartialShape{}) == 1 &&
-                              get_input_partial_shape(5).compatible(PartialShape{}) == 1,
+                          get_input_partial_shape(4).compatible(PartialShape{}) &&
+                              get_input_partial_shape(5).compatible(PartialShape{}),
                           "Filter scale and filter zero point shape must be same and 1");
 
     NODE_VALIDATION_CHECK(this,
-                          get_input_partial_shape(6).compatible(PartialShape{}) == 1 &&
-                              get_input_partial_shape(7).compatible(PartialShape{}) == 1,
+                          get_input_partial_shape(6).compatible(PartialShape{}) &&
+                              get_input_partial_shape(7).compatible(PartialShape{}),
                           "Output scale and output zero point shape must be same and 1");
+
+    // AxisSet should be empty till we support channel wise quantization
+    NODE_VALIDATION_CHECK(this,
+                          m_input_axes == AxisSet{} && m_filter_axes == AxisSet{} &&
+                              m_output_axes == AxisSet{},
+                          "Input, filter and output AxisSet should be empty");
 
     const PartialShape& input_shape = get_input_partial_shape(0);
     const PartialShape& filters_shape = get_input_partial_shape(1);

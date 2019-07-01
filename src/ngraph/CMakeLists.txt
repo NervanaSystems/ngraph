@@ -162,12 +162,16 @@ set (SRC
     op/experimental/quantized_conv_relu.hpp
     op/experimental/quantized_max_pool.cpp
     op/experimental/quantized_max_pool.hpp
+    op/experimental/range.cpp
+    op/experimental/range.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
     op/experimental/tile.cpp
     op/experimental/tile.hpp
     op/experimental/quantized_dot_bias.cpp
     op/experimental/quantized_dot_bias.hpp
+    op/experimental/compiled_kernel.cpp
+    op/experimental/compiled_kernel.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
     op/experimental/layers/ctc_greedy_decoder.cpp
@@ -250,6 +254,8 @@ set (SRC
     op/quantized_convolution.hpp
     op/quantized_dot.cpp
     op/quantized_dot.hpp
+    op/recv.cpp
+    op/recv.hpp
     op/relu.cpp
     op/relu.hpp
     op/replace_slice.cpp
@@ -268,6 +274,8 @@ set (SRC
     op/scatter_nd_add.hpp
     op/select.cpp
     op/select.hpp
+    op/send.cpp
+    op/send.hpp
     op/sigmoid.cpp
     op/sigmoid.hpp
     op/sign.cpp

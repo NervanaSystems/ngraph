@@ -7558,10 +7558,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_convolution)
                                                            F,
                                                            G,
                                                            H,
-                                                           element::i8,
-                                                           AxisSet{},
-                                                           AxisSet{},
-                                                           AxisSet{});
+                                                           element::i8);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
@@ -7693,10 +7690,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_conv_non_zero_zero_point)
                                                             rhs_zero_point,
                                                             result_scale,
                                                             result_zero_point,
-                                                            element::u8,
-                                                            AxisSet{},
-                                                            AxisSet{},
-                                                            AxisSet{});
+                                                            element::u8);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B});
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -7714,7 +7708,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_conv_non_zero_zero_point)
     }
 }
 
-TEST(${BACKEND_NAME}, quantized_conv_int32_output)
+NGRAPH_TEST(${BACKEND_NAME}, quantized_conv_int32_output)
 {
     Shape shape_a{1, 1, 3, 4};
     Shape shape_b{1, 1, 3, 3};
@@ -7742,10 +7736,7 @@ TEST(${BACKEND_NAME}, quantized_conv_int32_output)
                                                     F,
                                                     G,
                                                     H,
-                                                    element::i32,
-                                                    AxisSet{},
-                                                    AxisSet{},
-                                                    AxisSet{});
+                                                    element::i32);
     auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, E, G});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

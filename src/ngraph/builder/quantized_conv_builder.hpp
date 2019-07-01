@@ -25,22 +25,23 @@ namespace ngraph
 {
     namespace builder
     {
-        std::shared_ptr<Node> QuantizedConvolutionBuilder(const std::shared_ptr<Node>& input,
-                                                          const std::shared_ptr<Node>& filters,
-                                                          const Strides& window_movement_strides,
-                                                          const Strides& window_dilation_strides,
-                                                          const CoordinateDiff& padding_below,
-                                                          const CoordinateDiff& padding_above,
-                                                          const Strides& data_dilation_strides,
-                                                          const std::shared_ptr<Node>& min_input,
-                                                          const std::shared_ptr<Node>& max_input,
-                                                          const std::shared_ptr<Node>& min_filter,
-                                                          const std::shared_ptr<Node>& max_filter,
-                                                          const std::shared_ptr<Node>& min_output,
-                                                          const std::shared_ptr<Node>& max_output,
-                                                          const ngraph::element::Type& output_type,
-                                                          const ngraph::AxisSet& input_axes,
-                                                          const ngraph::AxisSet& filter_axes,
-                                                          const ngraph::AxisSet& output_axes);
+        std::shared_ptr<Node>
+            QuantizedConvolutionBuilder(const std::shared_ptr<Node>& input,
+                                        const std::shared_ptr<Node>& filters,
+                                        const Strides& window_movement_strides,
+                                        const Strides& window_dilation_strides,
+                                        const CoordinateDiff& padding_below,
+                                        const CoordinateDiff& padding_above,
+                                        const Strides& data_dilation_strides,
+                                        const std::shared_ptr<Node>& min_input,
+                                        const std::shared_ptr<Node>& max_input,
+                                        const std::shared_ptr<Node>& min_filter,
+                                        const std::shared_ptr<Node>& max_filter,
+                                        const std::shared_ptr<Node>& min_output,
+                                        const std::shared_ptr<Node>& max_output,
+                                        const ngraph::element::Type& output_type,
+                                        const ngraph::AxisSet& input_axes = ngraph::AxisSet{},
+                                        const ngraph::AxisSet& filter_axes = ngraph::AxisSet{},
+                                        const ngraph::AxisSet& output_axes = ngraph::AxisSet{});
     }
 }

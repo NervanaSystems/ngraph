@@ -59,9 +59,9 @@ namespace ngraph
                                  const std::shared_ptr<Node>& output_scale,
                                  const std::shared_ptr<Node>& output_zero_point,
                                  const ngraph::element::Type& output_type,
-                                 const ngraph::AxisSet& input_axes,
-                                 const ngraph::AxisSet& filter_axes,
-                                 const ngraph::AxisSet& output_axes);
+                                 const ngraph::AxisSet& input_axes = ngraph::AxisSet{},
+                                 const ngraph::AxisSet& filter_axes = ngraph::AxisSet{},
+                                 const ngraph::AxisSet& output_axes = ngraph::AxisSet{});
 
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
