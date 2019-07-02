@@ -23,10 +23,6 @@ using namespace ngraph;
 
 const string op::Abs::type_name{"Abs"};
 
-op::Abs::Abs()
-{
-}
-
 op::Abs::Abs(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {

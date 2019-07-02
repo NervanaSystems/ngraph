@@ -105,3 +105,16 @@ std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istr
     }
     return exec;
 }
+
+bool runtime::interpreter::INTBackend::set_config(const map<string, string>& config, string& error)
+{
+    bool rc = false;
+    auto it = config.find("test_echo");
+    error = "";
+    if (it != config.end())
+    {
+        error = it->second;
+        rc = true;
+    }
+    return rc;
+}

@@ -244,3 +244,9 @@ namespace ngraph
         }
     }
 }
+
+bool runtime::Backend::set_config(const map<string, string>& config, string& error)
+{
+    error = "set_config not supported";
+    return false;
+}

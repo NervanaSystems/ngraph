@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,9 @@ namespace ngraph
                 }
 
                 if (args[0].get_element_type() != element::f64 &&
-                    args[0].get_element_type() != element::f32)
+                    args[0].get_element_type() != element::f32 &&
+                    args[0].get_element_type() != element::u8 &&
+                    args[0].get_element_type() != element::i8)
                 {
                     throw ngraph_error("Unsupported type in CPU Builder for ScatterAdd");
                 }
@@ -60,67 +62,81 @@ namespace ngraph
 
                 if (is_int64)
                 {
-                    std::function<decltype(runtime::cpu::kernel::scatter_add_i64<float, 2, 2>)>
-                        kernel;
+                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 3)
+                    {
+                        std::function<decltype(runtime::cpu::kernel::scatter_add_i64<float, 2, 2>)>
+                            kernel;
 
-                    SELECT_KERNEL_BY_2RANKS(kernel,
-                                            args[0].get_element_type(),
-                                            inputs_shape.size(),
-                                            updates_shape.size(),
-                                            runtime::cpu::kernel::scatter_add_i64);
+                        SELECT_KERNEL_BY_2RANKS(kernel,
+                                                args[0].get_element_type(),
+                                                inputs_shape.size(),
+                                                updates_shape.size(),
+                                                runtime::cpu::kernel::scatter_add_i64);
 
-                    auto functor = [&,
-                                    kernel,
-                                    inputs_shape,
-                                    indices_shape,
-                                    updates_shape,
-                                    inputs_buffer_index,
-                                    indices_buffer_index,
-                                    updates_buffer_index,
-                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[inputs_buffer_index],
-                               ctx->buffer_data[indices_buffer_index],
-                               ctx->buffer_data[updates_buffer_index],
-                               ctx->buffer_data[out_buffer_index],
-                               inputs_shape,
-                               indices_shape,
-                               updates_shape,
-                               ectx->arena);
-                    };
-                    functors.emplace_back(functor);
+                        auto functor = [&,
+                                        kernel,
+                                        inputs_shape,
+                                        indices_shape,
+                                        updates_shape,
+                                        inputs_buffer_index,
+                                        indices_buffer_index,
+                                        updates_buffer_index,
+                                        out_buffer_index](CPURuntimeContext* ctx,
+                                                          CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[inputs_buffer_index],
+                                   ctx->buffer_data[indices_buffer_index],
+                                   ctx->buffer_data[updates_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   inputs_shape,
+                                   indices_shape,
+                                   updates_shape,
+                                   ectx->arena);
+                        };
+                        functors.emplace_back(functor);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Unsupported ranks in CPU Builder for ScatterAdd");
+                    }
                 }
                 else
                 {
-                    std::function<decltype(runtime::cpu::kernel::scatter_add_i32<float, 2, 2>)>
-                        kernel;
+                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 3)
+                    {
+                        std::function<decltype(runtime::cpu::kernel::scatter_add_i32<float, 2, 2>)>
+                            kernel;
 
-                    SELECT_KERNEL_BY_2RANKS(kernel,
-                                            args[0].get_element_type(),
-                                            inputs_shape.size(),
-                                            updates_shape.size(),
-                                            runtime::cpu::kernel::scatter_add_i32);
+                        SELECT_KERNEL_BY_2RANKS(kernel,
+                                                args[0].get_element_type(),
+                                                inputs_shape.size(),
+                                                updates_shape.size(),
+                                                runtime::cpu::kernel::scatter_add_i32);
 
-                    auto functor = [&,
-                                    kernel,
-                                    inputs_shape,
-                                    indices_shape,
-                                    updates_shape,
-                                    inputs_buffer_index,
-                                    indices_buffer_index,
-                                    updates_buffer_index,
-                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[inputs_buffer_index],
-                               ctx->buffer_data[indices_buffer_index],
-                               ctx->buffer_data[updates_buffer_index],
-                               ctx->buffer_data[out_buffer_index],
-                               inputs_shape,
-                               indices_shape,
-                               updates_shape,
-                               ectx->arena);
-                    };
-                    functors.emplace_back(functor);
+                        auto functor = [&,
+                                        kernel,
+                                        inputs_shape,
+                                        indices_shape,
+                                        updates_shape,
+                                        inputs_buffer_index,
+                                        indices_buffer_index,
+                                        updates_buffer_index,
+                                        out_buffer_index](CPURuntimeContext* ctx,
+                                                          CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[inputs_buffer_index],
+                                   ctx->buffer_data[indices_buffer_index],
+                                   ctx->buffer_data[updates_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   inputs_shape,
+                                   indices_shape,
+                                   updates_shape,
+                                   ectx->arena);
+                        };
+                        functors.emplace_back(functor);
+                    }
+                    else
+                    {
+                        throw ngraph_error("Unsupported ranks in CPU Builder for ScatterAdd");
+                    }
                 }
             }
             REGISTER_OP_BUILDER(ScatterAdd);
