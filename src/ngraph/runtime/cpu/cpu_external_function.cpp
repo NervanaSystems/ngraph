@@ -33,7 +33,10 @@
 #include "ngraph/codegen/execution_engine.hpp"
 #endif
 
+#ifdef NGRAPH_MLIR_ENABLE
 #include "contrib/mlir/pass/mlir_subgraph_extraction.hpp"
+#endif
+
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/file_util.hpp"
