@@ -41,6 +41,7 @@ set(SRC
     plaidml_ops_one_hot.cpp
     plaidml_ops_passthrough.cpp
     plaidml_ops_pool.cpp
+    plaidml_ops_quantize.cpp
     plaidml_ops_reduce.cpp
     plaidml_ops_replace_slice.cpp
     plaidml_ops_replicate.cpp
