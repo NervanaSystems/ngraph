@@ -203,7 +203,8 @@ shared_ptr<Node> op::GroupConvolutionTranspose::copy_with_new_args(const NodeVec
                                                       get_padding_end(),
                                                       get_output_padding(),
                                                       get_groups(),
-                                                      get_pad_type());
+                                                      get_pad_type(),
+                                                      get_output_shape());
 }
 
 Shape op::GroupConvolutionTranspose::get_data_batch_shape() const
