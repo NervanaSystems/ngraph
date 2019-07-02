@@ -6,28 +6,30 @@ Release Notes
 nGraph is provided as source code, APIs, build scripts, and some binary formats 
 for various Compiler stack configurations and use cases. 
 
+For downloads formatted as ``.zip`` and ``tar.gz``, see 
+https://github.com/NervanaSystems/ngraph/releases.
+
 This page includes additional documentation updates.
 
 We are pleased to announce the release of version |version|-doc.
 
 
-==============================
-
 Core updates for |version|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
++ PlaidML support
 + More ONNX ops
-+ Optimizations
-+ Don't reseed RNG on each use
++ Elementwise divide defaults to Python semantics
++ GenerateMask seed optional
 
-0.22-doc
---------
 
-+ Initial doc and API for IntelGPU backend. 
-+ DynamicBackend API.
-+ Note deprecation of support of MXNet's ``ngraph-mxnet`` PyPI.
-+ Noted changes on graph inspection options resultant from PR 3016.
-+ Added better tips and details to doc-contributor-README.
+Latest doc updates
+~~~~~~~~~~~~~~~~~~
+
++ Document new debug tool
++ Note deprecation of MXNet's ``ngraph-mxnet`` PyPI
++ Note default change to `svg` files for graphs and visualization
++ Add more prominent tips for contributors who find the doc-contributor-README
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
@@ -36,8 +38,15 @@ Core updates for |version|
 Changelog on Previous Releases
 ==============================
 
-For downloads formatted as ``.zip`` and ``tar.gz``, see 
-https://github.com/NervanaSystems/ngraph/releases.
+0.22
+----
+
++ More ONNX ops
++ Optimizations
++ Don't reseed RNG on each use
++ Initial doc and API for IntelGPU backend 
++ DynamicBackend API
+
 
 0.21
 ----
@@ -51,12 +60,6 @@ https://github.com/NervanaSystems/ngraph/releases.
 + offset arg for tensor creation is deprecated
 + static linking support
 + Initial test of 0.21-doc
-
-0.21-doc
---------
-
-Summary of documentation-related changes:
-
 + Updated :doc:`doc-contributor-README` for new community-based contributions. 
 + Added instructions on how to test or display the installed nGraph version.
 + Added instructions on building nGraph bridge (ngraph-bridge).
@@ -82,8 +85,6 @@ Summary of documentation-related changes:
 0.19
 ----
 
-**Download** `0.19.0-rc.2`_
-
 + More dynamic shape preparation
 + Distributed interface factored out
 + fp16 and bfloat16 types
@@ -103,9 +104,6 @@ Summary of documentation-related changes:
 0.18
 ----
 
-**Download** `0.18.1`_
-
-
 + Python formatting issue
 + mkl-dnn work-around
 + Event tracing improvements
@@ -118,8 +116,6 @@ Summary of documentation-related changes:
 0.17
 ----
 
-**Download** `0.17.0-rc.1`_
-
 + Allow negative padding in more places
 + Add code generation for some quantized ops
 + Preliminary dynamic shape support
@@ -131,11 +127,6 @@ Summary of documentation-related changes:
 0.16
 ----
 
-* **Download**: `0.16.0-rc.3`_
-* **Download** `0.16.0-rc.2`_
-* **Download** `0.16.0-rc.1`_
-
-
 + NodeInput and NodeOutput classes prepare for simplifications of Node
 + Test improvements
 + Additional quantization ops
@@ -143,11 +134,3 @@ Summary of documentation-related changes:
 + Fix memory leak
 + Concat optimization
 + Doc updates
-
-.. _0.20.0-rc.0: https://github.com/NervanaSystems/ngraph/releases/tag/v0.20.0-rc.0_
-.. _0.19.0-rc.2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.19.0-rc.2_
-.. _0.18.1: https://github.com/NervanaSystems/ngraph/releases/tag/v0.18.1_
-.. _0.17.0-rc.1: `https://github.com/NervanaSystems/ngraph/releases/tag/v0.17.0-rc.1
-.. _0.16.0-rc.3: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.3
-.. _0.16.0-rc.2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.2
-.. _0.16.0-rc.1: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.1
