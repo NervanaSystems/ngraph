@@ -18,6 +18,7 @@ replace_slice_matrix
 replace_slice_matrix_inplace
 replace_slice_scalar
 replace_slice_vector
+dyn_replace_slice
 shape_of_5d
 shape_of_matrix
 shape_of_scalar
@@ -44,7 +45,6 @@ pad_reflect_2d_with_neg
 batch_mat_mul_forward
 backwards_batchmatmul_tensor2_tensor2
 erf
-gather
 gather_nd_scalar_from_2d
 gather_nd_1d_from_2d
 gather_nd_scalar_from_3d
@@ -56,12 +56,15 @@ gather_nd_batch_scalar_from_3d
 gather_nd_batch_1d_from_3d
 gather_nd_batch_2d_from_3d
 gather_nd_single_indices
-gather_scalar_indices
-gather_scalar_indices_no_axis
-gather_2d_indices_no_axis
-gather_3d_indices_no_axis
-gather_4d_indices_no_axis
 gather_4d_indices_no_axis_uint8
+gather_scalar_indices_axis_1_2d_input
+gather_1d_indices_axis_2_4d_input
+gather_2d_indices_axis_1_2d_input
+gather_scalar_indices_no_axis_2d_input
+gather_1d_indices_no_axis_1d_input
+gather_2d_indices_no_axis_2d_input
+gather_3d_indices_no_axis_2d_input
+gather_4d_indices_no_axis_2d_input
 gemm
 gemm_broadcast_input_C
 normalize_across_chw_scalar_scale_4d
@@ -104,6 +107,8 @@ gather_no_axis_bool
 fake_quantize
 fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
+send_recv
+send_recv_ring
 
 # Not supported quant ops
 model_dequantize_linear_1d_zero_scale_int8

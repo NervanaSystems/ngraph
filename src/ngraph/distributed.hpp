@@ -24,6 +24,19 @@
 
 namespace ngraph
 {
+    namespace reduction
+    {
+        enum class Type
+        {
+            SUM,
+            PROD,
+            MIN,
+            MAX,
+        };
+
+        std::ostream& operator<<(std::ostream& out, const Type& obj);
+    }
+
     class DistributedInterface
     {
     public:
@@ -33,9 +46,16 @@ namespace ngraph
         virtual int get_rank() = 0;
         virtual void log_print(const std::string& timestamp, const std::vector<char>& buf) = 0;
 
+        virtual void all_reduce(void* in,
+                                void* out,
+                                element::Type_t element_type,
+                                reduction::Type reduce_type,
+                                size_t count) = 0;
         virtual void
-            all_reduce(void* in, void* out, element::Type_t element_type, size_t count) = 0;
-        virtual void broadcast(void* in, element::Type_t element_type, size_t count) = 0;
+            broadcast(void* in, element::Type_t element_type, size_t count, int root_id) = 0;
+        virtual void recv(void* in, element::Type_t element_type, size_t count, int src_id) = 0;
+        virtual void
+            send(const void* in, element::Type_t element_type, size_t count, int dest_id) = 0;
     };
 
     void set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface);

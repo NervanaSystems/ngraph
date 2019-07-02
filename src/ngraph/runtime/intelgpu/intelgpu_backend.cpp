@@ -86,10 +86,14 @@
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/group_conv_transpose.hpp"
+#include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/op/fused/space_to_depth.hpp"
@@ -1053,7 +1057,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Sum:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             const shared_ptr<op::Sum> sum = static_pointer_cast<op::Sum>(op);
             const AxisSet& axis = sum->get_reduction_axes();
@@ -1071,7 +1075,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Product:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             const shared_ptr<op::Product> prod = static_pointer_cast<op::Product>(op);
             const AxisSet& axis = prod->get_reduction_axes();
@@ -1142,7 +1146,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::All:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             // Empty axis is not a case for do_equal_propagation()
             kern.emit<op::All>(static_pointer_cast<op::All>(op));
@@ -1150,7 +1154,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Any:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             // Empty axis is not a case for do_equal_propagation()
             kern.emit<op::Any>(static_pointer_cast<op::Any>(op));
@@ -1850,14 +1854,14 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::Min:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             kern.emit<op::Min>(static_pointer_cast<op::Min>(op));
             break;
         }
         case OP_TYPEID::Max:
         {
-            arguments_check(op, 1, 1);
+            arguments_check(op, 2, 1);
 
             kern.emit<op::Max>(static_pointer_cast<op::Max>(op));
             break;
@@ -2009,7 +2013,7 @@ shared_ptr<runtime::Executable>
         }
         case OP_TYPEID::TopK:
         {
-            arguments_check(op, 1, 2);
+            arguments_check(op, 2, 2);
 
             const shared_ptr<op::TopK> topk_op = static_pointer_cast<op::TopK>(op);
 
@@ -2053,6 +2057,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::DepthToSpace:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::DynPad:
+        case OP_TYPEID::DynReplaceSlice:
         case OP_TYPEID::DynReshape:
         case OP_TYPEID::DynSlice:
         case OP_TYPEID::Elu:
@@ -2063,12 +2068,16 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::GatherND:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::GRN:
+        case OP_TYPEID::GroupConvolutionTranspose:
+        case OP_TYPEID::GRUCell:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::LeakyRelu:
+        case OP_TYPEID::LSTMCell:
         case OP_TYPEID::MVN:
         case OP_TYPEID::Normalize:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
+        case OP_TYPEID::RNNCell:
         case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedConvolutionBias:
@@ -2078,11 +2087,14 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedDot:
         case OP_TYPEID::QuantizedDotBias:
         case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::Recv:
+        case OP_TYPEID::Range:
         case OP_TYPEID::ReplaceSlice:
         case OP_TYPEID::ScalarConstantLike:
         case OP_TYPEID::ScaleShift:
         case OP_TYPEID::ScatterAdd:
         case OP_TYPEID::ScatterNDAdd:
+        case OP_TYPEID::Send:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::ShuffleChannels:
         case OP_TYPEID::SpaceToDepth:
@@ -2183,10 +2195,14 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::FakeQuantize:
     case OP_TYPEID::Gemm:
     case OP_TYPEID::GRN:
+    case OP_TYPEID::GroupConvolutionTranspose:
+    case OP_TYPEID::GRUCell:
     case OP_TYPEID::LeakyRelu:
+    case OP_TYPEID::LSTMCell:
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
+    case OP_TYPEID::RNNCell:
     case OP_TYPEID::ScaleShift:
     case OP_TYPEID::ShuffleChannels:
     case OP_TYPEID::SpaceToDepth:

@@ -339,11 +339,6 @@ void Node::add_control_dependency(std::shared_ptr<Node> node)
     m_control_dependencies.insert(node);
 }
 
-std::vector<std::shared_ptr<Function>> Node::get_functions() const
-{
-    return std::vector<std::shared_ptr<Function>>{};
-}
-
 namespace ngraph
 {
     ostream& operator<<(ostream& out, const Node& node)
@@ -562,6 +557,16 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
         ngraph::check_single_output_arg(args.at(i), i);
     }
     return args;
+}
+
+OutputVector ngraph::as_output_vector(const NodeVector& args)
+{
+    OutputVector output_vector;
+    for (auto& arg : check_single_output_args(args))
+    {
+        output_vector.push_back(arg);
+    }
+    return output_vector;
 }
 
 std::tuple<element::Type, PartialShape>

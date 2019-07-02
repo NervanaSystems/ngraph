@@ -26,14 +26,19 @@ namespace ngraph
         class Divide : public util::BinaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a division operation.
+            Divide() = default;
             /// \brief Constructs a division operation.
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             /// \param pythondiv Use Python style rounding for integral type
             /// \param autob Auto broadcast specification
-            Divide(const std::shared_ptr<Node>& arg0,
-                   const std::shared_ptr<Node>& arg1,
+            Divide(const Output<Node>& arg0,
+                   const Output<Node>& arg1,
                    bool pythondiv,
                    const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
@@ -42,11 +47,12 @@ namespace ngraph
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             /// \param autob Auto broadcast specification
-            Divide(const std::shared_ptr<Node>& arg0,
-                   const std::shared_ptr<Node>& arg1,
+            Divide(const Output<Node>& arg0,
+                   const Output<Node>& arg1,
                    const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             bool is_pythondiv() const { return m_pythondiv; }
+            void set_is_pythondiv(bool pythondiv) { m_pythondiv = pythondiv; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -54,10 +60,10 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         protected:
-            bool m_pythondiv;
+            bool m_pythondiv{true};
         };
     }
 
-    std::shared_ptr<ngraph::Node> operator/(const std::shared_ptr<ngraph::Node> arg0,
-                                            const std::shared_ptr<ngraph::Node> arg1);
+    std::shared_ptr<ngraph::Node> operator/(const Output<ngraph::Node> arg0,
+                                            const Output<ngraph::Node> arg1);
 }

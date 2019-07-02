@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,6 +72,17 @@ namespace ngraph
                                                        const CoordinateDiff& padding_below,
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides);
+
+            std::shared_ptr<Node>
+                QuantizedConvInteger(const std::shared_ptr<Node>& input,
+                                     const std::shared_ptr<Node>& filter,
+                                     const Strides& window_movement_strides,
+                                     const Strides& window_dilation_strides,
+                                     const CoordinateDiff& padding_below,
+                                     const CoordinateDiff& padding_above,
+                                     const Strides& data_dilation_strides,
+                                     const std::shared_ptr<Node>& input_zero_point,
+                                     const std::shared_ptr<Node>& filter_zero_point);
         }
     }
 }
