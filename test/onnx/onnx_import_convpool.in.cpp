@@ -30,6 +30,7 @@
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
+#include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
@@ -408,4 +409,20 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_global_lp_pool_p3)
     Outputs outputs{execute(function, inputs, "${BACKEND_NAME}")};
 
     EXPECT_TRUE(test::all_close_f(expected_outputs.front(), outputs.front()));
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_convtranspose_output_shape)
+{
+    auto conv_transpose_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/convtranspose_output_shape.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(conv_transpose_fn, "${BACKEND_NAME}");
+
+    test_case.add_input_from_file<float>(TEST_FILES, "onnx/convtranspose_output_shape/x.bin");
+    test_case.add_input_from_file<float>(TEST_FILES, "onnx/convtranspose_output_shape/w.bin");
+    test_case.add_expected_output_from_file<float>(
+        {1, 2, 10, 8}, TEST_FILES, "onnx/convtranspose_output_shape/y.bin");
+
+    test_case.dump_results();
+    test_case.run();
 }
