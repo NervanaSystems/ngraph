@@ -301,45 +301,83 @@ namespace
     void OP##Conversion::rewrite(                                                                  \
         Operation* op, ArrayRef<Value*> operands, PatternRewriter& rewriter) const
 
-#define ELTWISE_REWRITER(OP, T)                                                                                                                              \
-    REWRITER(OP)                                                                                                                                             \
-    {                                                                                                                                                        \
-        auto loc = cast<OP>(op).getLoc();                                                                                                                    \
-                                                                                                                                                             \
-        auto result = m_pass.buildOutputDefs(op, rewriter)[0];                                                                                               \
-        NGRAPH_ASSERT(result->getType().isa<MemRefType>());                                                                                                  \
-        /* Note that builder's current function is still the original function body.                \
-         use getBlock to get the new block instead. */ \
-                                                                                                                                                             \
-        /* get new operands */                                                                                                                               \
-        Value* lhs = operands[0];                                                                                                                            \
-        Value* rhs = operands[1];                                                                                                                            \
-                                                                                                                                                             \
-        ScopedContext scope(rewriter, loc);                                                                                                                  \
-        /* View */                                                                                                                                           \
-        MemRefView vRes(result), vLHS(lhs), vRHS(rhs);                                                                                                       \
-        /* Index Values */                                                                                                                                   \
-        IndexedValue iRes(result), iLHS(lhs), iRHS(rhs);                                                                                                     \
-        /* Bounds Index Handles */                                                                                                                           \
-        auto lbs = vLHS.getLbs();                                                                                                                            \
-        auto ubs = vLHS.getUbs();                                                                                                                            \
-        /* Loop induction vars */                                                                                                                            \
-        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());                                                                                               \
-        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);                                                                                               \
-        /* Steps */                                                                                                                                          \
-        auto steps = vLHS.getSteps();                                                                                                                        \
-        LoopNestBuilder(pivs, lbs, ubs, steps)(/* single stmt body */                                                                                        \
-                                               [&] { iRes(ivs) = iLHS(ivs) T iRHS(ivs); });                                                                  \
-        rewriter.replaceOp(op, {result});                                                                                                                    \
+    template <typename OP>
+    void compute_binary_elementwise(Operation* op,
+                                    ArrayRef<Value*> operands,
+                                    Value* result,
+                                    PatternRewriter& rewriter)
+    {
+        auto loc = cast<OP>(op).getLoc();
+
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        // Note that builder's current function is still the original function body.
+        // use getBlock to get the new block instead.
+
+        // get new operands
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs), vRHS(rhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs), iRHS(rhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        // Steps
+        auto steps = vLHS.getSteps();
+        // clang-format off
+        LoopNestBuilder(pivs, lbs, ubs, steps)(
+            // single stmt body
+            [&] {
+                    if (isa<NGAddOp>(op))
+                    {
+                        iRes(ivs) = iLHS(ivs) + iRHS(ivs);
+                    }
+                    else if (isa<NGSubOp>(op))
+                    {
+                        iRes(ivs) = iLHS(ivs) - iRHS(ivs);
+                    }
+                    else if (isa<NGMulOp>(op))
+                    {
+                        iRes(ivs) = iLHS(ivs) * iRHS(ivs);
+                    }
+                    else if (isa<NGDivOp>(op))
+                    {
+                        iRes(ivs) = iLHS(ivs) / iRHS(ivs);
+                    }
+                });
+        // clang-format on
+        rewriter.replaceOp(op, {result});
     }
 
-    // Element-wise Operations
-    ELTWISE_REWRITER(NGAddOp, +)
-    ELTWISE_REWRITER(NGSubOp, -)
-    ELTWISE_REWRITER(NGMulOp, *)
-    ELTWISE_REWRITER(NGDivOp, /)
+    REWRITER(NGAddOp)
+    {
+        auto result = m_pass.buildOutputDefs(op, rewriter)[0];
+        compute_binary_elementwise<NGAddOp>(op, operands, result, rewriter);
+    }
 
-#undef ELTWISE_REWRITER
+    REWRITER(NGSubOp)
+    {
+        auto result = m_pass.buildOutputDefs(op, rewriter)[0];
+        compute_binary_elementwise<NGSubOp>(op, operands, result, rewriter);
+    }
+
+    REWRITER(NGMulOp)
+    {
+        auto result = m_pass.buildOutputDefs(op, rewriter)[0];
+        compute_binary_elementwise<NGMulOp>(op, operands, result, rewriter);
+    }
+
+    REWRITER(NGDivOp)
+    {
+        auto result = m_pass.buildOutputDefs(op, rewriter)[0];
+        compute_binary_elementwise<NGDivOp>(op, operands, result, rewriter);
+    }
 
     REWRITER(NGDotOp)
     {
