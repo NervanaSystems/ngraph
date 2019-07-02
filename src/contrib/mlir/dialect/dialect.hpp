@@ -25,15 +25,17 @@
 #include "ngraph/check.hpp"
 namespace mlir
 {
-    class NGDialect : public mlir::Dialect
+    class NGraphOpsDialect : public mlir::Dialect
     {
     public:
-        explicit NGDialect(mlir::MLIRContext* ctx);
+        explicit NGraphOpsDialect(mlir::MLIRContext* ctx);
         mlir::Type parseType(llvm::StringRef tyData, mlir::Location loc) const override
         {
             NGRAPH_CHECK(false, "Unsupported type parsing.");
             return mlir::Type();
         }
         void printType(mlir::Type type, llvm::raw_ostream& os) const override;
+
+        static StringRef getDialectNamespace() { return "ng"; }
     };
 }
