@@ -22,9 +22,10 @@ using namespace ngraph;
 runtime::cpu::CPU_DebugTracer::CPU_DebugTracer()
     : m_serial_number(0)
 {
-    if (std::getenv("NGRAPH_CPU_DEBUG_TRACER") != nullptr)
+    static const auto debug_t = std::getenv("NGRAPH_CPU_DEBUG_TRACER");
+    if (debug_t != nullptr)
     {
-        enable_tracing = true;
+        m_enable_tracing = true;
 
         init_streams();
     }
@@ -54,12 +55,12 @@ void runtime::cpu::CPU_DebugTracer::init_streams()
 
 void runtime::cpu::CPU_DebugTracer::set_enable_tracing(bool new_state)
 {
-    if (!enable_tracing && new_state)
+    if (!m_enable_tracing && new_state)
     {
         init_streams();
     }
 
-    enable_tracing = new_state;
+    m_enable_tracing = new_state;
 }
 
 void runtime::cpu::CPU_DebugTracer::end_of_kernel()

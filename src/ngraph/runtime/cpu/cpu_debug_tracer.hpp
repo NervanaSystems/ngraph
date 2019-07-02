@@ -43,7 +43,7 @@ namespace ngraph
 
                 void set_enable_tracing(bool new_state);
 
-                bool tracing_is_enabled() { return enable_tracing; }
+                bool tracing_is_enabled() { return m_enable_tracing; }
                 void end_of_kernel();
 
                 template <typename T>
@@ -61,7 +61,7 @@ namespace ngraph
                 std::fstream m_tracer_stream;
                 std::fstream m_tracer_bin_stream;
 
-                bool enable_tracing = false;
+                bool m_enable_tracing = false;
             };
         }
     }
@@ -69,7 +69,7 @@ namespace ngraph
 
 // use of kahan sum to reduce numeric error
 template <typename T>
-static float find_variance(const std::vector<T>& f_data, float mean, size_t size)
+float find_variance(const std::vector<T>& f_data, float mean, size_t size)
 {
     float sum = 0.0f;
     float c = 0.0f;
