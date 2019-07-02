@@ -216,8 +216,6 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         {
             // single thread for codegen
             NGRAPH_CHECK(m_num_ctx == 1);
-            ctx->mkldnn_primitives.swap(mkldnn_emitter->get_mkldnn_primitives());
-            ctx->mkldnn_workspaces = mkldnn_emitter->get_mkldnn_workspaces();
         }
 
         ctx->states = m_external_function->m_states.data();
