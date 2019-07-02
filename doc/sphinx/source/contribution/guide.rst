@@ -3,9 +3,7 @@
 Contribution Guide
 ##################
 
-* :ref:`license`
-* :ref:`formatting`
-* :ref:`contribute`
+.. contents::
 
 .. _license:
 
