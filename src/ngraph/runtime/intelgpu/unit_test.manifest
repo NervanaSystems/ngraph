@@ -118,6 +118,9 @@ model_matmul_integer
 model_matmul_integer_no_zero_point
 model_matmul_integer_zero_point_zero
 model_matmul_integer_scalar
+quantized_convolution
+quantized_conv_non_zero_zero_point
+quantized_conv_int32_output
 
 # Need to update implementation
 divide_python_rounding_int32
