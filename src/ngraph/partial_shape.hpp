@@ -164,6 +164,10 @@ namespace ngraph
         /// \throws std::invalid_argument If this PartialShape is dynamic.
         Shape to_shape() const;
 
+        /// \brief Returns `true` if all static dimensions of the tensor are non-negative, else
+        ///        `false`.
+        bool all_non_negative() const;
+
         /// \brief Index operator for PartialShape.
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.

@@ -17,17 +17,19 @@
 
 // Add new dialect ops lowerers to this file
 
-#define DECL_OP_CONV(OP) \
-class OP##Conversion : public mlir::DialectConversionPattern \
-{\
-public:\
-    explicit OP##Conversion(mlir::MLIRContext *context, DialectLoweringPass& pass)\
-    : mlir::DialectConversionPattern(mlir::OP::getOperationName(), 1, context),\
-      m_pass(pass)\
-    {} \
-    void rewrite(Operation *op, ArrayRef<Value *> operands, PatternRewriter &rewriter) const override; \
-    DialectLoweringPass& m_pass;\
-};
+#define DECL_OP_CONV(OP)                                                                           \
+    class OP##Conversion : public NGraphOpLowering                                                 \
+    {                                                                                              \
+    public:                                                                                        \
+        explicit OP##Conversion(mlir::MLIRContext* context, DialectLoweringPass& pass)             \
+            : NGraphOpLowering(mlir::OP::getOperationName(), context, pass)                        \
+        {                                                                                          \
+        }                                                                                          \
+                                                                                                   \
+        PatternMatchResult matchAndRewrite(Operation* op,                                          \
+                                           ArrayRef<Value*> operands,                              \
+                                           PatternRewriter& rewriter) const override;              \
+    };
 
 DECL_OP_CONV(NGAddOp)
 DECL_OP_CONV(NGDotOp)
