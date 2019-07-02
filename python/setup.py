@@ -363,6 +363,22 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
+setup_requires = [
+    'numpy==1.15.4; python_version == "3.4"',
+    'numpy==1.16.4; python_version != "3.4"',
+]
+try:
+    import pip
+    try:
+        from pip import main as pipmain
+    except ImportError:
+        from pip._internal import main as pipmain
+    pipmain(['install', '--no-cache-dir'] + setup_requires)
+    setup_requires = []
+except Exception:
+    pass
+
+
 with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()
 
@@ -381,7 +397,7 @@ setup(
     packages=packages,
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
-    setup_requires=['numpy'],
+    setup_requires=setup_requires,
     install_requires=requirements,
     zip_safe=False,
     extras_require={
