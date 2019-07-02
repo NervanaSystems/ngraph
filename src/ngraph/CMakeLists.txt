@@ -31,11 +31,15 @@ set (SRC
     builder/numpy_transpose.hpp
     builder/quantization.cpp
     builder/quantization.hpp
+    builder/quantized_conv_builder.cpp
+    builder/quantized_conv_builder.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
     builder/quantization/quantized_linear_matmul.cpp
     builder/quantization/quantized_linear_matmul.hpp
     builder/quantization_util.hpp
+    builder/quantization_utils.hpp
+    builder/quantization_utils.cpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
     builder/reshape.cpp
@@ -154,8 +158,6 @@ set (SRC
     op/experimental/quantized_avg_pool.hpp
     op/experimental/quantized_concat.cpp
     op/experimental/quantized_concat.hpp
-    op/experimental/quantized_conv.cpp
-    op/experimental/quantized_conv.hpp
     op/experimental/quantized_conv_bias.cpp
     op/experimental/quantized_conv_bias.hpp
     op/experimental/quantized_conv_relu.cpp
@@ -252,6 +254,8 @@ set (SRC
     op/product.hpp
     op/quantize.cpp
     op/quantize.hpp
+    op/quantized_convolution.cpp
+    op/quantized_convolution.hpp
     op/recv.cpp
     op/recv.hpp
     op/relu.cpp

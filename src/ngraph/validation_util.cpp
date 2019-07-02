@@ -223,29 +223,15 @@ PartialShape ngraph::infer_windowed_reduction_output_shape(const Node* node,
 //
 // Infers the output batch shape and element type for convolution fprop.
 //
-std::tuple<element::Type, PartialShape>
-    ngraph::infer_convolution_forward(const Node* node,
-                                      element::Type et_batch,
-                                      element::Type et_filters,
-                                      const PartialShape& data_batch_shape,
-                                      const Strides& data_dilation,
-                                      const CoordinateDiff& data_padding_below,
-                                      const CoordinateDiff& data_padding_above,
-                                      const PartialShape& filters_shape,
-                                      const Strides& filter_strides,
-                                      const Strides& filter_dilation)
+PartialShape ngraph::infer_convolution_forward(const Node* node,
+                                               const PartialShape& data_batch_shape,
+                                               const Strides& data_dilation,
+                                               const CoordinateDiff& data_padding_below,
+                                               const CoordinateDiff& data_padding_above,
+                                               const PartialShape& filters_shape,
+                                               const Strides& filter_strides,
+                                               const Strides& filter_dilation)
 {
-    element::Type et_result;
-
-    NODE_VALIDATION_CHECK(
-        node,
-        element::Type::merge(et_result, et_batch, et_filters),
-        "Element types for data batch and filters do not match (data batch element type: ",
-        et_batch,
-        ", filters element type: ",
-        et_filters,
-        ").");
-
     Rank data_batch_filters_rank{Rank::dynamic()};
 
     NODE_VALIDATION_CHECK(
@@ -370,7 +356,7 @@ std::tuple<element::Type, PartialShape>
         batch_output_shape[i + 2] = data_output_shape[i];
     }
 
-    return std::make_tuple(et_result, batch_output_shape);
+    return batch_output_shape;
 }
 
 //

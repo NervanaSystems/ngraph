@@ -33,7 +33,6 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -42,6 +41,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
@@ -3243,7 +3243,6 @@ TEST(cpu_quant_fusion, qconv_relu)
             input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
         auto q_weights = std::make_shared<op::Quantize>(
             weights, weights_scale, int8_zero, element::i8, AxisSet{}, round_mode);
-        auto requant_scale = (input_scale * weights_scale) / output_scale;
         auto conv = std::make_shared<op::QuantizedConvolution>(q_input,
                                                                q_weights,
                                                                Strides{1, 1},
@@ -3251,7 +3250,16 @@ TEST(cpu_quant_fusion, qconv_relu)
                                                                CoordinateDiff{0, 0},
                                                                CoordinateDiff{0, 0},
                                                                Strides{1, 1},
-                                                               requant_scale);
+                                                               input_scale,
+                                                               uint8_zero,
+                                                               weights_scale,
+                                                               int8_zero,
+                                                               output_scale,
+                                                               int8_zero,
+                                                               element::i8,
+                                                               AxisSet{},
+                                                               AxisSet{},
+                                                               AxisSet{});
         auto dq = std::make_shared<op::Dequantize>(
             conv, output_scale, int8_zero, element::f32, AxisSet{});
         auto relu = std::make_shared<op::Relu>(dq);
