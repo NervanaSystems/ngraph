@@ -73,8 +73,20 @@ namespace ngraph
                                      size_t filter_in_channel_axis,
                                      size_t out_batch_axis,
                                      size_t out_channel_axis,
-                                     const float requant_scale = 1.0f)
+                                     const float* input_scale = nullptr,
+                                     const INPUT* input_zero_point = nullptr,
+                                     const float* filter_scale = nullptr,
+                                     const FILTER* filter_zero_point = nullptr,
+                                     const float* output_scale = nullptr,
+                                     const OUTPUT* output_zero_point = nullptr)
             {
+                bool is_quantized = false;
+                if (input_scale && input_zero_point && filter_scale && filter_zero_point &&
+                    output_scale && output_zero_point)
+                {
+                    is_quantized = true;
+                }
+
                 auto old_mode = std::fegetround();
                 std::fesetround(FE_TONEAREST);
                 // Comments throughout assume without loss of generality that:
@@ -213,6 +225,11 @@ namespace ngraph
                             {
                                 ACCUMULATION in_v = in[in_idx];
                                 ACCUMULATION f_v = filter[filter_idx];
+                                if (is_quantized)
+                                {
+                                    in_v = in_v - *input_zero_point;
+                                    f_v = f_v - *filter_zero_point;
+                                }
                                 result += in_v * f_v;
                                 in_idx += in_channel_stride;
                                 filter_idx += filter_in_channel_stride;
@@ -221,8 +238,16 @@ namespace ngraph
                         ++in_it;
                         ++filter_it;
                     }
-                    out[out_transform.index(out_coord)] =
-                        static_cast<OUTPUT>(result * requant_scale);
+                    if (is_quantized)
+                    {
+                        float scale = *input_scale * *filter_scale / *output_scale;
+                        out[out_transform.index(out_coord)] = static_cast<OUTPUT>(
+                            std::round(static_cast<float>(result) * scale) + *output_zero_point);
+                    }
+                    else
+                    {
+                        out[out_transform.index(out_coord)] = result;
+                    }
                 }
                 std::fesetround(old_mode);
             }
@@ -242,7 +267,12 @@ namespace ngraph
                              const CoordinateDiff& in_pad_below,
                              const CoordinateDiff& in_pad_above,
                              const Strides& in_dilation,
-                             const float requant_scale = 1.0f)
+                             const float* input_scale = nullptr,
+                             const INPUT* input_zero_point = nullptr,
+                             const float* filter_scale = nullptr,
+                             const FILTER* filter_zero_point = nullptr,
+                             const float* output_scale = nullptr,
+                             const OUTPUT* output_zero_point = nullptr)
 
             {
                 general_convolution<INPUT, FILTER, OUTPUT, ACCUMULATION>(in,
@@ -262,7 +292,12 @@ namespace ngraph
                                                                          1,
                                                                          0,
                                                                          1,
-                                                                         requant_scale);
+                                                                         input_scale,
+                                                                         input_zero_point,
+                                                                         filter_scale,
+                                                                         filter_zero_point,
+                                                                         output_scale,
+                                                                         output_zero_point);
             }
 
             template <typename INPUT,
