@@ -142,6 +142,8 @@ set (SRC
     op/experimental/dyn_broadcast.hpp
     op/experimental/dyn_pad.cpp
     op/experimental/dyn_pad.hpp
+    op/experimental/dyn_replace_slice.cpp
+    op/experimental/dyn_replace_slice.hpp
     op/experimental/dyn_reshape.cpp
     op/experimental/dyn_reshape.hpp
     op/experimental/dyn_slice.cpp
@@ -318,6 +320,8 @@ set (SRC
     op/fused/group_conv.cpp
     op/fused/group_conv_transpose.hpp
     op/fused/group_conv_transpose.cpp
+    op/fused/gru_cell.cpp
+    op/fused/gru_cell.hpp
     op/fused/leaky_relu.cpp
     op/fused/leaky_relu.hpp
     op/fused/lstm_cell.cpp
@@ -328,6 +332,8 @@ set (SRC
     op/fused/normalize.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/rnn_cell.cpp
+    op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
     op/fused/shuffle_channels.cpp

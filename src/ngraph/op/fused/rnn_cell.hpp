@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/activation_functions.hpp"
 #include "ngraph/op/util/fused_op.hpp"
@@ -32,47 +31,42 @@ namespace ngraph
     namespace op
     {
         ///
-        /// \brief      Class for lstm cell node.
+        /// \brief      Class for RNN cell node.
         ///
         /// \note       It follows notation and equations defined as in ONNX standard:
-        ///             https://github.com/onnx/onnx/blob/master/docs/Operators.md#LSTM
+        ///             https://github.com/onnx/onnx/blob/master/docs/Operators.md#RNN
         ///
-        ///             Note this class represents only single *cell* and not whole LSTM *layer*.
+        ///             Note this class represents only single *cell* and not whole RNN *layer*.
         ///
-        class LSTMCell : public util::FusedOp, public util::RNNCellBase
+        class RNNCell : public util::FusedOp, public util::RNNCellBase
         {
         public:
             ///
-            /// \brief      Constructs LSTMCell node.
+            /// \brief      Constructs RNNCell node.
             ///
             /// \param[in]  X            The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W            The weight tensor with shape: [4*hidden_size, input_size].
+            /// \param[in]  W            The weight tensor with shape: [hidden_size, input_size].
             /// \param[in]  R            The recurrence weight tensor with shape:
-            ///                             [4*hidden_size, hidden_size].
+            ///                             [hidden_size, hidden_size].
             /// \param[in]  H_t          The hidden state tensor at current time step with shape:
-            ///                             [batch_size, hidden_size].
-            /// \param[in]  C_t          The cell state tensor at current time step with shape:
             ///                             [batch_size, hidden_size].
             /// \param[in]  hidden_size  The number of hidden units for recurrent cell.
             ///
-            LSTMCell(const std::shared_ptr<Node>& X,
-                     const std::shared_ptr<Node>& W,
-                     const std::shared_ptr<Node>& R,
-                     const std::shared_ptr<Node>& H_t,
-                     const std::shared_ptr<Node>& C_t,
-                     std::size_t hidden_size);
+            RNNCell(const std::shared_ptr<Node>& X,
+                    const std::shared_ptr<Node>& W,
+                    const std::shared_ptr<Node>& R,
+                    const std::shared_ptr<Node>& H_t,
+                    std::size_t hidden_size);
 
             ///
-            /// \brief      Constructs LSTMCell node.
+            /// \brief      Constructs RNNCell node.
             ///
             /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W                 The weight tensor with shape: [4*hidden_size, input_size].
+            /// \param[in]  W                 The weight tensor with shape: [hidden_size, input_size].
             /// \param[in]  R                 The recurrence weight tensor with shape:
-            ///                               [4*hidden_size, hidden_size].
+            ///                               [hidden_size, hidden_size].
             /// \param[in]  H_t               The hidden state tensor at current time step with
             ///                               shape: [batch_size, hidden_size].
-            /// \param[in]  C_t               The cell state tensor at current time step with shape:
-            ///                               [batch_size, hidden_size].
             /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
             /// \param[in]  activations       The vector of activation functions used inside
             ///                               recurrent cell.
@@ -82,35 +76,28 @@ namespace ngraph
             ///                               in order respective to activation list.
             /// \param[in]  clip              The value defining clipping range [-clip, clip] on
             ///                               input of activation functions.
-            /// \param[in]  input_forget      Controls coupling input and forget gates.
             ///
-            LSTMCell(const std::shared_ptr<Node>& X,
-                     const std::shared_ptr<Node>& W,
-                     const std::shared_ptr<Node>& R,
-                     const std::shared_ptr<Node>& H_t,
-                     const std::shared_ptr<Node>& C_t,
-                     std::size_t hidden_size,
-                     const std::vector<std::string>& activations,
-                     const std::vector<float>& activation_alpha,
-                     const std::vector<float>& activation_beta,
-                     float clip,
-                     bool input_forget);
+            RNNCell(const std::shared_ptr<Node>& X,
+                    const std::shared_ptr<Node>& W,
+                    const std::shared_ptr<Node>& R,
+                    const std::shared_ptr<Node>& H_t,
+                    std::size_t hidden_size,
+                    const std::vector<std::string>& activations,
+                    const std::vector<float>& activation_alpha,
+                    const std::vector<float>& activation_beta,
+                    float clip);
 
             ///
-            /// \brief      Constructs LSTMCell node.
+            /// \brief      Constructs RNNCell node.
             ///
             /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W                 The weight tensor with shape: [4*hidden_size, input_size].
+            /// \param[in]  W                 The weight tensor with shape: [hidden_size, input_size].
             /// \param[in]  R                 The recurrence weight tensor with shape:
-            ///                               [4*hidden_size, hidden_size].
+            ///                               [hidden_size, hidden_size].
             /// \param[in]  H_t               The hidden state tensor at current time step with
             ///                               shape: [batch_size, hidden_size].
-            /// \param[in]  C_t               The cell state tensor at current time step with
-            ///                               shape: [batch_size, hidden_size].
             /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
-            /// \param[in]  B                 The bias tensor for input gate with shape: [8*hidden_size].
-            /// \param[in]  P                 The weight tensor for peepholes with shape:
-            ///                               [3*hidden_size] - 3 equals to only iof gates.
+            /// \param[in]  B                 The bias tensor for input gate with shape: [2*hidden_size].
             /// \param[in]  activations       The vector of activation functions used inside
             ///                               recurrent cell.
             /// \param[in]  activation_alpha  The vector of alpha parameters for activation
@@ -119,57 +106,35 @@ namespace ngraph
             ///                               in order respective to activation list.
             /// \param[in]  clip              The value defining clipping range [-clip, clip] on
             ///                               input of activation functions.
-            /// \param[in]  input_forget      Controls coupling input and forget gates.
             ///
-            LSTMCell(const std::shared_ptr<Node>& X,
-                     const std::shared_ptr<Node>& W,
-                     const std::shared_ptr<Node>& R,
-                     const std::shared_ptr<Node>& H_t,
-                     const std::shared_ptr<Node>& C_t,
-                     std::size_t hidden_size,
-                     const std::shared_ptr<Node>& B,
-                     const std::shared_ptr<Node>& P,
-                     const std::vector<std::string>& activations =
-                         std::vector<std::string>{"sigmoid", "tanh", "tanh"},
-                     const std::vector<float>& activation_alpha = {},
-                     const std::vector<float>& activation_beta = {},
-                     float clip = 0.f,
-                     bool input_forget = false);
+            RNNCell(const std::shared_ptr<Node>& X,
+                    const std::shared_ptr<Node>& W,
+                    const std::shared_ptr<Node>& R,
+                    const std::shared_ptr<Node>& H_t,
+                    std::size_t hidden_size,
+                    const std::shared_ptr<Node>& B,
+                    const std::vector<std::string>& activations = std::vector<std::string>{"tanh"},
+                    const std::vector<float>& activation_alpha = {},
+                    const std::vector<float>& activation_beta = {},
+                    float clip = 0.f);
 
             virtual void pre_validate_and_infer_types() override;
             virtual NodeVector decompose_op() const override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            bool get_input_forget() const { return m_input_forget; }
         private:
             std::shared_ptr<Node> get_bias() const;
-            NodeVector get_peephole_weigths() const;
 
             /// brief Add and initialize bias input to all zeros.
             void add_default_bias_input();
-            /// brief Add and initialize peepholes weights input to all zeros.
-            void add_default_peepholes_input();
 
             ///
             /// \brief The Activation function f.
             ///
             util::ActivationFunction m_activation_f;
-            ///
-            /// \brief The Activation function g.
-            ///
-            util::ActivationFunction m_activation_g;
-            ///
-            /// \brief The Activation function h.
-            ///
-            util::ActivationFunction m_activation_h;
-            ///
-            /// \brief      Controls whether to couple input and forget gates.
-            ///
-            bool m_input_forget = false;
 
-            static constexpr std::size_t s_gates_count{4};
-            static constexpr std::size_t s_peepholes_count{3};
+            static constexpr std::size_t s_gates_count{1};
         };
     }
 }
