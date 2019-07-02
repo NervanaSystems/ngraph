@@ -21,7 +21,6 @@ set(SRC
     compiler.cpp
     lowerer.cpp
     memory_manager.cpp
-    helpers.cpp
     pass/mlir_subgraph_extraction.cpp
     pass/mlir_subgraph_extraction.hpp
 )
