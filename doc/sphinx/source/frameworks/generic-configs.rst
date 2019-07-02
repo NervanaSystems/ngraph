@@ -37,7 +37,7 @@ documentation.
 Activate logtrace-related environment variables
 ===============================================
 
-Another generic configuration option is to activate ``NGRAPH_CPU_DEBUG_TRACER``,
+Another configuration option is to activate ``NGRAPH_CPU_DEBUG_TRACER``,
 a runtime environment variable that supports extra logging and debug detail. 
 
 This is a useful tool for data scientists interested in outputs from logtrace 
@@ -175,10 +175,11 @@ Convolution shapes
 ``OMP_NUM_THREADS``
 ^^^^^^^^^^^^^^^^^^^
 
-The best resource for this configuration option is the `gnu.org site`_.
-``OMP_NUM_THREADS`` defaults to the number of logical cores. To check the 
-number of cores on your system, you can run the following on the command-line to 
-see the details of your CPU: 
+The best resource for this configuration option is the Intel® OpenMP\* docs 
+at the following link: `Intel OpenMP documentation`_. ``OMP_NUM_THREADS`` 
+defaults to the number of logical cores. To check the number of cores on your 
+system, you can run the following on the command-line to see the details 
+of your CPU:
 
 .. code-block:: console
 
@@ -221,7 +222,7 @@ thus can make more efficient use of the underlying hardware.
 .. _PyPI: https://pypi.org/project/ngraph-core
 .. _KMP: https://software.intel.com/en-us/node/522691
 .. _MKL-DNN: https://github.com/intel/mkl-dnn
-.. _gnu.org site: https://gcc.gnu.org/onlinedocs/libgomp/Environment-Variables.html
+.. _Intel OpenMP documentation: https://www.openmprtl.org/documentation
 .. _Movidius: https://www.movidius.com/
 .. _BUILDING.md: https://github.com/NervanaSystems/ngraph/blob/master/python/BUILDING.md
 .. _GCC wiki for details: https://gcc.gnu.org/wiki/FunctionMultiVersioning

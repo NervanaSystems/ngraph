@@ -58,7 +58,7 @@ files to another format with a tool like ``pypandoc`` and share a link
 to your efforts on our `wiki`_. 
 
 Another option is to fork the `ngraph repo`_, essentially snapshotting it at 
-that point in time, and to build Jupyter\* notebook or other set of docs around 
+that point in time, and to build a Jupyter\* notebook or other set of docs around 
 it for a specific use case. Add a note on our wiki to show us what you 
 did; new and novel applications may have their projects highlighted on an 
 upcoming `ngraph.ai`_ release.   
