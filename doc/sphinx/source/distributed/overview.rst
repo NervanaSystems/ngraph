@@ -54,6 +54,4 @@ More communication ops support is in the works. See also:
 
 
 .. _arxiv.org/abs/1709.05011: https://arxiv.org/format/1709.05011
-.. _based on the synchronous: https://arxiv.org/format/1602.06709 
-
-
+.. _based on the synchronous: https://arxiv.org/format/1602.06709

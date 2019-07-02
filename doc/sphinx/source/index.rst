@@ -111,13 +111,5 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
 .. contribution/governance.rst
 
 
-Indices and tables
-==================
-
-   * :ref:`search`
-   * :ref:`genindex`
-
-
-
 .. nGraph: https://www.ngraph.ai
 .. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/

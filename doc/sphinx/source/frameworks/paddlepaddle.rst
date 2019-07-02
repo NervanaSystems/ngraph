@@ -29,8 +29,8 @@ Integration design
 
 Key design criteria for nGraph-PaddlePaddle integration includes:
 
-#. Minimal intermediate links between nGraph and PaddlePaddle, to reduce latency
-   and improve performance.
+#. Minimal intermediate links between nGraph and PaddlePaddle, to reduce
+   latency and improve performance.
 #. Close to no switching cost for end users of PaddlePaddle framework.
 #. Ease of maintenance.
 

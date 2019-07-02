@@ -12,8 +12,8 @@ Pattern matcher
 
 The nGraph Compiler is an optimizing compiler. As such, it provides a way to
 capture a given :term:`function graph` and perform a series of optimization
-passes over that graph. The result is a semantically-equivalent graph that, when
-executed using any :doc:`backend <../../backend-support/index>`, has
+passes over that graph. The result is a semantically-equivalent graph that,
+when executed using any :doc:`backend <../../backend-support/index>`, has
 optimizations inherent at the hardware level: superior runtime characteristics
 to increase training performance or reduce inference latency.
 
@@ -45,15 +45,16 @@ graph. These steps may be cycled or recycled as needed:
 #. Locate a list of potentially-transformable subgraphs in the given graph.
 #. Transform the selected candidates into semantically-equivalent subgraphs 
    that execute faster, or with less memory (or both). 
-#. Verify that the optimization pass performs correctly, with any or all expected 
+#. Verify that the optimization pass performs correctly, with any or all
+   expected 
    transformations, with the ``NGRAPH_SERIALIZE_TRACING`` option, which 
    serializes a graph in the `json` format after a pass.
 #. Measure and evaluate your performance improvements with ``NGRAPH_CPU_TRACING``, 
    which produces timelines compatible with ``chrome://tracing``.
 
-Optimizations can be experimented upon without using any backend by registering 
-a pass with pass manager (``Manager``), calling ``run_passes`` on a function, and 
-then inspecting the transformed graph. 
+Optimizations can be experimented upon without using any backend by
+registering a pass with pass manager (``Manager``), calling ``run_passes`` on
+a function, and then inspecting the transformed graph. 
 
 Optimization passes can be programmed ahead of time if you know or can predict 
 what your graph will look like when it's ready to be executed (in other words: 
@@ -70,10 +71,10 @@ that describes the following arithmetic expression:
 
 :math:`a + b * 1` or :math:`Add(a, Mul(b, 1))` 
 
-In the above expressions, `1` is an identity element; any element multiplied by 
-the identity element is equal to itself. In other words, the original expression 
-:math:`a + b * 1` is exactly equivalent to the expression :math:`a + b`, so we 
-can eliminate this extra multiplication step.
+In the above expressions, `1` is an identity element; any element multiplied
+by the identity element is equal to itself. In other words, the original
+expression :math:`a + b * 1` is exactly equivalent to the expression :math:`a
++ b`, so we can eliminate this extra multiplication step.
 
 The writer of an optimization pass which uses algebraic simplification would 
 probably want to first ``locate`` all multiplication expressions where 

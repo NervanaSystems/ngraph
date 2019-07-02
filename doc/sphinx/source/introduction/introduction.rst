@@ -20,10 +20,10 @@ to accelerate the performance of deep learning for both training and inference.
 **Optimize software to accelerate performance**
 
 nGraph Compiler, an open source deep learning compiler, is Intel's solution to
-deliver performance via software optimization. nGraph provides developers with a
-way to accelerate the performance of deep learning ASICs via software and to
-provide a significant increase in performance for standard hardware targets such
-as CPUs and GPUs. For deploying scalable AI solutions, nGraph uses kernel
+deliver performance via software optimization. nGraph provides developers with
+a way to accelerate the performance of deep learning ASICs via software and to
+provide a significant increase in performance for standard hardware targets
+such as CPUs and GPUs. For deploying scalable AI solutions, nGraph uses kernel
 libraries, which are a popular method to improve deep learning performance.
 Where kernel libraries are available and perform well, we use them.
 
@@ -48,7 +48,9 @@ with PlaidML addresses the third problem. nGraph applies graph-level
 optimizations by taking the computational graph from a deep learning framework
 such as TensorFlow\* and reconstructs it with nGraph :abbr: `IR (Intermediate
 Representation)`. nGraph IR centralizes computational graphs from various
-frameworks and provides a unified way to connect backends for targeted hardware.
+frameworks and provides a unified way to connect backends for targeted
+hardware.
+
 To address the third problem, nGraph is integrated with PlaidML, a tensor
 compiler, which generates code in LLVM, OpenCL, OpenGL, and Metal. Low-level
 optimizations are automatically applied to the generated code, resulting in a
