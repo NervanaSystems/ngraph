@@ -447,7 +447,8 @@ mlir::StaticFloatMemRef* MLIRCompiler::allocate_memref_descriptor(mlir::Type typ
 
 void MLIRCompiler::dump_mlir_module(const std::string msg)
 {
-    if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
+    char* env_var = std::getenv("NGRAPH_MLIR_DUMP_ALL");
+    if (env_var != nullptr && strlen(env_var) == 1 && env_var[0] != '0')
     {
         llvm::dbgs() << "*** " << msg << " ***\n";
         m_module->dump();
