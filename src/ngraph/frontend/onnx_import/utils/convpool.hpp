@@ -22,6 +22,7 @@
 #include "core/node.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -85,6 +86,14 @@ namespace ngraph
             {
                 return get_pads(node, get_kernel_shape(node));
             }
+
+            /// \brief      Gets the 'auto_pad' attribute value.
+            ///
+            /// \param[in]  node  The ONNX node we query for attribute.
+            ///
+            /// \return     The nGraph PadType object representing 'auto_pad' attribute value.
+            ///
+            ngraph::op::PadType get_auto_pad(const Node& node);
 
             /// \brief Create an nGraph pooling operation based on an ONNX pooling op.
             ///
