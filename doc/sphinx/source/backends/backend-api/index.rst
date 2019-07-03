@@ -7,4 +7,3 @@ Backend
 .. doxygenclass:: ngraph::runtime::Backend
    :project: ngraph
    :members:
-

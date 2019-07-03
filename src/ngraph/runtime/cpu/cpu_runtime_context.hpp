@@ -37,7 +37,6 @@ namespace ngraph
     {
         class AlignedBuffer;
     }
-
     class State;
 }
 
