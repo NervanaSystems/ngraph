@@ -363,10 +363,13 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
-setup_requires = [
-    'numpy==1.15.4; python_version == "3.4"',
-    'numpy==1.16.4; python_version != "3.4"',
-]
+with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
+    requirements = req.read().splitlines()
+    setup_requires = [
+        item for item in requirements if item.strip().startswith('numpy')
+    ]
+
+
 try:
     import pip
     try:
@@ -378,9 +381,6 @@ try:
 except Exception:
     pass
 
-
-with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
-    requirements = req.read().splitlines()
 
 setup(
     name='ngraph-core',
