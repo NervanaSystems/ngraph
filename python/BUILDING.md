@@ -2,10 +2,10 @@
 
 ## Building nGraph Python Wheels
 
-If you want to try a newer version of nGraph's Python API than is available from
-PyPI, you can build your own latest version from the source code. This 
-process is very similar to what is outlined in our [ngraph_build] instructions 
-with two important differences:
+If you want to try a newer version of nGraph's Python API than is available 
+from PyPI, you can build the latest version from source code. This process is 
+very similar to what is outlined in our [ngraph_build] instructions with two 
+important differences:
 
 1. You must specify: `-DNGRAPH_PYTHON_BUILD_ENABLE=ON` and `-DNGRAPH_ONNX_IMPORT_ENABLE=ON` 
    when running `cmake`.
@@ -18,7 +18,7 @@ with two important differences:
 
 After this procedure completes, the `ngraph/build/python/dist` directory should 
 contain the Python packages of the version you cloned. For example, if you 
-checked out and built `0.21`, you may see something like: 
+checked out and built `0.21` for Python 3.7, you might see something like: 
 
     $ ls python/dist/
     ngraph-core-0.21.0rc0.tar.gz  
