@@ -18,9 +18,36 @@
 Contributing to documentation
 =============================
 
-.. important:: Read this for changes affecting **anything** in ``ngraph/doc``
+.. note:: Tips for contributors who are new to the highly-dynamic 
+   environment of documentation in AI software:
 
-For updates to the nGraph Library ``/doc`` repo, please submit a PR with 
+   * A good place to start is "document something you figured out how to 
+     get working". Content changes and additions should be targeted at 
+     something more specific than "developers". If you don't understand 
+     how varied and wide the audience is, you'll inadvertently break or block 
+     things.
+
+   * There are experts who work on all parts of the stack; try asking how 
+     documentation changes ought to be made in their respective sections.
+
+   * Start with something small. It is okay to add a "patch" to fix a typo 
+     or suggest a word change; larger changes to files or structure require 
+     research and testing first, as well as some logic for why you think 
+     something needs changed.
+
+   * Most documentation should wrap at about ``80``. We do our best to help 
+     authors source-link and maintain their own code and contributions; 
+     overwriting something already documented doesn't always improve it.
+
+   * Be careful editing files with links already present in them; deleting 
+     links to papers, citations, or sources is discouraged.
+
+   * Please do not submit Jupyter* notebook code to the nGraph Library
+     or core repos; best practice is to maintain any project-specific 
+     examples, tests, or walk-throughs in a separate repository and to link 
+     back to the stable ``op`` or Ops that you use in your project.
+
+For updates within the nGraph Library ``/doc`` repo, please submit a PR with 
 any changes or ideas you'd like integrated. This helps us maintain trackability 
 with respect to changes made, additions, deletions, and feature requests.
 
@@ -36,7 +63,6 @@ it for a specific use case. Add a note on our wiki to show us what you
 did; new and novel applications may have their projects highlighted on an 
 upcoming `ngraph.ai`_ release.   
 
-
 .. note:: Please do not submit Jupyter* notebook code to the nGraph Library 
    or core repos; best practice is to maintain any project-specific examples, 
    tests, or walk-throughs in a separate repository.
@@ -45,9 +71,11 @@ upcoming `ngraph.ai`_ release.
 Documenting source code examples 
 --------------------------------
 
-When **verbosely** documenting functionality of specific sections of code -- whether 
-they are entire code blocks within a file, or code strings that are **outside** 
-the nGraph Library's `documentation repo`_, here is an example of best practice: 
+When **verbosely** documenting functionality of specific sections of code -- 
+whether they are entire code blocks within a file, or code strings that are 
+**outside** the nGraph Library's `documentation repo`_, here is an example 
+of best practice: 
+
 
 Say a file has some interesting functionality that could benefit from more 
 explanation about one or more of the pieces in context. To keep the "in context" 
@@ -73,8 +101,7 @@ the folder where the ``Makefile`` is that generates the documentation you're
 writing. 
 
 See the **note** at the bottom of this page for more detail about how 
-this works in the current |version| version of Intel nGraph library 
-documentation. 
+this works in the current |version| version of nGraph Library documentation.
 
 
 Adding captions to code blocks 
