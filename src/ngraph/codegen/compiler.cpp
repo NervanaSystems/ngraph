@@ -33,6 +33,12 @@
 #include <clang/FrontendTool/Utils.h>
 #include <clang/Lex/Preprocessor.h>
 #include <clang/Lex/PreprocessorOptions.h>
+
+#ifdef _WIN32
+#include <clang/Driver/Driver.h>
+#include "toolchains/MSVC.h"
+#endif
+
 #include <llvm/ADT/Statistic.h>
 #include <llvm/ExecutionEngine/MCJIT.h> // forces JIT to link in
 #include <llvm/IR/Module.h>
@@ -57,6 +63,8 @@
 #define IS_RTTI_ENABLED __has_feature(cxx_rtti)
 #elif defined(__GNUC__)
 #define IS_RTTI_ENABLED __GXX_RTTI
+#elif defined(_MSC_VER)
+#define IS_RTTI_ENABLED _CPPRTTI
 #else
 // Unknown compiler so assume RTTI is enabled by default
 #define IS_RTTI_ENABLED 1
@@ -190,6 +198,25 @@ void codegen::CompilerCore::initialize()
     // Prevent Eigen from using any LGPL3 code
     args.push_back("-DEIGEN_MPL2_ONLY");
 
+#ifdef _WIN32
+    // The Optimization Level (see below) parameter can be ignored on Windows
+    args.push_back("-O3");
+
+    // prevent macros from windows.h
+    args.push_back("-DNOMINMAX");
+
+    // let the code be linked with TBB
+    args.push_back("-D_MT");
+
+    // no boring deprecation
+    args.push_back("-D_CRT_SECURE_NO_WARNINGS");
+
+    // the compiler must be compartible with MSVC
+    args.push_back("-fms-extensions");
+    args.push_back("-fms-compatibility");
+    args.push_back("-fms-compatibility-version=19");
+#endif
+
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
@@ -227,8 +254,13 @@ void codegen::CompilerCore::initialize()
     auto LO = m_compiler->getInvocation().getLangOpts();
     LO->CPlusPlus = 1;
     LO->CPlusPlus11 = 1;
+#ifndef _WIN32
     // Strange but need to manually disable c++14
     LO->CPlusPlus14 = 0;
+#else
+    // The STD implementation for MSVC 17 requires c++14
+    LO->CPlusPlus14 = 1;
+#endif
     LO->Bool = 1;
     LO->Exceptions = 1;
     LO->CXXExceptions = 1;
@@ -410,10 +442,10 @@ std::string codegen::CompilerCore::generate_pch(const std::string& source)
 
 void codegen::CompilerCore::configure_search_path()
 {
+
 #ifdef USE_BUILTIN
     load_headers_from_resource();
 #endif
-
 #ifdef EIGEN_HEADERS_PATH
     add_header_search_path(EIGEN_HEADERS_PATH);
 #endif
@@ -440,6 +472,76 @@ void codegen::CompilerCore::configure_search_path()
     else
     {
         add_header_search_path("/usr/include");
+    }
+
+#elif defined(_WIN32)
+    // Add base toolchain-supplied header paths
+    // We would use the MSVC toolchain definition in clang/lib/Driver/ToolChains/MSVC.h
+    // (copied to toolchains/MSVC.h). Unfortunately, the toolchain contains methods
+    // to get paths to libraries, not headers, and some magic string manipulation
+    // is required.
+
+    auto& TO = m_compiler->getInvocation().getTargetOpts();
+    std::string Path = GetExecutablePath(m_source_name.c_str());
+
+    using clang::driver::toolchains::MSVCToolChain;
+    using clang::driver::Driver;
+
+    Driver TheDriver(Path, TO.Triple, m_compiler->getDiagnostics());
+    llvm::opt::InputArgList Args;
+    Triple TT(TO.Triple);
+
+    MSVCToolChain MSVC(TheDriver, TT, Args);
+
+    add_header_search_path(MSVC.getSubDirectoryPath(
+        MSVCToolChain::SubDirectoryType::Include));
+
+    if (MSVC.useUniversalCRT())
+    {
+        std::string universal_crt_path;
+        if (MSVC.getUniversalCRTLibraryPath(universal_crt_path))
+        {
+            int libidx = universal_crt_path.find("Lib", 0);
+            if (libidx !=  std::string::npos)
+            {
+                 universal_crt_path.replace(libidx, 3, "Include");
+
+                // remove the last path segment - architecture
+                int archidx = universal_crt_path.find_last_of('\\');
+                std::string universal_crt_includes_path = universal_crt_path
+                    .substr(0, archidx);
+
+                // Universal CRT to the search path
+                add_header_search_path(universal_crt_includes_path);
+            }
+        }
+    }
+
+    std::string windows_sdk_path;
+    MSVC.getWindowsSDKLibraryPath(windows_sdk_path);
+
+    int libidx = windows_sdk_path.find("Lib", 0);
+    if (libidx != std::string::npos)
+    {
+        // replacing "Lib" to "Include" in the SDK path
+        windows_sdk_path.replace(libidx, 3, "Include");
+
+        // remove the last path segment - architecture
+        int archidx = windows_sdk_path.find_last_of('\\');
+        std::string windows_sdk_includes_path = windows_sdk_path
+            .substr(0, archidx);
+
+        // remove the last path segment and get the basic path
+        int lastidx = windows_sdk_includes_path.find_last_of('\\');
+        std::string windows_sdk_includes_basic_path = windows_sdk_includes_path
+            .substr(0, lastidx + 1);
+
+        add_header_search_path(windows_sdk_includes_basic_path + "shared");
+        add_header_search_path(windows_sdk_includes_basic_path + "um");
+        add_header_search_path(windows_sdk_includes_basic_path + "winrt");
+
+        // From Clang
+        add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
     }
 #else
     // Add base toolchain-supplied header paths

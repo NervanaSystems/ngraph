@@ -354,9 +354,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
-# So many type_prop tests these days that we need to set /bigobj flag for MSVS.
+# So many type_prop tests these days that we need to set /bigobj flag for MSVC.
 # We should probably split up type_prop.cpp.
-if (MSVS)
+if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
 endif()
 
@@ -410,7 +410,7 @@ if (NGRAPH_ONNXIFI_ENABLE)
 endif()
 
 # If all the runtime libraries are installed into one location, that will make life easier.
-if (MSVS)
+if (MSVC)
     add_custom_target(unit-test-check
         COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
         COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}

@@ -28,6 +28,13 @@
 #include <tbb/flow_graph.h>
 
 #if !defined(NGRAPH_DEX_ONLY)
+#ifdef _WIN32
+// We must export type_info from itself because the JITed code uses RTTI.
+#pragma comment(linker, "/export:??_7type_info@@6B@")
+#pragma comment(linker, "/export:?__type_info_root_node@@3U__type_info_node@@A")
+#pragma comment(linker, "/export:?nothrow@std@@3Unothrow_t@1@B")
+#pragma comment(linker, "/export:?_Facet_Register@std@@YAXPEAV_Facet_base@1@@Z")
+#endif
 #include "ngraph/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
@@ -301,6 +308,13 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
 static StaticInitializers s_static_initializers(s_output_dir);
 
 #define TI(x) type_index(typeid(x))
+
+#ifdef _MSC_VER
+// MSVC (and clang on Windows via clang-cl) instantiates a template
+// even when we know that it will be instantiated in cpu_emitter.cpp.
+// It leads to linker error: 'error: duplicate symbol'.
+#include "ngraph/runtime/cpu/cpu_emitter_templates.hpp"
+#endif
 
 static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Add), &runtime::cpu::CPU_Emitter::emit<op::Add>},
@@ -646,6 +660,9 @@ using namespace ngraph::runtime;
             shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
             string type = tv->get_element_type().c_type_string();
             writer << "static " << type << "* " << tv->get_name() << " = ((" << type << "*)("
+#ifdef _WIN32
+                   << "0x" // just fixes the implementation dependency Windows/Linux
+#endif
                    << c->get_data_ptr() << "));\n";
 
             auto output_tensor = &node->get_output_tensor();
@@ -1067,7 +1084,6 @@ using namespace ngraph::runtime;
 
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
-
     m_compiler->set_precompiled_header_source(pch_header_source);
 
     auto codegen_module = m_compiler->compile(code);
@@ -2059,7 +2075,6 @@ void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,
 }
 
 #if !defined(NGRAPH_DEX_ONLY)
-
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     CodeWriter& writer,
     Node* node,

@@ -21,6 +21,17 @@
 #pragma once
 
 R"(
+#ifdef _WIN32
+// Unfortunately, MSVC Runtime doesn't export the sized delete operator
+// void operator delete ( void* ptr, std::size_t sz ) noexcept; (since c++14)
+// (mangled name: ??3@YAXPEAX_K@Z). It may be fixed later, but now we have to define
+// a work around.
+void operator delete(void* ptr, std::size_t sz) noexcept
+{
+    ::operator delete(ptr);
+}
+#endif
+
 struct CPURuntimeContextCG
 {
     std::unique_ptr<tbb::flow::graph> tbb_graph;

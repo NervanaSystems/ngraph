@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "reduce_sum.hpp"
 
 namespace ngraph
@@ -24,6 +25,7 @@ namespace ngraph
         {
             namespace kernel
             {
+                CPU_BACKEND_API
                 void reduce_sum_all_1d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
@@ -33,6 +35,7 @@ namespace ngraph
                     reduce_sum_all<float, 1>(input, output, input_shape, output_shape, arena);
                 }
 
+                CPU_BACKEND_API
                 void reduce_sum_all_2d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
@@ -42,6 +45,7 @@ namespace ngraph
                     reduce_sum_all<float, 2>(input, output, input_shape, output_shape, arena);
                 }
 
+                CPU_BACKEND_API
                 void reduce_sum_2d_1rd_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
@@ -53,6 +57,7 @@ namespace ngraph
                         input, output, input_shape, output_shape, reduction_axes, arena);
                 }
 
+                CPU_BACKEND_API
                 void reduce_sum_all_4d_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
@@ -61,6 +66,8 @@ namespace ngraph
                 {
                     reduce_sum_all<float, 4>(input, output, input_shape, output_shape, arena);
                 }
+
+                CPU_BACKEND_API
                 void reduce_sum_4d_2rd_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,

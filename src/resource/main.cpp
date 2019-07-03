@@ -194,7 +194,9 @@ int main(int argc, char** argv)
                 {
                     std::string line;
 #ifdef _WIN32
-                    const int max_partial_size = 65500;
+                    // why 16300?
+                    // see https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?view=vs-2019
+                    const int max_partial_size = 16300;
                     out << "{\n";
                     bool first_line = true;
                     int partial_size = 0;

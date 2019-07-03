@@ -32,7 +32,7 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+extern "C" CPU_BACKEND_API runtime::BackendConstructor* get_backend_constructor_pointer()
 {
     class CPU_BackendConstructor : public runtime::BackendConstructor
     {

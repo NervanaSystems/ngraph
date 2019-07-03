@@ -48,7 +48,7 @@ if(NOT DEFINED LLVM_TARBALL_URL)
     endif()
 else()
     if(NOT DEFINED LLVM_SHA1_HASH)
-        message(FATAL_ERROR "Prebuilt LLVM: please provide LLVM_SHA_HASH.")
+        message(FATAL_ERROR "Prebuilt LLVM: please provide LLVM_SHA1_HASH.")
     endif()
 endif()
 
@@ -145,7 +145,7 @@ set(LLVM_LINK_LIBS
 
 if(APPLE)
     set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} curses z m)
-else()
+elseif(UNIX)
     set(LLVM_LINK_LIBS ${LLVM_LINK_LIBS} tinfo z m)
 endif()
 

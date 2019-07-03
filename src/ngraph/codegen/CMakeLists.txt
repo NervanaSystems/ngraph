@@ -31,8 +31,10 @@ add_library(codegen SHARED ${SRC})
 # LLVM binary builds are typically built without RTTI
 # The built-in headers are in a version-specific directory
 # This must be kept in sync with the LLVM + Clang version in use
-if(NOT WIN32)
+if(APPLE OR UNIX)
    set_source_files_properties(compiler.cpp PROPERTIES COMPILE_FLAGS "-fno-rtti")
+elseif(WIN32)
+   set_source_files_properties(compiler.cpp PROPERTIES COMPILE_FLAGS "/GR-")
 endif()
 
 get_target_property(LLVM_INCLUDE_DIR libllvm INTERFACE_INCLUDE_DIRECTORIES)
@@ -90,4 +92,7 @@ if (NGRAPH_CPU_ENABLE)
 endif()
 target_include_directories(codegen SYSTEM PRIVATE ${CMAKE_BINARY_DIR})
 target_link_libraries(codegen PRIVATE libllvm ngraph)
+if (WIN32)
+    target_link_libraries(codegen PRIVATE version.lib)
+endif()
 install(TARGETS codegen DESTINATION ${NGRAPH_INSTALL_LIB})
