@@ -650,7 +650,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
     this->add_matcher(m, callback);
 }
 
-void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with_multi_add()
+void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with_multiply_add()
 {
     auto input_shape = Shape{1, 3, 2, 2};
     auto input = std::make_shared<pattern::op::Label>(element::f32, input_shape);
@@ -702,6 +702,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
             if (multi_match->get_users().size() > 1)
             {
                 NGRAPH_DEBUG << "Add isn't the only user of Multiply's output";
+                return false;
+            }
+            if (pattern_map[broadcast1_input]->output(0).get_shape() !=
+                    pattern_map[gamma]->output(0).get_shape() ||
+                pattern_map[broadcast2_input]->output(0).get_shape() !=
+                    pattern_map[gamma]->output(0).get_shape())
+            {
+                NGRAPH_DEBUG << "shapes of Broadcast input and gamma do not match";
                 return false;
             }
 
