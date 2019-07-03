@@ -3,7 +3,6 @@
 Overview
 ========
 
-
 .. toctree: :
 .. :maxdepth: 1
 ..   
@@ -19,7 +18,7 @@ Bridges currently exist for the TensorFlow\* and MXNet\* frameworks.
 ONNX is not a framework; however, it can be used with nGraph's
 :doc:`../python_api/index` to import and execute ONNX models.
 
-.. figure:: ../graphics/2019_06_11_WholeStack.png
+.. figure:: ../graphics/FWBridgesnGraph.png
     :width: 733px
     :alt: JiT compiling of a computation
 
