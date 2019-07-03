@@ -48,7 +48,7 @@ ngraph::runtime::plaidml::pass::ReplicateCombination::ReplicateCombination()
         }
 
         replace_node(lower,
-                     std::make_shared<plaidml::op::Replicate>(upper->get_arguments().at(0),
+                     std::make_shared<plaidml::op::Replicate>(upper->get_argument(0),
                                                               std::move(axes)));
 
         return true;
