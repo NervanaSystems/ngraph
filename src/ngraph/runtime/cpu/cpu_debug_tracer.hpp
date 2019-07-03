@@ -28,7 +28,7 @@
 #include <utility>
 #include <vector>
 
-#include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {
@@ -55,6 +55,10 @@ namespace ngraph
                                      const std::string& in_out);
 
             private:
+                CPU_DebugTracer(const CPU_DebugTracer&) = delete;
+                CPU_DebugTracer(CPU_DebugTracer&&) = delete;
+                CPU_DebugTracer& operator=(const CPU_DebugTracer&) = delete;
+
                 void init_streams();
 
                 size_t m_serial_number;

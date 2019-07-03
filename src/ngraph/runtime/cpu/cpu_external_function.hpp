@@ -76,16 +76,16 @@ namespace ngraph
 #endif
             struct TensorTracerAttributes
             {
-                size_t number_of_elements;
-                ngraph::Shape t_shape;
-                element::Type type_of_element;
+                size_t m_number_of_elements;
+                ngraph::Shape m_t_shape;
+                element::Type m_type_of_element;
 
                 TensorTracerAttributes(const size_t size,
                                        const ngraph::Shape& shape,
                                        const element::Type& type)
-                    : number_of_elements(size)
-                    , t_shape(shape)
-                    , type_of_element(type)
+                    : m_number_of_elements(size)
+                    , m_t_shape(shape)
+                    , m_type_of_element(type)
                 {
                 }
             };
@@ -95,8 +95,8 @@ namespace ngraph
                 std::string Description;
                 std::vector<std::string> Outputs;
                 std::vector<std::string> Inputs;
-                std::vector<TensorTracerAttributes> outputs_tensor_attrs;
-                std::vector<TensorTracerAttributes> inputs_tensor_attrs;
+                std::vector<TensorTracerAttributes> m_outputs_tensor_attrs;
+                std::vector<TensorTracerAttributes> m_inputs_tensor_attrs;
 
                 OpAttributes(const std::string& desc,
                              const std::vector<std::string>& outputs,
@@ -106,8 +106,8 @@ namespace ngraph
                     : Description(desc)
                     , Outputs(outputs)
                     , Inputs(inputs)
-                    , outputs_tensor_attrs(out_t_attrs)
-                    , inputs_tensor_attrs(in_t_attrs)
+                    , m_outputs_tensor_attrs(out_t_attrs)
+                    , m_inputs_tensor_attrs(in_t_attrs)
                 {
                 }
             };

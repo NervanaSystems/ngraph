@@ -1253,23 +1253,23 @@ static void dump_one_kernel_with_type(runtime::cpu::CPU_DebugTracer& debug_trace
                                       const std::string& tensor_name,
                                       const std::string& in_out)
 {
-    switch (t_attrs.type_of_element.get_type_enum())
+    switch (t_attrs.m_type_of_element.get_type_enum())
     {
     case element::Type_t::f32:
         debug_tracer.dump_one_tensor<float>(
-            kernel_name, tensor, tensor_name, t_attrs.number_of_elements, t_attrs.t_shape, in_out);
+            kernel_name, tensor, tensor_name, t_attrs.m_number_of_elements, t_attrs.m_t_shape, in_out);
         break;
     case element::Type_t::i8:
         debug_tracer.dump_one_tensor<int8_t>(
-            kernel_name, tensor, tensor_name, t_attrs.number_of_elements, t_attrs.t_shape, in_out);
+            kernel_name, tensor, tensor_name, t_attrs.m_number_of_elements, t_attrs.m_t_shape, in_out);
         break;
     case element::Type_t::u8:
         debug_tracer.dump_one_tensor<uint8_t>(
-            kernel_name, tensor, tensor_name, t_attrs.number_of_elements, t_attrs.t_shape, in_out);
+            kernel_name, tensor, tensor_name, t_attrs.m_number_of_elements, t_attrs.m_t_shape, in_out);
         break;
     case element::Type_t::i32:
         debug_tracer.dump_one_tensor<int32_t>(
-            kernel_name, tensor, tensor_name, t_attrs.number_of_elements, t_attrs.t_shape, in_out);
+            kernel_name, tensor, tensor_name, t_attrs.m_number_of_elements, t_attrs.m_t_shape, in_out);
         break;
     }
 }
@@ -1285,7 +1285,7 @@ void runtime::cpu::CPU_ExternalFunction::dump_one_kernel(CPU_DebugTracer& debug_
         {
             dump_one_kernel_with_type(
                 debug_tracer,
-                m_op_attrs.at(index).inputs_tensor_attrs.at(i),
+                m_op_attrs.at(index).m_inputs_tensor_attrs.at(i),
                 m_op_attrs.at(index).Description,
                 ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Inputs.at(i))],
                 m_op_attrs.at(index).Inputs.at(i),
@@ -1298,7 +1298,7 @@ void runtime::cpu::CPU_ExternalFunction::dump_one_kernel(CPU_DebugTracer& debug_
         {
             dump_one_kernel_with_type(
                 debug_tracer,
-                m_op_attrs.at(index).outputs_tensor_attrs.at(i),
+                m_op_attrs.at(index).m_outputs_tensor_attrs.at(i),
                 m_op_attrs.at(index).Description,
                 ctx->buffer_data[get_buffer_index(m_op_attrs.at(index).Outputs.at(i))],
                 m_op_attrs.at(index).Outputs.at(i),
