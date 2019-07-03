@@ -1,7 +1,9 @@
 Contributor Guidelines
 ======================
 
-https://ngraph.nervanasys.com/docs/latest/project/code-contributor-README.html
+The latest version of this file can be found at: 
+
+https://ngraph.nervanasys.com/docs/latest/project/contribution-guide.html
 
 
 License

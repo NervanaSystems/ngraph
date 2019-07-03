@@ -242,6 +242,8 @@ ngraph::runtime::plaidml::Config
         }
 
         // Reject unknown options
+        NGRAPH_ERR << "Unrecognized PlaidML backend option: "
+                   << std::string{oname_begin, static_cast<std::size_t>(oname_end - oname_begin)};
         err = true;
     }
 

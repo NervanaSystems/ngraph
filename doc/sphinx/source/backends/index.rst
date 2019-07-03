@@ -73,6 +73,9 @@ Additional resources for device or framework-specific configurations:
 OpenCL
 ------
 
+OpenCL is needed for the :doc:`plaidml-ng-api/index`; this is not needed if 
+you have only a CPU backend.  
+
 #. Install the latest Linux driver for your system. You can find a list 
    of drivers at https://software.intel.com/en-us/articles/opencl-drivers;
    You may need to install `OpenCL SDK`_ in case of an ``libOpenCL.so`` absence.
@@ -86,15 +89,16 @@ OpenCL
    may, for example, be able to find details at the ``/sys/module/[system]/parameters/`` location. 
 
 
-nGraph Bridge from TensorFlow*\ 
+nGraph Bridge from TensorFlow\*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When specified as the generic backend -- either manually or automatically 
 from a framework --  ``NGRAPH`` defaults to CPU, and it also allows for 
 additional device configuration or selection. 
 
-Because nGraph can select backends, you may try specifying the ``INTELGPU`` 
-backend as a runtime environment variable: 
+Because nGraph can select backends, specifying the ``INTELGPU`` 
+backend as a runtime environment variable also works if one is 
+present in your system: 
 
 :envvar:`NGRAPH_TF_BACKEND="INTELGPU"`
 
@@ -105,14 +109,9 @@ depending on the parameters specified.
 
    NGRAPH_TF_BACKEND="INTELGPU" python3 axpy.py
 
-* ``NGRAPH_INTELGPU_DUMP_FUNCTION`` -- dumps 
-  nGraph’s functions in dot format.
+* ``NGRAPH_INTELGPU_DUMP_FUNCTION`` -- dumps nGraph’s functions 
+  in dot format.
 
-* `` `` --.
-
-* `` `` --.
-
-* `` `` --.
 
 .. _axpy.py example: https://github.com/tensorflow/ngraph-bridge/blob/master/examples/axpy.py
 .. _OpenCL SDK: https://software.intel.com/en-us/opencl-sdk

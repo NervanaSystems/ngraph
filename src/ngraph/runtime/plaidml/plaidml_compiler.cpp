@@ -20,6 +20,7 @@
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -87,6 +88,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     ngraph::pass::Manager pass_manager;
 
     // We apply the same general-purposes passes as the CPU backend.
+    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
