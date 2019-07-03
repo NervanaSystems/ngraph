@@ -5,8 +5,8 @@ Integrating new frameworks
 
 This section details some of the *configuration options* and some of the 
 *environment variables* that can be used to tune for optimal performance when 
-your system already has a version of nGraph installed with one of our supported
-backends. 
+your system already has a version of nGraph installed with one or more of our 
+supported :doc:`../backends/index`.
 
 Regardless of the framework, after the :doc:`../buildlb` step, a good place 
 to start usually involves making the libraries available to the framework. On 
@@ -19,14 +19,58 @@ something like:
    export LD_LIBRARY_PATH=path/to/ngraph_dist/lib/
 
 
-Find or display nGraph Version
--------------------------------
+Find or display version
+=======================
 
-
+If you're working with the :doc:`../python_api/index`, the following command 
+may be useful:
 
 .. code-block:: console
 
    python3 -c "import ngraph as ng; print('nGraph version: ',ng.__version__)";
+
+To manually build a newer version than is available from the latest `PyPI`_
+(:abbr:`Python Package Index (PyPI)`), see our nGraph Python API `BUILDING.md`_ 
+documentation.
+
+
+Activate logtrace-related environment variables
+===============================================
+
+Another configuration option is to activate ``NGRAPH_CPU_DEBUG_TRACER``,
+a runtime environment variable that supports extra logging and debug detail. 
+
+This is a useful tool for data scientists interested in outputs from logtrace 
+files that can, for example, help in tracking down model convergences. It can 
+also help engineers who might want to add their new ``Backend`` to an existing 
+framework to compare intermediate tensors/values to references from a CPU 
+backend.
+
+To activate this tool, set the ``env`` var ``NGRAPH_CPU_DEBUG_TRACER=1``.
+It will dump ``trace_meta.log`` and ``trace_bin_data.log``. The names of the 
+logfiles can be customized.
+
+To specify the names of logs with those flags:
+
+:: 
+
+  NGRAPH_TRACER_LOG = "meta.log"
+  NGRAPH_BIN_TRACER_LOG = "bin.log"
+
+The meta_log contains::
+ 
+  kernel_name, serial_number_of_op, tensor_id, symbol_of_in_out, num_elements, shape, binary_data_offset, mean_of_tensor, variance_of_tensor
+
+A line example from a unit-test might look like::
+
+  K=Add S=0 TID=0_0 >> size=4 Shape{2, 2} bin_data_offset=8 mean=1.5 var=1.25
+
+The binary_log line contains::
+
+  tensor_id, binary data (tensor data)
+
+A reference for the implementation of parsing these logfiles can also be found 
+in the unit test for this feature.
 
 
 FMV
@@ -37,7 +81,7 @@ number of generic ways to patch or bring architecture-based optimizations to
 the :abbr:`Operating System (OS)` that is handling your ML environment. See 
 the `GCC wiki for details`_.
 
-If your nGraph build is a Neural Network configured on Clear Linux* OS 
+If your nGraph build is a Neural Network configured on Clear Linux\* OS 
 for Intel® Architecture, and it includes at least one older CPU, the 
 `following article may be helpful`_.
 
@@ -63,11 +107,14 @@ For CPU (and most cuDNN) backends, the preferred layout is currently ``NCHW``.
 Intel® Math Kernel Library for Deep Neural Networks 
 ---------------------------------------------------
 
--The following `KMP options`_ were originally optimized for models using the 
+.. important:: Intel® MKL-DNN is automatically enabled as part of an
+   nGraph default :doc:`build <../buildlb>`; you do *not* need to add it 
+   separately or as an additional component to be able to use these 
+   configuration settings.
+
+The following `KMP`_ options were originally optimized for models using the 
 Intel® `MKL-DNN`_ to train models with the ``NCHW`` data layout; however, other 
-configurations can be explored. MKL-DNN is automatically enabled as part of an 
-nGraph compilation; you do *not* need to add MKL-DNN separately or as an 
-additional component to be able to use these configuration settings.   
+configurations can be explored.    
 
 * ``KMP_BLOCKTIME`` Sets the time, in milliseconds, that a thread should wait 
   after completing the execution of a parallel region, before sleeping.
@@ -128,10 +175,11 @@ Convolution shapes
 ``OMP_NUM_THREADS``
 ^^^^^^^^^^^^^^^^^^^
 
-The best resource for this configuration option is the `gnu.org site`_ 
-``OMP_NUM_THREADS`` defaults to the number of logical cores. To check the 
-number of cores on your system, you can run the following on the command-line to 
-see the details of your CPU: 
+The best resource for this configuration option is the Intel® OpenMP\* docs 
+at the following link: `Intel OpenMP documentation`_. ``OMP_NUM_THREADS`` 
+defaults to the number of logical cores. To check the number of cores on your 
+system, you can run the following on the command-line to see the details 
+of your CPU:
 
 .. code-block:: console
 
@@ -171,11 +219,12 @@ achieve the best performance for NN workloads on CPU platforms. The nGraph
 Compiler stack runs on transformers handled by Intel® Architecture (IA), and 
 thus can make more efficient use of the underlying hardware.
 
-
-.. _KMP options: https://software.intel.com/en-us/cpp-compiler-developer-guide-and-reference-controlling-thread-allocation
-.. KMP options: https://software.intel.com/en-us/node/522691
+.. _PyPI: https://pypi.org/project/ngraph-core
+.. _KMP: https://software.intel.com/en-us/node/522691
 .. _MKL-DNN: https://github.com/intel/mkl-dnn
-.. _gnu.org site: https://gcc.gnu.org/onlinedocs/libgomp/Environment-Variables.html
+.. _Intel OpenMP documentation: https://www.openmprtl.org/documentation
 .. _Movidius: https://www.movidius.com/
+.. _BUILDING.md: https://github.com/NervanaSystems/ngraph/blob/master/python/BUILDING.md
 .. _GCC wiki for details: https://gcc.gnu.org/wiki/FunctionMultiVersioning
 .. _following article may be helpful: https://clearlinux.org/documentation/clear-linux/tutorials/fmv
+
