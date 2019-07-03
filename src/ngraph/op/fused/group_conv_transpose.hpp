@@ -65,13 +65,15 @@ namespace ngraph
             ///
             /// \brief      Constructs GroupConvolutionTranspose operation.
             ///
-            /// \param[in]  data            The node producing input data.
-            /// \param[in]  filters         The node producing filters data.
-            /// \param[in]  groups          The number of groups the input channels and output channels
-            ///                             are divided into.
+            /// \param[in]  data      The node producing input data.
+            /// \param[in]  filters   The node producing filters data.
+            /// \param[in]  pad_type  The provided padding type.
+            /// \param[in]  groups    The number of groups the input channels and output channels
+            ///                       are divided into.
             ///
             GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
                                       const std::shared_ptr<Node>& filters,
+                                      const PadType& pad_type = PadType::VALID,
                                       const std::size_t groups = 1UL);
 
             ///
@@ -110,8 +112,8 @@ namespace ngraph
                                       const Shape& output_shape,
                                       const std::size_t groups = 1UL);
 
-            std::shared_ptr<Node> get_filters() { return get_argument(1); }
             std::shared_ptr<Node> get_data() { return get_argument(0); }
+            std::shared_ptr<Node> get_filters() { return get_argument(1); }
             const Strides& get_strides() const { return m_strides; }
             const Strides& get_dilations() const { return m_dilations; }
             const CoordinateDiff& get_padding_begin() const { return m_padding_begin; }
@@ -121,6 +123,7 @@ namespace ngraph
             const PadType& get_pad_type() const { return m_pad_type; }
             const Shape& get_output_shape() const { return m_output_shape; }
             virtual void pre_validate_and_infer_types() override;
+            virtual void post_validate_and_infer_types() override;
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
