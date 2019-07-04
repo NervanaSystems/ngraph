@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/max_pool.hpp"
 #include "core/null_node.hpp"
 #include "ngraph/node.hpp"
-#include "utils/convpool.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "utils/pooling_factory.hpp"
 
 namespace ngraph
 {
@@ -29,7 +29,8 @@ namespace ngraph
             {
                 NodeVector max_pool(const Node& node)
                 {
-                    auto max_pool = convpool::make_ng_pool<ngraph::op::MaxPool>(node);
+                    auto max_pool =
+                        pooling::PoolingFactory(node).make_pooling_op<ngraph::op::MaxPool>();
                     max_pool.emplace_back(std::make_shared<NullNode>()); // Indices (optional)
                     return max_pool;
                 }
