@@ -100,8 +100,7 @@ namespace ngraph
                                      bool release_function = true);
                 ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
-                    make_call_frame(ngraph::pass::PassConfig& pass_config);
-
+                    make_call_frame(ngraph::pass::PassConfig& pass_config, Allocator* allocator);
                 const LayoutDescriptorPtrs& get_parameter_layout_descriptors();
                 const LayoutDescriptorPtrs& get_result_layout_descriptors();
                 const std::vector<size_t>& get_memory_buffer_sizes() const
