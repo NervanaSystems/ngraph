@@ -680,13 +680,7 @@ struct OutputHelper
     {
     }
 
-    operator shared_ptr<Node>() const
-    {
-        return m_output.get_index() == 0
-                   ? m_output.get_node_shared_ptr()
-                   : make_shared<op::GetOutputElement>(m_output.get_node_shared_ptr(),
-                                                       m_output.get_index());
-    }
+    operator shared_ptr<Node>() const { return get_output_element(m_output); }
     operator const Output<Node>&() const { return m_output; }
     Output<Node> m_output;
 };
@@ -1244,7 +1238,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GetOutputElement:
         {
-            node = make_shared<op::GetOutputElement>(args[0], node_js.at("n").get<size_t>());
+            node = make_shared<op::GetOutputElement>(
+                static_cast<Output<Node>>(args[0]).get_node_shared_ptr(),
+                node_js.at("n").get<size_t>());
             break;
         }
         case OP_TYPEID::Greater:

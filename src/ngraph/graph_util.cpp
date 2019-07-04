@@ -218,19 +218,18 @@ std::list<std::shared_ptr<ngraph::Node>>
         if (node_map.count(node.get()) == 0)
         {
             // get (already) cloned arguments and clone the node
-            NodeVector cloned_args;
-            for (auto arg : node->get_arguments())
+            OutputVector cloned_args;
+            for (auto input : node->inputs())
             {
-                cloned_args.push_back(node_map.at(arg.get()));
+                Output<Node> output = input.get_source_output();
+                cloned_args.push_back(output.for_node(node_map.at(output.get_node())));
             }
-            auto cloned_node = node->copy_with_new_args(cloned_args);
-
-            // copy control dependencies
-            for (auto cdep : node->get_control_dependencies())
+            std::set<std::shared_ptr<Node>> cloned_dependencies;
+            for (auto dependency : node->get_control_dependencies())
             {
-                cloned_node->add_control_dependency(node_map.at(cdep.get()));
+                cloned_dependencies.insert(node_map.at(dependency.get()));
             }
-
+            auto cloned_node = node->copy_with_new_inputs(cloned_args, cloned_dependencies);
             if (node->get_friendly_name() != node->get_name())
             {
                 // There is a friendly name for this node so copy it

@@ -337,8 +337,17 @@ namespace ngraph
         virtual NodeVector get_arguments() const;
         // Will be deprecated
         std::shared_ptr<Node> get_argument(size_t index) const;
+
+    protected:
         // Will be replaced with an OutputVector version
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
+
+    public:
+        std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& new_args) const;
+
+        std::shared_ptr<Node>
+            copy_with_new_inputs(const OutputVector& inputs,
+                                 const std::set<std::shared_ptr<Node>>& control_dependencies) const;
 
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
@@ -497,7 +506,7 @@ namespace ngraph
     };
 
     /// \brief A handle for one of a node's outputs.
-    template <typename NodeType>
+    template <typename NodeType = Node>
     class Output
     {
     public:
@@ -529,8 +538,14 @@ namespace ngraph
         {
         }
 
-        // A null output
+        /// A null output
         Output() = default;
+
+        /// This output position for a different node
+        Output<NodeType> for_node(const std::shared_ptr<NodeType>& node)
+        {
+            return Output(node, m_index);
+        }
 
         /// \return A pointer to the node referred to by this output handle.
         NodeType* get_node() const { return m_node.get(); }
