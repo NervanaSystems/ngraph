@@ -196,22 +196,29 @@ void runtime::Backend::async_thread_stop()
     }
 }
 
+static void local_thread_entry(shared_ptr<runtime::Backend::AsyncEvent> event)
+{
+    event->get_executable()->call(event->get_outputs(), event->get_inputs());
+    event->signal_result();
+};
+
 void runtime::Backend::async_thread_process(const shared_ptr<AsyncEvent>& event)
 {
     switch (event->get_type())
     {
     case AsyncEvent::Type::READ:
-        event->get_tensor()->read(event->get_data(), 0, event->get_size_in_bytes());
+        event->get_tensor()->read(event->get_data(), event->get_size_in_bytes());
         event->signal_result();
         break;
     case AsyncEvent::Type::WRITE:
-        event->get_tensor()->write(event->get_data(), 0, event->get_size_in_bytes());
+        event->get_tensor()->write(event->get_data(), event->get_size_in_bytes());
         event->signal_result();
         break;
     case AsyncEvent::Type::EXECUTE:
-        event->get_executable()->call(event->get_outputs(), event->get_inputs());
-        event->signal_result();
+    {
+        std::thread(local_thread_entry, event).detach();
         break;
+    }
     }
 }
 
