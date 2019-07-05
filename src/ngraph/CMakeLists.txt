@@ -370,7 +370,6 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
-    op/util/reshape.hpp
     op/util/rnn_cell_base.cpp
     op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
@@ -458,6 +457,8 @@ set (SRC
     rank.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
+    runtime/allocator.cpp
+    runtime/allocator.hpp
     runtime/backend.cpp
     runtime/backend.hpp
     runtime/backend_manager.cpp
