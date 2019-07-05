@@ -24,6 +24,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/strides.hpp"
 
 namespace ngraph
 {
@@ -86,6 +87,26 @@ namespace ngraph
             {
                 return get_pads(node, get_kernel_shape(node));
             }
+
+            ///
+            /// \brief         Calculate paddings with respect to auto_pad value.
+            ///
+            /// \param[in]     data_shape     The input data tensor shape.
+            /// \param[in]     filter_shape   The input filters tensor shape.
+            /// \param[in]     strides        The data strides.
+            /// \param[in]     dilations      The data dilations.
+            /// \param[in]     pad_type       The value of auto_pad attribute.
+            /// \param[in|out] padding_below  The paddings below axis.
+            /// \param[in|out] padding_above  The paddings above axis.
+            ///
+            /// \see        ngraph::op::PadType
+            void get_pads(const Shape& data_shape,
+                          const Shape& filter_shape,
+                          const Strides& strides,
+                          const Strides& dilations,
+                          const ngraph::op::PadType& pad_type,
+                          CoordinateDiff& padding_below,
+                          CoordinateDiff& padding_above);
 
             /// \brief      Gets the 'auto_pad' attribute value.
             ///

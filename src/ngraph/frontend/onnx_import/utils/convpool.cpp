@@ -22,6 +22,7 @@
 #include "exceptions.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -78,7 +79,7 @@ namespace ngraph
                     {
                         return ngraph::op::PadType::SAME_LOWER;
                     }
-                    if (pad_name == "NOTSET")
+                    if (pad_name == "NOTSET" || pad_name.empty())
                     {
                         return ngraph::op::PadType::NOTSET;
                     }
@@ -106,7 +107,7 @@ namespace ngraph
             std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node,
                                                                const Shape& kernel_shape)
             {
-                CoordinateDiff pads;
+                CoordinateDiff pads(kernel_shape.size(), 0);
                 if (node.has_attribute("pads"))
                 {
                     auto pads_int64 = node.get_attribute_value<std::vector<int64_t>>("pads");
@@ -123,6 +124,32 @@ namespace ngraph
                     // No paddings provided or only one side values provided, which means same
                     // padding at both begin and end of axis.
                     return {pads, pads};
+                }
+            }
+
+            void get_pads(const Shape& data_shape,
+                          const Shape& filter_shape,
+                          const Strides& strides,
+                          const Strides& dilations,
+                          const ngraph::op::PadType& pad_type,
+                          CoordinateDiff& padding_below,
+                          CoordinateDiff& padding_above)
+            {
+                if (pad_type == ngraph::op::PadType::SAME_UPPER ||
+                    pad_type == ngraph::op::PadType::SAME_LOWER)
+                {
+                    padding_below.clear();
+                    padding_above.clear();
+                    // Extract kernel shape - remove (N,C) channels
+                    Shape kernel_shape(std::next(std::begin(filter_shape), 2),
+                                       std::end(filter_shape));
+                    ngraph::infer_auto_padding(data_shape,
+                                               kernel_shape,
+                                               strides,
+                                               dilations,
+                                               pad_type,
+                                               padding_above,
+                                               padding_below);
                 }
             }
 
