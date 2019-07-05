@@ -49,13 +49,13 @@ namespace ngraph
                     ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
                     auto& padding_below = paddings.first;
                     auto& padding_above = paddings.second;
-                    convpool::get_pads(input->get_shape(),
-                                       filters->get_shape(),
-                                       window_movement_strides,
-                                       window_dilation_strides,
-                                       auto_pad_type,
-                                       padding_below,
-                                       padding_above);
+                    convpool::calculate_auto_pads(input->get_shape(),
+                                                  filters->get_shape(),
+                                                  window_movement_strides,
+                                                  window_dilation_strides,
+                                                  auto_pad_type,
+                                                  padding_below,
+                                                  padding_above);
 
                     const Strides default_data_dilation_strides(input->get_shape().size() - 2, 1);
                     auto scale_one = make_constant(ngraph::element::f32, Shape{}, 1);

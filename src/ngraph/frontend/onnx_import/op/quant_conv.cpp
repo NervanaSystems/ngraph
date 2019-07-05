@@ -228,13 +228,13 @@ namespace ngraph
                     ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
                     CoordinateDiff& padding_below = paddings.first;
                     CoordinateDiff& padding_above = paddings.second;
-                    convpool::get_pads(data->get_shape(),
-                                       filters->get_shape(),
-                                       strides,
-                                       filter_dilations,
-                                       auto_pad_type,
-                                       padding_below,
-                                       padding_above);
+                    convpool::calculate_auto_pads(data->get_shape(),
+                                                  filters->get_shape(),
+                                                  strides,
+                                                  filter_dilations,
+                                                  auto_pad_type,
+                                                  padding_below,
+                                                  padding_above);
 
                     std::shared_ptr<ngraph::Node> conv_node = nullptr;
 

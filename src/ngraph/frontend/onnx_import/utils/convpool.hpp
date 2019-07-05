@@ -59,8 +59,7 @@ namespace ngraph
             Strides get_dilations(const Node& node);
 
             /// \brief Get padding values for the operation described by an ONNX node.
-            /// \details If `auto_pad` attribute is specified as SAME_UPPER or SAME_LOWER, or VALID
-            ///          values are calculated. Otherwise values are taken from the `pads` attribute.
+            /// \details Values are taken from the `pads` attribute.
             ///
             ///          `pads` value should follow [x1_begin, x2_begin..., x1_end, x2_end,...].
             ///
@@ -73,8 +72,7 @@ namespace ngraph
                                                                const Shape& kernel_shape);
 
             /// \brief Get padding values for the operation described by an ONNX node.
-            /// \details If `auto_pad` attribute is specified as SAME_UPPER or SAME_LOWER, or VALID
-            ///          values are calculated. Otherwise values are taken from the `pads` attribute.
+            /// \details Values are taken from the `pads` attribute.
             ///
             ///          `pads` value should follow [x1_begin, x2_begin..., x1_end, x2_end,...].
             ///
@@ -100,13 +98,13 @@ namespace ngraph
             /// \param[in|out] padding_above  The paddings above axis.
             ///
             /// \see        ngraph::op::PadType
-            void get_pads(const Shape& data_shape,
-                          const Shape& filter_shape,
-                          const Strides& strides,
-                          const Strides& dilations,
-                          const ngraph::op::PadType& pad_type,
-                          CoordinateDiff& padding_below,
-                          CoordinateDiff& padding_above);
+            void calculate_auto_pads(const Shape& data_shape,
+                                     const Shape& filter_shape,
+                                     const Strides& strides,
+                                     const Strides& dilations,
+                                     const ngraph::op::PadType& pad_type,
+                                     CoordinateDiff& padding_below,
+                                     CoordinateDiff& padding_above);
 
             /// \brief      Gets the 'auto_pad' attribute value.
             ///

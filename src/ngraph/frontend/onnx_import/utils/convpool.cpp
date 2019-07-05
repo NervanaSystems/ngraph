@@ -127,13 +127,13 @@ namespace ngraph
                 }
             }
 
-            void get_pads(const Shape& data_shape,
-                          const Shape& filter_shape,
-                          const Strides& strides,
-                          const Strides& dilations,
-                          const ngraph::op::PadType& pad_type,
-                          CoordinateDiff& padding_below,
-                          CoordinateDiff& padding_above)
+            void calculate_auto_pads(const Shape& data_shape,
+                                     const Shape& filter_shape,
+                                     const Strides& strides,
+                                     const Strides& dilations,
+                                     const ngraph::op::PadType& pad_type,
+                                     CoordinateDiff& padding_below,
+                                     CoordinateDiff& padding_above)
             {
                 if (pad_type == ngraph::op::PadType::SAME_UPPER ||
                     pad_type == ngraph::op::PadType::SAME_LOWER)
