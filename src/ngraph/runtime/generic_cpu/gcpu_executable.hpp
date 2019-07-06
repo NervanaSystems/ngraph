@@ -72,7 +72,6 @@
 #include "ngraph/runtime/generic_cpu/kernel/broadcast.hpp"
 #include "ngraph/runtime/generic_cpu/kernel/dot.hpp"
 #include "ngraph/runtime/generic_cpu/kernel/reshape.hpp"
-#include "ngraph/runtime/generic_cpu/kernel/result.hpp"
 #include "ngraph/runtime/generic_cpu/node_wrapper.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
@@ -484,11 +483,11 @@ private:
             Shape in_shape = node.get_input_shape(0);
             Shape out_shape = node.get_output_shape(0);
             AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
-                                    out[0]->get_data_ptr<T>(),
-                                    in_shape,
-                                    out_shape,
-                                    broadcast_axes);
+            kernel::broadcast<T>(args[0]->get_data_ptr<const T>(),
+                                 out[0]->get_data_ptr<T>(),
+                                 in_shape,
+                                 out_shape,
+                                 broadcast_axes);
             break;
         }
         case OP_TYPEID::BroadcastDistributed:
@@ -737,13 +736,13 @@ private:
         {
             const op::Dot* dot = static_cast<const op::Dot*>(&node);
 
-            reference::dot(args[0]->get_data_ptr<const T>(),
-                           args[1]->get_data_ptr<const T>(),
-                           out[0]->get_data_ptr<T>(),
-                           node.get_input_shape(0),
-                           node.get_input_shape(1),
-                           node.get_output_shape(0),
-                           dot->get_reduction_axes_count());
+            kernel::dot(args[0]->get_data_ptr<const T>(),
+                        args[1]->get_data_ptr<const T>(),
+                        out[0]->get_data_ptr<T>(),
+                        node.get_input_shape(0),
+                        node.get_input_shape(1),
+                        node.get_output_shape(0),
+                        dot->get_reduction_axes_count());
             break;
         }
         case OP_TYPEID::DynReshape:
@@ -1343,11 +1342,11 @@ private:
         case OP_TYPEID::Reshape:
         {
             const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
-            reference::reshape(args[0]->get_data_ptr<const T>(),
-                               out[0]->get_data_ptr<T>(),
-                               node.get_input_shape(0),
-                               reshape->get_input_order(),
-                               node.get_output_shape(0));
+            kernel::reshape(args[0]->get_data_ptr<const T>(),
+                            out[0]->get_data_ptr<T>(),
+                            node.get_input_shape(0),
+                            reshape->get_input_order(),
+                            node.get_output_shape(0));
             break;
         }
         case OP_TYPEID::Result:
