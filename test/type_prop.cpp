@@ -13376,6 +13376,9 @@ INSTANTIATE_TEST_CASE_P(
     type_prop,
     DeduceDynSliceTest,
     ::testing::Values(
+        // TODO(jbobba): These tests should pass.
+        // DynSliceParams({{4}, {1}, {1}, {1}, {0}}, {{-9000}, {-8000}, {2}}, {{}, {}, {}, {}, {}}),
+        // DynSliceParams({{5}, {1}, {1}, {1}, {0}}, {{3}, {2}, {1}}, {{}, {}, {}, {}, {}}),
         DynSliceParams({{2, 3, 4, 5, 6}, {5}, {5}, {5}, {1, 2, 1, 1, 3}},
                        {{0, 1, 2, 3, 1}, {1, 3, 3, 5, 6}, {1, 1, 1, 2, 2}},
                        {{}, {}, {}, {}, {}}),
@@ -15075,6 +15078,691 @@ TEST(type_prop, fake_quantize_invalid_rank)
     }
 }
 
+TEST(type_prop, dynreplaceslice_arg_static_replacement_static_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
+}
+
+TEST(type_prop, dynreplaceslice_arg_static_replacement_rank_static_dynamic_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
+}
+
+TEST(type_prop, dynreplaceslice_arg_static_replacement_rank_dynamic_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
+}
+
+TEST(type_prop, dynreplaceslice_arg_rank_static_dynamic_replacement_static_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto replacement = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
+        PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8}));
+}
+
+TEST(type_prop,
+     dynreplaceslice_arg_rank_static_dynamic_replacement_rank_static_dynamic_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto replacement =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
+        PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8}));
+}
+
+TEST(type_prop, dynreplaceslice_arg_rank_static_dynamic_replacement_rank_dynamic_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
+        PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8}));
+}
+
+TEST(type_prop, dynreplaceslice_arg_static_replacement_static_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 4});
+    auto lower_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto upper_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
+}
+
+TEST(type_prop,
+     dynreplaceslice_arg_static_replacement_rank_static_dynamic_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto upper_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
+}
+
+TEST(type_prop, dynreplaceslice_arg_static_replacement_rank_dynamic_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto upper_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
+}
+
+TEST(type_prop,
+     dynreplaceslice_arg_rank_static_dynamic_replacement_static_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
+    auto lower_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto upper_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
+        PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8}));
+}
+
+TEST(
+    type_prop,
+    dynreplaceslice_arg_rank_static_dynamic_replacement_rank_static_dynamic_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto replacement =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto upper_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
+        PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8}));
+}
+
+TEST(type_prop,
+     dynreplaceslice_arg_rank_static_dynamic_replacement_rank_dynamic_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(
+        element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto upper_bounds =
+        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
+        PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8}));
+}
+
+TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_static_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_rank_static_dynamic_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_rank_dynamic_params_static_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_static_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop,
+     dynreplaceslice_arg_rank_dynamic_replacement_rank_static_dynamic_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop,
+     dynreplaceslice_arg_rank_dynamic_replacement_rank_dynamic_params_rank_static_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_static_params_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop,
+     dynreplaceslice_arg_rank_dynamic_replacement_rank_static_dynamic_params_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_rank_dynamic_params_rank_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+}
+
+TEST(type_prop, dynreplaceslice_static_shape)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
+    auto replacement = make_shared<op::Parameter>(element::f32, Shape{1, 2, 1, 1, 3});
+    auto lower_bounds = op::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
+    auto upper_bounds = op::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
+    auto strides = op::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_EQ(r->get_shape(), (Shape{2, 3, 4, 5, 6}));
+}
+
+TEST(type_prop, dynreplaceslice_static_shape_replacement_inconsistent)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 1, 1, 4});
+    auto lower_bounds = op::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
+    auto upper_bounds = op::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
+    auto strides = op::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
+
+    try
+    {
+        auto r =
+            make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        FAIL() << "Did not detect mismatch of replacement shape";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(), "Shape of the replacement is not compatible with the shape of the slice");
+    }
+}
+
+struct DynReplaceSliceParams
+{
+    Shape arg_shape;
+    Shape lower_bounds_shape;
+    Shape upper_bounds_shape;
+    Shape strides_shape;
+    Shape replacement_shape;
+
+    std::vector<int64_t> lower_bounds_val;
+    std::vector<int64_t> upper_bounds_val;
+    std::vector<int64_t> strides_val;
+
+    AxisSet lower_bounds_mask;
+    AxisSet upper_bounds_mask;
+    AxisSet new_axis;
+    AxisSet shrink_axis;
+    AxisSet ellipsis_mask;
+};
+
+struct DeduceDynReplaceSliceTest : ::testing::TestWithParam<DynReplaceSliceParams>
+{
+};
+
+TEST_P(DeduceDynReplaceSliceTest, output_shape)
+{
+    auto tp = GetParam();
+    auto arg = make_shared<op::Parameter>(element::f32, tp.arg_shape);
+    auto replacement = make_shared<op::Parameter>(element::f32, tp.replacement_shape);
+    auto lower_bounds =
+        op::Constant::create(element::i64, tp.lower_bounds_shape, tp.lower_bounds_val);
+    auto upper_bounds =
+        op::Constant::create(element::i64, tp.upper_bounds_shape, tp.upper_bounds_val);
+    auto strides = op::Constant::create(element::i64, tp.strides_shape, tp.strides_val);
+
+    auto r = make_shared<op::DynReplaceSlice>(arg,
+                                              replacement,
+                                              lower_bounds,
+                                              upper_bounds,
+                                              strides,
+                                              tp.lower_bounds_mask,
+                                              tp.upper_bounds_mask,
+                                              tp.new_axis,
+                                              tp.shrink_axis,
+                                              tp.ellipsis_mask);
+
+    EXPECT_EQ(r->get_shape(), tp.arg_shape);
+}
+
+INSTANTIATE_TEST_CASE_P(
+    type_prop,
+    DeduceDynReplaceSliceTest,
+    ::testing::Values(
+        DynReplaceSliceParams{{2, 3, 4, 5, 6},
+                              {5},
+                              {5},
+                              {5},
+                              {1, 2, 1, 1, 3},
+                              {0, 1, 2, 3, 1},
+                              {1, 3, 3, 5, 6},
+                              {1, 1, 1, 2, 2},
+                              {},
+                              {},
+                              {},
+                              {},
+                              {}},
+        DynReplaceSliceParams{{10}, {0}, {0}, {0}, {10}, {}, {}, {}, {}, {}, {}, {}, {}},
+        DynReplaceSliceParams{
+            {10}, {1}, {1}, {0}, {10}, {0}, {0}, {}, {}, {0}, {}, {}, {}}, // end-mask
+        DynReplaceSliceParams{
+            {10}, {1}, {1}, {0}, {9}, {-1}, {-1}, {}, {0}, {}, {}, {}, {}}, // begin-mask
+        DynReplaceSliceParams{{10}, {1}, {1}, {0}, {10}, {0}, {10}, {}, {}, {}, {}, {}, {}},
+        DynReplaceSliceParams{{10}, {1}, {1}, {0}, {5}, {5}, {10}, {}, {}, {}, {}, {}, {}},
+        DynReplaceSliceParams{{10}, {1}, {1}, {0}, {5}, {-5}, {10}, {}, {}, {}, {}, {}, {}},
+        DynReplaceSliceParams{{10},
+                              {1},
+                              {1},
+                              {1},
+                              {6},
+                              {-5},
+                              {0},
+                              {-1}, // negative-stride
+                              {},
+                              {0},
+                              {},
+                              {},
+                              {}},
+        DynReplaceSliceParams{{10}, {1}, {1}, {1}, {3}, {-5}, {2}, {-1}, {}, {}, {}, {}, {}},
+        DynReplaceSliceParams{{10}, {1}, {1}, {1}, {5}, {0}, {0}, {2}, {}, {0}, {}, {}, {}},
+        DynReplaceSliceParams{{10}, {1}, {1}, {1}, {5}, {1}, {0}, {2}, {}, {0}, {}, {}, {}},
+        DynReplaceSliceParams{{10}, {1}, {1}, {1}, {10}, {-1}, {0}, {-1}, {}, {0}, {}, {}, {}},
+        DynReplaceSliceParams{{10}, {1}, {1}, {1}, {5}, {-1}, {0}, {-2}, {}, {0}, {}, {}, {}},
+        /* Axis Masks: New, Shrink, Ellipsis */
+        DynReplaceSliceParams{{10}, {1}, {1}, {0}, {1, 10}, {0}, {10}, {}, {}, {}, {0}, {}, {}},
+        DynReplaceSliceParams{
+            {1, 2, 3}, {2}, {2}, {0}, {1, 2, 2}, {0, 0}, {1, 2}, {}, {}, {}, {}, {}, {1}},
+        DynReplaceSliceParams{{1, 2, 3},
+                              {4},
+                              {4},
+                              {0},
+                              {1, 2, 1},
+                              {0, 0, 0, 1},
+                              {2, 3, 2, 2},
+                              {},
+                              {},
+                              {},
+                              {2},
+                              {3},
+                              {}},
+        DynReplaceSliceParams{
+            {1, 2, 3}, {3}, {3}, {0}, {1, 1, 2, 1}, {0, 0, 1}, {2, 2, 2}, {}, {}, {}, {0}, {}, {1}},
+        DynReplaceSliceParams{
+            {1, 2, 2, 2}, {1}, {1}, {1}, {1, 2, 2}, {-1}, {0}, {-2}, {1}, {1}, {}, {1}, {}},
+        DynReplaceSliceParams{{1, 2, 2, 2},
+                              {4},
+                              {4},
+                              {0},
+                              {1, 2, 2},
+                              {0, 1, 0, 0},
+                              {1, 2, 2, 2},
+                              {},
+                              {1},
+                              {1},
+                              {},
+                              {1},
+                              {}},
+        DynReplaceSliceParams{
+            {1, 2, 3}, {3}, {3}, {0}, {1, 1, 2}, {0, 0, 1}, {2, 2, 2}, {}, {}, {}, {0}, {2}, {1}}));
+
+void DynReplaceSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
+                                       const shared_ptr<Node>& param_1,
+                                       const shared_ptr<Node>& param_2,
+                                       const shared_ptr<Node>& param_3,
+                                       const shared_ptr<Node>& param_4)
+{
+    try
+    {
+        auto r = make_shared<op::DynReplaceSlice>(param_0, param_1, param_2, param_3, param_4);
+        FAIL() << "Did not detect attributes not vector";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("shape must have rank 1"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynreplaceslice_arg_static_replacement_static_params_rank_static_dynamic_not_vector)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    {
+        lower_bounds =
+            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+    {
+        lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+    {
+        arg = make_shared<op::Parameter>(
+            element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+        lower_bounds =
+            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+
+    {
+        upper_bounds =
+            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+    {
+        upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+    {
+        arg = make_shared<op::Parameter>(
+            element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+        upper_bounds =
+            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+
+    {
+        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+    {
+        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+    {
+        arg = make_shared<op::Parameter>(
+            element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
+        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+    {
+        replacement =
+            make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+}
+
+TEST(type_prop, dynreplaceslice_params_et_dynamic_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::dynamic, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::Parameter>(element::dynamic, Shape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::dynamic, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::dynamic, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::dynamic, Shape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::dynamic);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
+}
+
+TEST(type_prop, dynreplaceslice_params_et_dynamic_inferrable_ok)
+{
+    auto arg = make_shared<op::Parameter>(element::dynamic, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::Parameter>(element::boolean, Shape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::Parameter>(element::dynamic, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::dynamic, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::dynamic, Shape{4});
+
+    auto r =
+        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+
+    EXPECT_EQ(r->get_output_element_type(0), element::boolean);
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
+}
+
+void DynReplaceSlice_Test_Type_Except(const shared_ptr<Node>& param_0,
+                                      const shared_ptr<Node>& param_1,
+                                      const shared_ptr<Node>& param_2,
+                                      const shared_ptr<Node>& param_3,
+                                      const shared_ptr<Node>& param_4)
+{
+    try
+    {
+        auto r = make_shared<op::DynReplaceSlice>(param_0, param_1, param_2, param_3, param_4);
+        FAIL() << "Did not detect parameter element type not i64";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("must have element type i64."));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, dynreplaceslice_params_et_wrong)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 4});
+
+    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    {
+        lower_bounds = make_shared<op::Parameter>(element::boolean, Shape{4});
+        DynReplaceSlice_Test_Type_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+    {
+        upper_bounds = make_shared<op::Parameter>(element::boolean, Shape{4});
+        DynReplaceSlice_Test_Type_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+    {
+        strides = make_shared<op::Parameter>(element::boolean, Shape{4});
+        DynReplaceSlice_Test_Type_Except(arg, replacement, lower_bounds, upper_bounds, strides);
+    }
+}
+
 TEST(type_prop, group_conv_transpose)
 {
     // C x M / group x kH x kW
@@ -15922,5 +16610,779 @@ TEST(type_prop, gru_cell_invalid_input)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Input tensor B must have shape"));
+    }
+}
+
+TEST(type_prop, quantized_conv_8_bit_output)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto i8_zero_point = make_shared<op::Parameter>(element::i8, Shape{});
+    auto u8_zero_point = make_shared<op::Parameter>(element::u8, Shape{});
+    auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                            filter,
+                                                            strides,
+                                                            dilation,
+                                                            padding_below,
+                                                            padding_above,
+                                                            dilation,
+                                                            scale,
+                                                            u8_zero_point,
+                                                            scale,
+                                                            i8_zero_point,
+                                                            scale,
+                                                            i8_zero_point,
+                                                            output_type,
+                                                            axes,
+                                                            axes,
+                                                            axes);
+
+    ASSERT_EQ(quant_conv->get_element_type(), output_type);
+    ASSERT_EQ(quant_conv->get_shape(), output_shape);
+}
+
+TEST(type_prop, quantized_conv_32_bit_output)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type i32 = element::i32;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i32;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto i8_zero_point = make_shared<op::Parameter>(element::i8, Shape{});
+    auto u8_zero_point = make_shared<op::Parameter>(element::u8, Shape{});
+    auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                            filter,
+                                                            strides,
+                                                            dilation,
+                                                            padding_below,
+                                                            padding_above,
+                                                            dilation,
+                                                            scale,
+                                                            u8_zero_point,
+                                                            scale,
+                                                            i8_zero_point,
+                                                            scale,
+                                                            i8_zero_point,
+                                                            output_type,
+                                                            axes,
+                                                            axes,
+                                                            axes);
+
+    ASSERT_EQ(quant_conv->get_element_type(), output_type);
+    ASSERT_EQ(quant_conv->get_shape(), output_shape);
+}
+
+TEST(type_prop, quantized_conv_non_quantized_input_fails)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = f32;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto i8_zero_point = make_shared<op::Parameter>(element::i8, Shape{});
+    auto u8_zero_point = make_shared<op::Parameter>(element::u8, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                u8_zero_point,
+                                                                scale,
+                                                                i8_zero_point,
+                                                                scale,
+                                                                i8_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                axes,
+                                                                axes);
+        FAIL() << "Attempt to use non-quantized input not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Input element type (element::Type{32, 1, 1, 0, \"float\"}) "
+                             "must be a quantized type");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_non_quantized_filter_fails)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = f32;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto i8_zero_point = make_shared<op::Parameter>(element::i8, Shape{});
+    auto u8_zero_point = make_shared<op::Parameter>(element::u8, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                u8_zero_point,
+                                                                scale,
+                                                                i8_zero_point,
+                                                                scale,
+                                                                i8_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                axes,
+                                                                axes);
+        FAIL() << "Attempt to use non-quantized filter not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Filter element type (element::Type{32, 1, 1, 0, \"float\"}) "
+                             "must be a quantized type");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_dyn_output_fails)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = f32;
+    element::Type output_type = element::dynamic;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto i8_zero_point = make_shared<op::Parameter>(element::i8, Shape{});
+    auto u8_zero_point = make_shared<op::Parameter>(element::u8, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                u8_zero_point,
+                                                                scale,
+                                                                i8_zero_point,
+                                                                scale,
+                                                                i8_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                axes,
+                                                                axes);
+        FAIL() << "Attempt to use dynamic output type not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Output element type must not be dynamic");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_non_floating_point_scale_fails)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = i8;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto i8_zero_point = make_shared<op::Parameter>(element::i8, Shape{});
+    auto u8_zero_point = make_shared<op::Parameter>(element::u8, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                u8_zero_point,
+                                                                scale,
+                                                                i8_zero_point,
+                                                                scale,
+                                                                i8_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                axes,
+                                                                axes);
+        FAIL() << "Attempt to use non floating point scale not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Scale must be a floating point number");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_input_zero_point_type_mismatch_fails)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = i8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto input_zero_point = make_shared<op::Parameter>(input_zero_point_type, Shape{});
+    auto filter_zero_point = make_shared<op::Parameter>(filter_zero_point_type, Shape{});
+    auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                input_zero_point,
+                                                                scale,
+                                                                filter_zero_point,
+                                                                scale,
+                                                                output_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                axes,
+                                                                axes);
+        FAIL() << "Attempt to use zero point type different from input type not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Input Zero point element type (element::Type{8, 0, 1, 1, \"int8_t\"}) must "
+            "match input element type (element::Type{8, 0, 0, 1, \"uint8_t\"})");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_filter_zero_point_type_mismatch_fails)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = u8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto input_zero_point = make_shared<op::Parameter>(input_zero_point_type, Shape{});
+    auto filter_zero_point = make_shared<op::Parameter>(filter_zero_point_type, Shape{});
+    auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                input_zero_point,
+                                                                scale,
+                                                                filter_zero_point,
+                                                                scale,
+                                                                output_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                axes,
+                                                                axes);
+        FAIL() << "Attempt to use zero point type different from filter type not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            "Filter Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
+            "match filter element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_non_scalar_input_zero_point_fails)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto input_zero_point = make_shared<op::Parameter>(input_zero_point_type, Shape{1, 2});
+    auto filter_zero_point = make_shared<op::Parameter>(filter_zero_point_type, Shape{});
+    auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                input_zero_point,
+                                                                scale,
+                                                                filter_zero_point,
+                                                                scale,
+                                                                output_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                axes,
+                                                                axes);
+        FAIL() << "Attempt to use non scalar input zero point not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Input scale and input zero point shape must be same and 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_non_scalar_filter_zero_point_fails)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto input_zero_point = make_shared<op::Parameter>(input_zero_point_type, Shape{});
+    auto filter_zero_point = make_shared<op::Parameter>(filter_zero_point_type, Shape{1, 2});
+    auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                input_zero_point,
+                                                                scale,
+                                                                filter_zero_point,
+                                                                scale,
+                                                                output_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                axes,
+                                                                axes);
+        FAIL() << "Attempt to use non scalar filter zero point not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Filter scale and filter zero point shape must be same and 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_non_scalar_output_zero_point_fails)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto input_zero_point = make_shared<op::Parameter>(input_zero_point_type, Shape{});
+    auto filter_zero_point = make_shared<op::Parameter>(filter_zero_point_type, Shape{});
+    auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{1, 2});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                input_zero_point,
+                                                                scale,
+                                                                filter_zero_point,
+                                                                scale,
+                                                                output_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                axes,
+                                                                axes);
+        FAIL() << "Attempt to use non scalar output zero point not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Output scale and output zero point shape must be same and 1");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_non_empty_input_axes)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto input_zero_point = make_shared<op::Parameter>(input_zero_point_type, Shape{});
+    auto filter_zero_point = make_shared<op::Parameter>(filter_zero_point_type, Shape{});
+    auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                input_zero_point,
+                                                                scale,
+                                                                filter_zero_point,
+                                                                scale,
+                                                                output_zero_point,
+                                                                output_type,
+                                                                AxisSet{1},
+                                                                axes,
+                                                                axes);
+        FAIL() << "Attempt to use non empty input axes not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Input, filter and output AxisSet should be empty");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_non_empty_filter_axes)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto input_zero_point = make_shared<op::Parameter>(input_zero_point_type, Shape{});
+    auto filter_zero_point = make_shared<op::Parameter>(filter_zero_point_type, Shape{});
+    auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                input_zero_point,
+                                                                scale,
+                                                                filter_zero_point,
+                                                                scale,
+                                                                output_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                AxisSet{1},
+                                                                axes);
+        FAIL() << "Attempt to use non empty filter axes not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Input, filter and output AxisSet should be empty");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, quantized_conv_non_empty_output_axes)
+{
+    auto strides = Strides{1, 1};
+    auto dilation = Strides{1, 1};
+    auto padding_below = CoordinateDiff{1, 1};
+    auto padding_above = CoordinateDiff{1, 1};
+    element::Type f32 = element::f32;
+    element::Type i8 = element::i8;
+    element::Type u8 = element::u8;
+    element::Type input_type = u8;
+    element::Type filter_type = i8;
+    element::Type output_type = i8;
+    element::Type scale_type = f32;
+    element::Type input_zero_point_type = u8;
+    element::Type filter_zero_point_type = i8;
+    element::Type output_zero_point_type = i8;
+    Shape output_shape{64, 64, 220, 220};
+    AxisSet axes{};
+
+    auto input = make_shared<op::Parameter>(input_type, Shape{64, 3, 224, 224});
+    auto filter = make_shared<op::Parameter>(filter_type, Shape{64, 3, 7, 7});
+    auto scale = make_shared<op::Parameter>(scale_type, Shape{});
+    auto input_zero_point = make_shared<op::Parameter>(input_zero_point_type, Shape{});
+    auto filter_zero_point = make_shared<op::Parameter>(filter_zero_point_type, Shape{});
+    auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{});
+    try
+    {
+        auto quant_conv = make_shared<op::QuantizedConvolution>(input,
+                                                                filter,
+                                                                strides,
+                                                                dilation,
+                                                                padding_below,
+                                                                padding_above,
+                                                                dilation,
+                                                                scale,
+                                                                input_zero_point,
+                                                                scale,
+                                                                filter_zero_point,
+                                                                scale,
+                                                                output_zero_point,
+                                                                output_type,
+                                                                axes,
+                                                                axes,
+                                                                AxisSet{1});
+        FAIL() << "Attempt to use non empty output axes not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "Input, filter and output AxisSet should be empty");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
     }
 }

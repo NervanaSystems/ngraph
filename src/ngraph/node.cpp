@@ -24,6 +24,7 @@
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
@@ -78,6 +79,29 @@ Node::~Node()
             input.remove_output();
         }
     }
+}
+
+std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) const
+{
+    return copy_with_new_inputs(inputs, get_control_dependencies());
+}
+
+std::shared_ptr<Node>
+    Node::copy_with_new_inputs(const OutputVector& inputs,
+                               const std::set<std::shared_ptr<Node>>& control_dependencies) const
+{
+    bool for_get_output_element = (description() == op::GetOutputElement::type_name);
+    NodeVector args;
+    for (const Output<Node>& input : inputs)
+    {
+        args.push_back(get_output_element(input, for_get_output_element));
+    }
+    shared_ptr<Node> clone = copy_with_new_args(args);
+    for (auto& cdep : control_dependencies)
+    {
+        clone->add_control_dependency(cdep);
+    }
+    return clone;
 }
 
 void Node::safe_delete(NodeVector& nodes, bool recurse)

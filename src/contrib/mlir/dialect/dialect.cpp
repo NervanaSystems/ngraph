@@ -21,8 +21,8 @@
 
 using namespace mlir;
 
-NGDialect::NGDialect(mlir::MLIRContext* ctx)
-    : mlir::Dialect("ng", ctx)
+NGraphOpsDialect::NGraphOpsDialect(mlir::MLIRContext* ctx)
+    : mlir::Dialect(getDialectNamespace(), ctx)
 {
     addTypes<NGTensorType>();
     addTypes<NGIntegerType>();
@@ -34,7 +34,7 @@ NGDialect::NGDialect(mlir::MLIRContext* ctx)
         >();
 }
 
-void NGDialect::printType(mlir::Type type, raw_ostream& os) const
+void NGraphOpsDialect::printType(mlir::Type type, raw_ostream& os) const
 {
     switch (type.getKind())
     {

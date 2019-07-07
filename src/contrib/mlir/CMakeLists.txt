@@ -56,6 +56,7 @@ if (NGRAPH_MLIR_ENABLE)
         MLIRExecutionEngine
         MLIRIR
         MLIRLLVMIR
+        MLIRStandardToLLVM
         MLIRParser
         MLIRPass
         MLIRTargetLLVMIR
