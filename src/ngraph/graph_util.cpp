@@ -89,8 +89,24 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
             for (auto arg : n->get_arguments())
             {
                 if (instances_seen.count(arg) == 0)
+<<<<<<< HEAD
                 {
                     stack.push_front(arg);
+=======
+                {
+                    stack.push_front(arg);
+                }
+            }
+
+            if (include_control_deps)
+            {
+                for (auto cdep : n->get_control_dependencies())
+                {
+                    if (instances_seen.count(cdep) == 0)
+                    {
+                        stack.push_front(cdep);
+                    }
+>>>>>>> 86a5cc259... Stabilize node sorting and fix some bugs.
                 }
             }
 
