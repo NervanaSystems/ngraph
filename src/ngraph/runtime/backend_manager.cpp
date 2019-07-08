@@ -42,14 +42,6 @@ using namespace ngraph;
 unordered_map<string, runtime::BackendConstructor*>& runtime::BackendManager::get_registry()
 {
     static unordered_map<string, BackendConstructor*> s_registered_backend;
-    static bool s_static_initialization_called = false;
-    if (!s_static_initialization_called)
-    {
-        s_static_initialization_called = true;
-#ifdef INTERPRETER_BACKEND_STATIC
-        runtime::interpreter::static_initialize();
-#endif
-    }
     return s_registered_backend;
 }
 

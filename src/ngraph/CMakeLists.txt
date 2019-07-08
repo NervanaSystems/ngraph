@@ -505,36 +505,6 @@ configure_file(version.in.hpp version.hpp)
 
 if (NGRAPH_STATIC_LIB_ENABLE)
     add_library(ngraph STATIC ${SRC})
-    if (NGRAPH_INTERPRETER_ENABLE)
-        target_compile_definitions(ngraph PUBLIC INTERPRETER_BACKEND_STATIC)
-    endif()
-    # if (NGRAPH_CPU_ENABLE)
-    #     target_compile_definitions(ngraph PUBLIC CPU_BACKEND_STATIC)
-    # endif()
-
-    # if (NGRAPH_INTELGPU_ENABLE)
-    #     target_compile_definitions(ngraph PUBLIC INTELGPU_BACKEND_STATIC)
-    # endif()
-
-    # if (NGRAPH_GPU_ENABLE)
-    #     target_compile_definitions(ngraph PUBLIC GPU_BACKEND_STATIC)
-    # endif()
-
-    # if (NGRAPH_NOP_ENABLE)
-    #     target_compile_definitions(ngraph PUBLIC NOP_BACKEND_STATIC)
-    # endif()
-
-    # if (NGRAPH_GPUH_ENABLE)
-    #     target_compile_definitions(ngraph PUBLIC GPUH_BACKEND_STATIC)
-    # endif()
-
-    # if (NGRAPH_GENERIC_CPU_ENABLE)
-    #     target_compile_definitions(ngraph PUBLIC GENERIC_CPU_BACKEND_STATIC)
-    # endif()
-
-    # if (NGRAPH_PLAIDML_ENABLE)
-    #     target_compile_definitions(ngraph PUBLIC PLAIDML_BACKEND_STATIC)
-    # endif()
 else()
     add_library(ngraph SHARED ${SRC})
 endif()

@@ -33,11 +33,21 @@
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+static void configure_static_backends()
+{
+#ifdef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
+    ngraph::runtime::BackendManager::register_backend(
+        "INTERPRETER", ngraph::runtime::interpreter::get_backend_constructor_pointer());
+#endif
+}
 
 class PerfShape : public ngraph::runtime::PerformanceCounter
 {
@@ -182,6 +192,7 @@ int main(int argc, char** argv)
     bool copy_data = true;
     bool dot_file = false;
 
+    configure_static_backends();
     for (size_t i = 1; i < argc; i++)
     {
         string arg = argv[i];

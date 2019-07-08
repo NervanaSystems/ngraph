@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_STATIC_LIB_ENABLE)
+if (NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
     set(LIBRARY_TYPE STATIC)
 else()
     set(LIBRARY_TYPE SHARED)
@@ -28,6 +28,7 @@ if (NGRAPH_INTERPRETER_ENABLE)
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
     target_link_libraries(interpreter_backend PUBLIC ngraph)
+    target_compile_definitions(interpreter_backend PUBLIC NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
 
     install(TARGETS interpreter_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
