@@ -20,6 +20,7 @@
 #include <functional>
 #include <list>
 #include <memory>
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -85,66 +86,62 @@ namespace ngraph
     std::list<std::shared_ptr<Node>> topological_sort(const T& nodes,
                                                       bool include_control_deps = false)
     {
-        std::deque<ngraph::Node*> independent_nodes;
-        std::unordered_map<const ngraph::Node*, size_t> node_dependency_count;
-        std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> node_map;
-        std::unordered_map<ngraph::Node*, std::set<Node*>> control_deps_users;
+        std::stack<ngraph::Node*> nodes_to_do;
+        std::set<Node*> nodes_done;
+        std::list<std::shared_ptr<Node>> result;
 
         for (auto node : nodes)
         {
-            //build an equivalent of node->get_users() but for control dependencies
-            size_t control_deps_count = 0;
-            if (include_control_deps)
+            if (node->get_input_size() == 0)
             {
-                for (auto cd : node->get_control_dependencies())
+                if (!include_control_deps || node->get_control_dependencies().size() == 0)
                 {
-                    control_deps_count++;
-                    control_deps_users[cd.get()].insert(node.get());
+                    result.push_back(node);
+                    nodes_done.insert(node.get());
+                    continue;
                 }
             }
-
-            node_map[node.get()] = node;
-            size_t deps_count = node->get_input_size() + control_deps_count;
-            node_dependency_count[node.get()] = deps_count;
-            if (deps_count == 0)
-            {
-                independent_nodes.push_back(node.get());
-            }
+            nodes_to_do.push(node.get());
         }
-
-        std::list<std::shared_ptr<ngraph::Node>> result_list;
-        while (independent_nodes.size() > 0)
+        while (nodes_to_do.size() > 0)
         {
-            auto independent_node = independent_nodes.front();
-            result_list.push_back(node_map[independent_node]);
-            independent_nodes.pop_front();
-
-            for (const std::shared_ptr<Node>& user : independent_node->get_users())
+            Node* node = nodes_to_do.top();
+            if (nodes_done.count(node) != 0)
             {
-                if (--node_dependency_count[user.get()] == 0)
+                nodes_to_do.pop();
+                continue;
+            }
+            bool can_add = true;
+            size_t arg_count = node->get_input_size();
+            for (size_t i = 0; i < arg_count; ++i)
+            {
+                Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
+                if (nodes_done.count(dep) == 0)
                 {
-                    independent_nodes.push_back(user.get());
+                    can_add = false;
+                    nodes_to_do.push(dep);
                 }
             }
-
             if (include_control_deps)
             {
-                auto cdit = control_deps_users.find(independent_node);
-                if (cdit != control_deps_users.end())
-                    for (auto cd_user : cdit->second)
+                for (auto depptr : node->get_control_dependencies())
+                {
+                    Node* dep = depptr.get();
+                    if (nodes_done.count(dep) == 0)
                     {
-                        node_dependency_count[cd_user] -= 1;
-                        size_t count = node_dependency_count[cd_user];
-                        if (count == 0)
-                        {
-                            independent_nodes.push_back(cd_user);
-                        }
+                        can_add = false;
+                        nodes_to_do.push(dep);
                     }
+                }
+            }
+            if (can_add)
+            {
+                result.push_back(node->shared_from_this());
+                nodes_to_do.pop();
+                nodes_done.insert(node);
             }
         }
-
-        NGRAPH_CHECK(nodes.size() == result_list.size());
-        return result_list;
+        return result;
     }
 
     // For cases, where `nodes` is a subset of the entire graph

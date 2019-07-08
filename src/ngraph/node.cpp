@@ -444,7 +444,7 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
     return m_outputs.at(0).get_tensor_ptr();
 }
 
-const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
+const std::vector<descriptor::Input*>& Node::get_output_inputs(size_t i) const
 {
     return m_outputs.at(i).get_inputs();
 }
