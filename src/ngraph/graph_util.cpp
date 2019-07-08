@@ -81,27 +81,27 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
     while (stack.size() > 0)
     {
         std::shared_ptr<Node> n = stack.front();
+        stack.pop_front();
         if (instances_seen.count(n) == 0)
         {
             instances_seen.insert(n);
             f(n);
-        }
-        stack.pop_front();
-        for (auto arg : n->get_arguments())
-        {
-            if (instances_seen.count(arg) == 0)
+            for (auto arg : n->get_arguments())
             {
-                stack.push_front(arg);
-            }
-        }
-
-        if (include_control_deps)
-        {
-            for (auto cdep : n->get_control_dependencies())
-            {
-                if (instances_seen.count(cdep) == 0)
+                if (instances_seen.count(arg) == 0)
                 {
-                    stack.push_front(cdep);
+                    stack.push_front(arg);
+                }
+            }
+
+            if (include_control_deps)
+            {
+                for (auto cdep : n->get_control_dependencies())
+                {
+                    if (instances_seen.count(cdep) == 0)
+                    {
+                        stack.push_front(cdep);
+                    }
                 }
             }
         }
