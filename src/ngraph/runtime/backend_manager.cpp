@@ -89,10 +89,6 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 
     auto registry = get_registry();
     auto it = registry.find(type);
-    // for (auto x : registry)
-    // {
-    //     NGRAPH_INFO << x.first;
-    // }
     if (it != registry.end())
     {
         BackendConstructor* new_backend = it->second;
@@ -100,7 +96,6 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     }
     else
     {
-        // NGRAPH_INFO << "open";
         DL_HANDLE handle = open_shared_library(type);
         if (!handle)
         {
@@ -157,7 +152,6 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     string library_name = lib_prefix + to_lower(type) + "_backend" + lib_suffix;
     string my_directory =
         file_util::get_directory(Backend::get_backend_shared_library_search_directory());
-    NGRAPH_INFO << my_directory;
     string library_path = file_util::path_join(my_directory, library_name);
     string error;
 #ifdef _WIN32
