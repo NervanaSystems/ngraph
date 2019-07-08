@@ -59,18 +59,16 @@ shared_ptr<Node> op::Gelu::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Gelu>(new_args.at(0));
 }
 
-void op::Gelu::validate_and_infer_types()
+void op::Gelu::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
 
-    NODE_VALIDATION_CHECK(
-        this, !input_element_type.is_dynamic(), "Argument element type must not be dynamic.");
-
     NODE_VALIDATION_CHECK(this,
-                          input_element_type == element::f32 ||
+                          input_element_type.is_dynamic() || input_element_type == element::f32 ||
                               input_element_type == element::f64 ||
-                              input_element_type == element::f16,
-                          "Argument element type must be f16, f32 or f64 (got ",
+                              input_element_type == element::f16 ||
+                              input_element_type == element::bf16,
+                          "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
                           input_element_type,
                           ").");
 }
