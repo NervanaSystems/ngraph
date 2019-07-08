@@ -132,6 +132,80 @@ TEST(dyn_elimination, slice)
     ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 4, 2, 2, 1, 2, 2}));
 }
 
+TEST(dyn_elimination, replace_slice)
+{
+    // input has shape [2,4,6,8,2,2,2]
+    // slice in numpy syntax is [0:,:4,2:6:2,7:3:-2,np.newaxis,...,1]
+    // slice shape should be [2,4,2,2,1,2,2] (so sayeth numpy!)
+    Shape shape_in{2, 4, 6, 8, 2, 2, 2};
+    Shape shape_slice{2, 4, 2, 2, 1, 2, 2};
+    auto input = make_shared<op::Parameter>(element::f32, shape_in);
+    auto replacement = make_shared<op::Parameter>(element::f32, shape_slice);
+    auto constant_lb =
+        make_shared<op::Constant>(element::i64, Shape{7}, vector<int64_t>{0, 3, 2, 7, 0, 0, 1});
+    auto constant_ub =
+        make_shared<op::Constant>(element::i64, Shape{7}, vector<int64_t>{0, 4, 6, 3, 0, 0, 0});
+    auto constant_strides =
+        make_shared<op::Constant>(element::i64, Shape{7}, vector<int64_t>{1, 1, 2, -2, 0, 0, 0});
+    AxisSet lower_bounds_mask{1};
+    AxisSet upper_bounds_mask{0};
+    AxisSet new_axis_mask{4};
+    AxisSet shrink_mask{6};
+    AxisSet ellipsis_mask{5};
+
+    auto rsl = make_shared<op::DynReplaceSlice>(input,
+                                                replacement,
+                                                constant_lb,
+                                                constant_ub,
+                                                constant_strides,
+                                                lower_bounds_mask,
+                                                upper_bounds_mask,
+                                                new_axis_mask,
+                                                shrink_mask,
+                                                ellipsis_mask);
+
+    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_shape(), (Shape{2, 4, 6, 8, 2, 2, 2}));
+
+    auto f = make_shared<Function>(rsl, ParameterVector{input, replacement});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::DynElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::DynReplaceSlice>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::ReplaceSlice>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::Reverse>(f), 1);
+
+    ASSERT_EQ(f->get_results().at(0)->get_element_type(), element::f32);
+    ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 4, 6, 8, 2, 2, 2}));
+}
+
+TEST(dyn_elimination, reshape)
+{
+    auto input_arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto shape_arg = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{0, 6, -1});
+
+    auto r = make_shared<op::DynReshape>(input_arg, shape_arg, true);
+
+    ASSERT_EQ(r->get_element_type(), element::f32);
+    ASSERT_EQ(r->get_shape(), (Shape{2, 6, 32}));
+
+    auto f = make_shared<Function>(r, ParameterVector{input_arg});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::DynElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::DynReshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
+
+    ASSERT_EQ(f->get_results().at(0)->get_element_type(), element::f32);
+    ASSERT_EQ(f->get_results().at(0)->get_shape(), (Shape{2, 6, 32}));
+}
+
 TEST(dyn_elimination, range)
 {
     auto constant_start = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{0});
