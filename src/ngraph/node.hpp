@@ -309,7 +309,7 @@ namespace ngraph
             "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
+        const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
             NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
 
         /// Returns the number of inputs for the op
