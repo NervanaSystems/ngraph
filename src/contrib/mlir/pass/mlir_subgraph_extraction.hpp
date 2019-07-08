@@ -25,7 +25,7 @@ namespace ngraph
         /// This pass creates CompiledKernel ops enclosing maximal sub-graphs of ops that are supported by MLIR
         class MLIRSubgraphExtractionPass : public ngraph::pass::FunctionPass
         {
-            using NodeSet = std::set<std::shared_ptr<Node>>;
+            using NodeSet = std::unordered_set<std::shared_ptr<Node>>;
 
             class MLIRSubgraph
             {
@@ -83,8 +83,8 @@ namespace ngraph
             bool run_on_function(std::shared_ptr<Function> func) override;
             /// Checks if an ngraph node is supported by MLIR backend
             bool is_supported_mlir_op(std::shared_ptr<Node> node);
-            /// Get the sub-graph that a node belongs to
-            int get_subgraph(std::shared_ptr<Node> node)
+            /// Get the sub-graph ID that a node belongs to
+            int get_subgraph_id(std::shared_ptr<Node> node)
             {
                 auto it = m_node_to_graph.find(node);
                 return (it == m_node_to_graph.end()) ? -1 : it->second;
@@ -99,8 +99,8 @@ namespace ngraph
             /// Stores a sub-graph in the map
             void add_subgraph(MLIRSubgraph& sg) { m_id_to_graph.emplace(sg.get_id(), sg); }
             /// Checks if adding a node to an extracted sub-graph will cause a DAG cycle
-            /// inputs: are the list of input nodes outside sub-graphs to the node we want to add.
-            /// subgraph_ids: are the sub-graphs the predecessor the node belong to.
+            /// inputs: the list of input nodes outside sub-graphs to the node we want to add.
+            /// subgraph_ids: the sub-graphs the predecessor nodes belong to.
             /// It traverses backwards from all input nodes and checks if we reach any node that already
             /// belongs to one of the sub-graph ids. If so, we have a cycle.
             ///
@@ -112,7 +112,7 @@ namespace ngraph
             /// D
             /// we want to add D to sub-graph 1. C is an input to D. sugraph_ids are 1
             /// we traverse backwards C->A(1) and find 1, then we cannot add D since we will form a cycle
-            bool check_cycles(NodeVector& inputs, std::vector<int>& subgraph_ids);
+            bool check_cycles(NodeVector& inputs, std::unordered_set<int>& subgraph_ids);
 
         private:
             static const std::set<std::type_index> m_supported_ops;
