@@ -19,11 +19,11 @@ ONNX is not a framework; however, it can be used with nGraph's
 :doc:`../python_api/index` to import and execute ONNX models.
 
 .. figure:: ../graphics/FWBridgesnGraph.png
-	:width:
-    :alt: JiT compiling of a computation
+   :width: 960px
+   :alt: JiT compiling of a computation
 
-    :abbr:`Just-in-Time (JiT)` Compiling for computation. nGraph `Core` components
-    are colored in blue.
+   :abbr:`Just-in-Time (JiT)` Compiling for computation. nGraph `Core`
+   components are colored in blue.
 
 Once connected via the bridge, the framework can then run and train a deep
 learning model with various workloads on various backends using nGraph Compiler

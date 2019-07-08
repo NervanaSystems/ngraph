@@ -67,8 +67,7 @@ graph, but the choice of operations in the graph may not be optimal.
 .. _figure-A:
 
 .. figure:: ../graphics/kernel-problem-1.png
-   :width:
-   :alt:
+   :width: 960px
 
 The computation is constructed to execute ``(A+B)*C``. With nGraph, we can
 further optimize the graph to be represented as ``A*C``. From the first graph
@@ -92,8 +91,7 @@ diagram using orange lines.
 .. _figure-B:
 
 .. figure:: ../graphics/kernel-problem-2.png
-   :width:
-   :alt:
+   :width: 960px
 
 Each framework must be manually integrated with each hardware-specific kernel
 library. Additionally, each integration is unique to the framework and its set
@@ -127,8 +125,7 @@ work for what will ultimately be a fragile setup that is costly to maintain.
 .. _figure-C:
 
 .. figure:: ../graphics/kernel-problem-3.png
-   :width:
-   :alt:
+   :width: 960px
 
 Integrating PlaidML with nGraph provides flexbility to support the latest deep
 learning models in the absence of hand-optimized kernels for new operations.
