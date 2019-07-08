@@ -7674,12 +7674,12 @@ TEST(${BACKEND_NAME}, quantized_dot)
     auto make_function = [shape_a, shape_b](const ngraph::element::Type& output_type) {
         auto A = make_shared<op::Parameter>(element::u8, shape_a);
         auto B = make_shared<op::Parameter>(element::i8, shape_b);
-        auto C = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto D = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto E = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto F = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto G = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto H = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto C = make_shared<op::Parameter>(element::f32, Shape{});
+        auto D = make_shared<op::Parameter>(element::f32, Shape{});
+        auto E = make_shared<op::Parameter>(element::f32, Shape{});
+        auto F = make_shared<op::Parameter>(element::f32, Shape{});
+        auto G = make_shared<op::Parameter>(element::f32, Shape{});
+        auto H = make_shared<op::Parameter>(element::f32, Shape{});
         auto CV = ngraph::builder::QuantizedDotBuilder(
             A, B, C, D, E, F, G, H, output_type, AxisSet{}, AxisSet{}, AxisSet{});
         return make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
@@ -7691,36 +7691,19 @@ TEST(${BACKEND_NAME}, quantized_dot)
     copy_data(a, a_data);
     auto b = backend->create_tensor(element::i8, shape_b);
     copy_data(b, b_data);
-    auto d = backend->create_tensor(element::f32, Shape{1});
+    auto d = backend->create_tensor(element::f32, Shape{});
     copy_data(d, vector<float>{-127.0f});
-    auto e = backend->create_tensor(element::f32, Shape{1});
+    auto e = backend->create_tensor(element::f32, Shape{});
     copy_data(e, vector<float>{127.0f});
-    auto e_a = backend->create_tensor(element::f32, Shape{1});
+    auto e_a = backend->create_tensor(element::f32, Shape{});
     copy_data(e_a, vector<float>{0.1f});
-    auto g = backend->create_tensor(element::f32, Shape{1});
+    auto g = backend->create_tensor(element::f32, Shape{});
     copy_data(g, vector<float>{0.9f});
-    auto h = backend->create_tensor(element::f32, Shape{1});
+    auto h = backend->create_tensor(element::f32, Shape{});
     copy_data(h, vector<float>{37.618633f});
-    auto i = backend->create_tensor(element::f32, Shape{1});
+    auto i = backend->create_tensor(element::f32, Shape{});
     copy_data(i, vector<float>{2.236754f});
-#if 0
-    auto f_nrequantize = make_function(element::i32);
-    auto f_nrequantize_r = backend->create_tensor(element::i32, shape_r);
-    auto f_nrequantize_handle = backend->compile(f_nrequantize);
-    f_nrequantize_handle->call_with_validate({f_nrequantize_r}, {a, b, d, e, e_a, g, h, i});
-    EXPECT_EQ((vector<int32_t>{26, 34, 45, 71, -1, 106, 66, 38, 118, 63, -3, 124}),
-              read_vector<int32_t>(f_nrequantize_r));
 
-    // QuantizedDot with relu
-    auto f_nrequantize_relu = make_function(element::i32);
-    auto f_nrequantize_relu_r = backend->create_tensor(element::i32, shape_r);
-    auto f_nrequantize_relu_handle = backend->compile(f_nrequantize_relu);
-    f_nrequantize_relu_handle->call_with_validate({f_nrequantize_relu_r},
-                                                  {a, b, d, e, e_a, g, h, i});
-    EXPECT_EQ((vector<int32_t>{26, 34, 45, 71, 0, 106, 66, 38, 118, 63, 0, 124}),
-              read_vector<int32_t>(f_nrequantize_relu_r));
-#endif
-    // QuantizedDot with requantize and no relu
     auto f_requantize = make_function(ngraph::element::i8);
     auto f_requantize_r = backend->create_tensor(element::i8, shape_r);
     auto handle = backend->compile(f_requantize);
@@ -7790,7 +7773,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_dot_int32_output)
     auto input_scale = op::Constant::create(element::f32, Shape{}, {1});
     auto input_zero_point = op::Constant::create(element::u8, Shape{}, {0});
     auto filter_scale = op::Constant::create(element::f32, Shape{}, {1});
-    auto filter_zero_point = op::Constant::create(element::u8, Shape{}, {0});
+    auto filter_zero_point = op::Constant::create(element::i8, Shape{}, {0});
     auto output_scale = op::Constant::create(element::f32, Shape{}, {1});
     auto output_zero_point = op::Constant::create(element::u8, Shape{}, {0});
     AxisSet axes{};

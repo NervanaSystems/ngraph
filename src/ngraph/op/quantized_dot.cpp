@@ -50,10 +50,6 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& input0,
     , m_output_axes(output_axes)
 {
     constructor_validate_and_infer_types();
-    auto& input0_shape = input0->get_shape();
-    auto& input1_shape = input1->get_shape();
-
-    set_output_type(0, output_type, Shape{input0_shape[0], input1_shape[1]});
 }
 
 void op::QuantizedDot::validate_and_infer_types()
@@ -69,6 +65,126 @@ void op::QuantizedDot::validate_and_infer_types()
         OUTPUT_SCALE,
         OUTPUT_ZERO_POINT
     };
+
+    NODE_VALIDATION_CHECK(
+        this, m_output_type.is_static(), "Output element type must not be dynamic");
+
+    NODE_VALIDATION_CHECK(this,
+                          m_output_type.is_quantized(),
+                          "Output element type (",
+                          m_output_type,
+                          ") must be a quantized type");
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(INPUT0).is_quantized(),
+                          "Input0 element type (",
+                          get_input_element_type(INPUT0),
+                          ") must be a quantized type");
+
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(INPUT1).is_quantized(),
+                          "INPUT1 element type (",
+                          get_input_element_type(INPUT1),
+                          ") must be a quantized type");
+
+    NODE_VALIDATION_CHECK(this,
+                          get_input_element_type(INPUT0_SCALE).is_real() ||
+                              get_input_element_type(INPUT0_SCALE).is_dynamic() ||
+                              get_input_element_type(INPUT1_SCALE).is_real() ||
+                              get_input_element_type(INPUT1_SCALE).is_dynamic() ||
+                              get_input_element_type(OUTPUT_SCALE).is_real() ||
+                              get_input_element_type(OUTPUT_SCALE).is_dynamic(),
+                          "Scale must be a floating point number");
+
+    NODE_VALIDATION_CHECK(
+        this,
+        get_input_element_type(0).compatible(get_input_element_type(INPUT0_ZERO_POINT)),
+        "Input0 Zero point element type (",
+        get_input_element_type(INPUT0_ZERO_POINT),
+        ") must match input0 element type (",
+        get_input_element_type(0),
+        ")");
+
+    NODE_VALIDATION_CHECK(
+        this,
+        get_input_element_type(1).compatible(get_input_element_type(INPUT1_ZERO_POINT)),
+        "Input1 Zero point element type (",
+        get_input_element_type(INPUT1_ZERO_POINT),
+        ") must match input1 element type (",
+        get_input_element_type(1),
+        ")");
+
+    // TODO Remove these checks once we support channelwise and vector of scales
+    NODE_VALIDATION_CHECK(this,
+                          get_input_partial_shape(2).compatible(PartialShape{}) &&
+                              get_input_partial_shape(3).compatible(PartialShape{}),
+                          "Input0 scale and input0 zero point shape must be same and 1");
+
+    NODE_VALIDATION_CHECK(this,
+                          get_input_partial_shape(4).compatible(PartialShape{}) &&
+                              get_input_partial_shape(5).compatible(PartialShape{}),
+                          "Input1 scale and input1 zero point shape must be same and 1");
+
+    NODE_VALIDATION_CHECK(this,
+                          get_input_partial_shape(6).compatible(PartialShape{}) &&
+                              get_input_partial_shape(7).compatible(PartialShape{}),
+                          "Output scale and output zero point shape must be same and 1");
+
+    // AxisSet should be empty till we support channel wise quantization
+    NODE_VALIDATION_CHECK(this,
+                          m_input0_axes == AxisSet{} && m_input1_axes == AxisSet{} &&
+                              m_output_axes == AxisSet{},
+                          "Input0, input1 and output AxisSet should be empty");
+
+    const PartialShape& arg0_shape = get_input_partial_shape(0);
+    const PartialShape& arg1_shape = get_input_partial_shape(1);
+    PartialShape result_shape;
+    size_t m_reduction_axes_count = 1;
+
+    if (arg0_shape.rank().is_static() && arg1_shape.rank().is_static())
+    {
+        for (size_t i = 0; i < m_reduction_axes_count; i++)
+        {
+            size_t axis_index_arg0 = size_t(arg0_shape.rank()) - m_reduction_axes_count + i;
+            size_t axis_index_arg1 = i;
+
+            NODE_VALIDATION_CHECK(
+                this,
+                arg0_shape[axis_index_arg0].compatible(arg1_shape[axis_index_arg1]),
+                "Paired axes (axis ",
+                axis_index_arg0,
+                " from arg0, axis ",
+                axis_index_arg1,
+                " from arg1) do not have same length (arg0 shape: ",
+                arg0_shape,
+                ", arg1 shape: ",
+                arg1_shape,
+                ", reduction axes count: ",
+                m_reduction_axes_count,
+                ").");
+        }
+
+        std::vector<Dimension> result_dims(size_t(arg0_shape.rank()) + size_t(arg1_shape.rank()) -
+                                           2 * m_reduction_axes_count);
+
+        size_t i = 0;
+
+        for (size_t j = 0; j < size_t(arg0_shape.rank()) - m_reduction_axes_count; j++)
+        {
+            result_dims[i++] = arg0_shape[j];
+        }
+        for (size_t j = m_reduction_axes_count; j < size_t(arg1_shape.rank()); j++)
+        {
+            result_dims[i++] = arg1_shape[j];
+        }
+
+        result_shape = PartialShape(result_dims);
+    }
+    else
+    {
+        result_shape = PartialShape::dynamic();
+    }
+
+    set_output_type(0, m_output_type, result_shape);
 }
 
 shared_ptr<Node> op::QuantizedDot::copy_with_new_args(const NodeVector& new_args) const
