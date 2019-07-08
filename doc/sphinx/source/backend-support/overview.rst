@@ -42,7 +42,8 @@ How to use?
    method on the ``Executable`` object.
 
 .. figure:: ../graphics/ExecutionInterfaceRunGraphs.png
-   :width: 650px
+   :width:
+   :alt:
 
    The execution interface for nGraph 
 

@@ -5,6 +5,7 @@ Overview
 ========
 
 .. figure:: ../graphics/2019_06_11_WholeStack.png
+   :width:
    :alt: The whole stack
 
    The whole nGraph Compiler stack  

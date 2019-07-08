@@ -19,7 +19,7 @@ ONNX is not a framework; however, it can be used with nGraph's
 :doc:`../python_api/index` to import and execute ONNX models.
 
 .. figure:: ../graphics/FWBridgesnGraph.png
-    :width: 733px
+	:width:
     :alt: JiT compiling of a computation
 
     :abbr:`Just-in-Time (JiT)` Compiling for computation. nGraph `Core` components
