@@ -30,8 +30,7 @@ using namespace ngraph;
 runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction> external_function,
                                            InitContextFuncCG compiled_init_ctx_func,
                                            DestroyContextFuncCG compiled_destroy_ctx_func,
-                                           EntryPoint compiled_function,
-                                           runtime::Allocator* allocator)
+                                           EntryPoint compiled_function)
     : m_external_function(external_function)
     , m_compiled_init_ctx_func(compiled_init_ctx_func)
     , m_compiled_destroy_ctx_func(compiled_destroy_ctx_func)
@@ -48,7 +47,7 @@ runtime::cpu::CPU_CallFrame::CPU_CallFrame(std::shared_ptr<CPU_ExternalFunction>
             std::to_string(std::thread::hardware_concurrency()) + "]");
     }
 
-    setup_runtime_context(allocator);
+    setup_runtime_context();
     if (!m_external_function->is_direct_execution())
     {
         // Invoke codegen runtime context initialization function.
@@ -179,7 +178,7 @@ void runtime::cpu::CPU_CallFrame::propagate_layouts(
     }
 }
 
-void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
+void runtime::cpu::CPU_CallFrame::setup_runtime_context()
 {
     for (auto i = 0; i < m_num_ctx; i++)
     {
@@ -203,7 +202,7 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
         size_t alignment = runtime::cpu::CPU_ExternalFunction::s_memory_pool_alignment;
         for (auto buffer_size : m_external_function->get_memory_buffer_sizes())
         {
-            auto buffer = new AlignedBuffer(buffer_size, alignment, allocator);
+            auto buffer = new AlignedBuffer(buffer_size, alignment);
             ctx->memory_buffers.push_back(buffer);
         }
         const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();

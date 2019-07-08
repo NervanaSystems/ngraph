@@ -1825,8 +1825,7 @@ bool runtime::cpu::CPU_ExternalFunction::is_codegen(const ngraph::pass::PassConf
 }
 
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
-    runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config,
-                                                        Allocator* allocator)
+    runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config)
 {
 #if defined(NGRAPH_DEX_ONLY)
     if (is_codegen(pass_config))
@@ -1854,8 +1853,7 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),
                                                             m_compiled_init_ctx_func,
                                                             m_compiled_destroy_ctx_func,
-                                                            m_compiled_function,
-                                                            allocator);
+                                                            m_compiled_function);
 }
 
 const runtime::cpu::LayoutDescriptorPtrs&

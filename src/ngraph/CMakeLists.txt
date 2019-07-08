@@ -457,8 +457,6 @@ set (SRC
     rank.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
-    runtime/allocator.cpp
-    runtime/allocator.hpp
     runtime/backend.cpp
     runtime/backend.hpp
     runtime/backend_manager.cpp
