@@ -308,3 +308,151 @@ NGRAPH_TEST(dynamic_${BACKEND_NAME}, all)
         ASSERT_EQ(results, expected_results[i]);
     }
 }
+
+template <typename T>
+struct RangeTest
+{
+    T start;
+    T stop;
+    T step;
+    Shape expected_result_shape;
+    std::vector<T> expected_result;
+};
+
+// TODO(amprocte): We should test this with more than just int32, but there is a bug in the
+// handling of element type-changing that is currently blocking doing that easily.
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, range)
+{
+    // Create a graph for f(start,stop,step) = Range(start,stop,step).
+    auto start = make_shared<op::Parameter>(element::i32, Shape{});
+    auto stop = make_shared<op::Parameter>(element::i32, Shape{});
+    auto step = make_shared<op::Parameter>(element::i32, Shape{});
+
+    auto range = make_shared<op::Range>(start, stop, step);
+    ASSERT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
+
+    auto f = make_shared<Function>(NodeVector{range}, ParameterVector{start, stop, step});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+    std::vector<RangeTest<int32_t>> int32_tests = {
+        RangeTest<int32_t>{0, 10, 1, Shape{10}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}},
+        RangeTest<int32_t>{-5, 6, 3, Shape{4}, {-5, -2, 1, 4}},
+        RangeTest<int32_t>{10, 0, 1, Shape{0}, {}},
+        RangeTest<int32_t>{10, 5, -3, Shape{2}, {10, 7}}};
+
+    for (auto& test : int32_tests)
+    {
+        auto t_start = backend->create_tensor(element::i32, Shape{});
+        auto t_stop = backend->create_tensor(element::i32, Shape{});
+        auto t_step = backend->create_tensor(element::i32, Shape{});
+
+        copy_data(t_start, std::vector<int32_t>{test.start});
+        copy_data(t_stop, std::vector<int32_t>{test.stop});
+        copy_data(t_step, std::vector<int32_t>{test.step});
+
+        ex->call_with_validate({t_r}, {t_start, t_stop, t_step});
+
+        ASSERT_EQ(t_r->get_element_type(), element::i32);
+        ASSERT_EQ(t_r->get_shape(), test.expected_result_shape);
+
+        auto results = read_vector<int32_t>(t_r);
+
+        ASSERT_EQ(results, test.expected_result);
+    }
+}
+
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, reshape)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto build_graph = [&backend](bool zero_flag) {
+        // Create a graph for f(x,shape) = DynReshape(x,shape,zero_flag=zero_flag).
+        auto x = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+        auto shape = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+
+        auto dyn_reshape = make_shared<op::DynReshape>(x, shape, zero_flag);
+        EXPECT_TRUE(dyn_reshape->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+
+        auto f = make_shared<Function>(NodeVector{dyn_reshape}, ParameterVector{x, shape});
+
+        auto ex = backend->compile(f);
+
+        return ex;
+    };
+
+    auto t_r = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+    auto ex_flag_off = build_graph(false);
+    auto ex_flag_on = build_graph(true);
+
+    std::vector<std::tuple<bool, Shape, std::vector<int32_t>, std::vector<int64_t>, Shape>> tests;
+
+    tests.emplace_back(make_tuple(
+        false, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6}, vector<int64_t>{6}, Shape{6}));
+    tests.emplace_back(make_tuple(
+        true, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6}, vector<int64_t>{6}, Shape{6}));
+    tests.emplace_back(make_tuple(
+        false, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6}, vector<int64_t>{-1}, Shape{6}));
+    tests.emplace_back(make_tuple(false,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{2, -1},
+                                  Shape{2, 3}));
+    tests.emplace_back(make_tuple(false,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{3, -1},
+                                  Shape{3, 2}));
+    tests.emplace_back(make_tuple(false,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{3, 2, -1},
+                                  Shape{3, 2, 1}));
+    tests.emplace_back(make_tuple(true,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{3, 2, -1},
+                                  Shape{3, 2, 1}));
+    tests.emplace_back(make_tuple(true,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{0, 0, -1},
+                                  Shape{2, 3, 1}));
+    tests.emplace_back(make_tuple(true,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{2, 0, -1},
+                                  Shape{2, 3, 1}));
+    tests.emplace_back(make_tuple(
+        true, Shape{0, 3, 4}, vector<int32_t>{}, vector<int64_t>{3, -1, 2}, Shape{3, 0, 2}));
+
+    for (auto& test : tests)
+    {
+        bool zero_flag = get<0>(test);
+        const Shape& in_shape = get<1>(test);
+        const std::vector<int32_t>& data = get<2>(test);
+        const std::vector<int64_t>& dims = get<3>(test);
+        const Shape& out_shape = get<4>(test);
+
+        auto t_x = backend->create_tensor(element::i32, in_shape);
+        auto t_shape = backend->create_tensor(element::i64, Shape{dims.size()});
+
+        copy_data(t_x, data);
+        copy_data(t_shape, dims);
+
+        auto ex = zero_flag ? ex_flag_on : ex_flag_off;
+        ex->call_with_validate({t_r}, {t_x, t_shape});
+
+        ASSERT_EQ(t_r->get_element_type(), element::i32);
+        ASSERT_EQ(t_r->get_shape(), out_shape);
+
+        auto results = read_vector<int32_t>(t_r);
+
+        ASSERT_EQ(results, data);
+    }
+}

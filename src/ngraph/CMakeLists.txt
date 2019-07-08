@@ -31,11 +31,15 @@ set (SRC
     builder/numpy_transpose.hpp
     builder/quantization.cpp
     builder/quantization.hpp
+    builder/quantized_conv_builder.cpp
+    builder/quantized_conv_builder.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
     builder/quantization/quantized_linear_matmul.cpp
     builder/quantization/quantized_linear_matmul.hpp
     builder/quantization_util.hpp
+    builder/quantization_utils.hpp
+    builder/quantization_utils.cpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
     builder/reshape.cpp
@@ -142,6 +146,8 @@ set (SRC
     op/experimental/dyn_broadcast.hpp
     op/experimental/dyn_pad.cpp
     op/experimental/dyn_pad.hpp
+    op/experimental/dyn_replace_slice.cpp
+    op/experimental/dyn_replace_slice.hpp
     op/experimental/dyn_reshape.cpp
     op/experimental/dyn_reshape.hpp
     op/experimental/dyn_slice.cpp
@@ -152,14 +158,14 @@ set (SRC
     op/experimental/quantized_avg_pool.hpp
     op/experimental/quantized_concat.cpp
     op/experimental/quantized_concat.hpp
-    op/experimental/quantized_conv.cpp
-    op/experimental/quantized_conv.hpp
     op/experimental/quantized_conv_bias.cpp
     op/experimental/quantized_conv_bias.hpp
     op/experimental/quantized_conv_relu.cpp
     op/experimental/quantized_conv_relu.hpp
     op/experimental/quantized_max_pool.cpp
     op/experimental/quantized_max_pool.hpp
+    op/experimental/range.cpp
+    op/experimental/range.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
     op/experimental/tile.cpp
@@ -168,6 +174,8 @@ set (SRC
     op/experimental/quantized_dot.hpp
     op/experimental/quantized_dot_bias.cpp
     op/experimental/quantized_dot_bias.hpp
+    op/experimental/compiled_kernel.cpp
+    op/experimental/compiled_kernel.hpp
     op/experimental/transpose.cpp
     op/experimental/transpose.hpp
     op/experimental/layers/ctc_greedy_decoder.cpp
@@ -246,6 +254,10 @@ set (SRC
     op/product.hpp
     op/quantize.cpp
     op/quantize.hpp
+    op/quantized_convolution.cpp
+    op/quantized_convolution.hpp
+    op/recv.cpp
+    op/recv.hpp
     op/relu.cpp
     op/relu.hpp
     op/replace_slice.cpp
@@ -264,6 +276,8 @@ set (SRC
     op/scatter_nd_add.hpp
     op/select.cpp
     op/select.hpp
+    op/send.cpp
+    op/send.hpp
     op/sigmoid.cpp
     op/sigmoid.hpp
     op/sign.cpp
@@ -310,6 +324,8 @@ set (SRC
     op/fused/group_conv.cpp
     op/fused/group_conv_transpose.hpp
     op/fused/group_conv_transpose.cpp
+    op/fused/gru_cell.cpp
+    op/fused/gru_cell.hpp
     op/fused/leaky_relu.cpp
     op/fused/leaky_relu.hpp
     op/fused/lstm_cell.cpp
@@ -320,6 +336,8 @@ set (SRC
     op/fused/normalize.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
+    op/fused/rnn_cell.cpp
+    op/fused/rnn_cell.hpp
     op/fused/scale_shift.cpp
     op/fused/scale_shift.hpp
     op/fused/shuffle_channels.cpp
@@ -352,7 +370,6 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
-    op/util/reshape.hpp
     op/util/rnn_cell_base.cpp
     op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
@@ -440,6 +457,8 @@ set (SRC
     rank.hpp
     runtime/aligned_buffer.cpp
     runtime/aligned_buffer.hpp
+    runtime/allocator.cpp
+    runtime/allocator.hpp
     runtime/backend.cpp
     runtime/backend.hpp
     runtime/backend_manager.cpp

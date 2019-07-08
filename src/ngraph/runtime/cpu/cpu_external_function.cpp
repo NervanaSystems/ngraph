@@ -33,6 +33,10 @@
 #include "ngraph/codegen/execution_engine.hpp"
 #endif
 
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/pass/mlir_subgraph_extraction.hpp"
+#endif
+
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/output.hpp"
 #include "ngraph/file_util.hpp"
@@ -69,10 +73,10 @@
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
@@ -108,6 +112,7 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -171,7 +176,6 @@
 #include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
-#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -427,8 +431,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::And), &runtime::cpu::CPU_Emitter::emit<op::And>},
     {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
     {TI(ngraph::op::CPULeakyRelu), &runtime::cpu::CPU_Emitter::emit<op::CPULeakyRelu>},
-    {TI(ngraph::runtime::cpu::op::LoopKernel),
-     &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::LoopKernel>},
+    {TI(ngraph::op::CompiledKernel), &runtime::cpu::CPU_Emitter::emit<op::CompiledKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
     {TI(ngraph::op::GenerateMask), &runtime::cpu::CPU_Emitter::emit<ngraph::op::GenerateMask>},
     {TI(ngraph::op::ConvolutionAdd), &runtime::cpu::CPU_Emitter::emit<op::ConvolutionAdd>},
@@ -924,7 +927,8 @@ using namespace ngraph::runtime;
             // Always enable nodes computing output tensors or nodes whose outputs might get
             // overwritten due to inplace kernels
             // TODO (jbobba) - Do we need to handle cacheability
-            if (computes_result(node.get()) || possibly_overwritten(node.get()))
+            if (computes_result(node.get()) || possibly_overwritten(node.get()) ||
+                node->has_state())
             {
                 writer << " || 1";
             }
@@ -1180,13 +1184,24 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS);
-    REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
-    REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
+
+    // Disable CPUFusion if MLIR is enabled to preserve core ops.
+    if (std::getenv("NGRAPH_MLIR") == nullptr)
+    {
+        REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass);
+    }
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass);
 #if defined(NGRAPH_HALIDE)
     REGISTER_KNOBBED_PASS(HalideSubgraphExtraction, true, ngraph::runtime::cpu::pass);
+#endif
+
+#ifdef NGRAPH_MLIR_ENABLE
+    if (std::getenv("NGRAPH_MLIR") != nullptr)
+    {
+        REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass);
+    }
 #endif
 
     NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
@@ -1424,7 +1439,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         bool disable_caching =
             (reuse_memory &&
              !cacheable) // Check cacheability only if we are reusing intermediate tensors
-            || computes_result(node.get()) || possibly_overwritten(node.get());
+            || computes_result(node.get()) || possibly_overwritten(node.get()) || node->has_state();
 
         vector<reference_wrapper<bool>> in_stale, out_stale;
         for (const auto& name : in_names)
@@ -1810,7 +1825,8 @@ bool runtime::cpu::CPU_ExternalFunction::is_codegen(const ngraph::pass::PassConf
 }
 
 shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
-    runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config)
+    runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config,
+                                                        Allocator* allocator)
 {
 #if defined(NGRAPH_DEX_ONLY)
     if (is_codegen(pass_config))
@@ -1838,7 +1854,8 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     return make_shared<ngraph::runtime::cpu::CPU_CallFrame>(shared_from_this(),
                                                             m_compiled_init_ctx_func,
                                                             m_compiled_destroy_ctx_func,
-                                                            m_compiled_function);
+                                                            m_compiled_function,
+                                                            allocator);
 }
 
 const runtime::cpu::LayoutDescriptorPtrs&

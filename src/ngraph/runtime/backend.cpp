@@ -110,9 +110,20 @@ bool runtime::Backend::is_supported_property(const Property prop) const
     return false;
 }
 
+void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec)
+{
+}
+
 std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_stream)
 {
     throw runtime_error("load opertion unimplemented.");
+}
+
+bool runtime::Backend::is_device_memory(void* ptr)
+{
+    // override this method for each supported backend to determine if the passed pointer is in
+    // device pinned memory or not
+    return false;
 }
 
 void runtime::Backend::set_backend_shared_library_search_directory(const string& path)
@@ -127,4 +138,10 @@ const string& runtime::Backend::get_backend_shared_library_search_directory()
         s_backend_shared_library_search_directory = find_my_file();
     }
     return s_backend_shared_library_search_directory;
+}
+
+bool runtime::Backend::set_config(const map<string, string>& config, string& error)
+{
+    error = "set_config not supported";
+    return false;
 }

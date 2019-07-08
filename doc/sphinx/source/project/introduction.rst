@@ -1,9 +1,28 @@
-.. introduction:
+.. project/introduction.rst:
 
-############
-Introduction
-############
+#######
+Summary
+#######
 
+nGraph is an open-source graph compiler for :abbr:`Artificial Neural Networks (ANNs)`. 
+The nGraph Compiler stack provides an inherently efficient graph-based compilation 
+infrastructure designed to be compatible with many upcoming 
+:abbr:`Application-Specific Integrated Circuits (ASICs)`, like the Intel® Nervana™ 
+Neural Network Processor (Intel® Nervana™ NNP), while also unlocking a massive 
+performance boost on any existing hardware targets for your neural network: both 
+GPUs and CPUs. Using its flexible infrastructure, you will find it becomes much 
+easier to create Deep Learning (DL) models that can adhere to the "write once, 
+run anywhere" mantra that enables your AI solutions to easily go from concept to 
+production to scale.
+
+Frameworks using nGraph to execute workloads have shown `up to 45X`_ performance 
+boost compared to native implementations. 
+
+For a detailed overview, see below; for a more historical perspective, see 
+our `arXiv`_ paper.
+
+Motivations
+===========
 
 Developers working to craft solutions with :abbr:`Artificial Intelligence (AI)`
 face a steep learning curve in taking their concepts from design to 
@@ -48,10 +67,6 @@ work with many of the new and emerging problems in Deep Learning including
 larger datasets, data that must be encrypted, and data-in-motion. Our solution 
 also addresses the scalability issue with kernel libraries, the current 
 popular solution to accelerating deep learning performance. 
-
-
-Motivations
-===========
 
 The current state-of-the-art software solution for speeding up deep learning 
 computation is to integrate kernel libraries like Intel® Math Kernel Library 
@@ -151,7 +166,7 @@ final product of required kernels is increasing exponentially.
 
 PlaidML addresses the kernel explosion problem in a manner that lifts a heavy 
 burden off kernel developers. It automatically lowers networks from nGraph 
-into Tile, a :abbr:Domain-Specific Language (DSL) designed for deep learning 
+into Tile, a :abbr:`Domain-Specific Language (DSL)` designed for deep learning 
 that allows developers to express how an operation should calculate tensors in
 an intuitive, mathematical form via `Stripe`_. Integration of PlaidML with 
 nGraph means extra flexibility to support newer deep learning models in the 
@@ -187,6 +202,7 @@ will make life easier for many kinds of developers:
 #. New DL accelerator developers creating an end-to-end software stack from 
    a deep learning framework to their silicon.  
 
-
+.. _arXiv: https://arxiv.org/abs/1801.08058
+.. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/
 .. _more transistors on denser and denser circuits: https://www.intel.com/content/www/us/en/silicon-innovations/moores-law-technology.html
 .. _Stripe: https://arxiv.org/abs/1903.06498
