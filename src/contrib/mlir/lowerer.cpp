@@ -137,11 +137,10 @@ namespace
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
         OwningRewritePatternList& patterns)
     {
-        RewriteListBuilder<NGAddOpConversion, 
+        RewriteListBuilder<NGAddOpConversion,
                            NGReluOpConversion,
                            NGDotOpConversion,
-                           NGReturnOpConversion>::build(
-            patterns, &getContext(), *this);
+                           NGReturnOpConversion>::build(patterns, &getContext(), *this);
     }
 
     void DialectLoweringPass::findOutputValues()
@@ -402,7 +401,6 @@ namespace
                      "NGReluOp with float element type should not be lowered until MLIR supports "
                      "lowering !std.CmpF");
 
-        
         // clang-format off
         LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
@@ -414,7 +412,8 @@ namespace
             {
                 ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
                 iRes(ivs) = intrinsics::select(val > zero, val, zero);
-            } else 
+            } 
+            else 
             {
                 NGRAPH_CHECK(false, "Unsupported type for Relu");
             }
