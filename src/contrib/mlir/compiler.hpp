@@ -132,7 +132,7 @@ namespace ngraph
                 mlir::MLIRContext m_context;
 
                 std::unique_ptr<mlir::Module> m_module;
-                std::unique_ptr<mlir::FuncBuilder> m_builder;
+                std::unique_ptr<mlir::OpBuilder> m_builder;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
 
                 using TensorToInfo = std::pair<descriptor::Tensor*, TensorInfo>;

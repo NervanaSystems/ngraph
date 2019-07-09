@@ -34,7 +34,6 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
@@ -45,6 +44,7 @@
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/scatter_add.hpp"
@@ -748,9 +748,25 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConvolution)
                 {
+                    auto qconv = static_cast<ngraph::op::QuantizedConvolution*>(node);
+                    auto input_zero_point =
+                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(3));
+                    auto filter_zero_point =
+                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(5));
+                    auto output_zero_point =
+                        dynamic_pointer_cast<ngraph::op::Constant>(qconv->get_argument(7));
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
+                        // Mkldnn assumes zero point to be zero
+                        if (input_zero_point == nullptr || filter_zero_point == nullptr ||
+                            output_zero_point == nullptr || !(ngraph::is_zero(input_zero_point)) ||
+                            !(ngraph::is_zero(filter_zero_point)) ||
+                            !(ngraph::is_zero(output_zero_point)))
+                        {
+                            return;
+                        }
+
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
                 }

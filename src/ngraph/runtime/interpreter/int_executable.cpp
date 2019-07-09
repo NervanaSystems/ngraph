@@ -47,9 +47,6 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
-    // Run this pass for the second time since, some fused operators like LSTMCell may use
-    // other fused operators inside.
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
     pass_manager.register_pass<pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
