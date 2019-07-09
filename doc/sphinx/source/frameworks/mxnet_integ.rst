@@ -7,12 +7,7 @@ MXNet\* bridge
 
 .. deprecated:: 0.21.0
 
-
 * See the nGraph-MXNet `Integration Guide`_ on the nGraph-MXNet repo.
-
-* **Testing inference latency**: See the :doc:`../../project/extras/testing_latency.rst` 
-  doc for a fully-documented example how to compile and test latency with an 
-  MXNet-supported model.  
 
 .. note:: The nGraph-MXNet bridge is designed to be used with trained models 
    only; it does not support distributed training.

@@ -1,4 +1,4 @@
-.. homomorphic_encryption:
+.. project/extras/homomorphic_encryption.rst:
 
 Homomorphic Encryption (HE)
 ===========================

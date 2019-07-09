@@ -1,4 +1,4 @@
-.. distributed_training:
+.. project/extras/distributed_training.rst:
 
 Distributed training with nGraph
 ================================

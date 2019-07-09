@@ -1,4 +1,4 @@
-.. testing_latency:
+.. project/extras/testing_latency.rst:
 
 
 Testing latency  

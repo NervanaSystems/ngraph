@@ -46,6 +46,7 @@ Output will look something like:
 More detail in the `ngraph_bridge examples`_ directory. 
 
 
+
 ONNX
 ====
 
@@ -65,7 +66,6 @@ for nGraph, ONNX and NumPy:
 Now you can start exploring some of the :doc:`onnx_integ` examples.
 
 See also nGraph's :doc:`../python_api/index`.   
-
 
 
 Other integration paths
