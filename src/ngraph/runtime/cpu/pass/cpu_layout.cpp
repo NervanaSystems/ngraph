@@ -36,7 +36,6 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
@@ -48,6 +47,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/result.hpp"
@@ -554,10 +554,26 @@ namespace ngraph
                         ConvolutionLayout<ngraph::op::QuantizedConvolution, false>(
                             node, i_mds, o_mds);
 
-                        auto scale_input_md = mkldnn_utils::create_default_mkldnn_md(
+                        auto input_scale_md = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 2, false, memory::format::x);
+                        auto input_zero_point_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 3, false, memory::format::x);
+                        auto filter_scale_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 4, false, memory::format::x);
+                        auto filter_zero_point_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 5, false, memory::format::x);
+                        auto output_scale_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 6, false, memory::format::x);
+                        auto output_zero_point_md = mkldnn_utils::create_default_mkldnn_md(
+                            node.get(), 7, false, memory::format::x);
 
-                        i_mds.push_back(scale_input_md);
+                        i_mds.push_back(input_scale_md);
+                        i_mds.push_back(input_zero_point_md);
+                        i_mds.push_back(filter_scale_md);
+                        i_mds.push_back(filter_zero_point_md);
+                        i_mds.push_back(output_scale_md);
+                        i_mds.push_back(output_zero_point_md);
+
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
