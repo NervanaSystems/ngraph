@@ -37,6 +37,7 @@ namespace
 {
     using namespace mlir;
     using namespace mlir::edsc;
+    using namespace mlir::edsc::op;
     using namespace ngraph::runtime;
 
     class DialectLoweringPass;
@@ -401,19 +402,23 @@ namespace
                      "NGReluOp with float element type should not be lowered until MLIR supports "
                      "lowering !std.CmpF");
 
+        
         // clang-format off
-        LoopNestBuilder(pivs, lbs, ubs, steps)(
-            // single stmt body
-            [&] {
-                    if (auto floatTy = elemTy.dyn_cast<FloatType>()) {
-                        ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
-                        auto cmpZero = ValueHandle(ScopedContext::getBuilder()->create<CmpFOp>(ScopedContext::getLocation(), CmpFPredicate::OGT, static_cast<ValueHandle>(iLHS(ivs)), zero).getResult());
-                        iRes(ivs) = intrinsics::select(cmpZero, static_cast<ValueHandle>(iLHS(ivs)), zero);
-                    } else if (auto intTy = elemTy.dyn_cast<IntegerType>()){
-                        ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
-                        auto cmpZero = ValueHandle(ScopedContext::getBuilder()->create<CmpIOp>(ScopedContext::getLocation(), CmpIPredicate::SGT, static_cast<ValueHandle>(iLHS(ivs)), zero).getResult());
-                        iRes(ivs) = intrinsics::select(cmpZero, static_cast<ValueHandle>(iLHS(ivs)), zero);
-                });
+        LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+            ValueHandle val = iLHS(ivs);
+            if (auto floatTy = elemTy.dyn_cast<FloatType>()) {
+                ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+                iRes(ivs) = intrinsics::select(val > zero, val, zero);
+            } 
+            else if (auto intTy = elemTy.dyn_cast<IntegerType>())
+            {
+                ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
+                iRes(ivs) = intrinsics::select(val > zero, val, zero);
+            } else 
+            {
+                NGRAPH_CHECK(false, "Unsupported type for Relu");
+            }
+        });
         // clang-format on
         rewriter.replaceOp(op, {result});
         return matchSuccess();
