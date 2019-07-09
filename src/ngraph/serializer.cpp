@@ -60,7 +60,6 @@
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
@@ -121,6 +120,7 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/recv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -1635,13 +1635,29 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
             auto data_dilation_strides = node_js["data_dilation_strides"];
-            node = make_shared<op::Convolution>(args[0],
-                                                args[1],
-                                                window_movement_strides,
-                                                window_dilation_strides,
-                                                padding_below,
-                                                padding_above,
-                                                data_dilation_strides.get<std::vector<size_t>>());
+            auto output_type = read_element_type(node_js.at("output_type"));
+            auto input_axes = node_js.at("input_axes").get<set<size_t>>();
+            auto filter_axes = node_js.at("filter_axes").get<set<size_t>>();
+            auto output_axes = node_js.at("output_axes").get<set<size_t>>();
+            node = make_shared<op::QuantizedConvolution>(
+                args[0],
+                args[1],
+                window_movement_strides,
+                window_dilation_strides,
+                padding_below,
+                padding_above,
+                data_dilation_strides.get<std::vector<size_t>>(),
+                args[2],
+                args[3],
+                args[4],
+                args[5],
+                args[6],
+                args[7],
+                output_type,
+                input_axes,
+                filter_axes,
+                output_axes);
+
             break;
         }
         case OP_TYPEID::QuantizedDotBias: { break;
@@ -2706,6 +2722,10 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["input_axes"] = tmp->get_input_axes();
+        node["filter_axes"] = tmp->get_filter_axes();
+        node["output_axes"] = tmp->get_output_axes();
         break;
     }
     case OP_TYPEID::QuantizedDotBias: { break;

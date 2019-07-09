@@ -20,10 +20,12 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/pass/pass_config.hpp"
+#include "ngraph/runtime/allocator.hpp"
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -139,6 +141,23 @@ public:
     /// \param op_name is the name of the backend specific op
     /// \returns a shared pointer to the op if found, else nullptr
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
+
+    /// \brief Returns memory allocator used by backend for host allocations
+    virtual Allocator* get_host_memory_allocator() { return nullptr; }
+    /// \brief Set the host memory allocator to be used by the backend
+    /// \param allocator is pointer to host memory allocator object
+    virtual void set_host_memory_allocator(std::unique_ptr<Allocator> allocator) {}
+    /// \brief Returns memory allocator used by backend for device allocations
+    virtual Allocator* get_device_memory_allocator()
+    {
+        // override this method from each supported backend to return
+        // its own device memory allocator
+        return nullptr;
+    }
+
+    /// \brief method for each supported backend to determine if the passed pointer is in device pinned memory or not
+    /// \param ptr pointer to the memory to determine if its in device memory or not
+    virtual bool is_device_memory(void* ptr);
 
     /// \brief Allows sending backend specific configuration. The map contains key, value pairs
     ///     specific to a particluar backend. The definition of these key, value pairs is
