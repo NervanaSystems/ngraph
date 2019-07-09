@@ -310,3 +310,49 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_bdir_short_input_seq)
     test_case.set_tolerance(DEFAULT_FLOAT_TOLERANCE_BITS + 3);
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_mixed_seq_reverse)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_mixed_seq_reverse.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    size_t hidden_size = 3;
+
+    // X
+    test_case.add_input<float>({1.f, 2.f, 10.f, 11.f});
+    // W
+    test_case.add_input<float>(
+        {0.1f, 0.2f, 0.3f, 0.4f, 1.f, 2.f, 3.f, 4.f, 10.f, 11.f, 12.f, 13.f});
+    // R
+    test_case.add_input<float>(std::vector<float>(4 * hidden_size * hidden_size, 0.1f));
+    // sequence_lens
+    test_case.add_input<int>({1, 2});
+
+    // Y
+    test_case.add_expected_output<float>(Shape{2, 1, 2, 3},
+                                         {0.28828844f,
+                                          0.36581877f,
+                                          0.45679423f,
+                                          0.64046413f,
+                                          0.82303363f,
+                                          0.91610711f,
+                                          0.f,
+                                          0.f,
+                                          0.f,
+                                          0.62759886f,
+                                          0.71640738f,
+                                          0.74624585f});
+    // Y_h
+    test_case.add_expected_output<float>(
+        Shape{1, 2, 3},
+        {0.28828844f, 0.36581877f, 0.45679423f, 0.64046413f, 0.82303363f, 0.91610711f});
+    // Y_c
+    test_case.add_expected_output<float>(
+        Shape{1, 2, 3},
+        {0.52497941f, 0.54983425f, 0.5744428f, 1.34960834f, 1.54772296f, 1.65633056f});
+
+    test_case.set_tolerance(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
+    test_case.run();
+}
