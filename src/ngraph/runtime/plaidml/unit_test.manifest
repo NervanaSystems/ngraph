@@ -60,37 +60,7 @@ generate_mask
 generate_mask2
 avg_pool_3d
 avg_pool_3d_uneven_strided_padded_include_in_computation
-quantize_dynamic_offset                 # Quantization/Dequantization is unimplemented
-dequantize_dynamic_offset               # Quantization/Dequantization is unimplemented
-dequantize_int8_zero_offset             # Quantization/Dequantization is unimplemented
-dequantize_int32                        # Quantization/Dequantization is unimplemented
-dequantize_int32_zero_offset            # Quantization/Dequantization is unimplemented
-dequantize_zero_offset                  # Quantization/Dequantization is unimplemented
-quantize_ROUND_NEAREST_TOWARD_ZERO      # Quantization/Dequantization is unimplemented
-quantize_ROUND_NEAREST_UPWARD           # Quantization/Dequantization is unimplemented
-quantize_ROUND_NEAREST_DOWNWARD         # Quantization/Dequantization is unimplemented
-quantize_ROUND_NEAREST_TOWARD_EVEN      # Quantization/Dequantization is unimplemented
-quantize_ROUND_NEAREST_TOWARD_INFINITY  # Quantization/Dequantization is unimplemented
-quantize_ROUND_TOWARD_INFINITY          # Quantization/Dequantization is unimplemented
-quantize_ROUND_TOWARD_ZERO              # Quantization/Dequantization is unimplemented
-quantize_ROUND_UP                       # Quantization/Dequantization is unimplemented
-quantize_ROUND_DOWN                     # Quantization/Dequantization is unimplemented
-quantize                                # Quantization/Dequantization is unimplemented
-quantize_zero_offset                    # Quantization/Dequantization is unimplemented
-quantize_axes                           # Quantization/Dequantization is unimplemented
-quantize_dynamic_offset                 # Quantization/Dequantization is unimplemented
-quantize_int8                           # Quantization/Dequantization is unimplemented
-quantize_int8_zero_offset               # Quantization/Dequantization is unimplemented
-quantize_int32                          # Quantization/Dequantization is unimplemented
-quantize_int32_zero_offset              # Quantization/Dequantization is unimplemented
-quantize_clamp                          # Quantization/Dequantization is unimplemented
-quantize_clamp_int8                     # Quantization/Dequantization is unimplemented
-quantize_clamp_int32                    # Quantization/Dequantization is unimplemented
-quantize_clamp_int32_zero_offset        # Quantization/Dequantization is unimplemented
-quantize_clamp_uint8                    # Quantization/Dequantization is unimplemented
-dequantize                              # Quantization/Dequantization is unimplemented
-dequantize_axes                         # Quantization/Dequantization is unimplemented
-dequantize_int8                         # Quantization/Dequantization is unimplemented
+quantize_clamp_int32                    # Requires fp64 inputs, which won't work on GPUs
 numeric_float_nan
 numeric_double_nan
 shape_of_scalar
@@ -259,12 +229,6 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
-rnn_cell_no_bias
-rnn_cell_bias_clip
-rnn_cell_activation_function
-gru_cell_bias_clip
-gru_cell_linear_before_reset
-gru_cell_activation_function
 
 # dgkutnic ww24.5: these tests are to be triaged by the PlaidML team
 # ww25.2: re-scrubbed this list of tests after fixing check_inputs
@@ -289,3 +253,31 @@ group_conv_transpose
 group_conv_transpose_output_shape
 divide_python_rounding_int32
 backwards_batchmatmul_tensor2_tensor2
+
+# unsupported ops: 'QuantizedConvolution', 'QuantizedDot', 'TopK', 'Erf', 'EmbeddingLookup'
+model_quant_conv_linear
+model_conv_integer_no_zero_point
+model_matmul_integer_no_zero_point
+model_matmul_integer_4d_no_zero_point
+model_top_k
+model_erf
+model_erf_int32
+model_hardmax
+quantized_convolution
+quantized_conv_int32_output
+
+# node validation error: "Argument shapes are inconsistent."
+model_lstm_fwd_with_clip
+model_lstm_fwd_mixed_seq
+model_lstm_fwd_hardsigmoid_activation
+model_reduce_log_sum
+model_reduce_log_sum_exp
+model_reduce_mean
+
+# result mismatch
+model_dequantize_linear_scalar_zero_scale_int8
+model_softmax
+avg_pool_3d_uneven_strided_padded
+rnn_cell_activation_function
+gru_cell_bias_clip
+gru_cell_linear_before_reset

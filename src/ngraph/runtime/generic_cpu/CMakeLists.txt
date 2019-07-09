@@ -15,10 +15,10 @@
 # ******************************************************************************
 
 if (NGRAPH_GENERIC_CPU_ENABLE)
-    find_package(OpenMP)
-    if (OPENMP_FOUND)
-        add_compile_options(${OpenMP_CXX_FLAGS})
-    endif()
+    # find_package(OpenMP)
+    # if (OPENMP_FOUND)
+    #     add_compile_options(${OpenMP_CXX_FLAGS})
+    # endif()
     add_library(gcpu_backend SHARED gcpu_backend.cpp gcpu_executable.cpp node_wrapper.cpp)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(gcpu_backend PROPERTIES
