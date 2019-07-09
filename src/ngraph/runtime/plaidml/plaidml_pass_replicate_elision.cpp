@@ -74,7 +74,7 @@ ngraph::runtime::plaidml::pass::ReplicateElision::ReplicateElision()
             if (elidable)
             {
                 replaced_any = true;
-                replace_node(replicate, replicate->get_arguments().at(0));
+                replace_node(replicate, replicate->get_argument(0));
             }
         }
 
