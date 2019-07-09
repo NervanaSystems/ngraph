@@ -13,6 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
+set(CMAKE_MACOSX_RPATH 1)
+if(APPLE)
+    set(CMAKE_INSTALL_RPATH "@loader_path/;@loader_path/../../..")
+elseif(DEFINED NGRAPH_RPATH)
+    set(CMAKE_INSTALL_RPATH "\$ORIGIN:\$ORIGIN/../../../:${NGRAPH_RPATH}")
+else()
+    set(CMAKE_INSTALL_RPATH "\$ORIGIN:\$ORIGIN/../../../")
+endif()
 
 set(SRC
     plaidml_backend.cpp
