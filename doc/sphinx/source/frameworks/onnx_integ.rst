@@ -4,7 +4,6 @@
 ONNX Support
 ============
 
-
 nGraph is able to import and execute ONNX models. Models are converted to 
 nGraph's internal representation and converted to ``Function`` objects, which 
 can be compiled and executed on one of nGraph's backends.
@@ -17,17 +16,6 @@ as an ONNX backend using the add-on package `nGraph ONNX`_.
    ``NGRAPH_ONNX_IMPORT_ENABLE`` flag. See `Building nGraph-ONNX 
    <ngraph_onnx_building>`_ for more information. All nGraph packages 
    published on PyPI are built with ONNX support.
-
-
-Installation
-------------
-
-To prepare your environment to use nGraph and ONNX, install the Python packages
-for nGraph, ONNX and NumPy:
-
-::
-
-    $ pip install ngraph-core onnx numpy
 
 
 Importing an ONNX model
