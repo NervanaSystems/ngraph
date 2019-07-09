@@ -49,7 +49,8 @@ public:
     }
 };
 
-std::unique_ptr<ngraph::runtime::Allocator> ngraph::runtime::create_default_allocator()
+ngraph::runtime::Allocator* ngraph::runtime::get_default_allocator()
 {
-    return std::unique_ptr<DefaultAllocator>(new DefaultAllocator());
+    static std::unique_ptr<DefaultAllocator> allocator(new DefaultAllocator());
+    return allocator.get();
 }
