@@ -313,3 +313,35 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
     return func;
 }
 #endif
+
+::testing::AssertionResult test_ordered_ops(shared_ptr<Function> f)
+{
+    set<shared_ptr<Node>> seen;
+    for (auto node : f->get_ordered_ops())
+    {
+        if (seen.count(node) > 0)
+        {
+            return ::testing::AssertionFailure() << "Duplication in ordered ops";
+        }
+        size_t arg_count = node->get_input_size();
+        for (size_t i = 0; i < arg_count; ++i)
+        {
+            shared_ptr<Node> dep = node->input(i).get_source_output().get_node_shared_ptr();
+            if (seen.count(dep) == 0)
+            {
+                return ::testing::AssertionFailure() << "Argument " << dep
+                                                     << " does not occur before op" << node;
+            }
+        }
+        for (shared_ptr<Node> dep : node->get_control_dependencies())
+        {
+            if (seen.count(dep) == 0)
+            {
+                return ::testing::AssertionFailure() << "Control dependency " << dep
+                                                     << " does not occur before op" << node;
+            }
+        }
+        seen.insert(node);
+    }
+    return ::testing::AssertionSuccess();
+}
