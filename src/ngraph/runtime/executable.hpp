@@ -73,6 +73,11 @@ public:
     ///    Saved stream may be read with Backend::load
     virtual void save(std::ostream& output_stream);
 
+    virtual std::vector<std::shared_ptr<runtime::Tensor>> create_input_tensor(size_t input_number,
+                                                             size_t pipeline_depth = 1);
+    virtual std::vector<std::shared_ptr<runtime::Tensor>> create_output_tensor(size_t input_number,
+                                                              size_t pipeline_depth = 1);
+
 protected:
     /// \brief Called at the end of compile to the values to be returned by get_parameters
     ///     and get_results

@@ -95,7 +95,6 @@ set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
 
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
-        async.cpp
         backend_debug_api.cpp
         builder.cpp
         backend_api.cpp)
