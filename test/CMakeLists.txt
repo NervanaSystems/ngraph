@@ -98,9 +98,6 @@ if (NGRAPH_INTERPRETER_ENABLE)
         backend_debug_api.cpp
         builder.cpp
         backend_api.cpp)
-        if (NGRAPH_CPU_ENABLE)
-            list(APPEND SRC hybrid_backend.cpp)
-        endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
@@ -170,6 +167,8 @@ set(MULTI_TEST_SRC
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
+    dyn_replace_slice_test.in.cpp
+    dyn_slice_test.in.cpp
     dynamic.in.cpp
 )
 
@@ -242,6 +241,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
+# So many type_prop tests these days that we need to set /bigobj flag for MSVS.
+# We should probably split up type_prop.cpp.
+if (MSVS)
+    target_compile_options(unit-test PRIVATE "/bigobj")
+endif()
+
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
@@ -257,6 +262,8 @@ endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
     target_link_libraries(unit-test PRIVATE plaidml_backend)
+    # Some PlaidML devices aren't so precise, so we increase the allowable tolerance.
+    target_compile_definitions(unit-test PRIVATE "PlaidML_FLOAT_TOLERANCE_BITS=12")
 endif()
 
 if (NGRAPH_TBB_ENABLE)

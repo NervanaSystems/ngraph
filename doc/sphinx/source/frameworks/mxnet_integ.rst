@@ -1,7 +1,10 @@
 .. frameworks/mxnet_integ.rst:
 
 MXNet\* bridge
-===============
+==============
+
+.. deprecated:: 0.21.0
+
 
 * See the nGraph-MXNet `Integration Guide`_ on the nGraph-MXNet repo.
 

@@ -4,6 +4,8 @@ computation_reuse
 dot_matrix_vector_int64
 generate_mask
 generate_mask2
+# Gives inaccurate value
+sigmoid_bprop_n1c1h4
 # custom_mem is not implemented on GPU
 tensorview_custom_mem
 # integer is not supported by cuDNN on backward pooling
@@ -51,6 +53,9 @@ quantize_ROUND_TOWARD_INFINITY
 quantize_ROUND_TOWARD_ZERO
 quantize_ROUND_UP
 quantize_ROUND_DOWN
+quantized_convolution
+quantized_conv_non_zero_zero_point
+quantized_conv_int32_output
 shape_of_scalar
 shape_of_vector
 shape_of_matrix
@@ -78,6 +83,8 @@ any_2x2x3_eliminate_dims_0_1
 any_2x2x3_eliminate_dims_0_2
 any_2x2x3_eliminate_dims_1_2
 any_2x2x3_eliminate_dims_0_1_2
+all_dynamic_axis
+all_change_axis
 all_trivial
 all_2x2_to_scalar_false
 all_2x2_to_scalar_true
@@ -91,6 +98,7 @@ all_2x2x3_eliminate_dims_0_1
 all_2x2x3_eliminate_dims_0_2
 all_2x2x3_eliminate_dims_1_2
 all_2x2x3_eliminate_dims_0_1_2
+dynamic_GPU.all
 
 # GPU backend uses floats to implement these ops for int32
 floor_int32
@@ -133,6 +141,10 @@ model_quant_conv_linear_2d
 model_quant_conv_linear_3d
 model_qlinear_matmul
 model_qlinear_matmul_3d
+model_conv_integer_zero_point_zero
+model_conv_integer_no_zero_point
+model_conv_integer
+model_conv_integer_pads
 model_matmul_integer
 model_matmul_integer_zero_point_zero
 model_matmul_integer_no_zero_point
@@ -152,7 +164,6 @@ erf
 zero_sized_erf
 model_erf
 model_erf_int32
-gather
 gather_nd_scalar_from_2d
 gather_nd_1d_from_2d
 gather_nd_scalar_from_3d
@@ -164,12 +175,15 @@ gather_nd_batch_scalar_from_3d
 gather_nd_batch_1d_from_3d
 gather_nd_batch_2d_from_3d
 gather_nd_single_indices
-gather_scalar_indices
-gather_scalar_indices_no_axis
-gather_2d_indices_no_axis
-gather_3d_indices_no_axis
-gather_4d_indices_no_axis
 gather_4d_indices_no_axis_uint8
+gather_scalar_indices_axis_1_2d_input
+gather_1d_indices_axis_2_4d_input
+gather_2d_indices_axis_1_2d_input
+gather_scalar_indices_no_axis_2d_input
+gather_1d_indices_no_axis_1d_input
+gather_2d_indices_no_axis_2d_input
+gather_3d_indices_no_axis_2d_input
+gather_4d_indices_no_axis_2d_input
 gemm
 gemm_broadcast_input_C
 model_hardmax
@@ -196,3 +210,5 @@ gather_no_axis_bool
 fake_quantize
 fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
+send_recv
+send_recv_ring

@@ -21,14 +21,16 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Erf::type_name{"Erf"};
+
 shared_ptr<Node> op::Erf::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Erf>(new_args.at(0));
 }
 
-op::Erf::Erf(shared_ptr<Node> arg)
-    : UnaryElementwiseArithmetic("Erf", arg)
+op::Erf::Erf(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }

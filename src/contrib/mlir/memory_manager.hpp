@@ -17,8 +17,8 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <vector>
-
 namespace ngraph
 {
     namespace runtime

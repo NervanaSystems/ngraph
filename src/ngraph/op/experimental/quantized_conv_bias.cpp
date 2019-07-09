@@ -19,9 +19,10 @@
 #include "quantized_conv_bias.hpp"
 
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;

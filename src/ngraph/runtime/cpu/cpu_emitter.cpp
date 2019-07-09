@@ -123,6 +123,7 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/deconv.hpp"
+#include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
@@ -190,10 +191,18 @@ namespace ngraph
                 auto scale_index = mkldnn_emitter->get_scale_index<OP>();
                 auto scales_size = shape_size(node->get_input_shape(scale_index));
                 writer << "std::vector<float> dyn_scales;\n";
-                writer << "dyn_scales.assign(" << args[scale_index].get_name() << ", "
-                       << args[scale_index].get_name() << " + " << std::to_string(scales_size)
-                       << ");\n";
-
+                if (is_same<OP, ngraph::op::QuantizedConvolution>())
+                {
+                    writer << "dyn_scales.push_back(*" << args[2].get_name() << " * "
+                           << " * " << args[4].get_name() << " / "
+                           << " * " << args[6].get_name() << ");\n";
+                }
+                else
+                {
+                    writer << "dyn_scales.assign(" << args[scale_index].get_name() << ", "
+                           << args[scale_index].get_name() << " + " << std::to_string(scales_size)
+                           << ");\n";
+                }
                 // for Quantize
                 if (is_same<OP, ngraph::op::Quantize>())
                 {
@@ -262,10 +271,13 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::AllReduce)
             {
+                const ngraph::op::AllReduce* allreduce =
+                    static_cast<const ngraph::op::AllReduce*>(node);
                 writer << "ngraph::get_distributed_interface()->all_reduce(" << args[0].get_name()
                        << ", " << out[0].get_name() << ", "
                        << "ngraph::element::Type_t::" << args[0].get_element_type().get_type_name()
-                       << ", " << out[0].get_size() << ");\n";
+                       << ", " << out[0].get_size() << ", "
+                       << "ngraph::Reduce_t::" << allreduce->get_reduce_type() << ");\n";
             }
 
             template <>
@@ -1833,8 +1845,9 @@ namespace ngraph
                 writer.block_begin();
                 if ((args[0].get_element_type() == element::f64 ||
                      args[0].get_element_type() == element::f32 ||
-                     args[0].get_element_type() == element::u8) &&
-                    gather->get_axis() == 0)
+                     args[0].get_element_type() == element::u8 ||
+                     args[0].get_element_type() == element::i8) &&
+                    args[0].get_shape().size() <= 3 && out[0].get_shape().size() <= 3)
                 {
                     writer << "cpu::kernel::gather<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
@@ -1845,6 +1858,7 @@ namespace ngraph
                     writer << "                   {" << join(args[0].get_shape()) << "},\n";
                     writer << "                   {" << join(args[1].get_shape()) << "},\n";
                     writer << "                   {" << join(out[0].get_shape()) << "},\n";
+                    writer << "                   " << gather->get_axis() << ",\n";
                     writer << "                   0);\n";
                 }
                 else
@@ -1893,8 +1907,11 @@ namespace ngraph
                 }
 
                 writer.block_begin();
-                if (args[0].get_element_type() == element::f64 ||
-                    args[0].get_element_type() == element::f32)
+                if ((args[0].get_element_type() == element::f64 ||
+                     args[0].get_element_type() == element::f32 ||
+                     args[0].get_element_type() == element::u8 ||
+                     args[0].get_element_type() == element::i8) &&
+                    args[0].get_shape().size() <= 3 && args[2].get_shape().size() <= 3)
                 {
                     writer << "cpu::kernel::scatter_add<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
@@ -2221,12 +2238,8 @@ namespace ngraph
                     auto arg1_shape = args[1].get_shape();
                     auto result_shape = out[0].get_shape();
 
-                    auto scales_size = shape_size(node->get_input_shape(2));
-                    writer << "std::vector<float> dyn_scales;\n";
-                    writer << "dyn_scales.assign(" << args[2].get_name() << ", "
-                           << args[2].get_name() << " + " << std::to_string(scales_size) << ");\n";
-
-                    writer << "reference::convolution<" << out[0].get_type() << ">("
+                    writer << "reference::convolution<" << args[0].get_type() << " , "
+                           << args[1].get_type() << " , " << out[0].get_type() << ", int32_t>("
                            << args[0].get_name() << ",\n";
                     writer << "                         " << args[1].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
@@ -2243,7 +2256,12 @@ namespace ngraph
                            << "},\n";
                     writer << "                         {"
                            << join(convolution->get_data_dilation_strides()) << "}, \n";
-                    writer << "                         dyn_scales[0]);\n";
+                    writer << "                         " << args[2].get_name() << ",\n";
+                    writer << "                         " << args[3].get_name() << ",\n";
+                    writer << "                         " << args[4].get_name() << ",\n";
+                    writer << "                         " << args[5].get_name() << ",\n";
+                    writer << "                         " << args[6].get_name() << ",\n";
+                    writer << "                         " << args[7].get_name() << ");\n";
                 }
             }
 
@@ -4000,6 +4018,12 @@ namespace ngraph
                 writer << "           training, seed, keep_prob);\n";
                 writer << "}\n";
                 writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Dropout)
+            {
+                throw ngraph_error("Not yet implemented");
             }
 
             template <>

@@ -45,6 +45,7 @@ set(SRC
     builder/convert_layout.cpp
     builder/convolution.cpp
     builder/dot.cpp
+    builder/dropout.cpp
     builder/embedding_lookup.cpp
     builder/erf.cpp
     builder/gather.cpp
@@ -99,6 +100,7 @@ set(SRC
     op/conv_relu.cpp
     op/convert_layout.cpp
     op/deconv.cpp
+    op/dropout.cpp
     op/group_conv_bias.cpp
     op/halide_op.cpp
     op/leaky_relu.cpp

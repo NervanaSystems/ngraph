@@ -35,11 +35,12 @@
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
+#include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
+#include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
 #include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/LLVMIR/LLVMDialect.h>
-#include <mlir/LLVMIR/Transforms.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
@@ -76,7 +77,7 @@ void MLIRCompiler::init_mlir()
 
     if (!initialized)
     {
-        mlir::registerDialect<mlir::NGDialect>();
+        mlir::registerDialect<mlir::NGraphOpsDialect>();
         // Register any LLVM command line options
         llvm::cl::ParseEnvironmentOptions("ngraph", "MLIR_LLVM_OPTIONS", "");
         initialized = true;
@@ -134,7 +135,7 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     // create builder
-    m_builder = llvm::make_unique<mlir::FuncBuilder>(function.get());
+    m_builder = llvm::make_unique<mlir::OpBuilder>(function->getBody());
     build_ng_dialect();
     m_module->getFunctions().push_back(function.release());
     if (failed(m_module->verify()))
@@ -267,22 +268,29 @@ void MLIRCompiler::build_ng_dialect()
     create_return();
 }
 
-template <>
-mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
+namespace ngraph
 {
-    return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
-}
-
-template <>
-mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
-{
-    return compiler.create_unary_op<mlir::NGReluOp>(ng_node);
-}
-
-template <>
-mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
-{
-    return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
+    namespace runtime
+    {
+        namespace ngmlir
+        {
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
+            {
+                return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
+            }
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
+            {
+                return compiler.create_unary_op<mlir::NGReluOp>(ng_node);
+            }
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
+            {
+                return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
+            }
+        }
+    }
 }
 
 const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
@@ -354,6 +362,7 @@ void MLIRCompiler::bind_arguments()
     // malloc here since that's what allocateMemRefArguments use
     // TODO (nmostafa): Better way of doing this ? Use builder allocator ?
     MLIRMemMgr** mem_mgr_arg = reinterpret_cast<MLIRMemMgr**>(malloc(sizeof(void*)));
+    NGRAPH_CHECK(mem_mgr_arg != nullptr);
     *mem_mgr_arg = &get_mem_mgr();
     // inserting memory manager ptr in right location ?
     NGRAPH_CHECK(m_invoke_args.size() == get_mem_mgr_arg_id(func));
@@ -366,10 +375,14 @@ void MLIRCompiler::execute()
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
     // Lower Standard dialect to LLVM dialect.
-    auto converter = mlir::createStdToLLVMConverter();
-    auto r = converter->convert(m_module.get());
-    (void)r;
-    NGRAPH_CHECK(succeeded(r), "second conversion failed");
+    mlir::LLVMTypeConverter llvm_converter(&m_context);
+    OwningRewritePatternList patterns;
+    mlir::populateStdToLLVMConversionPatterns(llvm_converter, patterns);
+
+    mlir::ConversionTarget target(m_context);
+    target.addLegalDialect<mlir::LLVM::LLVMDialect>();
+    auto result = applyConversionPatterns(*m_module, target, llvm_converter, std::move(patterns));
+    NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
 
     dump_mlir_module("LLVM-IR Dialect Dump:");
 
@@ -441,6 +454,7 @@ mlir::StaticFloatMemRef* MLIRCompiler::allocate_memref_descriptor(mlir::Type typ
     // We should expand this with different types and dynamic MemRefs
     auto* descriptor =
         reinterpret_cast<mlir::StaticFloatMemRef*>(malloc(sizeof(mlir::StaticFloatMemRef)));
+    NGRAPH_CHECK(descriptor != nullptr, "NULL MemRef descriptor");
     descriptor->data = nullptr;
     return descriptor;
 }

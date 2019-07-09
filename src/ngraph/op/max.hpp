@@ -26,11 +26,21 @@ namespace ngraph
         class Max : public util::ArithmeticReduction
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a "max" reduction operation.
+            Max();
             /// \brief Constructs a max-reduction operation.
             ///
             /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Max(const std::shared_ptr<Node>& arg, const AxisSet& reduction_axes);
+            /// \param reduction_axes The axis positions (0-based) to be elimaxated.
+            Max(const Output<Node>& arg, const AxisSet& reduction_axes);
+            /// \brief Constructs a "max" reduction operation.
+            ///
+            /// \param arg The tensor to be reduced.
+            /// \param reduction_axes The axis positions (0-based) to be elimaxated.
+            Max(const Output<Node>& arg, const Output<Node>& reduction_axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

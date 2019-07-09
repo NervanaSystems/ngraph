@@ -41,19 +41,17 @@ namespace ngraph
                                                        const PartialShape& window_shape,
                                                        const Strides& window_strides,
                                                        const Strides& window_dilation,
-                                                       bool is_window_all_in_padding_allowed);
+                                                       bool is_window_all_in_padding_allowed,
+                                                       bool ceil_mode = false);
 
-    std::tuple<element::Type, PartialShape>
-        infer_convolution_forward(const Node* node,
-                                  element::Type et_batch,
-                                  element::Type et_filters,
-                                  const PartialShape& data_batch_shape,
-                                  const Strides& data_dilation,
-                                  const CoordinateDiff& data_padding_below,
-                                  const CoordinateDiff& data_padding_above,
-                                  const PartialShape& filters_shape,
-                                  const Strides& filter_strides,
-                                  const Strides& filter_dilation);
+    PartialShape infer_convolution_forward(const Node* node,
+                                           const PartialShape& data_batch_shape,
+                                           const Strides& data_dilation,
+                                           const CoordinateDiff& data_padding_below,
+                                           const CoordinateDiff& data_padding_above,
+                                           const PartialShape& filters_shape,
+                                           const Strides& filter_strides,
+                                           const Strides& filter_dilation);
 
     PartialShape infer_batched_pooling_forward(const Node* node,
                                                const PartialShape& data_batch_shape,
@@ -61,7 +59,8 @@ namespace ngraph
                                                const CoordinateDiff& data_padding_above,
                                                const PartialShape& window_shape,
                                                const Strides& window_strides,
-                                               bool is_window_all_in_padding_allowed);
+                                               bool is_window_all_in_padding_allowed,
+                                               bool ceil_mode = false);
 
     std::tuple<element::Type, PartialShape, PartialShape>
         infer_batch_norm_forward(const Node* node,
@@ -92,4 +91,15 @@ namespace ngraph
                             const op::PadType pad_type,
                             CoordinateDiff& padding_above,
                             CoordinateDiff& padding_below);
+
+    PartialShape infer_slice_shape(const Node* node,
+                                   const PartialShape& input_shape,
+                                   const std::vector<int64_t>& lb,
+                                   const std::vector<int64_t>& ub,
+                                   const std::vector<int64_t>& str,
+                                   const AxisSet& lb_mask,
+                                   const AxisSet& ub_mask,
+                                   const AxisSet& new_axis,
+                                   const AxisSet& shrink_mask,
+                                   const AxisSet& ellipsis_mask);
 }
