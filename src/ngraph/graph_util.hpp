@@ -88,15 +88,6 @@ namespace ngraph
 
         for (auto node : nodes)
         {
-            if (node->get_input_size() == 0)
-            {
-                if (!include_control_deps || node->get_control_dependencies().size() == 0)
-                {
-                    result.push_back(node);
-                    nodes_done.insert(node.get());
-                    continue;
-                }
-            }
             nodes_to_do.push(node.get());
         }
         while (nodes_to_do.size() > 0)
