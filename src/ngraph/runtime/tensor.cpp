@@ -14,12 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <functional>
-
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
-#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace ngraph;
@@ -96,42 +94,4 @@ void runtime::Tensor::copy_from(const ngraph::runtime::Tensor& source)
     AlignedBuffer buffer{size, 64};
     source.read(buffer.get_ptr(), size);
     write(buffer.get_ptr(), size);
-}
-
-future<void> runtime::Tensor::begin_write(const void* p, size_t size_in_bytes, size_t buffer_number)
-{
-    if (m_backend)
-    {
-        // auto f = m_promise.get_future();
-        return m_backend->post_async_write_event(
-            shared_from_this(), p, size_in_bytes, buffer_number);
-    }
-    else
-    {
-        throw runtime_error("Async operations not supported for this backend");
-    }
-    // using namespace std::placeholders;
-    // auto f = m_promise.get_future();
-    // auto bound_f = bind(&Tensor::write, this, _1, _2, _3);
-    // async(bound_f, p, 0, n);
-    // return f;
-}
-
-future<void> runtime::Tensor::begin_read(void* p, size_t size_in_bytes, size_t buffer_number)
-{
-    if (m_backend)
-    {
-        // auto f = m_promise.get_future();
-        return m_backend->post_async_read_event(
-            shared_from_this(), p, size_in_bytes, buffer_number);
-    }
-    else
-    {
-        throw runtime_error("Async operations not supported for this backend");
-    }
-    // using namespace std::placeholders;
-    // auto f = m_promise.get_future();
-    // auto bound_f = bind(&Tensor::read, this, _1, _2, _3);
-    // async(bound_f, p, 0, n);
-    // return f;
 }

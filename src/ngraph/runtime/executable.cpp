@@ -17,7 +17,6 @@
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
-#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/util.hpp"
@@ -26,11 +25,6 @@ using namespace std;
 using namespace ngraph;
 
 runtime::Executable::Executable()
-{
-}
-
-runtime::Executable::Executable(const shared_ptr<Backend>& backend)
-    : m_backend{backend}
 {
 }
 
@@ -128,17 +122,4 @@ vector<runtime::PerformanceCounter> runtime::Executable::get_performance_data() 
 void runtime::Executable::save(std::ostream& output_stream)
 {
     throw runtime_error("save opertion unimplemented.");
-}
-
-future<void> runtime::Executable::begin_execute(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
-{
-    if (m_backend)
-    {
-        return m_backend->post_async_execute_event(shared_from_this(), outputs, inputs);
-    }
-    else
-    {
-        throw runtime_error("Async operations not supported for this backend");
-    }
 }

@@ -38,8 +38,7 @@ namespace ngraph
     }
 }
 
-class ngraph::runtime::interpreter::INTBackend : public Backend,
-                                                 public std::enable_shared_from_this<INTBackend>
+class ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
     INTBackend();

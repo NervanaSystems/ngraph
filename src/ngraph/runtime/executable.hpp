@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <future>
 #include <memory>
 
 #include "ngraph/function.hpp"
@@ -30,15 +29,13 @@ namespace ngraph
     {
         class Tensor;
         class Executable;
-        class Backend;
     }
 }
 
-class ngraph::runtime::Executable : public std::enable_shared_from_this<Executable>
+class ngraph::runtime::Executable
 {
 public:
     Executable();
-    Executable(const std::shared_ptr<Backend>& backend);
     virtual ~Executable();
 
     /// \param outputs vector of runtime::Tensor used as outputs
@@ -53,16 +50,6 @@ public:
     /// \returns true if iteration is successful, false otherwise
     bool call_with_validate(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                             const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
-
-    /// \brief Asynchronously executes a single iteration of the Function. The `future` is used
-    ///     to monitor the execution.
-    /// \param outputs vector of runtime::Tensor used as outputs
-    /// \param inputs vector of runtime::Tensor used as inputs
-    /// \returns a valid std::future to monitor the execution. Use future.get() to get the results
-    ///     or future.wait*() to wait for completion.
-    virtual std::future<void>
-        begin_execute(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                      const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
 
     /// \brief Collect performance information gathered on a Function.
     /// \returns Vector of PerformanceCounter information.
@@ -95,5 +82,4 @@ protected:
 private:
     ngraph::ParameterVector m_parameters;
     ngraph::ResultVector m_results;
-    std::shared_ptr<Backend> m_backend;
 };

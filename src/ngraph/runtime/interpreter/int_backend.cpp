@@ -54,20 +54,20 @@ runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_o
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
-    return make_shared<runtime::HostTensor>(shared_from_this(), type, shape);
+    return make_shared<runtime::HostTensor>(type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::HostTensor>(shared_from_this(), type, shape, memory_pointer);
+    return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Executable>
     runtime::interpreter::INTBackend::compile(shared_ptr<Function> function,
                                               bool enable_performance_collection)
 {
-    return make_shared<INTExecutable>(shared_from_this(), function, enable_performance_collection);
+    return make_shared<INTExecutable>(function, enable_performance_collection);
 }
 
 bool runtime::interpreter::INTBackend::is_supported(const Node& node) const

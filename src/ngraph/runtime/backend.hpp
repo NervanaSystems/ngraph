@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <future>
 #include <memory>
 
 #include "ngraph/function.hpp"
@@ -43,7 +42,6 @@ namespace ngraph
 class ngraph::runtime::Backend
 {
 public:
-    Backend();
     virtual ~Backend();
     /// \brief Create a new Backend object
     /// \param type The name of a registered backend, such as "CPU" or "GPU".
@@ -169,76 +167,4 @@ public:
     /// \returns true if the configuration is supported, false otherwise. On false the error
     ///     parameter value is valid.
     virtual bool set_config(const std::map<std::string, std::string>& config, std::string& error);
-
-    friend class ngraph::runtime::Tensor;
-    friend class ngraph::runtime::Executable;
-
-    class AsyncEvent
-    {
-    public:
-        enum class Type
-        {
-            READ,
-            WRITE,
-            EXECUTE
-        };
-        AsyncEvent(Type type,
-                   const std::shared_ptr<Tensor>& tensor,
-                   void* p,
-                   size_t size_in_bytes,
-                   size_t buffer_number);
-        AsyncEvent(const std::shared_ptr<Executable>& m_executable,
-                   const std::vector<std::shared_ptr<runtime::Tensor>>& m_outputs,
-                   const std::vector<std::shared_ptr<runtime::Tensor>>& m_inputs);
-        void* get_data() const { return m_data; }
-        size_t get_size_in_bytes() const { return m_size_in_bytes; }
-        Type get_type() const { return m_type; }
-        size_t get_buffer_number() const { return m_buffer_number; }
-        std::shared_ptr<Executable> get_executable() const { return m_executable; }
-        std::shared_ptr<Tensor> get_tensor() const { return m_tensor; }
-        const std::vector<std::shared_ptr<runtime::Tensor>>& get_outputs() const
-        {
-            return m_outputs;
-        }
-        const std::vector<std::shared_ptr<runtime::Tensor>>& get_inputs() const { return m_inputs; }
-        std::future<void> get_future() { return m_promise.get_future(); }
-        void signal_result() { m_promise.set_value(); }
-        friend std::ostream& operator<<(std::ostream& out, const AsyncEvent& event);
-
-    private:
-        const Type m_type;
-        size_t m_buffer_number;
-        void* m_data;
-        const size_t m_size_in_bytes;
-        std::shared_ptr<Executable> m_executable;
-        std::shared_ptr<Tensor> m_tensor;
-        std::vector<std::shared_ptr<runtime::Tensor>> m_outputs;
-        std::vector<std::shared_ptr<runtime::Tensor>> m_inputs;
-        std::promise<void> m_promise;
-    };
-
-protected:
-    std::future<void> post_async_read_event(const std::shared_ptr<Tensor>& tensor,
-                                            void* p,
-                                            size_t size_in_bytes,
-                                            size_t buffer_number);
-    std::future<void> post_async_write_event(const std::shared_ptr<Tensor>& tensor,
-                                             const void* p,
-                                             size_t size_in_bytes,
-                                             size_t buffer_number);
-    std::future<void>
-        post_async_execute_event(const std::shared_ptr<Executable>& executable,
-                                 const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                                 const std::vector<std::shared_ptr<runtime::Tensor>>& inputs);
-
-    void async_thread_start();
-    void async_thread_stop();
-    void async_thread_process(const std::shared_ptr<AsyncEvent>& event);
-    void async_thread_entry();
-
-    std::deque<std::shared_ptr<AsyncEvent>> m_event_queue;
-    std::mutex m_event_queue_mutex;
-    std::condition_variable m_event_queue_condition;
-    std::unique_ptr<std::thread> m_event_queue_thread;
-    bool m_event_queue_active = false;
 };

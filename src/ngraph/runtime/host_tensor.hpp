@@ -42,18 +42,6 @@ public:
                const std::string& name);
     HostTensor(const ngraph::element::Type& element_type, const Shape& shape);
     HostTensor(const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer);
-    HostTensor(const std::shared_ptr<ngraph::runtime::Backend>& backend,
-               const ngraph::element::Type& element_type,
-               const Shape& shape);
-    HostTensor(const std::shared_ptr<ngraph::runtime::Backend>& backend,
-               const ngraph::element::Type& element_type,
-               const Shape& shape,
-               void* memory_pointer);
-    HostTensor(const std::shared_ptr<ngraph::runtime::Backend>& backend,
-               const ngraph::element::Type& element_type,
-               const Shape& shape,
-               void* memory_pointer,
-               const std::string& name);
     virtual ~HostTensor() override;
 
     char* get_data_ptr();

@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <future>
 #include <memory>
 #include <vector>
 
@@ -36,22 +35,12 @@ namespace ngraph
 
     namespace runtime
     {
-        class Tensor : public std::enable_shared_from_this<Tensor>
+        class Tensor
         {
-            friend class Executable;
-
         protected:
             Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
                 : m_descriptor(descriptor)
                 , m_stale(true)
-            {
-            }
-
-            Tensor(const std::shared_ptr<ngraph::runtime::Backend>& backend,
-                   const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
-                : m_descriptor(descriptor)
-                , m_stale(true)
-                , m_backend{backend}
             {
             }
 
@@ -114,24 +103,6 @@ namespace ngraph
             /// \param n Number of bytes to read, must be integral number of elements.
             virtual void read(void* p, size_t n) const = 0;
 
-            /// \brief Write bytes into the tensor. The data buffer pointed to by `p` must
-            ///     be kept live until after the future is signaled complete
-            /// \param p Pointer to source of data
-            /// \param size_in_bytes Number of bytes to write, must be integral number of elements.
-            /// \param buffer_number For double-buffering, which buffer to write.
-            /// \return std::future to track the operation
-            virtual std::future<void>
-                begin_write(const void* p, size_t size_in_bytes, size_t buffer_number);
-
-            /// \brief Read bytes from the tensor. The data buffer pointed to by `p` must
-            ///     be kept live until after the future is signaled complete
-            /// \param p Pointer to destination for data
-            /// \param size_in_bytes Number of bytes to read, must be integral number of elements.
-            /// \param buffer_number For double-buffering, which buffer to read.
-            /// \return std::future to track the operation
-            virtual std::future<void>
-                begin_read(void* p, size_t size_in_bytes, size_t buffer_number);
-
             /// \brief copy bytes directly from source to this tensor
             /// \param source The source tensor
             virtual void copy_from(const ngraph::runtime::Tensor& source);
@@ -161,8 +132,8 @@ namespace ngraph
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
-            std::promise<void> m_promise;
-            std::shared_ptr<ngraph::runtime::Backend> m_backend;
         };
+
+        using TensorViewPtrs = std::vector<std::shared_ptr<Tensor>>;
     }
 }
