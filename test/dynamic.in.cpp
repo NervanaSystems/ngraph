@@ -625,7 +625,7 @@ static void reverse_shape_test(const PartialShape& input_pshape,
 }
 
 // Disabled for now because constant folding does not handle "Reverse" yet.
-NGRAPH_TEST(DISABLED_dynamic_${BACKEND_NAME}, reverse_shape)
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, reverse_shape)
 {
     // Test with shape {?, 3, 3}.
     reverse_shape_test(PartialShape{Dimension::dynamic(), 3, 3}, {Shape{2, 3, 3}, Shape{5, 3, 3}});
