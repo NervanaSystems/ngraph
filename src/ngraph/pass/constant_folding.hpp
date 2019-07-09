@@ -41,7 +41,8 @@ public:
         QUANTIZE,
         CONVERT,
         SHAPE_OF,
-        REVERSE
+        REVERSE,
+        PRODUCT
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -58,6 +59,7 @@ public:
         construct_constant_convert();
         construct_constant_shape_of();
         construct_constant_reverse();
+        construct_constant_product();
     }
 
     //this allows to specify the order in which matchers will be run
@@ -80,7 +82,8 @@ public:
             case CFTransformations::QUANTIZE: construct_constant_quantize(); break;
             case CFTransformations::CONVERT: construct_constant_convert(); break;
             case CFTransformations::SHAPE_OF: construct_constant_shape_of(); break;
-            case CFTransformations::REVERSE: construct_constant_shape_of(); break;
+            case CFTransformations::REVERSE: construct_constant_reverse(); break;
+            case CFTransformations::PRODUCT: construct_constant_product(); break;
             }
         }
     }
@@ -96,6 +99,7 @@ private:
     void construct_constant_convert();
     void construct_constant_shape_of();
     void construct_constant_reverse();
+    void construct_constant_product();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };

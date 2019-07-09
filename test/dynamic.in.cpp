@@ -554,7 +554,7 @@ static void to_vector_test(const PartialShape& input_pshape, const std::vector<S
 
         ex->call_with_validate({t_r}, {t_x});
 
-        ASSERT_EQ(t_r->get_shape(), Shape(shape_size(shape)));
+        ASSERT_EQ(t_r->get_shape(), (Shape{shape_size(shape)}));
 
         auto results = read_vector<float>(t_r);
 
@@ -562,8 +562,7 @@ static void to_vector_test(const PartialShape& input_pshape, const std::vector<S
     }
 }
 
-// Disabled for now because constant folding does not handle "Product" yet.
-NGRAPH_TEST(DISABLED_dynamic_${BACKEND_NAME}, to_vector)
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, to_vector)
 {
     // Test with shape {?, 3, 3}.
     to_vector_test(PartialShape{Dimension::dynamic(), 3, 3}, {Shape{2, 3, 3}, Shape{5, 3, 3}});
@@ -624,7 +623,6 @@ static void reverse_shape_test(const PartialShape& input_pshape,
     }
 }
 
-// Disabled for now because constant folding does not handle "Reverse" yet.
 NGRAPH_TEST(dynamic_${BACKEND_NAME}, reverse_shape)
 {
     // Test with shape {?, 3, 3}.
