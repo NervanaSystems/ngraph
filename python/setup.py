@@ -326,6 +326,7 @@ def add_platform_specific_link_args(link_args):
         link_args += ['-z', 'now']
     elif sys.platform == 'darwin':
         link_args += ['-Wl,-rpath,@loader_path/../..']
+        link_args += ['-stdlib=libc++']
 
 
 class BuildExt(build_ext):
@@ -360,6 +361,8 @@ class BuildExt(build_ext):
 
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
             ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
+            if sys.platform == 'darwin':
+                ext.extra_compile_args += ['-stdlib=libc++']
         build_ext.build_extensions(self)
 
 
