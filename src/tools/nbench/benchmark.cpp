@@ -106,9 +106,9 @@ void init_real_tv(shared_ptr<runtime::Tensor> tv, T min, T max)
     tv->write(vec.data(), vec.size() * sizeof(T));
 }
 
-static void random_init(shared_ptr<runtime::Tensor> tensor)
+static void random_init(shared_ptr<runtime::Tensor> tv)
 {
-    element::Type et = tensor->get_element_type();
+    element::Type et = tv->get_element_type();
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
@@ -116,17 +116,17 @@ static void random_init(shared_ptr<runtime::Tensor> tensor)
 #endif
     switch (et.get_type_enum())
     {
-    case element::Type_t::boolean: init_int_tv<char>(tensor, 0, 1); break;
-    case element::Type_t::f32: init_real_tv<float>(tensor, -1, 1); break;
-    case element::Type_t::f64: init_real_tv<double>(tensor, -1, 1); break;
-    case element::Type_t::i8: init_int_tv<int8_t>(tensor, -1, 1); break;
-    case element::Type_t::i16: init_int_tv<int16_t>(tensor, -1, 1); break;
-    case element::Type_t::i32: init_int_tv<int32_t>(tensor, 0, 1); break;
-    case element::Type_t::i64: init_int_tv<int64_t>(tensor, 0, 1); break;
-    case element::Type_t::u8: init_int_tv<uint8_t>(tensor, 0, 1); break;
-    case element::Type_t::u16: init_int_tv<uint16_t>(tensor, 0, 1); break;
-    case element::Type_t::u32: init_int_tv<uint32_t>(tensor, 0, 1); break;
-    case element::Type_t::u64: init_int_tv<uint64_t>(tensor, 0, 1); break;
+    case element::Type_t::boolean: init_int_tv<char>(tv, 0, 1); break;
+    case element::Type_t::f32: init_real_tv<float>(tv, -1, 1); break;
+    case element::Type_t::f64: init_real_tv<double>(tv, -1, 1); break;
+    case element::Type_t::i8: init_int_tv<int8_t>(tv, -1, 1); break;
+    case element::Type_t::i16: init_int_tv<int16_t>(tv, -1, 1); break;
+    case element::Type_t::i32: init_int_tv<int32_t>(tv, 0, 1); break;
+    case element::Type_t::i64: init_int_tv<int64_t>(tv, 0, 1); break;
+    case element::Type_t::u8: init_int_tv<uint8_t>(tv, 0, 1); break;
+    case element::Type_t::u16: init_int_tv<uint16_t>(tv, 0, 1); break;
+    case element::Type_t::u32: init_int_tv<uint32_t>(tv, 0, 1); break;
+    case element::Type_t::u64: init_int_tv<uint64_t>(tv, 0, 1); break;
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     case element::Type_t::bf16:
