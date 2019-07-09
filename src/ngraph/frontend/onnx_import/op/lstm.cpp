@@ -485,7 +485,7 @@ namespace ngraph
                                                   attributes);
 
                         NodeVector fwd_results{lstm_fwd.run()};
-                        NodeVector rev_results{lstm_fwd.run(true)};
+                        NodeVector rev_results{lstm_reversed.run(true)};
 
                         // Stack together respective outputs from both forward and reverse passess.
                         std::shared_ptr<ngraph::Node> Y{std::make_shared<ngraph::op::Concat>(
