@@ -5,7 +5,9 @@ Homomorphic Encryption (HE)
 
 * **Encryption with Intel® HE transformer for nGraph™** 
 
-  * The `Intel HE_transformer`_ enables deep encryption with nGraph Backends.
+  * The `Intel HE_transformer`_ is an experimental nGraph backend 
+    which enables deep learning on encrypted data using homomorphic 
+    encryption.
 
   * `Blog post`_ with `examples`_
 
