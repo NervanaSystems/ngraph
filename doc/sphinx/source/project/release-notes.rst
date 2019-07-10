@@ -23,7 +23,8 @@ Core updates for |version|
 + GenerateMask seed optional
 + Graph visualization improvements
 + **Known Issues**
-  - When using TensorFlow\* v1.14.0 with ```ngraph-bridge`` v0.16.0rc0 and CPU 
+  
+  - When using TensorFlow\* v1.14.0 with ```ngraph-bridge`` v0.16.0rc0 and CPU
     backend, we saw notable to severe decreases in throughput in many models.
 
 
