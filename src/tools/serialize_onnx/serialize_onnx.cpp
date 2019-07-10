@@ -33,7 +33,7 @@ DESCRIPTION
     Serialize an ONNX model
 
 SYNOPSIS
-        serialize_onnx [-i|--input <input file>] [-o|--output <output file>] [-t|--type <output type>]
+        serialize_onnx [-i|--input <input file>] [-o|--output <output file>] [-t|--type (json|cpio)]
 
 OPTIONS
         -i or --input  input ONNX file
