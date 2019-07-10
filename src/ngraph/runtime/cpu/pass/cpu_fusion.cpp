@@ -520,6 +520,51 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
     this->add_matcher(m, callback);
 }
 
+void ngraph::runtime::cpu::pass::CPUPreFusion::construct_maxpool_relu_switch()
+{
+    auto input_shape = Shape{1, 2, 2, 2};
+    auto input = std::make_shared<pattern::op::Label>(element::f32, input_shape);
+    Shape window_shape{2, 2};
+    auto max_pool = std::make_shared<ngraph::op::MaxPool>(input, window_shape);
+    auto prelu = std::make_shared<ngraph::op::Relu>(max_pool);
+
+    auto callback = [input](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_maxpool_relu_switch against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto maxpool =
+            std::static_pointer_cast<ngraph::op::MaxPool>(m.get_match_root()->get_argument(0));
+        auto relu = std::static_pointer_cast<ngraph::op::Relu>(m.get_match_root());
+        if (maxpool->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Relu isn't the only user of Maxpool's output";
+            return false;
+        }
+
+        if (relu->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Relu has more than 1 users";
+            return false;
+        }
+        auto relu_n = std::make_shared<ngraph::op::Relu>(pattern_map[input]);
+        auto maxpool_n =
+            std::make_shared<ngraph::op::MaxPool>(relu_n,
+                                                  maxpool->get_window_shape(),
+                                                  maxpool->get_window_movement_strides(),
+                                                  maxpool->get_padding_below(),
+                                                  maxpool->get_padding_above(),
+                                                  maxpool->get_pad_type(),
+                                                  maxpool->get_ceil_mode());
+        ngraph::replace_node(m.get_match_root(), maxpool_n);
+        return true;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, "CPUFusion.MaxpoolReluSwitch");
+    this->add_matcher(m, callback);
+}
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 {
     auto input_shape = Shape{1, 2, 2, 2};
