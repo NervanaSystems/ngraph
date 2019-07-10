@@ -419,8 +419,6 @@ set (SRC
     pass/pass.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
-    pass/prefix_reshape_elimination.cpp
-    pass/prefix_reshape_elimination.hpp
     pass/propagate_cacheability.cpp
     pass/propagate_cacheability.hpp
     pass/reshape_elimination.cpp
