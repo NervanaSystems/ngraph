@@ -34,19 +34,22 @@ namespace ngraph
     /// \param path The path to the output file
     /// \param func The Function to serialize
     /// \param indent If 0 then there is no formatting applied and the resulting string is the
+	/// \param cpio_enabled If cpio_enabled is true the output format is cpio, otherwise json
     ///    most compact representation. If non-zero then the json string is formatted with the
     ///    indent level specified.
     void serialize(const std::string& path,
                    std::shared_ptr<ngraph::Function> func,
-                   size_t indent = 0);
+                   size_t indent = 0,
+                   bool cpio_enabled = false);
 
     /// \brief Serialize a Function to a json stream
     /// \param out The output stream to which the data is serialized.
     /// \param func The Function to serialize
     /// \param indent If 0 then there is no formatting applied and the json is the
+    /// \param cpio_enabled If cpio_enabled is true the output format is cpio, otherwise json
     ///    most compact representation. If non-zero then the json is formatted with the
     ///    indent level specified.
-    void serialize(std::ostream& out, std::shared_ptr<ngraph::Function> func, size_t indent = 0);
+    void serialize(std::ostream& out, std::shared_ptr<ngraph::Function> func, size_t indent = 0, bool cpio_enabled = false);
 
     /// \brief Deserialize a Function
     /// \param in An isteam to the input data

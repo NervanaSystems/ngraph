@@ -33,11 +33,12 @@ DESCRIPTION
     Serialize an ONNX model
 
 SYNOPSIS
-        serialize_onnx [-i|--input <input file>] [-o|--output <output file>]
+        serialize_onnx [-i|--input <input file>] [-o|--output <output file>] [-t|--type <output type>]
 
 OPTIONS
         -i or --input  input ONNX file
         -o or --output output serialized model
+        -t or --type type of output ('json' or 'cpio'), 'json' is default choice
 )###";
 }
 
@@ -45,6 +46,7 @@ int main(int argc, char** argv)
 {
     string input;
     string output;
+    string output_type;
     for (size_t i = 1; i < argc; i++)
     {
         string arg = argv[i];
@@ -55,6 +57,10 @@ int main(int argc, char** argv)
         else if (arg == "-i" || arg == "--input")
         {
             input = argv[++i];
+        }
+        else if (arg == "-t" || arg == "--type")
+        {
+            output_type = argv[++i];
         }
         else if (arg == "-h" || arg == "--help")
         {
@@ -70,7 +76,8 @@ int main(int argc, char** argv)
 
         ngraph::stopwatch timer;
         timer.start();
-        ngraph::serialize(output, function, 2);
+        const auto cpio_enabled = output_type == "cpio";
+        ngraph::serialize(output, function, 2, cpio_enabled);
         timer.stop();
         cout << "serialize took   " << timer.get_milliseconds() << "ms\n";
     }

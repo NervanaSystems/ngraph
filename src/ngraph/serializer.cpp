@@ -261,8 +261,8 @@ protected:
     function<const_data_callback_t> m_const_data_callback;
 };
 
-static string
-    serialize(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
+static string serialize_to_json(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
+static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, size_t indent);
 
 static json write_dimension(Dimension d)
 {
@@ -397,23 +397,26 @@ static element::Type read_element_type(json j)
     return element::Type(bitwidth, is_real, is_signed, is_quantized, c_type_string);
 }
 
-void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
+void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent, bool cpio_enabled)
 {
     ofstream out(path);
-    serialize(out, func, indent);
+    serialize(out, func, indent, cpio_enabled);
 }
 
-void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
+void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t indent, bool cpio_enabled)
 {
-    out << ::serialize(func, indent, false);
+    if (cpio_enabled)
+        ::serialize_to_cpio(out, func, indent);
+    else
+		out << ::serialize_to_json(func, indent, false);
 }
 
-#if defined ENABLE_CPIO_FILE
 static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
 {
-    string j = ::serialize(func, indent, true);
+    string json_content = ::serialize_to_json(func, indent, true);
     cpio::Writer writer(out);
-    writer.write(func->get_name(), j.c_str(), static_cast<uint32_t>(j.size()));
+    writer.write(
+        func->get_name(), json_content.c_str(), static_cast<uint32_t>(json_content.size()));
 
     traverse_nodes(const_cast<Function*>(func.get()),
                    [&](shared_ptr<Node> node) {
@@ -427,9 +430,8 @@ static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, s
                    },
                    true);
 }
-#endif
 
-static string serialize(shared_ptr<Function> func, size_t indent, bool binary_constant_data)
+static string serialize_to_json(shared_ptr<Function> func, size_t indent, bool binary_constant_data)
 {
     JSONSerializer serializer;
     serializer.set_binary_constant_data(binary_constant_data);
@@ -453,7 +455,7 @@ static string serialize(shared_ptr<Function> func, size_t indent, bool binary_co
 
 std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent)
 {
-    return ::serialize(func, indent, false);
+    return ::serialize_to_json(func, indent, false);
 }
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
