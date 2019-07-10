@@ -84,7 +84,7 @@ void op::Pad::validate_and_infer_types()
             if (arg_shape[i].is_static())
             {
                 ptrdiff_t result_dim =
-                    m_padding_below[i] + static_cast<ptrdiff_t>(arg_shape[i]) + m_padding_above[i];
+                    m_padding_below[i] + static_cast<int64_t>(arg_shape[i]) + m_padding_above[i];
                 NODE_VALIDATION_CHECK(this,
                                       result_dim >= 0,
                                       "Inferred result dimension at axis ",

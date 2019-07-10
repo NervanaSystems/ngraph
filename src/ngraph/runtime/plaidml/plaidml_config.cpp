@@ -163,6 +163,12 @@ ngraph::runtime::plaidml::Config
         // So to verify that there is a non-zero-length option value, test oval_len
         // To verify that there is no option value, test has_oval
 
+        if (oname_begin == oname_end && !has_oval)
+        {
+            // An empty option; poor style, but advance to the next.
+            continue;
+        }
+
         // Check for verbosity
         if (is_opt("v"))
         {
@@ -242,6 +248,8 @@ ngraph::runtime::plaidml::Config
         }
 
         // Reject unknown options
+        NGRAPH_ERR << "Unrecognized PlaidML backend option: "
+                   << std::string{oname_begin, static_cast<std::size_t>(oname_end - oname_begin)};
         err = true;
     }
 

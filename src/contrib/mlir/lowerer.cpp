@@ -41,31 +41,34 @@ namespace
 
     class DialectLoweringPass;
 
-#include "op_lowerers.inc"
-
-    /// Use Dialect Converson Framework
-    class DialectLowerer : public DialectConversion
+    /// Base class for nGraph operation conversions to affine/standard dialect. Provides
+    /// conversion patterns with an access to the DialectLoweringPass which holds the state of the
+    /// conversion.
+    class NGraphOpLowering : public ConversionPattern
     {
     public:
-        DialectLowerer(DialectLoweringPass& pass)
-            : DialectConversion()
-            , m_pass(pass)
+        NGraphOpLowering(StringRef rootOpName, MLIRContext* context, DialectLoweringPass& pass)
+            : ConversionPattern(rootOpName, /*benefit=*/1, context)
+            , m_pass(pass){};
+
+    protected:
+        // Back-reference to the lowering pass which contains the lowering state, including the
+        // nGraph type converter.
+        DialectLoweringPass& m_pass;
+    };
+
+#include "op_lowerers.inc"
+
+    /// Conversion from types in the nGraph dialect to the Standard dialect.
+    class NGraphTypeConverter : public TypeConverter
+    {
+    public:
+        NGraphTypeConverter()
+            : TypeConverter()
         {
         }
 
         Type convertType(Type t) override;
-
-    protected:
-        // Initialize the list of converters.
-        void initConverters(OwningRewritePatternList& patterns, MLIRContext* mlirContext) override
-        {
-            RewriteListBuilder<NGAddOpConversion, NGDotOpConversion, NGReturnOpConversion>::build(
-                patterns, mlirContext, m_pass);
-        }
-
-    private:
-        DialectLoweringPass& m_pass;
-        llvm::BumpPtrAllocator allocator;
     };
 
     /// Dialect Lowering Pass to affine ops
@@ -73,14 +76,17 @@ namespace
     {
     public:
         DialectLoweringPass(ngmlir::MLIRCompiler& compiler)
-            : m_dialectLowerer(*this)
-            , m_compiler(compiler)
+            : m_compiler(compiler)
         {
         }
+
         void runOnModule() override;
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
 
     private:
+        /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
+        void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
+
         mlir::Function* getCallDecl(StringRef name,
                                     ArrayRef<Type> args,
                                     ArrayRef<Type> output,
@@ -90,7 +96,7 @@ namespace
         Value* insertMemMgrDef(PatternRewriter* rewriter = nullptr);
 
     private:
-        DialectLowerer m_dialectLowerer;
+        NGraphTypeConverter m_typeConverter;
         // Value holding mem manager passed pointer
         SmallVector<Value*, 4> m_memMgrDefs;
 
@@ -101,19 +107,37 @@ namespace
 
     void DialectLoweringPass::runOnModule()
     {
+        // Create type converter and initialize conversion patterns.
+        NGraphTypeConverter converter;
+        OwningRewritePatternList patterns;
+        populateNGraphToAffineConversionPatterns(patterns);
+
+        // Create target that defines legal ops for nGraph dialect to be lowered to.
+        ConversionTarget target(getContext());
+        // TODO: Remove NGFakeInputOp. We need to set NGFakeInputOp as legal op because we generate
+        // it as part of the lowering to affine/standard.
+        target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
+        target.addLegalOp<NGFakeInputOp>();
+
         // capture output values by looking for the Return and grabbing the values
         // the order of the returned values matches the order of the lowered func signature for
         // results. This is used to find the arg_id that a defined value maps to if it is an output
         findOutputValues();
 
-        if (failed(m_dialectLowerer.convert(&getModule())))
+        if (failed(applyConversionPatterns(getModule(), target, converter, std::move(patterns))))
         {
-            getModule().getContext()->emitError(mlir::UnknownLoc::get(getModule().getContext()),
-                                                "Error lowering dialect\n");
+            emitError(mlir::UnknownLoc::get(&getContext()), "Error lowering nGraph dialect\n");
             signalPassFailure();
         }
 
         processFakeInstrs();
+    }
+
+    void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
+        OwningRewritePatternList& patterns)
+    {
+        RewriteListBuilder<NGAddOpConversion, NGDotOpConversion, NGReturnOpConversion>::build(
+            patterns, &getContext(), *this);
     }
 
     void DialectLoweringPass::findOutputValues()
@@ -138,6 +162,9 @@ namespace
             outputCount = ret.getNumOperands();
         });
         // will be populated with lowered output values later
+        // TODO: This resize is making debugging obscure. When the container is not populated due
+        // to a bug, null pointers are used by the consumer leading to a crash more difficult to
+        // root-cause. We should try to change the current approach or introduce verification code.
         m_loweredOutputValues.resize(outputCount, nullptr);
     }
 
@@ -146,10 +173,11 @@ namespace
     {
         // it would be nice to insert one fake def at the start of the new func
         // however, due to how DialectConversion framework works, new func is only
-        // materialized after conversion is done (rewriter->getFunction, or even rewriter->getInsertionBlock()->getFunction()
-        // will give you the original func). This makes it very convoluted to insert instructions at entry block.
+        // materialized after conversion is done (rewriter->getFunction, or even
+        // rewriter->getInsertionBlock()->getFunction() will give you the original func). This
+        // makes it very convoluted to insert instructions at entry block.
         auto op = rewriter->create<NGFakeInputOp>(rewriter->getUnknownLoc(),
-                                                  IndexType::get(getModule().getContext()));
+                                                  IndexType::get(&getContext()));
         // will be fixed later to read passed arg instead.
         m_memMgrDefs.push_back(op.getResult());
         return op.getResult();
@@ -167,8 +195,7 @@ namespace
                 unsigned argId = (int)attr.getInt();
                 auto fakeOp = rewriter.create<NGFakeInputOp>(
                     op->getLoc(),
-                    m_dialectLowerer.convertType(
-                        origResult->getType()) /* convert to lowered type */
+                    m_typeConverter.convertType(origResult->getType()) /* convert to lowered type */
                     );
                 // Fake instrution is short-lived. Verify here.
                 fakeOp.verify();
@@ -181,7 +208,7 @@ namespace
                 auto tensorType = origResult->getType().cast<NGTensorType>();
                 auto callBackFunc = getCallDecl("__mlir_allocate",
                                                 {rewriter.getIndexType(), rewriter.getIndexType()},
-                                                {m_dialectLowerer.convertType(tensorType)},
+                                                {m_typeConverter.convertType(tensorType)},
                                                 rewriter);
 
                 auto size = tensorType.getSizeInBytes();
@@ -261,10 +288,10 @@ namespace
         return callBackFuncPtr;
     }
     // NGDialect converters
-    Type DialectLowerer::convertType(Type type)
+    Type NGraphTypeConverter::convertType(Type type)
     {
         // We may need to refactor this code to a external utility if type conversion is needed
-        // outside of the lowering context since DialectLowerer is private.
+        // outside of the lowering context since NGraphTypeConverter is private.
 
         if (auto tensor_type = type.dyn_cast<NGTensorType>())
         {
@@ -294,7 +321,7 @@ namespace
     }
 
 #define REWRITER(OP)                                                                               \
-    void OP##Conversion::rewrite(                                                                  \
+    PatternMatchResult OP##Conversion::matchAndRewrite(                                            \
         Operation* op, ArrayRef<Value*> operands, PatternRewriter& rewriter) const
 
     // ADD
@@ -334,6 +361,8 @@ namespace
                 });
         // clang-format on
         rewriter.replaceOp(op, {result});
+
+        return matchSuccess();
     }
 
     REWRITER(NGDotOp)
@@ -396,9 +425,16 @@ namespace
         });
 
         rewriter.replaceOp(op, {result});
+
+        return matchSuccess();
     }
 
-    REWRITER(NGReturnOp) { rewriter.replaceOpWithNewOp<ReturnOp>(op); }
+    REWRITER(NGReturnOp)
+    {
+        rewriter.replaceOpWithNewOp<ReturnOp>(op);
+        return matchSuccess();
+    }
+
 #undef REWRITER
 }
 

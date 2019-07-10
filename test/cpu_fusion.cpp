@@ -33,7 +33,6 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -42,6 +41,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
@@ -558,6 +558,136 @@ TEST(cpu_fusion, conv_bias_bprop)
     pass_manager.run_passes(df);
     size_t ccg = count_ops_of_type<op::ConvolutionBiasBackpropFiltersBias>(df);
     ASSERT_EQ(ccg, 1);
+}
+
+static void test_batchnorm_multiply_add_relu(Shape input_shape)
+{
+    auto make_bn_relu_function = [&]() {
+        auto c_axis = input_shape[1];
+        auto input = make_shared<op::Parameter>(element::f32, input_shape);
+        auto mean_shape = Shape{c_axis};
+        auto mean = std::make_shared<op::Parameter>(element::f32, mean_shape);
+        auto var_shape = Shape{c_axis};
+        auto var = std::make_shared<op::Parameter>(element::f32, var_shape);
+        auto gamma_shape = Shape{c_axis};
+        auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+        auto beta_shape = Shape{c_axis};
+        auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+        double eps = 0.001;
+        auto bn =
+            std::make_shared<ngraph::op::BatchNormInference>(eps, gamma, beta, input, mean, var);
+
+        std::vector<size_t> vec{0};
+        for (auto i = 2; i < input_shape.size(); i++)
+        {
+            vec.push_back(i);
+        }
+        auto broadcast1_input = std::make_shared<op::Parameter>(element::f32, gamma_shape);
+        auto broadcast1 =
+            std::make_shared<ngraph::op::Broadcast>(broadcast1_input, input_shape, AxisSet(vec));
+        auto multiply = std::make_shared<ngraph::op::Multiply>(bn, broadcast1);
+
+        auto broadcast2_input = std::make_shared<op::Parameter>(element::f32, gamma_shape);
+        auto broadcast2 =
+            std::make_shared<ngraph::op::Broadcast>(broadcast2_input, input_shape, AxisSet(vec));
+
+        auto add = std::make_shared<ngraph::op::Add>(multiply, broadcast2);
+        auto relu = std::make_shared<ngraph::op::Relu>(add);
+        auto f = make_shared<Function>(
+            relu,
+            ParameterVector{gamma, beta, input, mean, var, broadcast1_input, broadcast2_input});
+        return f;
+    };
+
+    auto cpu_f = make_bn_relu_function();
+    auto int_f = make_bn_relu_function();
+    test::Uniform<float> rng(1.0f, 10.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+
+    size_t bn_relu = count_ops_of_type<op::BatchNormInferenceRelu>(cpu_f);
+    ASSERT_EQ(bn_relu, 1);
+}
+
+TEST(cpu_fusion, batchnorm_multiply_add_relu)
+{
+    test_batchnorm_multiply_add_relu(Shape{1, 3, 2, 2});
+    test_batchnorm_multiply_add_relu(Shape{1, 2, 2, 2, 2});
+    test_batchnorm_multiply_add_relu(Shape{2, 2, 2, 4, 4});
+}
+
+TEST(cpu_fusion, batchnorm_multiply_add_relu_no_fusion)
+{
+    auto input_shape = Shape{3, 3, 2, 2};
+    auto make_bn_relu_function = [&]() {
+        auto c_axis = input_shape[1];
+        auto input = make_shared<op::Parameter>(element::f32, input_shape);
+        auto mean_shape = Shape{c_axis};
+        auto mean = std::make_shared<op::Parameter>(element::f32, mean_shape);
+        auto var_shape = Shape{c_axis};
+        auto var = std::make_shared<op::Parameter>(element::f32, var_shape);
+        auto gamma_shape = Shape{c_axis};
+        auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+        auto beta_shape = Shape{c_axis};
+        auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+        double eps = 0.001;
+        auto bn =
+            std::make_shared<ngraph::op::BatchNormInference>(eps, gamma, beta, input, mean, var);
+
+        std::vector<size_t> vec;
+        for (auto i = 1; i < input_shape.size(); i++)
+        {
+            vec.push_back(i);
+        }
+        auto broadcast1_input = std::make_shared<op::Parameter>(element::f32, Shape{3});
+        auto broadcast1 =
+            std::make_shared<ngraph::op::Broadcast>(broadcast1_input, input_shape, AxisSet(vec));
+        auto multiply = std::make_shared<ngraph::op::Multiply>(bn, broadcast1);
+
+        auto broadcast2_input = std::make_shared<op::Parameter>(element::f32, Shape{3});
+        auto broadcast2 =
+            std::make_shared<ngraph::op::Broadcast>(broadcast2_input, input_shape, AxisSet(vec));
+
+        auto add = std::make_shared<ngraph::op::Add>(multiply, broadcast2);
+        auto relu = std::make_shared<ngraph::op::Relu>(add);
+        auto f = make_shared<Function>(
+            relu,
+            ParameterVector{gamma, beta, input, mean, var, broadcast1_input, broadcast2_input});
+        return f;
+    };
+
+    auto cpu_f = make_bn_relu_function();
+    auto int_f = make_bn_relu_function();
+    test::Uniform<float> rng(1.0f, 10.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+    auto int_results = execute(int_f, args, "INTERPRETER");
+    auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+
+    size_t bn_relu = count_ops_of_type<op::BatchNormInferenceRelu>(cpu_f);
+    ASSERT_EQ(bn_relu, 0);
 }
 
 TEST(cpu_fusion, batchnorm_fprop_relu_b1c2h2w2)
@@ -3243,7 +3373,6 @@ TEST(cpu_quant_fusion, qconv_relu)
             input, input_scale, uint8_zero, element::u8, AxisSet{}, round_mode);
         auto q_weights = std::make_shared<op::Quantize>(
             weights, weights_scale, int8_zero, element::i8, AxisSet{}, round_mode);
-        auto requant_scale = (input_scale * weights_scale) / output_scale;
         auto conv = std::make_shared<op::QuantizedConvolution>(q_input,
                                                                q_weights,
                                                                Strides{1, 1},
@@ -3251,7 +3380,16 @@ TEST(cpu_quant_fusion, qconv_relu)
                                                                CoordinateDiff{0, 0},
                                                                CoordinateDiff{0, 0},
                                                                Strides{1, 1},
-                                                               requant_scale);
+                                                               input_scale,
+                                                               uint8_zero,
+                                                               weights_scale,
+                                                               int8_zero,
+                                                               output_scale,
+                                                               int8_zero,
+                                                               element::i8,
+                                                               AxisSet{},
+                                                               AxisSet{},
+                                                               AxisSet{});
         auto dq = std::make_shared<op::Dequantize>(
             conv, output_scale, int8_zero, element::f32, AxisSet{});
         auto relu = std::make_shared<op::Relu>(dq);

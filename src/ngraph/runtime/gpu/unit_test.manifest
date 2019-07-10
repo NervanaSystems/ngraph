@@ -53,6 +53,9 @@ quantize_ROUND_TOWARD_INFINITY
 quantize_ROUND_TOWARD_ZERO
 quantize_ROUND_UP
 quantize_ROUND_DOWN
+quantized_convolution
+quantized_conv_non_zero_zero_point
+quantized_conv_int32_output
 shape_of_scalar
 shape_of_vector
 shape_of_matrix
