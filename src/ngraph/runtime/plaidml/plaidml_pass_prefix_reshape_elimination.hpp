@@ -20,19 +20,23 @@
 
 namespace ngraph
 {
-    namespace pass
+    namespace runtime
     {
-        class PrefixReshapeElimination;
+        namespace plaidml
+        {
+            namespace pass
+            {
+                class PrefixReshapeElimination;
+            }
+        }
     }
 }
 
-// A pass to eliminate reshapes whose output shapes are the same as
-// their input shape modulo leading size-1 axes.
-//
-// N.B. This pass MUST only be used by backends that can handle the
-//      omission of leading size-1 axes, e.g. backends that implement
-//      NumPy-style broadcast semantics.
-class ngraph::pass::PrefixReshapeElimination final : public ngraph::pass::GraphRewrite
+// A pass that matches reshapes whose output shapes are the same as
+// their input shape modulo leading size-1 axes, and replaces them with
+// ImplicitBroadcast operations (which do the same thing as a passthrough).
+class ngraph::runtime::plaidml::pass::PrefixReshapeElimination final
+    : public ngraph::pass::GraphRewrite
 {
 public:
     PrefixReshapeElimination();
