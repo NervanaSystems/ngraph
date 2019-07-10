@@ -16,26 +16,28 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cmath>
-#include <numeric>
-#include <vector>
-#include "ngraph/shape.hpp"
+#include "ngraph/pass/graph_rewrite.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace gcpu
+        namespace plaidml
         {
-            namespace kernel
+            namespace pass
             {
-                template <typename T>
-                void result(const T* arg, T* out, size_t count)
-                {
-                    memcpy(out, arg, sizeof(T) * count);
-                }
+                class PrefixReshapeElimination;
             }
         }
     }
 }
+
+// A pass that matches reshapes whose output shapes are the same as
+// their input shape modulo leading size-1 axes, and replaces them with
+// ImplicitBroadcast operations (which do the same thing as a passthrough).
+class ngraph::runtime::plaidml::pass::PrefixReshapeElimination final
+    : public ngraph::pass::GraphRewrite
+{
+public:
+    PrefixReshapeElimination();
+};

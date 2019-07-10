@@ -267,6 +267,8 @@ model_top_k
 model_erf
 model_erf_int32
 model_hardmax
+quantized_convolution
+quantized_conv_int32_output
 
 # node validation error: "Argument shapes are inconsistent."
 model_lstm_fwd_with_clip
