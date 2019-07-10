@@ -69,39 +69,34 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             bool include_control_deps,
                             const NodeVector& subgraph_params)
 {
-    std::unordered_set<std::shared_ptr<Node>> instances_seen{subgraph_params.begin(),
-                                                             subgraph_params.end()};
-    std::deque<std::shared_ptr<Node>> stack;
-
-    for (auto r : subgraph_results)
+    std::unordered_set<Node*> instances_seen;
+    std::deque<Node*> stack;
+    for (auto& node_ptr : subgraph_params)
     {
-        stack.push_front(r);
+        instances_seen.insert(node_ptr.get());
+    }
+    for (auto& node_ptr : subgraph_results)
+    {
+        stack.push_front(node_ptr.get());
     }
 
     while (stack.size() > 0)
     {
-        std::shared_ptr<Node> n = stack.front();
+        Node* n = stack.front();
         stack.pop_front();
-        if (instances_seen.count(n) == 0)
+        if (instances_seen.insert(n).second)
         {
-            instances_seen.insert(n);
-            f(n);
-            for (auto arg : n->get_arguments())
+            f(n->shared_from_this());
+            for (auto& arg : n->get_arguments())
             {
-                if (instances_seen.count(arg) == 0)
-                {
-                    stack.push_front(arg);
-                }
+                stack.push_front(arg.get());
             }
 
             if (include_control_deps)
             {
-                for (auto cdep : n->get_control_dependencies())
+                for (auto& cdep : n->get_control_dependencies())
                 {
-                    if (instances_seen.count(cdep) == 0)
-                    {
-                        stack.push_front(cdep);
-                    }
+                    stack.push_front(cdep.get());
                 }
             }
         }
