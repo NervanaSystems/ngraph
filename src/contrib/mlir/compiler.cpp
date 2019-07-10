@@ -34,11 +34,12 @@
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
+#include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
+#include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
 #include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/LLVMIR/LLVMDialect.h>
-#include <mlir/LLVMIR/Transforms.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
@@ -50,6 +51,7 @@
 using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::make_unique;
+
 using namespace ngraph::runtime::ngmlir;
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
@@ -75,7 +77,7 @@ void MLIRCompiler::init_mlir()
 
     if (!initialized)
     {
-        mlir::registerDialect<mlir::NGDialect>();
+        mlir::registerDialect<mlir::NGraphOpsDialect>();
         // Register any LLVM command line options
         llvm::cl::ParseEnvironmentOptions("ngraph", "MLIR_LLVM_OPTIONS", "");
         initialized = true;
@@ -133,7 +135,7 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     // create builder
-    m_builder = llvm::make_unique<mlir::FuncBuilder>(function.get());
+    m_builder = llvm::make_unique<mlir::OpBuilder>(function->getBody());
     build_ng_dialect();
     m_module->getFunctions().push_back(function.release());
     if (failed(m_module->verify()))
@@ -359,10 +361,14 @@ void MLIRCompiler::execute()
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
     // Lower Standard dialect to LLVM dialect.
-    auto converter = mlir::createStdToLLVMConverter();
-    auto r = converter->convert(m_module.get());
-    (void)r;
-    NGRAPH_CHECK(succeeded(r), "second conversion failed");
+    mlir::LLVMTypeConverter llvm_converter(&m_context);
+    OwningRewritePatternList patterns;
+    mlir::populateStdToLLVMConversionPatterns(llvm_converter, patterns);
+
+    mlir::ConversionTarget target(m_context);
+    target.addLegalDialect<mlir::LLVM::LLVMDialect>();
+    auto result = applyConversionPatterns(*m_module, target, llvm_converter, std::move(patterns));
+    NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
 
     dump_mlir_module("LLVM-IR Dialect Dump:");
 
