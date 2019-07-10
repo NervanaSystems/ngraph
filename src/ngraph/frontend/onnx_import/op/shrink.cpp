@@ -52,6 +52,8 @@ namespace ngraph
                     }
                     else
                     {
+                        // Passing -lambd to unsigned type constant will cause an overflow.
+                        // For unsigned types the lowest possible value is 0.
                         negative_lambd = ngraph::op::Constant::create(
                             input_element_type, input->get_shape(), {0});
                     }
