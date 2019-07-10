@@ -46,7 +46,7 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
 
 .. toctree::
    :maxdepth: 1
-   :caption: Connecting Frameworks
+   :caption: Framework Support
 
    frameworks/overview.rst
    frameworks/tensorflow.rst
@@ -110,11 +110,6 @@ overview, see the :ref:`introduction` and our latest :doc:`project/release-notes
    contribution/guide.rst
 .. contribution/governance.rst
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Tutorials
-
-   tutorials/onnx-tutorial.rst
 
 .. nGraph: https://www.ngraph.ai
 .. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/
