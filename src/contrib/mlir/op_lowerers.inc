@@ -24,6 +24,8 @@
 #endif
 
 MLIR_OP(NGAddOp)
+MLIR_OP(NGArgMaxRedOp)
+MLIR_OP(NGArgMinRedOp)
 MLIR_OP(NGDotOp)
 MLIR_OP(NGReluOp)
 MLIR_LAST_OP(NGReturnOp)
