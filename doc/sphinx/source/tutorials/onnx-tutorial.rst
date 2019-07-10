@@ -21,8 +21,7 @@ Software requirements
 
 - Python 3.4 or higher
 - Protocol Buffers (protobuf) ``v.2.6.1`` or higher
-- `OpenCL runtime <opencl_drivers_>`_ (required only if you plan to use nGraph
-    with an Intel GPU backend)
+- `OpenCL runtime <opencl_drivers_>`_, required if you plan to use nGraph with an Intel GPU backend
 
 Install protobuf for Ubuntu
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,13 +40,13 @@ backend.
 
 .. note:: Pre-built packages (binaries) are currently not available for macOS.
 
-Install `ngraph-core`:
+Install ``ngraph-core``:
 
 ::
 
     pip install ngraph-core 
 
-Install `ngraph-onnx`:
+Install ``ngraph-onnx``:
 
 ::
 
@@ -67,7 +66,7 @@ Prepare your system:
     # apt install -y python3 python3-pip python3-dev python-virtualenv
     # apt install -y build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool
 
-Clone nGraph's `master` branch. Build and install it into
+Clone nGraph's ``master`` branch. Build and install it into
 ``$HOME/ngraph_dist``:
 
 ::
@@ -78,8 +77,8 @@ Clone nGraph's `master` branch. Build and install it into
     $ cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE 
     $ make install
 
-To build nGraph with an Intel GPU backend, add ``-DNGRAPH_INTELGPU_ENABLE=TRUE``
-to the cmake command. For example: 
+To build nGraph with an Intel GPU backend, add
+``-DNGRAPH_INTELGPU_ENABLE=TRUE`` to the cmake command. For example: 
 
 ::
 
@@ -113,8 +112,8 @@ Build a Python package (Binary wheel) for nGraph:
 For additional information on how to build nGraph Python bindings see the
 `Python API documentation <python_api_>`_.
 
-Once the Python binary wheel file ``ngraph-*.whl`` is prepared, install it using
-pip. For example:
+Once the Python binary wheel file ``ngraph-*.whl`` is prepared, install it
+using pip. For example:
 
 ::
 
@@ -124,29 +123,29 @@ Check that nGraph is properly installed in your Python shell:
 
 .. code-block:: python
 
-	>>> import ngraph as ng
-	>>> ng.abs([[1, 2, 3], [4, 5, 6]])
-	<Abs: 'Abs_1' ([2, 3])>
+    >>> import ngraph as ng
+    >>> ng.abs([[1, 2, 3], [4, 5, 6]])
+    <Abs: 'Abs_1' ([2, 3])>
 
 Additionally, check that nGraph and nGraph's Python wheel were
 both built with the ``NGRAPH_ONNX_IMPORT_ENABLE`` option:
 
 .. code-block:: python
 
-	from ngraph.impl import onnx_import
+    from ngraph.impl import onnx_import
 
 If you don't see any errors, nGraph should be installed correctly.
 
 Install ngraph-onnx
 ~~~~~~~~~~~~~~~~~~~
 
-``ngraph-onnx`` is an additional Python library that provides a Python API to run
-ONNX models using nGraph. 
+``ngraph-onnx`` is an additional Python library that provides a Python API to
+run ONNX models using nGraph. 
 
 To install ``ngraph-onnx``:
 
-Clone ``ngraph-onnx`` sources to the same directory where you cloned ``ngraph`` 
-sources.
+Clone ``ngraph-onnx`` sources to the same directory where you cloned 
+``ngraph`` sources.
 
 ::
 
@@ -194,17 +193,17 @@ nGraph model:
 
 .. code-block:: python
 
-	# Import ONNX and load an ONNX file from disk
-	>>> import onnx
-	>>> onnx_protobuf = onnx.load('resnet50/model.onnx')
+    # Import ONNX and load an ONNX file from disk
+    >>> import onnx
+    >>> onnx_protobuf = onnx.load('resnet50/model.onnx')
 
-	# Convert ONNX model to an ngraph model
-	>>> from ngraph_onnx.onnx_importer.importer import import_onnx_model
-	>>> ng_function = import_onnx_model(onnx_protobuf)
+    # Convert ONNX model to an ngraph model
+    >>> from ngraph_onnx.onnx_importer.importer import import_onnx_model
+    >>> ng_function = import_onnx_model(onnx_protobuf)
 
-	# The importer returns a list of ngraph models for every ONNX graph output:
-	>>> print(ng_function)
-	<Function: 'resnet50' ([1, 1000])>
+    # The importer returns a list of ngraph models for every ONNX graph output:
+    >>> print(ng_function)
+    <Function: 'resnet50' ([1, 1000])>
 
 This creates an nGraph ``Function`` object, which can be used to execute a
 computation on a chosen backend.
@@ -223,20 +222,20 @@ Execute your model by calling the created ``Computation`` object with input data
 
 .. code-block:: python
 
-	# Using an ngraph runtime (CPU backend) create a callable computation object
-	>>> import ngraph as ng
-	>>> runtime = ng.runtime(backend_name='CPU')
-	>>> resnet_on_cpu = runtime.computation(ng_function)
+    # Using an ngraph runtime (CPU backend) create a callable computation object
+    >>> import ngraph as ng
+    >>> runtime = ng.runtime(backend_name='CPU')
+    >>> resnet_on_cpu = runtime.computation(ng_function)
 
-	# Load an image (or create a mock as in this example)
-	>>> import numpy as np
-	>>> picture = np.ones([1, 3, 224, 224], dtype=np.float32)
+    # Load an image (or create a mock as in this example)
+    >>> import numpy as np
+    >>> picture = np.ones([1, 3, 224, 224], dtype=np.float32)
 
-	# Run computation on the picture:
-	>>> resnet_on_cpu(picture)
-	[array([[2.16105007e-04, 5.58412226e-04, 9.70510227e-05, 5.76671446e-05,
-	         7.45318757e-05, 4.80892748e-04, 5.67404088e-04, 9.48728994e-05,
-	         ...
+    # Run computation on the picture:
+    >>> resnet_on_cpu(picture)
+    [array([[2.16105007e-04, 5.58412226e-04, 9.70510227e-05, 5.76671446e-05,
+             7.45318757e-05, 4.80892748e-04, 5.67404088e-04, 9.48728994e-05,
+             ...
 
 Intel GPU
 ~~~~~~~~~
@@ -246,13 +245,13 @@ the runtime:
 
 .. code-block:: python
 
-	runtime = ng.runtime(backend_name='INTELGPU')
+    runtime = ng.runtime(backend_name='INTELGPU')
 
 Debugging
 =========
 
 If you encounter any problems with this tutorial, please submit a ticket to our
-`issues <_issues_>`_ page on GitHub.
+`issues <issues_>`_ page on GitHub.
 
 .. _onnx_model_zoo: https://github.com/onnx/models
 .. _python_api: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
