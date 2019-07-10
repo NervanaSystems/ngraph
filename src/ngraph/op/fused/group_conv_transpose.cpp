@@ -52,7 +52,6 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const shared_ptr<Node>&
 
 op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
                                                          const std::shared_ptr<Node>& filters,
-                                                         const PadType& pad_type,
                                                          const std::size_t groups)
     : GroupConvolutionTranspose(data,
                                 filters,
@@ -62,7 +61,7 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const std::shared_ptr<N
                                 CoordinateDiff(),
                                 CoordinateDiff(),
                                 groups,
-                                pad_type,
+                                PadType::EXPLICIT,
                                 Shape())
 {
 }

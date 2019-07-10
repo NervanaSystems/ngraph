@@ -67,13 +67,11 @@ namespace ngraph
             ///
             /// \param[in]  data      The node producing input data.
             /// \param[in]  filters   The node producing filters data.
-            /// \param[in]  pad_type  The provided padding type.
             /// \param[in]  groups    The number of groups the input channels and output channels
             ///                       are divided into.
             ///
             GroupConvolutionTranspose(const std::shared_ptr<Node>& data,
                                       const std::shared_ptr<Node>& filters,
-                                      const PadType& pad_type = PadType::VALID,
                                       const std::size_t groups = 1UL);
 
             ///
