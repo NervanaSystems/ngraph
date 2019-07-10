@@ -58,6 +58,21 @@ namespace
         DialectLoweringPass& m_pass;
     };
 
+// Conversion classes declarations
+#define MLIR_OP(OP)                                                                                \
+    class OP##Conversion : public NGraphOpLowering                                                 \
+    {                                                                                              \
+    public:                                                                                        \
+        explicit OP##Conversion(mlir::MLIRContext* context, DialectLoweringPass& pass)             \
+            : NGraphOpLowering(mlir::OP::getOperationName(), context, pass)                        \
+        {                                                                                          \
+        }                                                                                          \
+                                                                                                   \
+        PatternMatchResult matchAndRewrite(Operation* op,                                          \
+                                           ArrayRef<Value*> operands,                              \
+                                           PatternRewriter& rewriter) const override;              \
+    };
+
 #include "op_lowerers.inc"
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
@@ -137,10 +152,11 @@ namespace
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
         OwningRewritePatternList& patterns)
     {
-        RewriteListBuilder<NGAddOpConversion,
-                           NGReluOpConversion,
-                           NGDotOpConversion,
-                           NGReturnOpConversion>::build(patterns, &getContext(), *this);
+#define MLIR_OP(OP) OP##Conversion,
+#define MLIR_LAST_OP(OP) OP##Conversion
+        RewriteListBuilder<
+#include "op_lowerers.inc"
+            >::build(patterns, &getContext(), *this);
     }
 
     void DialectLoweringPass::findOutputValues()
@@ -401,24 +417,24 @@ namespace
                      "NGReluOp with float element type should not be lowered until MLIR supports "
                      "lowering !std.CmpF");
 
-        // clang-format off
         LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
-            if (auto floatTy = elemTy.dyn_cast<FloatType>()) {
+            if (auto floatTy = elemTy.dyn_cast<FloatType>())
+            {
                 ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
                 iRes(ivs) = intrinsics::select(val > zero, val, zero);
-            } 
+            }
             else if (auto intTy = elemTy.dyn_cast<IntegerType>())
             {
                 ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
                 iRes(ivs) = intrinsics::select(val > zero, val, zero);
-            } 
-            else 
+            }
+            else
             {
                 NGRAPH_CHECK(false, "Unsupported type for Relu");
             }
         });
-        // clang-format on
+
         rewriter.replaceOp(op, {result});
         return matchSuccess();
     }

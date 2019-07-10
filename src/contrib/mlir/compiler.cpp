@@ -279,15 +279,17 @@ namespace ngraph
             {
                 return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
             }
-            template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
-            {
-                return compiler.create_unary_op<mlir::NGReluOp>(ng_node);
-            }
+
             template <>
             mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
             {
                 return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
+            {
+                return compiler.create_unary_op<mlir::NGReluOp>(ng_node);
             }
         }
     }
