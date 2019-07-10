@@ -258,5 +258,6 @@ TEST(provenance, provenance)
         replace_node(c, d);
 
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
+        EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
     }
 }
