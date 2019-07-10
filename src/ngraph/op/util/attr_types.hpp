@@ -42,7 +42,6 @@ namespace ngraph
         ///              Floor(num_dims/2) at the beginning and
         ///              Ceil(num_dims/2) at the end
         /// VALID      - No padding
-        /// INVALID    - Used for validation of provided auto padding attribute value.
         ///
         enum class PadType
         {
@@ -50,7 +49,6 @@ namespace ngraph
             SAME_LOWER,
             SAME_UPPER,
             VALID,
-            INVALID,
             AUTO = SAME_UPPER,
             NOTSET = EXPLICIT,
         };

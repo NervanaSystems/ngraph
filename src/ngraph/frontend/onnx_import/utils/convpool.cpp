@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include <cmath>
+#include <string>
+#include <unordered_set>
 
 #include "convpool.hpp"
 #include "core/attribute.hpp"
@@ -83,7 +85,6 @@ namespace ngraph
                     {
                         return ngraph::op::PadType::NOTSET;
                     }
-                    return ngraph::op::PadType::INVALID;
                 }
             } // namespace
 
@@ -93,13 +94,16 @@ namespace ngraph
                 ngraph::op::PadType pad_type{ngraph::op::PadType::NOTSET};
                 if (node.has_attribute("auto_pad"))
                 {
+                    static std::unordered_set<std::string> auto_pad_values{
+                        "VALID", "SAME_UPPER", "SAME_LOWER", "NOTSET", ""};
+
                     const std::string& pad_str{node.get_attribute_value<std::string>("auto_pad")};
-                    pad_type = get_ng_pad_type(pad_str);
                     CHECK_VALID_NODE(node,
-                                     pad_type != ngraph::op::PadType::INVALID,
+                                     auto_pad_values.find(pad_str) != auto_pad_values.end(),
                                      "Provided `auto_pad` attribute value: '",
                                      pad_str,
                                      "' is invalid.");
+                    pad_type = get_ng_pad_type(pad_str);
                 }
                 return pad_type;
             }
