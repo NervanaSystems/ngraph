@@ -370,7 +370,6 @@ set (SRC
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
-    op/util/reshape.hpp
     op/util/rnn_cell_base.cpp
     op/util/rnn_cell_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
@@ -420,8 +419,6 @@ set (SRC
     pass/pass.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
-    pass/prefix_reshape_elimination.cpp
-    pass/prefix_reshape_elimination.hpp
     pass/propagate_cacheability.cpp
     pass/propagate_cacheability.hpp
     pass/reshape_elimination.cpp
