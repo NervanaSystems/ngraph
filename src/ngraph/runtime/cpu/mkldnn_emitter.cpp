@@ -668,10 +668,10 @@ void MKLDNNEmitter::build_relu_backward(std::vector<mkldnn::primitive*>& mkldnn_
     size_t result_index = deps[2];
     build_memory_primitive(mkldnn_primitives, bwd_desc.data.data_desc, result_index);
 
-    /* create forward relu primitive descriptor*/
+    // create forward relu primitive descriptor
     auto relu_pd = mkldnn::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
 
-    /* create backward relu primitive_descriptor */
+    // create backward relu primitive_descriptor
     auto relu_bwd_pd =
         mkldnn::eltwise_backward::primitive_desc(bwd_desc, executor::global_cpu_engine, relu_pd);
 
@@ -1188,9 +1188,9 @@ size_t MKLDNNEmitter::build_quantized_inner_product_forward(
     // mkldnn inner_product attr
     mkldnn::primitive_attr ip_attr;
     ip_attr.set_post_ops(pops);
-    /* Specify the rounding mode */
+    // Specify the rounding mode
     ip_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
-    /* Specify the scales array and corresponding mask */
+    // Specify the scales array and corresponding mask
     ip_attr.set_output_scales(0, output_scale);
     // mkldnn inner_product
     size_t ip_index =
@@ -1226,9 +1226,9 @@ size_t MKLDNNEmitter::build_quantized_inner_product_forward(
     // mkldnn inner_product attr
     mkldnn::primitive_attr ip_attr;
     ip_attr.set_post_ops(pops);
-    /* Specify the rounding mode */
+    // Specify the rounding mode
     ip_attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
-    /* Specify the scales array and corresponding mask */
+    // Specify the scales array and corresponding mask
     ip_attr.set_output_scales(0, output_scale);
     // mkldnn inner_product
     size_t ip_index = insert_primitive(new mkldnn::inner_product_forward(

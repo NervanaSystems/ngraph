@@ -75,7 +75,10 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
 
     for (auto r : subgraph_results)
     {
-        stack.push_front(r);
+        if (instances_seen.count(r) == 0)
+        {
+            stack.push_front(r);
+        }
     }
 
     while (stack.size() > 0)
