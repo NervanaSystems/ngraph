@@ -30,7 +30,7 @@ namespace ngraph
         class DefaultAllocator;
         /// \brief Create a default allocator that calls into system
         ///        allocation libraries
-        std::unique_ptr<Allocator> create_default_allocator();
+        ngraph::runtime::Allocator* get_default_allocator();
     }
 }
 
