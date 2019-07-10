@@ -22,11 +22,13 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/provenance.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
+unordered_set<std::shared_ptr<Node>>  Function::m_dynamic_nodes;
 
 Function::Function(const ResultVector& results,
                    const ParameterVector& parameters,
@@ -34,6 +36,7 @@ Function::Function(const ResultVector& results,
     : m_results(results)
     , m_parameters(parameters)
     , m_temporary_pool_size(0)
+    //, m_dynamic_nodes()
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
@@ -47,6 +50,7 @@ Function::Function(const NodeVector& results,
     : m_results(results.size())
     , m_parameters(parameters)
     , m_temporary_pool_size(0)
+    //, m_dynamic_nodes()
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
@@ -235,4 +239,59 @@ bool Function::is_dynamic() const
         }
     }
     return false;
+}
+
+void Function::replace_subgraph(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+{
+    if (target->is_output())
+    {
+        throw ngraph_error("Result nodes cannot be replaced.");
+    }
+
+    if (target->get_users().empty())
+    {
+        throw ngraph_error("replacing an unreachable node");
+    }
+
+    // Fix input/output descriptors
+    NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
+    bool remove_dyn_nodes = true;
+    auto update_dynamic_nodes = [remove_dyn_nodes](std::shared_ptr<Node> node) {
+        if ((node->get_output_partial_shape(0).is_dynamic()) && !remove_dyn_nodes)
+        {
+            m_dynamic_nodes.insert(node);
+        }
+        else if ((node->get_output_partial_shape(0).is_dynamic()) && remove_dyn_nodes)
+        {
+            m_dynamic_nodes.erase(node);
+        }
+    };
+
+    auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
+        replacement->merge_provenance_tags_from(node);
+    };
+
+    auto function_array = [update_dynamic_nodes, set_replacement_prov](std::shared_ptr<Node> node) {
+
+        if (ngraph::get_provenance_enabled())
+        {
+            set_replacement_prov(node);
+        }
+        update_dynamic_nodes(node);
+    };
+
+    traverse_nodes({target}, function_array, false, ngraph::find_common_args(target, replacement));
+
+    // For each of target's output O with replacement output O_rep:
+    //     For each O's connected downstream input I:
+    //         Change I's connected upstream output to O_rep
+    for (size_t i = 0; i < target->get_output_size(); i++)
+    {
+        for (auto& input : target->output(i).get_target_inputs())
+        {
+            input.replace_source_output(replacement->output(i));
+        }
+    }
+    remove_dyn_nodes = false;
+    traverse_nodes({target}, function_array, false, ngraph::find_common_args(target, replacement));
 }

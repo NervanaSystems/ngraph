@@ -108,6 +108,11 @@ namespace ngraph
         /// \brief Returns true if any of the op's defined in the function contains partial shape
         bool is_dynamic() const;
 
+        /// \brief Replaces node with another node/subgraph
+        /// \param target node which is to be replaced
+        /// \param replacement node which is replacing the target node
+        void replace_subgraph(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+
     protected:
         ResultVector m_results;
         ParameterVector m_parameters;
@@ -118,6 +123,8 @@ namespace ngraph
         Function(const Function&&) = delete;
         Function& operator=(const Function&) = delete;
 
+        // This unordered_set holds all the dynamic nodes of the function
+        static std::unordered_set<std::shared_ptr<Node>> m_dynamic_nodes;
         static std::atomic<size_t> m_next_instance_id;
         size_t m_instance_id;
         std::string m_name;
