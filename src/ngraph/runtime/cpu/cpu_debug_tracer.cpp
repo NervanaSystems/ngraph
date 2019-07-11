@@ -42,11 +42,11 @@ void runtime::cpu::CPU_DebugTracer::init_streams()
     static auto trace_bin_file_path = std::getenv("NGRAPH_CPU_BIN_TRACER_LOG");
     if (trace_file_path == nullptr)
     {
-        trace_file_path = (char*)"trace_meta.log";
+        trace_file_path = const_cast<char*>("trace_meta.log");
     }
     if (trace_bin_file_path == nullptr)
     {
-        trace_bin_file_path = (char*)"trace_bin_data.log";
+        trace_bin_file_path = const_cast<char*>("trace_bin_data.log");
     }
 
     m_tracer_stream.open(trace_file_path, ios_base::out | ios_base::ate);

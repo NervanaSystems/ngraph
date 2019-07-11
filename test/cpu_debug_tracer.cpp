@@ -80,9 +80,7 @@ TEST(cpu_debug_tracer, check_flow_with_external_function)
     set_env_vars(trace_log_file, bin_log_file);
 
     shared_ptr<runtime::Executable> handle = backend->compile(f);
-/*    auto cf = dynamic_pointer_cast<runtime::cpu::CPU_Executable>(handle)->get_call_frame();
-
-    cf->call({result}, {a, b});
+    handle->call_with_validate({result}, {a, b});
 
     //open two logs and parse them
     ifstream f_meta;
@@ -123,6 +121,6 @@ TEST(cpu_debug_tracer, check_flow_with_external_function)
     EXPECT_EQ((vector<float>{1, 3, 5, 7}), (v_f));
 
     remove(trace_log_file.c_str());
-    remove(bin_log_file.c_str());*/
+    remove(bin_log_file.c_str());
     unset_env_vars();
 }
