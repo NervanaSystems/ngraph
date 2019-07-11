@@ -261,7 +261,8 @@ protected:
     function<const_data_callback_t> m_const_data_callback;
 };
 
-static string serialize_to_json(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
+static string
+    serialize_to_json(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
 static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, size_t indent);
 
 static json write_dimension(Dimension d)
@@ -397,18 +398,24 @@ static element::Type read_element_type(json j)
     return element::Type(bitwidth, is_real, is_signed, is_quantized, c_type_string);
 }
 
-void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent, bool cpio_enabled)
+void ngraph::serialize(const string& path,
+                       shared_ptr<ngraph::Function> func,
+                       size_t indent,
+                       bool cpio_enabled)
 {
     ofstream out(path);
     serialize(out, func, indent, cpio_enabled);
 }
 
-void ngraph::serialize(ostream& out, shared_ptr<ngraph::Function> func, size_t indent, bool cpio_enabled)
+void ngraph::serialize(ostream& out,
+                       shared_ptr<ngraph::Function> func,
+                       size_t indent,
+                       bool cpio_enabled)
 {
     if (cpio_enabled)
         ::serialize_to_cpio(out, func, indent);
     else
-		out << ::serialize_to_json(func, indent, false);
+        out << ::serialize_to_json(func, indent, false);
 }
 
 static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
