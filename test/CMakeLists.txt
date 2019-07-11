@@ -157,7 +157,6 @@ set(MULTI_TEST_SRC
     backend_embedding_lookup.in.cpp
     backend_fused_op.in.cpp
     backend_gather.in.cpp
-    backend_mlir.in.cpp
     backend_one_hot.in.cpp
     backend_pool.in.cpp
     backend_reshape.in.cpp
@@ -172,6 +171,10 @@ set(MULTI_TEST_SRC
     dyn_slice_test.in.cpp
     dynamic.in.cpp
 )
+
+if (NGRAPH_MLIR_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend_mlir.in.cpp)
+endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
