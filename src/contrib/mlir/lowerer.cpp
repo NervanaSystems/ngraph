@@ -59,6 +59,21 @@ namespace
         DialectLoweringPass& m_pass;
     };
 
+// Conversion classes declarations
+#define MLIR_OP(OP)                                                                                \
+    class OP##Conversion : public NGraphOpLowering                                                 \
+    {                                                                                              \
+    public:                                                                                        \
+        explicit OP##Conversion(mlir::MLIRContext* context, DialectLoweringPass& pass)             \
+            : NGraphOpLowering(mlir::OP::getOperationName(), context, pass)                        \
+        {                                                                                          \
+        }                                                                                          \
+                                                                                                   \
+        PatternMatchResult matchAndRewrite(Operation* op,                                          \
+                                           ArrayRef<Value*> operands,                              \
+                                           PatternRewriter& rewriter) const override;              \
+    };
+
 #include "op_lowerers.inc"
 
     // Helpers
@@ -147,11 +162,11 @@ namespace
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
         OwningRewritePatternList& patterns)
     {
-        RewriteListBuilder<NGAddOpConversion,
-                           NGArgMaxRedOpConversion,
-                           NGArgMinRedOpConversion,
-                           NGDotOpConversion,
-                           NGReturnOpConversion>::build(patterns, &getContext(), *this);
+#define MLIR_OP(OP) OP##Conversion,
+#define MLIR_LAST_OP(OP) OP##Conversion
+        RewriteListBuilder<
+#include "op_lowerers.inc"
+            >::build(patterns, &getContext(), *this);
     }
 
     void DialectLoweringPass::findOutputValues()
@@ -345,6 +360,7 @@ namespace
 
     // ADD
     REWRITER(NGAddOp)
+
     {
         auto add = cast<NGAddOp>(op);
         auto loc = add.getLoc();
@@ -392,6 +408,61 @@ namespace
     REWRITER(NGArgMinRedOp)
     {
         lowerIndexReduction<mlir::NGArgMinRedOp>(op, operands, rewriter, m_pass);
+        return matchSuccess();
+    }
+
+    // Relu
+    REWRITER(NGReluOp)
+    {
+        auto loc = cast<NGReluOp>(op).getLoc();
+
+        auto result = m_pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        // Note that builder's current function is still the original function body.
+        // use getBlock to get the new block instead.
+
+        // get new operands
+        Value* lhs = operands[0];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        // Steps
+        auto steps = vLHS.getSteps();
+
+        NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
+        Type elemTy = lhs->getType().dyn_cast<MemRefType>().getElementType();
+        NGRAPH_CHECK(!elemTy.isa<FloatType>(),
+                     "NGReluOp with float element type should not be lowered until MLIR supports "
+                     "lowering !std.CmpF");
+
+        LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+            ValueHandle val = iLHS(ivs);
+            if (auto floatTy = elemTy.dyn_cast<FloatType>())
+            {
+                ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+                iRes(ivs) = intrinsics::select(val > zero, val, zero);
+            }
+            else if (auto intTy = elemTy.dyn_cast<IntegerType>())
+            {
+                ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
+                iRes(ivs) = intrinsics::select(val > zero, val, zero);
+            }
+            else
+            {
+                NGRAPH_CHECK(false, "Unsupported type for Relu");
+            }
+        });
+
+        rewriter.replaceOp(op, {result});
         return matchSuccess();
     }
 
