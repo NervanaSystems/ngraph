@@ -1259,20 +1259,36 @@ static void dump_one_kernel_with_type(runtime::cpu::CPU_DebugTracer& debug_trace
     switch (t_attrs.m_type_of_element.get_type_enum())
     {
     case element::Type_t::f32:
-        debug_tracer.dump_one_tensor<float>(
-            kernel_name, tensor, tensor_name, t_attrs.m_number_of_elements, t_attrs.m_t_shape, in_out);
+        debug_tracer.dump_one_tensor<float>(kernel_name,
+                                            tensor,
+                                            tensor_name,
+                                            t_attrs.m_number_of_elements,
+                                            t_attrs.m_t_shape,
+                                            in_out);
         break;
     case element::Type_t::i8:
-        debug_tracer.dump_one_tensor<int8_t>(
-            kernel_name, tensor, tensor_name, t_attrs.m_number_of_elements, t_attrs.m_t_shape, in_out);
+        debug_tracer.dump_one_tensor<int8_t>(kernel_name,
+                                             tensor,
+                                             tensor_name,
+                                             t_attrs.m_number_of_elements,
+                                             t_attrs.m_t_shape,
+                                             in_out);
         break;
     case element::Type_t::u8:
-        debug_tracer.dump_one_tensor<uint8_t>(
-            kernel_name, tensor, tensor_name, t_attrs.m_number_of_elements, t_attrs.m_t_shape, in_out);
+        debug_tracer.dump_one_tensor<uint8_t>(kernel_name,
+                                              tensor,
+                                              tensor_name,
+                                              t_attrs.m_number_of_elements,
+                                              t_attrs.m_t_shape,
+                                              in_out);
         break;
     case element::Type_t::i32:
-        debug_tracer.dump_one_tensor<int32_t>(
-            kernel_name, tensor, tensor_name, t_attrs.m_number_of_elements, t_attrs.m_t_shape, in_out);
+        debug_tracer.dump_one_tensor<int32_t>(kernel_name,
+                                              tensor,
+                                              tensor_name,
+                                              t_attrs.m_number_of_elements,
+                                              t_attrs.m_t_shape,
+                                              in_out);
         break;
     }
 }
