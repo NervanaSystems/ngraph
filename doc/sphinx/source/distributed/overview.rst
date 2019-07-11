@@ -1,11 +1,7 @@
 .. _distr:
 
 Overview
-########
-
-Distributed training with nGraph
-================================
-
+========
 
 .. important:: Distributed training is not officially supported as of version
    |version|; however, some configuration options have worked for nGraph 
