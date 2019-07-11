@@ -188,7 +188,8 @@ class ngraph::runtime::plaidml::builder::Elementwise final : public Statement
 {
 public:
     Elementwise(std::string lhs, std::string rhs);
-
+    void set_lhs(const std::string& lhs) { m_lhs = lhs; }
+    void set_rhs(const std::string& rhs) { m_rhs = rhs; }
 private:
     friend class Function;
 

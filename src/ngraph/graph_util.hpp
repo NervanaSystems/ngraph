@@ -275,7 +275,8 @@ namespace ngraph
 
     NodeVector get_subgraph_outputs(const NodeVector& nodes,
                                     const NodeVector& exclusions,
-                                    bool ignore_unused = false);
+                                    bool ignore_unused = false,
+                                    bool ignore_output_duplicates = true);
 
     // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter node
     // or a node that belongs to args
