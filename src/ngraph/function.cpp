@@ -97,7 +97,17 @@ void Function::init()
 
 std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps) const
 {
-    return topological_sort(get_ops(include_control_deps), include_control_deps);
+    NodeVector nodes;
+    for (auto& r : get_results())
+    {
+        nodes.push_back(r);
+    }
+    for (auto& param : get_parameters())
+    {
+        nodes.push_back(param);
+    }
+
+    return topological_sort(nodes, include_control_deps);
 }
 
 const std::string& Function::get_friendly_name() const

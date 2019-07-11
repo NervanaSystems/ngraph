@@ -82,15 +82,16 @@ namespace ngraph
 
     NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
+    /// Topological sort of nodes needed to compute root_nodes
     template <typename T>
-    std::list<std::shared_ptr<Node>> topological_sort(const T& nodes,
+    std::list<std::shared_ptr<Node>> topological_sort(T root_nodes,
                                                       bool include_control_deps = false)
     {
         std::stack<ngraph::Node*> nodes_to_do;
-        std::set<Node*> nodes_done;
+        std::unordered_set<Node*> nodes_done;
         std::list<std::shared_ptr<Node>> result;
 
-        for (auto node : nodes)
+        for (auto& node : root_nodes)
         {
             nodes_to_do.push(node.get());
         }
@@ -115,7 +116,7 @@ namespace ngraph
             }
             if (include_control_deps)
             {
-                for (auto depptr : node->get_control_dependencies())
+                for (auto& depptr : node->get_control_dependencies())
                 {
                     Node* dep = depptr.get();
                     if (nodes_done.count(dep) == 0)
@@ -135,88 +136,69 @@ namespace ngraph
         return result;
     }
 
-    // For cases, where `nodes` is a subset of the entire graph
+    /// Topological sort of just nodes
     template <typename T>
-    std::list<std::shared_ptr<Node>> subgraph_topological_sort(const T& nodes,
+    std::list<std::shared_ptr<Node>> subgraph_topological_sort(T nodes,
                                                                bool include_control_deps = false)
     {
-        std::deque<ngraph::Node*> independent_nodes;
-        std::unordered_map<const ngraph::Node*, size_t> node_dependency_count;
-        std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> node_map;
-        std::unordered_map<ngraph::Node*, std::set<Node*>> control_deps_users;
-        std::unordered_set<std::shared_ptr<ngraph::Node>> nodes_set(nodes.begin(), nodes.end());
+        std::stack<ngraph::Node*> nodes_to_do;
+        std::unordered_set<Node*> nodes_done;
+        std::unordered_set<Node*> nodes_to_emit;
+        std::list<std::shared_ptr<Node>> result;
 
-        for (auto node : nodes)
+        for (auto& node : nodes)
         {
-            //build an equivalent of node->get_users() but for control dependencies
-            size_t deps_count = 0;
+            nodes_to_emit.insert(node.get());
+            nodes_to_do.push(node.get());
+        }
+        while (nodes_to_do.size() > 0)
+        {
+            Node* node = nodes_to_do.top();
+            if (nodes_done.count(node) != 0)
+            {
+                nodes_to_do.pop();
+                continue;
+            }
+            bool can_add = true;
+            size_t arg_count = node->get_input_size();
+            for (size_t i = 0; i < arg_count; ++i)
+            {
+                Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
+                if (nodes_done.count(dep) == 0)
+                {
+                    can_add = false;
+                    nodes_to_do.push(dep);
+                }
+            }
             if (include_control_deps)
             {
-                for (auto cd : node->get_control_dependencies())
+                for (auto& depptr : node->get_control_dependencies())
                 {
-                    if (nodes_set.count(cd) != 0)
+                    Node* dep = depptr.get();
+                    if (nodes_done.count(dep) == 0)
                     {
-                        control_deps_users[cd.get()].insert(node.get());
-                        deps_count++;
+                        can_add = false;
+                        nodes_to_do.push(dep);
                     }
                 }
             }
-
-            node_map[node.get()] = node;
-            for (auto arg : node->get_arguments())
+            if (can_add)
             {
-                if (nodes_set.count(arg) != 0)
+                if (nodes_to_emit.count(node) != 0)
                 {
-                    deps_count++;
+                    result.push_back(node->shared_from_this());
                 }
-            }
-
-            node_dependency_count[node.get()] = deps_count;
-            if (deps_count == 0)
-            {
-                independent_nodes.push_back(node.get());
+                nodes_to_do.pop();
+                nodes_done.insert(node);
             }
         }
-
-        std::list<std::shared_ptr<ngraph::Node>> result_list;
-        while (independent_nodes.size() > 0)
-        {
-            auto independent_node = independent_nodes.front();
-            result_list.push_back(node_map[independent_node]);
-            independent_nodes.pop_front();
-
-            for (const std::shared_ptr<Node>& user : independent_node->get_users())
-            {
-                if (--node_dependency_count[user.get()] == 0)
-                {
-                    independent_nodes.push_back(user.get());
-                }
-            }
-
-            if (include_control_deps)
-            {
-                auto cdit = control_deps_users.find(independent_node);
-                if (cdit != control_deps_users.end())
-                    for (auto cd_user : cdit->second)
-                    {
-                        node_dependency_count[cd_user] -= 1;
-                        size_t count = node_dependency_count[cd_user];
-                        if (count == 0)
-                        {
-                            independent_nodes.push_back(cd_user);
-                        }
-                    }
-            }
-        }
-
-        NGRAPH_CHECK(nodes.size() == result_list.size());
-        return result_list;
+        return result;
     }
 
     template <typename T>
     void validate_nodes_and_infer_types(const T& nodes)
     {
-        for (auto node : subgraph_topological_sort(nodes))
+        for (auto& node : subgraph_topological_sort(nodes))
         {
             node->revalidate_and_infer_types();
         }
