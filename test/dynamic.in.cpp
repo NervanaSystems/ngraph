@@ -456,3 +456,53 @@ NGRAPH_TEST(dynamic_${BACKEND_NAME}, reshape)
         ASSERT_EQ(results, data);
     }
 }
+
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, replace_subgraph)
+{
+    //
+    // Create a graph for f(a,b,c) = (a+b)*c, where a, b, c all have shape {2,?,3}.
+    //
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    auto c = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+
+    auto replacement_node = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto a_plus_b_times_c = (a + b) * c;
+
+    auto f = make_shared<Function>(NodeVector{a_plus_b_times_c},
+                                   ParameterVector{a, b, c, replacement_node});
+    ASSERT_EQ(6, f->get_dynamic_nodes().size());
+    f->replace_subgraph(a, replacement_node);
+    ASSERT_EQ(5, f->get_dynamic_nodes().size());
+
+    //
+    // Get a backend with dynamic support, and compile f.
+    //
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+    auto ex = backend->compile(f);
+
+    //
+    // Create a dynamic output tensor with shape {2,?,3}.
+    //
+    auto t_r =
+        backend->create_dynamic_tensor(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    size_t middle_dim = 3;
+    vector<float> inputs(2 * middle_dim * 3);
+    for (size_t i = 0; i < 2 * middle_dim * 3; i++)
+    {
+        inputs[i] = i;
+    }
+
+    // Create static tensors for the inputs and copy data.
+    auto t_a = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+    auto t_b = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+    auto t_c = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+    auto t_replacement = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+
+    copy_data(t_a, inputs);
+    copy_data(t_b, inputs);
+    copy_data(t_c, inputs);
+
+    // Call ex, writing result into t_r (note we're using the same t_r from outside the loop.)
+    ex->call_with_validate({t_r}, {t_a, t_b, t_c, t_replacement});
+}

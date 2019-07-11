@@ -21,14 +21,14 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/provenance.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
-unordered_set<std::shared_ptr<Node>>  Function::m_dynamic_nodes;
+unordered_set<std::shared_ptr<Node>> Function::m_dynamic_nodes;
 
 Function::Function(const ResultVector& results,
                    const ParameterVector& parameters,
@@ -36,7 +36,6 @@ Function::Function(const ResultVector& results,
     : m_results(results)
     , m_parameters(parameters)
     , m_temporary_pool_size(0)
-    //, m_dynamic_nodes()
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
@@ -50,7 +49,6 @@ Function::Function(const NodeVector& results,
     : m_results(results.size())
     , m_parameters(parameters)
     , m_temporary_pool_size(0)
-    //, m_dynamic_nodes()
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
@@ -94,6 +92,11 @@ void Function::init()
                            {
                                throw ngraph_error("Function references undeclared parameter");
                            }
+                       }
+
+                       if (node->get_output_partial_shape(0).is_dynamic())
+                       {
+                           m_dynamic_nodes.insert(node);
                        }
                    },
                    true /*include control dependencies*/);

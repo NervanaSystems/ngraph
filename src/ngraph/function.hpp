@@ -112,6 +112,10 @@ namespace ngraph
         /// \param target node which is to be replaced
         /// \param replacement node which is replacing the target node
         void replace_subgraph(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+        const std::unordered_set<std::shared_ptr<Node>> get_dynamic_nodes() const
+        {
+            return m_dynamic_nodes;
+        }
 
     protected:
         ResultVector m_results;
