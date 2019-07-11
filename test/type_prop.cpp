@@ -13400,7 +13400,7 @@ INSTANTIATE_TEST_CASE_P(
         DynSliceParams({{10}, {1}, {1}, {1}, {5}}, {{1}, {0}, {2}}, {{}, {0}, {}, {}, {}}),
         DynSliceParams({{10}, {1}, {1}, {1}, {10}}, {{-1}, {0}, {-1}}, {{}, {0}, {}, {}, {}}),
         DynSliceParams({{10}, {1}, {1}, {1}, {5}}, {{-1}, {0}, {-2}}, {{}, {0}, {}, {}, {}}),
-        /* Axis Masks: New, Shrink, Ellipsis */
+        // Axis Masks: New, Shrink, Ellipsis
         DynSliceParams({{10}, {1}, {1}, {0}, {1, 10}}, {{0}, {10}, {}}, {{}, {}, {0}, {}, {}}),
         DynSliceParams({{1, 2, 3}, {2}, {2}, {0}, {1, 2, 2}},
                        {{0, 0}, {1, 2}, {}},
