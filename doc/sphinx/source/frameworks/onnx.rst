@@ -4,7 +4,6 @@
 ONNX
 ====
 
-
 nGraph is able to import and execute ONNX models. Models are converted to
 nGraph's internal representation and converted to ``Function`` objects, which
 can be compiled and executed on one of nGraph's backends.
