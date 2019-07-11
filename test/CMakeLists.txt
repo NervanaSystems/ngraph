@@ -172,6 +172,10 @@ set(MULTI_TEST_SRC
     dynamic.in.cpp
 )
 
+if (NGRAPH_MLIR_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend_mlir.in.cpp)
+endif()
+
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
 endif()
