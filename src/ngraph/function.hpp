@@ -112,7 +112,7 @@ namespace ngraph
         /// \param target node which is to be replaced
         /// \param replacement node which is replacing the target node
         void replace_subgraph(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
-        const std::unordered_set<std::shared_ptr<Node>> get_dynamic_nodes() const
+        std::unordered_set<std::shared_ptr<Node>> get_dynamic_nodes() const
         {
             return m_dynamic_nodes;
         }
@@ -128,7 +128,7 @@ namespace ngraph
         Function& operator=(const Function&) = delete;
 
         // This unordered_set holds all the dynamic nodes of the function
-        static std::unordered_set<std::shared_ptr<Node>> m_dynamic_nodes;
+        std::unordered_set<std::shared_ptr<Node>> m_dynamic_nodes;
         static std::atomic<size_t> m_next_instance_id;
         size_t m_instance_id;
         std::string m_name;

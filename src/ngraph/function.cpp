@@ -28,7 +28,6 @@ using namespace std;
 using namespace ngraph;
 
 atomic<size_t> Function::m_next_instance_id(0);
-unordered_set<std::shared_ptr<Node>> Function::m_dynamic_nodes;
 
 Function::Function(const ResultVector& results,
                    const ParameterVector& parameters,
@@ -259,14 +258,14 @@ void Function::replace_subgraph(std::shared_ptr<Node> target, std::shared_ptr<No
     // Fix input/output descriptors
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
     bool remove_dyn_nodes = true;
-    auto update_dynamic_nodes = [remove_dyn_nodes](std::shared_ptr<Node> node) {
+    auto update_dynamic_nodes = [this, remove_dyn_nodes](std::shared_ptr<Node> node) {
         if ((node->get_output_partial_shape(0).is_dynamic()) && !remove_dyn_nodes)
         {
-            m_dynamic_nodes.insert(node);
+            this->m_dynamic_nodes.insert(node);
         }
         else if ((node->get_output_partial_shape(0).is_dynamic()) && remove_dyn_nodes)
         {
-            m_dynamic_nodes.erase(node);
+            this->m_dynamic_nodes.erase(node);
         }
     };
 
