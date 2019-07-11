@@ -76,6 +76,9 @@ set(SRC
     shape.cpp
     specialize_function.cpp
     tensor.cpp
+    type_prop/batch_norm.cpp
+    type_prop/broadcast.cpp
+    type_prop/dyn_broadcast.cpp
     type_prop.cpp
     type_prop_layers.cpp
     util.cpp
