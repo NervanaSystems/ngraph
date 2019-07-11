@@ -151,7 +151,7 @@ namespace ngraph
             nodes_to_emit.insert(node.get());
             nodes_to_do.push(node.get());
         }
-        while (nodes_to_do.size() > 0)
+        while (nodes_to_do.size() > 0 && result.size() < nodes_to_emit.size())
         {
             Node* node = nodes_to_do.top();
             if (nodes_done.count(node) != 0)
