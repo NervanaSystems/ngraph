@@ -30,7 +30,7 @@ namespace ngraph
     ///    indent level specified.
     std::string serialize(std::shared_ptr<ngraph::Function> func, size_t indent = 0);
 
-    /// \brief Serialize a Function to a json file
+    /// \brief Serialize a Function to a json or cpio file
     /// \param path The path to the output file
     /// \param func The Function to serialize
     /// \param indent If 0 then there is no formatting applied and the resulting string is the
@@ -42,7 +42,7 @@ namespace ngraph
                    size_t indent = 0,
                    bool cpio_enabled = false);
 
-    /// \brief Serialize a Function to a json stream
+    /// \brief Serialize a Function to a json or cpio stream
     /// \param out The output stream to which the data is serialized.
     /// \param func The Function to serialize
     /// \param indent If 0 then there is no formatting applied and the json is the
