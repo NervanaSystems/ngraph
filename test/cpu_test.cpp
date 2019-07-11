@@ -1231,19 +1231,18 @@ TEST(cpu_test, constant_unary_binary)
 
 TEST(cpu_test, conv_test_winograd)
 {
-    /*  This test checks for the cpu specific graph pass handling for conv_winograd implementation. 
-        On SKX with MKLDNN version >= v0.18.0, mkldnn_verbose should match the following
-
-        mkldnn_verbose,info,Intel(R) MKL-DNN v0.18.0 (Git Hash 863ff6e7042cec7d2e29897fe9f0872e0888b0fc),Intel(R) Advanced Vector Extensions 512 (Intel(R) AVX-512) with AVX512BW, AVX512VL, and AVX512DQ extensions
-        mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.0129395
-        mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.414062
-        mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,0.0119629
-        mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,19.302
-        mkldnn_verbose,create,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,1.84106
-        mkldnn_verbose,exec,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,46.6631
-        mkldnn_verbose,create,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,0.279053
-        mkldnn_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
-    */
+    // This test checks for the cpu specific graph pass handling for conv_winograd implementation.
+    // On SKX with MKLDNN version >= v0.18.0, mkldnn_verbose should match the following
+    //
+    // mkldnn_verbose,info,Intel(R) MKL-DNN v0.18.0 (Git Hash 863ff6e7042cec7d2e29897fe9f0872e0888b0fc),Intel(R) Advanced Vector Extensions 512 (Intel(R) AVX-512) with AVX512BW, AVX512VL, and AVX512DQ extensions
+    // mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.0129395
+    // mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.414062
+    // mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,0.0119629
+    // mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,19.302
+    // mkldnn_verbose,create,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,1.84106
+    // mkldnn_verbose,exec,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,46.6631
+    // mkldnn_verbose,create,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,0.279053
+    // mkldnn_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
     auto make_function = []() -> std::shared_ptr<Function> {
         auto input = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
         auto filter = make_shared<op::Parameter>(element::f32, Shape{64, 3, 3, 3});
