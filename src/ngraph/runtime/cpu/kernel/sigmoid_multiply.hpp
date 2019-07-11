@@ -55,63 +55,63 @@ namespace ngraph
                     auto out_tm = wrap_into_tensor_map<float>(out_tensor, tensor_size);
                     switch (index)
                     {
-                    case 0 /*Logistic|Logistic*/:
+                    case 0: // Logistic|Logistic
                     {
                         auto c = 1.f / (((-in0).exp() + 1.f) * ((-in1).exp() + 1.f));
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 1 /*Logistic|Tanh*/:
+                    case 1: // Logistic|Tanh
                     {
                         auto c = in1.tanh() / ((-in0).exp() + 1.f);
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 2 /*Logistic|Identity*/:
+                    case 2: // Logistic|Identity
                     {
                         auto c = in1 / ((-in0).exp() + 1.f);
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 3 /*Tanh|Logistic*/:
+                    case 3: // Tanh|Logistic
                     {
                         auto c = in0.tanh() / ((-in1).exp() + 1.f);
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 4 /*Tanh|Tanh*/:
+                    case 4: // Tanh|Tanh
                     {
                         auto c = in0.tanh() * in1.tanh();
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 5 /*Tanh|Identity*/:
+                    case 5: // Tanh|Identity
                     {
                         auto c = in0.tanh() * in1;
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 6 /*Identity|Logistic*/:
+                    case 6: // Identity|Logistic
                     {
                         auto c = in0 / ((-in1).exp() + 1.f);
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 7 /*Identity|Tanh*/:
+                    case 7: // Identity|Tanh
                     {
                         auto c = in0 * in1.tanh();
                         out_tm.device(
                             ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) = c;
                     }
                     break;
-                    case 8 /*Identity|Identity*/:
+                    case 8: // Identity|Identity
                     {
                         auto c = (in0 * in1);
                         out_tm.device(
@@ -139,7 +139,7 @@ namespace ngraph
 
                     switch (index)
                     {
-                    case 0 /*Logistic|Logistic*/:
+                    case 0: // Logistic|Logistic
                     {
                         auto in0_neg_exp = (-in0).exp();
                         auto in0_log_denominator = in0_neg_exp + 1.f;
@@ -156,7 +156,7 @@ namespace ngraph
                             arena)) = i1;
                     }
                     break;
-                    case 1 /*Logistic|Tanh*/:
+                    case 1: // Logistic|Tanh
                     {
                         auto in0_neg_exp = (-in0).exp();
                         auto in0_log_denominator = in0_neg_exp + 1.f;
@@ -175,7 +175,7 @@ namespace ngraph
                             arena)) = i1;
                     }
                     break;
-                    case 2 /*Logistic|Identity*/:
+                    case 2: // Logistic|Identity
                     {
                         auto in0_neg_exp = (-in0).exp();
                         auto in0_log_denominator = in0_neg_exp + 1.f;
@@ -189,7 +189,7 @@ namespace ngraph
                             arena)) = i1;
                     }
                     break;
-                    case 3 /*Tanh|Logistic*/:
+                    case 3: // Tanh|Logistic
                     {
                         auto in0_2exp = (in0 * 2.f).exp();
                         auto in0_tanh_denominator = in0_2exp + 1.f;
@@ -208,7 +208,7 @@ namespace ngraph
                             arena)) = i1;
                     }
                     break;
-                    case 4 /*Tanh|Tanh*/:
+                    case 4: // Tanh|Tanh
                     {
                         auto in0_2exp = (in0 * 2.f).exp();
                         auto in0_tanh_denominator = in0_2exp + 1.f;
@@ -227,7 +227,7 @@ namespace ngraph
                             arena)) = i1;
                     }
                     break;
-                    case 5 /*Tanh|Identity*/:
+                    case 5: // Tanh|Identity
                     {
                         auto in0_2exp = (in0 * 2.f).exp();
                         auto in0_tanh_denominator = in0_2exp + 1.f;
@@ -241,7 +241,7 @@ namespace ngraph
                             arena)) = i1;
                     }
                     break;
-                    case 6 /*Identity|Logistic*/:
+                    case 6: // Identity|Logistic
                     {
                         auto in1_neg_exp = (-in1).exp();
                         auto in1_log_denominator = in1_neg_exp + 1.f;
@@ -255,7 +255,7 @@ namespace ngraph
                             arena)) = i1;
                     }
                     break;
-                    case 7 /*Identity|Tanh*/:
+                    case 7: // Identity|Tanh
                     {
                         auto in1_2exp = (in1 * 2.f).exp();
                         auto in1_tanh_denominator = in1_2exp + 1.f;
@@ -269,7 +269,7 @@ namespace ngraph
                             arena)) = i1;
                     }
                     break;
-                    case 8 /*Identity|Identity*/:
+                    case 8: // Identity|Identity
                     {
                         auto i0 = delta * in1;
                         auto i1 = delta * in0;

@@ -19,9 +19,12 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/relu.hpp"
 
 using namespace ngraph::descriptor;
 using namespace ngraph::op;
@@ -269,6 +272,22 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     if (TI(ngraph::op::Dot) == TI(*node))
     {
         if (node->get_input_shape(0).size() != 2 || node->get_input_shape(1).size() != 2)
+        {
+            return false;
+        }
+    }
+
+    if (TI(ngraph::op::ArgMin) == TI(*node) || TI(ngraph::op::ArgMax) == TI(*node))
+    {
+        // TODO: Remove this when MLIR has float point cmp support
+        if (!node->input(0).get_element_type().is_integral())
+            return false;
+    }
+
+    // Relu is supported for integer types only until MLIR adds support for lowering !std.CmpF to LLVM dialect
+    if (TI(ngraph::op::Relu) == TI(*node))
+    {
+        if (!node->get_element_type().is_integral())
         {
             return false;
         }

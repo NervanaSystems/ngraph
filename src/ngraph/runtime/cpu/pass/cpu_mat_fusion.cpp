@@ -478,13 +478,11 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
             }
             if (m_fusion_type.is_set(FusionType::REGULAR_FUSIONS))
             {
-                /*
-                if (auto fused_conv = fuse_group_convolution(n))
-                {
-                    func->replace_node(n, fused_conv);
-                    modified = true;
-                }
-                */
+                // if (auto fused_conv = fuse_group_convolution(n))
+                // {
+                //     func->replace_node(n, fused_conv);
+                //     modified = true;
+                // }
             }
         }
     }
