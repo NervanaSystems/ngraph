@@ -1,8 +1,8 @@
 .. backends/index.rst
 
-#################################
-Developer Resources for Backends
-#################################
+#####################
+Working with Backends
+#####################
 
 * :ref:`what_is_backend`
 * :ref:`how_to_use`
@@ -11,17 +11,19 @@ Developer Resources for Backends
 
 .. _what_is_backend:
 
-What's a backend?
------------------
+What is a backend?
+------------------
 
 In the nGraph Compiler stack, what we call a *backend* is responsible for 
 function execution and value allocation. A  backend can be used to 
-:doc:`carry out a programmed computation<../core/constructing-graphs/execute>` 
-from a framework on a CPU or GPU; or it can be used with an *Interpreter* mode, 
+:doc:`carry out computations<../core/constructing-graphs/execute>` 
+from a framework on a CPU, GPU; or it can be used with an *Interpreter* mode, 
 which is primarily intended for testing, to analyze a program, or to help a 
-framework developer customize targeted solutions. Experimental APIs to support 
-current and future nGraph Backends are also available; see, for example, the 
-section on :doc:`plaidml-ng-api/index`.
+framework developer customize targeted solutions. 
+
+Experimental APIs to support current and future nGraph Backends are 
+also available; see, for example, the section on PlaidML in the 
+:doc:`buildlb`.
 
 .. csv-table::
    :header: "Backend", "Current nGraph support", "Future nGraph support"
@@ -47,7 +49,6 @@ How to use?
    :width: 650px
 
    The execution interface for nGraph 
-
 
 The nGraph execution API for ``Executable`` objects is a simple, five-method 
 interface; each backend implements the following five functions:
