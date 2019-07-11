@@ -261,9 +261,13 @@ protected:
     function<const_data_callback_t> m_const_data_callback;
 };
 
-static string
-    serialize_to_json(shared_ptr<ngraph::Function> func, size_t indent, bool binary_constant_data);
-static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, size_t indent);
+static string serialize_to_json(shared_ptr<ngraph::Function> func,
+                                size_t indent,
+                                bool binary_constant_data = false);
+static void serialize_to_cpio(ostream& out,
+                              shared_ptr<ngraph::Function> func,
+                              size_t indent,
+                              bool binary_constant_data = true);
 
 static json write_dimension(Dimension d)
 {
@@ -415,12 +419,15 @@ void ngraph::serialize(ostream& out,
     if (cpio_enabled)
         ::serialize_to_cpio(out, func, indent);
     else
-        out << ::serialize_to_json(func, indent, false);
+        out << ::serialize_to_json(func, indent);
 }
 
-static void serialize_to_cpio(ostream& out, shared_ptr<ngraph::Function> func, size_t indent)
+static void serialize_to_cpio(ostream& out,
+                              shared_ptr<ngraph::Function> func,
+                              size_t indent,
+                              bool binary_constant_data)
 {
-    string json_content = ::serialize_to_json(func, indent, true);
+    string json_content = ::serialize_to_json(func, indent, binary_constant_data);
     cpio::Writer writer(out);
     writer.write(
         func->get_name(), json_content.c_str(), static_cast<uint32_t>(json_content.size()));
@@ -460,9 +467,19 @@ static string serialize_to_json(shared_ptr<Function> func, size_t indent, bool b
     return rc;
 }
 
-std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent)
+std::string
+    ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent, bool cpio_enabled)
 {
-    return ::serialize_to_json(func, indent, false);
+    if (cpio_enabled)
+    {
+        std::ostringstream cpio_stream;
+        ::serialize_to_cpio(cpio_stream, func, indent);
+        return cpio_stream.str();
+    }
+    else
+    {
+        return ::serialize_to_json(func, indent);
+    }
 }
 
 shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
