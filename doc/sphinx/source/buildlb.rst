@@ -20,7 +20,7 @@ for more detail.
 A "from scratch" source-code build that defaults to the PlaidML backend 
 contains rich algorithm libraries akin to those that were previously available 
 only to developers willing to spend extensive time writing, testing, and 
-customizing kernels. An ``NGRAPH_PLAIDML`` dist can function like framework 
+customizing kernels. An ``NGRAPH_PLAIDML`` dist can function like a framework 
 that lets developers compose, train, and even deploy :abbr:`DL (Deep Learning)` 
 models in their preferred language on neural networks of any size. This is 
 a good option if, for example, you are working on a laptop with a high-end 

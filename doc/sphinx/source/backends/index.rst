@@ -15,15 +15,15 @@ What is a backend?
 ------------------
 
 In the nGraph Compiler stack, what we call a *backend* is responsible for 
-function execution and value allocation. A  backend can be used to 
+function execution and value allocation. A backend can be used to 
 :doc:`carry out computations<../core/constructing-graphs/execute>` 
-from a framework on a CPU, GPU; or it can be used with an *Interpreter* mode, 
-which is primarily intended for testing, to analyze a program, or to help a 
-framework developer customize targeted solutions. 
+from a framework on a CPU, GPU, or ASIC; it can also be used with an 
+*Interpreter* mode, which is primarily intended for testing, to analyze a 
+program, or to help a framework developer customize targeted solutions. 
 
-Experimental APIs to support current and future nGraph Backends are 
-also available; see, for example, the section on PlaidML in the 
-:doc:`buildlb`.
+nGraph also provides a way to use the advanced tensor compiler PlaidML 
+as a backend; you can learn more about this backend and how to build it 
+from source in our documentation: :ref:`ngraph_plaidml_backend`.
 
 .. csv-table::
    :header: "Backend", "Current nGraph support", "Future nGraph support"
