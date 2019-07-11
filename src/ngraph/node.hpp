@@ -338,7 +338,6 @@ namespace ngraph
         // Will be deprecated
         std::shared_ptr<Node> get_argument(size_t index) const;
 
-    protected:
         // Will be replaced with an OutputVector version
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
