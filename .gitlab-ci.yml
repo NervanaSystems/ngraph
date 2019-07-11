@@ -19,4 +19,4 @@ pages:
     paths:
     - public
   only:
-  - evelynfay-added-intro
+  - evelynfay/new-doc-outline
