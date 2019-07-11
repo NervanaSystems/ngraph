@@ -280,4 +280,5 @@ std::vector<T> read_binary_file(const std::string& path)
     return file_content;
 }
 
-testing::AssertionResult test_ordered_ops(std::shared_ptr<ngraph::Function> f);
+testing::AssertionResult test_ordered_ops(std::shared_ptr<ngraph::Function> f,
+                                          const ngraph::NodeVector& required_ops);
