@@ -31,6 +31,7 @@ set(SRC
     cpu_visualize_tree.cpp
     cpu_cse.cpp
     cpu_debugger.cpp
+    cpu_debug_tracer.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp

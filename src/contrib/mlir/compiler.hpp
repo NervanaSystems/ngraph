@@ -105,6 +105,9 @@ namespace ngraph
                                              "' in MLIR Compiler");
                 }
 
+                template <typename UnaryOp>
+                mlir::Value* create_unary_op(const ngraph::Node* ng_node);
+
                 template <typename BinOp>
                 mlir::Value* create_binary_op(const ngraph::Node* ng_node);
 
