@@ -61,9 +61,10 @@ Install TensorFlow:
 
     pip install -U tensorflow==1.14.0
 
-Install `ngraph-tensorflow-bridge`:
+Install ``ngraph-tensorflow-bridge``:
 
 ::
+
     pip install -U ngraph-tensorflow-bridge
 
 Build from source
@@ -74,7 +75,7 @@ build nGraph bridge from source.
 
 .. note:: The requirements for building nGraph bridge are identical to the
    requirements for building TensorFlow from source. For more information,
-   review the [TensorFlow configuration] details. 
+   review the `TensorFlow configuration <tensorflow_configuration_>`_ details. 
 
 
 **Prepare you build environment**
@@ -157,7 +158,9 @@ respectively.
 Select the help option of ``build_ngtf.py`` script to learn more about various
 build options and how to build other backends. 
 
-Verify that ``ngraph-bridge`` installed correctly:
+**Verify installation of** ``ngraph-bridge``
+
+To verify that ``ngraph-bridge`` installed correctly, use:
 
 ::
 
@@ -272,8 +275,7 @@ CPU backend, add the following option:
 
 Where ``<num_cores>`` equals the number of cores in your processor. 
 
-Measure the time
-~~~~~~~~~~~~~~~~
+**Measure the time**
 
 nGraph is a Just In Time (JIT) compiler, meaning that the TensorFlow
 computation graph is compiled to nGraph during the first instance of the
@@ -284,17 +286,17 @@ Add the following Python code to measure the computation time:
 
 .. code-block:: python
 
-	# Warmup
-	sess.run(output_operation.outputs[0], {
-	        input_operation.outputs[0]: t})
-	# Run
-	import time
-	start = time.time()
-	results = sess.run(output_operation.outputs[0], {
-	        input_operation.outputs[0]: t
-	        })      
-	elapsed = time.time() - start
-	print('Time elapsed: %f seconds' % elapsed)
+    # Warmup
+    sess.run(output_operation.outputs[0], {
+            input_operation.outputs[0]: t})
+    # Run
+    import time
+    start = time.time()
+    results = sess.run(output_operation.outputs[0], {
+            input_operation.outputs[0]: t
+            })      
+    elapsed = time.time() - start
+    print('Time elapsed: %f seconds' % elapsed)
 
 Observe that the ouput time runs faster than TensorFlow native (without
 nGraph).
