@@ -17,7 +17,7 @@ A "from scratch" source-code build of the nGraph Library enables the CPU,
 ``Interpreter``, and unit tests by default. See :ref:`default_ngflags` 
 for more detail. 
 
-A "from scratch" source-code build of that defaults to the PlaidML backend 
+A "from scratch" source-code build that defaults to the PlaidML backend 
 contains rich algorithm libraries akin to those that were previously available 
 only to developers willing to spend extensive time writing, testing, and 
 customizing kernels. An ``NGRAPH_PLAIDML`` dist can function like framework 
