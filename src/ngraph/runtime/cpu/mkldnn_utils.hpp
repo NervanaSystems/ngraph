@@ -76,12 +76,12 @@ namespace ngraph
                 bool can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node);
                 bool can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node);
 
-                /*  
-                Intel(R) MKL-DNN supports the Winograd algorithm for convolutions with the following sizes:
-                2D convolution (i.e. spatial depth d=1), kernel sizes kh=3,kw=3. strides sh=sw=1.
-                Inference - Based on convolution sizes, MKLDNN chooses between two different tile sizes F(2x2, 3x3) or 
-                F(4x4, 3x3)(refer to Winograd paper for more informartion on tile sizes). Training - Uses F(4x4, 3x3) winograd.
-                */
+                //
+                // Intel(R) MKL-DNN supports the Winograd algorithm for convolutions with the following sizes:
+                // 2D convolution (i.e. spatial depth d=1), kernel sizes kh=3,kw=3. strides sh=sw=1.
+                // Inference - Based on convolution sizes, MKLDNN chooses between two different tile sizes F(2x2, 3x3) or
+                // F(4x4, 3x3)(refer to Winograd paper for more informartion on tile sizes). Training - Uses F(4x4, 3x3) winograd.
+                //
                 mkldnn::algorithm get_conv_algo();
 
                 // Placeholder for when "auto" support is added for deconv

@@ -75,19 +75,19 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
         // op.  Using target always works.
         AxisVector out_axes = to_axes(target, output_transpose);
 
-        auto lhs = node->get_arguments().at(0);
+        auto lhs = node->get_argument(0);
         auto* lhs_transpose = to_transpose(lhs);
         if (lhs_transpose)
         {
-            lhs = lhs_transpose->get_arguments().at(0);
+            lhs = lhs_transpose->get_argument(0);
         }
         AxisVector lhs_axes = to_axes(lhs, lhs_transpose);
 
-        auto rhs = node->get_arguments().at(1);
+        auto rhs = node->get_argument(1);
         auto* rhs_transpose = to_transpose(rhs);
         if (rhs_transpose)
         {
-            rhs = rhs_transpose->get_arguments().at(0);
+            rhs = rhs_transpose->get_argument(0);
         }
         AxisVector rhs_axes = to_axes(rhs, rhs_transpose);
 
