@@ -51,7 +51,7 @@ class ngraph::runtime::gcpu::NodeWrapper
 public:
     NodeWrapper(const std::shared_ptr<const ngraph::Node>& node);
 
-    const Node& get_node() const { return *m_node; }
+    std::shared_ptr<const Node> get_node() const { return m_node; }
     ngraph::runtime::gcpu::OP_TYPEID get_typeid() const { return m_typeid; }
 private:
     std::shared_ptr<const ngraph::Node> m_node;
