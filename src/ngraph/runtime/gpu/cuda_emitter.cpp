@@ -231,20 +231,20 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
     size_t num_rows = ((rank == 2) ? input_shape[0] : 1);
     std::vector<std::string> dtypes_string = get_string_vector(dtypes);
 
-    /*  The struct 'Entry' used in the kernel looks like this:
-    struct Entry
-    {
-            size_t index;
-            float value;
-
-            __device__ size_t get_index(){return index;}
-            __device__ void set_index(size_t id) {index = id;}
-            __device__ float get_value(){return value;}
-            __device__ void set_value(float val){value = val;}
-
-    };
-    Based on the datatypes, the max size of the struct can be 16 bytes. Any arbitrary size of the struct can
-    therfore be given by 'shared_struct_bytes' as calculated below accounting for structure padding*/
+    //  The struct 'Entry' used in the kernel looks like this:
+    // struct Entry
+    // {
+    //         size_t index;
+    //         float value;
+    //
+    //         __device__ size_t get_index(){return index;}
+    //         __device__ void set_index(size_t id) {index = id;}
+    //         __device__ float get_value(){return value;}
+    //         __device__ void set_value(float val){value = val;}
+    //
+    // };
+    // Based on the datatypes, the max size of the struct can be 16 bytes. Any arbitrary size of the struct can
+    // therfore be given by 'shared_struct_bytes' as calculated below accounting for structure padding
 
     size_t shared_struct_bytes = (((dtypes[0].size() + index_elem_type.size()) <= 8) ? 8 : 16);
     size_t shared_data_bytes = num_cols * shared_struct_bytes;
