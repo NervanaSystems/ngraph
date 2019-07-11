@@ -110,6 +110,37 @@ std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps)
     return topological_sort(nodes, include_control_deps);
 }
 
+void Function::map_unordered_ops(std::function<void(Node*)> f) const
+{
+    std::unordered_set<Node*> unordered_ops;
+    std::stack<Node*> remaining_ops;
+    for (auto& r : get_results())
+    {
+        remaining_ops.push(r.get());
+    }
+    for (auto& param : get_parameters())
+    {
+        remaining_ops.push(param.get());
+    }
+    while (remaining_ops.size() > 0)
+    {
+        Node* op = remaining_ops.top();
+        remaining_ops.pop();
+        if (unordered_ops.insert(op).second)
+        {
+            f(op);
+            for (size_t i = 0; i < op->get_input_size(); ++i)
+            {
+                remaining_ops.push(op->input(i).get_source_output().get_node());
+            }
+            for (auto& cdep : op->get_control_dependencies())
+            {
+                remaining_ops.push(cdep.get());
+            }
+        }
+    }
+}
+
 const std::string& Function::get_friendly_name() const
 {
     if (m_name.empty())
