@@ -32,28 +32,20 @@ the "write once, run anywhere" mantra that enables your AI solutions to easily
 go from concept to production to scale.
 
 Frameworks using nGraph to execute workloads have shown `up to 45X`_
-performance boost compared to native implementations. 
-For a high-level overview, see the :ref:`introduction` and our latest :doc:`project/release-notes`.
-
-.. _intro:
-
-Introduction
-============
+performance boost compared to native implementations. For a high-level
+overview, see the :ref:`introduction` and our latest :doc:`project/release-notes`.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Introduction
    :glob:
 
    introduction/*
 
 
-.. _framework_support:
-
-Framework Support
-=================
-
 .. toctree::
    :maxdepth: 1
+   :caption: Framework Support
 
    frameworks/overview.rst
    frameworks/tensorflow.rst
@@ -61,13 +53,9 @@ Framework Support
    frameworks/paddlepaddle.rst
 
 
-.. _ngraph_core:
-
-nGraph Core
-===========
-
 .. toctree::
    :maxdepth: 1
+   :caption: nGraph Core
 
    core/overview.rst
    core/pattern-matcher.rst
@@ -79,13 +67,9 @@ nGraph Core
 .. core/control_flow.rst
 
 
-.. _backend_support:
-
-Backend Support
-===============
-
 .. toctree::
    :maxdepth: 1
+   :caption: Backend Support
 
    backend-support/overview.rst
 .. backend-support/cpu.rst
@@ -93,45 +77,34 @@ Backend Support
 .. backend-support/plaidml.rst
 
 
-.. _distributed:
-
-Distributed Training
-====================
-
 .. toctree::
    :maxdepth: 1
+   :caption: Distributed Training
 
    distributed/overview.rst
 .. distributed/tensorflow.rst
 .. distributed/paddlepaddle.rst
 
 
-.. _validated_workloads:
-
-Validated Workloads
-===================
-
 .. toctree::
    :maxdepth: 1
+   :caption: Validated Workloads
 
    validated_workloads/list.rst
 
 
 .. toctree::
    :maxdepth: 1
+   :caption: Diagnostics and Visualization
 
 ..  diagnostics/nbench.rst
 ..  diagnostics/provenance.rst
 ..  diagnostics/netron.rst
 
 
-.. _contribution_guide:
-
-Contribution
-============
-
 .. toctree::
    :maxdepth: 1
+   :caption: Contribution
 
    contribution/guide.rst
 .. contribution/governance.rst
