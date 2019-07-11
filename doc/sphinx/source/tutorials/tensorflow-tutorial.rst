@@ -336,7 +336,7 @@ For debugging run time issues, see the instructions provided in the
 .. _nGraph_bridge: https://github.com/tensorflow/ngraph-bridge.git
 .. _Opencl_runtime: https://software.intel.com/en-us/articles/opencl-drivers
 .. _tensorflow_configuration: https://www.tensorflow.org/install/source
-.. _bazel_version: https://github.com/bazelbuild/bazel/releases/tag/0.25.2
+.. _bazel: https://github.com/bazelbuild/bazel/releases/tag/0.25.2
 .. _frozen_model: https://www.tensorflow.org/guide/extend/model_files#freezing
 .. _image_recognition_demo: https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples/label_image
 .. _nGraph_tensorflow_examples: https://github.com/tensorflow/ngraph-bridge/tree/master/examples
