@@ -171,6 +171,7 @@ prelu
 hardsigmoid
 prelu_shared_slope
 prelu_negative_slope
+relu_2Dfprop_i32
 conv_bias_1d
 conv_bias_2d
 conv_bias_3d
