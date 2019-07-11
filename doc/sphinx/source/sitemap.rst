@@ -1,44 +1,57 @@
 :orphan:
 
-.. toctree::
-   :caption: Introduction
-   :glob:
+* :ref:`intro`
 
-   introduction/*
+  .. toctree::
+     :glob:
 
-.. toctree::
-   :caption: Framework Support
+     introduction/*
 
-   frameworks/overview.rst
-   frameworks/tensorflow.rst
-   frameworks/onnx.rst
-   frameworks/paddlepaddle.rst
 
-.. toctree::
-   :caption: nGraph Core
+* :ref:`framework_support`
 
-   core/overview.rst
-   core/pattern-matcher.rst
-   core/graph_construction.rst
-   core/passes/passes.rst
-   nGraph Core Ops <ops/index.rst>
+  .. toctree::
 
-.. toctree::
-   :caption: Backend Support
+     frameworks/overview.rst
+     frameworks/tensorflow.rst
+     frameworks/onnx.rst
+     frameworks/paddlepaddle.rst
 
-   backend-support/overview.rst 
 
-.. toctree::
-   :caption: Distributed Training
+* :ref:`ngraph_core`
 
-   distributed/overview.rst
+  .. toctree::
 
-.. toctree::
-   :caption: Validated Workloads
+     core/overview.rst
+     core/pattern-matcher.rst
+     core/graph_construction.rst
+     core/passes/passes.rst
+     nGraph Core Ops <ops/index.rst>
 
-   validated_workloads/list.rst
 
-.. toctree::
-   :caption: Contribution
+* :ref:`backend_support`
 
-   contribution/guide.rst
+  .. toctree::
+
+     backend-support/overview.rst 
+
+
+* :ref:`distributed`
+
+  .. toctree::
+
+     distributed/overview.rst
+
+
+* :ref:`validated_workloads`
+
+  .. toctree::
+
+     validated_workloads/list.rst
+
+
+* :ref:`contribution_guide`
+
+  .. toctree::
+
+     contribution/guide.rst
