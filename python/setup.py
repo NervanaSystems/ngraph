@@ -384,7 +384,7 @@ setup(
     packages=packages,
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
-    setup_requires=['numpy'],
+    setup_requires=['numpy==1.16.4'],
     install_requires=requirements,
     zip_safe=False,
     extras_require={
