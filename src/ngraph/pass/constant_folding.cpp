@@ -846,7 +846,11 @@ shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> 
         return fold_constant_convert_helper1<TI, uint64_t>(constant, output_element_type);
     }
 
-    NGRAPH_CHECK(false, "unreachable");
+    NGRAPH_UNREACHABLE("Unexpected swith case");
+
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic pop
+#endif
 }
 
 static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> constant,
@@ -1019,6 +1023,9 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
     case element::Type_t::u64:
         return fold_constant_reverse_helper<uint64_t>(constant, reversed_axes);
     }
+
+    NGRAPH_UNREACHABLE("Unexpected swith case");
+
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
 #endif
@@ -1111,6 +1118,9 @@ static shared_ptr<op::Constant> fold_constant_product(shared_ptr<op::Constant> c
     case element::Type_t::u64:
         return fold_constant_product_helper<uint64_t>(constant, reduction_axes, result_shape);
     }
+
+    NGRAPH_UNREACHABLE("Unexpected swith case");
+
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
 #endif
