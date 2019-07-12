@@ -205,12 +205,12 @@ namespace ngraph
 
     AxisVector get_permutation_to_default_order(const AxisVector& axis_order);
 
-    /*
-    * Return type struct for cache_fprop, with the modified fprop and bprop
-    * functions
-    * and a list of the nodes that have been appended to fprop output/bprop
-    * input
-    */
+    //
+    // Return type struct for cache_fprop, with the modified fprop and bprop
+    // functions
+    // and a list of the nodes that have been appended to fprop output/bprop
+    // input
+    //
     struct FpropCache
     {
         std::shared_ptr<Function> fprop;
@@ -219,14 +219,14 @@ namespace ngraph
         NodeMap node_param_map;
     };
 
-    /**
-    * This utility takes forward-propogation and back-propagation functions
-    * and turns them into clone functions where the intermediate values of
-    * the forward prop are added to the output of fprop and the input of the bprop
-    * to avoid repeat calculations.
-    * The last argument is the adjoints coming into the bprop function, the output
-    * bprop function will have these nodes as the first N input parameters
-    **/
+    //
+    // This utility takes forward-propogation and back-propagation functions
+    // and turns them into clone functions where the intermediate values of
+    // the forward prop are added to the output of fprop and the input of the bprop
+    // to avoid repeat calculations.
+    // The last argument is the adjoints coming into the bprop function, the output
+    // bprop function will have these nodes as the first N input parameters
+    //
     FpropCache cache_fprop(std::shared_ptr<Function> fprop, std::shared_ptr<Function> bprop);
 
     // NodeExecutors are used in compiler optimization passes like ConstantFolding to execute a node
@@ -247,15 +247,15 @@ namespace ngraph
         UNKNOWN
     };
 
-    /**
-     * EnumMask is intended to work with a scoped enum type. It's used to store
-     * a combination of enum values and provides easy access and manipulation
-     * of these enum values as a mask.
-     *
-     * EnumMask does not provide a set_all() or invert() operator because they
-     * could do things unexpected by the user, i.e. for enum with 4 bit values,
-     * invert(001000...) != 110100..., due to the extra bits.
-     */
+    //
+    // EnumMask is intended to work with a scoped enum type. It's used to store
+    // a combination of enum values and provides easy access and manipulation
+    // of these enum values as a mask.
+    //
+    // EnumMask does not provide a set_all() or invert() operator because they
+    // could do things unexpected by the user, i.e. for enum with 4 bit values,
+    // invert(001000...) != 110100..., due to the extra bits.
+    //
     template <typename T>
     class EnumMask
     {
