@@ -113,7 +113,7 @@ std::list<shared_ptr<Node>> Function::get_ordered_ops(bool include_control_deps)
 void Function::map_unordered_ops(std::function<void(Node*)> f) const
 {
     std::unordered_set<Node*> unordered_ops;
-    std::stack<Node*> remaining_ops;
+    std::stack<Node*, std::vector<Node*>> remaining_ops;
     for (auto& r : get_results())
     {
         remaining_ops.push(r.get());

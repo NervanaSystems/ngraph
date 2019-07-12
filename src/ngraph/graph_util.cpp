@@ -69,7 +69,7 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             const NodeVector& subgraph_params)
 {
     std::unordered_set<Node*> instances_seen;
-    std::stack<Node*> stack;
+    std::stack<Node*, std::vector<Node*>> stack;
     for (auto& node_ptr : subgraph_params)
     {
         instances_seen.insert(node_ptr.get());
@@ -173,7 +173,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
 bool ngraph::is_post_dominated(Node* X, Node* Y)
 {
     std::unordered_set<Node*> visited;
-    std::stack<Node*> stack;
+    std::stack<Node*, std::vector<Node*>> stack;
     stack.push(X);
 
     while (stack.size() > 0)
@@ -494,7 +494,7 @@ NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector&
 bool ngraph::is_used(Node* node)
 {
     std::unordered_set<Node*> instances_seen;
-    std::stack<Node*> stack;
+    std::stack<Node*, std::vector<Node*>> stack;
     stack.push(node);
 
     while (stack.size() > 0)
