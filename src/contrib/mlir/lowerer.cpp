@@ -530,6 +530,97 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGConcatOp)
+    {
+        auto concat = cast<NGConcatOp>(op);
+        auto loc = concat.getLoc();
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
+
+        auto concatenation_axis_attr = op->getAttrOfType<IntegerAttr>("concatenation_axis");
+        NGRAPH_CHECK(concatenation_axis_attr, "Missing concatenation_axis in ConcatOp");
+        int64_t concatenation_axis = concatenation_axis_attr.getInt();
+
+        auto result_ty = result->getType().dyn_cast<MemRefType>();
+        NGRAPH_CHECK(result_ty, "Unexpected non-memref result type");
+        Type elem_ty = result_ty.getElementType();
+
+        MemRefView v_res(result);
+
+        std::vector<MemRefView> v_operands;
+
+        for (auto& operand : operands)
+        {
+            NGRAPH_CHECK(operand, "Unexpected null operand in ConcatOp");
+            auto operand_ty = operand->getType().dyn_cast<MemRefType>();
+            NGRAPH_CHECK(operand_ty, "Unexpected non-memref operand type");
+            NGRAPH_CHECK(elem_ty == operand_ty.getElementType(), "Types mismatch in ConcatOp");
+
+            v_operands.emplace_back(operand);
+        }
+
+#if 0
+        // size_t rank = who_knows;
+
+        // TODO(amprocte): Check rank consistency, concatenation_axis in bounds.
+
+        // IndexHandle position_along_concatenation_axis;
+
+        // for each operand:
+        //    std::vector<IndexHandle> loop_vars(rank);
+        //    std::vector<IndexHandle> loop_vars_lbs(rank); // start at 0
+        //    std::vector<IndexHandle> loop_vars_ubs(rank); // range to top of operand's dim
+        //
+        //    Nested loops...
+        //        i_res(loop_vars[concatenation_axis
+        //                            := loop_vars[concatenation_axis]
+        //                                 + position_along_concatenation_axis]])
+        //             = i_operand(loop_vars)
+        //
+        //    position_along_concatenation_axis += operand_shape[concatenation_axis]
+
+        //// copy-and-pasted code from Dot follows...
+
+        // Create the following loop nest for matmul operation:
+        //   for(n, N, 1)
+        //     for(m, M, 1)
+        //       for(k, K, 1)
+        //         res[n, k] += lhs[n, m] * rhs[m, k]
+        // TODO (dcab): We currently generate a super naive loop nest. Improve loop nest layout.
+
+        // Create induction variables, lower bounds, upper bounds and steps of the loop nest.
+        // It's important to note that MemRefView priovides lb/ub/step info is "reverse order",
+        // i.e., fastest varying dimension is the last one, slowest varying dimention is the first
+        // one.
+        IndexHandle n, m, k;
+        unsigned n_dim = v_lhs.fastestVarying() - 1;
+        unsigned m_dim = v_rhs.fastestVarying();
+        unsigned k_dim = v_rhs.fastestVarying();
+        IndexHandle n_lb(v_lhs.lb(n_dim)), m_lb(v_lhs.lb(m_dim)), k_lb(v_rhs.lb(k_dim));
+        IndexHandle n_ub(v_lhs.ub(n_dim)), m_ub(v_lhs.ub(m_dim)), k_ub(v_rhs.ub(k_dim));
+        int64_t n_step = v_lhs.step(n_dim), m_step = v_lhs.step(m_dim), k_step = v_rhs.step(k_dim);
+
+        // Constants and indexed values to be used inside the loop nest.
+        IndexedValue i_res(result), i_lhs(lhs), i_rhs(rhs);
+        ValueHandle zero_init(rewriter.create<ConstantOp>(loc, rewriter.getZeroAttr(elem_ty)));
+
+        LoopBuilder(&n, n_lb, n_ub, n_step)([&] {
+            LoopBuilder(&k, k_lb, k_ub, k_step)([&] {
+                i_res(n, k) = zero_init;
+                LoopBuilder(&m, m_lb, m_ub, m_step)(
+                    [&] { i_res(n, k) += i_lhs(n, m) * i_rhs(m, k); });
+            });
+        });
+#endif
+
+        rewriter.replaceOp(op, {result});
+
+        return matchSuccess();
+    }
+
     REWRITER(NGReturnOp)
     {
         rewriter.replaceOpWithNewOp<ReturnOp>(op);

@@ -28,6 +28,7 @@ MLIR_OP(NGArgMaxRedOp)
 MLIR_OP(NGArgMinRedOp)
 MLIR_OP(NGDotOp)
 MLIR_OP(NGReluOp)
+MLIR_OP(NGConcatOp)
 MLIR_LAST_OP(NGReturnOp)
 
 #undef MLIR_OP

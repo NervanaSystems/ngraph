@@ -8,6 +8,7 @@ MLIR_OP(ArgMin)
 MLIR_OP(ArgMax)
 MLIR_OP(Relu)
 MLIR_OP(Dot)
+MLIR_OP(Concat)
 // Add new supported ops here
 
 #undef MLIR_OP
