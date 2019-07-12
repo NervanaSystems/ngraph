@@ -68,7 +68,7 @@ namespace ngraph
                 }
 
             protected:
-                const Node& m_onnx_node;
+                Node m_onnx_node;
                 const NodeVector m_inputs;
                 Shape m_kernel_shape;
                 Strides m_strides;
