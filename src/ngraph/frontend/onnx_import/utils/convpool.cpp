@@ -16,7 +16,7 @@
 
 #include <cmath>
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
 
 #include "convpool.hpp"
 #include "core/attribute.hpp"
@@ -65,45 +65,29 @@ namespace ngraph
                 return detail::get_strides_helper(node, "dilations", get_kernel_shape(node));
             }
 
-            namespace
-            {
-                ngraph::op::PadType get_ng_pad_type(const std::string& pad_name)
-                {
-                    if (pad_name == "VALID")
-                    {
-                        return ngraph::op::PadType::VALID;
-                    }
-                    if (pad_name == "SAME_UPPER")
-                    {
-                        return ngraph::op::PadType::SAME_UPPER;
-                    }
-                    if (pad_name == "SAME_LOWER")
-                    {
-                        return ngraph::op::PadType::SAME_LOWER;
-                    }
-                    if (pad_name == "NOTSET" || pad_name.empty())
-                    {
-                        return ngraph::op::PadType::NOTSET;
-                    }
-                }
-            } // namespace
-
             ngraph::op::PadType get_auto_pad(const Node& node)
             {
                 // Default value means use explicitly provided padding values.
                 ngraph::op::PadType pad_type{ngraph::op::PadType::NOTSET};
                 if (node.has_attribute("auto_pad"))
                 {
-                    static std::unordered_set<std::string> auto_pad_values{
-                        "VALID", "SAME_UPPER", "SAME_LOWER", "NOTSET", ""};
+                    static std::unordered_multimap<std::string, ngraph::op::PadType>
+                        auto_pad_values{
+                            {"VALID", ngraph::op::PadType::VALID},
+                            {"SAME_UPPER", ngraph::op::PadType::SAME_UPPER},
+                            {"SAME_LOWER", ngraph::op::PadType::SAME_LOWER},
+                            {"NOTSET", ngraph::op::PadType::NOTSET},
+                            {"", ngraph::op::PadType::NOTSET},
+                        };
 
                     const std::string& pad_str{node.get_attribute_value<std::string>("auto_pad")};
+                    const auto pad_val_it = auto_pad_values.find(pad_str);
                     CHECK_VALID_NODE(node,
-                                     auto_pad_values.find(pad_str) != auto_pad_values.end(),
+                                     pad_val_it != auto_pad_values.end(),
                                      "Provided `auto_pad` attribute value: '",
                                      pad_str,
                                      "' is invalid.");
-                    pad_type = get_ng_pad_type(pad_str);
+                    pad_type = pad_val_it->second;
                 }
                 return pad_type;
             }
