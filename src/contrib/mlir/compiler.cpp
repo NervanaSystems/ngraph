@@ -24,8 +24,12 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/relu.hpp"
+#include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>
@@ -110,12 +114,12 @@ void MLIRCompiler::build_ng_dialect_module()
 
     for (auto input : kernel_inputs)
     {
-        args_type_list.push_back(get_mlir_type(input->get_output_tensor_ptr().get()));
+        args_type_list.push_back(get_mlir_type(input.get()));
     }
 
     for (auto output : kernel_outputs)
     {
-        result_type_list.push_back(get_mlir_type(output->get_output_tensor_ptr().get()));
+        result_type_list.push_back(get_mlir_type(output.get()));
     }
 
     auto func_type = mlir::FunctionType::get(args_type_list, result_type_list, &m_context);
@@ -146,17 +150,23 @@ void MLIRCompiler::build_ng_dialect_module()
     dump_mlir_module("nGraph Dialect Dump:");
 }
 
+// Converts nGraph shape \p ng_shape to MLIR shape \p mlir_shape.
+static void get_mlir_shape(ngraph::Shape ng_shape, llvm::SmallVectorImpl<int64_t>& mlir_shape)
+{
+    for (auto dim : ng_shape)
+    {
+        mlir_shape.push_back(dim);
+    }
+}
+
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
 // element type.
 mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
 {
-    SmallVector<int64_t, 4> shape;
-    for (auto d : tensor->get_shape())
-    {
-        shape.push_back(d);
-    }
-
-    return mlir::NGTensorType::get(&m_context, get_mlir_type(tensor->get_element_type()), shape);
+    SmallVector<int64_t, 4> mlir_shape;
+    get_mlir_shape(tensor->get_shape(), mlir_shape);
+    return mlir::NGTensorType::get(
+        &m_context, get_mlir_type(tensor->get_element_type()), mlir_shape);
 }
 
 // Converts an nGraph element type into an MLIR type.
@@ -193,6 +203,12 @@ mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
 #endif
+}
+
+mlir::Type MLIRCompiler::get_mlir_type(const ngraph::Node* node)
+{
+    descriptor::Tensor* out_tensor = node->get_output_tensor_ptr().get();
+    return get_mlir_type(out_tensor);
 }
 
 void MLIRCompiler::update_tensor_value(descriptor::Tensor* tensor, mlir::Value* value)
@@ -281,9 +297,27 @@ namespace ngraph
             }
 
             template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMax)
+            {
+                return compiler.create_index_reduction<mlir::NGArgMaxRedOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMin)
+            {
+                return compiler.create_index_reduction<mlir::NGArgMinRedOp>(ng_node);
+            }
+
+            template <>
             mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
             {
                 return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
+            {
+                return compiler.create_unary_op<mlir::NGReluOp>(ng_node);
             }
         }
     }
@@ -293,6 +327,16 @@ const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
 #define MLIR_OP(OP) {TI(ngraph::op::OP), &MLIRCompiler::create_op<ngraph::op::OP>},
 #include "ops_supported.inc"
 };
+
+template <typename UnaryOp>
+mlir::Value* MLIRCompiler::create_unary_op(const ngraph::Node* ng_node)
+{
+    auto lhs = ng_node->get_argument(0)->get_output_tensor_ptr();
+    auto lhs_v = get_tensor_value(lhs.get()).m_value;
+    auto res_type = get_mlir_type(ng_node->get_output_tensor_ptr().get());
+    return m_builder->create<UnaryOp>(mlir::UnknownLoc::get(&m_context), res_type, lhs_v)
+        .getResult();
+}
 
 template <typename BinOp>
 mlir::Value* MLIRCompiler::create_binary_op(const ngraph::Node* ng_node)
@@ -316,6 +360,22 @@ void MLIRCompiler::create_return()
     m_builder->create<mlir::NGReturnOp>(mlir::UnknownLoc::get(&m_context), value_list);
 }
 
+template <typename RedOp>
+mlir::Value* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_node)
+{
+    auto* idx_red = static_cast<const ngraph::op::util::IndexReduction*>(ng_node);
+
+    auto arg = idx_red->get_argument(0);
+    size_t red_axis = idx_red->get_reduction_axis();
+
+    mlir::Value* arg_val = get_tensor_value(arg->get_output_tensor_ptr().get()).m_value;
+    mlir::ArrayAttr red_axes_attr = m_builder->getI64ArrayAttr({(int64_t)red_axis});
+
+    return m_builder
+        ->create<RedOp>(
+            mlir::UnknownLoc::get(&m_context), get_mlir_type(ng_node), arg_val, red_axes_attr)
+        .getResult();
+}
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
 // helpers to be used inside the function.
 void MLIRCompiler::bind_arguments()
@@ -376,10 +436,17 @@ void MLIRCompiler::execute()
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
 
+    unsigned opt_level = 3;
+    if (char* opt_level_str = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
+    {
+        opt_level = std::stoi(opt_level_str);
+        NGRAPH_CHECK(opt_level >= 0 && opt_level <= 3, "Invalid optimization level");
+    }
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer to run
     // LLVM optimizations at level 3.
-    auto llvm_transformer = mlir::makeOptimizingTransformer(3 /*optLevel*/, 0 /*sizeLevel*/);
+    auto llvm_transformer =
+        mlir::makeOptimizingTransformer(opt_level /*optLevel*/, 0 /*sizeLevel*/);
     auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
