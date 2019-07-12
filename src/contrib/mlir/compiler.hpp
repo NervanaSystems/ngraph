@@ -91,6 +91,8 @@ namespace ngraph
 
                 mlir::Type get_mlir_type(const descriptor::Tensor* tensor);
                 mlir::Type get_mlir_type(const element::Type& type);
+                mlir::Type get_mlir_type(const ngraph::Node* node);
+
                 TensorInfo get_tensor_value(descriptor::Tensor* tensor);
                 void update_tensor_value(descriptor::Tensor* tensor, mlir::Value* value);
 
@@ -103,8 +105,14 @@ namespace ngraph
                                              "' in MLIR Compiler");
                 }
 
+                template <typename UnaryOp>
+                mlir::Value* create_unary_op(const ngraph::Node* ng_node);
+
                 template <typename BinOp>
                 mlir::Value* create_binary_op(const ngraph::Node* ng_node);
+
+                template <typename RedOp>
+                mlir::Value* create_index_reduction(const ngraph::Node* ng_node);
 
                 void create_return();
 
