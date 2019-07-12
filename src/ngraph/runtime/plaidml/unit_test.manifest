@@ -15,7 +15,7 @@ min_3d_eliminate_zero_dim               # Out-of-range for PlaidML
 reverse_sequence_n2c3h4w2               # No plans to implement ReverseSequence
 reverse_sequence_n4c3h2w2               # No plans to implement ReverseSequence
 reverse_sequence_n4d2c3h2w2             # No plans to implement ReverseSequence
-topk_1d_max_all                         # No plans to implement TopK
+topk_1d_max_all                         # No plans to implemenxfplait TopK
 topk_1d_max_partial                     # No plans to implement TopK
 topk_1d_max_one                         # No plans to implement TopK
 topk_1d_min_all                         # No plans to implement TopK
@@ -240,7 +240,7 @@ model_lstm_fwd_large_batch_no_clip
 model_global_lp_pool_p3
 model_argmin_no_keepdims
 model_elu
-PlaidML.model_selu
+model_selu
 model_sigmoid
 model_softplus
 model_argmax_int32
