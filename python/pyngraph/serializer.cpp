@@ -26,7 +26,10 @@ namespace py = pybind11;
 void regclass_pyngraph_Serializer(py::module m)
 {
     m.def("serialize",
-          (std::string(*)(std::shared_ptr<ngraph::Function>, size_t)) & ngraph::serialize,
+          (std::string(*)(
+              std::shared_ptr<ngraph::Function>, size_t, ngraph::SerializationOutputFormat)) &
+              ngraph::serialize,
           py::arg(),
-          py::arg("indent") = 0);
+          py::arg("indent") = 0,
+          py::arg("output_format") = ngraph::SerializationOutputFormat::JSON);
 }

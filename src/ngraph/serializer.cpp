@@ -405,21 +405,23 @@ static element::Type read_element_type(json j)
 void ngraph::serialize(const string& path,
                        shared_ptr<ngraph::Function> func,
                        size_t indent,
-                       bool cpio_enabled)
+                       SerializationOutputFormat output_format)
 {
     ofstream out(path);
-    serialize(out, func, indent, cpio_enabled);
+    serialize(out, func, indent, output_format);
 }
 
 void ngraph::serialize(ostream& out,
                        shared_ptr<ngraph::Function> func,
                        size_t indent,
-                       bool cpio_enabled)
+                       SerializationOutputFormat output_format)
 {
-    if (cpio_enabled)
-        ::serialize_to_cpio(out, func, indent);
-    else
-        out << ::serialize_to_json(func, indent);
+    switch (output_format)
+    {
+    case SerializationOutputFormat::CPIO: ::serialize_to_cpio(out, func, indent); break;
+    case SerializationOutputFormat::JSON:
+    default: out << ::serialize_to_json(func, indent); break;
+    }
 }
 
 static void serialize_to_cpio(ostream& out,
@@ -467,18 +469,20 @@ static string serialize_to_json(shared_ptr<Function> func, size_t indent, bool b
     return rc;
 }
 
-std::string
-    ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent, bool cpio_enabled)
+std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func,
+                              size_t indent,
+                              SerializationOutputFormat output_format)
 {
-    if (cpio_enabled)
+    switch (output_format)
+    {
+    case SerializationOutputFormat::CPIO:
     {
         std::ostringstream cpio_stream;
         ::serialize_to_cpio(cpio_stream, func, indent);
         return cpio_stream.str();
     }
-    else
-    {
-        return ::serialize_to_json(func, indent);
+    case SerializationOutputFormat::JSON:
+    default: return ::serialize_to_json(func, indent);
     }
 }
 

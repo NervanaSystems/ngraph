@@ -24,7 +24,7 @@ std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t ind
 void ngraph::serialize(const std::string& path,
                        std::shared_ptr<ngraph::Function> func,
                        size_t indent,
-                       bool cpio_enabled)
+                       SerializationOutputFormat output_format)
 {
     throw std::runtime_error("serializer disabled in build");
 }
@@ -32,7 +32,7 @@ void ngraph::serialize(const std::string& path,
 void ngraph::serialize(std::ostream& out,
                        std::shared_ptr<ngraph::Function> func,
                        size_t indent,
-                       bool cpio_enabled)
+                       SerializationOutputFormat output_format)
 {
     throw std::runtime_error("serializer disabled in build");
 }

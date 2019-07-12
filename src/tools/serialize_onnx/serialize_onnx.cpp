@@ -76,8 +76,9 @@ int main(int argc, char** argv)
 
         ngraph::stopwatch timer;
         timer.start();
-        const auto cpio_enabled = output_type == "cpio";
-        ngraph::serialize(output, function, 2, cpio_enabled);
+        const auto output_format = output_type == "cpio" ? ngraph::SerializationOutputFormat::CPIO
+                                                         : ngraph::SerializationOutputFormat::JSON;
+        ngraph::serialize(output, function, 2, output_format);
         timer.stop();
         cout << "serialize took   " << timer.get_milliseconds() << "ms\n";
     }
