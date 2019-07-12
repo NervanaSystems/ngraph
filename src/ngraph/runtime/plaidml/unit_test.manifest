@@ -15,7 +15,7 @@ min_3d_eliminate_zero_dim               # Out-of-range for PlaidML
 reverse_sequence_n2c3h4w2               # No plans to implement ReverseSequence
 reverse_sequence_n4c3h2w2               # No plans to implement ReverseSequence
 reverse_sequence_n4d2c3h2w2             # No plans to implement ReverseSequence
-topk_1d_max_all                         # No plans to implement TopK
+topk_1d_max_all                         # No plans to implemenxfplait TopK
 topk_1d_max_partial                     # No plans to implement TopK
 topk_1d_max_one                         # No plans to implement TopK
 topk_1d_min_all                         # No plans to implement TopK
@@ -230,6 +230,27 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
+# From onnx tests
+model_quant_conv_linear_2d
+model_quant_conv_linear_3d
+model_conv_integer
+model_conv_integer_zero_point_zero
+model_conv_integer_pads
+model_lstm_fwd_large_batch_no_clip
+model_global_lp_pool_p3
+model_argmin_no_keepdims
+model_elu
+model_selu
+model_sigmoid
+model_softplus
+model_argmax_int32
+model_argmin_int32
+model_lp_norm_default
+model_instance_normalization
+
+# failings on plaidml_nGPU
+argmin_4D_i64
+argmax_4D_i64
 
 # dgkutnic ww24.5: these tests are to be triaged by the PlaidML team
 # ww25.2: re-scrubbed this list of tests after fixing check_inputs
