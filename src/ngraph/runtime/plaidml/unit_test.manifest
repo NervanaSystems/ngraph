@@ -171,6 +171,7 @@ prelu
 hardsigmoid
 prelu_shared_slope
 prelu_negative_slope
+relu_2Dfprop_i32
 conv_bias_1d
 conv_bias_2d
 conv_bias_3d
@@ -240,6 +241,10 @@ batch_norm_training_0eps_f32
 argmin_trivial
 argmax_trivial
 argmin_trivial_in_i32
+argmin_3D_i32
+argmin_3D_i64
+argmax_3D_i32
+argmax_3D_i64
 sum_large_1d_to_scalar
 sum_stable_acc
 one_hot_scalar_2_in_3
