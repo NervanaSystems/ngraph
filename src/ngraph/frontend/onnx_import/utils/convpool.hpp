@@ -94,8 +94,8 @@ namespace ngraph
             /// \param[in]     strides        The data strides.
             /// \param[in]     dilations      The data dilations.
             /// \param[in]     pad_type       The value of auto_pad attribute.
-            /// \param[in|out] padding_below  The paddings below axis.
-            /// \param[in|out] padding_above  The paddings above axis.
+            /// \param[in,out] padding_below  The paddings below axis.
+            /// \param[in,out] padding_above  The paddings above axis.
             ///
             /// \see        ngraph::op::PadType
             void calculate_auto_pads(const Shape& data_shape,
