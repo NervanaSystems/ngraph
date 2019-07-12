@@ -82,12 +82,22 @@ namespace ngraph
 
     NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
+    struct TSItem
+    {
+        TSItem(Node* node)
+            : m_node(node)
+        {
+        }
+        Node* m_node;
+        bool m_inputs_done{false};
+    };
+
     /// Topological sort of nodes needed to compute root_nodes
     template <typename T>
     std::list<std::shared_ptr<Node>> topological_sort(T root_nodes,
                                                       bool include_control_deps = false)
     {
-        std::stack<ngraph::Node*> nodes_to_do;
+        std::stack<TSItem> nodes_to_do;
         std::unordered_set<Node*> nodes_done;
         std::list<std::shared_ptr<Node>> result;
 
@@ -97,40 +107,47 @@ namespace ngraph
         }
         while (nodes_to_do.size() > 0)
         {
-            Node* node = nodes_to_do.top();
-            if (nodes_done.count(node) != 0)
+            TSItem& ts_item = nodes_to_do.top();
+            Node* node = ts_item.m_node;
+            if (nodes_done.count(node) == 0)
             {
-                nodes_to_do.pop();
-                continue;
-            }
-            bool can_add = true;
-            size_t arg_count = node->get_input_size();
-            for (size_t i = 0; i < arg_count; ++i)
-            {
-                Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
-                if (nodes_done.count(dep) == 0)
+                bool can_add = true;
+                if (!ts_item.m_inputs_done)
                 {
-                    can_add = false;
-                    nodes_to_do.push(dep);
-                }
-            }
-            if (include_control_deps)
-            {
-                for (auto& depptr : node->get_control_dependencies())
-                {
-                    Node* dep = depptr.get();
-                    if (nodes_done.count(dep) == 0)
+                    size_t arg_count = node->get_input_size();
+                    for (size_t i = 0; i < arg_count; ++i)
                     {
-                        can_add = false;
-                        nodes_to_do.push(dep);
+                        Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
+                        if (nodes_done.count(dep) == 0)
+                        {
+                            can_add = false;
+                            nodes_to_do.push(dep);
+                        }
                     }
+                    if (include_control_deps)
+                    {
+                        for (auto& depptr : node->get_control_dependencies())
+                        {
+                            Node* dep = depptr.get();
+                            if (nodes_done.count(dep) == 0)
+                            {
+                                can_add = false;
+                                nodes_to_do.push(dep);
+                            }
+                        }
+                    }
+                    ts_item.m_inputs_done = true;
+                }
+                if (can_add)
+                {
+                    result.push_back(node->shared_from_this());
+                    nodes_to_do.pop();
+                    nodes_done.insert(node);
                 }
             }
-            if (can_add)
+            else
             {
-                result.push_back(node->shared_from_this());
                 nodes_to_do.pop();
-                nodes_done.insert(node);
             }
         }
         return result;
@@ -141,7 +158,7 @@ namespace ngraph
     std::list<std::shared_ptr<Node>> subgraph_topological_sort(T nodes,
                                                                bool include_control_deps = false)
     {
-        std::stack<ngraph::Node*> nodes_to_do;
+        std::stack<TSItem> nodes_to_do;
         std::unordered_set<Node*> nodes_done;
         std::unordered_set<Node*> nodes_to_emit;
         std::list<std::shared_ptr<Node>> result;
@@ -151,45 +168,54 @@ namespace ngraph
             nodes_to_emit.insert(node.get());
             nodes_to_do.push(node.get());
         }
-        while (nodes_to_do.size() > 0 && result.size() < nodes_to_emit.size())
+        size_t nodes_to_emit_size = nodes_to_emit.size();
+        while (nodes_to_do.size() > 0 && result.size() < nodes_to_emit_size)
         {
-            Node* node = nodes_to_do.top();
-            if (nodes_done.count(node) != 0)
+            TSItem& ts_item = nodes_to_do.top();
+            Node* node = ts_item.m_node;
+            if (nodes_done.count(node) == 0)
             {
-                nodes_to_do.pop();
-                continue;
-            }
-            bool can_add = true;
-            size_t arg_count = node->get_input_size();
-            for (size_t i = 0; i < arg_count; ++i)
-            {
-                Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
-                if (nodes_done.count(dep) == 0)
+                bool can_add = true;
+                if (!ts_item.m_inputs_done)
                 {
-                    can_add = false;
-                    nodes_to_do.push(dep);
-                }
-            }
-            if (include_control_deps)
-            {
-                for (auto& depptr : node->get_control_dependencies())
-                {
-                    Node* dep = depptr.get();
-                    if (nodes_done.count(dep) == 0)
+                    size_t arg_count = node->get_input_size();
+                    for (size_t i = 0; i < arg_count; ++i)
                     {
-                        can_add = false;
-                        nodes_to_do.push(dep);
+                        Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
+                        if (nodes_done.count(dep) == 0)
+                        {
+                            can_add = false;
+                            nodes_to_do.push(dep);
+                        }
                     }
+                    if (include_control_deps)
+                    {
+                        for (auto& depptr : node->get_control_dependencies())
+                        {
+                            Node* dep = depptr.get();
+                            if (nodes_done.count(dep) == 0)
+                            {
+                                can_add = false;
+                                nodes_to_do.push(dep);
+                            }
+                        }
+                    }
+                    ts_item.m_inputs_done = true;
+                }
+                if (can_add)
+                {
+                    if (nodes_to_emit.count(node) != 0)
+                    {
+                        result.push_back(node->shared_from_this());
+                    }
+                    nodes_to_do.pop();
+                    nodes_done.insert(node);
                 }
             }
-            if (can_add)
+
+            else
             {
-                if (nodes_to_emit.count(node) != 0)
-                {
-                    result.push_back(node->shared_from_this());
-                }
                 nodes_to_do.pop();
-                nodes_done.insert(node);
             }
         }
         return result;
