@@ -236,10 +236,10 @@ namespace ngraph
             NGRAPH_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node
-        const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
+        const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
 
         /// Get nodes dependent on this node
-        const std::set<Node*>& get_control_dependents() const;
+        const std::vector<Node*>& get_control_dependents() const;
 
         /// This node cannot execute until node executes
         void add_control_dependency(std::shared_ptr<Node> node);
@@ -309,7 +309,7 @@ namespace ngraph
             "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
+        const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
             NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
 
         /// Returns the number of inputs for the op
@@ -345,9 +345,9 @@ namespace ngraph
     public:
         std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& new_args) const;
 
-        std::shared_ptr<Node>
-            copy_with_new_inputs(const OutputVector& inputs,
-                                 const std::set<std::shared_ptr<Node>>& control_dependencies) const;
+        std::shared_ptr<Node> copy_with_new_inputs(
+            const OutputVector& inputs,
+            const std::vector<std::shared_ptr<Node>>& control_dependencies) const;
 
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
@@ -413,8 +413,8 @@ namespace ngraph
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
 
-        std::set<std::shared_ptr<Node>> m_control_dependencies;
-        std::set<Node*> m_control_dependents;
+        std::vector<Node*> m_control_dependents;
+        std::vector<std::shared_ptr<Node>> m_control_dependencies;
         const std::string m_node_type;
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;

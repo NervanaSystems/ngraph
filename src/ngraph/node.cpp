@@ -88,7 +88,7 @@ std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) con
 
 std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
-                               const std::set<std::shared_ptr<Node>>& control_dependencies) const
+                               const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
     bool for_get_output_element = (description() == op::GetOutputElement::type_name);
     NodeVector args;
@@ -353,20 +353,28 @@ NodeVector Node::get_arguments() const
     return result;
 }
 
-const std::set<std::shared_ptr<Node>>& Node::get_control_dependencies() const
+const std::vector<std::shared_ptr<Node>>& Node::get_control_dependencies() const
 {
     return m_control_dependencies;
 }
 
-const std::set<Node*>& Node::get_control_dependents() const
+const std::vector<Node*>& Node::get_control_dependents() const
 {
     return m_control_dependents;
 }
 
 void Node::add_control_dependency(std::shared_ptr<Node> node)
 {
-    m_control_dependencies.insert(node);
-    node->m_control_dependents.insert(this);
+    if (find(m_control_dependencies.begin(), m_control_dependencies.end(), node) ==
+        m_control_dependencies.end())
+    {
+        m_control_dependencies.push_back(node);
+        if (find(node->m_control_dependents.begin(), node->m_control_dependents.end(), this) ==
+            node->m_control_dependents.end())
+        {
+            node->m_control_dependents.push_back(this);
+        }
+    }
 }
 
 void Node::add_node_control_dependencies(std::shared_ptr<Node> source_node)
@@ -387,15 +395,31 @@ void Node::add_node_control_dependents(std::shared_ptr<Node> source_node)
 
 void Node::remove_control_dependency(std::shared_ptr<Node> node)
 {
-    m_control_dependencies.erase(node);
-    node->m_control_dependents.erase(this);
+    {
+        auto it = find(m_control_dependencies.begin(), m_control_dependencies.end(), node);
+        if (it != m_control_dependencies.end())
+        {
+            m_control_dependencies.erase(it);
+        }
+    }
+    {
+        auto it = find(node->m_control_dependents.begin(), node->m_control_dependents.end(), this);
+        if (it != node->m_control_dependents.end())
+        {
+            node->m_control_dependents.erase(it);
+        }
+    }
 }
 
 void Node::clear_control_dependencies()
 {
     for (auto& node : m_control_dependencies)
     {
-        node->m_control_dependents.erase(this);
+        auto it = find(node->m_control_dependents.begin(), node->m_control_dependents.end(), this);
+        if (it != node->m_control_dependents.end())
+        {
+            node->m_control_dependents.erase(it);
+        }
     }
     m_control_dependencies.clear();
 }
@@ -513,7 +537,7 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
     return m_outputs.at(0).get_tensor_ptr();
 }
 
-const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
+const std::vector<descriptor::Input*>& Node::get_output_inputs(size_t i) const
 {
     return m_outputs.at(i).get_inputs();
 }
