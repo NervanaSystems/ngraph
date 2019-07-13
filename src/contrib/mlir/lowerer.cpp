@@ -83,6 +83,12 @@ namespace
                              PatternRewriter& rewriter,
                              DialectLoweringPass& m_pass);
 
+    template <typename OP>
+    void compute_binary_elementwise(Operation* op,
+                                    ArrayRef<Value*> operands,
+                                    PatternRewriter& rewriter,
+                                    DialectLoweringPass& m_pass);
+
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
     {
@@ -360,42 +366,24 @@ namespace
 
     // ADD
     REWRITER(NGAddOp)
-
     {
-        auto add = cast<NGAddOp>(op);
-        auto loc = add.getLoc();
+        compute_binary_elementwise<mlir::NGAddOp>(op, operands, rewriter, m_pass);
+        return matchSuccess();
+    }
 
-        auto result = m_pass.buildOutputDefs(op, rewriter)[0];
-        NGRAPH_CHECK(result->getType().isa<MemRefType>());
-        // Note that builder's current function is still the original function body.
-        // use getBlock to get the new block instead.
-
-        // get new operands
-        Value* lhs = operands[0];
-        Value* rhs = operands[1];
-
-        ScopedContext scope(rewriter, loc);
-        // Views
-        MemRefView vRes(result), vLHS(lhs), vRHS(rhs);
-        // Index Values
-        IndexedValue iRes(result), iLHS(lhs), iRHS(rhs);
-        // Bounds Index Handles
-        auto lbs = vLHS.getLbs();
-        auto ubs = vLHS.getUbs();
-        // Loop induction vars
-        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
-        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
-        // Steps
-        auto steps = vLHS.getSteps();
-        // clang-format off
-        LoopNestBuilder(pivs, lbs, ubs, steps)( 
-            // single stmt body
-            [&] {
-                    iRes(ivs) = iLHS(ivs) + iRHS(ivs);
-                });
-        // clang-format on
-        rewriter.replaceOp(op, {result});
-
+    REWRITER(NGSubOp)
+    {
+        compute_binary_elementwise<mlir::NGSubOp>(op, operands, rewriter, m_pass);
+        return matchSuccess();
+    }
+    REWRITER(NGMulOp)
+    {
+        compute_binary_elementwise<mlir::NGMulOp>(op, operands, rewriter, m_pass);
+        return matchSuccess();
+    }
+    REWRITER(NGDivOp)
+    {
+        compute_binary_elementwise<mlir::NGDivOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
 
@@ -537,6 +525,60 @@ namespace
     }
 
 #undef REWRITER
+
+    template <typename OP>
+    void compute_binary_elementwise(Operation* op,
+                                    ArrayRef<Value*> operands,
+                                    PatternRewriter& rewriter,
+                                    DialectLoweringPass& m_pass)
+    {
+        auto loc = cast<OP>(op).getLoc();
+        auto result = m_pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        // Note that builder's current function is still the original function body.
+        // use getBlock to get the new block instead.
+
+        // get new operands
+        Value* lhs = operands[0];
+        Value* rhs = operands[1];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs), vRHS(rhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs), iRHS(rhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        // Steps
+        auto steps = vLHS.getSteps();
+        // clang-format off
+        LoopNestBuilder(pivs, lbs, ubs, steps)(
+            // single stmt body
+            [&] {
+                    if (isa<NGAddOp>(op))
+                    {
+                        iRes(ivs) = iLHS(ivs) + iRHS(ivs);
+                    }
+                    else if (isa<NGSubOp>(op))
+                    {
+                        iRes(ivs) = iLHS(ivs) - iRHS(ivs);
+                    }
+                    else if (isa<NGMulOp>(op))
+                    {
+                        iRes(ivs) = iLHS(ivs) * iRHS(ivs);
+                    }
+                    else if (isa<NGDivOp>(op))
+                    {
+                        iRes(ivs) = iLHS(ivs) / iRHS(ivs);
+                    }
+                });
+        // clang-format on
+        rewriter.replaceOp(op, {result});
+    }
 
     template <typename RedOp>
     void lowerIndexReduction(Operation* op,
