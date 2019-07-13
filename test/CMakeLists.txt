@@ -76,9 +76,35 @@ set(SRC
     shape.cpp
     specialize_function.cpp
     tensor.cpp
+    type_prop/avg_pool.cpp
     type_prop/batch_norm.cpp
+    type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
+    type_prop/concat.cpp
+    type_prop/constant.cpp
+    type_prop/convert.cpp
+    type_prop/convolution.cpp
+    type_prop/dequantize.cpp
+    type_prop/dot.cpp
     type_prop/dyn_broadcast.cpp
+    type_prop/embedding_lookup.cpp
+    type_prop/get_output_element.cpp
+    type_prop/index_reduction.cpp
+    type_prop/max_pool.cpp
+    type_prop/one_hot.cpp
+    type_prop/pad.cpp
+    type_prop/parameter.cpp
+    type_prop/quantize.cpp
+    type_prop/replace_slice.cpp
+    type_prop/reshape.cpp
+    type_prop/reverse.cpp
+    type_prop/select.cpp
+    type_prop/shape_of.cpp
+    type_prop/slice.cpp
+    type_prop/sum.cpp
+    type_prop/tile.cpp
+    type_prop/top_k.cpp
+    type_prop/unary_elementwise.cpp
     type_prop.cpp
     type_prop_layers.cpp
     util.cpp
