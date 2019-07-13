@@ -83,7 +83,7 @@ TEST(type_prop, dynreshape_arg_rank_dynamic_pattern_rank_dynamic_ok)
     auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
 
-    auto r = make_shared<op::Transpose>(arg, pattern);
+    auto r = make_shared<op::DynReshape>(arg, pattern);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
