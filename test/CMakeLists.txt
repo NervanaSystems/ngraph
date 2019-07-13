@@ -76,36 +76,75 @@ set(SRC
     shape.cpp
     specialize_function.cpp
     tensor.cpp
+    type_prop/all.cpp
+    type_prop/any.cpp
     type_prop/avg_pool.cpp
+    type_prop/batch_mat_mul.cpp
     type_prop/batch_norm.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
+    type_prop/clamp.cpp
     type_prop/concat.cpp
     type_prop/constant.cpp
     type_prop/convert.cpp
     type_prop/convolution.cpp
+    type_prop/convolution_bias.cpp
+    type_prop/depth_to_space.cpp
     type_prop/dequantize.cpp
     type_prop/dot.cpp
     type_prop/dyn_broadcast.cpp
+    type_prop/dyn_pad.cpp
+    type_prop/dyn_replace_slice.cpp
+    type_prop/dyn_reshape.cpp
+    type_prop/dyn_slice.cpp
+    type_prop/elu.cpp
     type_prop/embedding_lookup.cpp
+    type_prop/fake_quantize.cpp
+    type_prop/gather.cpp
+    type_prop/gather_nd.cpp
+    type_prop/gemm.cpp
     type_prop/get_output_element.cpp
+    type_prop/grn.cpp
+    type_prop/group_convolution.cpp
+    type_prop/group_convolution_transpose.cpp
+    type_prop/gru_cell.cpp
+    type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
+    type_prop/leaky_relu.cpp
+    type_prop/lstm_cell.cpp
     type_prop/max_pool.cpp
+    type_prop/mvn.cpp
+    type_prop/normalize.cpp
     type_prop/one_hot.cpp
     type_prop/pad.cpp
     type_prop/parameter.cpp
+    type_prop/prelu.cpp
     type_prop/quantize.cpp
+    type_prop/quantized_convolution.cpp
+    type_prop/range.cpp
     type_prop/replace_slice.cpp
     type_prop/reshape.cpp
     type_prop/reverse.cpp
+    type_prop/rnn_cell.cpp
+    type_prop/scale_shift.cpp
+    type_prop/scatter_add.cpp
+    type_prop/scatter_nd.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
+    type_prop/shuffle_channels.cpp
     type_prop/slice.cpp
+    type_prop/space_to_depth.cpp
+    type_prop/split.cpp
+    type_prop/squared_difference.cpp
+    type_prop/squeeze.cpp
     type_prop/sum.cpp
     type_prop/tile.cpp
     type_prop/top_k.cpp
+    type_prop/transpose.cpp
     type_prop/unary_elementwise.cpp
+    type_prop/unsqueeze.cpp
     type_prop.cpp
+    type_prop_benchmark.cpp
     type_prop_layers.cpp
     util.cpp
     zero_dim_tensor_elimination.cpp

@@ -16,27 +16,24 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "util/type_prop.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-TEST(type_prop, function_revalidate_and_infer)
+TEST(type_prop, squeeze)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto pattern = op::Constant::create(element::i64, Shape{6}, {1, 3, 16, 2, 2, 2});
+    auto param = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 4, 1, 8});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{0, 2});
+    auto squeeze = make_shared<op::Squeeze>(param, axes_node);
 
-    auto r = make_shared<op::DynReshape>(arg, pattern);
-    auto relu = make_shared<op::Relu>(r);
-    auto f = make_shared<Function>(relu, ParameterVector{arg});
+    ASSERT_EQ(squeeze->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze->get_shape(), (Shape{4, 4, 1, 8}));
 
-    EXPECT_EQ(r->get_output_element_type(0), element::f32);
-    EXPECT_EQ(r->get_output_shape(0), (Shape{1, 3, 16, 2, 2, 2}));
-    EXPECT_EQ(f->get_output_shape(0), (Shape{1, 3, 16, 2, 2, 2}));
+    axes_node = make_shared<ngraph::op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
+    auto squeeze_default_axes = make_shared<op::Squeeze>(param, axes_node);
 
-    auto new_pattern = op::Constant::create(element::i64, Shape{2}, {32, 12});
-    r->input(1).replace_source_output(new_pattern->output(0));
-
-    f->validate_nodes_and_infer_types();
-    EXPECT_EQ(r->get_output_shape(0), (Shape{32, 12}));
-    EXPECT_EQ(f->get_output_shape(0), (Shape{32, 12}));
+    ASSERT_EQ(squeeze_default_axes->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze_default_axes->get_shape(), (Shape{4, 4, 8}));
 }
