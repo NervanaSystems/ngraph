@@ -419,6 +419,7 @@ namespace ngraph
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
         std::string m_unique_name;
+        NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
         std::unordered_set<std::string> m_provenance_tags;
         std::deque<descriptor::Input> m_inputs;

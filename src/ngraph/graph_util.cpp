@@ -219,7 +219,7 @@ std::list<std::shared_ptr<ngraph::Node>>
                 cloned_args.push_back(output.for_node(node_map.at(output.get_node())));
             }
             std::vector<std::shared_ptr<Node>> cloned_dependencies;
-            for (auto dependency : node->get_control_dependencies())
+            for (auto& dependency : node->get_control_dependencies())
             {
                 shared_ptr<Node>& dependent = node_map.at(dependency.get());
                 if (find(cloned_dependencies.begin(), cloned_dependencies.end(), dependent) ==
