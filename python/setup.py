@@ -388,6 +388,6 @@ setup(
     install_requires=requirements,
     zip_safe=False,
     extras_require={
-        'plaidml': ['plaidml>=0.5.0'],
+        'plaidml': ['plaidml>=0.6.3'],
     },
 )
