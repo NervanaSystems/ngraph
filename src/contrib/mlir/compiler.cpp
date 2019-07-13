@@ -29,6 +29,8 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/less.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
@@ -315,6 +317,18 @@ namespace ngraph
             mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Divide)
             {
                 return compiler.create_binary_op<mlir::NGDivOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Greater)
+            {
+                return compiler.create_binary_op<mlir::NGGreaterOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Less)
+            {
+                return compiler.create_binary_op<mlir::NGLessOp>(ng_node);
             }
 
             template <>

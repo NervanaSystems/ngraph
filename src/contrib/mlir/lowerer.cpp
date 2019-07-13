@@ -376,14 +376,28 @@ namespace
         compute_binary_elementwise<mlir::NGSubOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
+
     REWRITER(NGMulOp)
     {
         compute_binary_elementwise<mlir::NGMulOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
+
     REWRITER(NGDivOp)
     {
         compute_binary_elementwise<mlir::NGDivOp>(op, operands, rewriter, m_pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGGreaterOp)
+    {
+        compute_binary_elementwise<mlir::NGGreaterOp>(op, operands, rewriter, m_pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGLessOp)
+    {
+        compute_binary_elementwise<mlir::NGLessOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
 
@@ -574,6 +588,14 @@ namespace
                     else if (isa<NGDivOp>(op))
                     {
                         iRes(ivs) = iLHS(ivs) / iRHS(ivs);
+                    }
+                    else if (isa<NGGreaterOp>(op))
+                    {
+                        iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs));
+                    }
+                    else if (isa<NGLessOp>(op))
+                    {
+                        iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
                     }
                 });
         // clang-format on
