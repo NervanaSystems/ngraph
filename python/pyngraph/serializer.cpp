@@ -25,6 +25,10 @@ namespace py = pybind11;
 
 void regclass_pyngraph_Serializer(py::module m)
 {
+    py::enum_<ngraph::SerializationOutputFormat>(m, "output_format")
+        .value("JSON", ngraph::SerializationOutputFormat::JSON)
+        .value("CPIO", ngraph::SerializationOutputFormat::CPIO);
+
     m.def("serialize",
           (std::string(*)(
               std::shared_ptr<ngraph::Function>, size_t, ngraph::SerializationOutputFormat)) &
