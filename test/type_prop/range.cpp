@@ -519,4 +519,3 @@ INSTANTIATE_TEST_CASE_P(type_prop,
                         ::testing::Values(RangeParams{0, 1, 0.25, PartialShape{4}},
                                           RangeParams{-1, 1, 0.25, PartialShape{8}},
                                           RangeParams{-1, 0.875, 0.25, PartialShape{8}}));
-                                          
