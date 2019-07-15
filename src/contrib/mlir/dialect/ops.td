@@ -182,6 +182,9 @@ def NGDotOp : NG_Binary_Op<"dot">
   let verifier = [{ return verifyOp(this); }];
 }
 
+// TODO(amprocte): Might be nice to rebase this on some sort of NG_Variadic_Op
+// class, but I'm not sure how to add concatenation_axis into the args if we
+// do that.
 def NGConcatOp :
       NG_OneResult_Op<"concat", [NoSideEffect]>,
       Arguments<(ins Variadic<NG_TensorType>:$args, I64Attr:$concatenation_axis)>
