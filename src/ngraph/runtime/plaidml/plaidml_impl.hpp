@@ -66,7 +66,7 @@ namespace ngraph
                 vertexai::plaidml::variable op_input(std::size_t idx) const
                 {
                     const auto& ti =
-                        m_build->bindings.at(op().input(idx).get_source_output().get_tensor());
+                        m_build->bindings.at(&op().input(idx).get_source_output().get_tensor());
                     return ti.var;
                 }
 
