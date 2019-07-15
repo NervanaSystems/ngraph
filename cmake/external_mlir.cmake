@@ -26,6 +26,8 @@ set(MLIR_PROJECT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/mlir_project)
 set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-projects)
 set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm/projects/mlir)
 set(MLIR_BUILD_DIR ${MLIR_LLVM_ROOT}/build)
+set(MLIR_TOOLS_DIR ${MLIR_BUILD_DIR}/bin)
+set(MLIR_LIBRARY_DIR ${MLIR_BUILD_DIR}/lib)
 
 # MLIR has to be pre-built before ngraph build starts
 # this will clone and build MLIR during cmake config instead
