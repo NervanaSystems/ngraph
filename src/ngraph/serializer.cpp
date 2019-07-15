@@ -1662,7 +1662,26 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::QuantizedDotBias: { break;
         }
-        case OP_TYPEID::QuantizedDot: { break;
+        case OP_TYPEID::QuantizedDot:
+        {
+            auto output_type = read_element_type(node_js.at("output_type"));
+            auto input0_axes = node_js.at("input0_axes").get<set<size_t>>();
+            auto input1_axes = node_js.at("input1_axes").get<set<size_t>>();
+            auto output_axes = node_js.at("output_axes").get<set<size_t>>();
+            node = make_shared<op::QuantizedDot>(args[0],
+                                                 args[1],
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 args[5],
+                                                 args[6],
+                                                 args[7],
+                                                 output_type,
+                                                 input0_axes,
+                                                 input1_axes,
+                                                 output_axes);
+
+            break;
         }
         case OP_TYPEID::QuantizedMaxPool:
         {
@@ -2730,7 +2749,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::QuantizedDotBias: { break;
     }
-    case OP_TYPEID::QuantizedDot: { break;
+    case OP_TYPEID::QuantizedDot:
+    {
+        auto tmp = dynamic_cast<const op::QuantizedDot*>(&n);
+        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["input0_axes"] = tmp->get_input0_axes();
+        node["input1_axes"] = tmp->get_input1_axes();
+        node["output_axes"] = tmp->get_output_axes();
+        break;
     }
     case OP_TYPEID::QuantizedMaxPool:
     {
