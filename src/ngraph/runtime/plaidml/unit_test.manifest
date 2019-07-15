@@ -137,6 +137,7 @@ pad_reflect_2d_with_neg
 pad_negative_exterior_2d
 pad_negative_exterior_2d_all_negative
 pad_negative_exterior_4d
+pad_symmetric
 max_trivial_int8
 max_trivial_5d_int32
 max_3d_to_scalar_double

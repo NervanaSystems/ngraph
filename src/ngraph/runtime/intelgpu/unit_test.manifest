@@ -40,6 +40,7 @@ pad_reflect_1d_bottom_neg_bigger_than_tensor
 pad_reflect_1d_multi_reflect
 pad_reflect_2d
 pad_reflect_2d_with_neg
+pad_symmetric
 
 # Not implemented
 batch_mat_mul_forward
