@@ -401,6 +401,18 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGMaxOp)
+    {
+        compute_binary_elementwise<mlir::NGMaxOp>(op, operands, rewriter, m_pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGMinOp)
+    {
+        compute_binary_elementwise<mlir::NGMinOp>(op, operands, rewriter, m_pass);
+        return matchSuccess();
+    }
+
     REWRITER(NGArgMaxRedOp)
     {
         lowerIndexReduction<mlir::NGArgMaxRedOp>(op, operands, rewriter, m_pass);
@@ -596,6 +608,14 @@ namespace
                     else if (isa<NGLessOp>(op))
                     {
                         iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
+                    }
+                    else if (isa<NGMaxOp>(op))
+                    {
+                        iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)) ?  ValueHandle(iLHS(ivs)) :  ValueHandle(iRHS(ivs));
+                    }
+                    else if (isa<NGMinOp>(op))
+                    {
+                        iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)) ?  ValueHandle(iLHS(ivs)) :  ValueHandle(iRHS(ivs));
                     }
                 });
         // clang-format on

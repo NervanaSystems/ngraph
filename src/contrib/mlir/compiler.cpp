@@ -31,6 +31,8 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
@@ -329,6 +331,18 @@ namespace ngraph
             mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Less)
             {
                 return compiler.create_binary_op<mlir::NGLessOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Maximum)
+            {
+                return compiler.create_binary_op<mlir::NGMaxOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Minimum)
+            {
+                return compiler.create_binary_op<mlir::NGMinOp>(ng_node);
             }
 
             template <>
