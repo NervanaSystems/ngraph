@@ -16,7 +16,9 @@
 
 #include "ngraph/serializer.hpp"
 
-std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func, size_t indent)
+std::string ngraph::serialize(std::shared_ptr<ngraph::Function> func,
+                              size_t indent,
+                              SerializationOutputFormat output_format)
 {
     throw std::runtime_error("serializer disabled in build");
 }
