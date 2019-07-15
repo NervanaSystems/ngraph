@@ -7775,7 +7775,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_dot_int32_output)
     auto filter_scale = op::Constant::create(element::f32, Shape{}, {1});
     auto filter_zero_point = op::Constant::create(element::i8, Shape{}, {0});
     auto output_scale = op::Constant::create(element::f32, Shape{}, {1});
-    auto output_zero_point = op::Constant::create(element::u8, Shape{}, {0});
+    auto output_zero_point = op::Constant::create(element::i32, Shape{}, {0});
     AxisSet axes{};
 
     Shape shape_r{1, 3}; // output shape
