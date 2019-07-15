@@ -52,9 +52,9 @@ public:
         if (m_visualize || m_serialize)
         {
 #ifdef _WIN32
-            /* MSVC produce a human-readable type name like class ngraph::pass::LikeReplacement
-             * by typeid(T).name(). Later ofstream doesn't accept it as a valid file name.
-             */
+            // MSVC produce a human-readable type name like class ngraph::pass::LikeReplacement
+            // by typeid(T).name(). Later ofstream doesn't accept it as a valid file name.
+            //
             std::string str = typeid(T).name();
             auto pos = str.find_last_of(":");
             m_pass_names.push_back(str.substr(pos + 1));

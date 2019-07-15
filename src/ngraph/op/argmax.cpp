@@ -21,10 +21,6 @@ using namespace ngraph;
 
 const string op::ArgMax::type_name{"ArgMax"};
 
-op::ArgMax::ArgMax()
-{
-}
-
 op::ArgMax::ArgMax(const Output<Node>& arg, size_t axis, const element::Type& index_element_type)
     : op::util::IndexReduction(arg, axis, index_element_type)
 {

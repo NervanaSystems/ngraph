@@ -20,8 +20,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Exp::Exp(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Exp", arg)
+const string op::Exp::type_name{"Exp"};
+
+op::Exp::Exp(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
