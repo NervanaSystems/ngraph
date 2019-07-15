@@ -535,39 +535,62 @@ namespace
         auto concat = cast<NGConcatOp>(op);
         auto loc = concat.getLoc();
 
-        // Retrieve/generate Values for operands and result.
         ScopedContext scope(rewriter, loc);
+
+        // Create Value for result, and extract type info.
         Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
 
-        auto concatenation_axis_attr = op->getAttrOfType<IntegerAttr>("concatenation_axis");
-        NGRAPH_CHECK(concatenation_axis_attr, "Missing concatenation_axis in ConcatOp");
-        int64_t concatenation_axis = concatenation_axis_attr.getInt();
-
         auto result_ty = result->getType().dyn_cast<MemRefType>();
         NGRAPH_CHECK(result_ty, "Unexpected non-memref result type");
+
         Type elem_ty = result_ty.getElementType();
 
+        // Retrieve concatenation axis.
+        auto concatenation_axis_attr = op->getAttrOfType<IntegerAttr>("concatenation_axis");
+        NGRAPH_CHECK(concatenation_axis_attr, "Missing concatenation_axis in ConcatOp");
+
+        int64_t concatenation_axis = concatenation_axis_attr.getInt();
+
+        // Create views/handles to write into result.
         MemRefView v_res(result);
         auto rank = v_res.rank();
-
-        std::vector<MemRefView> v_operands;
-
         IndexedValue iv_res(result);
 
+        // For each operand, generate a separate loop to copy into the target slice of "result".
+        // We'll keep track of the slice offsets via concatenation_axis_pos.
         IndexHandle concatenation_axis_pos(index_t(0));
+
         for (auto& operand : operands)
         {
+            // Retrieve and check some type info.
             NGRAPH_CHECK(operand, "Unexpected null operand in ConcatOp");
             auto operand_ty = operand->getType().dyn_cast<MemRefType>();
             NGRAPH_CHECK(operand_ty, "Unexpected non-memref operand type");
             NGRAPH_CHECK(elem_ty == operand_ty.getElementType(), "Types mismatch in ConcatOp");
 
+            // TODO(amprocte): Check consistency of operand shape (rank, dims other than at
+            // concatenation_axis) with result.
+
+            // Assuming rank = r, and the concatenation axis is A where A<r, we'll be creating
+            // loops of this form:
+            //
+            //   for i_0 := 0 to operand_dim[0]:
+            //    for i_1 := 0 to operand_dim[1]:
+            //     ...
+            //      for i_(r-2) := 0 to operand_dim[r-2]:
+            //       for i_(r-1) := 0 to operand_dim[r-1]:
+            //        result[i_0][i_1]...
+            //              [i_(A-1)][i_A + concatenation_axis_pos][i_(A+1)]...
+            //              [i_(r-2)][i_(r-1)]
+            //                  :=
+            //        operand[i_0][i_1]...[i_(r-2)][i_(r-1)]
             std::vector<IndexHandle> res_index_handles;
             std::vector<IndexHandle> operand_index_handles;
-            size_t axis = 0;
             MemRefView v_operand(operand);
 
+            // Function to recursively build the nested loops.
+            size_t axis = 0;
             std::function<void()> make_copy_loop = [&] {
                 if (axis < rank)
                 {
@@ -593,6 +616,8 @@ namespace
             };
 
             make_copy_loop();
+
+            // Move up concatenation_axis_pos for the next operand.
             concatenation_axis_pos = concatenation_axis_pos + v_operand.ub(concatenation_axis);
         }
 
