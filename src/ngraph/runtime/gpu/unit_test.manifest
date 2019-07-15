@@ -212,3 +212,5 @@ fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
 send_recv
 send_recv_ring
+gelu_f32
+gelu_f64
