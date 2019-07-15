@@ -533,8 +533,8 @@ namespace
     REWRITER(NGConcatOp)
     {
         auto concat = cast<NGConcatOp>(op);
-        auto loc = concat.getLoc();
 
+        auto loc = concat.getLoc();
         ScopedContext scope(rewriter, loc);
 
         // Create Value for result, and extract type info.
@@ -546,12 +546,6 @@ namespace
 
         Type elem_ty = result_ty.getElementType();
 
-        // Retrieve concatenation axis.
-        auto concatenation_axis_attr = op->getAttrOfType<IntegerAttr>("concatenation_axis");
-        NGRAPH_CHECK(concatenation_axis_attr, "Missing concatenation_axis in ConcatOp");
-
-        int64_t concatenation_axis = concatenation_axis_attr.getInt();
-
         // Create views/handles to write into result.
         MemRefView v_res(result);
         auto rank = v_res.rank();
@@ -559,19 +553,11 @@ namespace
 
         // For each operand, generate a separate loop to copy into the target slice of "result".
         // We'll keep track of the slice offsets via concatenation_axis_pos.
+        auto concatenation_axis = concat.concatenation_axis().getSExtValue();
         IndexHandle concatenation_axis_pos(index_t(0));
 
         for (auto& operand : operands)
         {
-            // Retrieve and check some type info.
-            NGRAPH_CHECK(operand, "Unexpected null operand in ConcatOp");
-            auto operand_ty = operand->getType().dyn_cast<MemRefType>();
-            NGRAPH_CHECK(operand_ty, "Unexpected non-memref operand type");
-            NGRAPH_CHECK(elem_ty == operand_ty.getElementType(), "Types mismatch in ConcatOp");
-
-            // TODO(amprocte): Check consistency of operand shape (rank, dims other than at
-            // concatenation_axis) with result.
-
             // Assuming rank = r, and the concatenation axis is A where A<r, we'll be creating
             // loops of this form:
             //
