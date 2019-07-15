@@ -82,7 +82,7 @@ void op::QuantizedDot::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(INPUT1).is_quantized(),
-                          "INPUT1 element type (",
+                          "Input1 element type (",
                           get_input_element_type(INPUT1),
                           ") must be a quantized type");
 
