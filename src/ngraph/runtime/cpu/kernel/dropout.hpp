@@ -58,11 +58,11 @@ namespace ngraph
                         {
                             size_t tid = 0;
 #endif
-                            /* Note :
-                              In this implementation of dropout, we are trying to be same as PDPD
-                              native implementation (and other frameworks).
-                              https://github.com/NervanaSystems/ngraph-paddle/blob/14d88829b386c9f7601788c5539c08326dcbe2fe/paddle/fluid/operators/dropout_op.h#L58-L78
-                              So, if framework passes same seed, then we will get same mask.*/
+                            // Note :
+                            // In this implementation of dropout, we are trying to be same as PDPD
+                            // native implementation (and other frameworks).
+                            // https://github.com/NervanaSystems/ngraph-paddle/blob/14d88829b386c9f7601788c5539c08326dcbe2fe/paddle/fluid/operators/dropout_op.h#L58-L78
+                            // So, if framework passes same seed, then we will get same mask.
                             std::minstd_rand msr;
                             if (use_seed)
                             {

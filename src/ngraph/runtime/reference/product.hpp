@@ -47,8 +47,9 @@ namespace ngraph
                 {
                     Coordinate output_coord = reduce(input_coord, reduction_axes);
 
-                    out[output_transform.index(output_coord)] *=
-                        arg[input_transform.index(input_coord)];
+                    size_t output_index = output_transform.index(output_coord);
+
+                    out[output_index] = out[output_index] * arg[input_transform.index(input_coord)];
                 }
             }
         }

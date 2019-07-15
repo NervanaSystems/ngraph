@@ -97,7 +97,7 @@ template <typename T>
 static mlir::LogicalResult verifyIndexReductionOp(T* op)
 {
     // TODO: verifyAxisReductionOp(op) + return element type + single axis.
-    return mlir::failure();
+    return mlir::success();
 }
 
 template <typename T>

@@ -160,6 +160,7 @@ namespace mlir
 
         static bool kindof(unsigned kind) { return kind == NGTypeKind::NG_BOOL_TYPE_ID; }
         static NGBoolType get(mlir::MLIRContext* ctx) { return get(NG_BOOL_TYPE_ID, ctx); }
+        size_t getWidth() { return 8; }
     };
 
     // Note that dialect types don't add new data members, so always possible
@@ -223,6 +224,23 @@ namespace mlir
         /// Computes tensor size in bytes
         size_t getSizeInBytes()
         {
+            return getNumElements() * llvm::divideCeil(getElementBitWidth(), 8);
+        }
+        size_t getElementBitWidth()
+        {
+            Type type = getElementType();
+            if (NGIntegerType intType = type.dyn_cast<NGIntegerType>())
+                return intType.getWidth();
+            if (NGFloatType floatType = type.dyn_cast<NGFloatType>())
+                return floatType.getIntOrFloatBitWidth();
+            if (NGBoolType boolType = type.dyn_cast<NGBoolType>())
+                return boolType.getWidth();
+            NGRAPH_CHECK(false, "Unknown type");
+            return -1;
+        }
+        /// Get number of elements
+        size_t getNumElements()
+        {
             size_t s = 1;
             auto shape = getShape();
             for (auto i = 0; i < getRank(); i++)
@@ -232,10 +250,8 @@ namespace mlir
                     return -1;
                 s *= shape[i];
             }
-            // Multiply times element size
-            return s * llvm::divideCeil(getElementType().getIntOrFloatBitWidth(), 8);
+            return s;
         }
-
         /// Checks if two tensors are compatible. Compatible means:
         /// Exactly same element types
         /// Compatible shapes: see isCompatibleShape.
