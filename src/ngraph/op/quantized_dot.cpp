@@ -97,20 +97,20 @@ void op::QuantizedDot::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(
         this,
-        get_input_element_type(0).compatible(get_input_element_type(INPUT0_ZERO_POINT)),
+        get_input_element_type(INPUT0).compatible(get_input_element_type(INPUT0_ZERO_POINT)),
         "Input0 Zero point element type (",
         get_input_element_type(INPUT0_ZERO_POINT),
         ") must match input0 element type (",
-        get_input_element_type(0),
+        get_input_element_type(INPUT0),
         ")");
 
     NODE_VALIDATION_CHECK(
         this,
-        get_input_element_type(1).compatible(get_input_element_type(INPUT1_ZERO_POINT)),
+        get_input_element_type(INPUT1).compatible(get_input_element_type(INPUT1_ZERO_POINT)),
         "Input1 Zero point element type (",
         get_input_element_type(INPUT1_ZERO_POINT),
         ") must match input1 element type (",
-        get_input_element_type(1),
+        get_input_element_type(INPUT1),
         ")");
 
     // TODO Remove these checks once we support channelwise and vector of scales
@@ -183,6 +183,15 @@ void op::QuantizedDot::validate_and_infer_types()
     {
         result_shape = PartialShape::dynamic();
     }
+
+    NODE_VALIDATION_CHECK(
+        this,
+        get_output_element_type(0).compatible(get_input_element_type(OUTPUT_ZERO_POINT)),
+        "Output Zero point element type (",
+        get_input_element_type(OUTPUT_ZERO_POINT),
+        ") must match output element type (",
+        get_output_element_type(0),
+        ")");
 
     set_output_type(0, m_output_type, result_shape);
 }
