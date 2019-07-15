@@ -103,7 +103,7 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
-    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp)
+    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
     if (NOT NGRAPH_DEX_ONLY)
         list(APPEND SRC cpu_codegen.cpp)
     endif()
@@ -167,9 +167,14 @@ set(MULTI_TEST_SRC
     backend_test.in.cpp
     backend_unary_elementwise.in.cpp
     convolution_test.in.cpp
+    dyn_replace_slice_test.in.cpp
     dyn_slice_test.in.cpp
     dynamic.in.cpp
 )
+
+if (NGRAPH_MLIR_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend_mlir.in.cpp)
+endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
     list(APPEND MULTI_TEST_SRC distributed.in.cpp)
@@ -261,6 +266,8 @@ endif()
 
 if (NGRAPH_PLAIDML_ENABLE)
     target_link_libraries(unit-test PRIVATE plaidml_backend)
+    # Some PlaidML devices aren't so precise, so we increase the allowable tolerance.
+    target_compile_definitions(unit-test PRIVATE "PlaidML_FLOAT_TOLERANCE_BITS=12")
 endif()
 
 if (NGRAPH_TBB_ENABLE)

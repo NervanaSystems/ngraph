@@ -31,9 +31,11 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/pad.hpp"
+#include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -49,9 +51,11 @@
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
+#include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/util.hpp"
@@ -215,7 +219,13 @@ void pass::ConstantFolding::construct_constant_reshape()
         if (type == element::i32)
         {
             replace_node(m.get_match_root(),
-                         fold_constant_reshape<int>(constant_match, reshape_match, func));
+                         fold_constant_reshape<int32_t>(constant_match, reshape_match, func));
+            return true;
+        }
+        if (type == element::i64)
+        {
+            replace_node(m.get_match_root(),
+                         fold_constant_reshape<int64_t>(constant_match, reshape_match, func));
             return true;
         }
         else if (type == element::i8)
@@ -955,4 +965,182 @@ void pass::ConstantFolding::construct_constant_shape_of()
     auto shape_of_matcher =
         make_shared<pattern::Matcher>(shape_of_op, "ConstantFolding.ConstantShapeOf");
     this->add_matcher(shape_of_matcher, constant_shape_of_callback, all_pass_property_off);
+}
+
+template <typename T>
+static shared_ptr<op::Constant> fold_constant_reverse_helper(shared_ptr<op::Constant> constant,
+                                                             const AxisSet& reversed_axes)
+{
+    auto out_shape = constant->get_shape();
+    vector<T> out_vec(shape_size(out_shape));
+
+    runtime::reference::reverse<T>(
+        constant->get_vector<T>().data(), out_vec.data(), out_shape, out_shape, reversed_axes);
+
+    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, out_vec);
+}
+
+static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> constant,
+                                                      const AxisSet& reversed_axes)
+{
+    auto& input_element_type = constant->get_output_element_type(0);
+
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+    switch (input_element_type.get_type_enum())
+    {
+    case element::Type_t::undefined:
+        NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_convert");
+        break;
+    case element::Type_t::dynamic:
+        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_convert");
+        break;
+    case element::Type_t::boolean:
+        return fold_constant_reverse_helper<char>(constant, reversed_axes);
+    case element::Type_t::bf16:
+        return fold_constant_reverse_helper<bfloat16>(constant, reversed_axes);
+    case element::Type_t::f16:
+        return fold_constant_reverse_helper<float16>(constant, reversed_axes);
+    case element::Type_t::f32: return fold_constant_reverse_helper<float>(constant, reversed_axes);
+    case element::Type_t::f64: return fold_constant_reverse_helper<double>(constant, reversed_axes);
+    case element::Type_t::i8: return fold_constant_reverse_helper<int8_t>(constant, reversed_axes);
+    case element::Type_t::i16:
+        return fold_constant_reverse_helper<int16_t>(constant, reversed_axes);
+    case element::Type_t::i32:
+        return fold_constant_reverse_helper<int32_t>(constant, reversed_axes);
+    case element::Type_t::i64:
+        return fold_constant_reverse_helper<int64_t>(constant, reversed_axes);
+    case element::Type_t::u8: return fold_constant_reverse_helper<uint8_t>(constant, reversed_axes);
+    case element::Type_t::u16:
+        return fold_constant_reverse_helper<uint16_t>(constant, reversed_axes);
+    case element::Type_t::u32:
+        return fold_constant_reverse_helper<uint32_t>(constant, reversed_axes);
+    case element::Type_t::u64:
+        return fold_constant_reverse_helper<uint64_t>(constant, reversed_axes);
+    }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic pop
+#endif
+}
+
+void pass::ConstantFolding::construct_constant_reverse()
+{
+    auto constant_label = make_shared<pattern::op::Label>(
+        element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto convert_op = make_shared<op::Reverse>(constant_label, AxisSet{0, 1, 2});
+
+    auto constant_reverse_callback = [constant_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_reverse_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto reverse_match = static_pointer_cast<op::Reverse>(m.get_match_root());
+
+        replace_node(m.get_match_root(),
+                     fold_constant_reverse(constant_match, reverse_match->get_reversed_axes()));
+        return true;
+    };
+
+    auto convert_matcher =
+        make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantReverse");
+    this->add_matcher(convert_matcher, constant_reverse_callback, all_pass_property_off);
+}
+
+template <typename T>
+static shared_ptr<op::Constant> fold_constant_product_helper(shared_ptr<op::Constant> constant,
+                                                             const AxisSet& reduction_axes,
+                                                             const Shape& result_shape)
+{
+    vector<T> out_vec(shape_size(result_shape));
+
+    runtime::reference::product<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_output_shape(0),
+                                   result_shape,
+                                   reduction_axes);
+
+    return make_shared<op::Constant>(constant->get_output_element_type(0), result_shape, out_vec);
+}
+
+static shared_ptr<op::Constant> fold_constant_product(shared_ptr<op::Constant> constant,
+                                                      const AxisSet& reduction_axes,
+                                                      const Shape& result_shape)
+{
+    auto& input_element_type = constant->get_output_element_type(0);
+
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
+    switch (input_element_type.get_type_enum())
+    {
+    case element::Type_t::undefined:
+        NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_product");
+        break;
+    case element::Type_t::dynamic:
+        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_product");
+        break;
+    case element::Type_t::boolean:
+        return fold_constant_product_helper<char>(constant, reduction_axes, result_shape);
+    case element::Type_t::bf16:
+        return fold_constant_product_helper<bfloat16>(constant, reduction_axes, result_shape);
+    case element::Type_t::f16:
+        return fold_constant_product_helper<float16>(constant, reduction_axes, result_shape);
+    case element::Type_t::f32:
+        return fold_constant_product_helper<float>(constant, reduction_axes, result_shape);
+    case element::Type_t::f64:
+        return fold_constant_product_helper<double>(constant, reduction_axes, result_shape);
+    case element::Type_t::i8:
+        return fold_constant_product_helper<int8_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::i16:
+        return fold_constant_product_helper<int16_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::i32:
+        return fold_constant_product_helper<int32_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::i64:
+        return fold_constant_product_helper<int64_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u8:
+        return fold_constant_product_helper<uint8_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u16:
+        return fold_constant_product_helper<uint16_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u32:
+        return fold_constant_product_helper<uint32_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u64:
+        return fold_constant_product_helper<uint64_t>(constant, reduction_axes, result_shape);
+    }
+#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#pragma GCC diagnostic pop
+#endif
+}
+
+void pass::ConstantFolding::construct_constant_product()
+{
+    auto constant_label = make_shared<pattern::op::Label>(
+        element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto convert_op = make_shared<op::Product>(constant_label, AxisSet{0, 1, 2});
+
+    auto constant_product_callback = [constant_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_product_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto product_match = static_pointer_cast<op::Product>(m.get_match_root());
+
+        replace_node(m.get_match_root(),
+                     fold_constant_product(constant_match,
+                                           product_match->get_reduction_axes(),
+                                           product_match->get_output_shape(0)));
+        return true;
+    };
+
+    auto convert_matcher =
+        make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantProduct");
+    this->add_matcher(convert_matcher, constant_product_callback, all_pass_property_off);
 }

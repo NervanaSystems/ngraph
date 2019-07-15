@@ -78,6 +78,7 @@ public:
                 construct_deconvolution_affine_folding_relu();
             }
             construct_dropout();
+            construct_batch_norm_infer_relu_with_multiply_add();
         }
     }
 
@@ -90,6 +91,7 @@ private:
     void construct_sigmoid_multiply();
     void construct_batch_norm_relu();
     void construct_batch_norm_relu_global_stats();
+    void construct_batch_norm_infer_relu_with_multiply_add();
     void construct_conv_relu();
     void construct_conv_bias_relu();
     void construct_conv_bias_add();

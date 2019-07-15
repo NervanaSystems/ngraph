@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <deque>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -69,39 +68,34 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             bool include_control_deps,
                             const NodeVector& subgraph_params)
 {
-    std::unordered_set<std::shared_ptr<Node>> instances_seen{subgraph_params.begin(),
-                                                             subgraph_params.end()};
-    std::deque<std::shared_ptr<Node>> stack;
-
-    for (auto r : subgraph_results)
+    std::unordered_set<Node*> instances_seen;
+    std::stack<Node*, std::vector<Node*>> stack;
+    for (auto& node_ptr : subgraph_params)
     {
-        stack.push_front(r);
+        instances_seen.insert(node_ptr.get());
+    }
+    for (auto& node_ptr : subgraph_results)
+    {
+        stack.push(node_ptr.get());
     }
 
     while (stack.size() > 0)
     {
-        std::shared_ptr<Node> n = stack.front();
-        if (instances_seen.count(n) == 0)
+        Node* n = stack.top();
+        stack.pop();
+        if (instances_seen.insert(n).second)
         {
-            instances_seen.insert(n);
-            f(n);
-        }
-        stack.pop_front();
-        for (auto arg : n->get_arguments())
-        {
-            if (instances_seen.count(arg) == 0)
+            f(n->shared_from_this());
+            for (auto& arg : n->get_arguments())
             {
-                stack.push_front(arg);
+                stack.push(arg.get());
             }
-        }
 
-        if (include_control_deps)
-        {
-            for (auto cdep : n->get_control_dependencies())
+            if (include_control_deps)
             {
-                if (instances_seen.count(cdep) == 0)
+                for (auto& cdep : n->get_control_dependencies())
                 {
-                    stack.push_front(cdep);
+                    stack.push(cdep.get());
                 }
             }
         }
@@ -179,25 +173,25 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
 bool ngraph::is_post_dominated(Node* X, Node* Y)
 {
     std::unordered_set<Node*> visited;
-    std::deque<Node*> stack;
-    stack.push_front(X);
+    std::stack<Node*, std::vector<Node*>> stack;
+    stack.push(X);
 
     while (stack.size() > 0)
     {
-        ngraph::Node* curr = stack.front();
+        ngraph::Node* curr = stack.top();
         visited.insert(curr);
         if (curr->is_output())
         {
             return false;
         }
-        stack.pop_front();
+        stack.pop();
         if (curr != Y)
         {
             for (const auto& next : curr->get_users())
             {
                 if (visited.count(next.get()) == 0)
                 {
-                    stack.push_front(next.get());
+                    stack.push(next.get());
                 }
             }
         }
@@ -460,7 +454,8 @@ bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
 
 NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
                                         const NodeVector& exclusions,
-                                        bool ignore_unused)
+                                        bool ignore_unused,
+                                        bool ignore_output_duplicates)
 {
     std::set<shared_ptr<Node>> exclusions_set(exclusions.begin(), exclusions.end());
     std::set<shared_ptr<Node>> nodes_set(nodes.begin(), nodes.end());
@@ -476,7 +471,11 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
 
         for (const auto& u : n->get_users())
         {
-            if (nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get())))
+            bool add_output = nodes_set.count(u) == 0 && (!ignore_unused || is_used(u.get()));
+            // check if output is already captured
+            add_output &= (ignore_output_duplicates ||
+                           std::find(outputs.begin(), outputs.end(), n) == outputs.end());
+            if (add_output)
             {
                 outputs.push_back(n);
             }
@@ -495,12 +494,12 @@ NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector&
 bool ngraph::is_used(Node* node)
 {
     std::unordered_set<Node*> instances_seen;
-    std::deque<Node*> stack;
-    stack.push_front(node);
+    std::stack<Node*, std::vector<Node*>> stack;
+    stack.push(node);
 
     while (stack.size() > 0)
     {
-        ngraph::Node* n = stack.front();
+        ngraph::Node* n = stack.top();
         if (instances_seen.count(n) == 0)
         {
             if (n->is_output())
@@ -509,12 +508,12 @@ bool ngraph::is_used(Node* node)
             }
             instances_seen.insert(n);
         }
-        stack.pop_front();
+        stack.pop();
         for (const auto& arg : n->get_users())
         {
             if (instances_seen.count(arg.get()) == 0)
             {
-                stack.push_front(arg.get());
+                stack.push(arg.get());
             }
         }
     }
