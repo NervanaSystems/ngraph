@@ -611,11 +611,11 @@ namespace
                     }
                     else if (isa<NGMaxOp>(op))
                     {
-                        iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)) ?  ValueHandle(iLHS(ivs)) :  ValueHandle(iRHS(ivs));
+                        iRes(ivs) = edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)), ValueHandle(iLHS(ivs)) , ValueHandle(iRHS(ivs)));
                     }
                     else if (isa<NGMinOp>(op))
                     {
-                        iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)) ?  ValueHandle(iLHS(ivs)) :  ValueHandle(iRHS(ivs));
+                        iRes(ivs) = edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)), ValueHandle(iLHS(ivs)), ValueHandle(iRHS(ivs)));
                     }
                 });
         // clang-format on
