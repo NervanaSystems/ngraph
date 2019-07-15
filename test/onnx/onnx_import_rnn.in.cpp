@@ -20,6 +20,7 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -201,5 +202,50 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_hardsigmoid_activation)
 
     // The discrepancies occur at most at 18th mantissa bit - 8th decimal position.
     test_case.set_tolerance(6);
+    test_case.run();
+}
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_large_batch_no_clip)
+{
+    auto function = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/lstm_fwd_large_batch_no_clip.prototxt"));
+
+    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    std::size_t seq_length = 2;
+    std::size_t batch_size = 32;
+    std::size_t input_size = 1;
+    std::size_t hidden_size = 3;
+
+    std::vector<float> in_X(seq_length * batch_size * input_size);
+    std::iota(std::begin(in_X), std::end(in_X), 1.f);
+    std::vector<float> in_R(4 * hidden_size * hidden_size, 0.1f);
+
+    // X
+    test_case.add_input<float>(in_X);
+    // W
+    test_case.add_input<float>(
+        {0.1f, 0.2f, 0.3f, 0.4f, 1.f, 2.f, 3.f, 4.f, 10.f, 11.f, 12.f, 13.f});
+    // R
+    test_case.add_input<float>(in_R);
+
+    // Y_h_data
+    test_case.add_expected_output<float>(
+        Shape{1, batch_size, hidden_size},
+        {0.90387899f, 0.9135572f,  0.91772245f, 0.90897038f, 0.92132433f, 0.92825467f, 0.91365823f,
+         0.92815113f, 0.93676105f, 0.91799162f, 0.93406357f, 0.94344562f, 0.92199681f, 0.93912057f,
+         0.94859476f, 0.92569357f, 0.94340185f, 0.95250664f, 0.92909964f, 0.94699686f, 0.95545127f,
+         0.93223207f, 0.94999634f, 0.95765468f, 0.93510761f, 0.9524867f,  0.95929726f, 0.93774272f,
+         0.9545467f,  0.96051891f, 0.9401536f,  0.95624603f, 0.96142619f, 0.94235605f, 0.95764499f,
+         0.96209939f, 0.94436539f, 0.95879495f, 0.96259862f, 0.94619635f, 0.95973921f, 0.96296872f,
+         0.94786299f, 0.96051397f, 0.96324302f, 0.94937864f, 0.96114929f, 0.96344629f, 0.95075587f,
+         0.96167006f, 0.96359692f, 0.95200645f, 0.96209679f, 0.96370852f, 0.95314133f, 0.9624464f,
+         0.9637912f,  0.95417069f, 0.96273278f, 0.96385246f, 0.95510395f, 0.96296733f, 0.96389785f,
+         0.95594975f, 0.96315942f, 0.96393147f, 0.95671607f, 0.96331673f, 0.96395638f, 0.9574102f,
+         0.96344554f, 0.96397483f, 0.9580388f,  0.96355102f, 0.9639885f,  0.95860795f, 0.96363739f,
+         0.96399863f, 0.95912322f, 0.96370811f, 0.96400613f, 0.95958963f, 0.96376601f, 0.96401169f,
+         0.96001179f, 0.96381342f, 0.96401581f, 0.96039386f, 0.96385224f, 0.96401886f, 0.96073964f,
+         0.96388402f, 0.96402112f, 0.96105254f, 0.96391004f, 0.96402279f});
+
     test_case.run();
 }

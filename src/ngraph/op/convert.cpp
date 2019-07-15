@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Convert::Convert(const shared_ptr<Node>& arg, const element::Type& element_type)
-    : Op("Convert", check_single_output_args({arg}))
+const string op::Convert::type_name{"Convert"};
+
+op::Convert::Convert(const Output<Node>& arg, const element::Type& element_type)
+    : Op({arg})
     , m_element_type(element_type)
 {
     constructor_validate_and_infer_types();

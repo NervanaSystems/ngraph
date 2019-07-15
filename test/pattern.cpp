@@ -292,17 +292,6 @@ TEST(pattern, graph_rewrite)
     }
 }
 
-std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv)
-{
-    std::vector<std::string> names;
-    for (auto n : nv)
-    {
-        names.push_back(n->get_name());
-    }
-    os << vector_to_string(names);
-    return os;
-}
-
 TEST(pattern, matcher)
 {
     Shape shape{};
@@ -522,6 +511,33 @@ TEST(pattern, previous_matches)
         Matcher n(pattern + b);
         previous_matches.insert(std::make_pair(pattern, a));
         ASSERT_FALSE(n.match(add, previous_matches));
+    }
+}
+
+TEST(pattern, test_sort)
+{
+    using ngraph::pattern::Matcher;
+    Shape shape{};
+
+    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto abs1 = make_shared<op::Abs>(a);
+    auto abs2 = make_shared<op::Abs>(b);
+    auto add = abs1 + abs2;
+
+    auto pa = make_shared<op::Parameter>(element::i32, shape);
+    auto pb = make_shared<op::Parameter>(element::i32, shape);
+    auto pabs1 = make_shared<op::Abs>(pa);
+    auto pabs1_label = std::make_shared<pattern::op::Label>(pabs1);
+    auto pabs2 = make_shared<op::Abs>(b);
+    auto padd = pabs1_label + pabs2;
+
+    {
+        Matcher n1(padd);
+        ASSERT_TRUE(n1.match(add));
+        auto r1 = n1.get_pattern_map()[pabs1_label];
+        ASSERT_TRUE(n1.match(add));
+        ASSERT_EQ(r1, n1.get_pattern_map()[pabs1_label]);
     }
 }
 

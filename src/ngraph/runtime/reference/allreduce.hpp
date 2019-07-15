@@ -25,9 +25,13 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void allreduce(T* arg, T* out, const element::Type_t element_type, int count)
+            void allreduce(T* arg,
+                           T* out,
+                           const element::Type_t element_type,
+                           const reduction::Type reduce_type,
+                           int count)
             {
-                get_distributed_interface()->all_reduce(arg, out, element_type, count);
+                get_distributed_interface()->all_reduce(arg, out, element_type, reduce_type, count);
             }
         }
     }

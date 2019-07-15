@@ -329,19 +329,18 @@ NodeVector Node::get_arguments() const
     return result;
 }
 
-const std::set<std::shared_ptr<Node>>& Node::get_control_dependencies() const
+const std::vector<std::shared_ptr<Node>>& Node::get_control_dependencies() const
 {
     return m_control_dependencies;
 }
 
 void Node::add_control_dependency(std::shared_ptr<Node> node)
 {
-    m_control_dependencies.insert(node);
-}
-
-std::vector<std::shared_ptr<Function>> Node::get_functions() const
-{
-    return std::vector<std::shared_ptr<Function>>{};
+    if (find(m_control_dependencies.begin(), m_control_dependencies.end(), node) ==
+        m_control_dependencies.end())
+    {
+        m_control_dependencies.push_back(node);
+    }
 }
 
 namespace ngraph
@@ -449,7 +448,7 @@ shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
     return m_outputs.at(0).get_tensor_ptr();
 }
 
-const std::set<descriptor::Input*>& Node::get_output_inputs(size_t i) const
+const std::vector<descriptor::Input*>& Node::get_output_inputs(size_t i) const
 {
     return m_outputs.at(i).get_inputs();
 }
@@ -562,6 +561,16 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
         ngraph::check_single_output_arg(args.at(i), i);
     }
     return args;
+}
+
+OutputVector ngraph::as_output_vector(const NodeVector& args)
+{
+    OutputVector output_vector;
+    for (auto& arg : check_single_output_args(args))
+    {
+        output_vector.push_back(arg);
+    }
+    return output_vector;
 }
 
 std::tuple<element::Type, PartialShape>

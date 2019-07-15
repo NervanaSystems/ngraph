@@ -184,11 +184,7 @@ void runtime::gpu::GPUCompiledFunction::compile()
     string dump_filename = file_util::path_join(get_output_dir(), m_function_name + "_ops.txt");
     pass_manager.register_pass<ngraph::pass::DumpSorted>(dump_filename);
     pass_manager.run_passes(m_function);
-
-    for (shared_ptr<Function> current_function : pass_manager.get_state().get_functions())
-    {
-        m_function_ordered_ops.emplace(current_function, current_function->get_ordered_ops());
-    }
+    m_function_ordered_ops.emplace(m_function, m_function->get_ordered_ops());
 
     add_passes(pass_manager);
     emit();

@@ -41,6 +41,7 @@ set(SRC
     plaidml_ops_one_hot.cpp
     plaidml_ops_passthrough.cpp
     plaidml_ops_pool.cpp
+    plaidml_ops_quantize.cpp
     plaidml_ops_reduce.cpp
     plaidml_ops_replace_slice.cpp
     plaidml_ops_replicate.cpp
@@ -54,6 +55,7 @@ set(SRC
     plaidml_pass_explicit_logicals.cpp
     plaidml_pass_implicit_broadcast.cpp
     plaidml_pass_lower_convolutions.cpp
+    plaidml_pass_prefix_reshape_elimination.cpp
     plaidml_pass_replicate_combination.cpp
     plaidml_pass_replicate_elision.cpp
     plaidml_pass_winograd.cpp

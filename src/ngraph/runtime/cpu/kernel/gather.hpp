@@ -31,7 +31,7 @@ namespace ngraph
         {
             namespace kernel
             {
-                // Calculate the indices from position 0 to rank-1.
+                // Calculate the indices for positions 0 to rank-1.
                 static void
                     get_indices(const Shape& shape, int index, std::vector<int>& indices, int rank)
                 {
@@ -93,8 +93,11 @@ namespace ngraph
 
                     if (indices_rank == 0)
                     {
+//TODO Enable this if compiler issue with CODEGEN is fixed or DEX needs it.
+#if 0
 #ifdef _OPENMP
 #pragma omp parallel for
+#endif
 #endif
                         for (int i = 0; i < outer_loop_num; i++)
                         {
@@ -142,7 +145,11 @@ namespace ngraph
                     }
                     else
                     {
-                        auto num_indices = shape_size(indices_shape);
+                        size_t num_indices = 1;
+                        for (auto d : indices_shape)
+                        {
+                            num_indices *= d;
+                        }
 
 #ifdef _OPENMP
 #pragma omp parallel for
