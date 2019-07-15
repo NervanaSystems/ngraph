@@ -77,11 +77,12 @@ NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
             if (in.get_node()->description() == op::GetOutputElement::type_name)
             {
                 goe = in.get_node()->shared_from_this();
+                break;
             }
         }
         if (goe == nullptr)
         {
-            goe = get_output_element(o);
+            goe = get_output_element(o, true);
         }
         goes.at(o.get_index()) = goe;
     }
