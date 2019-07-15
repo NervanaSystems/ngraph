@@ -58,7 +58,26 @@ static const mkldnn_version_t* get_mkldnn_version()
 std::map<element::Type, const mkldnn::memory::data_type>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
 {
-    // Mapping from POD types to MKLDNN data types
+// Mapping from POD types to MKLDNN data types
+#if defined(USE_MKLDNN_V1)
+    static std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map = {
+        {element::boolean, mkldnn::memory::data_type::s8},
+        {element::bf16, mkldnn::memory::data_type::bf16},
+        {element::f16, mkldnn::memory::data_type::f16},
+        {element::f32, mkldnn::memory::data_type::f32},
+        {element::f64, mkldnn::memory::data_type::undef},
+        {element::i8, mkldnn::memory::data_type::s8},
+        {element::i16, mkldnn::memory::data_type::undef},
+        {element::i32, mkldnn::memory::data_type::s32},
+        {element::i64, mkldnn::memory::data_type::undef},
+        {element::u8, mkldnn::memory::data_type::u8},
+        {element::u16, mkldnn::memory::data_type::undef},
+        {element::u32, mkldnn::memory::data_type::undef},
+        {element::u64, mkldnn::memory::data_type::undef},
+    };
+    return s_mkldnn_data_type_map;
+}
+#else
     static std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map = {
         {element::boolean, mkldnn::memory::data_type::s8},
         {element::f32, mkldnn::memory::data_type::f32},
@@ -73,11 +92,30 @@ std::map<element::Type, const mkldnn::memory::data_type>&
         {element::u64, mkldnn::memory::data_type::data_undef},
     };
     return s_mkldnn_data_type_map;
+#endif
 }
 
 std::map<element::Type, const std::string>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string_map()
 {
+#if defined(USE_MKLDNN_V1)
+    static std::map<element::Type, const std::string> s_mkldnn_data_type_string_map{
+        {element::boolean, "mkldnn::memory::data_type::s8"},
+        {element::bf16, "mkldnn::memory::data_type::bf16"},
+        {element::f16, "mkldnn::memory::data_type::f16"},
+        {element::f32, "mkldnn::memory::data_type::f32"},
+        {element::f64, "mkldnn::memory::data_type::undef"},
+        {element::i8, "mkldnn::memory::data_type::s8"},
+        {element::i16, "mkldnn::memory::data_type::undef"},
+        {element::i32, "mkldnn::memory::data_type::s32"},
+        {element::i64, "mkldnn::memory::data_type::undef"},
+        {element::u8, "mkldnn::memory::data_type::u8"},
+        {element::u16, "mkldnn::memory::data_type::undef"},
+        {element::u32, "mkldnn::memory::data_type::undef"},
+        {element::u64, "mkldnn::memory::data_type::undef"}};
+    return s_mkldnn_data_type_string_map;
+}
+#else
     static std::map<element::Type, const std::string> s_mkldnn_data_type_string_map{
         {element::boolean, "mkldnn::memory::data_type::s8"},
         {element::f32, "mkldnn::memory::data_type::f32"},
@@ -91,8 +129,402 @@ std::map<element::Type, const std::string>&
         {element::u32, "mkldnn::memory::data_type::data_undef"},
         {element::u64, "mkldnn::memory::data_type::data_undef"}};
     return s_mkldnn_data_type_string_map;
+#endif
 }
 
+#if defined(USE_MKLDNN_V1)
+std::map<memory::format_kind, const std::string>&
+    runtime::cpu::mkldnn_utils::get_mkldnn_format_kind_string_map()
+{
+    static std::map<memory::format, const std::string> s_mkldnn_format_kind_string_map{
+        {memory::format_kind::undef, "memory::format_kind::undef"},
+        {memory::format_kind::any, "memory::format_kind::any"},
+        {memory::format_kind::blocked, "memory::format_kind::blocked"},
+        {memory::format_kind::wino, "memory::format_kind::wino"},
+        {memory::format_kind::packed, "memory::format_kind::packed"},
+    };
+    return s_mkldnn_format_kind_string_map;
+}
+
+std::map<memory::format_tag, const std::string>&
+    runtime::cpu::mkldnn_utils::get_mkldnn_format_tag_string_map()
+{
+    static std::map<memory::format, const std::string> s_mkldnn_format_tag_string_map{
+        {memory::format_tag::undef, "memory::format_tag::undef"},
+        {memory::format_tag::any, "memory::format_tag::any"},
+        // Plain formats
+        {memory::format_tag::a, "memory::format_tag::a"},
+        {memory::format_tag::ab, "memory::format_tag::ab"},
+        {memory::format_tag::abc, "memory::format_tag::abc"},
+        {memory::format_tag::abcd, "memory::format_tag::abcd"},
+        {memory::format_tag::abcde, "memory::format_tag::abcde"},
+        {memory::format_tag::abcdef, "memory::format_tag::abcdef"},
+        // Permuted plain formats
+        {memory::format_tag::abdec, "memory::format_tag::abdec"},
+        {memory::format_tag::acb, "memory::format_tag::acb"},
+        {memory::format_tag::acbde, "memory::format_tag::acbde"},
+        {memory::format_tag::acdb, "memory::format_tag::acdb"},
+        {memory::format_tag::acdeb, "memory::format_tag::acdeb"},
+        {memory::format_tag::ba, "memory::format_tag::ba"},
+        {memory::format_tag::bac, "memory::format_tag::bac"},
+        {memory::format_tag::bacd, "memory::format_tag::bacd"},
+        {memory::format_tag::bca, "memory::format_tag::bca"},
+        {memory::format_tag::bcda, "memory::format_tag::bcda"},
+        {memory::format_tag::bcdea, "memory::format_tag::bcdea"},
+        {memory::format_tag::cba, "memory::format_tag::cba"},
+        {memory::format_tag::cdba, "memory::format_tag::cdba"},
+        {memory::format_tag::cdeba, "memory::format_tag::cdeba"},
+        {memory::format_tag::decab, "memory::format_tag::decab"},
+        // Opaque blocked formats
+        {memory::format_tag::Abc16a, "memory::format_tag::Abc16a"},
+        {memory::format_tag::ABc16a16b, "memory::format_tag::ABc16a16b"},
+        {memory::format_tag::aBc16b, "memory::format_tag::aBc16b"},
+        {memory::format_tag::ABc16b16a, "memory::format_tag::ABc16b16a"},
+        {memory::format_tag::Abc4a, "memory::format_tag::Abc4a"},
+        {memory::format_tag::aBc4b, "memory::format_tag::aBc4b"},
+        {memory::format_tag::ABc4b16a4b, "memory::format_tag::ABc4b16a4b"},
+        {memory::format_tag::ABc4b4a, "memory::format_tag::ABc4b4a"},
+        {memory::format_tag::ABc8a16b2a, "memory::format_tag::ABc8a16b2a"},
+        {memory::format_tag::ABc8a8b, "memory::format_tag::ABc8a8b"},
+        {memory::format_tag::aBc8b, "memory::format_tag::aBc8b"},
+        {memory::format_tag::ABc8b16a2b, "memory::format_tag::ABc8b16a2b"},
+        {memory::format_tag::BAc8a16b2a, "memory::format_tag::BAc8a16b2a"},
+        {memory::format_tag::ABc8b8a, "memory::format_tag::ABc8b8a"},
+        {memory::format_tag::Abcd16a, "memory::format_tag::Abcd16a"},
+        {memory::format_tag::ABcd16a16b, "memory::format_tag::ABcd16a16b"},
+        {memory::format_tag::ABcd32a32b, "memory::format_tag::ABcd32a32b"},
+        {memory::format_tag::aBcd16b, "memory::format_tag::aBcd16b"},
+        {memory::format_tag::ABcd16b16a, "memory::format_tag::ABcd16b16a"},
+        {memory::format_tag::aBCd16b16c, "memory::format_tag::aBCd16b16c"},
+        {memory::format_tag::aBCd16c16b, "memory::format_tag::aBCd16c16b"},
+        {memory::format_tag::Abcd4a, "memory::format_tag::Abcd4a"},
+        {memory::format_tag::aBcd4b, "memory::format_tag::aBcd4b"},
+        {memory::format_tag::ABcd4b16a4b, "memory::format_tag::ABcd4b16a4b"},
+        {memory::format_tag::ABcd4b4a, "memory::format_tag::ABcd4b4a"},
+        {memory::format_tag::aBCd4c16b4c, "memory::format_tag::aBCd4c16b4c"},
+        {memory::format_tag::aBCd4c4b, "memory::format_tag::aBCd4c4b"},
+        {memory::format_tag::ABcd8a16b2a, "memory::format_tag::ABcd8a16b2a"},
+        {memory::format_tag::ABcd8a8b, "memory::format_tag::ABcd8a8b"},
+        {memory::format_tag::aBcd8b, "memory::format_tag::aBcd8b"},
+        {memory::format_tag::ABcd8b16a2b, "memory::format_tag::ABcd8b16a2b"},
+        {memory::format_tag::aBCd8b16c2b, "memory::format_tag::aBCd8b16c2b"},
+        {memory::format_tag::BAcd8a16b2a, "memory::format_tag::BAcd8a16b2a"},
+        {memory::format_tag::ABcd8b8a, "memory::format_tag::ABcd8b8a"},
+        {memory::format_tag::aBCd8b8c, "memory::format_tag::aBCd8b8c"},
+        {memory::format_tag::aBCd8c16b2c, "memory::format_tag::aBCd8c16b2c"},
+        {memory::format_tag::ABcde8a16b2a, "memory::format_tag::ABcde8a16b2a"},
+        {memory::format_tag::aCBd8b16c2b, "memory::format_tag::aCBd8b16c2b"},
+        {memory::format_tag::aBCd8c8b, "memory::format_tag::aBCd8c8b"},
+        {memory::format_tag::Abcde16a, "memory::format_tag::Abcde16a"},
+        {memory::format_tag::ABcde16a16b, "memory::format_tag::ABcde16a16b"},
+        {memory::format_tag::BAcde8a16b2a, "memory::format_tag::BAcde8a16b2a"},
+        {memory::format_tag::aBcde16b, "memory::format_tag::aBcde16b"},
+        {memory::format_tag::ABcde16b16a, "memory::format_tag::ABcde16b16a"},
+        {memory::format_tag::aBCde16b16c, "memory::format_tag::aBCde16b16c"},
+        {memory::format_tag::aBCde16c16b, "memory::format_tag::aBCde16c16b"},
+        {memory::format_tag::aBCde16c16b, "memory::format_tag::aBCde16c16b"},
+        {memory::format_tag::Abcde4a, "memory::format_tag::Abcde4a"},
+        {memory::format_tag::aBcde4b, "memory::format_tag::aBcde4b"},
+        {memory::format_tag::ABcde4b4a, "memory::format_tag::ABcde4b4a"},
+        {memory::format_tag::aBCde4b4c, "memory::format_tag::aBCde4b4c"},
+        {memory::format_tag::aBCde4c16b4c, "memory::format_tag::aBCde4c16b4c"},
+        {memory::format_tag::aBCde4c4b, "memory::format_tag::aBCde4c4b"},
+        {memory::format_tag::Abcde8a, "memory::format_tag::Abcde8a"},
+        {memory::format_tag::ABcde8a8b, "memory::format_tag::ABcde8a8b"},
+        {memory::format_tag::BAcde16b16a, "memory::format_tag::BAcde16b16a"},
+        {memory::format_tag::aBcde8b, "memory::format_tag::aBcde8b"},
+        {memory::format_tag::ABcde8b16a2b, "memory::format_tag::ABcde8b16a2b"},
+        {memory::format_tag::aBCde8b16c2b, "memory::format_tag::aBCde8b16c2b"},
+        {memory::format_tag::aCBde8b16c2b, "memory::format_tag::aCBde8b16c2b"},
+        {memory::format_tag::ABcde8b8a, "memory::format_tag::ABcde8b8a"},
+        {memory::format_tag::aBCde8b8c, "memory::format_tag::aBCde8b8c"},
+        {memory::format_tag::ABcd4a8b8a4b, "memory::format_tag::ABcd4a8b8a4b"},
+        {memory::format_tag::ABcd2a8b8a2b, "memory::format_tag::ABcd2a8b8a2b"},
+        {memory::format_tag::aBCde4b8c8b4c, "memory::format_tag::aBCde4b8c8b4c"},
+        {memory::format_tag::aBCde2b8c8b2c, "memory::format_tag::aBCde2b8c8b2c"},
+        {memory::format_tag::aBCde8c16b2c, "memory::format_tag::aBCde8c16b2c"},
+        {memory::format_tag::aBCde8c8b, "memory::format_tag::aBCde8c8b"},
+        {memory::format_tag::aBcdef16b, "memory::format_tag::aBcdef16b"},
+        {memory::format_tag::aBCdef16b16c, "memory::format_tag::aBCdef16b16c"},
+        {memory::format_tag::aBCdef16c16b, "memory::format_tag::aBCdef16c16b"},
+        {memory::format_tag::aBcdef4b, "memory::format_tag::aBcdef4b"},
+        {memory::format_tag::aBCdef4c4b, "memory::format_tag::aBCdef4c4b"},
+        {memory::format_tag::aBCdef8b8c, "memory::format_tag::aBCdef8b8c"},
+        {memory::format_tag::aBCdef8c16b2c, "memory::format_tag::aBCdef8c16b2c"},
+        {memory::format_tag::aBCdef8b16c2b, "memory::format_tag::aBCdef8b16c2b"},
+        {memory::format_tag::aCBdef8b16c2b, "memory::format_tag::aCBdef8b16c2b"},
+        {memory::format_tag::aBCdef8c8b, "memory::format_tag::aBCdef8c8b"},
+        {memory::format_tag::aBdc16b, "memory::format_tag::aBdc16b"},
+        {memory::format_tag::aBdc4b, "memory::format_tag::aBdc4b"},
+        {memory::format_tag::aBdc8b, "memory::format_tag::aBdc8b"},
+        {memory::format_tag::aBdec16b, "memory::format_tag::aBdec16b"},
+        {memory::format_tag::aBdec32b, "memory::format_tag::aBdec32b"},
+        {memory::format_tag::aBdec4b, "memory::format_tag::aBdec4b"},
+        {memory::format_tag::aBdec8b, "memory::format_tag::aBdec8b"},
+        {memory::format_tag::aBdefc16b, "memory::format_tag::aBdefc16b"},
+        {memory::format_tag::aCBdef16c16b, "memory::format_tag::aCBdef16c16b"},
+        {memory::format_tag::aBdefc4b, "memory::format_tag::aBdefc4b"},
+        {memory::format_tag::aBdefc8b, "memory::format_tag::aBdefc8b"},
+        {memory::format_tag::Abcdef16a, "memory::format_tag::Abcdef16a"},
+        {memory::format_tag::Acb16a, "memory::format_tag::Acb16a"},
+        {memory::format_tag::Acb4a, "memory::format_tag::Acb4a"},
+        {memory::format_tag::Acb8a, "memory::format_tag::Acb8a"},
+        {memory::format_tag::aCBd16b16c, "memory::format_tag::aCBd16b16c"},
+        {memory::format_tag::aCBd16c16b, "memory::format_tag::aCBd16c16b"},
+        {memory::format_tag::aCBde16b16c, "memory::format_tag::aCBde16b16c"},
+        {memory::format_tag::aCBde16c16b, "memory::format_tag::aCBde16c16b"},
+        {memory::format_tag::Acdb16a, "memory::format_tag::Acdb16a"},
+        {memory::format_tag::Acdb32a, "memory::format_tag::Acdb32a"},
+        {memory::format_tag::Acdb4a, "memory::format_tag::Acdb4a"},
+        {memory::format_tag::Acdb8a, "memory::format_tag::Acdb8a"},
+        {memory::format_tag::Acdeb16a, "memory::format_tag::Acdeb16a"},
+        {memory::format_tag::Acdeb4a, "memory::format_tag::Acdeb4a"},
+        {memory::format_tag::Acdeb8a, "memory::format_tag::Acdeb8a"},
+        {memory::format_tag::BAc16a16b, "memory::format_tag::BAc16a16b"},
+        {memory::format_tag::BAc16b16a, "memory::format_tag::BAc16b16a"},
+        {memory::format_tag::BAcd16a16b, "memory::format_tag::BAcd16a16b"},
+        {memory::format_tag::BAcd16b16a, "memory::format_tag::BAcd16b16a"},
+        {memory::format_tag::last, "memory::format_tag::last"},
+        // Aliases
+        {memory::format_tag::x, "memory::format_tag::x"},
+        {memory::format_tag::nc, "memory::format_tag::nc"},
+        {memory::format_tag::cn, "memory::format_tag::cn"},
+        {memory::format_tag::ncw, "memory::format_tag::ncw"},
+        {memory::format_tag::nwc, "memory::format_tag::nwc"},
+        {memory::format_tag::nchw, "memory::format_tag::nchw"},
+        {memory::format_tag::nhwc, "memory::format_tag::nhwc"},
+        {memory::format_tag::chwn, "memory::format_tag::chwn"},
+        {memory::format_tag::ncdhw, "memory::format_tag::ncdhw"},
+        {memory::format_tag::ndhwc, "memory::format_tag::ndhwc"},
+        {memory::format_tag::oi, "memory::format_tag::oi"},
+        {memory::format_tag::io, "memory::format_tag::io"},
+        {memory::format_tag::oiw, "memory::format_tag::oiw"},
+        {memory::format_tag::owi, "memory::format_tag::owi"},
+        {memory::format_tag::wio, "memory::format_tag::wio"},
+        {memory::format_tag::iwo, "memory::format_tag::iwo"},
+        {memory::format_tag::oihw, "memory::format_tag::oihw"},
+        {memory::format_tag::hwio, "memory::format_tag::hwio"},
+        {memory::format_tag::ohwi, "memory::format_tag::ohwi"},
+        {memory::format_tag::ihwo, "memory::format_tag::ihwo"},
+        {memory::format_tag::iohw, "memory::format_tag::iohw"},
+        {memory::format_tag::oidhw, "memory::format_tag::oidhw"},
+        {memory::format_tag::dhwio, "memory::format_tag::dhwio"},
+        {memory::format_tag::odhwi, "memory::format_tag::odhwi"},
+        {memory::format_tag::idhwo, "memory::format_tag::idhwo"},
+        {memory::format_tag::goiw, "memory::format_tag::goiw"},
+        {memory::format_tag::goihw, "memory::format_tag::goihw"},
+        {memory::format_tag::hwigo, "memory::format_tag::hwigo"},
+        {memory::format_tag::giohw, "memory::format_tag::giohw"},
+        {memory::format_tag::goidhw, "memory::format_tag::goidhw"},
+        {memory::format_tag::tnc, "memory::format_tag::tnc"},
+        {memory::format_tag::ntc, "memory::format_tag::ntc"},
+        {memory::format_tag::ldnc, "memory::format_tag::ldnc"},
+        {memory::format_tag::ldigo, "memory::format_tag::ldigo"},
+        {memory::format_tag::ldgoi, "memory::format_tag::ldgoi"},
+        {memory::format_tag::ldgo, "memory::format_tag::ldgo"},
+        {memory::format_tag::nCdhw16c, "memory::format_tag::nCdhw16c"},
+        {memory::format_tag::nCdhw4c, "memory::format_tag::nCdhw4c"},
+        {memory::format_tag::nCdhw8c, "memory::format_tag::nCdhw8c"},
+        {memory::format_tag::nChw16c, "memory::format_tag::nChw16c"},
+        {memory::format_tag::nChw4c, "memory::format_tag::nChw4c"},
+        {memory::format_tag::nChw8c, "memory::format_tag::nChw8c"},
+        {memory::format_tag::nCw16c, "memory::format_tag::nCw16c"},
+        {memory::format_tag::nCw4c, "memory::format_tag::nCw4c"},
+        {memory::format_tag::nCw8c, "memory::format_tag::nCw8c"},
+        {memory::format_tag::NCw16n16c, "memory::format_tag::NCw16n16c"},
+        {memory::format_tag::NCdhw16n16c, "memory::format_tag::NCdhw16n16c"},
+        {memory::format_tag::NChw16n16c, "memory::format_tag::NChw16n16c"},
+        {memory::format_tag::NChw32n32c, "memory::format_tag::NChw32n32c"},
+        {memory::format_tag::IOw16o16i, "memory::format_tag::IOw16o16i"},
+        {memory::format_tag::IOw16i16o, "memory::format_tag::IOw16i16o"},
+        {memory::format_tag::OIw16i16o, "memory::format_tag::OIw16i16o"},
+        {memory::format_tag::OIw16i16o, "memory::format_tag::OIw16i16o"},
+        {memory::format_tag::Oiw16o, "memory::format_tag::Oiw16o"},
+        {memory::format_tag::OIw4i16o4i, "memory::format_tag::OIw4i16o4i"},
+        {memory::format_tag::OIw4i4o, "memory::format_tag::OIw4i4o"},
+        {memory::format_tag::Oiw4o, "memory::format_tag::Oiw4o"},
+        {memory::format_tag::OIw8i16o2i, "memory::format_tag::OIw8i16o2i"},
+        {memory::format_tag::OIw8i8o, "memory::format_tag::OIw8i8o"},
+        {memory::format_tag::OIw8o16i2o, "memory::format_tag::OIw8o16i2o"},
+        {memory::format_tag::IOw8o16i2o, "memory::format_tag::IOw8o16i2o"},
+        {memory::format_tag::OIw8o8i, "memory::format_tag::OIw8o8i"},
+        {memory::format_tag::Owi16o, "memory::format_tag::Owi16o"},
+        {memory::format_tag::Owi4o, "memory::format_tag::Owi4o"},
+        {memory::format_tag::Owi8o, "memory::format_tag::Owi8o"},
+        {memory::format_tag::IOhw16i16o, "memory::format_tag::IOhw16i16o"},
+        {memory::format_tag::IOhw16o16i, "memory::format_tag::IOhw16o16i"},
+        {memory::format_tag::Ohwi16o, "memory::format_tag::Ohwi16o"},
+        {memory::format_tag::Ohwi32o, "memory::format_tag::Ohwi32o"},
+        {memory::format_tag::Ohwi4o, "memory::format_tag::Ohwi4o"},
+        {memory::format_tag::Ohwi8o, "memory::format_tag::Ohwi8o"},
+        {memory::format_tag::OIhw16i16o, "memory::format_tag::OIhw16i16o"},
+        {memory::format_tag::OIhw16o16i, "memory::format_tag::OIhw16o16i"},
+        {memory::format_tag::Oihw16o, "memory::format_tag::Oihw16o"},
+        {memory::format_tag::OIhw4i16o4i, "memory::format_tag::OIhw4i16o4i"},
+        {memory::format_tag::OIhw4i4o, "memory::format_tag::OIhw4i4o"},
+        {memory::format_tag::Oihw4o, "memory::format_tag::Oihw4o"},
+        {memory::format_tag::OIhw8i16o2i, "memory::format_tag::OIhw8i16o2i"},
+        {memory::format_tag::OIhw8i8o, "memory::format_tag::OIhw8i8o"},
+        {memory::format_tag::OIhw8o16i2o, "memory::format_tag::OIhw8o16i2o"},
+        {memory::format_tag::IOhw8o16i2o, "memory::format_tag::IOhw8o16i2o"},
+        {memory::format_tag::OIhw8o8i, "memory::format_tag::OIhw8o8i"},
+        {memory::format_tag::Odhwi16o, "memory::format_tag::Odhwi16o"},
+        {memory::format_tag::Odhwi4o, "memory::format_tag::Odhwi4o"},
+        {memory::format_tag::Odhwi8o, "memory::format_tag::Odhwi8o"},
+        {memory::format_tag::OIdhw16i16o, "memory::format_tag::OIdhw16i16o"},
+        {memory::format_tag::OIdhw16o16i, "memory::format_tag::OIdhw16o16i"},
+        {memory::format_tag::Oidhw16o, "memory::format_tag::Oidhw16o"},
+        {memory::format_tag::OIdhw4i4o, "memory::format_tag::OIdhw4i4o"},
+        {memory::format_tag::Oidhw4o, "memory::format_tag::Oidhw4o"},
+        {memory::format_tag::OIdhw8i16o2i, "memory::format_tag::OIdhw8i16o2i"},
+        {memory::format_tag::OIdhw8i8o, "memory::format_tag::OIdhw8i8o"},
+        {memory::format_tag::OIdhw8o16i2o, "memory::format_tag::OIdhw8o16i2o"},
+        {memory::format_tag::IOdhw8o16i2o, "memory::format_tag::IOdhw8o16i2o"},
+        {memory::format_tag::OIdhw8o8i, "memory::format_tag::OIdhw8o8i"},
+        {memory::format_tag::IOdhw16i16o, "memory::format_tag::IOdhw16i16o"},
+        {memory::format_tag::Goiw16g, "memory::format_tag::Goiw16g"},
+        {memory::format_tag::gIOw16o16i, "memory::format_tag::gIOw16o16i"},
+        {memory::format_tag::gIOw16i16o, "memory::format_tag::gIOw16i16o"},
+        {memory::format_tag::gOIw16i16o, "memory::format_tag::gOIw16i16o"},
+        {memory::format_tag::gOIw16o16i, "memory::format_tag::gOIw16o16i"},
+        {memory::format_tag::gOiw16o, "memory::format_tag::gOiw16o"},
+        {memory::format_tag::gOIw4i16o4i, "memory::format_tag::gOIw4i16o4i"},
+        {memory::format_tag::gOIw4i4o, "memory::format_tag::gOIw4i4o"},
+        {memory::format_tag::gOiw4o, "memory::format_tag::gOiw4o"},
+        {memory::format_tag::gOIw8i16o2i, "memory::format_tag::gOIw8i16o2i"},
+        {memory::format_tag::gOIw8i8o, "memory::format_tag::gOIw8i8o"},
+        {memory::format_tag::gOIw8o16i2o, "memory::format_tag::gOIw8o16i2o"},
+        {memory::format_tag::gIOw8o16i2o, "memory::format_tag::gIOw8o16i2o"},
+        {memory::format_tag::gOIw8o8i, "memory::format_tag::gOIw8o8i"},
+        {memory::format_tag::gOwi16o, "memory::format_tag::gOwi16o"},
+        {memory::format_tag::gOwi4o, "memory::format_tag::gOwi4o"},
+        {memory::format_tag::gOwi8o, "memory::format_tag::gOwi8o"},
+        {memory::format_tag::gIOhw16i16o, "memory::format_tag::gIOhw16i16o"},
+        {memory::format_tag::gIOhw16o16i, "memory::format_tag::gIOhw16o16i"},
+        {memory::format_tag::gOhwi16o, "memory::format_tag::gOhwi16o"},
+        {memory::format_tag::gOhwi32o, "memory::format_tag::gOhwi32o"},
+        {memory::format_tag::gOhwi4o, "memory::format_tag::gOhwi4o"},
+        {memory::format_tag::gOhwi8o, "memory::format_tag::gOhwi8o"},
+        {memory::format_tag::Goihw16g, "memory::format_tag::Goihw16g"},
+        {memory::format_tag::gOIhw16i16o, "memory::format_tag::gOIhw16i16o"},
+        {memory::format_tag::gOIhw16o16i, "memory::format_tag::gOIhw16o16i"},
+        {memory::format_tag::gOihw16o, "memory::format_tag::gOihw16o"},
+        {memory::format_tag::gOIhw2i8o4i, "memory::format_tag::gOIhw2i8o4i"},
+        {memory::format_tag::gOIhw4i16o4i, "memory::format_tag::gOIhw4i16o4i"},
+        {memory::format_tag::gOIhw4i4o, "memory::format_tag::gOIhw4i4o"},
+        {memory::format_tag::gOIhw4o4i, "memory::format_tag::gOIhw4o4i"},
+        {memory::format_tag::gOihw4o, "memory::format_tag::gOihw4o"},
+        {memory::format_tag::Goihw8g, "memory::format_tag::Goihw8g"},
+        {memory::format_tag::gOIhw8i16o2i, "memory::format_tag::gOIhw8i16o2i"},
+        {memory::format_tag::gOIhw8i8o, "memory::format_tag::gOIhw8i8o"},
+        {memory::format_tag::gOIhw8o16i2o, "memory::format_tag::gOIhw8o16i2o"},
+        {memory::format_tag::gIOhw8o16i2o, "memory::format_tag::gIOhw8o16i2o"},
+        {memory::format_tag::gOIhw8o8i, "memory::format_tag::gOIhw8o8i"},
+        {memory::format_tag::OIhw4o8i8o4i, "memory::format_tag::OIhw4o8i8o4i"},
+        {memory::format_tag::OIhw2o8i8o2i, "memory::format_tag::OIhw2o8i8o2i"},
+        {memory::format_tag::gOIhw4o8i8o4i, "memory::format_tag::gOIhw4o8i8o4i"},
+        {memory::format_tag::gOIhw2o8i8o2i, "memory::format_tag::gOIhw2o8i8o2i"},
+        {memory::format_tag::gIOdhw16i16o, "memory::format_tag::gIOdhw16i16o"},
+        {memory::format_tag::gOdhwi16o, "memory::format_tag::gOdhwi16o"},
+        {memory::format_tag::gOdhwi4o, "memory::format_tag::gOdhwi4o"},
+        {memory::format_tag::gOdhwi8o, "memory::format_tag::gOdhwi8o"},
+        {memory::format_tag::gOIdhw16i16o, "memory::format_tag::gOIdhw16i16o"},
+        {memory::format_tag::gOIdhw16o16i, "memory::format_tag::gOIdhw16o16i"},
+        {memory::format_tag::gOidhw16o, "memory::format_tag::gOidhw16o"},
+        {memory::format_tag::gOIdhw4i4o, "memory::format_tag::gOIdhw4i4o"},
+        {memory::format_tag::gOidhw4o, "memory::format_tag::gOidhw4o"},
+        {memory::format_tag::gOIdhw8i16o2i, "memory::format_tag::gOIdhw8i16o2i"},
+        {memory::format_tag::gOIdhw8i8o, "memory::format_tag::gOIdhw8i8o"},
+        {memory::format_tag::gOIdhw8o16i2o, "memory::format_tag::gOIdhw8o16i2o"},
+        {memory::format_tag::gIOdhw8o16i2o, "memory::format_tag::gIOdhw8o16i2o"},
+        {memory::format_tag::gOIdhw8o8i, "memory::format_tag::gOIdhw8o8i"},
+        {memory::format_tag::Goidhw16g, "memory::format_tag::Goidhw16g"},
+    };
+    return s_mkldnn_format_tag_string_map;
+}
+
+std::set<memory::format_tag>& runtime::cpu::mkldnn_utils::get_filter_format_tags()
+{
+    static std::set<memory::format_tag> s_filter_format_tags{
+        memory::format_tag::oihw,
+        memory::format_tag::ihwo,
+        memory::format_tag::hwio,
+        // TODO (nishant): Uncomment after the next release of mkl-dnn"
+        // memory::format_tag::dhwio,
+        memory::format_tag::oidhw,
+        memory::format_tag::OIdhw16i16o,
+        memory::format_tag::OIdhw16o16i,
+        memory::format_tag::Oidhw16o,
+        memory::format_tag::Odhwi16o,
+        // memory::format_tag::oIhw8i,             // These currently map to nChw8c and nChw16c
+        // memory::format_tag::oIhw16i,
+        memory::format_tag::OIhw8i8o,
+        memory::format_tag::OIhw16i16o,
+        memory::format_tag::IOhw16o16i,
+        memory::format_tag::OIhw8o8i,
+        memory::format_tag::OIhw16o16i,
+        memory::format_tag::Oihw8o,
+        memory::format_tag::Oihw16o,
+        memory::format_tag::Ohwi8o,
+        memory::format_tag::Ohwi16o,
+        memory::format_tag::OhIw16o4i};
+    return s_filter_format_tags;
+}
+
+mkldnn::memory::format_tag runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
+    const ngraph::runtime::cpu::LayoutDescriptor& layout)
+{
+    return CreateNativeDataFormat(layout.get_shape());
+}
+
+mkldnn::memory::format_tag runtime::cpu::mkldnn_utils::CreateNativeDataFormat(const Shape& shape)
+{
+    switch (shape.size())
+    {
+    case 1: return mkldnn::memory::format_tag::x;
+    case 2: return mkldnn::memory::format_tag::nc;
+    case 4: return mkldnn::memory::format_tag::nchw;
+    case 5: return mkldnn::memory::format_tag::ncdhw;
+    default: return mkldnn::memory::format_tag::undef;
+    }
+}
+
+const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_tag_string(memory::format_tag fmt)
+{
+    auto it = get_mkldnn_format_tag_string_map().find(fmt);
+    if (it == get_mkldnn_format_tag_string_map().end())
+        throw ngraph_error("No MKLDNN format_tag exists for the given format_tag type " +
+                           std::to_string(fmt));
+    return it->second;
+}
+
+mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
+    const Node* node,
+    size_t index,
+    bool output = false,
+    mkldnn::memory::format_tag format_tag = mkldnn::memory::format_tag::any)
+{
+    Shape shape;
+    mkldnn::memory::data_type et;
+    if (output)
+    {
+        shape = node->get_output_shape(index);
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_output_element_type(index));
+    }
+    else
+    {
+        shape = node->get_input_shape(index);
+        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(index));
+    }
+
+    if (shape == Shape{})
+    {
+        shape = Shape{1};
+    }
+    return memory::desc(memory::dims(shape.begin(), shape.end()), et, format_tag);
+}
+
+#else
 std::map<memory::format, const std::string>&
     runtime::cpu::mkldnn_utils::get_mkldnn_format_string_map()
 {
@@ -227,30 +659,6 @@ mkldnn::memory::format runtime::cpu::mkldnn_utils::CreateNativeDataFormat(const 
     }
 }
 
-const std::string&
-    runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const ngraph::element::Type& type)
-{
-    auto it = get_mkldnn_data_type_string_map().find(type);
-    if (it == get_mkldnn_data_type_string_map().end() || it->second.empty())
-    {
-        throw ngraph_error("No MKLDNN data type exists for the given element type" +
-                           type.c_type_string());
-    }
-    return it->second;
-}
-
-mkldnn::memory::data_type
-    runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
-{
-    auto it = get_mkldnn_data_type_map().find(type);
-    if (it == get_mkldnn_data_type_map().end())
-    {
-        throw ngraph_error("No MKLDNN data type exists for the given element type" +
-                           type.c_type_string());
-    }
-    return it->second;
-}
-
 const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::format fmt)
 {
     auto it = get_mkldnn_format_string_map().find(fmt);
@@ -258,21 +666,6 @@ const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::
         throw ngraph_error("No MKLDNN format exists for the given format type " +
                            std::to_string(fmt));
     return it->second;
-}
-
-const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_input_mkldnn_md(const Node* node,
-                                                                            size_t index)
-{
-    auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-        node->get_inputs()[index].get_output().get_tensor_ptr()->get_tensor_layout());
-    return cpu_tvl->get_mkldnn_md();
-}
-
-const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_output_mkldnn_md(const Node* node,
-                                                                             size_t index)
-{
-    auto tvl = node->get_output_tensor_ptr(index)->get_tensor_layout();
-    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_md();
 }
 
 mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
@@ -299,141 +692,6 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
         shape = Shape{1};
     }
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format);
-}
-
-bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const ngraph::element::Type type)
-{
-    auto it = get_mkldnn_data_type_map().find(type);
-    if (it == get_mkldnn_data_type_map().end() ||
-        it->second == mkldnn::memory::data_type::data_undef)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
-                                                      const Strides& strides,
-                                                      const ngraph::element::Type type)
-{
-    auto it = get_mkldnn_data_type_map().find(type);
-    if (dims.size() == 0)
-    {
-        return false;
-    }
-    if (it == get_mkldnn_data_type_map().end() ||
-        it->second == mkldnn::memory::data_type::data_undef)
-    {
-        return false;
-    }
-    if (dims.size() > TENSOR_MAX_DIMS)
-    {
-        return false;
-    }
-    if (shape_size(dims) == 0)
-    {
-        return false;
-    }
-    return true;
-}
-
-bool runtime::cpu::mkldnn_utils::is_perm_sorted(const Strides& a, const AxisVector& perm)
-{
-    for (size_t i = 0; i < a.size() - 1; i++)
-    {
-        if (a[perm[i]] < a[perm[i + 1]])
-            return false;
-    }
-    return true;
-}
-
-mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
-    const Shape& dims, const Strides& strides, const ngraph::element::Type type)
-{
-    if (dims.size() > TENSOR_MAX_DIMS || strides.size() > TENSOR_MAX_DIMS)
-    {
-        throw ngraph_error("In create_blocked_mkldnn_md: Dimensions (dims, stride): (" +
-                           std::to_string(dims.size()) + ", " + std::to_string(strides.size()) +
-                           ") exceed maximum supported by MKLDNN " +
-                           std::to_string(TENSOR_MAX_DIMS));
-    }
-
-    if (dims.size() != strides.size())
-    {
-        throw ngraph_error("In create_blocked_mkldnn_md: Rank mismatch between shape and strides " +
-                           std::to_string(dims.size()) + " " + std::to_string(strides.size()));
-    }
-
-    memory::dims dim(dims.begin(), dims.end());
-    memory::dims stride(strides.begin(), strides.end());
-    memory::data_type dtype = get_mkldnn_data_type(type);
-
-    if (dims.size() == 1)
-    {
-        return memory::desc(dim, dtype, memory::format::x);
-    }
-    if (dims.size() == 2)
-    {
-        if (is_perm_sorted(strides, {0, 1}))
-        {
-            return memory::desc(dim, dtype, memory::format::nc);
-        }
-    }
-
-    if (dims.size() == 3)
-    {
-        if (is_perm_sorted(strides, {0, 1, 2}))
-        {
-            return memory::desc(dim, dtype, memory::format::tnc);
-        }
-        if (is_perm_sorted(strides, {1, 0, 2}))
-        {
-            return memory::desc(dim, dtype, memory::format::ntc);
-        }
-    }
-
-    if (dims.size() == 4)
-    {
-        if (is_perm_sorted(strides, {0, 1, 2, 3}))
-        {
-            return memory::desc(dim, dtype, memory::format::nchw);
-        }
-        if (is_perm_sorted(strides, {0, 2, 3, 1}))
-        {
-            return memory::desc(dim, dtype, memory::format::nhwc);
-        }
-    }
-
-    if (dims.size() == 5)
-    {
-        if (is_perm_sorted(strides, {0, 1, 2, 3, 4}))
-        {
-            return memory::desc(dim, dtype, memory::format::ncdhw);
-        }
-        if (is_perm_sorted(strides, {0, 2, 3, 4, 1}))
-        {
-            return memory::desc(dim, dtype, memory::format::ndhwc);
-        }
-    }
-
-    mkldnn_memory_desc_t md;
-    md.primitive_kind = mkldnn_memory;
-    md.ndims = static_cast<int>(dim.size());
-    md.format = mkldnn_blocked;
-    md.data_type = mkldnn::memory::convert_to_c(dtype);
-
-    for (size_t i = 0; i < dim.size(); i++)
-    {
-        md.layout_desc.blocking.block_dims[i] = 1;
-        md.layout_desc.blocking.strides[1][i] = 1;
-        md.layout_desc.blocking.strides[0][i] = stride[i];
-        md.layout_desc.blocking.padding_dims[i] = dim[i];
-        md.layout_desc.blocking.offset_padding_to_data[i] = 0;
-        md.dims[i] = dim[i];
-    }
-    md.layout_desc.blocking.offset_padding = 0;
-
-    return memory::desc(md);
 }
 
 // MKLDNN kernel selection sometimes relies on named layouts like "mkldnn_nchw"
@@ -688,6 +946,195 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::d
     }
 
     return false;
+}
+#endif
+
+// for both versions
+
+const std::string&
+    runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const ngraph::element::Type& type)
+{
+    auto it = get_mkldnn_data_type_string_map().find(type);
+    if (it == get_mkldnn_data_type_string_map().end() || it->second.empty())
+    {
+        throw ngraph_error("No MKLDNN data type exists for the given element type" +
+                           type.c_type_string());
+    }
+    return it->second;
+}
+
+mkldnn::memory::data_type
+    runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
+{
+    auto it = get_mkldnn_data_type_map().find(type);
+    if (it == get_mkldnn_data_type_map().end())
+    {
+        throw ngraph_error("No MKLDNN data type exists for the given element type" +
+                           type.c_type_string());
+    }
+    return it->second;
+}
+
+const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_input_mkldnn_md(const Node* node,
+                                                                            size_t index)
+{
+    auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
+        node->get_inputs()[index].get_output().get_tensor_ptr()->get_tensor_layout());
+    return cpu_tvl->get_mkldnn_md();
+}
+
+const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_output_mkldnn_md(const Node* node,
+                                                                             size_t index)
+{
+    auto tvl = node->get_output_tensor_ptr(index)->get_tensor_layout();
+    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_md();
+}
+
+bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const ngraph::element::Type type)
+{
+    auto it = get_mkldnn_data_type_map().find(type);
+    if (it == get_mkldnn_data_type_map().end() ||
+#if defined(USE_MKLDNN_V1)
+        it->second == mkldnn::memory::data_type::undef)
+#else
+        it->second == mkldnn::memory::data_type::data_undef)
+#endif
+    {
+        return false;
+    }
+    return true;
+}
+
+bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
+                                                      const Strides& strides,
+                                                      const ngraph::element::Type type)
+{
+    auto it = get_mkldnn_data_type_map().find(type);
+    if (dims.size() == 0)
+    {
+        return false;
+    }
+    if (it == get_mkldnn_data_type_map().end() ||
+#if defined(USE_MKLDNN_V1)
+        it->second == mkldnn::memory::data_type::undef)
+#else
+        it->second == mkldnn::memory::data_type::data_undef)
+#endif
+    {
+        return false;
+    }
+    if (dims.size() > TENSOR_MAX_DIMS)
+    {
+        return false;
+    }
+    if (shape_size(dims) == 0)
+    {
+        return false;
+    }
+    return true;
+}
+
+bool runtime::cpu::mkldnn_utils::is_perm_sorted(const Strides& a, const AxisVector& perm)
+{
+    for (size_t i = 0; i < a.size() - 1; i++)
+    {
+        if (a[perm[i]] < a[perm[i + 1]])
+            return false;
+    }
+    return true;
+}
+
+mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
+    const Shape& dims, const Strides& strides, const ngraph::element::Type type)
+{
+    if (dims.size() > TENSOR_MAX_DIMS || strides.size() > TENSOR_MAX_DIMS)
+    {
+        throw ngraph_error("In create_blocked_mkldnn_md: Dimensions (dims, stride): (" +
+                           std::to_string(dims.size()) + ", " + std::to_string(strides.size()) +
+                           ") exceed maximum supported by MKLDNN " +
+                           std::to_string(TENSOR_MAX_DIMS));
+    }
+
+    if (dims.size() != strides.size())
+    {
+        throw ngraph_error("In create_blocked_mkldnn_md: Rank mismatch between shape and strides " +
+                           std::to_string(dims.size()) + " " + std::to_string(strides.size()));
+    }
+
+    memory::dims dim(dims.begin(), dims.end());
+    memory::dims stride(strides.begin(), strides.end());
+    memory::data_type dtype = get_mkldnn_data_type(type);
+
+#if defined(USE_MKLDNN_V1)
+    return memory::desc(dim, dtype, stride);
+#else
+    if (dims.size() == 1)
+    {
+        return memory::desc(dim, dtype, memory::format::x);
+    }
+    if (dims.size() == 2)
+    {
+        if (is_perm_sorted(strides, {0, 1}))
+        {
+            return memory::desc(dim, dtype, memory::format::nc);
+        }
+    }
+
+    if (dims.size() == 3)
+    {
+        if (is_perm_sorted(strides, {0, 1, 2}))
+        {
+            return memory::desc(dim, dtype, memory::format::tnc);
+        }
+        if (is_perm_sorted(strides, {1, 0, 2}))
+        {
+            return memory::desc(dim, dtype, memory::format::ntc);
+        }
+    }
+
+    if (dims.size() == 4)
+    {
+        if (is_perm_sorted(strides, {0, 1, 2, 3}))
+        {
+            return memory::desc(dim, dtype, memory::format::nchw);
+        }
+        if (is_perm_sorted(strides, {0, 2, 3, 1}))
+        {
+            return memory::desc(dim, dtype, memory::format::nhwc);
+        }
+    }
+
+    if (dims.size() == 5)
+    {
+        if (is_perm_sorted(strides, {0, 1, 2, 3, 4}))
+        {
+            return memory::desc(dim, dtype, memory::format::ncdhw);
+        }
+        if (is_perm_sorted(strides, {0, 2, 3, 4, 1}))
+        {
+            return memory::desc(dim, dtype, memory::format::ndhwc);
+        }
+    }
+
+    mkldnn_memory_desc_t md;
+    md.primitive_kind = mkldnn_memory;
+    md.ndims = static_cast<int>(dim.size());
+    md.format = mkldnn_blocked;
+    md.data_type = mkldnn::memory::convert_to_c(dtype);
+
+    for (size_t i = 0; i < dim.size(); i++)
+    {
+        md.layout_desc.blocking.block_dims[i] = 1;
+        md.layout_desc.blocking.strides[1][i] = 1;
+        md.layout_desc.blocking.strides[0][i] = stride[i];
+        md.layout_desc.blocking.padding_dims[i] = dim[i];
+        md.layout_desc.blocking.offset_padding_to_data[i] = 0;
+        md.dims[i] = dim[i];
+    }
+    md.layout_desc.blocking.offset_padding = 0;
+
+    return memory::desc(md);
+#endif
 }
 
 bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)

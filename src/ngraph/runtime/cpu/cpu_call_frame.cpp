@@ -211,6 +211,10 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         {
             ctx->mkldnn_primitives =
                 std::vector<mkldnn::primitive*>(mkldnn_emitter->get_mkldnn_primitives().size());
+#if defined(USE_MKLDNN_V1)
+            ctx->mkldnn_memories =
+                std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
+#endif
         }
         else
         {

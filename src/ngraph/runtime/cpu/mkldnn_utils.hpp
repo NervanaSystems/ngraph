@@ -36,28 +36,32 @@ namespace ngraph
 #ifndef _WIN32
                 extern "C" void mkl_serv_free_buffers();
 #endif
+#if defined(USE_MKLDNN_V1)
+                std::map<memory::format_kind, const std::string>&
+                    get_mkldnn_format_kind_string_map();
+                std::map<memory::format_tag, const std::string>&
+                    get_mkldnn_format_kind_string_map();
+                std::set<mkldnn::memory::format_tag>& get_filter_format_tags();
+                mkldnn::memory::format_tag
+                    CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
+                mkldnn::memory::format_tag CreateNativeDataFormat(const Shape& shape);
+                const std::string& get_mkldnn_format__tag_string(mkldnn::memory::format fmt);
+                mkldnn::memory::desc
+                    create_default_mkldnn_md(const Node* node,
+                                             size_t index,
+                                             bool is_output,
+                                             mkldnn::memory::format_tag format_tag);
+#else
+                std::map<mkldnn::memory::format, const std::string>& get_mkldnn_format_string_map();
+                std::set<mkldnn::memory::format>& get_filter_formats();
                 mkldnn::memory::format
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
                 mkldnn::memory::format CreateNativeDataFormat(const Shape& shape);
-                const std::string& get_mkldnn_data_type_string(const ngraph::element::Type& type);
-                mkldnn::memory::data_type get_mkldnn_data_type(const ngraph::element::Type& type);
                 const std::string& get_mkldnn_format_string(mkldnn::memory::format fmt);
-
-                const mkldnn::memory::desc& get_input_mkldnn_md(const Node* node, size_t index);
-                const mkldnn::memory::desc& get_output_mkldnn_md(const Node* node, size_t index);
-
                 mkldnn::memory::desc create_default_mkldnn_md(const Node* node,
                                                               size_t index,
                                                               bool is_output,
                                                               mkldnn::memory::format format);
-                bool is_perm_sorted(const Strides& a, const AxisVector& perm);
-                bool can_create_mkldnn_md(const ngraph::element::Type type);
-                bool can_create_mkldnn_md(const Shape& dims,
-                                          const Strides& strides,
-                                          const ngraph::element::Type type);
-                mkldnn::memory::desc create_blocked_mkldnn_md(const Shape& dims,
-                                                              const Strides& strides,
-                                                              const ngraph::element::Type type);
                 mkldnn::memory::desc try_get_named_md(const mkldnn_memory_desc_t& md);
                 mkldnn::memory::desc rotate_blocked_md(const mkldnn::memory::desc& in,
                                                        const AxisVector& axis_order);
@@ -73,6 +77,22 @@ namespace ngraph
                                              const AxisVector& axis_list);
                 bool is_mkldnn_filter_format(mkldnn::memory::format fmt);
                 bool is_mkldnn_blocked_data_format(mkldnn::memory::format fmt);
+#endif
+                const std::string& get_mkldnn_data_type_string(const ngraph::element::Type& type);
+                mkldnn::memory::data_type get_mkldnn_data_type(const ngraph::element::Type& type);
+
+                const mkldnn::memory::desc& get_input_mkldnn_md(const Node* node, size_t index);
+                const mkldnn::memory::desc& get_output_mkldnn_md(const Node* node, size_t index);
+
+                bool is_perm_sorted(const Strides& a, const AxisVector& perm);
+                bool can_create_mkldnn_md(const ngraph::element::Type type);
+                bool can_create_mkldnn_md(const Shape& dims,
+                                          const Strides& strides,
+                                          const ngraph::element::Type type);
+                mkldnn::memory::desc create_blocked_mkldnn_md(const Shape& dims,
+                                                              const Strides& strides,
+                                                              const ngraph::element::Type type);
+
                 bool can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node);
                 bool can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node);
 
@@ -93,8 +113,7 @@ namespace ngraph
                 std::map<element::Type, const mkldnn::memory::data_type>&
                     get_mkldnn_data_type_map();
                 std::map<element::Type, const std::string>& get_mkldnn_data_type_string_map();
-                std::map<mkldnn::memory::format, const std::string>& get_mkldnn_format_string_map();
-                std::set<mkldnn::memory::format>& get_filter_formats();
+
                 template <typename T>
                 bool can_use_mkldnn_conv(ngraph::Node* node)
                 {
