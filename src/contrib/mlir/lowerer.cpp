@@ -533,23 +533,18 @@ namespace
     REWRITER(NGConcatOp)
     {
         auto concat = cast<NGConcatOp>(op);
-
         auto loc = concat.getLoc();
         ScopedContext scope(rewriter, loc);
 
         // Create Value for result, and extract type info.
         Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
-
         auto result_ty = result->getType().dyn_cast<MemRefType>();
         NGRAPH_CHECK(result_ty, "Unexpected non-memref result type");
 
-        Type elem_ty = result_ty.getElementType();
-
-        // Create views/handles to write into result.
+        // Create view to write into result.
         MemRefView v_res(result);
         auto rank = v_res.rank();
-        IndexedValue iv_res(result);
 
         // For each operand, generate a separate loop to copy into the target slice of "result".
         // We'll keep track of the slice offsets via concatenation_axis_pos.
@@ -571,37 +566,33 @@ namespace
             //              [i_(r-2)][i_(r-1)]
             //                  :=
             //        operand[i_0][i_1]...[i_(r-2)][i_(r-1)]
-            std::vector<IndexHandle> res_index_handles;
-            std::vector<IndexHandle> operand_index_handles;
             MemRefView v_operand(operand);
 
-            // Function to recursively build the nested loops.
-            size_t axis = 0;
-            std::function<void()> make_copy_loop = [&] {
-                if (axis < rank)
-                {
-                    IndexHandle i;
-                    IndexHandle i_lb(v_operand.lb(axis));
-                    IndexHandle i_ub(v_operand.ub(axis));
-                    int64_t i_step = v_operand.step(axis);
+            llvm::SmallVector<ValueHandle, 5> ivars;
+            llvm::SmallVector<ValueHandle*, 5> ivar_ptrs;
+            llvm::SmallVector<ValueHandle, 5> ivar_lbs;
+            llvm::SmallVector<ValueHandle, 5> ivar_ubs;
+            llvm::SmallVector<int64_t, 5> ivar_steps;
+            for (int i = 0; i < rank; i++)
+            {
+                ivars.push_back(IndexHandle());
+                ivar_ptrs.push_back(&(ivars.back()));
+                ivar_lbs.push_back(v_operand.lb(i));
+                ivar_ubs.push_back(v_operand.ub(i));
+                ivar_steps.push_back(v_operand.step(i));
+            }
 
-                    LoopBuilder(&i, i_lb, i_ub, i_step)([&] {
-                        res_index_handles.push_back(axis == concatenation_axis
-                                                        ? IndexHandle(i + concatenation_axis_pos)
-                                                        : i);
-                        operand_index_handles.push_back(i);
-                        axis++;
-                        make_copy_loop();
-                    });
-                }
-                else
-                {
-                    IndexedValue iv_operand(operand);
-                    iv_res(res_index_handles) = iv_operand(operand_index_handles);
-                }
-            };
+            LoopNestBuilder(ivar_ptrs, ivar_lbs, ivar_ubs, ivar_steps)([&] {
+                IndexedValue iv_res(result);
+                IndexedValue iv_operand(operand);
 
-            make_copy_loop();
+                // On the LHS of the assignment, adjust the index for the concatenation axis.
+                llvm::SmallVector<ValueHandle, 5> res_index_handles = ivars;
+                res_index_handles[concatenation_axis] =
+                    IndexHandle(res_index_handles[concatenation_axis] + concatenation_axis_pos);
+
+                iv_res(res_index_handles) = iv_operand(ivars);
+            });
 
             // Move up concatenation_axis_pos for the next operand.
             concatenation_axis_pos = concatenation_axis_pos + v_operand.ub(concatenation_axis);
