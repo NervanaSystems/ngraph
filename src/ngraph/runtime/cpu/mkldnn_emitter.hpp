@@ -328,9 +328,9 @@ namespace ngraph
                     const std::vector<size_t>& deps,
                     size_t conv_index);
 
-                /**
-                 * Convolution + bias backprop for weights and bias
-                 */
+                //
+                // Convolution + bias backprop for weights and bias
+                //
                 void build_convolution_backward_weights_bias(
                     std::vector<mkldnn::primitive*>& mkldnn_primitives,
                     const mkldnn::convolution_backward_weights::desc& bwd_desc,

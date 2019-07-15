@@ -163,6 +163,12 @@ ngraph::runtime::plaidml::Config
         // So to verify that there is a non-zero-length option value, test oval_len
         // To verify that there is no option value, test has_oval
 
+        if (oname_begin == oname_end && !has_oval)
+        {
+            // An empty option; poor style, but advance to the next.
+            continue;
+        }
+
         // Check for verbosity
         if (is_opt("v"))
         {
