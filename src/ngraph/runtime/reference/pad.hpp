@@ -172,7 +172,8 @@ namespace ngraph
                             {
                                 c[i] = static_cast<size_t>(pos + padding_below[i]);
                             }
-                            else{
+                            else
+                            {
                                 pos = -(pos + 1);
                                 ptrdiff_t src_dim = static_cast<ptrdiff_t>(arg0_shape[i]);
                                 if (pos < src_dim)
@@ -181,7 +182,8 @@ namespace ngraph
                                 }
                                 else
                                 {
-                                    c[i] = static_cast<size_t>(padding_below[i] + src_dim + padding_above[i] - pos);
+                                    c[i] = static_cast<size_t>(padding_below[i] + src_dim +
+                                                               padding_above[i] - pos);
                                 }
                             }
                         }

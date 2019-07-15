@@ -3908,8 +3908,7 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_symmetric)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a,
-              test::NDArray<float, 2>({{1, 2, 3}, {4, 5, 6}}).get_vector());
+    copy_data(a, test::NDArray<float, 2>({{1, 2, 3}, {4, 5, 6}}).get_vector());
     auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2112});
     auto result = backend->create_tensor(element::f32, shape_r);
