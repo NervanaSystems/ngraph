@@ -29,6 +29,7 @@ Integer TIMEOUTTIME = "3600"
 // BRANCH parameter is no loner needed
 // TRIGGER_URL parameter is no longer needed
 
+
 // Constants
 JENKINS_DIR = '.'
 
