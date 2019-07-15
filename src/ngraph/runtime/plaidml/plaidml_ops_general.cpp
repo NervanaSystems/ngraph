@@ -183,10 +183,10 @@ void ngraph::runtime::plaidml::ImplConstant::Apply()
 // GetOutputElement pipes one of its N inputs to its output.
 void ngraph::runtime::plaidml::ImplGetOutputElement::Apply()
 {
-    check_inputs_ge(op().get_n() + 1);
+    check_inputs(1);
     check_outputs(1);
 
-    set_output(op_input(op().get_n()));
+    set_output(op_input(0));
 }
 
 // Pad adds interior and exterior padding to a tensor.
