@@ -553,6 +553,10 @@ namespace
 
         for (auto& operand : operands)
         {
+            NGRAPH_CHECK(operand, "Unexpected null operand in ConcatOp");
+            auto operandTy = result->getType().dyn_cast<MemRefType>();
+            NGRAPH_CHECK(operandTy, "Unexpected non-memref operand type");
+
             // Assuming rank = r, and the concatenation axis is A where A<r, we'll be creating
             // loops of this form:
             //
@@ -567,6 +571,7 @@ namespace
             //                  :=
             //        operand[i_0][i_1]...[i_(r-2)][i_(r-1)]
             MemRefView vOperand(operand);
+            NGRAPH_CHECK(vOperand.rank() == rank, "Unexpected rank mismatch");
 
             llvm::SmallVector<ValueHandle, 5> indexVars;
             llvm::SmallVector<ValueHandle*, 5> indexVarPtrs;
