@@ -87,8 +87,7 @@ TEST(control_dependencies, cdep_ops)
         make_shared<ControlDependencyOp>(NodeVector{A}, std::set<std::shared_ptr<Node>>{absn});
 
     auto f = make_shared<Function>(cdop, ParameterVector{A, B});
-    auto nodes = f->get_ordered_ops(true);
-    ASSERT_EQ(nodes.back()->get_argument(0), cdop);
+    test_ordered_ops(f, NodeVector{absn});
 }
 
 TEST(control_dependencies, two_cdep_ops)
@@ -102,8 +101,7 @@ TEST(control_dependencies, two_cdep_ops)
                                                  std::set<std::shared_ptr<Node>>{absn, absn_c});
 
     auto f = make_shared<Function>(cdop, ParameterVector{A, B, C});
-    auto nodes = f->get_ordered_ops(true);
-    ASSERT_EQ(nodes.back()->get_argument(0), cdop);
+    test_ordered_ops(f, NodeVector{absn, absn_c});
 }
 
 TEST(control_dependencies, two_cdep_ops_op_on_top)
@@ -117,8 +115,7 @@ TEST(control_dependencies, two_cdep_ops_op_on_top)
     auto absn_cdop = make_shared<op::Abs>(cdop);
 
     auto f = make_shared<Function>(absn_cdop, ParameterVector{A, B});
-    auto nodes = f->get_ordered_ops(true);
-    ASSERT_EQ(nodes.back()->get_argument(0), absn_cdop);
+    test_ordered_ops(f, NodeVector{absn, absn_b});
 }
 
 TEST(control_dependencies, clone_function_cdop)
@@ -129,6 +126,7 @@ TEST(control_dependencies, clone_function_cdop)
         make_shared<ControlDependencyOp>(NodeVector{A}, std::set<std::shared_ptr<Node>>{absn});
 
     auto f = make_shared<Function>(cdop, ParameterVector{A});
+    test_ordered_ops(f, NodeVector{absn});
     auto clone = ngraph::clone_function(*f.get());
     auto matcher = std::make_shared<pattern::Matcher>(cdop);
     auto cdop_clone = clone->get_results().at(0)->get_argument(0);
@@ -160,6 +158,30 @@ TEST(control_dependencies, clone_function_cdop_abs)
     {
         ASSERT_TRUE(std::dynamic_pointer_cast<op::Abs>(ccdep));
     }
+}
+
+static size_t count_control_dependencies(const shared_ptr<Node>& node,
+                                         const shared_ptr<Node>& dependency)
+{
+    auto& dependencies = node->get_control_dependencies();
+    return count(dependencies.begin(), dependencies.end(), dependency);
+}
+
+TEST(control_dependencies, replace_node)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto MUL_AB = A * B;
+    auto MUL_BA = B * A;
+    auto ADD = A + B;
+    auto SUM = MUL_AB + ADD;
+    ADD->add_control_dependency(MUL_AB);
+    ASSERT_TRUE(1 == count_control_dependencies(ADD, MUL_AB));
+    ASSERT_TRUE(0 == count_control_dependencies(ADD, MUL_BA));
+    replace_node(MUL_AB, MUL_BA);
+    ASSERT_TRUE(0 == count_control_dependencies(ADD, MUL_AB));
+    ASSERT_TRUE(1 == count_control_dependencies(ADD, MUL_BA));
 }
 
 #ifndef NGRAPH_JSON_DISABLE

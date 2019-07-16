@@ -58,7 +58,8 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
                     if (auto goe =
                             dynamic_cast<op::GetOutputElement*>(fop_user->get_raw_pointer_node()))
                     {
-                        if (goe->get_n() == i && !goe->get_output_inputs(0).empty())
+                        Output<Node> goe_output = goe->get_as_output();
+                        if (goe_output.get_index() == i && !goe->get_output_inputs(0).empty())
                         {
                             // Replace GOE users
                             set<descriptor::Input*> goe_users{

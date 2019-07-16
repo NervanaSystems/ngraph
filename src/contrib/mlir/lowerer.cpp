@@ -37,7 +37,9 @@ namespace
 {
     using namespace mlir;
     using namespace mlir::edsc;
+    using namespace mlir::edsc::op;
     using namespace ngraph::runtime;
+    using namespace ngraph::runtime::ngmlir;
 
     class DialectLoweringPass;
 
@@ -57,7 +59,29 @@ namespace
         DialectLoweringPass& m_pass;
     };
 
+// Conversion classes declarations
+#define MLIR_OP(OP)                                                                                \
+    class OP##Conversion : public NGraphOpLowering                                                 \
+    {                                                                                              \
+    public:                                                                                        \
+        explicit OP##Conversion(mlir::MLIRContext* context, DialectLoweringPass& pass)             \
+            : NGraphOpLowering(mlir::OP::getOperationName(), context, pass)                        \
+        {                                                                                          \
+        }                                                                                          \
+                                                                                                   \
+        PatternMatchResult matchAndRewrite(Operation* op,                                          \
+                                           ArrayRef<Value*> operands,                              \
+                                           PatternRewriter& rewriter) const override;              \
+    };
+
 #include "op_lowerers.inc"
+
+    // Helpers
+    template <typename RedOp>
+    void lowerIndexReduction(Operation* op,
+                             ArrayRef<Value*> operands,
+                             PatternRewriter& rewriter,
+                             DialectLoweringPass& m_pass);
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
@@ -82,15 +106,17 @@ namespace
 
         void runOnModule() override;
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
-
-    private:
-        /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
-        void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
+        Value* createTempTensor(Type type, unsigned size, PatternRewriter& rewriter);
 
         mlir::Function* getCallDecl(StringRef name,
                                     ArrayRef<Type> args,
                                     ArrayRef<Type> output,
                                     PatternRewriter& rewriter);
+
+    private:
+        /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
+        void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
+
         void findOutputValues();
         void processFakeInstrs();
         Value* insertMemMgrDef(PatternRewriter* rewriter = nullptr);
@@ -136,8 +162,11 @@ namespace
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
         OwningRewritePatternList& patterns)
     {
-        RewriteListBuilder<NGAddOpConversion, NGDotOpConversion, NGReturnOpConversion>::build(
-            patterns, &getContext(), *this);
+#define MLIR_OP(OP) OP##Conversion,
+#define MLIR_LAST_OP(OP) OP##Conversion
+        RewriteListBuilder<
+#include "op_lowerers.inc"
+            >::build(patterns, &getContext(), *this);
     }
 
     void DialectLoweringPass::findOutputValues()
@@ -206,23 +235,28 @@ namespace
             else
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
-                auto callBackFunc = getCallDecl("__mlir_allocate",
-                                                {rewriter.getIndexType(), rewriter.getIndexType()},
-                                                {m_typeConverter.convertType(tensorType)},
-                                                rewriter);
-
-                auto size = tensorType.getSizeInBytes();
-                SmallVector<mlir::Value*, 4> args = {
-                    insertMemMgrDef(&rewriter), /* pointer to mem manager */
-                    rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(),
-                                                           size)}; /* size to allocate */
-                auto newResult =
-                    rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args)
-                        .getResult(0);
+                auto newResult = createTempTensor(
+                    m_typeConverter.convertType(tensorType), tensorType.getSizeInBytes(), rewriter);
                 newResults.push_back(newResult);
             }
         }
         return newResults;
+    }
+
+    Value*
+        DialectLoweringPass::createTempTensor(Type type, unsigned size, PatternRewriter& rewriter)
+    {
+        auto callBackFunc = getCallDecl("__mlir_allocate",
+                                        {rewriter.getIndexType(), rewriter.getIndexType()},
+                                        {type},
+                                        rewriter);
+        SmallVector<mlir::Value*, 4> args = {
+            insertMemMgrDef(&rewriter), /* pointer to mem manager */
+            rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(),
+                                                   size)}; /* size to allocate */
+        auto newTemp = rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args)
+                           .getResult(0);
+        return newTemp;
     }
 
     void DialectLoweringPass::processFakeInstrs()
@@ -365,6 +399,73 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGArgMaxRedOp)
+    {
+        lowerIndexReduction<mlir::NGArgMaxRedOp>(op, operands, rewriter, m_pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGArgMinRedOp)
+    {
+        lowerIndexReduction<mlir::NGArgMinRedOp>(op, operands, rewriter, m_pass);
+        return matchSuccess();
+    }
+
+    // Relu
+    REWRITER(NGReluOp)
+    {
+        auto loc = cast<NGReluOp>(op).getLoc();
+
+        auto result = m_pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        // Note that builder's current function is still the original function body.
+        // use getBlock to get the new block instead.
+
+        // get new operands
+        Value* lhs = operands[0];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        // Steps
+        auto steps = vLHS.getSteps();
+
+        NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
+        Type elemTy = lhs->getType().dyn_cast<MemRefType>().getElementType();
+        NGRAPH_CHECK(!elemTy.isa<FloatType>(),
+                     "NGReluOp with float element type should not be lowered until MLIR supports "
+                     "lowering !std.CmpF");
+
+        LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+            ValueHandle val = iLHS(ivs);
+            if (auto floatTy = elemTy.dyn_cast<FloatType>())
+            {
+                ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+                iRes(ivs) = intrinsics::select(val > zero, val, zero);
+            }
+            else if (auto intTy = elemTy.dyn_cast<IntegerType>())
+            {
+                ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
+                iRes(ivs) = intrinsics::select(val > zero, val, zero);
+            }
+            else
+            {
+                NGRAPH_CHECK(false, "Unsupported type for Relu");
+            }
+        });
+
+        rewriter.replaceOp(op, {result});
+        return matchSuccess();
+    }
+
     REWRITER(NGDotOp)
     {
         auto dot = cast<NGDotOp>(op);
@@ -412,7 +513,7 @@ namespace
         IndexHandle n_ub(v_lhs.ub(n_dim)), m_ub(v_lhs.ub(m_dim)), k_ub(v_rhs.ub(k_dim));
         int64_t n_step = v_lhs.step(n_dim), m_step = v_lhs.step(m_dim), k_step = v_rhs.step(k_dim);
 
-        // Constants, indexed values and indexes to be used inside the loop nest.
+        // Constants and indexed values to be used inside the loop nest.
         IndexedValue i_res(result), i_lhs(lhs), i_rhs(rhs);
         ValueHandle zero_init(rewriter.create<ConstantOp>(loc, rewriter.getZeroAttr(elem_ty)));
 
@@ -436,6 +537,96 @@ namespace
     }
 
 #undef REWRITER
+
+    template <typename RedOp>
+    void lowerIndexReduction(Operation* op,
+                             ArrayRef<Value*> operands,
+                             PatternRewriter& rewriter,
+                             DialectLoweringPass& m_pass)
+    {
+        static_assert(std::is_same<RedOp, NGArgMinRedOp>() || std::is_same<RedOp, NGArgMaxRedOp>(),
+                      "Template parameter is not supported by lowerIndexReduction");
+
+        RedOp redOp = cast<RedOp>(op);
+        auto loc = redOp.getLoc();
+        auto axesAttr = redOp.axes();
+
+        NGRAPH_CHECK(axesAttr.size() == 1, "Index Reduction op should have one reduction axis");
+        Attribute axisAttr = *axesAttr.begin();
+        unsigned axis = axisAttr.dyn_cast<IntegerAttr>().getInt();
+
+        NGRAPH_CHECK(operands.size() == 1 && operands[0] != nullptr,
+                     "Expected one non-null operand in Index Reduction op");
+
+        // Retrieve/generate Values for operands and result.
+        ScopedContext scope(rewriter, loc);
+        Value* arg = operands[0];
+
+        Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
+
+        // Views
+        MemRefView vRes(result), vArg(arg);
+        // Index Values
+        IndexedValue iRes(result), iArg(arg);
+        // Bounds Index Handles
+        auto resLbs = vRes.getLbs();
+        auto resUbs = vRes.getUbs();
+        auto argLbs = vArg.getLbs();
+        auto argUbs = vArg.getUbs();
+
+        Type resTy = result->getType().cast<MemRefType>().getElementType();
+        // Generate loop nest that initializes result to lower bound of the axis to be reduced.
+        {
+            auto ivs = IndexHandle::makeIndexHandles(vRes.rank());
+            auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+            auto steps = vRes.getSteps();
+            auto initVal = vArg.lb(axis);
+            LoopNestBuilder(pivs, resLbs, resUbs, steps)(
+                [&] { iRes(ivs) = ValueHandle::create<IndexCastOp>(initVal, resTy); });
+        }
+
+        // Generate loop nest that computes the actual index reduction.
+        {
+            auto allIVs = IndexHandle::makeIndexHandles(vArg.rank());
+            auto pAllIVs = IndexHandle::makeIndexHandlePointers(allIVs);
+            auto steps = vArg.getSteps();
+            SmallVector<IndexHandle, 8> nonRedIVs;
+
+            Type resTy = result->getType().cast<MemRefType>().getElementType();
+            NGRAPH_CHECK(resTy.isa<IntegerType>(),
+                         "Expected integer result type in index reduction");
+
+            // iterate over all argument dimensions
+            LoopNestBuilder(pAllIVs, argLbs, argUbs, steps)([&] {
+                // build a list of non-reduction IVs
+                for (auto i = 0; i < vArg.rank(); i++)
+                {
+                    if (i != axis)
+                        nonRedIVs.push_back(allIVs[i]);
+                }
+
+                // Load current min index with integer data type and convert it to index data type.
+                ValueHandle currRedIdx = ValueHandle::create<IndexCastOp>(
+                    (ValueHandle)iRes(nonRedIVs), IndexType::get(resTy.getContext()));
+
+                // Build list of IVs including current min index.
+                auto tempIVs = allIVs;
+                tempIVs[axis] = currRedIdx;
+
+                // Select the min/max value and cast it back to integer type before storing it.
+                ValueHandle newRedIdx =
+                    std::is_same<RedOp, NGArgMinRedOp>()
+                        ? edsc::intrinsics::select(
+                              iArg(allIVs) < iArg(tempIVs), allIVs[axis], currRedIdx)
+                        : edsc::intrinsics::select(
+                              iArg(tempIVs) < iArg(allIVs), allIVs[axis], currRedIdx);
+
+                iRes(nonRedIVs) = ValueHandle::create<IndexCastOp>(newRedIdx, resTy);
+            });
+        }
+
+        rewriter.replaceOp(op, result);
+    }
 }
 
 namespace mlir

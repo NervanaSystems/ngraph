@@ -52,7 +52,7 @@ void ngraph::set_distributed_interface(std::unique_ptr<DistributedInterface> dis
 
 DistributedInterface* ngraph::get_distributed_interface()
 {
-    if (0 == s_distributed_interface)
+    if (nullptr == s_distributed_interface)
     {
 #ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
         set_distributed_interface(std::unique_ptr<DistributedInterface>(
