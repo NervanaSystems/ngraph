@@ -84,10 +84,10 @@ namespace
                              DialectLoweringPass& m_pass);
 
     template <typename OP>
-    void compute_binary_elementwise(Operation* op,
-                                    ArrayRef<Value*> operands,
-                                    PatternRewriter& rewriter,
-                                    DialectLoweringPass& m_pass);
+    void lower_binary_elementwise(Operation* op,
+                                  ArrayRef<Value*> operands,
+                                  PatternRewriter& rewriter,
+                                  DialectLoweringPass& m_pass);
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
@@ -367,49 +367,49 @@ namespace
     // ADD
     REWRITER(NGAddOp)
     {
-        compute_binary_elementwise<mlir::NGAddOp>(op, operands, rewriter, m_pass);
+        lower_binary_elementwise<mlir::NGAddOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
 
     REWRITER(NGSubOp)
     {
-        compute_binary_elementwise<mlir::NGSubOp>(op, operands, rewriter, m_pass);
+        lower_binary_elementwise<mlir::NGSubOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
 
     REWRITER(NGMulOp)
     {
-        compute_binary_elementwise<mlir::NGMulOp>(op, operands, rewriter, m_pass);
+        lower_binary_elementwise<mlir::NGMulOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
 
     REWRITER(NGDivOp)
     {
-        compute_binary_elementwise<mlir::NGDivOp>(op, operands, rewriter, m_pass);
+        lower_binary_elementwise<mlir::NGDivOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
 
     REWRITER(NGGreaterOp)
     {
-        compute_binary_elementwise<mlir::NGGreaterOp>(op, operands, rewriter, m_pass);
+        lower_binary_elementwise<mlir::NGGreaterOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
 
     REWRITER(NGLessOp)
     {
-        compute_binary_elementwise<mlir::NGLessOp>(op, operands, rewriter, m_pass);
+        lower_binary_elementwise<mlir::NGLessOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
 
     REWRITER(NGMaxOp)
     {
-        compute_binary_elementwise<mlir::NGMaxOp>(op, operands, rewriter, m_pass);
+        lower_binary_elementwise<mlir::NGMaxOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
 
     REWRITER(NGMinOp)
     {
-        compute_binary_elementwise<mlir::NGMinOp>(op, operands, rewriter, m_pass);
+        lower_binary_elementwise<mlir::NGMinOp>(op, operands, rewriter, m_pass);
         return matchSuccess();
     }
 
@@ -553,17 +553,14 @@ namespace
 #undef REWRITER
 
     template <typename OP>
-    void compute_binary_elementwise(Operation* op,
-                                    ArrayRef<Value*> operands,
-                                    PatternRewriter& rewriter,
-                                    DialectLoweringPass& m_pass)
+    void lower_binary_elementwise(Operation* op,
+                                  ArrayRef<Value*> operands,
+                                  PatternRewriter& rewriter,
+                                  DialectLoweringPass& m_pass)
     {
         auto loc = cast<OP>(op).getLoc();
         auto result = m_pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result->getType().isa<MemRefType>());
-        // Note that builder's current function is still the original function body.
-        // use getBlock to get the new block instead.
-
         // get new operands
         Value* lhs = operands[0];
         Value* rhs = operands[1];
@@ -581,44 +578,52 @@ namespace
         auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
-        // clang-format off
         LoopNestBuilder(pivs, lbs, ubs, steps)(
             // single stmt body
             [&] {
-                    if (isa<NGAddOp>(op))
-                    {
-                        iRes(ivs) = iLHS(ivs) + iRHS(ivs);
-                    }
-                    else if (isa<NGSubOp>(op))
-                    {
-                        iRes(ivs) = iLHS(ivs) - iRHS(ivs);
-                    }
-                    else if (isa<NGMulOp>(op))
-                    {
-                        iRes(ivs) = iLHS(ivs) * iRHS(ivs);
-                    }
-                    else if (isa<NGDivOp>(op))
-                    {
-                        iRes(ivs) = iLHS(ivs) / iRHS(ivs);
-                    }
-                    else if (isa<NGGreaterOp>(op))
-                    {
-                        iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs));
-                    }
-                    else if (isa<NGLessOp>(op))
-                    {
-                        iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
-                    }
-                    else if (isa<NGMaxOp>(op))
-                    {
-                        iRes(ivs) = edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)), ValueHandle(iLHS(ivs)) , ValueHandle(iRHS(ivs)));
-                    }
-                    else if (isa<NGMinOp>(op))
-                    {
-                        iRes(ivs) = edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)), ValueHandle(iLHS(ivs)), ValueHandle(iRHS(ivs)));
-                    }
-                });
-        // clang-format on
+                if (isa<NGAddOp>(op))
+                {
+                    iRes(ivs) = iLHS(ivs) + iRHS(ivs);
+                }
+                else if (isa<NGSubOp>(op))
+                {
+                    iRes(ivs) = iLHS(ivs) - iRHS(ivs);
+                }
+                else if (isa<NGMulOp>(op))
+                {
+                    iRes(ivs) = iLHS(ivs) * iRHS(ivs);
+                }
+                else if (isa<NGDivOp>(op))
+                {
+                    iRes(ivs) = iLHS(ivs) / iRHS(ivs);
+                }
+                else if (isa<NGGreaterOp>(op))
+                {
+                    iRes(ivs) = ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs));
+                }
+                else if (isa<NGLessOp>(op))
+                {
+                    iRes(ivs) = ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs));
+                }
+                else if (isa<NGMaxOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) > ValueHandle(iRHS(ivs)),
+                                                 ValueHandle(iLHS(ivs)),
+                                                 ValueHandle(iRHS(ivs)));
+                }
+                else if (isa<NGMinOp>(op))
+                {
+                    iRes(ivs) =
+                        edsc::intrinsics::select(ValueHandle(iLHS(ivs)) < ValueHandle(iRHS(ivs)),
+                                                 ValueHandle(iLHS(ivs)),
+                                                 ValueHandle(iRHS(ivs)));
+                }
+                else
+                {
+                    NGRAPH_CHECK(false, "Unsupported op");
+                }
+            });
         rewriter.replaceOp(op, {result});
     }
 
