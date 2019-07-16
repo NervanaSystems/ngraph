@@ -316,6 +316,8 @@ set (SRC
     op/fused/elu.hpp
     op/fused/fake_quantize.cpp
     op/fused/fake_quantize.hpp
+    op/fused/gelu.cpp
+    op/fused/gelu.hpp
     op/fused/gemm.cpp
     op/fused/gemm.hpp
     op/fused/grn.cpp

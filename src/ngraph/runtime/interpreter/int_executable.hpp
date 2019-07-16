@@ -399,12 +399,9 @@ private:
         }
         case OP_TYPEID::GetOutputElement:
         {
-            const op::GetOutputElement* get_output_element =
-                static_cast<const op::GetOutputElement*>(&node);
-            size_t n = get_output_element->get_n();
             size_t element_count = shape_size(node.get_output_shape(0));
             size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(out[0]->get_data_ptr<T>(), args[n]->get_data_ptr<T>(), num_bytes);
+            std::memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), num_bytes);
             break;
         }
         case OP_TYPEID::BatchMatMul:

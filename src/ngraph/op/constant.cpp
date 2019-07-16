@@ -328,6 +328,8 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
     return rc;
 }
 
+const string op::ScalarConstantLikeBase::type_name{"ScalarConstantLike"};
+
 shared_ptr<op::Constant> op::ScalarConstantLikeBase::as_constant() const
 {
     return std::make_shared<op::Constant>(m_element_type, m_shape, m_data->get_ptr());
