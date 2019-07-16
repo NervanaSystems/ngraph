@@ -70,8 +70,6 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     constructor_validate_and_infer_types();
     set_output_size(m_output_nodes.size());
 
-    auto ref = node_list.at(0);
-
     for (size_t i = 0; i < outputs.size(); ++i)
     {
         auto& o = outputs.at(i);
