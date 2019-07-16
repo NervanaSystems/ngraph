@@ -253,7 +253,7 @@ namespace ngraph
         /// Remove this node as a dependency from all dependent nodes
         void clear_control_dependents();
 
-        /// This node aborbs the control dependencies of source_node
+        /// This node absorbs the control dependencies of source_node
         void add_node_control_dependencies(std::shared_ptr<Node> source_node);
 
         /// This node becomes a dependent of every node dependent on source_node
