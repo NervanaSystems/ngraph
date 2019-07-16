@@ -14,30 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "util/type_prop.hpp"
 
-#include "ngraph/pass/graph_rewrite.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+TEST(type_prop, leaky_relu)
 {
-    namespace runtime
-    {
-        namespace plaidml
-        {
-            namespace pass
-            {
-                class PrefixReshapeElimination;
-            }
-        }
-    }
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto alpha = make_shared<op::Parameter>(element::f32, Shape{});
+    auto leaky_relu_func = make_shared<op::LeakyRelu>(data, alpha);
+    EXPECT_EQ(leaky_relu_func->get_element_type(), element::f32);
+    EXPECT_EQ(leaky_relu_func->get_shape(), (Shape{3, 6}));
 }
-
-// A pass that matches reshapes whose output shapes are the same as
-// their input shape modulo leading size-1 axes, and replaces them with
-// ImplicitBroadcast operations (which do the same thing as a passthrough).
-class ngraph::runtime::plaidml::pass::PrefixReshapeElimination final
-    : public ngraph::pass::GraphRewrite
-{
-public:
-    PrefixReshapeElimination();
-};
