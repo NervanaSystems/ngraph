@@ -539,63 +539,63 @@ namespace
         // Create Value for result, and extract type info.
         Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
-        auto result_ty = result->getType().dyn_cast<MemRefType>();
-        NGRAPH_CHECK(result_ty, "Unexpected non-memref result type");
+        auto resultTy = result->getType().dyn_cast<MemRefType>();
+        NGRAPH_CHECK(resultTy, "Unexpected non-memref result type");
 
         // Create view to write into result.
-        MemRefView v_res(result);
-        auto rank = v_res.rank();
+        MemRefView vRes(result);
+        auto rank = vRes.rank();
 
         // For each operand, generate a separate loop to copy into the target slice of "result".
         // We'll keep track of the slice offsets via concatenation_axis_pos.
-        auto concatenation_axis = concat.concatenation_axis().getSExtValue();
-        IndexHandle concatenation_axis_pos(index_t(0));
+        auto concatenationAxis = concat.concatenation_axis().getSExtValue();
+        IndexHandle concatenationAxisPos(index_t(0));
 
         for (auto& operand : operands)
         {
             // Assuming rank = r, and the concatenation axis is A where A<r, we'll be creating
             // loops of this form:
             //
-            //   for i_0 := 0 to operand_dim[0]:
-            //    for i_1 := 0 to operand_dim[1]:
+            //   for i_0 := 0 to operand.dims[0]:
+            //    for i_1 := 0 to operand.dims[1]:
             //     ...
-            //      for i_(r-2) := 0 to operand_dim[r-2]:
-            //       for i_(r-1) := 0 to operand_dim[r-1]:
+            //      for i_(r-2) := 0 to operand.dims[r-2]:
+            //       for i_(r-1) := 0 to operand.dims[r-1]:
             //        result[i_0][i_1]...
-            //              [i_(A-1)][i_A + concatenation_axis_pos][i_(A+1)]...
+            //              [i_(A-1)][i_A + concatenationAxisPos][i_(A+1)]...
             //              [i_(r-2)][i_(r-1)]
             //                  :=
             //        operand[i_0][i_1]...[i_(r-2)][i_(r-1)]
-            MemRefView v_operand(operand);
+            MemRefView vOperand(operand);
 
-            llvm::SmallVector<ValueHandle, 5> ivars;
-            llvm::SmallVector<ValueHandle*, 5> ivar_ptrs;
-            llvm::SmallVector<ValueHandle, 5> ivar_lbs;
-            llvm::SmallVector<ValueHandle, 5> ivar_ubs;
-            llvm::SmallVector<int64_t, 5> ivar_steps;
+            llvm::SmallVector<ValueHandle, 5> indexVars;
+            llvm::SmallVector<ValueHandle*, 5> indexVarPtrs;
+            llvm::SmallVector<ValueHandle, 5> indexVarLbs;
+            llvm::SmallVector<ValueHandle, 5> indexVarUbs;
+            llvm::SmallVector<int64_t, 5> indexVarSteps;
             for (int i = 0; i < rank; i++)
             {
-                ivars.push_back(IndexHandle());
-                ivar_ptrs.push_back(&(ivars.back()));
-                ivar_lbs.push_back(v_operand.lb(i));
-                ivar_ubs.push_back(v_operand.ub(i));
-                ivar_steps.push_back(v_operand.step(i));
+                indexVars.push_back(IndexHandle());
+                indexVarPtrs.push_back(&(indexVars.back()));
+                indexVarLbs.push_back(vOperand.lb(i));
+                indexVarUbs.push_back(vOperand.ub(i));
+                indexVarSteps.push_back(vOperand.step(i));
             }
 
-            LoopNestBuilder(ivar_ptrs, ivar_lbs, ivar_ubs, ivar_steps)([&] {
-                IndexedValue iv_res(result);
-                IndexedValue iv_operand(operand);
+            LoopNestBuilder(indexVarPtrs, indexVarLbs, indexVarUbs, indexVarSteps)([&] {
+                IndexedValue ivRes(result);
+                IndexedValue ivOperand(operand);
 
                 // On the LHS of the assignment, adjust the index for the concatenation axis.
-                llvm::SmallVector<ValueHandle, 5> res_index_handles = ivars;
-                res_index_handles[concatenation_axis] =
-                    IndexHandle(res_index_handles[concatenation_axis] + concatenation_axis_pos);
+                llvm::SmallVector<ValueHandle, 5> resIndexHandles = indexVars;
+                resIndexHandles[concatenationAxis] =
+                    IndexHandle(resIndexHandles[concatenationAxis] + concatenationAxisPos);
 
-                iv_res(res_index_handles) = iv_operand(ivars);
+                ivRes(resIndexHandles) = ivOperand(indexVars);
             });
 
             // Move up concatenation_axis_pos for the next operand.
-            concatenation_axis_pos = concatenation_axis_pos + v_operand.ub(concatenation_axis);
+            concatenationAxisPos = concatenationAxisPos + vOperand.ub(concatenationAxis);
         }
 
         rewriter.replaceOp(op, {result});
