@@ -22,7 +22,7 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
+    Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
     GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
     Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
     Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
@@ -200,6 +200,18 @@ def reshape(node, output_shape, input_order=None, name=None):
     if input_order is None:
         input_order = list(range(len(node.shape)))
     return Reshape(node, AxisVector(input_order), Shape(output_shape))
+
+
+@nameable_op
+def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Perform elu operation on data node element-wise with the specified alpha parameter.
+
+    :param data: One of: input node, array or scalar.
+    :param alpha: One of: input node or scalar.
+    :param name: The optional ouptut node name.
+    :return: The new node performing elu operation on its input data element-wise.
+    """
+    return Elu(data, alpha)
 
 
 @unary_op

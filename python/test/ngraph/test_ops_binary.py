@@ -184,3 +184,22 @@ def test_binary_operators_with_scalar(operator, numpy_function):
     result = computation(value_a)
     expected = numpy_function(value_a, value_b)
     assert np.allclose(result, expected)
+
+
+def test_elu_operator_broadcast():
+    runtime = get_runtime()
+
+    data_shape = [2, 2]
+    alpha_shape = [1]
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    parameter_alpha = ng.parameter(alpha_shape, name='Alpha', dtype=np.float32)
+
+    model = ng.elu(parameter_data, parameter_alpha)
+    computation = runtime.computation(model, parameter_data, parameter_alpha)
+
+    value_data = np.array([[-5, 1], [-2, 3]], dtype=np.float32)
+    value_alpha = np.array([3], dtype=np.float32)
+
+    result = computation(value_data, value_alpha)
+    expected = np.array([[-2.9797862, 1.], [-2.5939941, 3.]], dtype=np.float32)
+    assert np.allclose(result, expected)
