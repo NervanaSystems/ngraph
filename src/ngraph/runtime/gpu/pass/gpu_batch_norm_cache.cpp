@@ -46,7 +46,7 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
                 if (auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(arg))
                 {
                     if (auto bn = std::dynamic_pointer_cast<op::BatchNormTraining>(
-                            goe->get_arguments().at(0)))
+                            goe->input(0).get_source_output().get_node_shared_ptr()))
                     {
                         goes.push_back(goe);
                     }
@@ -57,7 +57,7 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
             if (goes.size())
             {
                 if (auto target = std::dynamic_pointer_cast<op::BatchNormTraining>(
-                        goes.front()->get_arguments().at(0)))
+                        goes.front()->input(0).get_source_output().get_node_shared_ptr()))
                 {
                     auto replacement = std::make_shared<op::gpu::BatchNormTrainingWithStats>(
                         target->get_eps_value(),
