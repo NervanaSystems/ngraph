@@ -25,6 +25,7 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/interpreter/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -107,6 +108,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         if (get_backend_constructor_pointer)
         {
             backend = get_backend_constructor_pointer()->create(config);
+            register_backend(type, get_backend_constructor_pointer());
         }
         else
         {
@@ -125,26 +127,6 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     return backend;
 }
 
-// This doodad finds the full path of the containing shared library
-static string find_my_file()
-{
-#ifdef _WIN32
-    HMODULE hModule = GetModuleHandleW(L"ngraph.dll");
-    WCHAR wpath[MAX_PATH];
-    GetModuleFileNameW(hModule, wpath, MAX_PATH);
-    wstring ws(wpath);
-    string path(ws.begin(), ws.end());
-    replace(path.begin(), path.end(), '\\', '/');
-    path = file_util::get_directory(path);
-    path += "/";
-    return path;
-#else
-    Dl_info dl_info;
-    dladdr(reinterpret_cast<void*>(find_my_file), &dl_info);
-    return dl_info.dli_fname;
-#endif
-}
-
 DL_HANDLE runtime::BackendManager::open_shared_library(string type)
 {
     string lib_prefix = SHARED_LIB_PREFIX;
@@ -160,7 +142,8 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     }
 
     string library_name = lib_prefix + to_lower(type) + "_backend" + lib_suffix;
-    string my_directory = file_util::get_directory(find_my_file());
+    string my_directory =
+        file_util::get_directory(Backend::get_backend_shared_library_search_directory());
     string library_path = file_util::path_join(my_directory, library_name);
     string error;
 #ifdef _WIN32
@@ -185,7 +168,8 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
 map<string, string> runtime::BackendManager::get_registered_device_map()
 {
     map<string, string> rc;
-    string my_directory = file_util::get_directory(find_my_file());
+    string my_directory =
+        file_util::get_directory(Backend::get_backend_shared_library_search_directory());
     vector<string> backend_list;
 
     auto f = [&](const string& file, bool is_dir) {
