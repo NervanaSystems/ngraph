@@ -250,10 +250,8 @@ namespace
         
         NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
 
-        ArrayRef<int64_t> shape = memRefType.getShape();
         Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
-        
-        
+
         // TODO:
         // Enable dynamic memref allocation via call-back to nGraph allocator
         // We should create a list of Values representing each dynamic dim
@@ -261,19 +259,7 @@ namespace
         // E.g. If lowering concat, Value for dynamic concat axis will be the sum of input dims. 
         // The lowerer will generate code to compute the dims. 
         // This is better be done via std.AllocOp but we need to make it hookable to nGraph allocator call-back.
-        
-        #if 0
-        auto callBackFunc = getCallDecl("__mlir_allocate",
-                                    {rewriter.getIndexType(), rewriter.getIndexType()},
-                                    {type},
-                                    rewriter);
-        SmallVector<mlir::Value*, 4> args = {
-            insertMemMgrDef(&rewriter), /* pointer to mem manager */
-            rewriter.create<mlir::ConstantIndexOp>(rewriter.getUnknownLoc(),
-                                               size)}; /* size to allocate */
-        auto newTemp = rewriter.create<mlir::CallOp>(rewriter.getUnknownLoc(), callBackFunc, args)
-                       .getResult(0);
-        #endif
+
         return alloc;
     }
 
