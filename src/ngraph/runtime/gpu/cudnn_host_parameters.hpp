@@ -61,6 +61,7 @@ namespace ngraph
                     case CUDNN_DATA_HALF:
                     case CUDNN_DATA_INT8x4:
                     case CUDNN_DATA_UINT8:
+                    case CUDNN_DATA_UINT8x4:
                     default:
                         throw std::runtime_error(
                             "Encountered unhandled cudnnDataType_t during compilation.");
