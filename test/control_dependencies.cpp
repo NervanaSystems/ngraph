@@ -160,6 +160,30 @@ TEST(control_dependencies, clone_function_cdop_abs)
     }
 }
 
+static size_t count_control_dependencies(const shared_ptr<Node>& node,
+                                         const shared_ptr<Node>& dependency)
+{
+    auto& dependencies = node->get_control_dependencies();
+    return count(dependencies.begin(), dependencies.end(), dependency);
+}
+
+TEST(control_dependencies, replace_node)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto MUL_AB = A * B;
+    auto MUL_BA = B * A;
+    auto ADD = A + B;
+    auto SUM = MUL_AB + ADD;
+    ADD->add_control_dependency(MUL_AB);
+    ASSERT_TRUE(1 == count_control_dependencies(ADD, MUL_AB));
+    ASSERT_TRUE(0 == count_control_dependencies(ADD, MUL_BA));
+    replace_node(MUL_AB, MUL_BA);
+    ASSERT_TRUE(0 == count_control_dependencies(ADD, MUL_AB));
+    ASSERT_TRUE(1 == count_control_dependencies(ADD, MUL_BA));
+}
+
 #ifndef NGRAPH_JSON_DISABLE
 TEST(control_dependencies, serialize_cdop)
 {
