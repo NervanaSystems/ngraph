@@ -239,7 +239,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
             auto& out_desc = output_descs[0];
 
             // 'replace_output' invalidates iterator of the original container. Use a copy instead.
-            const std::set<descriptor::Input*> input_descs = out_desc.get_inputs();
+            const std::vector<descriptor::Input*> input_descs = out_desc.get_inputs();
 
             for (descriptor::Input* in_desc : input_descs)
             {
