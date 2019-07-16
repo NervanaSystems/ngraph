@@ -207,7 +207,9 @@ namespace ngraph
         // TODO(amprocte): should this be protected?
         void set_output_type(size_t i,
                              const element::Type& element_type,
-                             const PartialShape& pshape);
+                             const PartialShape& pshape,
+                             bool is_valid = true,
+                             const std::string& invalidity_explanation = "");
 
         bool is_parameter() const;
         virtual bool is_output() const;

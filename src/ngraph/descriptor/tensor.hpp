@@ -51,11 +51,14 @@ namespace ngraph
                    size_t node_output_number);
 
             const std::string& get_name() const;
-            void set_tensor_type(const element::Type& element_type, const PartialShape& pshape);
+            void set_tensor_type(const element::Type& element_type,
+                                 const PartialShape& pshape,
+                                 bool is_valid = true,
+                                 const std::string& invalidity_explanation = "");
 
-            const element::Type& get_element_type() const { return m_element_type; }
+            const element::Type& get_element_type() const;
             const Shape& get_shape() const;
-            const PartialShape& get_partial_shape() const { return m_partial_shape; }
+            const PartialShape& get_partial_shape() const;
             const std::shared_ptr<layout::TensorLayout>& get_tensor_layout() const
             {
                 return m_tensor_layout;
@@ -67,6 +70,10 @@ namespace ngraph
             size_t get_pool_offset() const;
 
             size_t size() const;
+
+            bool is_valid() const;
+
+            const std::string& get_invalidity_explanation() const;
 
         protected:
             element::Type m_element_type;
@@ -83,6 +90,10 @@ namespace ngraph
             std::string m_name;
             std::shared_ptr<layout::TensorLayout> m_tensor_layout;
             size_t m_pool_offset{0};
+
+        private:
+            bool m_is_valid;
+            std::string m_invalidity_explanation;
         };
 
         std::ostream& operator<<(std::ostream&, const ngraph::descriptor::Tensor&);

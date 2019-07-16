@@ -68,8 +68,8 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {
-    constructor_validate_and_infer_types();
     set_output_size(m_output_nodes.size());
+    constructor_validate_and_infer_types();
 
     auto ref = node_list.at(0);
     for (auto n : node_list)

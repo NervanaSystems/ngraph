@@ -31,6 +31,7 @@ ngraph::op::BatchNormTraining::BatchNormTraining(Output<ngraph::Node> input,
     : Op({gamma, beta, input})
     , m_epsilon(epsilon)
 {
+    set_output_size(3);
     constructor_validate_and_infer_types();
 }
 
@@ -39,10 +40,8 @@ ngraph::op::BatchNormTraining::BatchNormTraining(double eps,
                                                  Output<ngraph::Node> gamma,
                                                  Output<ngraph::Node> beta,
                                                  Output<ngraph::Node> input)
-    : Op({gamma, beta, input})
-    , m_epsilon(eps)
+    : BatchNormTraining(input, gamma, beta, eps)
 {
-    constructor_validate_and_infer_types();
 }
 
 void ngraph::op::BatchNormTraining::validate_and_infer_types()
@@ -51,7 +50,6 @@ void ngraph::op::BatchNormTraining::validate_and_infer_types()
     PartialShape result_batch_shape;
     PartialShape result_channel_shape;
 
-    set_output_size(3);
     std::tie(result_et, result_batch_shape, result_channel_shape) =
         infer_batch_norm_forward(this,
                                  get_input_element_type(INPUT_DATA),
@@ -113,6 +111,7 @@ ngraph::op::BatchNormInference::BatchNormInference(Output<ngraph::Node> input,
     : Op({gamma, beta, input, mean, variance})
     , m_epsilon(epsilon)
 {
+    set_output_size(1);
     constructor_validate_and_infer_types();
 }
 
@@ -123,9 +122,9 @@ ngraph::op::BatchNormInference::BatchNormInference(double eps,
                                                    Output<ngraph::Node> input,
                                                    Output<ngraph::Node> mean,
                                                    Output<ngraph::Node> variance)
-    : Op({gamma, beta, input, mean, variance})
-    , m_epsilon(eps)
+    : BatchNormInference(input, gamma, beta, mean, variance, eps)
 {
+    set_output_size(1);
     constructor_validate_and_infer_types();
 }
 
@@ -135,7 +134,6 @@ void ngraph::op::BatchNormInference::validate_and_infer_types()
     PartialShape result_batch_shape;
     PartialShape result_channel_shape; // unused here
 
-    set_output_size(1);
     std::tie(result_et, result_batch_shape, result_channel_shape) =
         infer_batch_norm_forward(this,
                                  get_input_element_type(INPUT_DATA),

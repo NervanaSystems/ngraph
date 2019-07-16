@@ -32,6 +32,7 @@ op::Quantize::Quantize(const shared_ptr<Node>& input,
     , m_axes(axes)
     , m_round_mode(round_mode)
 {
+    set_output_size(1);
     constructor_validate_and_infer_types();
 }
 
@@ -111,8 +112,6 @@ void op::Quantize::validate_and_infer_types()
                           "quantization axes (",
                           m_axes.size(),
                           ")");
-
-    set_output_size(1);
 
     if (input_shape.rank().is_static() && scale_zero_point_shape.rank().is_static())
     {

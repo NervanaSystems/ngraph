@@ -40,6 +40,8 @@ op::util::FusedOp::FusedOp(const std::string& node_type, const NodeVector& args)
 {
 }
 
+// TODO(amprocte): With the changes for late validation, we'll need to set_output_size before this
+// is invoked.
 void op::util::FusedOp::validate_and_infer_types()
 {
     pre_validate_and_infer_types();

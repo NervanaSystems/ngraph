@@ -192,7 +192,17 @@ void Node::set_argument(size_t position, const Output<Node>& argument)
 void Node::constructor_validate_and_infer_types()
 {
 #ifdef IN_TRANSITION
-    validate_and_infer_types();
+    try
+    {
+        validate_and_infer_types();
+    }
+    catch (const NodeValidationFailure& e)
+    {
+        for (size_t i = 0; i < get_output_size(); i++)
+        {
+            set_output_type(i, element::dynamic, PartialShape::dynamic(), false, e.what());
+        }
+    }
 #endif
 }
 
@@ -228,9 +238,14 @@ void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
     m_inputs.at(i).m_is_relevant_to_value = relevant;
 }
 
-void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
+void Node::set_output_type(size_t i,
+                           const element::Type& element_type,
+                           const PartialShape& pshape,
+                           bool is_valid,
+                           const std::string& invalidity_explanation)
 {
-    get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
+    get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(
+        element_type, pshape, is_valid, invalidity_explanation);
 }
 
 std::deque<descriptor::Output>& Node::get_outputs()

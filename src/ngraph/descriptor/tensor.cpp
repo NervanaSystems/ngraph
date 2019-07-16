@@ -28,6 +28,8 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
     , m_shape(pshape.is_static() ? pshape.to_shape() : Shape{})
     , m_partial_shape(pshape)
     , m_name(name)
+    , m_is_valid(true)
+    , m_invalidity_explanation("")
 {
 }
 
@@ -40,29 +42,55 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
     , m_partial_shape(pshape)
     , m_node(node)
     , m_node_output_number(node_output_number)
+    , m_is_valid(true)
+    , m_invalidity_explanation("")
 {
 }
 
 void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
-                                         const PartialShape& pshape)
+                                         const PartialShape& pshape,
+                                         bool is_valid,
+                                         const std::string& invalidity_explanation)
 {
-    NGRAPH_CHECK(pshape.all_non_negative(),
-                 "set_tensor_type called on a PartialShape containing negative dimensions: ",
-                 pshape);
-    if (pshape.is_static())
+    if (is_valid)
     {
-        m_shape = pshape.to_shape();
+        NGRAPH_CHECK(pshape.all_non_negative(),
+                     "set_tensor_type called on a PartialShape containing negative dimensions: ",
+                     pshape);
+        if (pshape.is_static())
+        {
+            m_shape = pshape.to_shape();
+        }
+        else
+        {
+            m_shape = Shape{};
+        }
+        m_partial_shape = pshape;
+        m_element_type = element_type;
     }
     else
     {
-        m_shape = Shape{};
+        m_partial_shape = PartialShape::dynamic();
+        m_element_type = element::dynamic;
     }
-    m_partial_shape = pshape;
-    m_element_type = element_type;
+
+    m_is_valid = is_valid;
+    m_invalidity_explanation = "";
+}
+
+const element::Type& descriptor::Tensor::get_element_type() const
+{
+    NGRAPH_CHECK(m_is_valid,
+                 "get_element_type() called on an invalid node. Original validation error: ",
+                 m_invalidity_explanation);
+    return m_element_type;
 }
 
 const Shape& descriptor::Tensor::get_shape() const
 {
+    NGRAPH_CHECK(m_is_valid,
+                 "get_shape() called on an invalid node. Original validation error: ",
+                 m_invalidity_explanation);
     if (m_partial_shape.is_static())
     {
         return m_shape;
@@ -72,6 +100,14 @@ const Shape& descriptor::Tensor::get_shape() const
         throw std::invalid_argument(
             "get_shape was called on a descriptor::Tensor with dynamic shape");
     }
+}
+
+const PartialShape& descriptor::Tensor::get_partial_shape() const
+{
+    NGRAPH_CHECK(m_is_valid,
+                 "get_partial_shape() called on an invalid node. Original validation error: ",
+                 m_invalidity_explanation);
+    return m_partial_shape;
 }
 
 void descriptor::Tensor::set_pool_offset(size_t offset)
@@ -94,6 +130,16 @@ size_t descriptor::Tensor::size() const
     {
         return shape_size(get_shape()) * m_element_type.size();
     }
+}
+
+bool descriptor::Tensor::is_valid() const
+{
+    return m_is_valid;
+}
+
+const std::string& descriptor::Tensor::get_invalidity_explanation() const
+{
+    return m_invalidity_explanation;
 }
 
 void descriptor::Tensor::set_tensor_layout(

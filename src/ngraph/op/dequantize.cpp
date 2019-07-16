@@ -32,6 +32,7 @@ op::Dequantize::Dequantize(const Output<Node>& input,
     , m_type(type)
     , m_axes(axes)
 {
+    set_output_size(1);
     constructor_validate_and_infer_types();
 }
 
@@ -111,8 +112,6 @@ void op::Dequantize::validate_and_infer_types()
                           "quantization axes (",
                           m_axes.size(),
                           ")");
-
-    set_output_size(1);
 
     if (input_shape.rank().is_static() && scale_zero_point_shape.rank().is_static())
     {
