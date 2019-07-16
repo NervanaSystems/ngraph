@@ -587,9 +587,13 @@ namespace
                 IndexedValue ivOperand(operand);
 
                 // On the LHS of the assignment, adjust the index for the concatenation axis.
-                llvm::SmallVector<ValueHandle, 5> resIndexHandles = indexVars;
-                resIndexHandles[concatenationAxis] =
-                    IndexHandle(resIndexHandles[concatenationAxis] + concatenationAxisPos);
+                llvm::SmallVector<ValueHandle, 5> resIndexHandles;
+                for (int i = 0; i < rank; i++)
+                {
+                    resIndexHandles.push_back(i == concatenationAxis
+                                                  ? indexVars[i] + concatenationAxisPos
+                                                  : indexVars[i]);
+                }
 
                 ivRes(resIndexHandles) = ivOperand(indexVars);
             });
