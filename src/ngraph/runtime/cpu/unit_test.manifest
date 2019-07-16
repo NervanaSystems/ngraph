@@ -8,7 +8,5 @@ sum_stable_acc_double
 max_3d_to_scalar_int32
 
 # Not implemented
-erf
-zero_sized_erf
 send_recv
 send_recv_ring

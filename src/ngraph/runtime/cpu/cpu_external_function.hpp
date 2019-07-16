@@ -44,6 +44,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+#include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
@@ -61,6 +62,7 @@ namespace ngraph
             class CPU_Emitter;
             class CPU_CallFrame;
             class CPU_Debugger;
+            class CPU_DebugTracer;
 
 #if !defined(NGRAPH_DEX_ONLY)
 
@@ -72,18 +74,40 @@ namespace ngraph
 
             using OpMap = std::unordered_map<std::type_index, OpFunction>;
 #endif
+            struct TensorTracerAttributes
+            {
+                size_t m_number_of_elements;
+                ngraph::Shape m_t_shape;
+                element::Type m_type_of_element;
+
+                TensorTracerAttributes(const size_t size,
+                                       const ngraph::Shape& shape,
+                                       const element::Type& type)
+                    : m_number_of_elements(size)
+                    , m_t_shape(shape)
+                    , m_type_of_element(type)
+                {
+                }
+            };
 
             struct OpAttributes
             {
                 std::string Description;
                 std::vector<std::string> Outputs;
                 std::vector<std::string> Inputs;
+                std::vector<TensorTracerAttributes> m_outputs_tensor_attrs;
+                std::vector<TensorTracerAttributes> m_inputs_tensor_attrs;
+
                 OpAttributes(const std::string& desc,
                              const std::vector<std::string>& outputs,
-                             const std::vector<std::string>& inputs)
+                             const std::vector<std::string>& inputs,
+                             const std::vector<TensorTracerAttributes>& out_t_attrs,
+                             const std::vector<TensorTracerAttributes>& in_t_attrs)
                     : Description(desc)
                     , Outputs(outputs)
                     , Inputs(inputs)
+                    , m_outputs_tensor_attrs(out_t_attrs)
+                    , m_inputs_tensor_attrs(in_t_attrs)
                 {
                 }
             };
@@ -187,6 +211,10 @@ namespace ngraph
 
                 std::vector<ngraph::State*> m_states;
 
+                void dump_one_kernel(CPU_DebugTracer& debug_tracer,
+                                     CPURuntimeContext* ctx,
+                                     bool is_it_input);
+
             private:
                 // Register passes that are common to codegen and DEX
                 void register_common_passes(ngraph::pass::Manager& pass_manager,
@@ -212,6 +240,7 @@ namespace ngraph
                     const Node&,
                     const Node&,
                     const std::unordered_map<const Node*, std::string>& node_cache);
+
                 std::string emit_op_as_function(const Node&, const std::string& function_name);
                 std::string strip_comments(const std::string&);
 

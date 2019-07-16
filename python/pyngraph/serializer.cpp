@@ -25,10 +25,6 @@ namespace py = pybind11;
 
 void regclass_pyngraph_Serializer(py::module m)
 {
-    /*
-    std::string serialize(std::shared_ptr<ngraph::Function>,
-                          size_t indent = 0);
-    */
     m.def("serialize",
           (std::string(*)(std::shared_ptr<ngraph::Function>, size_t)) & ngraph::serialize,
           py::arg(),
