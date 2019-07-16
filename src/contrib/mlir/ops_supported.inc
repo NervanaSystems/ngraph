@@ -4,6 +4,9 @@
 #endif
 
 MLIR_OP(Add)
+MLIR_OP(ArgMin)
+MLIR_OP(ArgMax)
+MLIR_OP(Relu)
 MLIR_OP(Dot)
 // Add new supported ops here
 

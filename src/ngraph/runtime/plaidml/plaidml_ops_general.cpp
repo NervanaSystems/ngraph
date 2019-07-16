@@ -183,10 +183,10 @@ void ngraph::runtime::plaidml::ImplConstant::Apply()
 // GetOutputElement pipes one of its N inputs to its output.
 void ngraph::runtime::plaidml::ImplGetOutputElement::Apply()
 {
-    check_inputs_ge(op().get_n() + 1);
+    check_inputs(1);
     check_outputs(1);
 
-    set_output(op_input(op().get_n()));
+    set_output(op_input(0));
 }
 
 // Pad adds interior and exterior padding to a tensor.
@@ -212,10 +212,6 @@ void ngraph::runtime::plaidml::ImplPad::Apply()
     NGRAPH_DEBUG << "Pad input dims: " << op().get_input_shape(0);
     NGRAPH_DEBUG << "Pad output dims: " << op().get_shape();
 
-    // FIXME: Compatibility hack inserted by amprocte, now that nGraph's Pad op no longer supports
-    // interior padding.
-    Shape padding_interior(op().get_padding_below().size(), 0);
-
     auto dim_limit = op().get_shape().size();
 
     bool any_zero_dims = false;
@@ -230,16 +226,17 @@ void ngraph::runtime::plaidml::ImplPad::Apply()
 
     auto out_dsize = [&](std::size_t idx) {
         std::ostringstream s;
-        std::size_t total_pad = op().get_padding_below().at(idx) + op().get_padding_above().at(idx);
-        std::size_t in_dsize = op().get_input_shape(0).at(idx);
-        if (in_dsize)
-        {
-            total_pad += padding_interior.at(idx) * (in_dsize - 1);
-        }
+        std::ptrdiff_t total_pad =
+            op().get_padding_below().at(idx) + op().get_padding_above().at(idx);
+        std::ptrdiff_t in_dsize = op().get_input_shape(0).at(idx);
         if (!any_zero_dims)
         {
             s << "DI" << idx + 1;
-            if (total_pad)
+            if (total_pad < 0)
+            {
+                s << " - " << (0 - total_pad);
+            }
+            else if (0 < total_pad)
             {
                 s << " + " << total_pad;
             }
@@ -258,15 +255,7 @@ void ngraph::runtime::plaidml::ImplPad::Apply()
         {
             s << below << " + ";
         }
-        auto interior = padding_interior.at(idx) + 1;
-        if (interior != 1)
-        {
-            s << "(d" << idx + 1 << " * " << interior << ")";
-        }
-        else
-        {
-            s << "d" << idx + 1;
-        }
+        s << "d" << idx + 1;
         return s.str();
     };
 

@@ -17,7 +17,6 @@ We are pleased to announce the release of version |version|-doc.
 Core updates for |version|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 Latest doc updates
 ~~~~~~~~~~~~~~~~~~
 
@@ -41,10 +40,14 @@ Changelog on Previous Releases
 + Elementwise divide defaults to Python semantics
 + GenerateMask seed optional
 + Document new debug tool
++ Graph visualization improvements
 + Note deprecation of MXNet's ``ngraph-mxnet`` PyPI
 + Note default change to `svg` files for graphs and visualization
 + Add more prominent tips for contributors who find the doc-contributor-README
-
++ **Known Issues**
+  
+  - When using TensorFlow\* v1.14.0 with ```ngraph-bridge`` v0.16.0rc0 and CPU
+    backend, we saw notable to severe decreases in throughput in many models.
 
 0.22
 ----

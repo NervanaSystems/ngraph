@@ -14,28 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "util/type_prop.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <numeric>
-#include <vector>
-#include "ngraph/shape.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+TEST(type_prop, leaky_relu)
 {
-    namespace runtime
-    {
-        namespace gcpu
-        {
-            namespace kernel
-            {
-                template <typename T>
-                void result(const T* arg, T* out, size_t count)
-                {
-                    memcpy(out, arg, sizeof(T) * count);
-                }
-            }
-        }
-    }
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto alpha = make_shared<op::Parameter>(element::f32, Shape{});
+    auto leaky_relu_func = make_shared<op::LeakyRelu>(data, alpha);
+    EXPECT_EQ(leaky_relu_func->get_element_type(), element::f32);
+    EXPECT_EQ(leaky_relu_func->get_shape(), (Shape{3, 6}));
 }
