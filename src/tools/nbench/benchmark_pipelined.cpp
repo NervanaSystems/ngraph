@@ -71,13 +71,17 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
         }
     }
 
-    // // Create output tensors for all Results
-    // array<vector<shared_ptr<runtime::Tensor>>, pipeline_depth> output_tensors_array;
-    // for (shared_ptr<Node> out : f->get_results())
-    // {
-    //     auto output_tensors = backend->create_tensor(out->get_element_type(), out->get_shape());
-    //     output_tensors_array[i] = output_tensors;
-    // }
+    // Create output tensors for all Results
+    array<vector<shared_ptr<runtime::Tensor>>, pipeline_depth> output_tensors_array;
+    size_t output_index = 0;
+    for (shared_ptr<Node> result : f->get_results())
+    {
+        auto output_tensors = exec->create_output_tensor(output_index++, pipeline_depth);
+        for(size_t i=0; i<pipeline_depth; i++)
+        {
+            output_tensors_array[i].push_back(output_tensors[i]);
+        }
+    }
 
     stopwatch t1;
 
