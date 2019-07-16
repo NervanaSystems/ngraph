@@ -37,8 +37,8 @@ namespace ngraph
             /// \param output_scale Scale to transform the output
             /// \param output_zero_point Zero point used for mapping
             /// \param output_type Output element type
-            /// \param input0_axes Input axes set for channel wise quantization
-            /// \param input1_axes Filter axes set for channel wise quantization
+            /// \param input0_axes Input0 axes set for channel wise quantization
+            /// \param input1_axes Input1 axes set for channel wise quantization
             /// \param output_axes Output axes set for channel wise quantization
             QuantizedDot(const std::shared_ptr<Node>& input0,
                          const std::shared_ptr<Node>& input1,
@@ -49,9 +49,9 @@ namespace ngraph
                          const std::shared_ptr<Node>& output_scale,
                          const std::shared_ptr<Node>& output_zero_point,
                          const element::Type& output_type,
-                         const AxisSet& input0_axes,
-                         const AxisSet& input1_axes,
-                         const AxisSet& output_axes);
+                         const AxisSet& input0_axes = ngraph::AxisSet{},
+                         const AxisSet& input1_axes = ngraph::AxisSet{},
+                         const AxisSet& output_axes = ngraph::AxisSet{});
 
             std::shared_ptr<Node> get_input0() { return get_argument(0); }
             std::shared_ptr<Node> get_input1() { return get_argument(1); }
