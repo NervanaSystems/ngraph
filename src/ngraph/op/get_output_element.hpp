@@ -28,11 +28,17 @@ namespace ngraph
         class GetOutputElement : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a get-tuple-element operation.
             ///
             /// \param arg The input tuple.
             /// \param n The index of the tuple element to get.
             GetOutputElement(const std::shared_ptr<Node>& arg, size_t n);
+
+            /// Return the equilent Output<Node>
+            Output<Node> get_as_output() const;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -47,6 +53,16 @@ namespace ngraph
                                            const NodeVector& deltas) override;
             size_t m_n;
         };
+    }
+
+    inline std::shared_ptr<Node> get_output_element(const Output<Node>& output,
+                                                    bool for_get_output_element = false)
+    {
+        return (for_get_output_element ||
+                (output.get_index() == 0 && output.get_node()->get_output_size() == 1))
+                   ? output.get_node_shared_ptr()
+                   : std::make_shared<op::GetOutputElement>(output.get_node_shared_ptr(),
+                                                            output.get_index());
     }
 
     inline std::shared_ptr<Node> get_output_element(const std::shared_ptr<Node> node, size_t i = 0)

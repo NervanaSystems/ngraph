@@ -167,6 +167,9 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input.replace_source_output(replacement->output(i));
         }
     }
+
+    replacement->add_node_control_dependents(target);
+    target->clear_control_dependents();
 }
 
 // Check if all paths from X to a result go through Y
@@ -209,19 +212,23 @@ std::list<std::shared_ptr<ngraph::Node>>
         if (node_map.count(node.get()) == 0)
         {
             // get (already) cloned arguments and clone the node
-            NodeVector cloned_args;
-            for (auto arg : node->get_arguments())
+            OutputVector cloned_args;
+            for (auto input : node->inputs())
             {
-                cloned_args.push_back(node_map.at(arg.get()));
+                Output<Node> output = input.get_source_output();
+                cloned_args.push_back(output.for_node(node_map.at(output.get_node())));
             }
-            auto cloned_node = node->copy_with_new_args(cloned_args);
-
-            // copy control dependencies
-            for (auto cdep : node->get_control_dependencies())
+            std::vector<std::shared_ptr<Node>> cloned_dependencies;
+            for (auto& dependency : node->get_control_dependencies())
             {
-                cloned_node->add_control_dependency(node_map.at(cdep.get()));
+                shared_ptr<Node>& dependent = node_map.at(dependency.get());
+                if (find(cloned_dependencies.begin(), cloned_dependencies.end(), dependent) ==
+                    cloned_dependencies.end())
+                {
+                    cloned_dependencies.push_back(dependent);
+                }
             }
-
+            auto cloned_node = node->copy_with_new_inputs(cloned_args, cloned_dependencies);
             if (node->get_friendly_name() != node->get_name())
             {
                 // There is a friendly name for this node so copy it
