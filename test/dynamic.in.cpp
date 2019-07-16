@@ -654,25 +654,38 @@ NGRAPH_TEST(dynamic_${BACKEND_NAME}, replace_subgraph)
     auto c = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
 
     auto replacement_node = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
-    auto a_plus_b_times_c = (a + b) * c;
 
-    auto f = make_shared<Function>(NodeVector{a_plus_b_times_c},
-                                   ParameterVector{a, b, c, replacement_node});
+    auto d = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto e = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto a_plus_b = (a + b);
+    auto a_plus_b_times_c = a_plus_b * c;
+    auto d_minus_e = d - e;
+
+    auto f = make_shared<Function>(NodeVector{a_plus_b_times_c, d_minus_e},
+                                   ParameterVector{a, b, c, replacement_node, d, e});
+
+    // replace dynamic_node with node with static shape
     ASSERT_EQ(6, f->get_dynamic_nodes().size());
-    f->replace_subgraph(a, replacement_node);
+    f->replace_subgraph(c, replacement_node);
     ASSERT_EQ(5, f->get_dynamic_nodes().size());
 
+    // replace (a+b) with (d-e)
+    f->replace_subgraph(a_plus_b, d_minus_e);
     //
     // Get a backend with dynamic support, and compile f.
     //
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
     auto ex = backend->compile(f);
 
+    //std::cout << f->get_dynamic_nodes().size() << std::endl;
+    std::cout << f->is_dynamic() << std::endl;
+    std::cout << " I am calling from here: " << std::endl;
     //
     // Create a dynamic output tensor with shape {2,?,3}.
     //
-    auto t_r =
+    auto t_r1 =
         backend->create_dynamic_tensor(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    auto t_r2 = backend->create_dynamic_tensor(element::f32, PartialShape{2, 3, 3});
     size_t middle_dim = 3;
     vector<float> inputs(2 * middle_dim * 3);
     for (size_t i = 0; i < 2 * middle_dim * 3; i++)
@@ -684,12 +697,22 @@ NGRAPH_TEST(dynamic_${BACKEND_NAME}, replace_subgraph)
     auto t_a = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
     auto t_b = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
     auto t_c = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
-    auto t_replacement = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+    auto t_d = backend->create_tensor(element::f32, Shape{2, 3, 3});
+    auto t_e = backend->create_tensor(element::f32, Shape{2, 3, 3});
+    auto t_replacement = backend->create_tensor(element::f32, Shape{2, 3, 3});
 
     copy_data(t_a, inputs);
     copy_data(t_b, inputs);
     copy_data(t_c, inputs);
+    copy_data(t_d, inputs);
+    copy_data(t_e, inputs);
 
     // Call ex, writing result into t_r (note we're using the same t_r from outside the loop.)
-    ex->call_with_validate({t_r}, {t_a, t_b, t_c, t_replacement});
+    ex->call_with_validate({t_r1, t_r2}, {t_a, t_b, t_c, t_replacement, t_d, t_e});
+    std::cout << "dynamic_nodes_size: " << f->get_dynamic_nodes().size() << std::endl;
+
+    for (auto& node : f->get_dynamic_nodes())
+    {
+        std::cout << node->get_name() << std::endl;
+    }
 }

@@ -89,5 +89,11 @@ std::shared_ptr<Function>
         new_results[i] = std::static_pointer_cast<op::Result>(m[new_results[i].get()]);
     }
 
-    return std::make_shared<Function>(new_results, new_parameters);
+    auto cloned_function = std::make_shared<Function>(new_results, new_parameters);
+    for (auto& node : f->get_dynamic_nodes())
+    {
+        std::cout << "cloned_dyn_nodes: " << node->get_name() << std::endl;
+    }
+
+    return cloned_function;
 }

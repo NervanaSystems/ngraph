@@ -35,6 +35,7 @@ Function::Function(const ResultVector& results,
     : m_results(results)
     , m_parameters(parameters)
     , m_temporary_pool_size(0)
+    , m_dynamic_nodes()
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
@@ -48,6 +49,7 @@ Function::Function(const NodeVector& results,
     : m_results(results.size())
     , m_parameters(parameters)
     , m_temporary_pool_size(0)
+    , m_dynamic_nodes()
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
@@ -235,8 +237,10 @@ bool Function::is_dynamic() const
     auto list_of_nodes = this->get_ops();
     for (auto& node : list_of_nodes)
     {
+        std::cout << "node: " << node->get_name() << std::endl;
         if (node->get_output_partial_shape(0).is_dynamic())
         {
+            std::cout << "dynamic: " << node->get_name() << std::endl;
             return true;
         }
     }
@@ -259,14 +263,27 @@ void Function::replace_subgraph(std::shared_ptr<Node> target, std::shared_ptr<No
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
     bool remove_dyn_nodes = true;
     auto update_dynamic_nodes = [this, remove_dyn_nodes](std::shared_ptr<Node> node) {
+
+        // we will update the dynamic_nodes list if the new_node being replaced is dynamic
         if ((node->get_output_partial_shape(0).is_dynamic()) && !remove_dyn_nodes)
         {
             this->m_dynamic_nodes.insert(node);
         }
+        // we will remove the dynamic_nodes of the sub graph being replaced
         else if ((node->get_output_partial_shape(0).is_dynamic()) && remove_dyn_nodes)
         {
             this->m_dynamic_nodes.erase(node);
+            // we will loop through the dynamic_nodes set and updates the set
+            // if the subgraph replacement removes dynmaic state of other nodes in the graph
+            for (auto& dyn_node : this->m_dynamic_nodes)
+            {
+                if (dyn_node->get_output_partial_shape(0).is_static())
+                {
+                    m_dynamic_nodes.erase(dyn_node);
+                }
+            }
         }
+
     };
 
     auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
