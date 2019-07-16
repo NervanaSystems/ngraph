@@ -24,6 +24,7 @@
 #include <iomanip>
 
 #include "benchmark.hpp"
+#include "benchmark_pipelined.hpp"
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
@@ -429,7 +430,7 @@ OPTIONS
                 vector<runtime::PerformanceCounter> perf_data;
                 if (double_buffer)
                 {
-                    perf_data = run_benchmark_double_buffered(
+                    perf_data = run_benchmark_pipelined(
                         f, backend, iterations, timing_detail, warmup_iterations, copy_data);
                 }
                 else
