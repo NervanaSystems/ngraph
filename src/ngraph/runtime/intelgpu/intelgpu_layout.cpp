@@ -159,7 +159,7 @@ cldnn::concatenation::concatenation_axis
         {
             return cldnn::concatenation::along_b;
         }
-    /* no break */
+    // no break
     default:
         throw invalid_argument("IntelGPULayout::get_cldnn_axis: wrong tensor channel " +
                                to_string(t_channel));

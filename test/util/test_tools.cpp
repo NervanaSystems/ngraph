@@ -313,3 +313,44 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
     return func;
 }
 #endif
+
+::testing::AssertionResult test_ordered_ops(shared_ptr<Function> f, const NodeVector& required_ops)
+{
+    unordered_set<Node*> seen;
+    for (auto& node_ptr : f->get_ordered_ops())
+    {
+        Node* node = node_ptr.get();
+        if (seen.count(node) > 0)
+        {
+            return ::testing::AssertionFailure() << "Duplication in ordered ops";
+        }
+        size_t arg_count = node->get_input_size();
+        for (size_t i = 0; i < arg_count; ++i)
+        {
+            Node* dep = node->input(i).get_source_output().get_node();
+            if (seen.count(dep) == 0)
+            {
+                return ::testing::AssertionFailure() << "Argument " << *dep
+                                                     << " does not occur before op" << *node;
+            }
+        }
+        for (auto& dep_ptr : node->get_control_dependencies())
+        {
+            if (seen.count(dep_ptr.get()) == 0)
+            {
+                return ::testing::AssertionFailure() << "Control dependency " << *dep_ptr
+                                                     << " does not occur before op" << *node;
+            }
+        }
+        seen.insert(node);
+    }
+    for (auto& node_ptr : required_ops)
+    {
+        if (seen.count(node_ptr.get()) == 0)
+        {
+            return ::testing::AssertionFailure() << "Required op " << *node_ptr
+                                                 << "does not occur in ordered ops";
+        }
+    }
+    return ::testing::AssertionSuccess();
+}

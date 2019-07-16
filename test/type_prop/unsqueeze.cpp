@@ -14,33 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "util/type_prop.hpp"
 
-#include "ngraph/pass/pass.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+TEST(type_prop, unsqueeze)
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class CPUCompiledKernelFusion : public ngraph::pass::FunctionPass
-                {
-                public:
-                    CPUCompiledKernelFusion(size_t min_kernel_size = 2)
-                        : FunctionPass()
-                        , m_min_kernel_size(min_kernel_size)
-                    {
-                    }
+    auto param = make_shared<op::Parameter>(element::f32, Shape{4, 1, 4, 1, 8});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{1, 2});
+    auto squeeze = make_shared<op::Unsqueeze>(param, axes_node);
 
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-
-                protected:
-                    size_t m_min_kernel_size;
-                };
-            }
-        }
-    }
+    ASSERT_EQ(squeeze->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze->get_shape(), (Shape{4, 1, 1, 1, 4, 1, 8}));
 }

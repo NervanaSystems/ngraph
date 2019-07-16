@@ -32,7 +32,6 @@ TEST(event_tracing, event_file)
     // Set the environment variable to ensure logging
     ngraph::Event::enable_event_tracing();
     std::vector<std::thread> threads;
-    std::mutex mtx;
     for (auto i = 0; i < 10; i++)
     {
         int id = i;
