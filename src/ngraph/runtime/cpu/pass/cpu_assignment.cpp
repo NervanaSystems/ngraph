@@ -216,7 +216,7 @@ namespace ngraph
                     auto goe = static_cast<ngraph::op::GetOutputElement*>(node);
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->add_in_place_oi_pair({0, goe->get_n(), false});
+                    op_annotations->add_in_place_oi_pair({0, 0, false});
                     goe->set_op_annotations(op_annotations);
                 }
 
