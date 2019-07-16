@@ -84,7 +84,7 @@ static shared_ptr<Node>
                              shared_ptr<Node>& node,
                              const vector<memory::desc>& required_mds)
 {
-    vector<shared_ptr<Node>> new_args;
+    OutputVector new_args;
     bool replace_node = false;
     uint32_t index = 0;
 
@@ -143,7 +143,7 @@ static shared_ptr<Node>
     shared_ptr<Node> new_node;
     if (replace_node)
     {
-        new_node = node->copy_with_new_args(new_args);
+        new_node = node->copy_with_new_inputs(new_args);
         if (node->is_output())
         {
             external_function->get_function()->replace_node(node, new_node);
@@ -184,7 +184,7 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
                                std::shared_ptr<Node> node,
                                bool use_replace = true)
 {
-    std::vector<shared_ptr<Node>> new_args;
+    OutputVector new_args;
     bool replace_node = false;
     uint32_t index = 0;
     for (descriptor::Input& input : node->get_inputs())
@@ -235,7 +235,7 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
     shared_ptr<Node> new_node;
     if (replace_node)
     {
-        new_node = node->copy_with_new_args(new_args);
+        new_node = node->copy_with_new_inputs(new_args);
         if (node->is_output())
         {
             external_function->get_function()->replace_node(node, new_node);
@@ -1904,8 +1904,6 @@ namespace ngraph
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::GetOutputElement)
                 {
-                    auto goe = static_cast<const ngraph::op::GetOutputElement*>(node.get());
-
                     if (mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format ==
                         mkldnn_format_undef)
                     {
@@ -1913,7 +1911,7 @@ namespace ngraph
                     }
                     else
                     {
-                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), goe->get_n());
+                        auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         vector<memory::desc> o_mds;
                         o_mds.push_back(input_md);
                         set_output_layouts(node, o_mds);
