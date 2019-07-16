@@ -135,26 +135,6 @@ TEST(type_prop, group_conv_transpose_invalid_params)
     {
         const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
                                                                     weights,
-                                                                    Strides{1, 1},
-                                                                    Strides{1, 1},
-                                                                    CoordinateDiff{2, 2},
-                                                                    CoordinateDiff{2, 2},
-                                                                    CoordinateDiff{0, 0},
-                                                                    4,
-                                                                    op::PadType::SAME_UPPER);
-        EXPECT_FALSE(gct.get()) << "GroupConvolutionTranspose validation did not work. "
-                                   "Node was created with incorrect params.";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Currently only eplicit pad type is supported."));
-    }
-
-    try
-    {
-        const auto gct = make_shared<op::GroupConvolutionTranspose>(data,
-                                                                    weights,
                                                                     Strides{1},
                                                                     Strides{1, 1},
                                                                     CoordinateDiff{2, 2},

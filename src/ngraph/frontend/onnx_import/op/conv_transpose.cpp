@@ -26,6 +26,7 @@
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
@@ -51,6 +52,7 @@ namespace ngraph
                     auto strides = convpool::get_strides(node);
                     auto dilations = convpool::get_dilations(node);
                     auto paddings = convpool::get_pads(node);
+                    ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
                     CoordinateDiff padding_below = paddings.first;
                     CoordinateDiff padding_above = paddings.second;
 
@@ -100,7 +102,8 @@ namespace ngraph
                             padding_below,
                             padding_above,
                             CoordinateDiff(std::begin(output_padding), std::end(output_padding)),
-                            groups);
+                            groups,
+                            auto_pad_type);
                     }
 
                     // no bias param
