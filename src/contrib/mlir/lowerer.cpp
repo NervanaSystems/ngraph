@@ -119,6 +119,7 @@ namespace
 
         void findOutputValues();
         void processFakeInstrs();
+        void insertNoAliasArgAttrs();
         Value* insertMemMgrDef(PatternRewriter* rewriter = nullptr);
 
     private:
@@ -157,6 +158,8 @@ namespace
         }
 
         processFakeInstrs();
+
+        insertNoAliasArgAttrs();
     }
 
     void DialectLoweringPass::populateNGraphToAffineConversionPatterns(
@@ -302,6 +305,23 @@ namespace
         {
             v->replaceAllUsesWith(entryBlock->getArgument(m_compiler.get_mem_mgr_arg_id(f)));
             v->getDefiningOp()->erase();
+        }
+    }
+
+    /// Add llvm.noalias attribute to all the memref function arguments. We know that this is safe
+    /// by nGraph op semantics.
+    void DialectLoweringPass::insertNoAliasArgAttrs()
+    {
+        auto func = getModule().getNamedFunction("main");
+        unsigned int argIdx = 0;
+        for (auto* arg : func->getArguments())
+        {
+            if (arg->getType().isa<MemRefType>())
+            {
+                func->setArgAttr(argIdx, "llvm.noalias", BoolAttr::get(true, &getContext()));
+            }
+
+            ++argIdx;
         }
     }
 
