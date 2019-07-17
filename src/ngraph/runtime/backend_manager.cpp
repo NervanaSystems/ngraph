@@ -25,6 +25,7 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/runtime/interpreter/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
@@ -69,6 +70,14 @@ vector<string> runtime::BackendManager::get_registered_backends()
 
 shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
 {
+#ifdef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
+    runtime::interpreter::static_initialize();
+#endif
+
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+    runtime::cpu::static_initialize();
+#endif
+
     shared_ptr<runtime::Backend> backend;
     string type = config;
 

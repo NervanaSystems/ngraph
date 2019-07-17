@@ -43,7 +43,7 @@ runtime::BackendConstructor* runtime::interpreter::get_backend_constructor_point
     return s_backend_constructor.get();
 }
 
-#ifndef INTERPRETER_BACKEND_STATIC
+#ifndef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
 extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
     return runtime::interpreter::get_backend_constructor_pointer();
