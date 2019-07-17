@@ -78,7 +78,7 @@ namespace ngraph
         f(p);
     };
 
-    /// \brief Replace the node `target` with the node `replacement, i.e.,
+    /// \brief Replace the node `target` with the node `replacement`, i.e.,
     ///        redirect all users and control dependencies of `target` to
     ///        `replacement`.
     ///
@@ -118,9 +118,9 @@ namespace ngraph
     ///          v                v
     ///       some_user         another_user
     ///
-    /// (Step 2: Replace N1 with N2)
+    /// (Step 2: Replace N1 with new_N1)
     ///
-    ///    replace_node(N1,new_N1);
+    ///    replace_node(N1, new_N1);
     ///
     ///   A----------------------------------------.
     ///   |                                        |
@@ -164,7 +164,7 @@ namespace ngraph
     ///
     /// (After -- graph is now invalid)
     ///
-    ///      replace_node(A,B);
+    ///      replace_node(A, B);
     ///
     ///      A(shape=2x2)  B(shape=3x3)
     ///                    |
@@ -178,7 +178,7 @@ namespace ngraph
     /// to work:
     ///
     ///    shared_ptr<Node> M = make_shared<SomeUnaryOp>(N);
-    ///    replace_node(M,N);
+    ///    replace_node(M, N);
     ///
     /// The problem is that at replacement time, N itself is a user of M. So
     /// we end up introducing a cycle as follows:
@@ -207,7 +207,7 @@ namespace ngraph
     ///                     v
     ///                other users...
     ///
-    ///    To avoid the cycle, a valid way to perform the above desired insertion would be,
+    /// To avoid the cycle, a valid way to perform the above desired insertion would be,
     ///
     ///        auto new_N = N->copy_with_new_args(N->get_arguments());
     ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
