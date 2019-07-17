@@ -1,7 +1,7 @@
 .. buildlb.rst:
 
 ###############
-Build and Test 
+Build and Test
 ###############
 
 * :ref:`default_ngflags`
@@ -15,7 +15,7 @@ hardware, and how you intend to use it.
 
 A "from scratch" source-code build of the nGraph Library enables the CPU, 
 ``Interpreter``, and unit tests by default. See :ref:`default_ngflags` 
-for more detail. 
+for more detail.
 
 A "from scratch" source-code build that defaults to the PlaidML backend 
 contains rich algorithm libraries akin to those that were previously available 
@@ -25,10 +25,10 @@ that lets developers compose, train, and even deploy :abbr:`DL (Deep Learning)`
 models in their preferred language on neural networks of any size. This is 
 a good option if, for example, you are working on a laptop with a high-end 
 GPU that you want to use for compute. See :ref:`ngraph_plaidml_backend` 
-for instructions on how to build. 
+for instructions on how to build.
 
 In either case, there are some prerequisites that your system will need 
-to build from sources.  
+to build from sources.
 
 .. _prerequisites:
 
@@ -91,7 +91,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
 #. Generate the GNU Makefiles in the customary manner (from within the 
    ``build`` directory). This command enables ONNX support in the library  
    and sets the target build location at ``~/ngraph_dist``, where it can be 
-   found easily.  
+   found easily.
 
    .. code-block:: console
 
@@ -114,14 +114,14 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
    .. code-block:: console
       
       $ make   # note: make -j <N> may work, but sometimes results in out-of-memory errors if too many compilation processes are used
-      $ make install          
+      $ make install
 
 #. (Optional, requires `doxygen`_, `Sphinx`_, and `breathe`_). Run ``make html`` 
    inside the ``doc/sphinx`` directory of the cloned source to build a copy of 
    the `website docs`_ locally. The low-level API docs with inheritance and 
    collaboration diagrams can be found inside the ``/docs/doxygen/`` directory. 
    See the :doc:`project/doc-contributor-README` for more details about how to 
-   build documentation for nGraph. 
+   build documentation for nGraph.
 
 
 .. _centos: 
@@ -172,8 +172,9 @@ locally:
 #. Ensure you have installed the :ref:`prerequisites` for your OS.
 
 #. Install the prerequisites for the backend. Our hybrid ``NGRAPH_PLAIDML``
-   backend works best with Python3 versions. Feel free to use a virtual
-   environment, especially if you are just testing.
+   backend works best with Python3 versions. We recommend that you use a 
+   virtual environment, due to some of the difficulties that users have 
+   seen when trying to install outside of a venv.
 
    .. code-block:: console
 
@@ -194,9 +195,9 @@ locally:
 
       $ cmake .. -DCMAKE_INSTALL_PREFIX=~/ngraph_plaidml_dist -DNGRAPH_CPU_ENABLE=OFF -DNGRAPH_PLAIDML_ENABLE=ON 
 
-#. Run :command:`make` and ``make install``.  Note that if you are building 
+#. Run :command:`make` and ``make install``. Note that if you are building 
    outside a local or user path, you may need to run ``make install`` as the 
-   root user. 
+   root user.
 
    .. code-block:: console
 
@@ -207,7 +208,7 @@ locally:
    nbench. Note that if you built in a virtual environment and run 
    ``make check`` from it, the Google Test may report failures. Full 
    tests can be run when PlaidML devices are available at the machine 
-   level. 
+   level.
 
 For more about working with the PlaidML backend from nGraph, see our 
 API documentation :doc:`backends/plaidml-ng-api/index`. 
