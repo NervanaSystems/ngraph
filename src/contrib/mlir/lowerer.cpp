@@ -315,17 +315,14 @@ namespace
                                                      PatternRewriter& rewriter)
     {
         auto callBackFuncPtr = getModule().getNamedFunction(name);
-        if (callBackFuncPtr)
+        if (callBackFuncPtr == nullptr)
         {
-            return callBackFuncPtr;
+            auto callBackType = rewriter.getFunctionType(args, output);
+            auto callBackFunc =
+                llvm::make_unique<mlir::Function>(rewriter.getUnknownLoc(), name, callBackType);
+            callBackFuncPtr = callBackFunc.get();
+            getModule().getFunctions().push_back(callBackFunc.release());
         }
-        // create a new decl
-        auto callBackType = rewriter.getFunctionType(args, output);
-        auto callBackFunc =
-            llvm::make_unique<mlir::Function>(rewriter.getUnknownLoc(), name, callBackType);
-        callBackFuncPtr = callBackFunc.get();
-        getModule().getFunctions().push_back(callBackFunc.release());
-
         return callBackFuncPtr;
     }
     // NGDialect converters
