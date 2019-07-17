@@ -70,7 +70,9 @@ namespace ngraph
                                 ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index);
+
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                                ctx, max_pool_index, deps, cpu::mkldnn_utils::OpType::MAXPOOL);
                         };
                     functors.emplace_back(functor);
                 }
@@ -151,7 +153,11 @@ namespace ngraph
                                 ctx, fdeps[1], ctx->buffer_data[out_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, fdeps[2], ctx->mkldnn_workspaces[fdeps[3]]);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, fwd_pool_index);
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                                ctx,
+                                fwd_pool_index,
+                                fdeps,
+                                cpu::mkldnn_utils::OpType::MAXPOOLBACKPROPFORWARD);
                         };
 
                     // MaxPoolBackprop backward needs 4 primitives: diff_dst, workspace, diff_src,
@@ -168,7 +174,11 @@ namespace ngraph
                             ctx, bdeps[1], ctx->mkldnn_workspaces[bdeps[3]]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, bdeps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, bwd_pool_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            bwd_pool_index,
+                            bdeps,
+                            cpu::mkldnn_utils::OpType::MAXPOOLBACKPROPBACKWARD);
                     };
                     auto functor = [&,
                                     bwd_pool_desc,
@@ -272,7 +282,9 @@ namespace ngraph
                         ctx, deps[1], ctx->buffer_data[out0_buffer_index]);
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[2], ctx->buffer_data[out1_buffer_index]);
-                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index);
+
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        ctx, max_pool_index, deps, cpu::mkldnn_utils::OpType::MAXPOOLWITHINDICES);
                 };
                 functors.emplace_back(functor);
             }
@@ -328,7 +340,12 @@ namespace ngraph
                         ctx, deps[1], ctx->buffer_data[arg2_buffer_index]);
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, max_pool_index);
+
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        ctx,
+                        max_pool_index,
+                        deps,
+                        cpu::mkldnn_utils::OpType::MAXPOOLWITHINDICESBACKPROP);
                 };
                 functors.emplace_back(functor);
             }

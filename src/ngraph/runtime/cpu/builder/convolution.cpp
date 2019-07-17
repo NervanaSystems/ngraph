@@ -82,7 +82,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTION);
                     };
                     functors.emplace_back(functor);
                 }
@@ -176,7 +178,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONRELU);
                     };
                     functors.emplace_back(functor);
                 }
@@ -235,7 +239,9 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONBIAS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -305,7 +311,9 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONBIASADD);
                     };
                     functors.emplace_back(functor);
                 }
@@ -371,7 +379,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::CONVOLUTIONADD);
                     };
                     functors.emplace_back(functor);
                 }
@@ -426,7 +436,12 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPDATA);
                     };
                     functors.emplace_back(functor);
                 }
@@ -526,7 +541,12 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPWEIGHTS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -625,7 +645,12 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out1_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::CONVOLUTIONBACKPROPWEIGHTSBIAS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -683,7 +708,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::GROUPCONVOLUTION);
                     };
                     functors.emplace_back(functor);
                 }
@@ -742,7 +769,9 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::GROUPCONVOLUTIONBIAS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -806,7 +835,9 @@ namespace ngraph
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, conv_index, deps, cpu::mkldnn_utils::OpType::DECONVOLUTIONBIAS);
                     };
                     functors.emplace_back(functor);
                 }

@@ -71,7 +71,9 @@ namespace ngraph
                                 ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);
+
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                                ctx, avg_pool_index, deps, cpu::mkldnn_utils::OpType::AVGPOOL);
                         };
                     functors.emplace_back(functor);
                 }
@@ -160,7 +162,9 @@ namespace ngraph
                             ctx, deps[0], ctx->buffer_data[delta_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, avg_pool_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, avg_pool_index, deps, cpu::mkldnn_utils::OpType::AVGPOOLBACKPROP);
                     };
                     functors.emplace_back(functor);
                 }

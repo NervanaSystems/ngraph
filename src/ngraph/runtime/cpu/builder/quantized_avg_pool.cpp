@@ -59,7 +59,12 @@ namespace ngraph
                                 ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, qavg_pool_index);
+
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                                ctx,
+                                qavg_pool_index,
+                                deps,
+                                cpu::mkldnn_utils::OpType::QUANTIZEDAVGPOOL);
                         };
                     functors.emplace_back(functor);
                 }

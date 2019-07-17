@@ -83,7 +83,7 @@ namespace ngraph
 
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                        weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
 
                     // batchnorm forward needs 6 primitives: input, weights, result, mean,
                     // variance, and batch_normalization_forward.
@@ -132,7 +132,8 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[4], ctx->buffer_data[out2_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, batchnorm_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, batchnorm_index, deps, cpu::mkldnn_utils::OpType::BATCHNORM3ARGS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -149,7 +150,7 @@ namespace ngraph
 
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                        weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
 
                     // batchnorm forward needs 6 primitives: input, weights, result, mean,
                     // variance, and batch_normalization_forward.
@@ -198,7 +199,8 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[4], ctx->buffer_data[out0_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, batchnorm_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, batchnorm_index, deps, cpu::mkldnn_utils::OpType::BATCHNORM5ARGS);
                     };
                     functors.emplace_back(functor);
                 }
@@ -413,9 +415,9 @@ namespace ngraph
                 auto batchnorm_desc = mkldnn_emitter->get_batchnorm_backward_desc(node);
                 auto weights_shape = Shape{2, args[0].get_size()};
                 auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
                 auto dweights_desc = mkldnn_emitter->build_memory_descriptor(
-                    weights_shape, args[0].get_element_type(), mkldnn::memory::format::nc);
+                    weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
 
                 // batchnorm backward needs 8 primitives: weights, input, mean, variance,
                 // dinput, dweights, and batch_normalization_backward.
@@ -469,7 +471,8 @@ namespace ngraph
                         ctx, deps[5], ctx->buffer_data[out0_buffer_index]);
                     cpu::mkldnn_utils::set_memory_ptr(ctx, deps[6], stacked_dweights.get());
 
-                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, batchnorm_index);
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        ctx, batchnorm_index, deps, cpu::mkldnn_utils::OpType::BATCHNORMBACKPROP);
 
                     memcpy(ctx->buffer_data[out1_buffer_index],
                            stacked_dweights.get(),

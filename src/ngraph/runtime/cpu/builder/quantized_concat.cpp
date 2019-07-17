@@ -84,7 +84,9 @@ namespace ngraph
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[nargs], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, concat_index, deps, cpu::mkldnn_utils::OpType::QUANTIZEDCONCAT);
                     };
 
                     functors.emplace_back(functor);

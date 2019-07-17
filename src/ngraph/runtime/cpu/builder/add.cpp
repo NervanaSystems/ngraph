@@ -68,7 +68,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, add_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, add_index, deps, cpu::mkldnn_utils::OpType::ADD);
                     };
                     functors.emplace_back(functor);
                 }
