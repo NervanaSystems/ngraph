@@ -68,8 +68,8 @@ static shared_ptr<op::Reshape> combine_reshapes(shared_ptr<op::Reshape> r1,
 
 static void insert_reshape(shared_ptr<Node> target, shared_ptr<Node> reshape, size_t input_index)
 {
-    auto arg = target->get_argument(input_index);
-    auto new_reshape = reshape->copy_with_new_args({arg});
+    auto arg = target->input(input_index).get_source_output();
+    auto new_reshape = reshape->copy_with_new_inputs({arg});
     target->input(input_index).replace_source_output(new_reshape->output(0));
 }
 
