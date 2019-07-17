@@ -21,10 +21,17 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/subtract.hpp"
 
 using namespace ngraph::descriptor;
 using namespace ngraph::op;
@@ -275,13 +282,49 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         {
             return false;
         }
+        else
+        {
+            return true;
+        }
     }
 
     if (TI(ngraph::op::ArgMin) == TI(*node) || TI(ngraph::op::ArgMax) == TI(*node))
     {
         // TODO: Remove this when MLIR has float point cmp support
         if (!node->input(0).get_element_type().is_integral())
+        {
             return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    if (TI(ngraph::op::Maximum) == TI(*node) || TI(ngraph::op::Minimum) == TI(*node))
+    {
+        // TODO: Remove this when MLIR has float point cmp support
+        if (!node->input(0).get_element_type().is_integral())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    if (TI(ngraph::op::Greater) == TI(*node) || TI(ngraph::op::Less) == TI(*node))
+    {
+        // TODO: Remove this when MLIR has float point cmp support
+        if (!node->input(0).get_element_type().is_integral())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
 
     // Relu is supported for integer types only until MLIR adds support for lowering !std.CmpF to LLVM dialect
@@ -290,6 +333,10 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         if (!node->get_element_type().is_integral())
         {
             return false;
+        }
+        else
+        {
+            return true;
         }
     }
     return true;

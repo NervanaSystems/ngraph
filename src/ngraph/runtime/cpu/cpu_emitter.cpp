@@ -3027,6 +3027,7 @@ namespace ngraph
                     case ngraph::op::PadMode::REFLECT:
                         pad_mode_string = "ngraph::op::PadMode::REFLECT";
                         break;
+                    case ngraph::op::PadMode::SYMMETRIC: throw ngraph_error("Unsupported PadMode");
                     }
                     writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
@@ -3470,6 +3471,7 @@ namespace ngraph
                         func_block += "d_" + out_denom + " = 1;\n";
                     }
                     break;
+                case ngraph::op::SigmoidMultiply::FunctionType::NumTypes:
                 default:
                     throw ngraph_error(
                         "generate_sigmoid_mul_func input function type not supported");
