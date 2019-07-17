@@ -16,6 +16,12 @@
 
 include(FindOpenMP)
 
+if (NGRAPH_CPU_STATIC_LIB_ENABLE)
+    set(LIBRARY_TYPE STATIC)
+else()
+    set(LIBRARY_TYPE SHARED)
+endif()
+
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
@@ -156,7 +162,8 @@ endif()
 if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-    add_library(cpu_backend SHARED ${SRC})
+    add_library(cpu_backend ${LIBRARY_TYPE} ${SRC})
+    target_compile_definitions(cpu_backend PUBLIC NGRAPH_CPU_STATIC_LIB_ENABLE)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(cpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
