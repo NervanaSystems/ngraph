@@ -62,12 +62,17 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
 
 @nameable_op
 def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Perform elu operation on data node element-wise with the specified alpha parameter.
+    """Perform Exponential Linear Unit operation element-wise on data from input node.
 
-    :param data: One of: input node, array or scalar. Input tensor.
-    :param alpha: One of: node, array or scalar. Multiplier for negative values.
-    :param name: The optional ouptut node name.
-    :return: The new node performing elu operation on its input data element-wise.
+    Computes exponential linear: alpha * (exp(data) - 1) if < 0, data otherwise.
+
+    For more information refer to:
+    `Fast and Accurate Deep Network Learning by Exponential Linear Units (ELUs) <http://arxiv.org/abs/1511.07289>`_
+
+    :param data: Input tensor. One of: input node, array or scalar.
+    :param alpha: Multiplier for negative values. One of: input node or scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing an ELU operation on its input data element-wise.
     """
     return Elu(data, alpha)
 
