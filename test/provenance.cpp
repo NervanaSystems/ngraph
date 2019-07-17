@@ -221,18 +221,18 @@ TEST(provenance, provenance)
     // Replacement:
     //
     //   A{tag_a}  B{tag_b}
-    //         |      |
-    //       E{tag_e} |
-    //           |    |
-    //     C -> D{tag_d}
+    //         |     |
+    //        E{}    |
+    //         |     |
+    //    C -> D{tag_d}
     //
     //
     // After:
     //
-    //   A{tag_a}  B{tag_b}
-    //         |      |
-    //       E{tag_e} |
-    //           |    |
+    //   A{tag_a}          B{tag_b}
+    //         |             |
+    //   E{tag_c, tag_d}     |
+    //           |           |
     //          D{tag_c, tag_d}
     //
     // Comment:
@@ -258,5 +258,58 @@ TEST(provenance, provenance)
         replace_node(c, d);
 
         EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
+        EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
+    }
+
+    //
+    // Before:
+    //
+    //   A{tag_a}  B{tag_b}
+    //         |   |
+    //        C{tag_c}
+    //
+    //
+    // Replacement:
+    //
+    //   A{tag_a}  B{tag_b}
+    //         |      |
+    //       E{tag_e} |
+    //           |    |
+    //     C -> D{tag_d}
+    //
+    //
+    // After:
+    //
+    //   A{tag_a}               B{tag_b}
+    //       \                    /
+    //   E{tag_c, tag_d, tag_e}  /
+    //          \               /
+    //           D{tag_c, tag_d}
+    //
+    // Comment:
+    //   * D is the replacement root replacing C and creating a new argument node E
+    //
+    {
+        auto x = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+        auto y = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
+
+        auto a = make_shared<op::Add>(x, y);
+        a->add_provenance_tag("tag_a");
+        auto b = make_shared<op::Multiply>(y, x);
+        b->add_provenance_tag("tag_b");
+        auto c = make_shared<op::Subtract>(a, b);
+        c->add_provenance_tag("tag_c");
+
+        auto f = make_shared<Function>(c, ParameterVector{x, y});
+
+        auto e = make_shared<op::Subtract>(a, x);
+        e->add_provenance_tag("tag_e");
+        auto d = make_shared<op::Subtract>(e, b);
+        d->add_provenance_tag("tag_d");
+
+        replace_node(c, d);
+
+        EXPECT_EQ(d->get_provenance_tags(), (ProvSet{"tag_c", "tag_d"}));
+        EXPECT_EQ(e->get_provenance_tags(), (ProvSet{"tag_c", "tag_d", "tag_e"}));
     }
 }

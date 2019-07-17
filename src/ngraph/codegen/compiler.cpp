@@ -343,7 +343,7 @@ std::unique_ptr<codegen::Module>
     preprocessor_options.RemappedFileBuffers.push_back({m_source_name, buffer.get()});
 
     // Create and execute action
-    m_compiler_action.reset(new EmitCodeGenOnlyAction());
+    m_compiler_action.reset(new EmitLLVMOnlyAction());
     std::unique_ptr<llvm::Module> rc;
     bool reinitialize = false;
     if (m_compiler->ExecuteAction(*m_compiler_action) == true)

@@ -33,7 +33,7 @@
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
-#include "ngraph/op/reverse.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
@@ -279,7 +279,8 @@ namespace ngraph
 
                         if (reverse)
                         {
-                            m_X = std::make_shared<ngraph::op::Reverse>(m_X, AxisSet{0});
+                            m_X = std::make_shared<ngraph::op::ReverseSequence>(
+                                m_X, m_seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
                         }
 
                         NodeVector in_seqs{};
@@ -343,7 +344,8 @@ namespace ngraph
                         // Get back the original order of the output data.
                         if (reverse)
                         {
-                            Y = std::make_shared<ngraph::op::Reverse>(Y, AxisSet{0});
+                            Y = std::make_shared<ngraph::op::ReverseSequence>(
+                                Y, m_seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
                         }
 
                         // Expand Y so that it has expected shape:
@@ -485,7 +487,7 @@ namespace ngraph
                                                   attributes);
 
                         NodeVector fwd_results{lstm_fwd.run()};
-                        NodeVector rev_results{lstm_fwd.run(true)};
+                        NodeVector rev_results{lstm_reversed.run(true)};
 
                         // Stack together respective outputs from both forward and reverse passess.
                         std::shared_ptr<ngraph::Node> Y{std::make_shared<ngraph::op::Concat>(
