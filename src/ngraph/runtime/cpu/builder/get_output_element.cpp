@@ -34,9 +34,7 @@ namespace ngraph
             void Builder::BUILDER_DECL(ngraph::op::GetOutputElement)
             {
                 auto& functors = external_function->get_functors();
-                auto goe = static_cast<const ngraph::op::GetOutputElement*>(node);
-                size_t n = goe->get_n();
-                auto arg_buffer_index = external_function->get_buffer_index(args[n].get_name());
+                auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto functor = [&, arg_buffer_index, out_buffer_index](CPURuntimeContext* ctx,
                                                                        CPUExecutionContext* ectx) {
