@@ -22,10 +22,13 @@
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/pass/reshape_sinking.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
@@ -88,10 +91,13 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     // We apply the same general-purposes passes as the CPU backend.
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
     pass_manager.register_pass<ngraph::pass::AlgebraicSimplification>();
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
+    pass_manager.register_pass<ngraph::pass::ReshapeSinking>();
+    pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<ngraph::pass::CoreFusion>();
     // N.B. We'd like to register ngraph::pass::GetOutputElementElimination, but it breaks BatchNorm
     // backprop
@@ -103,10 +109,10 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateCombination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::LowerConvolutions>();
-    if (pass_manager.get_pass_config().get_pass_enable("Winograd"))
-    {
-        pass_manager.register_pass<ngraph::runtime::plaidml::pass::Winograd>();
-    }
+    // if (pass_manager.get_pass_config().get_pass_enable("Winograd"))
+    // {
+    //     pass_manager.register_pass<ngraph::runtime::plaidml::pass::Winograd>();
+    // }
     if (!m_config->graphviz.empty())
     {
         pass_manager.register_pass<ngraph::pass::VisualizeTree>(m_config->graphviz);
