@@ -40,14 +40,20 @@ timestamps {
         deleteDir()  // Clear the workspace before starting
 
         // Clone the cje-algo directory which contains our Jenkins groovy scripts
-        git(branch: JENKINS_BRANCH, changelog: false, poll: false,
-            url: 'https://github.intel.com/AIPG/cje-algo')
+        try {
+            sh "git clone -b $JENKINS_BRANCH https://github.intel.com/AIPG/cje-algo ."
+        } catch (e) {
+            echo "${e}"
+            println("ERROR: An error occurred during cje-algo script checkout.")
+            throw e
+        }
 
         // Call the main job script.
         //
         // NOTE: We keep the main job script in github.intel.com because it may
         //      contain references to technology which has not yet been released.
         //
+        
         echo "Calling ngraph-ci-premerge.groovy"
         def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
         ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME)
