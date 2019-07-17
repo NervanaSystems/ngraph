@@ -134,6 +134,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "nlohmann/json.hpp"
@@ -512,6 +513,7 @@ static shared_ptr<ngraph::Function>
     unordered_map<string, shared_ptr<Node>> node_map;
     for (json node_js : func_js.at("ops"))
     {
+        shared_ptr<Node> node;
         try
         {
             string node_name = node_js.at("name").get<string>();
@@ -520,7 +522,7 @@ static shared_ptr<ngraph::Function>
             vector<string> node_inputs = get_value<vector<string>>(node_js, "inputs");
             vector<string> control_deps_inputs = get_value<vector<string>>(node_js, "control_deps");
             vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
-            shared_ptr<Node> node;
+
             vector<shared_ptr<Node>> args;
             for (const string& name : node_inputs)
             {
@@ -1632,6 +1634,14 @@ static shared_ptr<ngraph::Function>
             }
             throw runtime_error("Error parsing json at node '" + node_name + "'");
         }
+        if (ngraph::get_provenance_enabled())
+        {
+            std::vector<json> prov_js = node_js.at("provenance_tags");
+            for (auto prov_tag : prov_js)
+            {
+                node->add_provenance_tag(prov_tag);
+            }
+        }
     }
 
     // This handles both graphs w/ `op::Result` and legacy graphs w/o it
@@ -1719,6 +1729,15 @@ static json write(const Node& n, bool binary_constant_data)
             output_shapes.push_back(n.get_output_shape(i));
         }
         node["output_shapes"] = output_shapes;
+    }
+    if (ngraph::get_provenance_enabled())
+    {
+        json provenance_tags = json::array();
+        for (auto prov_tag : n.get_provenance_tags())
+        {
+            provenance_tags.push_back(prov_tag);
+        }
+        node["provenance_tags"] = provenance_tags;
     }
 
     string node_op = n.description();
