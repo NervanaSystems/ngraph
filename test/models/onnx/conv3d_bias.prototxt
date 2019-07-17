@@ -9,7 +9,7 @@ graph {
     op_type: "Conv"
     attribute {
       name: "auto_pad"
-      type: FLOATS
+      type: STRING
     }
     attribute {
       name: "dilations"

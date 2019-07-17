@@ -34,46 +34,33 @@
 
 using namespace ngraph;
 
-std::shared_ptr<Node> make_broadcast_zero(const std::shared_ptr<Node>& node)
+Output<Node> make_broadcast_zero(const Output<Node>& output)
 {
-    std::shared_ptr<Node> zero = std::make_shared<op::ScalarConstantLike>(node, 0.0);
-    std::shared_ptr<Node> bzero = std::make_shared<op::BroadcastLike>(zero, node, AxisSet{});
+    Output<Node> zero = std::make_shared<op::ScalarConstantLike>(output, 0.0);
+    Output<Node> bzero = std::make_shared<op::BroadcastLike>(zero, output, AxisSet{});
     return bzero;
 }
 
-NodeVector make_zeros(std::shared_ptr<Node> x)
+OutputVector make_zeros(std::shared_ptr<Node> x)
 {
-    NodeVector zeros;
-    if (x->get_output_size() > 1)
+    OutputVector zeros;
+    for (auto output : x->outputs())
     {
-        auto goes = op::get_output_elements(x);
-        for (size_t i = 0; i < goes.size(); ++i)
-        {
-            zeros.push_back(make_broadcast_zero(goes.at(i)));
-        }
-    }
-    else
-    {
-        zeros.push_back(make_broadcast_zero(x));
+        zeros.push_back(make_broadcast_zero(output));
     }
     return zeros;
 }
 
 autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
+    : Adjoints(OutputVector(ys.begin(), ys.end()), OutputVector(cs.begin(), cs.end()))
+{
+}
+
+autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
 {
     if (ys.size() != cs.size())
     {
         throw ngraph_error("ys and cs must be equal size");
-    }
-
-    for (size_t i = 0; i < ys.size(); i++)
-    {
-        if (ys.at(i)->get_output_size() > 1 || cs.at(i)->get_output_size() > 1)
-        {
-            throw ngraph_error(
-                "Adjoints for multi-output ops aren't supported directly.\nProvide deltas for "
-                "corresponding GetOutputElements instead");
-        }
     }
 
     // Pass 1 determines which nodes contribute to y as well as setting up a reverse
@@ -86,7 +73,11 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
     std::unordered_set<std::shared_ptr<Node>> visited_nodes;
 
     // Nodes we should check
-    std::list<std::shared_ptr<Node>> nodes_to_check(ys.cbegin(), ys.cend());
+    std::list<std::shared_ptr<Node>> nodes_to_check;
+    for (auto& y : ys)
+    {
+        nodes_to_check.push_back(y.get_node_shared_ptr());
+    }
     while (nodes_to_check.size() > 0)
     {
         auto node = nodes_to_check.front();
@@ -95,8 +86,9 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
         {
             continue;
         }
-        for (auto arg : node->get_arguments())
+        for (auto input : node->inputs())
         {
+            auto arg = input.get_source_output().get_node_shared_ptr();
             auto count_it = parent_counts.find(arg);
             if (count_it == parent_counts.end())
             {
@@ -115,13 +107,17 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
     // before a node is visited.
     for (size_t i = 0; i < ys.size(); i++)
     {
-        Node* n = ys.at(i).get();
-        NodeVector t{cs.at(i)};
-        std::pair<Node*, NodeVector> pair = std::make_pair(n, t);
-        m_adjoint_map.insert(std::make_pair(ys.at(i).get(), NodeVector{cs.at(i)}));
+        Node* n = ys.at(i).get_node();
+        OutputVector t{cs.at(i)};
+        std::pair<Node*, OutputVector> pair = std::make_pair(n, t);
+        m_adjoint_map.insert(std::make_pair(ys.at(i).get_node(), OutputVector{cs.at(i)}));
     }
 
-    nodes_to_check.assign(ys.cbegin(), ys.cend());
+    for (auto& y : ys)
+    {
+        nodes_to_check.push_back(y.get_node_shared_ptr());
+    }
+
     while (nodes_to_check.size() > 0)
     {
         auto node = nodes_to_check.front();
@@ -136,30 +132,37 @@ autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
                 nodes_to_check.push_front(arg);
             }
         }
-        node->generate_adjoints(*this, get(node));
+        OutputVector deltas = get(node);
+        NodeVector delta_nodes;
+        for (auto delta : deltas)
+        {
+            delta_nodes.push_back(get_output_element(delta));
+        }
+        node->generate_adjoints(*this, delta_nodes);
     }
 }
 
-const NodeVector& autodiff::Adjoints::get(const std::shared_ptr<Node>& x)
+const OutputVector& autodiff::Adjoints::get(const Output<Node>& x)
 {
-    auto adjoint_it = m_adjoint_map.find(x.get());
+    auto adjoint_it = m_adjoint_map.find(x.get_node());
     if (m_adjoint_map.end() == adjoint_it)
     {
-        adjoint_it = m_adjoint_map.insert({x.get(), make_zeros(x)}).first;
+        adjoint_it =
+            m_adjoint_map.insert({x.get_node(), make_zeros(x.get_node_shared_ptr())}).first;
     }
     return adjoint_it->second;
 }
 
-void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
-                                   const std::shared_ptr<Node>& delta,
+void autodiff::Adjoints::add_delta(const Output<Node>& x,
+                                   const Output<Node>& delta,
                                    size_t output_index)
 {
-    auto adjoint_it = m_adjoint_map.find(x.get());
+    auto adjoint_it = m_adjoint_map.find(x.get_node());
     if (m_adjoint_map.end() == adjoint_it)
     {
-        auto zeros = make_zeros(x);
+        auto zeros = make_zeros(x.get_node_shared_ptr());
         zeros.at(output_index) = delta;
-        m_adjoint_map.insert({x.get(), zeros});
+        m_adjoint_map.insert({x.get_node(), zeros});
     }
     else
     {
@@ -170,46 +173,47 @@ void autodiff::Adjoints::add_delta(const std::shared_ptr<Node>& x,
 }
 
 //This doesn't need an index since slice can only sit on top of GOE
-void autodiff::Adjoints::add_delta_to_slice(const std::shared_ptr<Node>& x,
-                                            const std::shared_ptr<Node>& delta,
+void autodiff::Adjoints::add_delta_to_slice(const Output<Node>& x,
+                                            const Output<Node>& delta,
                                             const Coordinate& lower_bounds,
                                             const Coordinate& upper_bounds,
                                             const Strides& strides)
 {
-    if (!(x->get_output_element_type(0).compatible(delta->get_output_element_type(0))) ||
-        !(x->get_output_partial_shape(0).rank().compatible(
-            delta->get_output_partial_shape(0).rank())))
+    if (!(x.get_element_type().compatible(delta.get_element_type())) ||
+        !(x.get_partial_shape().rank().compatible(delta.get_partial_shape().rank())))
     {
         throw ngraph_error(
             "Autodiff internal error: Mismatch on backprop and op in add_delta_to_slice.");
     }
 
-    auto adjoint_it = m_adjoint_map.find(x.get());
+    auto adjoint_it = m_adjoint_map.find(x.get_node());
     if (m_adjoint_map.end() == adjoint_it)
     {
         auto zero = make_broadcast_zero(x);
-        NodeVector zeros{
+        OutputVector zeros{
             std::make_shared<op::ReplaceSlice>(zero, delta, lower_bounds, upper_bounds, strides)};
-        m_adjoint_map.insert({x.get(), zeros});
+        m_adjoint_map.insert({x.get_node(), zeros});
     }
     else
     {
         auto& deltas = adjoint_it->second;
         deltas.at(0) = std::make_shared<op::ReplaceSlice>(
             deltas.at(0),
-            std::make_shared<op::Slice>(deltas.at(0), lower_bounds, upper_bounds, strides) + delta,
+            std::make_shared<op::Add>(
+                std::make_shared<op::Slice>(deltas.at(0), lower_bounds, upper_bounds, strides),
+                delta),
             lower_bounds,
             upper_bounds,
             strides);
     }
 }
 
-std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const std::shared_ptr<Node>& x)
+std::shared_ptr<Node> autodiff::Adjoints::backprop_node(const Output<Node>& x)
 {
-    auto deltas = get(x);
-    if (deltas.size() > 1)
-    {
-        throw ngraph_error("backprop_node is called for multi-output node");
-    }
-    return deltas.at(0);
+    return get_output_element(backprop_output(x));
+}
+
+Output<Node> autodiff::Adjoints::backprop_output(const Output<Node>& x)
+{
+    return get(x).at(x.get_index());
 }

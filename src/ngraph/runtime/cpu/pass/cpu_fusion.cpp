@@ -551,14 +551,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         {
             return false;
         }
-        std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
-        for (auto bn_in : m_bn->get_output_inputs(0))
-        {
-            auto mgoe = std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(bn_in->get_node());
-            NGRAPH_CHECK(mgoe);
-            mgoes[mgoe->get_n()] = mgoe;
-        }
-
+        NodeVector mgoes(get_output_elements(m_bn));
         if (mgoes[0]->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
