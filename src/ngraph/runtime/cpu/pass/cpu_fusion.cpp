@@ -520,6 +520,51 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
     this->add_matcher(m, callback);
 }
 
+static bool switch_nodes(std::shared_ptr<ngraph::Node> node1,
+                         std::shared_ptr<ngraph::Node> node2,
+                         size_t source_input_index = 0,
+                         size_t target_input_index = 0)
+{
+    // check if node1 has only 1 argument, not sure how it will work with >1 args
+    if (node1->inputs().size() > 1)
+    {
+        NGRAPH_DEBUG << "Cannot switch. More than 1 inputs to this node\n";
+        return false;
+    }
+    if (node1->get_users().size() > 1)
+    {
+        NGRAPH_DEBUG << "Cannot switch. More than 1 user of this node\n";
+        return false;
+    }
+    if (node1->outputs().size() > 1)
+    {
+        NGRAPH_DEBUG << "Cannot switch. More than 1 output of this node\n";
+        return false;
+    }
+    if (node2->outputs().size() > 1)
+    {
+        NGRAPH_DEBUG << "Cannot switch. More than 1 output of this node\n";
+        return false;
+    }
+
+    auto users = node2->get_users();
+    auto num_users = users.size();
+    auto target_inputs = node2->output(0).get_target_inputs();
+
+    // actual switch happening after this
+    auto arg = node1->get_argument(source_input_index);
+    node2->input(0).replace_source_output(arg);
+
+    node1->input(0).replace_source_output(node2->output(0));
+
+    // used implementation ref from replace_node
+    for (auto& input : target_inputs)
+    {
+        input.replace_source_output(node1->output(0));
+    }
+    return true;
+}
+
 void ngraph::runtime::cpu::pass::CPUPreFusion::construct_maxpool_relu_switch()
 {
     auto input_shape = Shape{1, 2, 2, 2};
@@ -532,36 +577,10 @@ void ngraph::runtime::cpu::pass::CPUPreFusion::construct_maxpool_relu_switch()
         NGRAPH_DEBUG << "In callback for construct_maxpool_relu_switch against node = "
                      << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_map();
-
-        auto maxpool =
-            std::static_pointer_cast<ngraph::op::MaxPool>(m.get_match_root()->get_argument(0));
-        auto relu = std::static_pointer_cast<ngraph::op::Relu>(m.get_match_root());
-        if (maxpool->get_users().size() > 1)
-        {
-            NGRAPH_DEBUG << "Relu isn't the only user of Maxpool's output";
-            return false;
-        }
-
-        if (relu->get_users().size() > 1)
-        {
-            NGRAPH_DEBUG << "Relu has more than 1 users";
-            return false;
-        }
-        auto relu_n = std::make_shared<ngraph::op::Relu>(pattern_map[input]);
-        auto maxpool_n =
-            std::make_shared<ngraph::op::MaxPool>(relu_n,
-                                                  maxpool->get_window_shape(),
-                                                  maxpool->get_window_movement_strides(),
-                                                  maxpool->get_padding_below(),
-                                                  maxpool->get_padding_above(),
-                                                  maxpool->get_pad_type(),
-                                                  maxpool->get_ceil_mode());
-        ngraph::replace_node(m.get_match_root(), maxpool_n);
-        return true;
+        return switch_nodes(m.get_match_root()->get_argument(0), m.get_match_root());
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, "CPUFusion.MaxpoolReluSwitch");
+    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, "CPUPreFusion.MaxpoolReluSwitch");
     this->add_matcher(m, callback);
 }
 
