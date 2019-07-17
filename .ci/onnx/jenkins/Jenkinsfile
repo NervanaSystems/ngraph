@@ -62,13 +62,13 @@ def cloneRepository(String jenkins_github_credential_id, String ngraph_git_addre
             sh "git clone $onnx_git_address -b $CHANGE_BRANCH ."
         }
         catch (Exception e) {
-            if (env.ONNX_SHA && ONNX_SHA!="") {
+            if (ONNX_SHA && ONNX_SHA!="") {
                 ONNX_BRANCH = "$ONNX_SHA"
             } else {
                 ONNX_BRANCH = "master"
             }
             sh """
-                echo "WARNING! Failed to clone ngraph-onnx branch $CHANGE_BRANCH ! Falling back to master."
+                echo "WARNING! Failed to clone ngraph-onnx branch $CHANGE_BRANCH ! Falling back to $ONNX_BRANCH."
                 echo "EXCEPTION: $e"
             """
             checkout([$class: 'GitSCM',
