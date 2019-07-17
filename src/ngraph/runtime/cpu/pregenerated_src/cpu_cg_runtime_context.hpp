@@ -31,29 +31,29 @@ struct CPURuntimeContextCG
 
     std::vector<mkldnn::primitive*> mkldnn_primitives;
     std::vector<char*> mkldnn_workspaces;
-	std::vector<mkldnn::memory::desc*> mkldnn_descriptors;
+    std::vector<mkldnn::memory::desc*> mkldnn_descriptors;
 
     mkldnn::engine global_cpu_engine = mkldnn::engine(mkldnn::engine::cpu, 0);
 
-	void set_memory_ptr(size_t primitive_index,
+    void set_memory_ptr(size_t primitive_index,
                         void* ptr)
-	{
-		auto primitive = static_cast<mkldnn::memory*>(mkldnn_primitives[primitive_index]);
-		primitive->set_data_handle(ptr);
-	}
+    {
+        auto primitive = static_cast<mkldnn::memory*>(mkldnn_primitives[primitive_index]);
+        primitive->set_data_handle(ptr);
+    }
 
-	void mkldnn_invoke_primitive(size_t primitive_index)
-	{
-		mkldnn::stream s(mkldnn::stream::kind::eager);
-		try
-		{
-			s.submit({*mkldnn_primitives[primitive_index]}).wait();
-		}
-		catch (const mkldnn::error& e)
-		{
-			throw std::runtime_error("Could not run mkldnn primitive " + e.message);
-		}
-	}
+    void mkldnn_invoke_primitive(size_t primitive_index)
+    {
+        mkldnn::stream s(mkldnn::stream::kind::eager);
+        try
+        {
+            s.submit({*mkldnn_primitives[primitive_index]}).wait();
+        }
+        catch (const mkldnn::error& e)
+        {
+            throw std::runtime_error("Could not run mkldnn primitive " + e.message);
+        }
+    }
 
 
 private:
@@ -89,32 +89,32 @@ private:
 
     void init_mkldnn_primitives();
 
-	inline void cleanup_mkldnn_primitives()
-	{
-		for (auto p : mkldnn_primitives)
-		{
-			delete p;
-		}
+    inline void cleanup_mkldnn_primitives()
+    {
+        for (auto p : mkldnn_primitives)
+        {
+            delete p;
+        }
 #ifndef _WIN32
-		//To avoid memory leak in mkldnn, release any buffers that are not free'd yet.
-		//https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
-		//mkl_free_buffers() is not exposed at this point, hence using mkl_serv_free_buffers()
-		ngraph::runtime::cpu::mkldnn_utils::mkl_serv_free_buffers();
+        //To avoid memory leak in mkldnn, release any buffers that are not free'd yet.
+        //https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
+        //mkl_free_buffers() is not exposed at this point, hence using mkl_serv_free_buffers()
+        ngraph::runtime::cpu::mkldnn_utils::mkl_serv_free_buffers();
 #endif
 
-		for (auto w : mkldnn_workspaces)
-		{
-			free(w);
-		}
-	}
+        for (auto w : mkldnn_workspaces)
+        {
+            free(w);
+        }
+    }
 
     inline void cleanup_mkldnn_descriptors()
-	{
-		for (auto d : mkldnn_descriptors)
-		{
-			free(d);
-		}
-	}
+    {
+        for (auto d : mkldnn_descriptors)
+        {
+            free(d);
+        }
+    }
 };
 
 extern "C" CPURuntimeContextCG* init_cg_ctx()
@@ -128,23 +128,23 @@ extern "C" void destroy_cg_ctx(CPURuntimeContextCG* cg_ctx)
 }
 
 static void
-	deserialize_memory_descs_and_build_memory_primitives(std::ifstream& desc_file,
-														 CPURuntimeContextCG* cg_ctx,
-														 size_t descs_count)
+    deserialize_memory_descs_and_build_memory_primitives(std::ifstream& desc_file,
+                                                         CPURuntimeContextCG* cg_ctx,
+                                                         size_t descs_count)
 {
-	cg_ctx->mkldnn_descriptors = std::vector<mkldnn::memory::desc*>(descs_count);
-	for (auto i = 0; i < descs_count; i++)
+    cg_ctx->mkldnn_descriptors = std::vector<mkldnn::memory::desc*>(descs_count);
+    for (auto i = 0; i < descs_count; i++)
     {
-		size_t primitive_index;
-		desc_file >> primitive_index;
+        size_t primitive_index;
+        desc_file >> primitive_index;
         auto desc = (mkldnn::memory::desc*)malloc(sizeof(mkldnn::memory::desc));
-		if (!desc)
-		{
-			throw std::bad_alloc();
-		}
+        if (!desc)
+        {
+            throw std::bad_alloc();
+        }
         desc_file.read(reinterpret_cast<char*>(desc), sizeof(mkldnn::memory::desc));
-		cg_ctx->mkldnn_descriptors[i] = desc;
-		cg_ctx->mkldnn_primitives[primitive_index] = new mkldnn::memory({*cg_ctx->mkldnn_descriptors[i], cg_ctx->global_cpu_engine}, nullptr);
-	}
+        cg_ctx->mkldnn_descriptors[i] = desc;
+        cg_ctx->mkldnn_primitives[primitive_index] = new mkldnn::memory({*cg_ctx->mkldnn_descriptors[i], cg_ctx->global_cpu_engine}, nullptr);
+    }
 };
 )"
