@@ -60,6 +60,18 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
     return make_constant_node(value, dtype)
 
 
+@nameable_op
+def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Perform elu operation on data node element-wise with the specified alpha parameter.
+
+    :param data: One of: input node, array or scalar. Input tensor.
+    :param alpha: One of: node, array or scalar. Multiplier for negative values.
+    :param name: The optional ouptut node name.
+    :return: The new node performing elu operation on its input data element-wise.
+    """
+    return Elu(data, alpha)
+
+
 # Unary ops
 @unary_op
 def absolute(node, name=None):  # type: (NodeInput, str) -> Node
@@ -200,18 +212,6 @@ def reshape(node, output_shape, input_order=None, name=None):
     if input_order is None:
         input_order = list(range(len(node.shape)))
     return Reshape(node, AxisVector(input_order), Shape(output_shape))
-
-
-@nameable_op
-def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Perform elu operation on data node element-wise with the specified alpha parameter.
-
-    :param data: One of: input node, array or scalar.
-    :param alpha: One of: input node or scalar.
-    :param name: The optional ouptut node name.
-    :return: The new node performing elu operation on its input data element-wise.
-    """
-    return Elu(data, alpha)
 
 
 @unary_op
