@@ -17,6 +17,8 @@
 #include "ngraph/op/reverse_sequence.hpp"
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/type/element_type.hpp"
 
 using namespace ngraph::op;
 
@@ -31,12 +33,17 @@ namespace ngraph
                 NodeVector reverse_sequence(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
+
                     const auto sequence_lengths = node.get_ng_inputs().at(1);
+                    //nGraph support only int32 type of sequence_lengths
+                    const auto sequence_lengths_i32 = std::make_shared<ngraph::op::Convert>(
+                        node.get_ng_inputs().at(1), element::i32);
+
                     const auto batch_axis = node.get_attribute_value<int64_t>("batch_axis", 1);
                     const auto time_axis = node.get_attribute_value<int64_t>("time_axis", 0);
 
                     return {std::make_shared<ngraph::op::ReverseSequence>(
-                        data, sequence_lengths, batch_axis, time_axis)};
+                        data, sequence_lengths_i32, batch_axis, time_axis)};
                 }
 
             } // namespace set_1
