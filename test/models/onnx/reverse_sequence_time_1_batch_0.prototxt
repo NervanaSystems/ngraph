@@ -3,19 +3,19 @@ producer_name: "nGraph ONNX Importer"
 graph {
   node {
     input: "x"
-	  input: "sequence_lengths"
+    input: "sequence_lengths"
     output: "y"
-	attribute {
+    op_type: "ReverseSequence"
+    attribute {
       name: "batch_axis"
       i: 0
       type: INT
     }
-	attribute {
+    attribute {
       name: "time_axis"
       i: 1
       type: INT
     }
-    op_type: "ReverseSequence"
   }
   name: "reverse_sequence_graph"
   input {

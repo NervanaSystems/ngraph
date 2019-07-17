@@ -1578,7 +1578,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_eye_like)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, reverse_sequence_0_batch_1)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_0_batch_1)
 {
     const auto reverse_sequence_fn = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reverse_sequence_time_0_batch_1.prototxt"));
@@ -1597,7 +1597,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, reverse_sequence_0_batch_1)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, reverse_sequence_1_batch_0)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_reverse_sequence_1_batch_0)
 {
     const auto reverse_sequence_fn = onnx_import::import_onnx_model(
         file_util::path_join(SERIALIZED_ZOO, "onnx/reverse_sequence_time_1_batch_0.prototxt"));

@@ -14,12 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
-#include <vector>
-
+#include "ngraph/op/reverse_sequence.hpp"
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/reverse_sequence.hpp"
 
 using namespace ngraph::op;
 
