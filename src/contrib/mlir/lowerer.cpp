@@ -235,19 +235,18 @@ namespace
             else
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
-                auto newResult = createTempTensor(
-                    m_typeConverter.convertType(tensorType), rewriter);
+                auto newResult =
+                    createTempTensor(m_typeConverter.convertType(tensorType), rewriter);
                 newResults.push_back(newResult);
             }
         }
         return newResults;
     }
 
-    Value*
-    DialectLoweringPass::createTempTensor(Type type, PatternRewriter& rewriter)
+    Value* DialectLoweringPass::createTempTensor(Type type, PatternRewriter& rewriter)
     {
         MemRefType memRefType = type.cast<MemRefType>();
-        
+
         NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
 
         Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
@@ -255,9 +254,9 @@ namespace
         // TODO:
         // Enable dynamic memref allocation via call-back to nGraph allocator
         // We should create a list of Values representing each dynamic dim
-        // The values would be computed based on the shape of the input to the ng op we are lowering. 
-        // E.g. If lowering concat, Value for dynamic concat axis will be the sum of input dims. 
-        // The lowerer will generate code to compute the dims. 
+        // The values would be computed based on the shape of the input to the ng op we are lowering.
+        // E.g. If lowering concat, Value for dynamic concat axis will be the sum of input dims.
+        // The lowerer will generate code to compute the dims.
         // This is better be done via std.AllocOp but we need to make it hookable to nGraph allocator call-back.
 
         return alloc;
