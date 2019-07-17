@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,7 +55,6 @@ set(SRC
     plaidml_pass_explicit_logicals.cpp
     plaidml_pass_implicit_broadcast.cpp
     plaidml_pass_lower_convolutions.cpp
-    plaidml_pass_prefix_reshape_elimination.cpp
     plaidml_pass_replicate_combination.cpp
     plaidml_pass_replicate_elision.cpp
     plaidml_pass_winograd.cpp

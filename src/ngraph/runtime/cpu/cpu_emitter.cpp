@@ -997,11 +997,8 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GetOutputElement)
             {
-                auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
-
                 writer.block_begin();
-                writer << "memcpy(" << out[0].get_name() << ", "
-                       << args[get_tuple_element->get_n()].get_name() << ", "
+                writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                        << out[0].get_size() * out[0].get_element_type().size() << ");\n";
                 writer.block_end();
             }
@@ -3030,6 +3027,7 @@ namespace ngraph
                     case ngraph::op::PadMode::REFLECT:
                         pad_mode_string = "ngraph::op::PadMode::REFLECT";
                         break;
+                    case ngraph::op::PadMode::SYMMETRIC: throw ngraph_error("Unsupported PadMode");
                     }
                     writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
@@ -3473,6 +3471,7 @@ namespace ngraph
                         func_block += "d_" + out_denom + " = 1;\n";
                     }
                     break;
+                case ngraph::op::SigmoidMultiply::FunctionType::NumTypes:
                 default:
                     throw ngraph_error(
                         "generate_sigmoid_mul_func input function type not supported");
@@ -3890,7 +3889,7 @@ namespace ngraph
                 while (auto goe =
                            std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(it->get_node()))
                 {
-                    it = &goe->get_inputs().at(goe->get_n()).get_output();
+                    it = &goe->get_inputs().at(0).get_output();
                 }
                 return it;
             }

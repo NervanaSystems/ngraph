@@ -78,6 +78,7 @@ namespace ngraph
         f(p);
     };
 
+    /// All users (inputs and control dependencies) of target are replace with replacement
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);

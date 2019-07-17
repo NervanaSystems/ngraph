@@ -217,15 +217,14 @@ NGRAPH_TEST(${BACKEND_NAME}, send_recv_ring)
 
     f_send =
         make_shared<Function>(make_shared<op::Send>(A, (rank + 1) % comm_size), ParameterVector{A});
-    auto handle = backend->compile(f_send);
-    handle->call_with_validate({result}, {result});
+    backend->compile(f_send)->call_with_validate({result}, {result});
 
     if (rank == 0)
     {
         f_recv = make_shared<Function>(make_shared<op::Recv>(A, comm_size - 1), ParameterVector{A});
-        handle = backend->compile(f_recv);
+        auto handle = backend->compile(f_recv);
         copy_data(result, vector<float>(4, 0));
-        handle->call_with_validate({result}, {result});
+        backend->compile(f_recv)->call_with_validate({result}, {result});
         EXPECT_EQ(v, read_vector<float>(result));
     }
 }
