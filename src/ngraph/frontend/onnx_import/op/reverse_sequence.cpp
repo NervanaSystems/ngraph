@@ -20,8 +20,6 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/type/element_type.hpp"
 
-using namespace ngraph::op;
-
 namespace ngraph
 {
     namespace onnx_import
