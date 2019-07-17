@@ -72,7 +72,7 @@ def cloneRepository(String jenkins_github_credential_id, String ngraph_git_addre
                 echo "EXCEPTION: $e"
             """
             checkout([$class: 'GitSCM',
-                branches: [[name: "master"]],
+                branches: [[name: "$ONNX_BRANCH"]],
                 doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', timeout: 30]], submoduleCfg: [],
                 userRemoteConfigs: [[credentialsId: "${jenkins_github_credential_id}",
                 url: "${onnx_git_address}"]]])
