@@ -122,6 +122,10 @@ static void random_init(shared_ptr<runtime::Tensor> tv)
     case element::Type_t::u16: init_int_tv<uint16_t>(tv, 0, 1); break;
     case element::Type_t::u32: init_int_tv<uint32_t>(tv, 0, 1); break;
     case element::Type_t::u64: init_int_tv<uint64_t>(tv, 0, 1); break;
+    case element::Type_t::undefined:
+    case element::Type_t::dynamic:
+    case element::Type_t::bf16:
+    case element::Type_t::f16:
     default: throw runtime_error("unsupported type");
     }
 }
