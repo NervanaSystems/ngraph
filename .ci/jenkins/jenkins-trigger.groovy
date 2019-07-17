@@ -24,7 +24,7 @@
 // Parameters which ngraph-unittest uses:
 String  PR_URL = CHANGE_URL
 String  PR_COMMIT_AUTHOR = CHANGE_AUTHOR
-String  JENKINS_BRANCH = "master"
+String  JENKINS_BRANCH = "ngraph-core-r0.20.1.rc1"
 Integer TIMEOUTTIME = "3600"
 // BRANCH parameter is no loner needed
 // TRIGGER_URL parameter is no longer needed
@@ -40,14 +40,20 @@ timestamps {
         deleteDir()  // Clear the workspace before starting
 
         // Clone the cje-algo directory which contains our Jenkins groovy scripts
-        git(branch: JENKINS_BRANCH, changelog: false, poll: false,
-            url: 'https://github.intel.com/AIPG/cje-algo')
+        try {
+            sh "git clone -b $JENKINS_BRANCH https://github.intel.com/AIPG/cje-algo ."
+        } catch (e) {
+            echo "${e}"
+            println("ERROR: An error occurred during cje-algo script checkout.")
+            throw e
+        }
 
         // Call the main job script.
         //
         // NOTE: We keep the main job script in github.intel.com because it may
         //      contain references to technology which has not yet been released.
         //
+        
         echo "Calling ngraph-ci-premerge.groovy"
         def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
         ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME)
