@@ -26,9 +26,16 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -294,6 +301,48 @@ namespace ngraph
             mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
             {
                 return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Subtract)
+            {
+                return compiler.create_binary_op<mlir::NGSubOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Multiply)
+            {
+                return compiler.create_binary_op<mlir::NGMulOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Divide)
+            {
+                return compiler.create_binary_op<mlir::NGDivOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Greater)
+            {
+                return compiler.create_binary_op<mlir::NGGreaterOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Less)
+            {
+                return compiler.create_binary_op<mlir::NGLessOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Maximum)
+            {
+                return compiler.create_binary_op<mlir::NGMaxOp>(ng_node);
+            }
+
+            template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Minimum)
+            {
+                return compiler.create_binary_op<mlir::NGMinOp>(ng_node);
             }
 
             template <>
