@@ -183,6 +183,7 @@ option(NGRAPH_FAST_MATH_ENABLE "Enable fast math" ON)
 option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
 option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph static library" FALSE)
 option(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE "Enable build INTERPRETER backend static library" FALSE)
+option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend static library" FALSE)
 
 if (NGRAPH_CPU_ENABLE
         AND

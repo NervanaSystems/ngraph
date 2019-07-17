@@ -23,6 +23,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
@@ -32,7 +33,7 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+runtime::BackendConstructor* runtime::cpu::get_backend_constructor_pointer()
 {
     class CPU_BackendConstructor : public runtime::BackendConstructor
     {
@@ -48,6 +49,23 @@ extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
     static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
         new CPU_BackendConstructor());
     return s_backend_constructor.get();
+}
+
+#ifndef CPU_BACKEND_STATIC
+extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+{
+    return runtime::cpu::get_backend_constructor_pointer();
+}
+#endif
+
+void runtime::cpu::static_initialize()
+{
+    static bool s_is_initialized = false;
+    if (!s_is_initialized)
+    {
+        s_is_initialized = true;
+        BackendManager::register_backend("CPU", runtime::cpu::get_backend_constructor_pointer());
+    }
 }
 
 namespace
