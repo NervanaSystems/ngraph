@@ -25,6 +25,11 @@ DOCKER_CONTAINER_NAME = "jenkins_ngraph-onnx_ci"
 NGRAPH_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
 ONNX_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph-onnx.git"
 JENKINS_GITHUB_CREDENTIAL_ID = "7157091e-bc04-42f0-99fd-dc4da2922a55"
+
+// Fix this ngraph-onnx commit for ngc r0.20.1 .
+// https://github.com/NervanaSystems/ngraph-onnx/tree/5c97579a0d9af082ee4acb0d8c94f30da4ae58f6
+ONNX_SHA = "5c97579a0d9af082ee4acb0d8c94f30da4ae58f6"
+
 ONNX_BRANCH = "$CHANGE_BRANCH"
 GIT_PR_AUTHOR_EMAIL=""
 GIT_COMMIT_AUTHOR_EMAIL=""
@@ -57,13 +62,17 @@ def cloneRepository(String jenkins_github_credential_id, String ngraph_git_addre
             sh "git clone $onnx_git_address -b $CHANGE_BRANCH ."
         }
         catch (Exception e) {
-            ONNX_BRANCH = "master"
+            if (ONNX_SHA && ONNX_SHA!="") {
+                ONNX_BRANCH = "$ONNX_SHA"
+            } else {
+                ONNX_BRANCH = "master"
+            }
             sh """
-                echo "WARNING! Failed to clone ngraph-onnx branch $CHANGE_BRANCH ! Falling back to master."
+                echo "WARNING! Failed to clone ngraph-onnx branch $CHANGE_BRANCH ! Falling back to $ONNX_BRANCH."
                 echo "EXCEPTION: $e"
             """
             checkout([$class: 'GitSCM',
-                branches: [[name: "master"]],
+                branches: [[name: "$ONNX_BRANCH"]],
                 doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', timeout: 30]], submoduleCfg: [],
                 userRemoteConfigs: [[credentialsId: "${jenkins_github_credential_id}",
                 url: "${onnx_git_address}"]]])
