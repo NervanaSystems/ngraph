@@ -26,7 +26,7 @@ NGRAPH_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph.git"
 ONNX_GIT_ADDRESS = "https://github.com/NervanaSystems/ngraph-onnx.git"
 JENKINS_GITHUB_CREDENTIAL_ID = "7157091e-bc04-42f0-99fd-dc4da2922a55"
 
-// Fix this ngraph-onnx commit for ngc r0.20.1
+// Fix this ngraph-onnx commit for ngc r0.20.1 .
 // https://github.com/NervanaSystems/ngraph-onnx/tree/5c97579a0d9af082ee4acb0d8c94f30da4ae58f6
 ONNX_SHA = "5c97579a0d9af082ee4acb0d8c94f30da4ae58f6"
 
