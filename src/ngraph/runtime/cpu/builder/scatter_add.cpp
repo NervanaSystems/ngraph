@@ -19,9 +19,31 @@
 #include "ngraph/op/scatter_add.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/scatter_add.hpp"
+#include "ngraph/runtime/reference/scatter_add.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+#define scatter_add_functor(e_t, i_t)                                             \
+    functor = [&,                                                                 \
+               inputs_shape,                                                      \
+               indices_shape,                                                     \
+               updates_shape,                                                     \
+               out_shape,                                                         \
+               inputs_buffer_index,                                               \
+               indices_buffer_index,                                              \
+               updates_buffer_index,                                              \
+               out_buffer_index](CPURuntimeContext* ctx,                          \
+                                 CPUExecutionContext* ectx) {                     \
+        ngraph::runtime::reference::scatter_add<e_t, i_t>(                        \
+                static_cast<e_t*>(ctx->buffer_data[inputs_buffer_index]),         \
+                static_cast<i_t*>(ctx->buffer_data[indices_buffer_index]),        \
+                static_cast<e_t*>(ctx->buffer_data[updates_buffer_index]),        \
+                static_cast<e_t*>(ctx->buffer_data[out_buffer_index]),            \
+                inputs_shape,                                                     \
+                indices_shape,                                                    \
+                updates_shape,                                                    \
+                out_shape);}
 
 namespace ngraph
 {
@@ -39,30 +61,34 @@ namespace ngraph
                 auto updates_buffer_index = external_function->get_buffer_index(args[2].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                if (args[1].get_element_type() != element::i64 &&
-                    args[1].get_element_type() != element::i32)
+                bool use_kernel = false;
+                auto index_type = args[1].get_element_type();
+                if (index_type != element::i64 &&
+                    index_type != element::i32)
                 {
                     throw ngraph_error("Unsupported index element type");
                 }
 
-                if (args[0].get_element_type() != element::f64 &&
-                    args[0].get_element_type() != element::f32 &&
-                    args[0].get_element_type() != element::u8 &&
-                    args[0].get_element_type() != element::i8)
-                {
-                    throw ngraph_error("Unsupported type in CPU Builder for ScatterAdd");
-                }
-
-                bool is_int64 = args[1].get_element_type() == element::i64;
+                auto element_type = args[0].get_element_type();
+                bool is_int64 = index_type == element::i64;
                 auto inputs_shape = args[0].get_shape();
                 auto indices_shape = args[1].get_shape();
                 auto updates_shape = args[2].get_shape();
                 auto out_shape = out[0].get_shape();
-                auto element_type = args[0].get_element_type();
 
-                if (is_int64)
+                // if handled by cpu_builder.hpp: SELECT_KERNEL_BY_2RANKS
+                if ((element_type == element::f64 ||
+                     element_type == element::f32 ||
+                     element_type == element::u8 ||
+                     element_type == element::i8) &&
+                    inputs_shape.size() <= 3 && updates_shape.size() <= 3)
                 {
-                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 3)
+                    use_kernel = true;
+                }
+
+                if (use_kernel)
+                {
+                    if (is_int64)
                     {
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i64<float, 2, 2>)>
                             kernel;
@@ -96,13 +122,6 @@ namespace ngraph
                     }
                     else
                     {
-                        throw ngraph_error("Unsupported ranks in CPU Builder for ScatterAdd");
-                    }
-                }
-                else
-                {
-                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 3)
-                    {
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i32<float, 2, 2>)>
                             kernel;
 
@@ -133,10 +152,113 @@ namespace ngraph
                         };
                         functors.emplace_back(functor);
                     }
+                }
+                else
+                {
+                    CPUKernelFunctor functor;
+                    if(is_int64)
+                    {
+                        if (element_type == element::boolean)
+                        {
+                            scatter_add_functor(char, int64_t);
+                        }
+                        else if (element_type == element::f32)
+                        {
+                            scatter_add_functor(float, int64_t);
+                        }
+                        else if (element_type == element::f64)
+                        {
+                            scatter_add_functor(double, int64_t);
+                        }
+                        else if (element_type == element::i8)
+                        {
+                            scatter_add_functor(int8_t, int64_t);
+                        }
+                        else if (element_type == element::i16)
+                        {
+                            scatter_add_functor(int16_t, int64_t);
+                        }
+                        else if (element_type == element::i32)
+                        {
+                            scatter_add_functor(int32_t, int64_t);
+                        }
+                        else if (element_type == element::i64)
+                        {
+                            scatter_add_functor(int64_t, int64_t);
+                        }
+                        else if (element_type == element::u8)
+                        {
+                            scatter_add_functor(uint8_t, int64_t);
+                        }
+                        else if (element_type == element::u16)
+                        {
+                            scatter_add_functor(uint16_t, int64_t);
+                        }
+                        else if (element_type == element::u32)
+                        {
+                            scatter_add_functor(uint32_t, int64_t);
+                        }
+                        else if (element_type == element::u64)
+                        {
+                            scatter_add_functor(uint64_t, int64_t);
+                        }
+                        else
+                        {
+                            throw ngraph_error("Unsupported type in CPU Builder for ScatterAdd");
+                        }
+                    }
                     else
                     {
-                        throw ngraph_error("Unsupported ranks in CPU Builder for ScatterAdd");
+                        if (element_type == element::boolean)
+                        {
+                            scatter_add_functor(char, int32_t);
+                        }
+                        else if (element_type == element::f32)
+                        {
+                            scatter_add_functor(float, int32_t);
+                        }
+                        else if (element_type == element::f64)
+                        {
+                            scatter_add_functor(double, int32_t);
+                        }
+                        else if (element_type == element::i8)
+                        {
+                            scatter_add_functor(int8_t, int32_t);
+                        }
+                        else if (element_type == element::i16)
+                        {
+                            scatter_add_functor(int16_t, int32_t);
+                        }
+                        else if (element_type == element::i32)
+                        {
+                            scatter_add_functor(int32_t, int32_t);
+                        }
+                        else if (element_type == element::i64)
+                        {
+                            scatter_add_functor(int64_t, int32_t);
+                        }
+                        else if (element_type == element::u8)
+                        {
+                            scatter_add_functor(uint8_t, int32_t);
+                        }
+                        else if (element_type == element::u16)
+                        {
+                            scatter_add_functor(uint16_t, int32_t);
+                        }
+                        else if (element_type == element::u32)
+                        {
+                            scatter_add_functor(uint32_t, int32_t);
+                        }
+                        else if (element_type == element::u64)
+                        {
+                            scatter_add_functor(uint64_t, int32_t);
+                        }
+                        else
+                        {
+                            throw ngraph_error("Unsupported type in CPU Builder for ScatterAdd");
+                        }
                     }
+                    functors.emplace_back(functor);
                 }
             }
             REGISTER_OP_BUILDER(ScatterAdd);
