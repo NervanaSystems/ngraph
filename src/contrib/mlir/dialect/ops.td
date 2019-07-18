@@ -248,5 +248,46 @@ def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red">
 // Terminator Ops
 def NGReturnOp : NG_Terminator_Op<"return">;
 
+// Quantized Ops
+def NGQuantizeOp :
+      NG_OneResult_Op<"quantize", [NoSideEffect]>,
+      Arguments<(ins NG_TensorType:$input, NG_TensorType:$scale, NG_TensorType:$zeroPoint,
+                 I64Attr:$outputType, I64ArrayAttr:$axes, I64Attr:$roundMode)>
+{
+  // TODO: Implement
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+
+  let verifier = [{ return verifyQuantizeOp(this); }];
+}
+
+// Quantized Ops
+def NGDequantizeOp :
+      NG_OneResult_Op<"dequantize", [NoSideEffect]>,
+      Arguments<(ins NG_TensorType:$input, NG_TensorType:$scale, NG_TensorType:$zeroPoint,
+                 I64Attr:$outputType, I64ArrayAttr:$axes)>
+{
+  // TODO: Implement
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+
+  let verifier = [{ return verifyDequantizeOp(this); }];
+}
+
+def NGQuantizedConvolutionOp :
+      NG_OneResult_Op<"quantizedconvolution", [NoSideEffect]>,
+      Arguments<(ins NG_TensorType:$input, NG_TensorType:$filter,
+                 I64ArrayAttr:$movementStrides, I64ArrayAttr:$dilationStrides,
+                 I64ArrayAttr:$paddingBelow, I64ArrayAttr:$paddingAbove,
+                 I64ArrayAttr:$dataDilationStrides, NG_TensorType:$inputScale,
+                 NG_TensorType:$inputZeroPoint,  NG_TensorType:$filterScale,
+                 NG_TensorType:$filterZeroPoint, NG_TensorType:$outputScale,
+                 NG_TensorType:$outputZeroPoint, I64ArrayAttr:$inputAxes,
+                 I64ArrayAttr:$fliterAxes, I64ArrayAttr:$outputAxes)>
+{
+  // TODO: Implement
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+
+  let verifier = [{ return verifyQuantizedConvolutionOp(this); }];
+}
+
 // Fake ops
 def NGFakeInputOp : NG_MemRefDef_Op<"fake.input", [NoSideEffect]>;

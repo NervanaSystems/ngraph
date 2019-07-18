@@ -161,6 +161,27 @@ static mlir::LogicalResult verifyCmpOp(T* op)
     return mlir::success();
 }
 
+template <>
+mlir::LogicalResult verifyQuantizedConvolutionOp(NGQuantizedConvolutionOp* op)
+{
+    // TODO(nbpatel): Add checks.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyQuantizeOp(NGQuantizeOp* op)
+{
+    // TODO(nbpatel): Add checks.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyDequantizeOp(NGDequantizeOp* op)
+{
+    // TODO(nbpatel): Add checks.
+    return mlir::success();
+}
+
 namespace mlir
 {
 #define GET_OP_CLASSES
