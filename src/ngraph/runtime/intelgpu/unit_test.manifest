@@ -18,6 +18,7 @@ replace_slice_matrix
 replace_slice_matrix_inplace
 replace_slice_scalar
 replace_slice_vector
+dyn_replace_slice
 shape_of_5d
 shape_of_matrix
 shape_of_scalar
@@ -108,6 +109,8 @@ fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
 send_recv
 send_recv_ring
+gelu_f32
+gelu_f64
 
 # Not supported quant ops
 model_dequantize_linear_1d_zero_scale_int8
@@ -117,6 +120,9 @@ model_matmul_integer
 model_matmul_integer_no_zero_point
 model_matmul_integer_zero_point_zero
 model_matmul_integer_scalar
+quantized_convolution
+quantized_conv_non_zero_zero_point
+quantized_conv_int32_output
 
 # Need to update implementation
 divide_python_rounding_int32

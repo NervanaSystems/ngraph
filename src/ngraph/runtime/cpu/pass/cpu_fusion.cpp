@@ -43,7 +43,6 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
@@ -59,6 +58,7 @@
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -613,14 +613,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         {
             return false;
         }
-        std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
-        for (auto bn_in : m_bn->get_output_inputs(0))
-        {
-            auto mgoe = std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(bn_in->get_node());
-            NGRAPH_CHECK(mgoe);
-            mgoes[mgoe->get_n()] = mgoe;
-        }
-
+        NodeVector mgoes(get_output_elements(m_bn));
         if (mgoes[0]->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
@@ -709,6 +702,143 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
     auto m =
         std::make_shared<ngraph::pattern::Matcher>(prelu, "CPUFusion.BatchNormReluGlobalStats");
+    this->add_matcher(m, callback);
+}
+
+// graph before this fusion:
+// input mean var gamma beta        broadcast1_input       broadcast2_input
+//  \     \   |    /     /              /                        \
+//       BatchNormInference          Broadcast1              Broadcast2
+//             \                        /                        /
+//                    Multiply                                 /
+//                       \                                   /
+//                                     Add
+//                                      |
+//                                     Relu
+//
+//
+// graph after this fusion:
+// input  mean var     gamma    broadcast1_input   beta     broadcast2_input
+//  \      \    |        \          / \             /            /
+//   \      \   |          Mulitply1      Multiply2             /
+//    \      \  |             /              \                 /
+//     \      \ |            /                    newAdd
+//      \      \|           /                      /
+//            BatchNormInferenceRelu
+//
+// Multiply1, Multiply2, and newAdd operate on vectors while Multiply an Add operate on multi-dimensional matrices.
+// Multiply1, Multiply2, and newAdd may be folded away with constant folding pass later.
+void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with_multiply_add()
+{
+    auto input_shape = Shape{1, 3, 2, 2};
+    auto input = std::make_shared<pattern::op::Label>(element::f32, input_shape);
+    auto mean_shape = Shape{3};
+    auto mean = std::make_shared<pattern::op::Label>(element::f32, mean_shape);
+    auto var_shape = Shape{3};
+    auto var = std::make_shared<pattern::op::Label>(element::f32, var_shape);
+    auto gamma_shape = Shape{3};
+    auto gamma = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
+    auto beta_shape = Shape{3};
+    auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
+    double eps = 0.001;
+    auto bn = std::make_shared<ngraph::op::BatchNormInference>(eps, gamma, beta, input, mean, var);
+    auto bn_label = std::make_shared<pattern::op::Label>(bn, nullptr, NodeVector{bn});
+
+    auto broadcast1_input = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
+    auto broadcast1 =
+        std::make_shared<ngraph::op::Broadcast>(broadcast1_input, input_shape, AxisSet{0, 2, 3});
+    auto broadcast1_label =
+        std::make_shared<pattern::op::Label>(broadcast1, nullptr, NodeVector{broadcast1});
+    auto multiply = std::make_shared<ngraph::op::Multiply>(bn_label, broadcast1_label);
+    auto multi_label =
+        std::make_shared<pattern::op::Label>(multiply, nullptr, NodeVector{multiply});
+
+    auto broadcast2_input = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
+    auto broadcast2 =
+        std::make_shared<ngraph::op::Broadcast>(broadcast2_input, input_shape, AxisSet{0, 2, 3});
+    auto broadcast2_label =
+        std::make_shared<pattern::op::Label>(broadcast2, nullptr, NodeVector{broadcast2});
+    auto add = std::make_shared<ngraph::op::Add>(multi_label, broadcast2_label);
+    auto prelu = std::make_shared<ngraph::op::Relu>(add);
+
+    auto callback = [input,
+                     mean,
+                     var,
+                     gamma,
+                     beta,
+                     bn_label,
+                     multi_label,
+                     broadcast1_input,
+                     broadcast2_input,
+                     broadcast1_label,
+                     broadcast2_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG
+            << "In callback for construct_batch_norm_infer_relu_with_multi_add against node = "
+            << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto bn_match = pattern_map[bn_label];
+        if (bn_match->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Multiply isn't the only user of BatchNorm's output";
+            return false;
+        }
+        auto multi_match = pattern_map[multi_label];
+        if (multi_match->get_users().size() > 1)
+        {
+            NGRAPH_DEBUG << "Add isn't the only user of Multiply's output";
+            return false;
+        }
+
+        std::vector<size_t> vec{0};
+        for (auto i = 2; i < pattern_map[input]->output(0).get_shape().size(); i++)
+        {
+            vec.push_back(i);
+        }
+        AxisSet axisSet{vec};
+        if (std::static_pointer_cast<ngraph::op::Broadcast>(pattern_map[broadcast1_label])
+                    ->get_broadcast_axes() != axisSet ||
+            std::static_pointer_cast<ngraph::op::Broadcast>(pattern_map[broadcast2_label])
+                    ->get_broadcast_axes() != axisSet)
+        {
+            NGRAPH_DEBUG << "Broadcast axes is not {0, 2, ...}";
+            return false;
+        }
+
+        auto new_gamma = std::make_shared<ngraph::op::Multiply>(pattern_map[gamma],
+                                                                pattern_map[broadcast1_input]);
+        auto new_multi = std::make_shared<ngraph::op::Multiply>(pattern_map[beta],
+                                                                pattern_map[broadcast1_input]);
+        auto new_beta = std::make_shared<ngraph::op::Add>(new_multi, pattern_map[broadcast2_input]);
+
+        std::shared_ptr<Node> bn_relu;
+        if (auto bn_inference = std::dynamic_pointer_cast<ngraph::op::BatchNormInference>(bn_match))
+        {
+            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
+            {
+                return false;
+            }
+            bn_relu =
+                std::make_shared<ngraph::op::BatchNormInferenceRelu>(bn_inference->get_eps_value(),
+                                                                     new_gamma,
+                                                                     new_beta,
+                                                                     pattern_map[input],
+                                                                     pattern_map[mean],
+                                                                     pattern_map[var]);
+        }
+
+        if (bn_relu)
+        {
+            ngraph::replace_node(m.get_match_root(), bn_relu);
+            return true;
+        }
+
+        return false;
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu,
+                                                        "CPUFusion.BatchNormInferReluWithMultiAdd");
     this->add_matcher(m, callback);
 }
 
@@ -1929,7 +2059,12 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
     Shape shape{2, 2, 1, 1};
     auto data_batch = std::make_shared<pattern::op::Label>(element::u8, shape);
     auto filters = std::make_shared<pattern::op::Label>(element::i8, shape);
-    auto requantization_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto input_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto filter_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto output_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto requant_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+    auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
     auto dq_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto dq_zp = std::make_shared<pattern::op::Label>(element::i8, Shape{});
 
@@ -1945,7 +2080,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
                                                                        CoordinateDiff{0, 0},
                                                                        CoordinateDiff{0, 0},
                                                                        Strides{1, 1},
-                                                                       requantization_scale,
+                                                                       requant_scale,
                                                                        false);
     }
     else
@@ -1957,7 +2092,16 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
                                                                    CoordinateDiff{0, 0},
                                                                    CoordinateDiff{0, 0},
                                                                    Strides{1, 1},
-                                                                   requantization_scale);
+                                                                   input_scale,
+                                                                   uint8_zero,
+                                                                   filter_scale,
+                                                                   int8_zero,
+                                                                   output_scale,
+                                                                   int8_zero,
+                                                                   element::i8,
+                                                                   AxisSet{},
+                                                                   AxisSet{},
+                                                                   AxisSet{});
     }
     auto dq =
         std::make_shared<ngraph::op::Dequantize>(qconv, dq_scale, dq_zp, element::f32, AxisSet{});
@@ -2013,6 +2157,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
         {
             auto qconv_m =
                 std::static_pointer_cast<ngraph::op::QuantizedConvolution>(dq_m->get_argument(0));
+            auto requantization_scale =
+                qconv_m->get_argument(2) * qconv_m->get_argument(4) / qconv_m->get_argument(6);
             qconv_n = std::make_shared<ngraph::op::QuantizedConvolutionRelu>(
                 qconv_m->get_argument(0),
                 qconv_m->get_argument(1),
@@ -2021,7 +2167,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
                 qconv_m->get_padding_below(),
                 qconv_m->get_padding_above(),
                 qconv_m->get_data_dilation_strides(),
-                qconv_m->get_argument(2));
+                requantization_scale);
         }
         auto zp =
             builder::make_constant<uint8_t>(element::u8, dq_m->get_argument(1)->get_shape(), 0);

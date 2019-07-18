@@ -28,9 +28,12 @@ namespace ngraph
     class Node;
     class Function;
 
+    template <typename T>
+    class Output;
     // Need duplicate definition here to avoid g++ issues
     // Keep consistent with version in node.hpp
     using NodeVector = std::vector<std::shared_ptr<Node>>;
+    using OutputVector = std::vector<Output<Node>>;
 
     namespace autodiff
     {
@@ -41,6 +44,8 @@ namespace ngraph
             ///
             /// \param y The dependent value
             /// \param c An expression for where to evaluate the derivatives
+            Adjoints(const OutputVector& y, const OutputVector& c);
+
             Adjoints(const NodeVector& y, const NodeVector& c);
 
             Adjoints(const Adjoints& adjoints) = default;
@@ -50,14 +55,14 @@ namespace ngraph
             /// \brief (dy/dx)(c)
             ///
             /// \param x The node whose adjoint is desired.
-            const NodeVector& get(const std::shared_ptr<Node>& x);
+            const OutputVector& get(const Output<Node>& x);
 
             /// \brief Add a backprop contribution to x's adjoint
             ///
             /// \param x The adjoint node
             /// \param delta A backprop contribution
-            void add_delta(const std::shared_ptr<Node>& x,
-                           const std::shared_ptr<Node>& delta,
+            void add_delta(const Output<Node>& x,
+                           const Output<Node>& delta,
                            size_t output_index = 0);
 
             /// \brief Add a backprop contribution to a slice of x's adjoint
@@ -67,16 +72,17 @@ namespace ngraph
             /// \param lower_bounds Lower bounds of slice to add to
             /// \param upper_bounds Upper bounds of slice to add to
             /// \param strides Strides of slice to add to
-            void add_delta_to_slice(const std::shared_ptr<Node>& x,
-                                    const std::shared_ptr<Node>& delta,
+            void add_delta_to_slice(const Output<Node>& x,
+                                    const Output<Node>& delta,
                                     const Coordinate& lower_bounds,
                                     const Coordinate& upper_bounds,
                                     const Strides& strides);
 
-            std::shared_ptr<Node> backprop_node(const std::shared_ptr<Node>& x);
+            std::shared_ptr<Node> backprop_node(const Output<Node>& x);
+            Output<Node> backprop_output(const Output<Node>& x);
 
         protected:
-            std::map<Node*, NodeVector> m_adjoint_map;
+            std::map<Node*, OutputVector> m_adjoint_map;
         };
     }
 }

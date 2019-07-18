@@ -306,6 +306,52 @@ NGRAPH_TEST(${BACKEND_NAME}, floor_int32)
               read_vector<int32_t>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, gelu_f32)
+{
+    Shape shape{8};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Gelu>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    vector<float> input{-4.0f, -3.0f, -2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f};
+    copy_data(a, input);
+    auto result = backend->create_tensor(element::f32, shape);
+
+    std::transform(input.begin(), input.end(), input.begin(), [](float x) -> float {
+        return 0.5f * x * (1.0f + erf(x / sqrt(2.0f)));
+    });
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, gelu_f64)
+{
+    Shape shape{8};
+    auto A = make_shared<op::Parameter>(element::f64, shape);
+    auto f = make_shared<Function>(make_shared<op::Gelu>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f64, shape);
+    vector<double> input{-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0};
+    copy_data(a, input);
+    auto result = backend->create_tensor(element::f64, shape);
+
+    std::transform(input.begin(), input.end(), input.begin(), [](double x) -> double {
+        return 0.5 * x * (1.0 + erf(x / sqrt(2.0)));
+    });
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f(input, read_vector<double>(result)));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, log)
 {
     Shape shape{2, 2, 2};
