@@ -1,3 +1,5 @@
+:orphan:
+
 .. _dynamic_shape:
 
 Dynamic shape

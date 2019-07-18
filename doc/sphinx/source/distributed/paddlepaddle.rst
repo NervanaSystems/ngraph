@@ -1,3 +1,5 @@
+:orphan:
+
 .. _distr_paddle:
 
 

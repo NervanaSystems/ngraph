@@ -74,9 +74,9 @@ nGraph Core
    core/graph_construction.rst
    core/passes/passes.rst
    nGraph Core Ops <ops/index.rst>
-.. core/quantization.rst
-.. core/dynamic_shape.rst
-.. core/control_flow.rst
+   core/quantization.rst
+   core/dynamic_shape.rst
+   core/control_flow.rst
 
 
 .. _backend_support:
@@ -102,8 +102,8 @@ Distributed Training
    :maxdepth: 1
 
    distributed/overview.rst
-.. distributed/tensorflow.rst
-.. distributed/paddlepaddle.rst
+   distributed/tensorflow.rst
+   distributed/paddlepaddle.rst
 
 
 .. _validated_workloads:
@@ -134,7 +134,7 @@ Contribution
    :maxdepth: 1
 
    contribution/guide.rst
-.. contribution/governance.rst
+   contribution/governance.rst
 
 
 .. nGraph: https://www.ngraph.ai
