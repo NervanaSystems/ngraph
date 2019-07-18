@@ -3,17 +3,14 @@
 Overview
 ########
 
-* :ref:`what_is_backend`
-* :ref:`how_to_use`
+.. contents::
 
-
-.. _what_is_backend:
 
 What's a backend?
 -----------------
 
 In the nGraph Compiler stack, what we call a *backend* is responsible for 
-function execution and value allocation. A  backend can be used to 
+function execution and value allocation. A backend can be used to 
 :doc:`carry out a programmed computation<../core/constructing-graphs/execute>` 
 from a framework on a CPU or GPU; or it can be used with an *Interpreter* mode, 
 which is primarily intended for testing, to analyze a program, or to help a 
@@ -30,8 +27,6 @@ section on :doc:`plaidml-ng-api/index`.
    NVIDIA\* CUDA (GPUs), Yes, Some 
    AMD\* GPUs, Yes, Some
 
-
-.. _how_to_use:
 
 How to use?
 -----------

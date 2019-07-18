@@ -8,7 +8,7 @@ Pattern matcher
    :maxdepth: 1 
 
    overview.rst
-   graph-rewrite.rst
+   fusion/graph-rewrite.rst
 
 The nGraph Compiler is an optimizing compiler. As such, it provides a way to
 capture a given :term:`function graph` and perform a series of optimization
