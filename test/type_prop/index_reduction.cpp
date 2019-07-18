@@ -97,12 +97,6 @@ TEST(type_prop, argmax_invalid_zero_reduction_axis)
     }
 }
 
-TEST(type_prop, sum_valid_zero_reduction_axis)
-{
-    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 0});
-    auto sum = make_shared<op::Sum>(a, AxisSet{1});
-}
-
 TEST(type_prop, index_reduction_invalid_index_type)
 {
     auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});

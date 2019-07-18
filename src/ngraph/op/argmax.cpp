@@ -27,23 +27,6 @@ op::ArgMax::ArgMax(const Output<Node>& arg, size_t axis, const element::Type& in
     constructor_validate_and_infer_types();
 }
 
-void op::ArgMax::validate_reduction() const
-{
-    PartialShape input_shape = get_input_partial_shape(0);
-    Rank rank = input_shape.rank();
-    if (!rank.is_dynamic())
-    {
-        Dimension d = input_shape[m_axis];
-        if (d.is_static())
-        {
-            NODE_VALIDATION_CHECK(this,
-                                  0 != size_t(d),
-                                  "Tensor reduction axis can not be empty, shape is: ",
-                                  input_shape);
-        }
-    }
-}
-
 shared_ptr<Node> op::ArgMax::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
