@@ -169,21 +169,21 @@ static mlir::LogicalResult verifyCmpOp(T* op)
 }
 
 template <>
-mlir::LogicalResult verifyQuantizedConvolutionOp(NGQuantizedConvolutionOp* op)
+mlir::LogicalResult verifyOp(NGQuantizedConvolutionOp* op)
 {
     // TODO(nbpatel): Add checks.
     return mlir::success();
 }
 
 template <>
-mlir::LogicalResult verifyQuantizeOp(NGQuantizeOp* op)
+mlir::LogicalResult verifyOp(NGQuantizeOp* op)
 {
     // TODO(nbpatel): Add checks.
     return mlir::success();
 }
 
 template <>
-mlir::LogicalResult verifyDequantizeOp(NGDequantizeOp* op)
+mlir::LogicalResult verifyOp(NGDequantizeOp* op)
 {
     // TODO(nbpatel): Add checks.
     return mlir::success();

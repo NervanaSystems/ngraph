@@ -269,7 +269,7 @@ def NGQuantizeOp :
   // TODO: Implement
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
-  let verifier = [{ return verifyQuantizeOp(this); }];
+  let verifier = [{ return verifyOp(this); }];
 }
 
 // Quantized Ops
@@ -281,7 +281,7 @@ def NGDequantizeOp :
   // TODO: Implement
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
-  let verifier = [{ return verifyDequantizeOp(this); }];
+  let verifier = [{ return verifyOp(this); }];
 }
 
 def NGQuantizedConvolutionOp :
@@ -298,7 +298,7 @@ def NGQuantizedConvolutionOp :
   // TODO: Implement
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
-  let verifier = [{ return verifyQuantizedConvolutionOp(this); }];
+  let verifier = [{ return verifyOp(this); }];
 }
 
 // Fake ops
