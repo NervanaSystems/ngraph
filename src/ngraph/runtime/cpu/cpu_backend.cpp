@@ -58,29 +58,17 @@ extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 }
 #endif
 
-void runtime::cpu::static_initialize()
-{
-    static bool s_is_initialized = false;
-    if (!s_is_initialized)
-    {
-        s_is_initialized = true;
-        BackendManager::register_backend("CPU", runtime::cpu::get_backend_constructor_pointer());
-    }
-}
-
 namespace
 {
-#ifndef NGRAPH_CPU_STATIC_LIB_ENABLE
     static class CPUStaticInit
     {
     public:
         CPUStaticInit()
         {
-            runtime::BackendManager::register_backend("CPU", get_backend_constructor_pointer());
+            runtime::BackendManager::register_backend("CPU", runtime::cpu::get_backend_constructor_pointer());
         }
         ~CPUStaticInit() {}
     } s_cpu_static_init;
-#endif
 }
 
 runtime::cpu::CPU_Backend::~CPU_Backend()

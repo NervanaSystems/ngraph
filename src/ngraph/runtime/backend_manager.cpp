@@ -74,10 +74,6 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     runtime::interpreter::static_initialize();
 #endif
 
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-    runtime::cpu::static_initialize();
-#endif
-
     shared_ptr<runtime::Backend> backend;
     string type = config;
 
