@@ -114,6 +114,13 @@ mlir::LogicalResult verifyOp(NGDotOp* op)
 }
 
 template <>
+mlir::LogicalResult verifyOp(NGConcatOp* op)
+{
+    // TODO(amprocte): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
 mlir::LogicalResult verifyOp(NGSelectOp* op)
 {
     mlir::Type t0 = op->getOperation()->getOperand(0)->getType();
