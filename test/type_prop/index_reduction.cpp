@@ -85,7 +85,7 @@ TEST(type_prop, argmax_invalid_zero_reduction_axis)
     try
     {
         auto argmax = make_shared<op::ArgMax>(a, 1, element::i32);
-        FAIL() << "ArgMax c-tor should throw for zero-legnth reduction axis";
+        FAIL() << "ArgMax c-tor should throw for zero-length reduction axis";
     }
     catch (const NodeValidationFailure& error)
     {
