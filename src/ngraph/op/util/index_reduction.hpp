@@ -47,6 +47,8 @@ namespace ngraph
                                size_t axis,
                                const element::Type& index_element_type);
 
+                // Additional per-op validation
+                virtual void validate_reduction() const {}
             public:
                 size_t get_reduction_axis() const;
                 void set_reduction_axis(size_t value);
