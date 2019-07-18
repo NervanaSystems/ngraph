@@ -24,6 +24,7 @@
 // Parameters which ngraph-unittest uses:
 String  PR_URL = CHANGE_URL
 String  PR_COMMIT_AUTHOR = CHANGE_AUTHOR
+String  PR_TARGET = CHANGE_TARGET
 String  JENKINS_BRANCH = "master"
 Integer TIMEOUTTIME = "3600"
 // BRANCH parameter is no loner needed
