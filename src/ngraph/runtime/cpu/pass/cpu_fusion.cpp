@@ -547,8 +547,6 @@ static bool switch_nodes(std::shared_ptr<ngraph::Node> node1,
         return false;
     }
 
-    auto users = node2->get_users();
-    auto num_users = users.size();
     auto target_inputs = node2->output(0).get_target_inputs();
 
     // actual switch happening after this
