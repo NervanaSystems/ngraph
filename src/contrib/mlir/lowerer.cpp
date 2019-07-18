@@ -653,8 +653,13 @@ namespace
         return matchSuccess();
     }
 
-#undef REWRITER
+    REWRITER(NGGatherOp)
+    {
+        return matchSuccess();
+    }
 
+#undef REWRITER
+/// End of pattern matchers
     template <typename OP>
     void lower_binary_elementwise(Operation* op,
                                   ArrayRef<Value*> operands,
