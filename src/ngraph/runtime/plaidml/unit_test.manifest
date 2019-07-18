@@ -297,6 +297,8 @@ quantized_conv_int32_output
 # unsupported op: `ReverseSequence`
 model_lstm_bdir_short_input_seq
 model_lstm_mixed_seq_reverse
+model_reverse_sequence_0_batch_1
+model_reverse_sequence_1_batch_0
 
 # node validation error: "Argument shapes are inconsistent."
 model_lstm_fwd_with_clip
