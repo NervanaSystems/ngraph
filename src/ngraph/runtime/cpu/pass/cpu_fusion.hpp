@@ -41,7 +41,7 @@ public:
     CPUPreFusion()
         : GraphRewrite()
     {
-        construct_maxpool_relu_switch();
+        //construct_maxpool_relu_switch();
     }
 
 private:
