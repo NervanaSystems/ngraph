@@ -9,12 +9,12 @@ nGraph's internal representation and converted to ``Function`` objects, which
 can be compiled and executed on one of nGraph's backends.
 
 You can use nGraph's Python API to run an ONNX model and nGraph can be used
-as an ONNX backend using the add-on package `nGraph-ONNX <ngraph_onnx>`_.
+as an ONNX backend using the add-on package `nGraph ONNX <ngraph_onnx_>`_.
 
 
 .. note:: In order to support ONNX, nGraph must be built with the
-   ``NGRAPH_ONNX_IMPORT_ENABLE`` flag. See `Building nGraph-ONNX
-   <ngraph_onnx_building>`_ for more information. All nGraph packages
+   ``NGRAPH_ONNX_IMPORT_ENABLE`` flag. See `Building nGraph ONNX
+   <ngraph_onnx_building_>`_ for more information. All nGraph packages
    published on PyPI are built with ONNX support.
 
 
