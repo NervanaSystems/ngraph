@@ -46,7 +46,7 @@
 // It's that easy. You can use this for fun and profit.
 
 #ifndef NGRAPH_OP
-#error "NGRAPH_OP not defined"
+#warning "NGRAPH_OP not defined"
 #define NGRAPH_OP(x, y)
 #endif
 

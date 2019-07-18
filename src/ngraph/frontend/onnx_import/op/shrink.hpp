@@ -27,9 +27,9 @@ namespace ngraph
         {
             namespace set_1
             {
-                /// @brief ONNX Shrink operator
+                /// \brief ONNX Shrink operator
                 ///
-                /// @note It operates on a single input tensor and two attributes: lambd and bias.
+                /// \note It operates on a single input tensor and two attributes: lambd and bias.
                 ///       Input values greater or equal to '-lambd' and less or equal to 'lambd' are zeroed-out.
                 ///       'Bias' is added to the values that are less than '-lambd'
                 ///       and subtracted from values greater than 'lambd'.
