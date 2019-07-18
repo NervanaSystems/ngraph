@@ -35,7 +35,7 @@ from ngraph.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput, ScalarData
+    NodeInput, ScalarData, as_node
 from ngraph.utils.types import get_element_type
 
 
@@ -74,7 +74,7 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing an ELU operation on its input data element-wise.
     """
-    return Elu(data, alpha)
+    return Elu(as_node(data), as_node(alpha))
 
 
 # Unary ops

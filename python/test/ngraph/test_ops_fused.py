@@ -56,7 +56,7 @@ def test_elu_operator_with_scalar():
     runtime = get_runtime()
 
     data_value = np.array([[-5, 1], [-2, 3]], dtype=np.float32)
-    alpha_value = 3.0
+    alpha_value = np.array([3.0], dtype=np.float32)
 
     data_shape = [2, 2]
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
