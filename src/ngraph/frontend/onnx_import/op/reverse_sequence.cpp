@@ -14,10 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/reverse_sequence.hpp"
+#include <memory>
+
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -33,7 +35,7 @@ namespace ngraph
                     const auto data = node.get_ng_inputs().at(0);
 
                     const auto sequence_lengths = node.get_ng_inputs().at(1);
-                    //nGraph support only int32 type of sequence_lengths
+                    //nGraph supports only int32 type of sequence_lengths
                     const auto sequence_lengths_i32 = std::make_shared<ngraph::op::Convert>(
                         node.get_ng_inputs().at(1), element::i32);
 
