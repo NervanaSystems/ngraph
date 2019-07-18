@@ -218,7 +218,6 @@ bool runtime::gpu::GPU_Backend::is_supported(const Node& op) const
 {
     set<string> unsupported_ops = {"Quantize",
                                    "Dequantize",
-                                   "DynReplaceSlice",
                                    "DynReshape",
                                    "DynSlice",
                                    "ShapeOf",

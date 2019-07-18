@@ -540,6 +540,7 @@ TEST(util, enum_mask_operators)
 
 TEST(graph, huge)
 {
+    Function* f;
     std::vector<std::weak_ptr<Node>> weak_nodes;
     {
         auto param = make_shared<op::Parameter>(element::f32, Shape{3, 3});
@@ -548,12 +549,16 @@ TEST(graph, huge)
         {
             n = make_shared<op::Negative>(n);
         }
-        auto f = make_shared<Function>(NodeVector{n}, ParameterVector{param});
-        f->map_unordered_ops(
-            [&weak_nodes](Node* node) { weak_nodes.push_back(node->shared_from_this()); });
+        f = new Function(NodeVector{n}, ParameterVector{param});
+        for (auto node : f->get_ops())
+        {
+            weak_nodes.push_back(node);
+        }
     }
 
-    for (auto& weak_node : weak_nodes)
+    delete f;
+
+    for (auto weak_node : weak_nodes)
     {
         EXPECT_TRUE(weak_node.expired());
     }

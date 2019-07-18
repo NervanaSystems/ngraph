@@ -46,7 +46,7 @@
 // It's that easy. You can use this for fun and profit.
 
 #ifndef NGRAPH_OP
-#warning "NGRAPH_OP not defined"
+#error "NGRAPH_OP not defined"
 #define NGRAPH_OP(x, y)
 #endif
 
@@ -84,7 +84,6 @@ NGRAPH_OP(Divide, ngraph::op)
 NGRAPH_OP(Dot, ngraph::op)
 NGRAPH_OP(DynBroadcast, ngraph::op)
 NGRAPH_OP(DynPad, ngraph::op)
-NGRAPH_OP(DynReplaceSlice, ngraph::op)
 NGRAPH_OP(DynReshape, ngraph::op)
 NGRAPH_OP(DynSlice, ngraph::op)
 NGRAPH_OP(EmbeddingLookup, ngraph::op)

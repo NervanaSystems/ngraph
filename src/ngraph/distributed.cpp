@@ -46,13 +46,13 @@ static std::unique_ptr<DistributedInterface> s_distributed_interface;
 
 void ngraph::set_distributed_interface(std::unique_ptr<DistributedInterface> distributed_interface)
 {
-    NGRAPH_DEBUG << "Setting distributed interface to: " << distributed_interface->get_name();
+    NGRAPH_DEBUG << "Setting distributed interfsce to: " << distributed_interface->get_name();
     s_distributed_interface = std::move(distributed_interface);
 }
 
 DistributedInterface* ngraph::get_distributed_interface()
 {
-    if (nullptr == s_distributed_interface)
+    if (0 == s_distributed_interface)
     {
 #ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
         set_distributed_interface(std::unique_ptr<DistributedInterface>(

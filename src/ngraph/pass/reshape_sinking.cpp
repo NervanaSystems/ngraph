@@ -68,8 +68,8 @@ static shared_ptr<op::Reshape> combine_reshapes(shared_ptr<op::Reshape> r1,
 
 static void insert_reshape(shared_ptr<Node> target, shared_ptr<Node> reshape, size_t input_index)
 {
-    auto arg = target->input(input_index).get_source_output();
-    auto new_reshape = reshape->copy_with_new_inputs({arg});
+    auto arg = target->get_argument(input_index);
+    auto new_reshape = reshape->copy_with_new_args({arg});
     target->input(input_index).replace_source_output(new_reshape->output(0));
 }
 
@@ -380,8 +380,8 @@ static void
 
     auto new_lower = ngraph::apply_permutation(n->get_padding_below(), def_order);
     auto new_upper = ngraph::apply_permutation(n->get_padding_above(), def_order);
-    auto new_pad = make_shared<op::Pad>(
-        dummy_correct_shape, n->get_argument(1), new_lower, new_upper, n->get_pad_mode());
+    auto new_pad =
+        make_shared<op::Pad>(dummy_correct_shape, n->get_argument(1), new_lower, new_upper);
     ngraph::replace_node(dummy_correct_shape, n->get_argument(0));
     NGRAPH_DEBUG << "Replacing " << n->get_name() << " with " << new_pad->get_name();
     ngraph::replace_node(n, new_pad);

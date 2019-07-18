@@ -52,14 +52,14 @@ runtime::gcpu::GCPUBackend::GCPUBackend(const vector<string>& unsupported_op_nam
 shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,
                                                                       const Shape& shape)
 {
-    return make_shared<runtime::HostTensor>(type, shape);
+    return make_shared<runtime::HostTensor>(type, shape, this);
 }
 
 shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,
                                                                       const Shape& shape,
                                                                       void* memory_pointer)
 {
-    return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
+    return make_shared<runtime::HostTensor>(type, shape, memory_pointer, this);
 }
 
 shared_ptr<runtime::Executable>

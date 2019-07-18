@@ -45,7 +45,8 @@ namespace ngraph
             ///        of values must match the size of the shape.
             template <typename T>
             Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
-                : m_element_type(type)
+                : Node("Constant", {})
+                , m_element_type(type)
                 , m_shape(shape)
                 , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
                                                     host_alignment()))
@@ -80,7 +81,8 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param values A list of string values to use as the constant data.
             Constant(const element::Type& type, Shape shape, const std::vector<std::string>& values)
-                : m_element_type(type)
+                : Node({})
+                , m_element_type(type)
                 , m_shape(shape)
                 , m_data(new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(),
                                                     host_alignment()))
@@ -136,7 +138,8 @@ namespace ngraph
             /// \param shape The shape of the tensor constant.
             /// \param data A void* to constant data.
             Constant(const element::Type& type, const Shape& shape, const void* data)
-                : m_element_type(type)
+                : Node({})
+                , m_element_type(type)
                 , m_shape(shape)
                 , m_data(nullptr)
             {
@@ -249,8 +252,8 @@ namespace ngraph
 
         protected:
             void* get_data_ptr_nc() { return (m_data ? m_data->get_ptr() : nullptr); }
-            Constant(const OutputVector& args)
-                : Node(args)
+            Constant(const std::string& name, const NodeVector& args)
+                : Node(name, args)
                 , m_shape({})
             {
             }
@@ -349,14 +352,11 @@ namespace ngraph
         class ScalarConstantLikeBase : public Constant
         {
         public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
             std::shared_ptr<op::Constant> as_constant() const;
 
         protected:
-            ScalarConstantLikeBase(const OutputVector& args)
-                : Constant(args)
+            ScalarConstantLikeBase(const std::string& name, const NodeVector& args)
+                : Constant(name, args)
             {
             }
         };
@@ -373,8 +373,8 @@ namespace ngraph
             /// \param like A tensor that will supply the element type.
             /// \param value The value of the scalar.
             template <typename T>
-            ScalarConstantLike(const Output<Node>& like, T value)
-                : ScalarConstantLikeBase({like})
+            ScalarConstantLike(const std::shared_ptr<Node>& like, T value)
+                : ScalarConstantLikeBase("ScalarConstantLike", {like})
                 , m_value(static_cast<double>(value))
             {
                 constructor_validate_and_infer_types();

@@ -18,8 +18,6 @@
 
 #include <cstddef>
 
-#include "ngraph/runtime/allocator.hpp"
-
 namespace ngraph
 {
     namespace runtime
@@ -34,11 +32,7 @@ namespace ngraph
 class ngraph::runtime::AlignedBuffer
 {
 public:
-    // Allocator objects and the allocation interfaces are owned by the
-    // creators of AlignedBuffers. They need to ensure that the lifetime of
-    // allocator exceeds the lifetime of this AlignedBuffer.
-    AlignedBuffer(size_t byte_size, size_t alignment, Allocator* allocator = nullptr);
-
+    AlignedBuffer(size_t byte_size, size_t alignment);
     AlignedBuffer();
     ~AlignedBuffer();
 
@@ -52,7 +46,6 @@ private:
     AlignedBuffer(const AlignedBuffer&) = delete;
     AlignedBuffer& operator=(const AlignedBuffer&) = delete;
 
-    Allocator* m_allocator;
     char* m_allocated_buffer;
     char* m_aligned_buffer;
     size_t m_byte_size;

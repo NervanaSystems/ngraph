@@ -344,7 +344,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
             auto old_weights_reshape_node = op_seg_map.at(op_nodes.at(0)).at(Type::WEIGHTS);
             auto weights_reshape_node =
-                old_weights_reshape_node->copy_with_new_inputs({weights_node});
+                old_weights_reshape_node->copy_with_new_args({weights_node});
             auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
             const auto& dot_shape = dot_node->get_shape();
 
@@ -478,11 +478,13 @@ bool runtime::cpu::pass::CPUBatchFusion::run_on_function(std::shared_ptr<Functio
             }
             if (m_fusion_type.is_set(FusionType::REGULAR_FUSIONS))
             {
-                // if (auto fused_conv = fuse_group_convolution(n))
-                // {
-                //     func->replace_node(n, fused_conv);
-                //     modified = true;
-                // }
+                /*
+                if (auto fused_conv = fuse_group_convolution(n))
+                {
+                    func->replace_node(n, fused_conv);
+                    modified = true;
+                }
+                */
             }
         }
     }

@@ -149,7 +149,6 @@ def NGSinhOp     : NG_Unary_Arith_Op<"sinh">;
 def NGTanOp      : NG_Unary_Arith_Op<"tan">;
 def NGTanhOp     : NG_Unary_Arith_Op<"tanh">;
 def NGSqrtOp     : NG_Unary_Arith_Op<"sqrt">;
-def NGReluOp     : NG_Unary_Arith_Op<"relu">;
 
 // Binary Operations
 def NGAddOp      : NG_Binary_Arith_Op<"add", [Commutative]>;

@@ -125,12 +125,7 @@ namespace ngraph
                                padding_below,
                                padding_above,
                                data_dilation_strides,
-                               nullptr,
-                               nullptr,
-                               nullptr,
-                               nullptr,
-                               nullptr,
-                               nullptr);
+                               1.0f);
                     };
                     functors.emplace_back(functor);
                 }

@@ -88,8 +88,6 @@ namespace ngraph
 
         std::list<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
         std::list<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;
-        void map_unordered_ops(std::function<void(Node*)> f) const;
-
         friend std::ostream& operator<<(std::ostream&, const Function&);
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();

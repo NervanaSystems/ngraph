@@ -27,8 +27,6 @@ namespace ngraph
         namespace ngmlir
         {
             class MLIRCompiler;
-
-            using OwningRewritePatternList = std::vector<std::unique_ptr<mlir::RewritePattern>>;
         }
     }
 }

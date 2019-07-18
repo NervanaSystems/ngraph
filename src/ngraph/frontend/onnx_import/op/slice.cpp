@@ -18,7 +18,6 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/slice.hpp"
 #include "slice.hpp"
@@ -58,15 +57,6 @@ namespace ngraph
                             get_valid_array_idx(starts.at(idx), data_shape.at(axis));
                         upper_bounds.at(axis) =
                             get_valid_array_idx(ends.at(idx), data_shape.at(axis));
-                    }
-
-                    // Check for cases when start is greater than end and change them to "empty" slice.
-                    for (auto idx = 0; idx < lower_bounds.size(); ++idx)
-                    {
-                        if (lower_bounds.at(idx) > upper_bounds.at(idx))
-                        {
-                            upper_bounds.at(idx) = lower_bounds.at(idx);
-                        }
                     }
 
                     return {std::make_shared<ngraph::op::Slice>(data, lower_bounds, upper_bounds)};

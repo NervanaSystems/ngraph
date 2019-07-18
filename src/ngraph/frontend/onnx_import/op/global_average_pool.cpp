@@ -15,8 +15,9 @@
 //*****************************************************************************
 
 #include "ngraph/node.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/avg_pool.hpp"
-#include "utils/pooling_factory.hpp"
+#include "utils/convpool.hpp"
 
 namespace ngraph
 {
@@ -28,8 +29,7 @@ namespace ngraph
             {
                 NodeVector global_average_pool(const Node& node)
                 {
-                    return pooling::GlobalPoolingFactory(node)
-                        .make_pooling_op<ngraph::op::AvgPool>();
+                    return convpool::make_ng_pool<ngraph::op::AvgPool>(node);
                 }
 
             } // namespace set_1

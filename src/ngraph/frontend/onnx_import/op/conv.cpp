@@ -26,7 +26,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "op/conv.hpp"
 
@@ -47,8 +46,7 @@ namespace ngraph
                                             const ngraph::Strides& dilations,
                                             const ngraph::CoordinateDiff& padding_below,
                                             const ngraph::CoordinateDiff& padding_above,
-                                            int groups,
-                                            const ngraph::op::PadType& auto_pad)
+                                            int groups)
                     {
                         if (groups > 1)
                         {
@@ -87,9 +85,7 @@ namespace ngraph
                                                                               strides,
                                                                               dilations,
                                                                               padding_below,
-                                                                              padding_above,
-                                                                              Strides{},
-                                                                              auto_pad));
+                                                                              padding_above));
                             }
                             std::size_t concatenation_axis = 1;
                             return std::make_shared<ngraph::op::Concat>(convolution_nodes,
@@ -97,14 +93,8 @@ namespace ngraph
                         }
                         else
                         {
-                            return std::make_shared<ngraph::op::Convolution>(data,
-                                                                             filters,
-                                                                             strides,
-                                                                             dilations,
-                                                                             padding_below,
-                                                                             padding_above,
-                                                                             Strides{},
-                                                                             auto_pad);
+                            return std::make_shared<ngraph::op::Convolution>(
+                                data, filters, strides, dilations, padding_below, padding_above);
                         }
                     }
 
@@ -136,18 +126,11 @@ namespace ngraph
                     auto strides = convpool::get_strides(node);
                     auto dilations = convpool::get_dilations(node);
                     auto paddings = convpool::get_pads(node);
-                    ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
                     const auto& padding_below = paddings.first;
                     const auto& padding_above = paddings.second;
 
-                    auto conv_node = make_ng_convolution(data,
-                                                         filters,
-                                                         strides,
-                                                         dilations,
-                                                         padding_below,
-                                                         padding_above,
-                                                         groups,
-                                                         auto_pad_type);
+                    auto conv_node = make_ng_convolution(
+                        data, filters, strides, dilations, padding_below, padding_above, groups);
 
                     // no bias param
                     if (inputs.size() < 3)

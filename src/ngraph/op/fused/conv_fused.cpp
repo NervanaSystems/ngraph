@@ -159,23 +159,16 @@ void op::ConvolutionBias::validate_and_infer_types()
     element::Type result_et;
     PartialShape result_shape;
 
-    NODE_VALIDATION_CHECK(
-        this,
-        element::Type::merge(result_et, data_batch_et, filters_et),
-        "Element types for data batch and filters do not match (data batch element type: ",
-        data_batch_et,
-        ", filters element type: ",
-        filters_et,
-        ").");
-
-    result_shape = infer_convolution_forward(this,
-                                             data_batch_shape,
-                                             m_data_dilation_strides,
-                                             m_padding_below,
-                                             m_padding_above,
-                                             filters_shape,
-                                             m_window_movement_strides,
-                                             m_window_dilation_strides);
+    std::tie(result_et, result_shape) = infer_convolution_forward(this,
+                                                                  data_batch_et,
+                                                                  filters_et,
+                                                                  data_batch_shape,
+                                                                  m_data_dilation_strides,
+                                                                  m_padding_below,
+                                                                  m_padding_above,
+                                                                  filters_shape,
+                                                                  m_window_movement_strides,
+                                                                  m_window_dilation_strides);
     set_output_type(0, result_et, result_shape);
 }
 
@@ -414,23 +407,16 @@ void op::ConvolutionBiasAdd::validate_and_infer_types()
     element::Type result_et;
     PartialShape result_shape;
 
-    NODE_VALIDATION_CHECK(
-        this,
-        element::Type::merge(result_et, data_batch_et, filters_et),
-        "Element types for data batch and filters do not match (data batch element type: ",
-        data_batch_et,
-        ", filters element type: ",
-        filters_et,
-        ").");
-
-    result_shape = infer_convolution_forward(this,
-                                             data_batch_shape,
-                                             m_data_dilation_strides,
-                                             m_padding_below,
-                                             m_padding_above,
-                                             filters_shape,
-                                             m_window_movement_strides,
-                                             m_window_dilation_strides);
+    std::tie(result_et, result_shape) = infer_convolution_forward(this,
+                                                                  data_batch_et,
+                                                                  filters_et,
+                                                                  data_batch_shape,
+                                                                  m_data_dilation_strides,
+                                                                  m_padding_below,
+                                                                  m_padding_above,
+                                                                  filters_shape,
+                                                                  m_window_movement_strides,
+                                                                  m_window_dilation_strides);
     // TODO: Check result_shape is compatible with add_input
     set_output_type(0, result_et, result_shape);
 }

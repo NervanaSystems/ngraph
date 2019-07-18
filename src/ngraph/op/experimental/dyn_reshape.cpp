@@ -99,8 +99,7 @@ void op::DynReshape::validate_and_infer_types()
                     if (out_shape_val[i] == 0 && m_zero_flag)
                     {
                         // Copy input_shape[i] for zero values
-                        NODE_VALIDATION_CHECK(
-                            this, i < input_shape.size(), "'0' dimension is out of range");
+                        NGRAPH_CHECK(i < input_shape.size());
                         partial_shape[i] = Dimension(input_shape[i]);
                         output_elements *= input_shape[i];
                     }
@@ -120,21 +119,12 @@ void op::DynReshape::validate_and_infer_types()
                     // input elements
                     if (output_elements == 0)
                     {
-                        // TODO(amprocte): Decide if this is desired behavior here. (NumPy seems
-                        // to fail.)
-                        NODE_VALIDATION_CHECK(this,
-                                              input_elements == 0,
-                                              "Cannot infer '-1' dimension with zero-size output "
-                                              "dimension unless at least one input dimension is "
-                                              "also zero-size");
+                        NGRAPH_CHECK(input_elements == 0);
                         partial_shape[negative_dim] = Dimension(0);
                     }
                     else
                     {
-                        NODE_VALIDATION_CHECK(
-                            this,
-                            input_elements % output_elements == 0,
-                            "Non-'-1' output dimensions do not evenly divide the input dimensions");
+                        NGRAPH_CHECK(input_elements % output_elements == 0);
                         partial_shape[negative_dim] = Dimension(input_elements / output_elements);
                     }
                 }

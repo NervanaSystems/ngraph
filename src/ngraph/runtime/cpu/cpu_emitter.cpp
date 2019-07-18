@@ -191,18 +191,10 @@ namespace ngraph
                 auto scale_index = mkldnn_emitter->get_scale_index<OP>();
                 auto scales_size = shape_size(node->get_input_shape(scale_index));
                 writer << "std::vector<float> dyn_scales;\n";
-                if (is_same<OP, ngraph::op::QuantizedConvolution>())
-                {
-                    writer << "dyn_scales.push_back(*" << args[2].get_name() << " * "
-                           << " * " << args[4].get_name() << " / "
-                           << " * " << args[6].get_name() << ");\n";
-                }
-                else
-                {
-                    writer << "dyn_scales.assign(" << args[scale_index].get_name() << ", "
-                           << args[scale_index].get_name() << " + " << std::to_string(scales_size)
-                           << ");\n";
-                }
+                writer << "dyn_scales.assign(" << args[scale_index].get_name() << ", "
+                       << args[scale_index].get_name() << " + " << std::to_string(scales_size)
+                       << ");\n";
+
                 // for Quantize
                 if (is_same<OP, ngraph::op::Quantize>())
                 {
@@ -997,8 +989,11 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GetOutputElement)
             {
+                auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
+
                 writer.block_begin();
-                writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
+                writer << "memcpy(" << out[0].get_name() << ", "
+                       << args[get_tuple_element->get_n()].get_name() << ", "
                        << out[0].get_size() * out[0].get_element_type().size() << ");\n";
                 writer.block_end();
             }
@@ -1636,12 +1631,23 @@ namespace ngraph
                 auto type_name = embed->get_element_type().c_type_string();
                 auto element_count = shape_size(embed->get_argument(0)->get_shape());
 
+                // FIXME
+                // clang generates 16 bytes aligned store with unaligned address,
+                // which results in segmentation fault.
+                // Workaround for now: Use push_back to avoid generating such store.
+                auto arg1_shape = args[1].get_shape();
+                writer << "ngraph::Shape shape;\n";
+                for (auto i = 0; i < arg1_shape.size(); i++)
+                {
+                    writer << "shape.push_back(" << std::to_string(arg1_shape[i]) << ");\n";
+                }
+
                 writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";
                 writer << "            " << args[0].get_name() << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
                 writer << "            " << out[0].get_name() << ",\n";
                 writer << "            " << element_count << ",\n";
-                writer << "           {" << join(args[1].get_shape()) << "});\n";
+                writer << "             shape);\n";
                 writer.block_end();
             }
 
@@ -2224,8 +2230,12 @@ namespace ngraph
                     auto arg1_shape = args[1].get_shape();
                     auto result_shape = out[0].get_shape();
 
-                    writer << "reference::convolution<" << args[0].get_type() << " , "
-                           << args[1].get_type() << " , " << out[0].get_type() << ", int32_t>("
+                    auto scales_size = shape_size(node->get_input_shape(2));
+                    writer << "std::vector<float> dyn_scales;\n";
+                    writer << "dyn_scales.assign(" << args[2].get_name() << ", "
+                           << args[2].get_name() << " + " << std::to_string(scales_size) << ");\n";
+
+                    writer << "reference::convolution<" << out[0].get_type() << ">("
                            << args[0].get_name() << ",\n";
                     writer << "                         " << args[1].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
@@ -2242,12 +2252,7 @@ namespace ngraph
                            << "},\n";
                     writer << "                         {"
                            << join(convolution->get_data_dilation_strides()) << "}, \n";
-                    writer << "                         " << args[2].get_name() << ",\n";
-                    writer << "                         " << args[3].get_name() << ",\n";
-                    writer << "                         " << args[4].get_name() << ",\n";
-                    writer << "                         " << args[5].get_name() << ",\n";
-                    writer << "                         " << args[6].get_name() << ",\n";
-                    writer << "                         " << args[7].get_name() << ");\n";
+                    writer << "                         dyn_scales[0]);\n";
                 }
             }
 
@@ -3027,7 +3032,6 @@ namespace ngraph
                     case ngraph::op::PadMode::REFLECT:
                         pad_mode_string = "ngraph::op::PadMode::REFLECT";
                         break;
-                    case ngraph::op::PadMode::SYMMETRIC: throw ngraph_error("Unsupported PadMode");
                     }
                     writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
@@ -3471,7 +3475,6 @@ namespace ngraph
                         func_block += "d_" + out_denom + " = 1;\n";
                     }
                     break;
-                case ngraph::op::SigmoidMultiply::FunctionType::NumTypes:
                 default:
                     throw ngraph_error(
                         "generate_sigmoid_mul_func input function type not supported");
@@ -3889,7 +3892,7 @@ namespace ngraph
                 while (auto goe =
                            std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(it->get_node()))
                 {
-                    it = &goe->get_inputs().at(0).get_output();
+                    it = &goe->get_inputs().at(goe->get_n()).get_output();
                 }
                 return it;
             }

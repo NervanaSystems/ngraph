@@ -7,10 +7,9 @@ Backend APIs
    :maxdepth: 1
    
    backend-api/index
-   dynamicbackend-api/index
-   plaidml-ng-api/index
    executable-api/index
-   
+   hosttensor-api/index
+   plaidml-ng-api/index
 
 As of version ``0.15``, there is a new backend API to work with functions that 
 can be compiled as a runtime ``Executable``. Where previously ``Backend`` used a 

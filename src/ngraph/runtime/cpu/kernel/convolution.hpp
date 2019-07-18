@@ -43,12 +43,7 @@ namespace ngraph
                                  const CoordinateDiff& padding_below,
                                  const CoordinateDiff& padding_above,
                                  const Strides& data_dilation_strides,
-                                 void* input_scale = nullptr,
-                                 void* input_zero_point = nullptr,
-                                 void* filter_scale = nullptr,
-                                 void* filter_zero_point = nullptr,
-                                 void* output_scale = nullptr,
-                                 void* output_zero_point = nullptr)
+                                 const float requant_scale)
                 {
                     reference::convolution<INPUT, FILTER, OUTPUT, ACCUMULATION>(
                         static_cast<const INPUT*>(input0),
@@ -62,12 +57,7 @@ namespace ngraph
                         padding_below,
                         padding_above,
                         data_dilation_strides,
-                        static_cast<const float*>(input_scale),
-                        static_cast<const INPUT*>(input_zero_point),
-                        static_cast<const float*>(filter_scale),
-                        static_cast<const FILTER*>(filter_zero_point),
-                        static_cast<const float*>(output_scale),
-                        static_cast<const OUTPUT*>(output_zero_point));
+                        requant_scale);
                 }
 
                 template <typename ElementType>

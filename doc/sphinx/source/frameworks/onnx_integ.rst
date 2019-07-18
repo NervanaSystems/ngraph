@@ -10,7 +10,7 @@ nGraph's internal representation and converted to ``Function`` objects, which
 can be compiled and executed on one of nGraph's backends.
 
 You can use nGraph's Python API to run an ONNX model and nGraph can be used 
-as an ONNX backend using the add-on package `nGraph ONNX`_.
+as an ONNX backend using the add-on package `nGraph-ONNX <ngraph_onnx>`_.
 
 
 .. note:: In order to support ONNX, nGraph must be built with the 
@@ -33,7 +33,8 @@ for nGraph, ONNX and NumPy:
 Importing an ONNX model
 -----------------------
 
-You can download models from the `ONNX Model Zoo`_. For example, ResNet-50:
+You can download models from the `ONNX Model Zoo <onnx_model_zoo_>`_.
+For example ResNet-50:
 
 ::
 
@@ -91,9 +92,9 @@ data:
 
 
 Find more information about nGraph and ONNX in the 
-`nGraph ONNX`_ GitHub repository.
+`nGraph-ONNX <ngraph_onnx>`_ GitHub repository.
 
 
-.. _ngraph ONNX: https://github.com/NervanaSystems/ngraph-onnx
-.. _ngraph ONNX building: https://github.com/NervanaSystems/ngraph-onnx/blob/master/BUILDING.md
-.. _ONNX model zoo: https://github.com/onnx/models
+.. _ngraph_onnx: https://github.com/NervanaSystems/ngraph-onnx/
+.. _ngraph_onnx_building: https://github.com/NervanaSystems/ngraph-onnx/blob/master/BUILDING.md
+.. _onnx_model_zoo: https://github.com/onnx/models

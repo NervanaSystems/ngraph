@@ -15,22 +15,17 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/generic_cpu/gcpu_executable.hpp"
-#include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
 #include "ngraph/pass/assign_layout.hpp"
-#include "ngraph/pass/core_fusion.hpp"
-#include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -40,35 +35,21 @@ using descriptor::layout::DenseTensorLayout;
 
 runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& function,
                                               bool enable_performance_collection)
-    : m_is_compiled{true}
-    , m_performance_counters_enabled{enable_performance_collection}
 {
-    m_function = clone_function(*function);
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::LikeReplacement>();
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
-    pass_manager.register_pass<pass::ImplicitBroadcastElimination>();
-    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
-    pass_manager.register_pass<pass::Liveness>();
-    pass_manager.run_passes(m_function);
-
-    for (const shared_ptr<Node>& node : m_function->get_ordered_ops())
     {
-        m_wrapped_nodes.emplace_back(node);
-    }
-    set_parameters_and_results(*m_function);
-}
+        m_is_compiled = true;
+        pass::Manager pass_manager;
+        pass_manager.register_pass<pass::LikeReplacement>();
+        pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
+        pass_manager.register_pass<pass::Liveness>();
+        pass_manager.run_passes(function);
 
-runtime::gcpu::GCPUExecutable::GCPUExecutable(const std::string& model_string)
-    : m_is_compiled{true}
-    , m_performance_counters_enabled{false}
-{
-    m_function = deserialize(model_string);
-    for (const shared_ptr<Node>& node : m_function->get_ordered_ops())
-    {
-        m_wrapped_nodes.emplace_back(node);
+        for (const shared_ptr<Node>& node : function->get_ordered_ops())
+        {
+            m_wrapped_nodes.emplace_back(node);
+        }
     }
-    set_parameters_and_results(*m_function);
+    set_parameters_and_results(*function);
 }
 
 bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
@@ -101,7 +82,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            descriptor::Tensor* tensor = &param->output(i).get_tensor();
+            descriptor::Tensor* tensor = param->get_output_tensor_ptr(i).get();
             tensor_map.insert({tensor, func_inputs[input_count++]});
         }
     }
@@ -114,14 +95,14 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::Tensor* tensor = &output->output(0).get_tensor();
+        descriptor::Tensor* tensor = output->get_output_tensor_ptr(0).get();
         tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
     // for each ordered op in the graph
     for (const NodeWrapper& wrapped : m_wrapped_nodes)
     {
-        auto op = wrapped.get_node();
+        const Node* op = &wrapped.get_node();
         auto type_id = wrapped.get_typeid();
         if (type_id == OP_TYPEID::Parameter)
         {
@@ -130,9 +111,9 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
 
         // get op inputs from map
         vector<shared_ptr<HostTensor>> op_inputs;
-        for (auto input : op->inputs())
+        for (const descriptor::Input& input : op->get_inputs())
         {
-            descriptor::Tensor* tensor = &input.get_tensor();
+            descriptor::Tensor* tensor = input.get_output().get_tensor_ptr().get();
             op_inputs.push_back(tensor_map.at(tensor));
         }
 
@@ -140,14 +121,14 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         vector<shared_ptr<HostTensor>> op_outputs;
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
-            descriptor::Tensor* tensor = &op->output(i).get_tensor();
+            descriptor::Tensor* tensor = op->get_output_tensor_ptr(i).get();
             shared_ptr<HostTensor> host_tensor;
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
                 const Shape& shape = op->get_output_shape(i);
                 const element::Type& type = op->get_output_element_type(i);
-                string name = op->output(i).get_tensor().get_name();
+                string name = op->get_output_tensor(i).get_name();
                 host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
                 tensor_map.insert({tensor, host_tensor});
             }
@@ -196,7 +177,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         }
         if (m_nan_check_enabled)
         {
-            perform_nan_check(op_outputs, op.get());
+            perform_nan_check(op_outputs, op);
         }
     }
 
@@ -205,9 +186,19 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
 
 void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
                                                    const NodeWrapper& op,
-                                                   const vector<shared_ptr<HostTensor>>& out,
-                                                   const vector<shared_ptr<HostTensor>>& in)
+                                                   const vector<shared_ptr<HostTensor>>& outputs,
+                                                   const vector<shared_ptr<HostTensor>>& inputs)
 {
+    vector<void*> out;
+    vector<const void*> in;
+    for (auto t : outputs)
+    {
+        out.push_back(t->get_data_ptr());
+    }
+    for (auto t : inputs)
+    {
+        in.push_back(t->get_data_ptr());
+    }
     stringstream ss;
     switch (type.get_type_enum())
     {
@@ -225,8 +216,7 @@ void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     case element::Type_t::bf16:
-    case element::Type_t::f16:
-        ss << "unsupported element type " << type << " op " << op.get_node()->get_name();
+        ss << "unsupported element type " << type << " op " << op.get_node().get_name();
         throw ngraph_error(ss.str());
     }
 }
@@ -239,9 +229,11 @@ void runtime::gcpu::GCPUExecutable::set_nan_check(bool enable)
 vector<runtime::PerformanceCounter> runtime::gcpu::GCPUExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
-    for (const pair<shared_ptr<const Node>, stopwatch> p : m_timer_map)
+    for (const pair<const Node*, stopwatch> p : m_timer_map)
     {
-        rc.emplace_back(p.first, p.second.get_total_microseconds(), p.second.get_call_count());
+        rc.emplace_back(p.first->get_name().c_str(),
+                        p.second.get_total_microseconds(),
+                        p.second.get_call_count());
     }
     return rc;
 }
@@ -293,13 +285,4 @@ void runtime::gcpu::GCPUExecutable::perform_nan_check(const vector<shared_ptr<Ho
         }
         arg_number++;
     }
-}
-
-void runtime::gcpu::GCPUExecutable::save(ostream& out)
-{
-    cpio::Writer writer(out);
-    string si = "INTERPRETER Save File 1.0";
-    writer.write("save_info", si.data(), si.size());
-    string model = serialize(m_function, 0);
-    writer.write("model", model.data(), model.size());
 }

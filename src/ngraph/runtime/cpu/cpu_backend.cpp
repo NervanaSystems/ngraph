@@ -63,17 +63,11 @@ namespace
     } s_cpu_static_init;
 }
 
-runtime::cpu::CPU_Backend::~CPU_Backend()
-{
-    m_exec_map.clear();
-}
-
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
-    ngraph::pass::PassConfig& pass_config,
-    Allocator* allocator)
+    ngraph::pass::PassConfig& pass_config)
 {
-    return external_function->make_call_frame(pass_config, allocator);
+    return external_function->make_call_frame(pass_config);
 }
 
 shared_ptr<runtime::Tensor>
@@ -109,29 +103,21 @@ shared_ptr<runtime::Executable>
 #endif
 
     shared_ptr<runtime::Executable> rc;
-    // we will protect the access to map (m_exec_map) across multiple threads by creating a lock_gaurd
-    // m_exec_map_mutex will be released once the object `guard` goes out of scope
+    auto it = m_exec_map.find(func);
+    if (it != m_exec_map.end())
     {
-        std::lock_guard<std::mutex> guard(m_exec_map_mutex);
-        auto it = m_exec_map.find(func);
-        if (it != m_exec_map.end())
-        {
-            rc = it->second;
-            return rc;
-        }
+        rc = it->second;
     }
-    rc = make_shared<CPU_Executable>(
-        func, pass_config, get_host_memory_allocator(), performance_counters_enabled);
+    else
     {
-        std::lock_guard<std::mutex> guard(m_exec_map_mutex);
+        rc = make_shared<CPU_Executable>(func, pass_config, performance_counters_enabled);
         m_exec_map.insert({func, rc});
-        return rc;
     }
+    return rc;
 }
 
 runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
                                              ngraph::pass::PassConfig& pass_config,
-                                             Allocator* allocator,
                                              bool performance_counters_enabled)
 {
     FunctionInstance& instance = m_function_instance;
@@ -139,7 +125,7 @@ runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
     {
         instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
         instance.m_external_function->m_emit_timing = performance_counters_enabled;
-        auto cf = instance.m_external_function->make_call_frame(pass_config, allocator);
+        auto cf = instance.m_external_function->make_call_frame(pass_config);
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
     }
     set_parameters_and_results(*func);
@@ -170,7 +156,6 @@ bool runtime::cpu::CPU_Executable::call(const vector<shared_ptr<runtime::Tensor>
 
 void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> exec)
 {
-    std::lock_guard<std::mutex> guard(m_exec_map_mutex);
     for (auto it = m_exec_map.begin(); it != m_exec_map.end(); ++it)
     {
         if (it->second == exec)
@@ -179,28 +164,6 @@ void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> 
             break;
         }
     }
-}
-
-runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
-{
-    if (!m_allocator)
-    {
-        return runtime::get_default_allocator();
-    }
-    return m_allocator.get();
-}
-
-void runtime::cpu::CPU_Backend::set_host_memory_allocator(
-    std::unique_ptr<runtime::Allocator> allocator)
-{
-    if (m_allocator)
-    {
-        // Resources allocated with the existing allocator might still be around and expect it
-        // to be available for freeing. We cannot switch to the new allocator
-        throw ngraph_error(
-            "Allocator already exists. Changing allocators mid-execution is not permitted.");
-    }
-    m_allocator = std::move(allocator);
 }
 
 vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const
@@ -220,7 +183,6 @@ bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
 {
     return true;
 }
-
 bool runtime::cpu::CPU_Backend::is_supported_property(const Property prop) const
 {
     if (prop == Property::memory_attach)
