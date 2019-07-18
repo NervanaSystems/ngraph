@@ -463,8 +463,6 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0eps_f32)
     EXPECT_TRUE(std::get<2>(result)) << "Gamma beta test variance";
 }
 
-
-
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_parameters_duplication)
 {
     auto input_shape = Shape{2, 2, 2, 1};
