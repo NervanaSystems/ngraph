@@ -567,6 +567,86 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGConcatOp)
+    {
+        auto concat = cast<NGConcatOp>(op);
+        auto loc = concat.getLoc();
+        ScopedContext scope(rewriter, loc);
+
+        // Create Value for result, and extract type info.
+        Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
+        auto resultTy = result->getType().cast<MemRefType>();
+
+        // Create view to write into result.
+        MemRefView vRes(result);
+        auto rank = vRes.rank();
+
+        // For each operand, generate a separate loop to copy into the target slice of "result".
+        // We'll keep track of the slice offsets via concatenation_axis_pos.
+        auto concatenationAxis = concat.concatenation_axis().getSExtValue();
+        IndexHandle concatenationAxisPos(index_t(0));
+
+        for (auto& operand : operands)
+        {
+            NGRAPH_CHECK(operand, "Unexpected null operand in ConcatOp");
+            auto operandTy = result->getType().cast<MemRefType>();
+
+            // Assuming rank = r, and the concatenation axis is A where A<r, we'll be creating
+            // loops of this form:
+            //
+            //   for i_0 := 0 to operand.dims[0]:
+            //    for i_1 := 0 to operand.dims[1]:
+            //     ...
+            //      for i_(r-2) := 0 to operand.dims[r-2]:
+            //       for i_(r-1) := 0 to operand.dims[r-1]:
+            //        result[i_0][i_1]...
+            //              [i_(A-1)][i_A + concatenationAxisPos][i_(A+1)]...
+            //              [i_(r-2)][i_(r-1)]
+            //                  :=
+            //        operand[i_0][i_1]...[i_(r-2)][i_(r-1)]
+            MemRefView vOperand(operand);
+            NGRAPH_CHECK(vOperand.rank() == rank, "Unexpected rank mismatch");
+
+            llvm::SmallVector<ValueHandle, 5> indexVars;
+            llvm::SmallVector<ValueHandle*, 5> indexVarPtrs;
+            llvm::SmallVector<ValueHandle, 5> indexVarLbs;
+            llvm::SmallVector<ValueHandle, 5> indexVarUbs;
+            llvm::SmallVector<int64_t, 5> indexVarSteps;
+            for (int i = 0; i < rank; i++)
+            {
+                indexVars.push_back(IndexHandle());
+                indexVarPtrs.push_back(&(indexVars.back()));
+                indexVarLbs.push_back(vOperand.lb(i));
+                indexVarUbs.push_back(vOperand.ub(i));
+                indexVarSteps.push_back(vOperand.step(i));
+            }
+
+            LoopNestBuilder(indexVarPtrs, indexVarLbs, indexVarUbs, indexVarSteps)([&] {
+                IndexedValue ivRes(result);
+                IndexedValue ivOperand(operand);
+
+                // On the LHS of the assignment, adjust the index for the concatenation axis.
+                llvm::SmallVector<ValueHandle, 5> resIndexHandles;
+                for (int i = 0; i < rank; i++)
+                {
+                    resIndexHandles.push_back(i == concatenationAxis
+                                                  ? indexVars[i] + concatenationAxisPos
+                                                  : indexVars[i]);
+                }
+
+                ivRes(resIndexHandles) = ivOperand(indexVars);
+            });
+
+            // Move up concatenation_axis_pos for the next operand.
+            concatenationAxisPos = concatenationAxisPos + vOperand.ub(concatenationAxis);
+        }
+
+        rewriter.replaceOp(op, {result});
+
+        return matchSuccess();
+    }
+
     REWRITER(NGReturnOp)
     {
         rewriter.replaceOpWithNewOp<ReturnOp>(op);
