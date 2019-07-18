@@ -78,7 +78,140 @@ namespace ngraph
         f(p);
     };
 
-    /// All users (inputs and control dependencies) of target are replace with replacement
+    /// \brief Replace the node `target` with the node `replacement`, i.e.,
+    ///        redirect all users and control dependencies of `target` to
+    ///        `replacement`.
+    ///
+    /// \param target Node to be replaced.
+    /// \param replacement Node to replace `target` with.
+    ///
+    /// This is primarily used in graph-rewriting passes. For example, we
+    /// might "fuse" two Concat operations as follows:
+    ///
+    /// (Step 0: Original graph)
+    ///
+    ///   A                       B
+    ///   |                       |
+    ///   v                       v
+    /// N0[Concat, concatenation_axis=3]     C
+    ///          |                           |
+    ///          v                           v
+    ///        N1[Concat, concatenation_axis=3]
+    ///          |                |
+    ///          v                v
+    ///       some_user         another_user
+    ///
+    /// (Step 1: Construct replacement)
+    ///
+    ///    shared_ptr<Node> new_N1 = make_shared<op::Concat>({A,B,C},3);
+    ///
+    ///   A----------------------------------------.
+    ///   |                                        |
+    ///   |                       B----------------)--.
+    ///   |                       |                |  |
+    ///   v                       v                |  |
+    /// N0[Concat, concatenation_axis=3]     C-----)--)--.
+    ///          |                           |     |  |  |
+    ///          v                           v     v  v  v
+    ///        N1[Concat, concatenation_axis=3]   new_N1[Concat, concatenation_axis=3]
+    ///          |                |
+    ///          v                v
+    ///       some_user         another_user
+    ///
+    /// (Step 2: Replace N1 with new_N1)
+    ///
+    ///    replace_node(N1, new_N1);
+    ///
+    ///   A----------------------------------------.
+    ///   |                                        |
+    ///   |                       B----------------)--.
+    ///   |                       |                |  |
+    ///   v                       v                |  |
+    /// N0[Concat, concatenation_axis=3]     C-----)--)--.
+    ///          |                           |     |  |  |
+    ///          v                           v     v  v  v
+    ///        N1[Concat, concatenation_axis=3]   new_N1[Concat, concatenation_axis=3]
+    ///                                                  |                |
+    ///                                                  v                v
+    ///                                               some_user         another_user
+    ///
+    /// (Step 3: N0 and N1 are now dead, nodes will be freed)
+    ///
+    ///    [happens automatically, once all shared_ptrs to N1 are released]
+    ///
+    ///   A----------------------------------------.
+    ///                                            |
+    ///                           B----------------)--.
+    ///                                            |  |
+    ///                                            |  |
+    ///                                      C-----)--)--.
+    ///                                            |  |  |
+    ///                                            v  v  v
+    ///                                           new_N1[Concat, concatenation_axis=3]
+    ///                                                  |                |
+    ///                                                  v                v
+    ///                                               some_user         another_user
+    ///
+    /// NOTE 1: replace_node is not type-safe (the graph is not revalidated).
+    /// For example, the following is allowed, even if node `some_user`
+    /// requires an input of shape 2x2:
+    ///
+    /// (Before)
+    ///      A(shape=2x2)  B(shape=3x3)
+    ///      |
+    ///      v
+    ///   some_user(requires 2x2 input)
+    ///
+    /// (After -- graph is now invalid)
+    ///
+    ///      replace_node(A, B);
+    ///
+    ///      A(shape=2x2)  B(shape=3x3)
+    ///                    |
+    ///                    v
+    ///                 some_user(requires 2x2 input)
+    ///
+    /// NOTE 2: it is possible to insert a cycle into the graph with
+    /// replace_node, resulting in an invalid graph. Care must be taken to
+    /// avoid this. One common example is when you are attempting to insert a
+    /// new node `M` "after"` a node `N`. For example, you might expect this
+    /// to work:
+    ///
+    ///    shared_ptr<Node> M = make_shared<SomeUnaryOp>(N);
+    ///    replace_node(M, N);
+    ///
+    /// The problem is that at replacement time, N itself is a user of M. So
+    /// we end up introducing a cycle as follows:
+    ///
+    ///       N
+    ///       |
+    ///       v
+    ///  other users...
+    ///
+    ///      |||
+    ///      vvv
+    ///
+    ///       N------------>M
+    ///       |
+    ///       v
+    ///  other users...
+    ///
+    ///      |||
+    ///      vvv
+    ///
+    ///               .----.
+    ///              |      |
+    ///              |      |
+    ///       N      `----->M
+    ///                     |
+    ///                     v
+    ///                other users...
+    ///
+    /// To avoid the cycle, a valid way to perform the above desired insertion would be,
+    ///
+    ///        auto new_N = N->copy_with_new_args(N->get_arguments());
+    ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
+    ///        replace_node(N, M);
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
