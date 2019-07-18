@@ -66,7 +66,7 @@ TEST(type_prop, argmin_invalid_zero_reduction_axis)
     try
     {
         auto argmin = make_shared<op::ArgMin>(a, 1, element::i32);
-        FAIL() << "ArgMin c-tor should throw for zero-legnth reduction axis";
+        FAIL() << "ArgMin c-tor should throw for zero-length reduction axis";
     }
     catch (const NodeValidationFailure& error)
     {
