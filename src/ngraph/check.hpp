@@ -156,3 +156,9 @@ namespace ngraph
 /// \throws ::ngraph::CheckFailure if `cond` is false.
 #define NGRAPH_CHECK(cond, ...)                                                                    \
     NGRAPH_CHECK_HELPER(::ngraph::CheckFailure, "", (cond), ##__VA_ARGS__)
+
+/// \brief Macro to signal a code path that is unreachable in a successful execution. It's
+/// implemented with NGRAPH_CHECK macro.
+/// \param ... Additional error message that should describe why that execution path is unreachable.
+/// \throws ::ngrap::CheckFailure if the macro is executed.
+#define NGRAPH_UNREACHABLE(...) NGRAPH_CHECK(false, "Unreachable: ", ##__VA_ARGS__)

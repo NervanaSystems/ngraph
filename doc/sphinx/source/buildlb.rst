@@ -1,22 +1,39 @@
 .. buildlb.rst:
 
 ###############
-Build and Test 
+Build and Test
 ###############
 
-This section details how to build the C++ version of the nGraph Library, which 
-is targeted toward developers working on kernel-specific operations, 
-optimizations, or on deep learning solutions that leverage custom backends. 
+* :ref:`default_ngflags`
+* :ref:`ngraph_plaidml_backend`
 
-* :ref:`ubuntu`
-* :ref:`centos`
+There are a few common paths to take when manually building the |project| 
+from source code. Today nGraph supports various developers working on all 
+parts of the :abbr:`Deep Learning (DL)` stack, and the way you decide to 
+build or install components ought to depend on the capabilities of your 
+hardware, and how you intend to use it.
 
+A "from scratch" source-code build of the nGraph Library enables the CPU, 
+``Interpreter``, and unit tests by default. See :ref:`default_ngflags` 
+for more detail.
+
+A "from scratch" source-code build that defaults to the PlaidML backend 
+contains rich algorithm libraries akin to those that were previously available 
+only to developers willing to spend extensive time writing, testing, and 
+customizing kernels. An ``NGRAPH_PLAIDML`` dist can function like a framework 
+that lets developers compose, train, and even deploy :abbr:`DL (Deep Learning)` 
+models in their preferred language on neural networks of any size. This is 
+a good option if, for example, you are working on a laptop with a high-end 
+GPU that you want to use for compute. See :ref:`ngraph_plaidml_backend` 
+for instructions on how to build.
+
+In either case, there are some prerequisites that your system will need 
+to build from sources.
+
+.. _prerequisites:
 
 Prerequisites
-=============
-
-Release |release| of |project| supports Linux\*-based systems with the following 
-packages and prerequisites: 
+-------------
 
 .. csv-table::
    :header: "Operating System", "Compiler", "Build System", "Status", "Additional Packages"
@@ -27,70 +44,35 @@ packages and prerequisites:
    Ubuntu 16.04 or 18.04 (LTS) 64-bit, Clang 3.9, CMake 3.5.1 + GNU Make, supported, ``build-essential cmake clang-3.9 clang-format-3.9 git curl zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool``
    Clear Linux\* OS for Intel® Architecture version 28880, Clang 8.0, CMake 3.14.2, experimental, bundles ``machine-learning-basic c-basic python-basic python-basic-dev dev-utils``
 
-Other configurations may work, but should be considered experimental with
-limited support. On Ubuntu 16.04 with gcc-5.4.0 or clang-3.9, for example, we 
-recommend adding ``-DNGRAPH_USE_PREBUILT_LLVM=TRUE`` to the cmake command in 
-step 4 below. This fetches a pre-built tarball of LLVM+Clang from llvm.org, 
-and it will substantially reduce build time.
 
-If using ``gcc`` version 4.8, it may be necessary to add symlinks from ``gcc`` 
-to ``gcc-4.8``, and from ``g++`` to ``g++-4.8``, in your :envvar:`PATH`, even 
-if you explicitly specify the ``CMAKE_C_COMPILER`` and ``CMAKE_CXX_COMPILER`` 
-flags when building. (**Do NOT** supply the ``-DNGRAPH_USE_PREBUILT_LLVM`` 
-flag in this case, because the prebuilt tarball supplied on llvm.org is not 
-compatible with a gcc 4.8-based build.)
+.. _default_ngflags:
 
-
-The ``default`` build
----------------------
-
-Running ``cmake`` with no build flags defaults to the following settings; see
-the ``CMakeLists.txt`` file for other experimental options' details: 
-
-.. code-block:: console 
-
-   -- NGRAPH_UNIT_TEST_ENABLE:         ON
-   -- NGRAPH_TOOLS_ENABLE:             ON
-   -- NGRAPH_CPU_ENABLE:               ON
-   -- NGRAPH_INTELGPU_ENABLE:          OFF
-   -- NGRAPH_GPU_ENABLE:               OFF
-   -- NGRAPH_INTERPRETER_ENABLE:       ON
-   -- NGRAPH_NOP_ENABLE:               ON
-   -- NGRAPH_GPUH_ENABLE:              OFF
-   -- NGRAPH_GENERIC_CPU_ENABLE:       OFF
-   -- NGRAPH_DEBUG_ENABLE:             OFF  # Set to "ON" to enable logging
-   -- NGRAPH_ONNX_IMPORT_ENABLE:       OFF
-   -- NGRAPH_DEX_ONLY:                 OFF
-   -- NGRAPH_CODE_COVERAGE_ENABLE:     OFF
-   -- NGRAPH_LIB_VERSIONING_ENABLE:    OFF
-   -- NGRAPH_PYTHON_BUILD_ENABLE:      OFF
-   -- NGRAPH_USE_PREBUILT_LLVM:        OFF
-   -- NGRAPH_PLAIDML_ENABLE:           OFF
-   -- NGRAPH_DISTRIBUTED_ENABLE:       OFF
-
+Building nGraph from source
+===========================
 
 .. important:: The default :program:`cmake` procedure (no build flags) will  
    install ``ngraph_dist`` to an OS-level location like ``/usr/bin/ngraph_dist``
    or ``/usr/lib/ngraph_dist``. Here we specify how to build locally to the
    location of ``~/ngraph_dist`` with the cmake target ``-DCMAKE_INSTALL_PREFIX=~/ngraph_dist``. 
 
-
 All of the nGraph Library documentation presumes that ``ngraph_dist`` gets 
-installed locally. The system location can be used just as easily by customizing 
-paths on that system. See the :file:`ngraph/CMakeLists.txt` file to change or 
-customize the default CMake procedure.
+installed locally. The system location can be used just as easily by 
+customizing paths on that system. See the :file:`ngraph/CMakeLists.txt` 
+file to change or customize the default CMake procedure.
 
+* :ref:`ubuntu`
+* :ref:`centos`
 
-Build steps
------------
 
 .. _ubuntu:
 
-Ubuntu LTS
-~~~~~~~~~~
+Ubuntu LTS build steps
+----------------------
 
 The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu 
 18.04 (LTS).
+
+#. Ensure you have installed the :ref:`prerequisites` for Ubuntu\*.
 
 #. Clone the `NervanaSystems` ``ngraph`` repo:
 
@@ -109,7 +91,7 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
 #. Generate the GNU Makefiles in the customary manner (from within the 
    ``build`` directory). This command enables ONNX support in the library  
    and sets the target build location at ``~/ngraph_dist``, where it can be 
-   found easily.  
+   found easily.
 
    .. code-block:: console
 
@@ -132,30 +114,29 @@ The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu
    .. code-block:: console
       
       $ make   # note: make -j <N> may work, but sometimes results in out-of-memory errors if too many compilation processes are used
-      $ make install          
+      $ make install
 
 #. (Optional, requires `doxygen`_, `Sphinx`_, and `breathe`_). Run ``make html`` 
    inside the ``doc/sphinx`` directory of the cloned source to build a copy of 
    the `website docs`_ locally. The low-level API docs with inheritance and 
    collaboration diagrams can be found inside the ``/docs/doxygen/`` directory. 
    See the :doc:`project/doc-contributor-README` for more details about how to 
-   build documentation for nGraph. 
+   build documentation for nGraph.
 
 
 .. _centos: 
 
-CentOS 7.4
-~~~~~~~~~~
+CentOS 7.4 build steps
+----------------------
 
 The process documented here will work on CentOS 7.4.
 
-#. Update the system with :command:`yum` and issue the following commands: 
-   
+#. Ensure you have installed the :ref:`prerequisites` for CentOS\*, 
+   and update the system with :command:`yum`.
+
    .. code-block:: console
 
       $ sudo yum update
-      $ sudo yum install zlib-devel install ncurses-libs ncurses-devel patch diffutils wget gcc-c++ make git perl-Data-Dumper
-
 
 #. Install Cmake 3.4:
 
@@ -178,6 +159,59 @@ The process documented here will work on CentOS 7.4.
       $ cd ngraph && mkdir build && cd build
       $ ~/cmake/bin/cmake .. -DCMAKE_INSTALL_PREFIX=~/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=ON 
       $ make && sudo make install 
+
+
+.. _ngraph_plaidml_backend:
+
+Building nGraph-PlaidML from source
+===================================
+
+The following instructions will create the ``~/ngraph_plaidml_dist`` 
+locally:
+
+#. Ensure you have installed the :ref:`prerequisites` for your OS.
+
+#. Install the prerequisites for the backend. Our hybrid ``NGRAPH_PLAIDML``
+   backend works best with Python3 versions. We recommend that you use a 
+   virtual environment, due to some of the difficulties that users have 
+   seen when trying to install outside of a venv.
+
+   .. code-block:: console
+
+      $ sudo apt install python3-pip
+      $ pip install plaidml 
+      $ plaidml-setup
+
+#. Clone the source code, create and enter your build directory:
+
+   .. code-block:: console
+
+      $ git clone https://github.com/NervanaSystems/ngraph.git
+      $ cd ngraph && mkdir build && cd build
+
+#. Prepare the CMake files as follows: 
+
+   .. code-block:: console
+
+      $ cmake .. -DCMAKE_INSTALL_PREFIX=~/ngraph_plaidml_dist -DNGRAPH_CPU_ENABLE=OFF -DNGRAPH_PLAIDML_ENABLE=ON 
+
+#. Run :command:`make` and ``make install``. Note that if you are building 
+   outside a local or user path, you may need to run ``make install`` as the 
+   root user.
+
+   .. code-block:: console
+
+      $ make
+      $ make install
+
+   This should create the shared library ``libplaidml_backend.so`` and 
+   nbench. Note that if you built in a virtual environment and run 
+   ``make check`` from it, the Google Test may report failures. Full 
+   tests can be run when PlaidML devices are available at the machine 
+   level.
+
+For more about working with the PlaidML backend from nGraph, see our 
+API documentation :doc:`backends/plaidml-ng-api/index`. 
 
 
 macOS\* development
@@ -228,3 +262,4 @@ To perform unit tests on the install:
 .. _ONNX: http://onnx.ai
 .. _website docs: https://ngraph.nervanasys.com/docs/latest/
 .. _googletest framework: https://github.com/google/googletest.git
+.. _PlaidML: https://github.com/plaidml/plaidml

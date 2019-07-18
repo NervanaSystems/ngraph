@@ -14,33 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "util/type_prop.hpp"
 
-#include "ngraph/pass/pass.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+TEST(type_prop, convert_deduce)
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            namespace pass
-            {
-                class CPUCompiledKernelFusion : public ngraph::pass::FunctionPass
-                {
-                public:
-                    CPUCompiledKernelFusion(size_t min_kernel_size = 2)
-                        : FunctionPass()
-                        , m_min_kernel_size(min_kernel_size)
-                    {
-                    }
-
-                    bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-
-                protected:
-                    size_t m_min_kernel_size;
-                };
-            }
-        }
-    }
+    // Deduce type
+    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto c = make_shared<op::Convert>(param, element::i32);
+    ASSERT_EQ(c->get_element_type(), element::i32);
+    ASSERT_EQ(c->get_shape(), (Shape{2, 3, 4}));
 }

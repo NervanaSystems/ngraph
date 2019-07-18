@@ -14,26 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "gtest/gtest.h"
+#include "ngraph/ngraph.hpp"
+#include "util/type_prop.hpp"
 
-#include "ngraph/pass/graph_rewrite.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+TEST(type_prop, unsqueeze)
 {
-    namespace pass
-    {
-        class PrefixReshapeElimination;
-    }
+    auto param = make_shared<op::Parameter>(element::f32, Shape{4, 1, 4, 1, 8});
+    auto axes_node =
+        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{1, 2});
+    auto squeeze = make_shared<op::Unsqueeze>(param, axes_node);
+
+    ASSERT_EQ(squeeze->get_element_type(), element::f32);
+    ASSERT_EQ(squeeze->get_shape(), (Shape{4, 1, 1, 1, 4, 1, 8}));
 }
-
-// A pass to eliminate reshapes whose output shapes are the same as
-// their input shape modulo leading size-1 axes.
-//
-// N.B. This pass MUST only be used by backends that can handle the
-//      omission of leading size-1 axes, e.g. backends that implement
-//      NumPy-style broadcast semantics.
-class ngraph::pass::PrefixReshapeElimination final : public ngraph::pass::GraphRewrite
-{
-public:
-    PrefixReshapeElimination();
-};

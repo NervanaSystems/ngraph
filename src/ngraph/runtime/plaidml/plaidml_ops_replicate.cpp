@@ -53,7 +53,7 @@ ngraph::runtime::plaidml::op::Replicate::Replicate(std::shared_ptr<Node> arg,
 
 void ngraph::runtime::plaidml::op::Replicate::validate_and_infer_types()
 {
-    const auto& arg = get_arguments().at(0);
+    std::shared_ptr<Node> arg = get_argument(0);
     Shape shape = arg->get_shape();
     for (auto rit = m_replication_axes.begin(), sit = shape.begin();
          rit != m_replication_axes.end();
