@@ -522,8 +522,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
 
 static bool switch_nodes(std::shared_ptr<ngraph::Node> node1,
                          std::shared_ptr<ngraph::Node> node2,
-                         size_t source_input_index = 0,
-                         size_t target_input_index = 0)
+                         size_t source_input_index = 0)
 {
     // check if node1 has only 1 argument, not sure how it will work with >1 args
     if (node1->inputs().size() > 1)
