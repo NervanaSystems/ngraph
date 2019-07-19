@@ -24,6 +24,7 @@
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/placement.hpp"
@@ -78,6 +79,29 @@ Node::~Node()
             input.remove_output();
         }
     }
+}
+
+std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) const
+{
+    return copy_with_new_inputs(inputs, get_control_dependencies());
+}
+
+std::shared_ptr<Node>
+    Node::copy_with_new_inputs(const OutputVector& inputs,
+                               const std::vector<std::shared_ptr<Node>>& control_dependencies) const
+{
+    bool for_get_output_element = (description() == op::GetOutputElement::type_name);
+    NodeVector args;
+    for (const Output<Node>& input : inputs)
+    {
+        args.push_back(get_output_element(input, for_get_output_element));
+    }
+    shared_ptr<Node> clone = copy_with_new_args(args);
+    for (auto& cdep : control_dependencies)
+    {
+        clone->add_control_dependency(cdep);
+    }
+    return clone;
 }
 
 void Node::safe_delete(NodeVector& nodes, bool recurse)
@@ -334,12 +358,77 @@ const std::vector<std::shared_ptr<Node>>& Node::get_control_dependencies() const
     return m_control_dependencies;
 }
 
+const std::vector<Node*>& Node::get_control_dependents() const
+{
+    return m_control_dependents;
+}
+
 void Node::add_control_dependency(std::shared_ptr<Node> node)
 {
     if (find(m_control_dependencies.begin(), m_control_dependencies.end(), node) ==
         m_control_dependencies.end())
     {
         m_control_dependencies.push_back(node);
+        if (find(node->m_control_dependents.begin(), node->m_control_dependents.end(), this) ==
+            node->m_control_dependents.end())
+        {
+            node->m_control_dependents.push_back(this);
+        }
+    }
+}
+
+void Node::add_node_control_dependencies(std::shared_ptr<Node> source_node)
+{
+    for (auto& node : source_node->get_control_dependencies())
+    {
+        add_control_dependency(node);
+    }
+}
+
+void Node::add_node_control_dependents(std::shared_ptr<Node> source_node)
+{
+    for (Node* node : source_node->get_control_dependents())
+    {
+        node->add_control_dependency(shared_from_this());
+    }
+}
+
+void Node::remove_control_dependency(std::shared_ptr<Node> node)
+{
+    {
+        auto it = find(m_control_dependencies.begin(), m_control_dependencies.end(), node);
+        if (it != m_control_dependencies.end())
+        {
+            m_control_dependencies.erase(it);
+        }
+    }
+    {
+        auto it = find(node->m_control_dependents.begin(), node->m_control_dependents.end(), this);
+        if (it != node->m_control_dependents.end())
+        {
+            node->m_control_dependents.erase(it);
+        }
+    }
+}
+
+void Node::clear_control_dependencies()
+{
+    for (auto& node : m_control_dependencies)
+    {
+        auto it = find(node->m_control_dependents.begin(), node->m_control_dependents.end(), this);
+        if (it != node->m_control_dependents.end())
+        {
+            node->m_control_dependents.erase(it);
+        }
+    }
+    m_control_dependencies.clear();
+}
+
+void Node::clear_control_dependents()
+{
+    while (!m_control_dependents.empty())
+    {
+        (*m_control_dependents.begin())->remove_control_dependency(shared_from_this());
     }
 }
 

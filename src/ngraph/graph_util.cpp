@@ -102,28 +102,28 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
     }
 }
 
-NodeVector ngraph::find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+NodeVector ngraph::find_common_args(std::shared_ptr<Node> node1, std::shared_ptr<Node> node2)
 {
-    std::unordered_set<std::shared_ptr<Node>> target_args;
+    std::unordered_set<std::shared_ptr<Node>> node1_args;
 
-    auto compute_target_args = [&target_args](const std::shared_ptr<Node> node) {
-        target_args.insert(node);
+    auto compute_node1_args = [&node1_args](const std::shared_ptr<Node> node) {
+        node1_args.insert(node);
     };
 
-    traverse_nodes({target}, compute_target_args, false, NodeVector{});
+    traverse_nodes({node1}, compute_node1_args, false, NodeVector{});
 
-    std::unordered_set<std::shared_ptr<Node>> replacement_args;
+    std::unordered_set<std::shared_ptr<Node>> node2_args;
 
-    auto compute_replacement_args = [&replacement_args](const std::shared_ptr<Node> node) {
-        replacement_args.insert(node);
+    auto compute_node2_args = [&node2_args](const std::shared_ptr<Node> node) {
+        node2_args.insert(node);
     };
 
-    traverse_nodes({replacement}, compute_replacement_args, false, NodeVector{});
+    traverse_nodes({node2}, compute_node2_args, false, NodeVector{});
 
     NodeVector common_args;
-    for (auto e : target_args)
+    for (auto e : node1_args)
     {
-        if (replacement_args.count(e) > 0)
+        if (node2_args.count(e) > 0)
         {
             common_args.push_back(e);
         }
@@ -149,12 +149,19 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
 
     if (ngraph::get_provenance_enabled())
     {
+        auto common_args = ngraph::find_common_args(target, replacement);
+
         auto set_replacement_prov = [replacement](std::shared_ptr<Node> node) {
             replacement->merge_provenance_tags_from(node);
         };
 
-        traverse_nodes(
-            {target}, set_replacement_prov, false, ngraph::find_common_args(target, replacement));
+        traverse_nodes({target}, set_replacement_prov, false, common_args);
+
+        auto set_prov_new_nodes = [replacement](std::shared_ptr<Node> node) {
+            node->merge_provenance_tags_from(replacement);
+        };
+
+        traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
     }
 
     // For each of target's output O with replacement output O_rep:
@@ -167,6 +174,9 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
             input.replace_source_output(replacement->output(i));
         }
     }
+
+    replacement->add_node_control_dependents(target);
+    target->clear_control_dependents();
 }
 
 // Check if all paths from X to a result go through Y
@@ -209,19 +219,23 @@ std::list<std::shared_ptr<ngraph::Node>>
         if (node_map.count(node.get()) == 0)
         {
             // get (already) cloned arguments and clone the node
-            NodeVector cloned_args;
-            for (auto arg : node->get_arguments())
+            OutputVector cloned_args;
+            for (auto input : node->inputs())
             {
-                cloned_args.push_back(node_map.at(arg.get()));
+                Output<Node> output = input.get_source_output();
+                cloned_args.push_back(output.for_node(node_map.at(output.get_node())));
             }
-            auto cloned_node = node->copy_with_new_args(cloned_args);
-
-            // copy control dependencies
-            for (auto cdep : node->get_control_dependencies())
+            std::vector<std::shared_ptr<Node>> cloned_dependencies;
+            for (auto& dependency : node->get_control_dependencies())
             {
-                cloned_node->add_control_dependency(node_map.at(cdep.get()));
+                shared_ptr<Node>& dependent = node_map.at(dependency.get());
+                if (find(cloned_dependencies.begin(), cloned_dependencies.end(), dependent) ==
+                    cloned_dependencies.end())
+                {
+                    cloned_dependencies.push_back(dependent);
+                }
             }
-
+            auto cloned_node = node->copy_with_new_inputs(cloned_args, cloned_dependencies);
             if (node->get_friendly_name() != node->get_name())
             {
                 // There is a friendly name for this node so copy it

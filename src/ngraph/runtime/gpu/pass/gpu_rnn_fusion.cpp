@@ -313,10 +313,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
         auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 2);
 
-        NGRAPH_CHECK(lstm->get_outputs().at(0).get_inputs().size() == 2,
-                     "Lstm node doesnt have two outputs");
-
-        // Now identify the nodes which consumes the output of LSTM nodes
+        // Now identify the nodes which consume the outputs of LSTM nodes
         // and replace them accordingly
         // find the user's for {ht|ct} and replace them with lstm_goe_1
         for (auto node : pattern_map[ct_label]->get_users())
