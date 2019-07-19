@@ -88,6 +88,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scatter_add_4d_indices)
         read_vector<float>(result),
         MIN_FLOAT_TOLERANCE_BITS));
 }
+#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, scatter_add_3d_indices)
 {
@@ -123,7 +124,6 @@ NGRAPH_TEST(${BACKEND_NAME}, scatter_add_3d_indices)
         read_vector<float>(result),
         MIN_FLOAT_TOLERANCE_BITS));
 }
-#endif
 
 NGRAPH_TEST(${BACKEND_NAME}, scatter_add_2d_indices)
 {

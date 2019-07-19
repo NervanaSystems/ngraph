@@ -19,9 +19,10 @@ include(ExternalProject)
 # Includes blas 3.8.0 in mkldnn
 set(NGRAPH_MKLDNN_SHORT_VERSION 0)
 set(NGRAPH_MKLDNN_FULL_VERSION 0.20.0.0)
-set(NGRAPH_MKLDNN_VERSION "v0.20")
-set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.5.20190502")
-set(NGRAPH_MKLDNN_GIT_TAG "v0.20")
+set(NGRAPH_MKLDNN_ASSET_VERSION "v0.20")
+set(NGRAPH_MKLDNN_VERSION "v0.20.1")
+set(NGRAPH_MKLDNN_MKLML_VERSION "2019.0.5.20190502")
+set(NGRAPH_MKLDNN_GIT_TAG "v0.20.1")
 
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
@@ -88,8 +89,8 @@ endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/${NGRAPH_MKLDNN_VERSION}/")
-set(MKLVERSION ${NGRAPH_MKLDNN_SUB_VERSION})
+set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/${NGRAPH_MKLDNN_ASSET_VERSION}/")
+set(MKLVERSION ${NGRAPH_MKLDNN_MKLML_VERSION})
 if (LINUX)
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH 6ab490f0b358124338d04ee9383c3cbc536969d8)
