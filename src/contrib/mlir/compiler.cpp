@@ -26,6 +26,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
@@ -364,6 +365,12 @@ namespace ngraph
             }
 
             template <>
+            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Concat)
+            {
+                return compiler.create_concat(ng_node);
+            }
+
+            template <>
             mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
             {
                 return compiler.create_unary_op<mlir::NGReluOp>(ng_node);
@@ -396,6 +403,26 @@ mlir::Value* MLIRCompiler::create_binary_op(const ngraph::Node* ng_node)
     auto rhs_v = get_tensor_value(rhs.get()).m_value;
     auto res_type = get_mlir_type(ng_node->get_output_tensor_ptr().get());
     return m_builder->create<BinOp>(mlir::UnknownLoc::get(&m_context), res_type, lhs_v, rhs_v)
+        .getResult();
+}
+
+mlir::Value* MLIRCompiler::create_concat(const ngraph::Node* ng_node)
+{
+    std::vector<mlir::Value*> arg_values;
+    auto ng_node_concat = static_cast<const ngraph::op::Concat*>(ng_node);
+    for (auto& arg : ng_node->get_arguments())
+    {
+        auto arg_tensor = arg->get_output_tensor_ptr();
+        auto arg_v = get_tensor_value(arg_tensor.get()).m_value;
+        arg_values.push_back(arg_v);
+    }
+    auto res_type = get_mlir_type(ng_node->get_output_tensor_ptr().get());
+    return m_builder
+        ->create<mlir::NGConcatOp>(
+            mlir::UnknownLoc::get(&m_context),
+            res_type,
+            arg_values,
+            m_builder->getI64IntegerAttr(ng_node_concat->get_concatenation_axis()))
         .getResult();
 }
 

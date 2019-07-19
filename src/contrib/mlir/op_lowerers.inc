@@ -26,6 +26,7 @@
 MLIR_OP(NGAddOp)
 MLIR_OP(NGArgMaxRedOp)
 MLIR_OP(NGArgMinRedOp)
+MLIR_OP(NGConcatOp)
 MLIR_OP(NGDivOp)
 MLIR_OP(NGDotOp)
 MLIR_OP(NGGreaterOp)

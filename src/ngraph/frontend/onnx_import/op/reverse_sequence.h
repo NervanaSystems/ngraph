@@ -16,23 +16,25 @@
 
 #pragma once
 
-#include "ngraph/op/op.hpp"
+#include <memory>
+
+#include "core/node.hpp"
+#include "ngraph/node.hpp"
 
 namespace ngraph
 {
-    namespace op
+    namespace onnx_import
     {
-        /// \brief Operation that returns the shape of its input argument as a tensor.
-        class ShapeOf : public Op
+        namespace op
         {
-        public:
-            /// \brief Constructs a shape-of operation.
-            ShapeOf(const std::shared_ptr<Node>& arg);
+            namespace set_1
+            {
+                NodeVector reverse_sequence(const Node& node);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+            } // namespace set_1
 
-            void validate_and_infer_types() override;
-        };
-    }
-}
+        } //namespace op
+
+    } // namespace onnx_import
+
+} // namespace ngraph

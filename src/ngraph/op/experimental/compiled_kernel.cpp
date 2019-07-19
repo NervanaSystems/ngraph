@@ -71,15 +71,6 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     constructor_validate_and_infer_types();
     set_output_size(m_output_nodes.size());
 
-    auto ref = node_list.at(0);
-    for (auto n : node_list)
-    {
-        if (n->get_shape() != ref->get_shape() || n->get_element_type() != ref->get_element_type())
-        {
-            throw ngraph_error("types and shapes of the nodes in node_list are different");
-        }
-    }
-
     for (size_t i = 0; i < outputs.size(); ++i)
     {
         auto& o = outputs.at(i);
