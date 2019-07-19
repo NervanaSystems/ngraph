@@ -174,11 +174,11 @@ mlir::LogicalResult verifyOp(NGGatherOp* op)
     Type ty = op->input()->getType();
     NGTensorType inputType = ty.cast<NGTensorType>();
     
-    ty = op->input()->getType();
+    ty = op->indices()->getType();
     NGTensorType indicesType = ty.cast<NGTensorType>();
 
     // ensure axis < params rank
-    if (op->axis().getSExtValue() >= inputType.getRank());
+    if (op->axis().getSExtValue() >= inputType.getRank())
         return op->emitOpError("Gather axis is larger than input rank");
 
     ty = indicesType.getElementType();
@@ -195,7 +195,7 @@ mlir::LogicalResult verifyOp(NGGatherOp* op)
     NGTensorType resType = r0.cast<NGTensorType>();
     
     // ensure result is compatible with input
-    if (!resType.isCompatible(inputType))
+    if (!resType.getRank() == inputType.getRank() + indicesType.getRank() - 1)
         return op->emitOpError("Incompatible result shape and/or type");
 
     return mlir::success();

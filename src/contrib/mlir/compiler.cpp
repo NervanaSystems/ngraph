@@ -389,7 +389,12 @@ namespace ngraph
             template <>
             mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Gather)
             {
-                return nullptr; //compiler.create_gather(ng_node);
+                auto ng_node_gather = static_cast<const ngraph::op::Gather*>(ng_node);
+                mlir::Value* result = compiler.create_generic_op<mlir::NGGatherOp>(ng_node);
+                mlir::Operation* op = result->getDefiningOp();
+                op->setAttr("axis", compiler.m_builder->getI64IntegerAttr(ng_node_gather->get_axis()));
+                return result;
+
             }
         }
     }
