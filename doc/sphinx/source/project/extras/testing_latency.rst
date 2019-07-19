@@ -1,9 +1,8 @@
-.. frameworks/validated/testing-latency.rst:
+.. project/extras/testing_latency.rst:
 
 
 Testing latency  
-###############
-
+===============
 
 Many open-source DL frameworks provide a layer where experts in data science 
 can make use of optimizations contributed by machine learning engineers. Having 
@@ -30,7 +29,7 @@ training.
 
 
 Tutorial: Testing inference latency of ResNet-50-V2 with MXNet
-==============================================================
+--------------------------------------------------------------
 
 This tutorial supports compiling MXNet with nGraph's CPU backend.
 
