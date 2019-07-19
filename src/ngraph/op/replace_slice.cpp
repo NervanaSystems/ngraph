@@ -21,12 +21,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::ReplaceSlice::ReplaceSlice(const shared_ptr<Node>& arg0,
-                               const shared_ptr<Node>& arg1,
+const string op::ReplaceSlice::type_name{"ReplaceSlice"};
+
+op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
+                               const Output<Node>& arg1,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds,
                                const Strides& strides)
-    : Op("ReplaceSlice", check_single_output_args({arg0, arg1}))
+    : Op({arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(strides)
@@ -34,11 +36,11 @@ op::ReplaceSlice::ReplaceSlice(const shared_ptr<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-op::ReplaceSlice::ReplaceSlice(const shared_ptr<Node>& arg0,
-                               const shared_ptr<Node>& arg1,
+op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
+                               const Output<Node>& arg1,
                                const Coordinate& lower_bounds,
                                const Coordinate& upper_bounds)
-    : Op("ReplaceSlice", check_single_output_args({arg0, arg1}))
+    : Op({arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
     , m_strides(Strides(lower_bounds.size(), 1))
