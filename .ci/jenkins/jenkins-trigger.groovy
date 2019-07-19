@@ -25,7 +25,7 @@
 String  PR_URL = CHANGE_URL
 String  PR_COMMIT_AUTHOR = CHANGE_AUTHOR
 String  PR_TARGET = CHANGE_TARGET
-String  JENKINS_BRANCH = "master"
+String  JENKINS_BRANCH = "aslepko/mac"
 Integer TIMEOUTTIME = "3600"
 // BRANCH parameter is no loner needed
 // TRIGGER_URL parameter is no longer needed
@@ -57,7 +57,7 @@ timestamps {
         
         echo "Calling ngraph-ci-premerge.groovy"
         def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
-        ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME)
+        ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME, PR_TARGET)
         echo "ngraph-ci-premerge.groovy completed"
 
     }  // End:  node
