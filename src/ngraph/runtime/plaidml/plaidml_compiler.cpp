@@ -20,12 +20,12 @@
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
+#include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/prefix_reshape_elimination.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
@@ -43,8 +43,7 @@ namespace
 {
     void write_debug(const ngraph::Node& op)
     {
-        PLAIDML_DEBUG << "Node: name=\"" << op.get_name() << "\" desc=\"" << op.description()
-                      << "\"";
+        PLAIDML_DEBUG << "Compiling: " << op;
         for (const auto& op_input : op.get_inputs())
         {
             ngraph::descriptor::Tensor* tensor = op_input.get_output().get_tensor_ptr().get();
@@ -87,6 +86,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     ngraph::pass::Manager pass_manager;
 
     // We apply the same general-purposes passes as the CPU backend.
+    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -102,7 +102,6 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateElision>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateCombination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
-    pass_manager.register_pass<ngraph::pass::PrefixReshapeElimination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::LowerConvolutions>();
     if (pass_manager.get_pass_config().get_pass_enable("Winograd"))
     {

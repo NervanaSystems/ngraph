@@ -23,10 +23,6 @@ using namespace ngraph;
 
 const string op::AvgPool::type_name{"AvgPool"};
 
-op::AvgPool::AvgPool()
-{
-}
-
 op::AvgPool::AvgPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
@@ -191,7 +187,7 @@ bool op::AvgPool::get_include_padding_in_avg_computation() const
     return m_include_padding_in_avg_computation;
 }
 
-void op::AvgPool::get_include_padding_in_avg_computation(bool include_padding_in_avg_computation)
+void op::AvgPool::set_include_padding_in_avg_computation(bool include_padding_in_avg_computation)
 {
     m_include_padding_in_avg_computation = include_padding_in_avg_computation;
 }
@@ -230,10 +226,6 @@ shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) con
 }
 
 const string op::AvgPoolBackprop::type_name("AvgPoolBackprop");
-
-op::AvgPoolBackprop::AvgPoolBackprop()
-{
-}
 
 op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
                                      const shared_ptr<Node>& delta,

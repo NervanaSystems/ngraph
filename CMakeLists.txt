@@ -162,6 +162,7 @@ ngraph_var(NGRAPH_USE_PREBUILT_LLVM DEFAULT "FALSE")
 option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
+option(NGRAPH_MLIR_ENABLE "Control the building of MLIR backend" FALSE)
 option(NGRAPH_INTELGPU_ENABLE "Control the building of the Intel GPU backend with clDNN" FALSE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
@@ -205,6 +206,12 @@ if (NGRAPH_CPU_ENABLE
     set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
 endif()
 
+if (NGRAPH_MLIR_ENABLE AND (NOT NGRAPH_DEX_ONLY))
+    #disable code-gen due to sym collision with LLVM
+    message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON.\n"
+                        "Use -DNGRAPH_DEX_ONLY=ON and try again. \n")
+endif()
+
 if (NGRAPH_DISTRIBUTED_ENABLE)
     if ("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL "MLSL")
         if (NGRAPH_INTEL_CPU_ONLY_ENABLE)
@@ -242,6 +249,7 @@ endmacro()
 NORMALIZE_BOOL(NGRAPH_UNIT_TEST_ENABLE)
 NORMALIZE_BOOL(NGRAPH_TOOLS_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CPU_ENABLE)
+NORMALIZE_BOOL(NGRAPH_MLIR_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTELGPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTERPRETER_ENABLE)
@@ -270,6 +278,7 @@ endif()
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:        ${NGRAPH_UNIT_TEST_ENABLE}")
 message(STATUS "NGRAPH_TOOLS_ENABLE:            ${NGRAPH_TOOLS_ENABLE}")
 message(STATUS "NGRAPH_CPU_ENABLE:              ${NGRAPH_CPU_ENABLE}")
+message(STATUS "NGRAPH_MLIR_ENABLE:             ${NGRAPH_MLIR_ENABLE}")
 message(STATUS "NGRAPH_INTELGPU_ENABLE:         ${NGRAPH_INTELGPU_ENABLE}")
 message(STATUS "NGRAPH_GPU_ENABLE:              ${NGRAPH_GPU_ENABLE}")
 message(STATUS "NGRAPH_INTERPRETER_ENABLE:      ${NGRAPH_INTERPRETER_ENABLE}")
@@ -452,6 +461,11 @@ if (NGRAPH_CPU_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
 endif()
 
+if (NGRAPH_MLIR_ENABLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_MLIR_ENABLE")
+    set(NGRAPH_MLIR_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/contrib/mlir)
+endif()
+
 if (NGRAPH_PLAIDML_ENABLE)
     find_package(PlaidML CONFIG)
     if (NOT PLAIDML_FOUND)
@@ -474,17 +488,31 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
-add_custom_target(style-check
-    COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    -P ${CMAKE_MODULE_PATH}style_check.cmake
-)
+# Since UNIX and APPLE support Bash we can use a Bash script to do the clang-format functions
+# This is much faster than the cmake method
+if (UNIX OR APPLE)
+    add_custom_target(style-check COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/check-code-format.sh)
+    add_custom_target(style-apply COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+    add_custom_target(style COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+else()
+    add_custom_target(style-check
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_check.cmake
+    )
 
-add_custom_target(style-apply
-    COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    -P ${CMAKE_MODULE_PATH}style_apply.cmake
-)
+    add_custom_target(style-apply
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+    )
+
+    add_custom_target(style
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+    )
+endif()
 
 add_custom_target(fix-mode
     COMMAND ${CMAKE_COMMAND}
@@ -587,6 +615,9 @@ if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
 endif()
 if(NGRAPH_CPU_ENABLE)
     include(cmake/external_mkldnn.cmake)
+endif()
+if (NGRAPH_MLIR_ENABLE)
+    include(cmake/external_mlir.cmake)
 endif()
 if(NGRAPH_INTELGPU_ENABLE)
     include(cmake/external_cldnn.cmake)

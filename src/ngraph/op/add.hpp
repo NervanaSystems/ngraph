@@ -33,7 +33,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an unitialized addition operation
-            Add();
+            Add() = default;
 
             /// \brief Constructs an addition operation.
             ///
@@ -58,6 +58,6 @@ namespace ngraph
         };
     }
 
-    std::shared_ptr<ngraph::Node> operator+(const std::shared_ptr<ngraph::Node> arg0,
-                                            const std::shared_ptr<ngraph::Node> arg1);
+    std::shared_ptr<ngraph::Node> operator+(const std::shared_ptr<ngraph::Node>& arg0,
+                                            const std::shared_ptr<ngraph::Node>& arg1);
 }

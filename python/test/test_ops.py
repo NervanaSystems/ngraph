@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -529,7 +529,6 @@ def test_sum():
     result_arr = np.array([0], dtype=np.float32)
     result.write(util.numpy_to_c(result_arr), 4)
     handle = backend.compile(function)
-    handle.get_performance_data()
     handle.call([result], [a])
     result.read(util.numpy_to_c(result_arr), 4)
 
@@ -819,6 +818,7 @@ def test_slice():
 
 
 @pytest.mark.skip_on_gpu
+@pytest.mark.skip_on_intelgpu
 def test_replace_slice():
 
     element_type = Type.f32

@@ -33,7 +33,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a batched average pooling operation.
-            AvgPool();
+            AvgPool() = default;
 
             /// \brief Constructs a batched average pooling operation.
             ///
@@ -148,7 +148,7 @@ namespace ngraph
             const Shape& get_padding_above() const;
             void set_padding_above(const Shape& padding_above);
             bool get_include_padding_in_avg_computation() const;
-            void get_include_padding_in_avg_computation(bool include_padding_in_avg_computation);
+            void set_include_padding_in_avg_computation(bool include_padding_in_avg_computation);
             /// \return The pad type for pooling.
             const PadType& get_pad_type() const;
             void set_pad_type(const PadType& pad_type);
@@ -175,7 +175,7 @@ namespace ngraph
         public:
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            AvgPoolBackprop();
+            AvgPoolBackprop() = default;
             AvgPoolBackprop(const Shape& forward_arg_shape,
                             const std::shared_ptr<Node>& delta,
                             const Shape& window_shape,

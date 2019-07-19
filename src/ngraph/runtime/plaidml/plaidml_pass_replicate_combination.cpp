@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,9 +47,9 @@ ngraph::runtime::plaidml::pass::ReplicateCombination::ReplicateCombination()
             *ait *= *uit;
         }
 
-        replace_node(lower,
-                     std::make_shared<plaidml::op::Replicate>(upper->get_arguments().at(0),
-                                                              std::move(axes)));
+        replace_node(
+            lower,
+            std::make_shared<plaidml::op::Replicate>(upper->get_argument(0), std::move(axes)));
 
         return true;
     };

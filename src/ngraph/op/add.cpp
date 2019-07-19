@@ -21,10 +21,6 @@ using namespace ngraph;
 
 const string op::Add::type_name{"Add"};
 
-op::Add::Add()
-{
-}
-
 op::Add::Add(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
     : BinaryElementwiseArithmetic(arg0, arg1, autob)
 {
@@ -53,7 +49,7 @@ void op::Add::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     adjoints.add_delta(y, delta);
 }
 
-shared_ptr<Node> ngraph::operator+(const shared_ptr<Node> arg0, const shared_ptr<Node> arg1)
+shared_ptr<Node> ngraph::operator+(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
 {
     return make_shared<op::Add>(arg0, arg1);
 }

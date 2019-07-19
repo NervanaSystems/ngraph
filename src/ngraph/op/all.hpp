@@ -33,7 +33,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an "all" reduction operation.
-            All();
+            All() = default;
             /// \brief Constructs an "all" reduction operation.
             ///
             /// \param arg The tensor to be reduced.

@@ -67,7 +67,7 @@ namespace ngraph
         /// \brief      Broadcast shape of two nodes to make them compatible for a matrix multiplication.
         ///
         /// \note       This function is reflecting broadcasting behaviour of NumPy's `matmul` operation
-        ///             \link https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html
+        ///             (https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html)
         ///             This mean that only \"stack of matrices\" axes are bidirectionally broadcasted.
         ///             The last two dimension are left untouched.
         ///

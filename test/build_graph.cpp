@@ -150,3 +150,40 @@ TEST(build_graph, no_arg_construction)
     validate_nodes_and_infer_types(ops);
     ASSERT_EQ(add1->get_output_shape(0), Shape{7});
 }
+
+TEST(build_graph, multi_output_split)
+{
+    const auto data = make_shared<op::Parameter>(element::f32, Shape{64, 8, 100, 150});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
+    const auto split = make_shared<op::Split>(data, 1, 2);
+    auto conv = make_shared<op::GroupConvolution>(split->output(1),
+                                                  filters,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1},
+                                                  2);
+    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+}
+
+TEST(build_graph, function_revalidate_and_infer)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto pattern = op::Constant::create(element::i64, Shape{6}, {1, 3, 16, 2, 2, 2});
+
+    auto r = make_shared<op::DynReshape>(arg, pattern);
+    auto relu = make_shared<op::Relu>(r);
+    auto f = make_shared<Function>(relu, ParameterVector{arg});
+
+    EXPECT_EQ(r->get_output_element_type(0), element::f32);
+    EXPECT_EQ(r->get_output_shape(0), (Shape{1, 3, 16, 2, 2, 2}));
+    EXPECT_EQ(f->get_output_shape(0), (Shape{1, 3, 16, 2, 2, 2}));
+
+    auto new_pattern = op::Constant::create(element::i64, Shape{2}, {32, 12});
+    r->input(1).replace_source_output(new_pattern->output(0));
+
+    f->validate_nodes_and_infer_types();
+    EXPECT_EQ(r->get_output_shape(0), (Shape{32, 12}));
+    EXPECT_EQ(f->get_output_shape(0), (Shape{32, 12}));
+}
