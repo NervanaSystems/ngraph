@@ -78,6 +78,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
 
             /// \return The inclusive lower-bound coordinates.
             const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
@@ -86,8 +87,6 @@ namespace ngraph
             /// \return The slicing strides.
             const Strides& get_strides() const { return m_strides; }
         protected:
-            void validate_and_infer_types() override;
-
             Coordinate m_lower_bounds;
             Coordinate m_upper_bounds;
             Strides m_strides;

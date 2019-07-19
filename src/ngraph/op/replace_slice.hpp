@@ -81,6 +81,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
 
             /// \return The inclusive lower-bound coordinates.
             const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
@@ -91,7 +92,6 @@ namespace ngraph
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void validate_and_infer_types() override;
 
             Coordinate m_lower_bounds;
             Coordinate m_upper_bounds;
