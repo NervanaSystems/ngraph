@@ -123,8 +123,8 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     // before we rewrite, we make our own copy of the function.
     auto rewrite_func = clone_function(*func);
 
-    // Apply passes.
-    pass_manager.run_passes(rewrite_func);
+    // Apply passes, with revalidation disabled.
+    pass_manager.run_passes(rewrite_func, true, false);
 
     // Compile the resulting function.
     Build b;
