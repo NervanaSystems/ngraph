@@ -173,7 +173,7 @@ void runtime::cpu::CPUTensorView::copy_from(const ngraph::runtime::Tensor& sourc
             dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(this->get_tensor_layout().get());
         auto other_tl =
             dynamic_cast<ngraph::runtime::cpu::LayoutDescriptor*>(source.get_tensor_layout().get());
-        if ((this_tl != NULL) && (other_tl != NULL) && (*this_tl == *other_tl))
+        if ((this_tl != nullptr) && (other_tl != nullptr) && (*this_tl == *other_tl))
         {
             // Direct copy
             memcpy(get_data_ptr(), cpu_source->get_data_ptr(), get_size_in_bytes());

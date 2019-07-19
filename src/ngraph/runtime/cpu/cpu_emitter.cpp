@@ -53,6 +53,7 @@
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
@@ -125,7 +126,6 @@
 #include "ngraph/runtime/cpu/op/dropout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
-#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
@@ -191,10 +191,18 @@ namespace ngraph
                 auto scale_index = mkldnn_emitter->get_scale_index<OP>();
                 auto scales_size = shape_size(node->get_input_shape(scale_index));
                 writer << "std::vector<float> dyn_scales;\n";
-                writer << "dyn_scales.assign(" << args[scale_index].get_name() << ", "
-                       << args[scale_index].get_name() << " + " << std::to_string(scales_size)
-                       << ");\n";
-
+                if (is_same<OP, ngraph::op::QuantizedConvolution>())
+                {
+                    writer << "dyn_scales.push_back(*" << args[2].get_name() << " * "
+                           << " * " << args[4].get_name() << " / "
+                           << " * " << args[6].get_name() << ");\n";
+                }
+                else
+                {
+                    writer << "dyn_scales.assign(" << args[scale_index].get_name() << ", "
+                           << args[scale_index].get_name() << " + " << std::to_string(scales_size)
+                           << ");\n";
+                }
                 // for Quantize
                 if (is_same<OP, ngraph::op::Quantize>())
                 {
@@ -989,11 +997,8 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GetOutputElement)
             {
-                auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
-
                 writer.block_begin();
-                writer << "memcpy(" << out[0].get_name() << ", "
-                       << args[get_tuple_element->get_n()].get_name() << ", "
+                writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                        << out[0].get_size() * out[0].get_element_type().size() << ");\n";
                 writer.block_end();
             }
@@ -1631,23 +1636,12 @@ namespace ngraph
                 auto type_name = embed->get_element_type().c_type_string();
                 auto element_count = shape_size(embed->get_argument(0)->get_shape());
 
-                // FIXME
-                // clang generates 16 bytes aligned store with unaligned address,
-                // which results in segmentation fault.
-                // Workaround for now: Use push_back to avoid generating such store.
-                auto arg1_shape = args[1].get_shape();
-                writer << "ngraph::Shape shape;\n";
-                for (auto i = 0; i < arg1_shape.size(); i++)
-                {
-                    writer << "shape.push_back(" << std::to_string(arg1_shape[i]) << ");\n";
-                }
-
                 writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";
                 writer << "            " << args[0].get_name() << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
                 writer << "            " << out[0].get_name() << ",\n";
                 writer << "            " << element_count << ",\n";
-                writer << "             shape);\n";
+                writer << "           {" << join(args[1].get_shape()) << "});\n";
                 writer.block_end();
             }
 
@@ -1839,7 +1833,7 @@ namespace ngraph
                      args[0].get_element_type() == element::f32 ||
                      args[0].get_element_type() == element::u8 ||
                      args[0].get_element_type() == element::i8) &&
-                    args[0].get_shape().size() <= 3 && out[0].get_shape().size() <= 3)
+                    args[0].get_shape().size() <= 3 && out[0].get_shape().size() <= 5)
                 {
                     writer << "cpu::kernel::gather<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
@@ -1903,7 +1897,7 @@ namespace ngraph
                      args[0].get_element_type() == element::f32 ||
                      args[0].get_element_type() == element::u8 ||
                      args[0].get_element_type() == element::i8) &&
-                    args[0].get_shape().size() <= 3 && args[2].get_shape().size() <= 3)
+                    args[0].get_shape().size() <= 3 && args[2].get_shape().size() <= 5)
                 {
                     writer << "cpu::kernel::scatter_add<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
@@ -2230,12 +2224,8 @@ namespace ngraph
                     auto arg1_shape = args[1].get_shape();
                     auto result_shape = out[0].get_shape();
 
-                    auto scales_size = shape_size(node->get_input_shape(2));
-                    writer << "std::vector<float> dyn_scales;\n";
-                    writer << "dyn_scales.assign(" << args[2].get_name() << ", "
-                           << args[2].get_name() << " + " << std::to_string(scales_size) << ");\n";
-
-                    writer << "reference::convolution<" << out[0].get_type() << ">("
+                    writer << "reference::convolution<" << args[0].get_type() << " , "
+                           << args[1].get_type() << " , " << out[0].get_type() << ", int32_t>("
                            << args[0].get_name() << ",\n";
                     writer << "                         " << args[1].get_name() << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
@@ -2252,7 +2242,12 @@ namespace ngraph
                            << "},\n";
                     writer << "                         {"
                            << join(convolution->get_data_dilation_strides()) << "}, \n";
-                    writer << "                         dyn_scales[0]);\n";
+                    writer << "                         " << args[2].get_name() << ",\n";
+                    writer << "                         " << args[3].get_name() << ",\n";
+                    writer << "                         " << args[4].get_name() << ",\n";
+                    writer << "                         " << args[5].get_name() << ",\n";
+                    writer << "                         " << args[6].get_name() << ",\n";
+                    writer << "                         " << args[7].get_name() << ");\n";
                 }
             }
 
@@ -3032,6 +3027,7 @@ namespace ngraph
                     case ngraph::op::PadMode::REFLECT:
                         pad_mode_string = "ngraph::op::PadMode::REFLECT";
                         break;
+                    case ngraph::op::PadMode::SYMMETRIC: throw ngraph_error("Unsupported PadMode");
                     }
                     writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
@@ -3475,6 +3471,7 @@ namespace ngraph
                         func_block += "d_" + out_denom + " = 1;\n";
                     }
                     break;
+                case ngraph::op::SigmoidMultiply::FunctionType::NumTypes:
                 default:
                     throw ngraph_error(
                         "generate_sigmoid_mul_func input function type not supported");
@@ -3883,7 +3880,7 @@ namespace ngraph
                                       std::function<std::string(const std::vector<std::string>&)>>
                 inline_emitters = initialize_inline_emitters();
 
-            // GOEE doesn't see GOEs in subgraphs that are hidden inside LoopKernels
+            // GOEE doesn't see GOEs in subgraphs that are hidden inside CompiledKernels
             // we have to manually propagate the source output
             static const ngraph::descriptor::Output*
                 get_goe_input_output(ngraph::descriptor::Output* output)
@@ -3892,28 +3889,28 @@ namespace ngraph
                 while (auto goe =
                            std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(it->get_node()))
                 {
-                    it = &goe->get_inputs().at(goe->get_n()).get_output();
+                    it = &goe->get_inputs().at(0).get_output();
                 }
                 return it;
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::runtime::cpu::op::LoopKernel)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::CompiledKernel)
             {
                 std::unordered_map<const ngraph::descriptor::Output*, std::string>
                     loop_symbol_table;
                 // pre-fill symbol table with inputs
 
-                const ngraph::runtime::cpu::op::LoopKernel* clk =
-                    static_cast<const ngraph::runtime::cpu::op::LoopKernel*>(node);
+                const ngraph::op::CompiledKernel* ck =
+                    static_cast<const ngraph::op::CompiledKernel*>(node);
 
-                NodeVector output_nodes = clk->get_kernel_outputs();
-                NodeVector node_list = clk->get_node_list();
+                NodeVector output_nodes = ck->get_kernel_outputs();
+                NodeVector node_list = ck->get_node_list();
 
                 for (size_t i = 0; i < args.size(); i++)
                 {
                     std::string sname = std::string(args[i].get_name()) + "[i]";
-                    auto entry = std::make_pair(&clk->get_inputs().at(i).get_output(), sname);
+                    auto entry = std::make_pair(&ck->get_inputs().at(i).get_output(), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4014,7 +4011,56 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dropout)
             {
-                throw ngraph_error("Not yet implemented");
+                auto dropout = static_cast<const ngraph::op::Dropout*>(node);
+                size_t ncr = ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores();
+
+                writer.block_begin();
+                writer << "bool training = static_cast<bool>(" << args[1].get_name() << "[0]);\n";
+                writer << "bool use_seed = " << to_string(dropout->get_use_seed()) << ";\n";
+                writer << "int32_t seed = use_seed ? " << to_string(dropout->get_seed())
+                       << " : rand();\n";
+                writer << "double keep_prob = static_cast<double>(" << args[4].get_name()
+                       << "[0]);\n";
+                writer << "size_t count = " << args[0].get_size() << ";\n";
+                writer << "size_t nthr = " << to_string(ncr) << ";\n";
+                //writer << "size_t nthr = " << to_string(ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores()) << ";\n";
+                writer << "size_t chunk_size = (count + nthr - 1) / nthr;\n";
+                writer << "std::vector<std::minstd_rand> vmsr(nthr);\n";
+                writer << "for (size_t i = 0; i < nthr; i++)\n\
+                {\n\
+                    std::minstd_rand msr;\n\
+                    msr.seed(seed+i);\n\
+                    vmsr[i] = msr;\n\
+                }\n";
+
+                writer << "double dropout_prob = 1 - keep_prob;\n";
+                writer << "std::uniform_real_distribution<> gen(0, 1);\n";
+                writer << "#pragma omp parallel num_threads(nthr)\n";
+                writer << "{\n";
+                writer << "size_t tid = omp_get_thread_num();\n";
+                writer << "std::minstd_rand msr;\n msr.seed(seed+tid);\n";
+                writer << "size_t idx_start = tid * chunk_size;\n";
+                writer << "size_t idx_end = std::min(idx_start + chunk_size, count);\n";
+                writer << "for (size_t i = idx_start; i < idx_end; i++)\n";
+                writer << "{\n";
+                writer << "    //out[i] = training ? static_cast<T>(bd(gen)) : "
+                          "static_cast<float>(1);\n";
+                writer << "    //out0[i] = training ? input[i] : static_cast<float>(1);\n";
+                writer << "    if (static_cast<float>(gen(msr)) < dropout_prob)\n";
+                writer << "    {\n";
+                writer << "        " << out[0].get_name() << "[i] = 0;\n";
+                writer << "        " << out[1].get_name() << "[i] = 0;\n";
+                writer << "    }\n";
+                writer << "    else\n";
+                writer << "    {\n";
+                writer << "        " << out[1].get_name() << "[i] = 1;\n";
+                writer << "        " << out[0].get_name() << "[i] = " << args[0].get_name()
+                       << "[i] / static_cast<float>(keep_prob);\n";
+                writer << "    }\n";
+                writer << "}\n"; // for loop ends
+                writer << "}\n"; //#pragma ends
+
+                writer.block_end();
             }
 
             template <>

@@ -42,13 +42,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
         auto subgraph = extract_subgraph(subgraph_outputs, fused_op->get_arguments());
         for (auto subgraph_node : subgraph)
         {
-            if (auto nested_fused_op = dynamic_pointer_cast<op::util::FusedOp>(subgraph_node))
-            {
-                if (!(m_has_direct_support && m_has_direct_support(*nested_fused_op)))
-                {
-                    run_on_node(nested_fused_op);
-                }
-            }
+            run_on_node(subgraph_node);
         }
 
         size_t i = 0;
@@ -64,7 +58,8 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
                     if (auto goe =
                             dynamic_cast<op::GetOutputElement*>(fop_user->get_raw_pointer_node()))
                     {
-                        if (goe->get_n() == i && !goe->get_output_inputs(0).empty())
+                        Output<Node> goe_output = goe->get_as_output();
+                        if (goe_output.get_index() == i && !goe->get_output_inputs(0).empty())
                         {
                             // Replace GOE users
                             set<descriptor::Input*> goe_users{

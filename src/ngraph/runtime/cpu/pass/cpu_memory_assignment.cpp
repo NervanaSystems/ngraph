@@ -578,8 +578,9 @@ void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
         case TensorRole::INTERMEDIATE: return string("TensorRole::INTERMEDIATE");
         case TensorRole::CONSTANT: return string("TensorRole::CONSTANT");
         case TensorRole::OUTPUT: return string("TensorRole::OUTPUT");
+        case TensorRole::UNKNOWN:
+        default: throw runtime_error("unhandled CPU tensor role");
         }
-        throw runtime_error("unhandled CPU tensor role");
     };
 
     //liveness analysis

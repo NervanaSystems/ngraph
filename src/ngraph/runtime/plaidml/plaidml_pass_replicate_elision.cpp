@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2017-2018 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ ngraph::runtime::plaidml::pass::ReplicateElision::ReplicateElision()
             if (elidable)
             {
                 replaced_any = true;
-                replace_node(replicate, replicate->get_arguments().at(0));
+                replace_node(replicate, replicate->get_argument(0));
             }
         }
 

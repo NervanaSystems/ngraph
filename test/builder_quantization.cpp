@@ -24,6 +24,7 @@
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
 #include "ngraph/builder/quantization/quantized_linear_matmul.hpp"
+#include "ngraph/builder/quantized_conv_builder.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pass/constant_folding.hpp"
@@ -143,137 +144,6 @@ static void constant_fold(std::shared_ptr<Function> f)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
-}
-
-TEST(builder, scaled_QC)
-{
-    Shape shape_a{1, 1, 3, 4}; // input shape
-    Shape shape_b{1, 1, 3, 3}; // filter shape
-    Shape shape_r{1, 1, 3, 4}; // output shape
-    vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
-    vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto C = op::Constant::create(element::f32, Shape{1}, {0.0f});
-    auto D = op::Constant::create(element::f32, Shape{1}, {255.0f});
-    auto E = op::Constant::create(element::f32, Shape{1}, {-127.0f});
-    auto F = op::Constant::create(element::f32, Shape{1}, {127.0f});
-    auto G = op::Constant::create(element::f32, Shape{1}, {22.0f});
-    auto H = op::Constant::create(element::f32, Shape{1}, {90.0f});
-    auto CV = ngraph::builder::ScaledQuantizedConvolution(A,
-                                                          B,
-                                                          Strides{1, 1},        // move_strides
-                                                          Strides{1, 1},        // filter_dilation
-                                                          CoordinateDiff{1, 1}, // below_pads
-                                                          CoordinateDiff{1, 1}, // above_pads
-                                                          Strides{1, 1},        // data_dilation
-                                                          C,
-                                                          D,
-                                                          E,
-                                                          F,
-                                                          G,
-                                                          H);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B});
-    constant_fold(f);
-
-    auto backend = runtime::Backend::create("CPU");
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::u8, shape_a);
-    copy_data(a, a_data);
-    auto b = backend->create_tensor(element::i8, shape_b);
-    copy_data(b, b_data);
-    auto result = backend->create_tensor(element::i8, shape_r);
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<int8_t>{31, 48, 42, 45, 54, 102, 127, 61, 47, 74, 61, 55}),
-              read_vector<int8_t>(result));
-}
-
-TEST(builder, scaled_QConvInteger)
-{
-    Shape shape_a{1, 1, 3, 4}; // input shape
-    Shape shape_b{1, 1, 3, 3}; // filter shape
-    Shape shape_r{1, 1, 3, 4}; // output shape
-    vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
-    vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto CV =
-        ngraph::builder::quantization::QuantizedConvInteger(A,
-                                                            B,
-                                                            Strides{1, 1},        // move_strides
-                                                            Strides{1, 1},        // filter_dilation
-                                                            CoordinateDiff{1, 1}, // below_pads
-                                                            CoordinateDiff{1, 1}, // above_pads
-                                                            Strides{1, 1});       // data_dilation
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B});
-    constant_fold(f);
-
-    auto backend = runtime::Backend::create("CPU");
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::u8, shape_a);
-    copy_data(a, a_data);
-    auto b = backend->create_tensor(element::i8, shape_b);
-    copy_data(b, b_data);
-    auto result = backend->create_tensor(element::i32, shape_r);
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<int32_t>{22, 34, 30, 32, 38, 72, 90, 43, 33, 52, 43, 39}),
-              read_vector<int32_t>(result));
-}
-
-TEST(builder, dynamic_scaled_QC)
-{
-    Shape shape_a{1, 1, 3, 4}; // input shape
-    Shape shape_b{1, 1, 3, 3}; // filter shape
-    Shape shape_r{1, 1, 3, 4}; // output shape
-    vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
-    vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto C = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto D = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto E = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto F = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto G = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto H = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto CV = ngraph::builder::ScaledQuantizedConvolution(A,
-                                                          B,
-                                                          Strides{1, 1},        // move_strides
-                                                          Strides{1, 1},        // filter_dilation
-                                                          CoordinateDiff{1, 1}, // below_pads
-                                                          CoordinateDiff{1, 1}, // above_pads
-                                                          Strides{1, 1},        // data_dilation
-                                                          C,
-                                                          D,
-                                                          E,
-                                                          F,
-                                                          G,
-                                                          H);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
-    auto backend = runtime::Backend::create("CPU");
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::u8, shape_a);
-    copy_data(a, a_data);
-    auto b = backend->create_tensor(element::i8, shape_b);
-    copy_data(b, b_data);
-    auto d = backend->create_tensor(element::f32, Shape{1});
-    copy_data(d, vector<float>{0.0f});
-    auto e = backend->create_tensor(element::f32, Shape{1});
-    copy_data(e, vector<float>{255.0f});
-    auto e_a = backend->create_tensor(element::f32, Shape{1});
-    copy_data(e_a, vector<float>{-127.0f});
-    auto g = backend->create_tensor(element::f32, Shape{1});
-    copy_data(g, vector<float>{127.0f});
-    auto h = backend->create_tensor(element::f32, Shape{1});
-    copy_data(h, vector<float>{22.0f});
-    auto i = backend->create_tensor(element::f32, Shape{1});
-    copy_data(i, vector<float>{90.0f});
-    auto result = backend->create_tensor(element::i8, shape_r);
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a, b, d, e, e_a, g, h, i});
-    EXPECT_EQ((vector<int8_t>{31, 48, 42, 45, 54, 102, 127, 61, 47, 74, 61, 55}),
-              read_vector<int8_t>(result));
 }
 
 TEST(builder, scaled_QC_with_relu)
@@ -1422,52 +1292,6 @@ TEST(builder, dynamic_scaled_QD_with_bias)
                                                  {a, b, c, d, e, e_a, g, h, i});
     EXPECT_EQ((vector<uint8_t>{178, 231, 255, 255, 0, 255, 255, 255, 255, 255, 0, 255}),
               read_vector<uint8_t>(f_requantize_relu_r));
-}
-
-TEST(builder, scaled_QC_u8u8)
-{
-    Shape shape_a{1, 1, 3, 4};                                     // input shape
-    Shape shape_b{1, 1, 3, 3};                                     // filter shape
-    Shape shape_r{1, 1, 3, 4};                                     // output shape
-    vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4}; //{-1, -2, 3, 2, 4, 1, 0, 1, 0};
-    vector<uint8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};          //{0, -1, 0, -2, -3, 5, 0, 2, 1};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::u8, shape_b);
-    auto scale = op::Constant::create(element::f32, Shape{}, {2});
-    auto CV = make_shared<ngraph::op::QuantizedConvolution>(A,
-                                                            B,
-                                                            Strides{1, 1},        // move_strides
-                                                            Strides{1, 1},        // filter_dilation
-                                                            CoordinateDiff{1, 1}, // below_pads
-                                                            CoordinateDiff{1, 1}, // above_pads
-                                                            Strides{1, 1},        // data_dilation
-                                                            scale,
-                                                            false);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B});
-    constant_fold(f);
-
-    auto backend = runtime::Backend::create("CPU");
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::u8, shape_a);
-    copy_data(a, a_data);
-    auto b = backend->create_tensor(element::u8, shape_b);
-    copy_data(b, b_data);
-    auto result = backend->create_tensor(element::u8, shape_r);
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a, b});
-    EXPECT_EQ((vector<uint8_t>{22 * 2,
-                               34 * 2,
-                               30 * 2,
-                               32 * 2,
-                               38 * 2,
-                               72 * 2,
-                               90 * 2,
-                               43 * 2,
-                               33 * 2,
-                               52 * 2,
-                               43 * 2,
-                               39 * 2} /*{1, 28, -3, 16, -7, -14, 3, -7, -3}*/),
-              read_vector<uint8_t>(result));
 }
 
 TEST(builder, scaled_QDot_u8u8)

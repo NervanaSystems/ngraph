@@ -15,12 +15,16 @@
 //*****************************************************************************
 
 #include <cmath>
+#include <string>
+#include <unordered_map>
 
 #include "convpool.hpp"
 #include "core/attribute.hpp"
 #include "core/node.hpp"
+#include "exceptions.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/shape.hpp"
+#include "ngraph/validation_util.hpp"
 
 namespace ngraph
 {
@@ -61,119 +65,79 @@ namespace ngraph
                 return detail::get_strides_helper(node, "dilations", get_kernel_shape(node));
             }
 
-            namespace
+            ngraph::op::PadType get_auto_pad(const Node& node)
             {
-                Shape get_output_data_shape(const Shape& input, const Strides& strides)
+                // Default value means use explicitly provided padding values.
+                ngraph::op::PadType pad_type{ngraph::op::PadType::NOTSET};
+                if (node.has_attribute("auto_pad"))
                 {
-                    Shape output;
-                    for (std::size_t idx = 0; idx < input.size(); ++idx)
-                    {
-                        output.emplace_back(std::ceil(static_cast<float>(input.at(idx)) /
-                                                      static_cast<float>(strides.at(idx))));
-                    }
-                    return output;
-                }
+                    static std::unordered_multimap<std::string, ngraph::op::PadType>
+                        auto_pad_values{
+                            {"VALID", ngraph::op::PadType::VALID},
+                            {"SAME_UPPER", ngraph::op::PadType::SAME_UPPER},
+                            {"SAME_LOWER", ngraph::op::PadType::SAME_LOWER},
+                            {"NOTSET", ngraph::op::PadType::NOTSET},
+                            {"", ngraph::op::PadType::NOTSET},
+                        };
 
-                Shape get_pad_shape(const Shape& input,
-                                    const Shape& kernel,
-                                    const Shape& strides,
-                                    const Shape& output)
-                {
-                    Shape pad_shape;
-                    for (std::size_t idx = 0; idx < input.size(); ++idx)
-                    {
-                        // for `SAME` pading formula is: max((output - 1) * strides[1] + kernel - input, 0)
-                        // Element type of shape is unsigned long.
-                        // During pad computation we can get a value as result value
-                        // During max computation unsigned long(-1) is greater than 0
-                        // so std::max won't work corectly without casting
-                        pad_shape.emplace_back(
-                            std::max(static_cast<long>((output.at(idx) - 1) * strides.at(idx) +
-                                                       kernel.at(idx) - input.at(idx)),
-                                     0L));
-                    }
-                    return pad_shape;
+                    const std::string& pad_str{node.get_attribute_value<std::string>("auto_pad")};
+                    const auto pad_val_it = auto_pad_values.find(pad_str);
+                    CHECK_VALID_NODE(node,
+                                     pad_val_it != auto_pad_values.end(),
+                                     "Provided `auto_pad` attribute value: '",
+                                     pad_str,
+                                     "' is invalid.");
+                    pad_type = pad_val_it->second;
                 }
-
-                CoordinateDiff get_auto_pads(const Shape& input_shape,
-                                             const Shape& kernel_shape,
-                                             const Strides& strides,
-                                             const std::string& auto_pad)
-                {
-                    if (auto_pad == "VALID")
-                    {
-                        return CoordinateDiff(input_shape.size());
-                    }
-                    CoordinateDiff pads_begin;
-                    CoordinateDiff pads_end;
-                    // Omit {N,C} axes
-                    Shape input_spatial_shape{std::next(std::begin(input_shape), 2),
-                                              std::end(input_shape)};
-                    // Assume that all {input_spatial_shape,kernel_shape,strides}.size()
-                    // is the same.
-                    const Shape& output_spatial_shape =
-                        get_output_data_shape(input_spatial_shape, strides);
-                    const Shape& pad_shape = get_pad_shape(
-                        input_spatial_shape, kernel_shape, strides, output_spatial_shape);
-                    if (auto_pad == "SAME_UPPER")
-                    {
-                        for (size_t pad : pad_shape)
-                        {
-                            // Integer division
-                            pads_begin.emplace_back(pad / 2);
-                            pads_end.emplace_back(pad - pads_begin.back());
-                        }
-                    }
-                    else if (auto_pad == "SAME_LOWER")
-                    {
-                        for (size_t pad : pad_shape)
-                        {
-                            // Integer division
-                            pads_end.emplace_back(pad / 2);
-                            pads_begin.emplace_back(pad - pads_end.back());
-                        }
-                    }
-                    CoordinateDiff pads{pads_begin};
-                    pads.insert(std::end(pads), std::begin(pads_end), std::end(pads_end));
-                    return pads;
-                }
-
-            } // namespace
+                return pad_type;
+            }
 
             std::pair<CoordinateDiff, CoordinateDiff> get_pads(const Node& node,
                                                                const Shape& kernel_shape)
             {
-                CoordinateDiff pads;
-                try
+                CoordinateDiff pads(kernel_shape.size(), 0);
+                if (node.has_attribute("pads"))
                 {
                     auto pads_int64 = node.get_attribute_value<std::vector<int64_t>>("pads");
                     pads = CoordinateDiff{std::begin(pads_int64), std::end(pads_int64)};
                 }
-                catch (const error::node::UnknownAttribute&)
-                {
-                    std::string auto_pad{node.get_attribute_value<std::string>("auto_pad", "")};
-                    if (!auto_pad.empty())
-                    {
-                        pads = get_auto_pads(node.get_ng_inputs().at(0)->get_shape(),
-                                             kernel_shape,
-                                             get_strides(node),
-                                             auto_pad);
-                    }
-                }
-                if (pads.empty())
-                {
-                    pads = CoordinateDiff(static_cast<std::ptrdiff_t>(kernel_shape.size()), 0UL);
-                }
 
-                if (pads.size() != kernel_shape.size() * 2)
-                {
-                    // Paddings specified in (H, W, C) format.
-                    return {pads, pads};
-                }
-                else
+                if (pads.size() == kernel_shape.size() * 2)
                 {
                     return {{std::begin(pads), std::begin(pads) + pads.size() / 2},
                             {std::begin(pads) + pads.size() / 2, std::end(pads)}};
+                }
+                else
+                {
+                    // No paddings provided or only one side values provided, which means same
+                    // padding at both begin and end of axis.
+                    return {pads, pads};
+                }
+            }
+
+            void calculate_auto_pads(const Shape& data_shape,
+                                     const Shape& filter_shape,
+                                     const Strides& strides,
+                                     const Strides& dilations,
+                                     const ngraph::op::PadType& pad_type,
+                                     CoordinateDiff& padding_below,
+                                     CoordinateDiff& padding_above)
+            {
+                if (pad_type == ngraph::op::PadType::SAME_UPPER ||
+                    pad_type == ngraph::op::PadType::SAME_LOWER)
+                {
+                    padding_below.clear();
+                    padding_above.clear();
+                    // Extract kernel shape - remove (N,C) channels
+                    Shape kernel_shape(std::next(std::begin(filter_shape), 2),
+                                       std::end(filter_shape));
+                    ngraph::infer_auto_padding(data_shape,
+                                               kernel_shape,
+                                               strides,
+                                               dilations,
+                                               pad_type,
+                                               padding_above,
+                                               padding_below);
                 }
             }
 
