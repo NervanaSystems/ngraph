@@ -119,7 +119,7 @@ Validated Workloads
 
 .. toctree::
    :maxdepth: 1
-   
+
 .. diagnostics/nbench.rst
 .. diagnostics/provenance.rst
 .. diagnostics/netron.rst
