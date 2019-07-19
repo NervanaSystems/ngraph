@@ -88,9 +88,6 @@ Backend Support
    :maxdepth: 1
 
    backend-support/overview.rst
-.. backend-support/cpu.rst
-.. backend-support/kernel_library.rst
-.. backend-support/plaidml.rst
 
 
 .. _distributed:
@@ -115,14 +112,6 @@ Validated Workloads
    :maxdepth: 1
 
    validated_workloads/list.rst
-
-
-.. toctree::
-   :maxdepth: 1
-
-.. diagnostics/nbench.rst
-.. diagnostics/provenance.rst
-.. diagnostics/netron.rst
 
 
 .. _contribution_guide:
