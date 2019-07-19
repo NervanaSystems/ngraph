@@ -128,9 +128,6 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
         NODE_VALIDATION_CHECK(this,
                               n_data_channels % m_groups == 0,
                               "Number of data channels not a multiple of group size.");
-        // padding type
-        NODE_VALIDATION_CHECK(
-            this, m_pad_type == PadType::EXPLICIT, "Currently only eplicit pad type is supported.");
 
         if (m_padding_begin.size() == 0)
         {
@@ -192,6 +189,30 @@ void op::GroupConvolutionTranspose::pre_validate_and_infer_types()
     }
 }
 
+void op::GroupConvolutionTranspose::post_validate_and_infer_types()
+{
+    auto data_shape = get_input_partial_shape(0);
+    auto filters_shape = get_input_partial_shape(1);
+    if (data_shape.is_static() && filters_shape.is_static())
+    {
+        if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
+        {
+            m_padding_begin.clear();
+            m_padding_end.clear();
+            auto filter_shape = filters_shape.to_shape();
+            // Extract kernel shape
+            filter_shape.erase(filter_shape.begin(), filter_shape.begin() + 2);
+            infer_auto_padding(data_shape.to_shape(),
+                               filter_shape,
+                               m_strides,
+                               m_dilations,
+                               m_pad_type,
+                               m_padding_end,
+                               m_padding_begin);
+        }
+    }
+}
+
 shared_ptr<Node> op::GroupConvolutionTranspose::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
@@ -203,7 +224,8 @@ shared_ptr<Node> op::GroupConvolutionTranspose::copy_with_new_args(const NodeVec
                                                       get_padding_end(),
                                                       get_output_padding(),
                                                       get_groups(),
-                                                      get_pad_type());
+                                                      get_pad_type(),
+                                                      get_output_shape());
 }
 
 Shape op::GroupConvolutionTranspose::get_data_batch_shape() const

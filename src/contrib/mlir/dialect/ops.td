@@ -149,6 +149,7 @@ def NGSinhOp     : NG_Unary_Arith_Op<"sinh">;
 def NGTanOp      : NG_Unary_Arith_Op<"tan">;
 def NGTanhOp     : NG_Unary_Arith_Op<"tanh">;
 def NGSqrtOp     : NG_Unary_Arith_Op<"sqrt">;
+def NGReluOp     : NG_Unary_Arith_Op<"relu">;
 
 // Binary Operations
 def NGAddOp      : NG_Binary_Arith_Op<"add", [Commutative]>;
@@ -178,6 +179,18 @@ def NGSelectOp    : NG_Ternary_Op<"select">
 def NGDotOp : NG_Binary_Op<"dot">
 {
   // TODO: Add reduction axis attribute when needed.
+  let verifier = [{ return verifyOp(this); }];
+}
+
+// TODO(amprocte): Might be nice to rebase this on some sort of NG_Variadic_Op
+// class, but I'm not sure how to add concatenation_axis into the args if we
+// do that.
+def NGConcatOp :
+      NG_OneResult_Op<"concat", [NoSideEffect]>,
+      Arguments<(ins Variadic<NG_TensorType>:$args, I64Attr:$concatenation_axis)>
+{
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+
   let verifier = [{ return verifyOp(this); }];
 }
 

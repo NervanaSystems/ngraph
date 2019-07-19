@@ -77,11 +77,9 @@ std::shared_ptr<ngraph::Node>
 void ngraph::op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
                                                       const NodeVector& deltas)
 {
-    auto gamma = get_argument(0);
-    auto beta = get_argument(1);
-    auto input = get_argument(2);
-    std::shared_ptr<Node> mean = nullptr;
-    std::shared_ptr<Node> var = nullptr;
+    auto gamma = input(0).get_source_output();
+    auto beta = input(1).get_source_output();
+    auto data = input(2).get_source_output();
 
     // Extract mean and variance outputs from BatchNormBase
     // as these are used by BatchNormTrainingBackprop.
@@ -90,25 +88,16 @@ void ngraph::op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoin
     // Next, Mean and Variance (`at(1)` and `at(2)`) are extracted
     // Please see `add_output` in `BatchNormBase::BatchNormBase` for more details
 
-    auto goes = op::get_output_elements(shared_from_this());
-    mean = goes.at(1);
-    var = goes.at(2);
-    if (!mean)
-    {
-        throw ngraph_error("GetOutputElement for mean is missing");
-    }
+    auto mean = output(1);
+    auto var = output(2);
 
-    if (!var)
-    {
-        throw ngraph_error("GetOutputElement for variance is missing");
-    }
     auto bbn = std::make_shared<op::BatchNormTrainingBackprop>(
-        input, gamma, beta, mean, var, deltas.at(0), get_eps_value());
+        data, gamma, beta, mean, var, deltas.at(0), get_eps_value());
     auto dinput = std::make_shared<op::GetOutputElement>(bbn, 0);
     auto dgamma = std::make_shared<op::GetOutputElement>(bbn, 1);
     auto dbeta = std::make_shared<op::GetOutputElement>(bbn, 2);
 
-    adjoints.add_delta(input, dinput);
+    adjoints.add_delta(data, dinput);
     adjoints.add_delta(gamma, dgamma);
     adjoints.add_delta(beta, dbeta);
 }

@@ -342,9 +342,11 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
         if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&
             !(n->get_output_size() > 1))
         {
-            NodeVector isolated_op_args;
-            for (auto arg : n->get_arguments())
+            OutputVector isolated_op_args;
+            for (auto& input : n->inputs())
             {
+                auto source_output = input.get_source_output();
+                auto arg = source_output.get_node_shared_ptr();
                 if (!arg->is_output() && !arg->is_parameter() && !arg->is_constant() &&
                     !(arg->get_output_size() > 1))
                 {
@@ -361,7 +363,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
                     isolated_op_args.push_back(arg);
                 }
             }
-            auto isolated_op = n->copy_with_new_args(isolated_op_args);
+            auto isolated_op = n->copy_with_new_inputs(isolated_op_args);
             isolated_results.push_back(isolated_op);
         }
     }

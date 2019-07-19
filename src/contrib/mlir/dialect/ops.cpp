@@ -97,7 +97,7 @@ template <typename T>
 static mlir::LogicalResult verifyIndexReductionOp(T* op)
 {
     // TODO: verifyAxisReductionOp(op) + return element type + single axis.
-    return mlir::failure();
+    return mlir::success();
 }
 
 template <typename T>
@@ -110,6 +110,13 @@ template <>
 mlir::LogicalResult verifyOp(NGDotOp* op)
 {
     // TODO(dcab): Improve verification: proper shapes, etc.
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGConcatOp* op)
+{
+    // TODO(amprocte): Improve verification: proper shapes, etc.
     return mlir::success();
 }
 
