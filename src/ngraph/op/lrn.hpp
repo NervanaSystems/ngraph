@@ -49,6 +49,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
 
             double get_alpha() const { return m_alpha; }
             double get_beta() const { return m_beta; }
@@ -57,7 +58,6 @@ namespace ngraph
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void validate_and_infer_types() override;
 
             double m_alpha;
             double m_beta;

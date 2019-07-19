@@ -59,6 +59,44 @@ TEST(type_prop, index_reduction_invalid_rank)
     }
 }
 
+TEST(type_prop, argmin_invalid_zero_reduction_axis)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 0});
+
+    try
+    {
+        auto argmin = make_shared<op::ArgMin>(a, 1, element::i32);
+        FAIL() << "ArgMin c-tor should throw for zero-length reduction axis";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "reduction axis can not be empty");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, argmax_invalid_zero_reduction_axis)
+{
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 0});
+
+    try
+    {
+        auto argmax = make_shared<op::ArgMax>(a, 1, element::i32);
+        FAIL() << "ArgMax c-tor should throw for zero-length reduction axis";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), "reduction axis can not be empty");
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
 TEST(type_prop, index_reduction_invalid_index_type)
 {
     auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
