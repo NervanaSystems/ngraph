@@ -278,7 +278,7 @@ set(MULTI_TEST_SRC
 )
 
 if (NGRAPH_MLIR_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend_mlir.in.cpp)
+    list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
