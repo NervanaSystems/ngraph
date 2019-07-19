@@ -67,7 +67,8 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     Computes exponential linear: alpha * (exp(data) - 1) if < 0, data otherwise.
 
     For more information refer to:
-    `Fast and Accurate Deep Network Learning by Exponential Linear Units (ELUs) <http://arxiv.org/abs/1511.07289>`_
+    `Fast and Accurate Deep Network Learning by Exponential Linear Units (ELUs)
+    <http://arxiv.org/abs/1511.07289>`
 
     :param data: Input tensor. One of: input node, array or scalar.
     :param alpha: Multiplier for negative values. One of: input node or scalar value.
