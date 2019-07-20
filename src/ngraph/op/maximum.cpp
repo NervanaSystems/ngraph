@@ -25,10 +25,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::Maximum::Maximum(const shared_ptr<Node>& arg0,
-                     const shared_ptr<Node>& arg1,
+const string op::Maximum::type_name{"Maximum"};
+
+op::Maximum::Maximum(const Output<Node>& arg0,
+                     const Output<Node>& arg1,
                      const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic("Maximum", arg0, arg1, autob)
+    : BinaryElementwiseArithmetic(arg0, arg1, autob)
 {
     constructor_validate_and_infer_types();
 }
