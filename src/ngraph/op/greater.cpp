@@ -21,8 +21,8 @@ using namespace ngraph;
 
 const string op::Greater::type_name{"Greater"};
 
-op::Greater::Greater(const Output<Node> &arg0,
-                     const Output<Node> &arg1,
+op::Greater::Greater(const Output<Node>& arg0,
+                     const Output<Node>& arg1,
                      const AutoBroadcastSpec& autob)
     : BinaryElementwiseComparison(arg0, arg1, autob)
 {
