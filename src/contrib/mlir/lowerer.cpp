@@ -681,19 +681,18 @@ namespace
             paramsUbs.push_back(IndexHandle(vParams.ub(i)));
             paramsSteps.push_back(vParams.step(i));
         }
-        NGRAPH_CHECK(
-            paramsLbs.size()   == vParams.rank() - 1 &&
-            paramsUbs.size()   == paramsLbs.size() && 
-            paramsSteps.size() == paramsLbs.size(), 
-                    "Incorrect loop nest bounds size for gather params");
+        NGRAPH_CHECK(paramsLbs.size() == vParams.rank() - 1 &&
+                         paramsUbs.size() == paramsLbs.size() &&
+                         paramsSteps.size() == paramsLbs.size(),
+                     "Incorrect loop nest bounds size for gather params");
 
-        paramsIVs = IndexHandle::makeIndexHandles(vParams.rank()-1);
+        paramsIVs = IndexHandle::makeIndexHandles(vParams.rank() - 1);
         paramsIVPtrs = IndexHandle::makeIndexHandlePointers(paramsIVs);
 
         auto indicesLbs = vIndices.getLbs();
         auto indicesUbs = vIndices.getUbs();
         auto indicesSteps = vIndices.getSteps();
-        
+
         auto indicesIVs = IndexHandle::makeIndexHandles(vIndices.rank());
         auto indicesIVPtrs = IndexHandle::makeIndexHandlePointers(indicesIVs);
 
@@ -719,7 +718,7 @@ namespace
         //             for I_0:0 -> indices.dim[0]
         // ...
         //               for I_(M-1):0 -> indices.dim[M-1]
-        //                 res[P_0, P_1, .. P_(A-1), I_0, .., I_(M-1), P_(A+1), ... P_(N-1)] = 
+        //                 res[P_0, P_1, .. P_(A-1), I_0, .., I_(M-1), P_(A+1), ... P_(N-1)] =
         //                   params[P_0, P_1, .. P_(A-1), indices[I_0, .., I_(M-1)], P_(A+1), ... P_(N-1)];
 
         LoopNestBuilder(paramsIVPtrs, paramsLbs, paramsUbs, paramsSteps)([&] {
@@ -735,7 +734,7 @@ namespace
                     {
                         paramsIndices.push_back(IndexHandle(axisIdx));
                     }
-                    else 
+                    else
                     {
                         paramsIndices.push_back(paramsIVs[j++]);
                     }
@@ -772,7 +771,7 @@ namespace
     }
 
 #undef REWRITER
-/// End of pattern matchers
+    /// End of pattern matchers
     template <typename OP>
     void lower_binary_elementwise(Operation* op,
                                   ArrayRef<Value*> operands,

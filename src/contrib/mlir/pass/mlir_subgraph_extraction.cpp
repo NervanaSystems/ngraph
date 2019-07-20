@@ -39,7 +39,6 @@ using namespace ngraph::descriptor;
 using namespace ngraph::op;
 using namespace ngraph::pass;
 
-
 #define TI(x) std::type_index(typeid(x))
 
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;

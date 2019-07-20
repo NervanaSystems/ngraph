@@ -348,7 +348,7 @@ namespace ngraph
                 return compiler.create_generic_op<mlir::NGMinOp>(ng_node);
             }
 
-           template <>
+            template <>
             mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
             {
                 return compiler.create_generic_op<mlir::NGDotOp>(ng_node);
@@ -360,7 +360,8 @@ namespace ngraph
                 auto* idx_red = static_cast<const ngraph::op::util::IndexReduction*>(ng_node);
                 mlir::Value* result = compiler.create_generic_op<mlir::NGArgMaxRedOp>(ng_node);
                 mlir::Operation* op = result->getDefiningOp();
-                mlir::ArrayAttr red_axes_attr = compiler.m_builder->getI64ArrayAttr({(int64_t)idx_red->get_reduction_axis()});
+                mlir::ArrayAttr red_axes_attr =
+                    compiler.m_builder->getI64ArrayAttr({(int64_t)idx_red->get_reduction_axis()});
                 op->setAttr("axes", red_axes_attr);
                 return result;
             }
@@ -371,7 +372,8 @@ namespace ngraph
                 auto* idx_red = static_cast<const ngraph::op::util::IndexReduction*>(ng_node);
                 mlir::Value* result = compiler.create_generic_op<mlir::NGArgMinRedOp>(ng_node);
                 mlir::Operation* op = result->getDefiningOp();
-                mlir::ArrayAttr red_axes_attr = compiler.m_builder->getI64ArrayAttr({(int64_t)idx_red->get_reduction_axis()});
+                mlir::ArrayAttr red_axes_attr =
+                    compiler.m_builder->getI64ArrayAttr({(int64_t)idx_red->get_reduction_axis()});
                 op->setAttr("axes", red_axes_attr);
                 return result;
             }
@@ -382,7 +384,9 @@ namespace ngraph
                 auto ng_node_concat = static_cast<const ngraph::op::Concat*>(ng_node);
                 mlir::Value* result = compiler.create_generic_op<mlir::NGConcatOp>(ng_node);
                 mlir::Operation* op = result->getDefiningOp();
-                op->setAttr("concatenation_axis", compiler.m_builder->getI64IntegerAttr(ng_node_concat->get_concatenation_axis()));
+                op->setAttr("concatenation_axis",
+                            compiler.m_builder->getI64IntegerAttr(
+                                ng_node_concat->get_concatenation_axis()));
                 return result;
             }
 
@@ -392,9 +396,9 @@ namespace ngraph
                 auto ng_node_gather = static_cast<const ngraph::op::Gather*>(ng_node);
                 mlir::Value* result = compiler.create_generic_op<mlir::NGGatherOp>(ng_node);
                 mlir::Operation* op = result->getDefiningOp();
-                op->setAttr("axis", compiler.m_builder->getI64IntegerAttr(ng_node_gather->get_axis()));
+                op->setAttr("axis",
+                            compiler.m_builder->getI64IntegerAttr(ng_node_gather->get_axis()));
                 return result;
-
             }
         }
     }
@@ -418,15 +422,10 @@ mlir::Value* MLIRCompiler::create_generic_op(const ngraph::Node* ng_node)
     }
 
     return m_builder
-        ->create<Op,
-                 ArrayRef<mlir::Type>,
-                 ArrayRef<mlir::Value *>,
-                 ArrayRef<mlir::NamedAttribute>>(
-                    mlir::UnknownLoc::get(&m_context),
-                    res_types,
-                    arg_values, {/* no attrs */}).getResult();
+        ->create<Op, ArrayRef<mlir::Type>, ArrayRef<mlir::Value*>, ArrayRef<mlir::NamedAttribute>>(
+            mlir::UnknownLoc::get(&m_context), res_types, arg_values, {/* no attrs */})
+        .getResult();
 }
-
 
 const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
 #define MLIR_OP(OP) {TI(ngraph::op::OP), &MLIRCompiler::create_op<ngraph::op::OP>},

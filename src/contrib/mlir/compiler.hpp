@@ -98,15 +98,15 @@ namespace ngraph
 
                 void build_ng_dialect();
 
-                template<typename Op>
+                template <typename Op>
                 static mlir::Value* create_op(MLIRCompiler& compiler, const ngraph::Node* ng_node)
                 {
                     throw std::runtime_error("Unimplemented op '" + ng_node->description() +
                                              "' in MLIR Compiler");
                 }
 
-                // Generic op lowerer to ng dialect. 
-                // Simply maps ngraph tensors to values and generate an OP. No op-specific logic. 
+                // Generic op lowerer to ng dialect.
+                // Simply maps ngraph tensors to values and generate an OP. No op-specific logic.
                 template <typename OP>
                 mlir::Value* create_generic_op(const ngraph::Node* ng_node);
 

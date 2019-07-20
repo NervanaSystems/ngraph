@@ -173,7 +173,7 @@ mlir::LogicalResult verifyOp(NGGatherOp* op)
 {
     Type ty = op->params()->getType();
     NGTensorType inputType = ty.cast<NGTensorType>();
-    
+
     ty = op->indices()->getType();
     NGTensorType indicesType = ty.cast<NGTensorType>();
 
@@ -190,10 +190,10 @@ mlir::LogicalResult verifyOp(NGGatherOp* op)
     NGIntegerType indicesEltType = ty.cast<NGIntegerType>();
     if (!indicesEltType.isInt32() && !indicesEltType.isInt64())
         return op->emitOpError("Indices tensor is not of I32 or I64 type");
-    
+
     mlir::Type r0 = op->res()->getType();
     NGTensorType resType = r0.cast<NGTensorType>();
-    
+
     // ensure result is compatible with input
     if (!resType.getRank() == inputType.getRank() + indicesType.getRank() - 1)
         return op->emitOpError("Incompatible result shape and/or type");
