@@ -260,14 +260,14 @@ def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red">
 // Gather
 def NGGatherOp : 
     NG_OneResult_Op<"gather", [NoSideEffect]>,
-    Arguments<(ins NG_TensorType:$input, NG_TensorType:$indices, I64Attr:$axis)>
+    Arguments<(ins NG_TensorType:$params, NG_TensorType:$indices, I64Attr:$axis)>
 {
-  let summary = "Gather slices from input along the specified axis according to indices";
+  let summary = "Gather slices from params along the specified axis according to indices";
   let description = [{
-    Gather slices from axis of input according to indices
-    input The tensor from which slices are gathered
-    indices Index tensor: Data type must be `element::i32` or `element::i64`
-    axis Axis in input to gather
+    Gather slices from axis of params according to indices
+    params The tensor from which slices are gathered
+    indices Index tensor. Data type must be `element::i32` or `element::i64`
+    axis Axis in params to gather
   }];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];

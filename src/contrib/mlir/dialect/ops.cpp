@@ -171,7 +171,7 @@ static mlir::LogicalResult verifyCmpOp(T* op)
 template <>
 mlir::LogicalResult verifyOp(NGGatherOp* op)
 {
-    Type ty = op->input()->getType();
+    Type ty = op->params()->getType();
     NGTensorType inputType = ty.cast<NGTensorType>();
     
     ty = op->indices()->getType();
