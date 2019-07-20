@@ -338,8 +338,8 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     }
 
     // Make parameter node
-    shared_ptr<op::Parameter> par_node = make_shared<op::Parameter>(
-        src_node->get_output_element_type(0), src_node->get_output_shape(0));
+    shared_ptr<op::Parameter> par_node =
+        static_pointer_cast<op::Parameter>(src_node->copy_with_new_inputs({}));
     par_node->set_placement(dst_node->get_placement());
 
     // Fix input / output among src, dst and par
@@ -353,12 +353,8 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
     NGRAPH_CHECK(src_outputs.size() == 1,
                  "insert_result_parameter_split encountered more than "
                  "one output between the source and destination nodes");
-    auto& src_output = src_outputs[0];
 
-    // Remove [0]
-    src_output.remove_target_input(dst_input);
-
-    // Remove [0] (again), add [8], remove [1], add [9]
+    // Replace [0] with [8], [1] with [9]
     dst_input.replace_source_output(par_node->output(0));
 
     // Add res node
@@ -424,11 +420,9 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
     NGRAPH_CHECK(src_outputs.size() == 1,
                  "insert_new_node_between encountered more than one "
                  "output between the source and destination nodes");
-    auto& src_output = src_outputs[0];
 
-    src_output.remove_target_input(dst_input); // Remove [0]
     dst_input.replace_source_output(
-        new_node->output(0)); // Remove [0] (again), add [8], remove [1], add [9]
+        new_node->output(0)); // Remove [0], add [8], remove [1], add [9]
 }
 
 std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
@@ -652,4 +646,27 @@ std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
     }
 
     return result;
+}
+
+/// Replace all users of original not in exclusions with replacement
+void ngraph::replace_output(const Output<Node>& original,
+                            const Output<Node>& replacement,
+                            const set<Input<Node>>& exclusions)
+{
+    original.replace(replacement, exclusions);
+}
+
+/// For every pair, replace the first output with the second
+void ngraph::replace_outputs(const std::vector<std::pair<Output<Node>, Output<Node>>>& outputs,
+                             const set<Input<Node>>& exclusions)
+{
+    for (auto& p : outputs)
+    {
+        replace_output(p.first, p.second, exclusions);
+    }
+}
+
+void ngraph::replace_source_output(const Input<Node>& input, Output<Node>& output)
+{
+    input.replace_source_output(output);
 }

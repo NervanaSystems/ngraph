@@ -424,4 +424,15 @@ namespace ngraph
     /// \return A vector containing a handle for each output of src that is connected to an input
     ///         of `dst`.
     std::vector<Output<Node>> get_outputs_to(Node& src, Node& dst);
+
+    /// Replace all users of original not in exclusions with replacement
+    void replace_output(const Output<Node>& original,
+                        const Output<Node>& replacement,
+                        const std::set<Input<Node>>& exclusions = {});
+
+    /// For every pair, replace the first output with the second
+    void replace_outputs(const std::vector<std::pair<Output<Node>, Output<Node>>>& outputs,
+                         const std::set<Input<Node>>& exclusions = {});
+
+    void replace_source_output(const Input<Node>& input, Output<Node>& output);
 }

@@ -229,9 +229,10 @@ TEST(pattern, graph_rewrite)
                   a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(sum->output(0)
                         .get_target_inputs()
-                        .empty()); // graph's input is removed from sum's target inptus
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
-            graph->input(1))); // a's output feeds into graph's input
+                        .empty()); // graph's input is removed from sum's target inputs
+        auto target_inputs = a->output(0).get_target_inputs();
+        ASSERT_TRUE(find(target_inputs.begin(), target_inputs.end(), graph->input(1)) !=
+                    target_inputs.end()); // a's output feeds into graph's input
     }
 
     {
@@ -247,8 +248,11 @@ TEST(pattern, graph_rewrite)
         ASSERT_TRUE(mul->output(0)
                         .get_target_inputs()
                         .empty()); // graph's input is removed from sum's target inputs
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
-            graph->input(1))); // a's output feeds into graph's input
+        auto target_inputs = a->output(0).get_target_inputs();
+        ASSERT_TRUE(find(target_inputs.begin(),
+                         target_inputs.end(),
+                         graph->input(1)) !=
+                    target_inputs.end()); // a's output feeds into graph's input
     }
 
     {
@@ -260,8 +264,11 @@ TEST(pattern, graph_rewrite)
         ASSERT_EQ(graph->get_arguments().at(0), a);
         ASSERT_EQ(graph->input(0).get_source_output(),
                   a->output(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
-            graph->input(0))); // a's output feeds into graph's input
+        auto target_inputs = a->output(0).get_target_inputs();
+        ASSERT_TRUE(find(target_inputs.begin(),
+                         target_inputs.end(),
+                         graph->input(0)) !=
+                    target_inputs.end()); // a's output feeds into graph's input
     }
 
     {
@@ -274,8 +281,11 @@ TEST(pattern, graph_rewrite)
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(graph->input(1).get_source_output(),
                   a->output(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
-            graph->input(1))); // a's output feeds into graph's input
+        auto target_inputs = a->output(0).get_target_inputs();
+        ASSERT_TRUE(find(target_inputs.begin(),
+                         target_inputs.end(),
+                         graph->input(1)) !=
+                    target_inputs.end()); // a's output feeds into graph's input
     }
 
     {
@@ -287,8 +297,11 @@ TEST(pattern, graph_rewrite)
         ASSERT_EQ(graph->get_arguments().at(1), a);
         ASSERT_EQ(graph->input(1).get_source_output(),
                   a->output(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
-            graph->input(1))); // a's output feeds into graph's input
+        auto target_inputs = a->output(0).get_target_inputs();
+        ASSERT_TRUE(find(target_inputs.begin(),
+                         target_inputs.end(),
+                         graph->input(1)) !=
+                    target_inputs.end()); // a's output feeds into graph's input
     }
 }
 
@@ -744,4 +757,43 @@ TEST(pattern, is_contained_match)
     auto label_abs2 = make_shared<op::Abs>(label_abs);
     ASSERT_TRUE(n.match(label_abs2, absn2));
     ASSERT_FALSE(n.is_contained_match());
+}
+
+TEST(pattern, replace_output)
+{
+    Shape shape{};
+    auto a = make_shared<op::Parameter>(element::f32, shape);
+    auto b = make_shared<op::Negative>(a);
+    auto c = make_shared<op::Negative>(b);
+    auto d = make_shared<op::Result>(c);
+    auto e = make_shared<op::Result>(c);
+    // Optimize out the double negative
+    ngraph::replace_output(c->output(0), a->output(0));
+
+    // The two users of the output should go directly to a now
+    ASSERT_TRUE(d->input(0).get_source_output() == a->output(0));
+    ASSERT_TRUE(e->input(0).get_source_output() == a->output(0));
+}
+
+TEST(pattern, replace_outputs)
+{
+    Shape shape{};
+    auto a = make_shared<op::Parameter>(element::f32, shape);
+    auto b = make_shared<op::Negative>(a);
+    auto c = make_shared<op::Negative>(b);
+    auto d = make_shared<op::Add>(c, c);
+    auto e = make_shared<op::Result>(c);
+    auto f = make_shared<op::Result>(c);
+    auto g = make_shared<op::Result>(d);
+
+    // Optimize out the double negative (c => a) and replace the Add with a new one (d => h)
+    // Don't update the inputs to the old Add (d)
+    auto h = make_shared<op::Add>(a, a);
+    ngraph::replace_outputs({{c->output(0), a->output(0)}, {d->output(0), h->output(0)}},
+                            {d->input(0), d->input(1)});
+    ASSERT_TRUE(e->input(0).get_source_output() == a->output(0));
+    ASSERT_TRUE(f->input(0).get_source_output() == a->output(0));
+    ASSERT_TRUE(g->input(0).get_source_output() == h->output(0));
+    ASSERT_TRUE(d->input(0).get_source_output() == c->output(0));
+    ASSERT_TRUE(d->input(1).get_source_output() == c->output(0));
 }

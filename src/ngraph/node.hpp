@@ -581,13 +581,28 @@ namespace ngraph
 
         /// \return A set containing handles for all inputs targeted by the output referenced by
         ///        this output handle.
-        std::set<Input<Node>> get_target_inputs() const;
+        std::vector<Input<Node>> get_target_inputs() const;
+
+        /// \return The number of target inputs using this output
+        size_t get_target_inputs_size() const;
 
         /// \brief Removes a target input from the output referenced by this output handle.
         /// \param target_input The target input to remove.
         ///
         // TODO(amprocte): Investigate whether this really ought to be public.
         void remove_target_input(const Input<Node>& target_input) const;
+
+        void replace(const Output<NodeType>& replacement,
+                     const std::set<Input<Node>>& exclusions = {}) const
+        {
+            for (const Input<Node>& input : get_target_inputs())
+            {
+                if (exclusions.find(input) == exclusions.end())
+                {
+                    input.replace_source_output(replacement);
+                }
+            }
+        }
 
         bool operator==(const Output& other) const
         {
@@ -664,16 +679,22 @@ namespace ngraph
     }
 
     template <typename NodeType>
-    std::set<Input<Node>> Output<NodeType>::get_target_inputs() const
+    std::vector<Input<Node>> Output<NodeType>::get_target_inputs() const
     {
-        std::set<Input<Node>> result;
+        std::vector<Input<Node>> result;
 
         for (auto& input : m_node->m_outputs.at(m_index).get_inputs())
         {
-            result.emplace(input->get_raw_pointer_node(), input->get_index());
+            result.push_back(Input<Node>(input->get_raw_pointer_node(), input->get_index()));
         }
 
         return result;
+    }
+
+    template <typename NodeType>
+    size_t Output<NodeType>::get_target_inputs_size() const
+    {
+        return m_node->m_outputs.at(m_index).get_inputs().size();
     }
 
     template <typename NodeType>
