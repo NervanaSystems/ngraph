@@ -547,8 +547,8 @@ static bool switch_nodes(std::shared_ptr<ngraph::Node> node1,
     }
 
     auto target_inputs = node2->output(0).get_target_inputs();
-    // remove the control_dependency, which shouldn't be there, but in case
-    // other control_dependencies will work out fine even after switch.
+    // Remove the control_dependency, which shouldn't be there, but in case
+    // Other control_dependencies will work out fine even after switch.
     node2->remove_control_dependency(node1);
 
     // actual switch happening after this
