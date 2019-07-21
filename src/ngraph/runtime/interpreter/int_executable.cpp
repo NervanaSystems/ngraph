@@ -30,6 +30,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -76,6 +77,8 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    runtime::event::Duration d1("Interpreter", "call");
+
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
     for (auto tensor : inputs)
