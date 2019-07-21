@@ -15,25 +15,37 @@
 //*****************************************************************************
 
 #include "benchmark.hpp"
+#include "benchmark_utils.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "benchmark_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
 
+class TensorCollection
+{
+public:
+    vector<shared_ptr<runtime::HostTensor>> parameter_data;
+
+    vector<shared_ptr<runtime::Tensor>> input_tensors;
+    vector<shared_ptr<runtime::Tensor>> output_tensors;
+
+private:
+};
+
 vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function> f,
-                                                                  const string& backend_name,
-                                                                  size_t iterations,
-                                                                  bool timing_detail,
-                                                                  int warmup_iterations,
-                                                                  bool copy_data)
+                                                            const string& backend_name,
+                                                            size_t iterations,
+                                                            bool timing_detail,
+                                                            int warmup_iterations,
+                                                            bool copy_data)
 {
     constexpr size_t pipeline_depth = 2;
+    array<TensorCollection, pipeline_depth> tensor_collections;
     stopwatch timer;
     timer.start();
     auto backend = runtime::Backend::create(backend_name);
@@ -45,7 +57,6 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
 
     // Create random input data for all input tensors
     array<vector<shared_ptr<runtime::HostTensor>>, pipeline_depth> parameters_data_set;
-    array<vector<shared_ptr<runtime::HostTensor>>, pipeline_depth> results_data_set;
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         vector<shared_ptr<runtime::HostTensor>> parameters_data;
@@ -65,7 +76,7 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
         auto input_tensors = exec->create_input_tensor(input_index++, pipeline_depth);
-        for(size_t i=0; i<pipeline_depth; i++)
+        for (size_t i = 0; i < pipeline_depth; i++)
         {
             input_tensors_array[i].push_back(input_tensors[i]);
         }
@@ -77,7 +88,7 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     for (shared_ptr<Node> result : f->get_results())
     {
         auto output_tensors = exec->create_output_tensor(output_index++, pipeline_depth);
-        for(size_t i=0; i<pipeline_depth; i++)
+        for (size_t i = 0; i < pipeline_depth; i++)
         {
             output_tensors_array[i].push_back(output_tensors[i]);
         }
