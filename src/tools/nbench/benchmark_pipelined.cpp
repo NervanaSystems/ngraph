@@ -34,6 +34,7 @@ class TensorCollection
 {
 public:
     vector<shared_ptr<runtime::HostTensor>> parameter_data;
+    vector<shared_ptr<runtime::HostTensor>> result_data;
 
     vector<shared_ptr<runtime::Tensor>> input_tensors;
     vector<shared_ptr<runtime::Tensor>> output_tensors;
@@ -49,6 +50,26 @@ static size_t s_warmup_iterations;
 
 static void do_iteration(runtime::Executable* exec, const TensorCollection& tensors)
 {
+    const vector<shared_ptr<runtime::Tensor>>& args = tensors.input_tensors;
+    const vector<shared_ptr<runtime::Tensor>>& results = tensors.output_tensors;
+    for (size_t arg_index = 0; arg_index < args.size(); arg_index++)
+    {
+        const shared_ptr<runtime::Tensor>& arg = args[arg_index];
+        if (arg->get_stale())
+        {
+            const shared_ptr<runtime::HostTensor>& data = tensors.parameter_data[arg_index];
+            arg->write(data->get_data_ptr(),
+                       data->get_element_count() * data->get_element_type().size());
+        }
+    }
+    exec->call(results, args);
+    for (size_t result_index = 0; result_index < results.size(); result_index++)
+    {
+        const shared_ptr<runtime::HostTensor>& data = tensors.result_data[result_index];
+        const shared_ptr<runtime::Tensor>& result = results[result_index];
+        result->read(data->get_data_ptr(),
+                     data->get_element_count() * data->get_element_type().size());
+    }
 }
 
 static void
@@ -96,7 +117,6 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     set_denormals_flush_to_zero();
 
     // Create random input data for all input tensors
-    array<vector<shared_ptr<runtime::HostTensor>>, pipeline_depth> parameters_data_set;
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         for (shared_ptr<op::Parameter> param : f->get_parameters())
@@ -105,6 +125,17 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
                 make_shared<runtime::HostTensor>(param->get_element_type(), param->get_shape());
             random_init(tensor_data);
             tensor_collections[i].parameter_data.push_back(tensor_data);
+        }
+    }
+
+    // Create output tensors for all outputs
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        for (shared_ptr<Node> result : f->get_results())
+        {
+            auto tensor_data =
+                make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
+            tensor_collections[i].result_data.push_back(tensor_data);
         }
     }
 
