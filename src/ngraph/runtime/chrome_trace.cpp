@@ -177,7 +177,6 @@ void runtime::event::Manager::open(const string& path)
     ofstream& out = get_output_stream();
     if (out.is_open() == false)
     {
-        NGRAPH_INFO << path;
         out.open(path, ios_base::trunc);
         out << "[\n";
     }
