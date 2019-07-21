@@ -15,13 +15,13 @@
 //*****************************************************************************
 
 #include "benchmark.hpp"
+#include "benchmark_utils.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "benchmark_utils.hpp"
 
 using namespace std;
 using namespace ngraph;

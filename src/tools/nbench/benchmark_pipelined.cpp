@@ -78,7 +78,6 @@ static void
 {
     while (current_iteration < s_iterations + s_warmup_iterations)
     {
-        NGRAPH_INFO;
         unique_lock<mutex> lock(s_mutex);
         if ((current_iteration & 1) != pipeline_stage)
         {
@@ -102,7 +101,6 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
                                                             int warmup_iterations,
                                                             bool copy_data)
 {
-    NGRAPH_INFO;
     constexpr size_t pipeline_depth = 2;
     s_iterations = iterations;
     s_warmup_iterations = warmup_iterations;
@@ -170,69 +168,12 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         threads[i] = thread(thread_entry, exec.get(), tensor_collections[i], i);
-        // threads[i] = thread(thread_entry, i);
     }
 
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         threads[i].join();
     }
-
-    // // Before we start we write the first iteration's data
-    // size_t buffer_number = 0;
-    // auto args = input_tensors_array[buffer_number];
-    // auto args_data = parameters_data_set[buffer_number];
-    // for (size_t arg_index = 0; arg_index < args.size(); arg_index++)
-    // {
-    //     const shared_ptr<runtime::Tensor>& arg = args[arg_index];
-    //     const shared_ptr<runtime::HostTensor>& data = args_data[arg_index];
-    //     arg->begin_write(data->get_data_ptr(),
-    //                      data->get_element_count() * data->get_element_type().size(),
-    //                      buffer_number);
-    // }
-
-    // const vector<shared_ptr<runtime::Tensor>>& results = output_tensors[buffer_number];
-    // const vector<shared_ptr<runtime::HostTensor>>& results_data = results_data_set[buffer_number];
-    // for (size_t i = 0; i < iterations + warmup_iterations; i++)
-    // {
-    //     if (i == warmup_iterations)
-    //     {
-    //         t1.start();
-    //     }
-    //     future<void> exec_future = exec->begin_execute(results, args);
-    //     if (i > 0)
-    //     {
-    //         for (size_t result_index = 0; result_index < results.size(); result_index++)
-    //         {
-    //             const shared_ptr<runtime::HostTensor>& data = results_data[result_index];
-    //             const shared_ptr<runtime::Tensor>& result = results[result_index];
-    //             result->begin_read(data->get_data_ptr(),
-    //                                data->get_element_count() * data->get_element_type().size(),
-    //                                (buffer_number - 1) & 1);
-    //         }
-    //     }
-    //     buffer_number = (buffer_number + 1) & 1;
-    //     for (size_t arg_index = 0; arg_index < args.size(); arg_index++)
-    //     {
-    //         const shared_ptr<runtime::Tensor>& arg = args[arg_index];
-    //         const shared_ptr<runtime::HostTensor>& data = args_data[arg_index];
-    //         arg->begin_write(data->get_data_ptr(),
-    //                          data->get_element_count() * data->get_element_type().size(),
-    //                          buffer_number);
-    //     }
-    //     exec_future.get();
-    // }
-    // for (size_t result_index = 0; result_index < results.size(); result_index++)
-    // {
-    //     const shared_ptr<runtime::HostTensor>& data = results_data[result_index];
-    //     const shared_ptr<runtime::Tensor>& result = results[result_index];
-    //     result->begin_read(data->get_data_ptr(),
-    //                        data->get_element_count() * data->get_element_type().size(),
-    //                        (buffer_number - 1) & 1);
-    // }
-    // t1.stop();
-    // float time = t1.get_milliseconds();
-    // cout << time / iterations << "ms per iteration" << endl;
 
     vector<runtime::PerformanceCounter> perf_data = exec->get_performance_data();
     return perf_data;

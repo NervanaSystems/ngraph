@@ -26,8 +26,8 @@
 
 std::vector<ngraph::runtime::PerformanceCounter>
     run_benchmark_pipelined(std::shared_ptr<ngraph::Function> f,
-                                  const std::string& backend_name,
-                                  size_t iterations,
-                                  bool timing_detail,
-                                  int warmup_iterations,
-                                  bool copy_data);
+                            const std::string& backend_name,
+                            size_t iterations,
+                            bool timing_detail,
+                            int warmup_iterations,
+                            bool copy_data);
