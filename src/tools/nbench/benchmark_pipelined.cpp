@@ -44,23 +44,33 @@ private:
 static mutex s_mutex;
 static condition_variable s_condition;
 static size_t current_iteration = 0;
+static size_t s_iterations;
+static size_t s_warmup_iterations;
+
+static void do_iteration(runtime::Executable* exec, const TensorCollection& tensors)
+{
+}
 
 static void
     thread_entry(runtime::Executable* exec, const TensorCollection& tensors, size_t pipeline_stage)
 // static void thread_entry(size_t pipeline_stage)
 {
-    NGRAPH_INFO;
-    unique_lock<mutex> lock(s_mutex);
-    if ((current_iteration & 1) != pipeline_stage)
+    while (current_iteration < s_iterations + s_warmup_iterations)
     {
-        s_condition.wait(lock);
-    }
-    else
-    {
-        // our turn to run
-        NGRAPH_INFO << "stage " << pipeline_stage << " for iteration " << current_iteration;
-        current_iteration++;
-        s_condition.notify_all();
+        NGRAPH_INFO;
+        unique_lock<mutex> lock(s_mutex);
+        if ((current_iteration & 1) != pipeline_stage)
+        {
+            s_condition.wait(lock);
+        }
+        else
+        {
+            // our turn to run
+            NGRAPH_INFO << "stage " << pipeline_stage << " for iteration " << current_iteration;
+            do_iteration(exec, tensors);
+            current_iteration++;
+            s_condition.notify_all();
+        }
     }
 }
 
@@ -73,6 +83,8 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
 {
     NGRAPH_INFO;
     constexpr size_t pipeline_depth = 2;
+    s_iterations = iterations;
+    s_warmup_iterations = warmup_iterations;
     array<TensorCollection, pipeline_depth> tensor_collections;
     stopwatch timer;
     timer.start();
