@@ -38,6 +38,8 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
+atomic<size_t> runtime::interpreter::INTExecutable::m_next_group_id;
+
 runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
                                                    bool enable_performance_collection)
     : m_is_compiled{true}
@@ -303,4 +305,87 @@ void runtime::interpreter::INTExecutable::save(ostream& out)
     writer.write("save_info", si.data(), si.size());
     string model = serialize(m_function, 0);
     writer.write("model", model.data(), model.size());
+}
+
+shared_ptr<ngraph::op::Parameter>
+    runtime::interpreter::INTExecutable::get_parameter(size_t index) const
+{
+    const ParameterVector& parameters = get_parameters();
+    NGRAPH_CHECK(index < parameters.size(), "create_tensor for input out of bounds");
+    return parameters[index];
+}
+
+shared_ptr<ngraph::op::Result> runtime::interpreter::INTExecutable::get_result(size_t index) const
+{
+    const ResultVector& results = get_results();
+    NGRAPH_CHECK(index < results.size(), "create_tensor for input out of bounds");
+    return results[index];
+}
+shared_ptr<runtime::Tensor>
+    runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index)
+{
+    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    return make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
+}
+
+shared_ptr<runtime::Tensor>
+    runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index)
+{
+    shared_ptr<op::Result> result = get_result(output_index);
+    return make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
+}
+
+vector<shared_ptr<runtime::Tensor>>
+    runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index,
+                                                             size_t pipeline_depth)
+{
+    vector<shared_ptr<runtime::HostTensor>> tensors;
+    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    size_t group_id = m_next_group_id.fetch_add(1);
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        shared_ptr<runtime::HostTensor> tensor;
+        auto t =
+            make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
+        tensor = static_pointer_cast<runtime::HostTensor>(t);
+        // tensor->m_group_id = group_id;
+        // tensor->m_buffer_id = i;
+        // tensor->m_backend = m_backend;
+        // tensor->m_pipeline_depth = pipeline_depth;
+        tensors.push_back(tensor);
+    }
+    vector<shared_ptr<runtime::Tensor>> result_tensors;
+    for (const shared_ptr<runtime::HostTensor>& tensor : tensors)
+    {
+        // tensor->m_group_tensors = tensors;
+        result_tensors.push_back(tensor);
+    }
+    return result_tensors;
+}
+
+vector<shared_ptr<runtime::Tensor>>
+    runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index,
+                                                              size_t pipeline_depth)
+{
+    vector<shared_ptr<runtime::HostTensor>> tensors;
+    shared_ptr<op::Result> result = get_result(output_index);
+    size_t group_id = m_next_group_id.fetch_add(1);
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        shared_ptr<runtime::HostTensor> tensor;
+        auto t = make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
+        tensor = static_pointer_cast<runtime::HostTensor>(t);
+        // tensor->m_group_id = group_id;
+        // tensor->m_buffer_id = i;
+        // tensor->m_backend = m_backend;
+        // tensor->m_pipeline_depth = pipeline_depth;
+        tensors.push_back(tensor);
+    }
+    vector<shared_ptr<runtime::Tensor>> result_tensors;
+    for (const shared_ptr<runtime::HostTensor>& tensor : tensors)
+    {
+        // tensor->m_group_tensors = tensors;
+        result_tensors.push_back(tensor);
+    }
+    return result_tensors;
 }

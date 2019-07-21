@@ -14,6 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
 #include "benchmark.hpp"
 #include "benchmark_utils.hpp"
 #include "ngraph/file_util.hpp"
@@ -37,6 +41,29 @@ public:
 private:
 };
 
+static mutex s_mutex;
+static condition_variable s_condition;
+static size_t current_iteration = 0;
+
+static void
+    thread_entry(runtime::Executable* exec, const TensorCollection& tensors, size_t pipeline_stage)
+// static void thread_entry(size_t pipeline_stage)
+{
+    NGRAPH_INFO;
+    unique_lock<mutex> lock(s_mutex);
+    if ((current_iteration & 1) != pipeline_stage)
+    {
+        s_condition.wait(lock);
+    }
+    else
+    {
+        // our turn to run
+        NGRAPH_INFO << "stage " << pipeline_stage << " for iteration " << current_iteration;
+        current_iteration++;
+        s_condition.notify_all();
+    }
+}
+
 vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function> f,
                                                             const string& backend_name,
                                                             size_t iterations,
@@ -44,6 +71,7 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
                                                             int warmup_iterations,
                                                             bool copy_data)
 {
+    NGRAPH_INFO;
     constexpr size_t pipeline_depth = 2;
     array<TensorCollection, pipeline_depth> tensor_collections;
     stopwatch timer;
@@ -59,15 +87,13 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     array<vector<shared_ptr<runtime::HostTensor>>, pipeline_depth> parameters_data_set;
     for (size_t i = 0; i < pipeline_depth; i++)
     {
-        vector<shared_ptr<runtime::HostTensor>> parameters_data;
         for (shared_ptr<op::Parameter> param : f->get_parameters())
         {
             auto tensor_data =
                 make_shared<runtime::HostTensor>(param->get_element_type(), param->get_shape());
             random_init(tensor_data);
-            parameters_data.push_back(tensor_data);
+            tensor_collections[i].parameter_data.push_back(tensor_data);
         }
-        parameters_data_set[i] = parameters_data;
     }
 
     // Create input tensors for all Parameters
@@ -78,7 +104,7 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
         auto input_tensors = exec->create_input_tensor(input_index++, pipeline_depth);
         for (size_t i = 0; i < pipeline_depth; i++)
         {
-            input_tensors_array[i].push_back(input_tensors[i]);
+            tensor_collections[i].input_tensors.push_back(input_tensors[i]);
         }
     }
 
@@ -90,11 +116,24 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
         auto output_tensors = exec->create_output_tensor(output_index++, pipeline_depth);
         for (size_t i = 0; i < pipeline_depth; i++)
         {
-            output_tensors_array[i].push_back(output_tensors[i]);
+            tensor_collections[i].output_tensors.push_back(output_tensors[i]);
         }
     }
 
     stopwatch t1;
+
+    size_t current_iteration = 0;
+    thread threads[pipeline_depth];
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        threads[i] = thread(thread_entry, exec.get(), tensor_collections[i], i);
+        // threads[i] = thread(thread_entry, i);
+    }
+
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        threads[i].join();
+    }
 
     // // Before we start we write the first iteration's data
     // size_t buffer_number = 0;
