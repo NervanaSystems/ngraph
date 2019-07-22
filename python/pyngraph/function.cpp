@@ -25,6 +25,8 @@
 
 namespace py = pybind11;
 
+static const char* CAPSULE_NAME = "ngraph_function";
+
 void regclass_pyngraph_Function(py::module m)
 {
     py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "Function");
@@ -52,21 +54,22 @@ void regclass_pyngraph_Function(py::module m)
         return "<" + class_name + ": '" + self.get_friendly_name() + "' (" + shape + ")>";
     });
     function.def_static("from_capsule", [](py::object* capsule) {
-        auto* pycapsule_ptr = capsule->ptr();
-        auto* ngraph_function = reinterpret_cast<std::shared_ptr<ngraph::Function>*>(PyCapsule_GetPointer(pycapsule_ptr, "ngraph_function"));
-        // std::cout << "from_capsule: " << (*fun)->get_name() << " " << (*fun)->get_friendly_name() << " " << (*fun).get() << std::endl;
+        auto* pybind_capsule_ptr = capsule->ptr();
+        auto* capsule_ptr = PyCapsule_GetPointer(pybind_capsule_ptr, CAPSULE_NAME);
+        auto* ngraph_function = static_cast<std::shared_ptr<ngraph::Function>*>(capsule_ptr);
+
         return *ngraph_function;
     });
     function.def_static("to_capsule", [](std::shared_ptr<ngraph::Function>& ngraph_function) {
-        // std::cout << "to_capsule_1: " << ngraph_function->get_name() << " " << ngraph_function->get_friendly_name() << " " 
-        //           << ngraph_function.get()  << " " << ngraph_function.use_count() << std::endl;
-        auto pybind_capsule = py::capsule(&ngraph_function, "ngraph_function", nullptr);
-
-        auto* ptr = pybind_capsule.ptr();
-        auto* fun = reinterpret_cast<std::shared_ptr<ngraph::Function>*>(PyCapsule_GetPointer(ptr, "ngraph_function"));
-
-        // std::cout << "to_capsule_2: " << (*fun)->get_name() << " " << (*fun)->get_friendly_name() << " " << (*fun).get()  
-        //           << " " << fun->use_count() << std::endl;
+        auto* sp_copy = new std::shared_ptr<ngraph::Function>(ngraph_function);
+        auto pybind_capsule = py::capsule(sp_copy, CAPSULE_NAME, [](PyObject* capsule) {
+            auto* capsule_ptr = PyCapsule_GetPointer(capsule, CAPSULE_NAME);
+            auto* function_sp = static_cast<std::shared_ptr<ngraph::Function>*>(capsule_ptr);
+            if (function_sp)
+            {
+                delete function_sp;
+            }
+        });
 
         return pybind_capsule;
     });
