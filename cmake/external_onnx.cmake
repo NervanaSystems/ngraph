@@ -30,6 +30,9 @@ set(ONNX_VERSION 1.5.0)
 set(ONNX_GIT_REPO_URL https://github.com/onnx/onnx.git)
 set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
 
+add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
+add_definitions(-DONNX_ML=ON)
+
 ExternalProject_Add(
     ext_onnx
     PREFIX onnx
@@ -58,8 +61,8 @@ ExternalProject_Add(
 
 ExternalProject_Get_Property(ext_onnx SOURCE_DIR BINARY_DIR)
 
-set(ONNX_INCLUDE_DIR ${SOURCE_DIR}/onnx)
-set(ONNX_PROTO_INCLUDE_DIR ${BINARY_DIR}/onnx)
+set(ONNX_INCLUDE_DIR ${SOURCE_DIR})
+set(ONNX_PROTO_INCLUDE_DIR ${BINARY_DIR})
 if (WIN32)
     set(ONNX_LIBRARY ${BINARY_DIR}/${CMAKE_BUILD_TYPE}/onnx.lib)
     set(ONNX_PROTO_LIBRARY ${BINARY_DIR}/${CMAKE_BUILD_TYPE}/onnx_proto.lib)
