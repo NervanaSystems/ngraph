@@ -365,3 +365,281 @@ NGRAPH_TEST(dynamic_${BACKEND_NAME}, range)
         ASSERT_EQ(results, test.expected_result);
     }
 }
+
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, reshape)
+{
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto build_graph = [&backend](bool zero_flag) {
+        // Create a graph for f(x,shape) = DynReshape(x,shape,zero_flag=zero_flag).
+        auto x = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+        auto shape = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+
+        auto dyn_reshape = make_shared<op::DynReshape>(x, shape, zero_flag);
+        EXPECT_TRUE(dyn_reshape->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
+
+        auto f = make_shared<Function>(NodeVector{dyn_reshape}, ParameterVector{x, shape});
+
+        auto ex = backend->compile(f);
+
+        return ex;
+    };
+
+    auto t_r = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
+
+    auto ex_flag_off = build_graph(false);
+    auto ex_flag_on = build_graph(true);
+
+    std::vector<std::tuple<bool, Shape, std::vector<int32_t>, std::vector<int64_t>, Shape>> tests;
+
+    tests.emplace_back(make_tuple(
+        false, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6}, vector<int64_t>{6}, Shape{6}));
+    tests.emplace_back(make_tuple(
+        true, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6}, vector<int64_t>{6}, Shape{6}));
+    tests.emplace_back(make_tuple(
+        false, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6}, vector<int64_t>{-1}, Shape{6}));
+    tests.emplace_back(make_tuple(false,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{2, -1},
+                                  Shape{2, 3}));
+    tests.emplace_back(make_tuple(false,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{3, -1},
+                                  Shape{3, 2}));
+    tests.emplace_back(make_tuple(false,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{3, 2, -1},
+                                  Shape{3, 2, 1}));
+    tests.emplace_back(make_tuple(true,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{3, 2, -1},
+                                  Shape{3, 2, 1}));
+    tests.emplace_back(make_tuple(true,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{0, 0, -1},
+                                  Shape{2, 3, 1}));
+    tests.emplace_back(make_tuple(true,
+                                  Shape{2, 3},
+                                  vector<int32_t>{1, 2, 3, 4, 5, 6},
+                                  vector<int64_t>{2, 0, -1},
+                                  Shape{2, 3, 1}));
+    tests.emplace_back(make_tuple(
+        true, Shape{0, 3, 4}, vector<int32_t>{}, vector<int64_t>{3, -1, 2}, Shape{3, 0, 2}));
+
+    for (auto& test : tests)
+    {
+        bool zero_flag = get<0>(test);
+        const Shape& in_shape = get<1>(test);
+        const std::vector<int32_t>& data = get<2>(test);
+        const std::vector<int64_t>& dims = get<3>(test);
+        const Shape& out_shape = get<4>(test);
+
+        auto t_x = backend->create_tensor(element::i32, in_shape);
+        auto t_shape = backend->create_tensor(element::i64, Shape{dims.size()});
+
+        copy_data(t_x, data);
+        copy_data(t_shape, dims);
+
+        auto ex = zero_flag ? ex_flag_on : ex_flag_off;
+        ex->call_with_validate({t_r}, {t_x, t_shape});
+
+        ASSERT_EQ(t_r->get_element_type(), element::i32);
+        ASSERT_EQ(t_r->get_shape(), out_shape);
+
+        auto results = read_vector<int32_t>(t_r);
+
+        ASSERT_EQ(results, data);
+    }
+}
+
+static void axpy_test(const PartialShape& input_pshape, const std::vector<Shape>& input_shapes)
+{
+    auto a = make_shared<op::Parameter>(element::f32, input_pshape);
+    auto x = make_shared<op::Parameter>(element::f32, input_pshape);
+    auto y = make_shared<op::Parameter>(element::f32, input_pshape);
+
+    auto axpy = a * x + y;
+
+    auto f = make_shared<Function>(NodeVector{axpy}, ParameterVector{a, x, y});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::f32, input_pshape);
+
+    for (auto& shape : input_shapes)
+    {
+        vector<float> inputs(shape_size(shape));
+        for (size_t i = 0; i < shape_size(shape); i++)
+        {
+            inputs[i] = i;
+        }
+
+        auto t_a = backend->create_tensor(element::f32, shape);
+        auto t_x = backend->create_tensor(element::f32, shape);
+        auto t_y = backend->create_tensor(element::f32, shape);
+
+        copy_data(t_a, inputs);
+        copy_data(t_x, inputs);
+        copy_data(t_y, inputs);
+
+        ex->call_with_validate({t_r}, {t_a, t_x, t_y});
+
+        ASSERT_EQ(t_r->get_shape(), shape);
+
+        auto results = read_vector<float>(t_r);
+
+        vector<float> expected_values(shape_size(shape));
+        for (size_t i = 0; i < shape_size(shape); i++)
+        {
+            expected_values[i] = (i * i) + i;
+        }
+
+        EXPECT_TRUE(test::all_close_f(results, expected_values));
+    }
+}
+
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, axpy)
+{
+    // Test with shape {?, 3, 3}.
+    axpy_test(PartialShape{Dimension::dynamic(), 3, 3}, {Shape{2, 3, 3}, Shape{5, 3, 3}});
+
+    // Test with shape {?, ?, ?}.
+    axpy_test(PartialShape::dynamic(3),
+              {Shape{2, 3, 3}, Shape{5, 3, 3}, Shape{2, 5, 2}, Shape{8, 1, 8}});
+
+    // Test with shape ?. (Rank unknown.)
+    axpy_test(PartialShape::dynamic(),
+              {Shape{2, 3, 3},
+               Shape{5, 3, 3},
+               Shape{2, 5, 2},
+               Shape{8, 1, 8},
+               Shape{5},
+               Shape{8, 2},
+               Shape{8, 2, 8, 2},
+               Shape{2, 3, 4, 5, 2}});
+}
+
+static void to_vector_test(const PartialShape& input_pshape, const std::vector<Shape>& input_shapes)
+{
+    auto x = make_shared<op::Parameter>(element::f32, input_pshape);
+
+    shared_ptr<Node> x_new_shape = make_shared<op::ShapeOf>(x);
+    x_new_shape = make_shared<op::Product>(x_new_shape, AxisSet{0});
+    x_new_shape = make_shared<op::Reshape>(x_new_shape, AxisVector{}, Shape{1});
+
+    auto x_reshaped = make_shared<op::DynReshape>(x, x_new_shape);
+
+    auto f = make_shared<Function>(NodeVector{x_reshaped}, ParameterVector{x});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic(1));
+
+    for (auto& shape : input_shapes)
+    {
+        vector<float> inputs(shape_size(shape));
+        for (size_t i = 0; i < shape_size(shape); i++)
+        {
+            inputs[i] = i;
+        }
+
+        auto t_x = backend->create_tensor(element::f32, shape);
+
+        copy_data(t_x, inputs);
+
+        ex->call_with_validate({t_r}, {t_x});
+
+        ASSERT_EQ(t_r->get_shape(), (Shape{shape_size(shape)}));
+
+        auto results = read_vector<float>(t_r);
+
+        EXPECT_TRUE(test::all_close_f(results, inputs));
+    }
+}
+
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, to_vector)
+{
+    // Test with shape {?, 3, 3}.
+    to_vector_test(PartialShape{Dimension::dynamic(), 3, 3}, {Shape{2, 3, 3}, Shape{5, 3, 3}});
+
+    // Test with shape {?, ?, ?}.
+    to_vector_test(PartialShape::dynamic(3),
+                   {Shape{2, 3, 3}, Shape{5, 3, 3}, Shape{2, 5, 2}, Shape{8, 1, 8}});
+
+    // Test with shape ?. (Rank unknown.)
+    to_vector_test(PartialShape::dynamic(),
+                   {Shape{2, 3, 3},
+                    Shape{5, 3, 3},
+                    Shape{2, 5, 2},
+                    Shape{8, 1, 8},
+                    Shape{5},
+                    Shape{8, 2},
+                    Shape{8, 2, 8, 2},
+                    Shape{2, 3, 4, 5, 2}});
+}
+
+static void reverse_shape_test(const PartialShape& input_pshape,
+                               const std::vector<Shape>& input_shapes)
+{
+    auto x = make_shared<op::Parameter>(element::f32, input_pshape);
+
+    shared_ptr<Node> x_new_shape = make_shared<op::ShapeOf>(x);
+    x_new_shape = make_shared<op::Reverse>(x_new_shape, AxisSet{0});
+
+    auto x_reshaped = make_shared<op::DynReshape>(x, x_new_shape);
+
+    auto f = make_shared<Function>(NodeVector{x_reshaped}, ParameterVector{x});
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    for (auto& shape : input_shapes)
+    {
+        vector<float> inputs(shape_size(shape));
+        for (size_t i = 0; i < shape_size(shape); i++)
+        {
+            inputs[i] = i;
+        }
+
+        auto t_x = backend->create_tensor(element::f32, shape);
+
+        copy_data(t_x, inputs);
+
+        ex->call_with_validate({t_r}, {t_x});
+
+        Shape expected_shape = shape;
+        std::reverse(expected_shape.begin(), expected_shape.end());
+        ASSERT_EQ(t_r->get_shape(), expected_shape);
+
+        auto results = read_vector<float>(t_r);
+
+        EXPECT_TRUE(test::all_close_f(results, inputs));
+    }
+}
+
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, reverse_shape)
+{
+    // Test with shape {?, 3, 3}.
+    reverse_shape_test(PartialShape{Dimension::dynamic(), 3, 3}, {Shape{2, 3, 3}, Shape{5, 3, 3}});
+
+    // Test with shape {?, ?, ?}.
+    reverse_shape_test(PartialShape::dynamic(3),
+                       {Shape{2, 3, 3}, Shape{5, 3, 3}, Shape{2, 5, 2}, Shape{8, 1, 8}});
+
+    // Test with shape ?. (Rank unknown.)
+    reverse_shape_test(PartialShape::dynamic(),
+                       {Shape{2, 3, 3},
+                        Shape{5, 3, 3},
+                        Shape{2, 5, 2},
+                        Shape{8, 1, 8},
+                        Shape{5},
+                        Shape{8, 2},
+                        Shape{8, 2, 8, 2},
+                        Shape{2, 3, 4, 5, 2}});
+}

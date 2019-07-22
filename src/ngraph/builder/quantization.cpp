@@ -217,33 +217,6 @@ namespace ngraph
                                                              requantization_scale);
         }
 
-        shared_ptr<Node> ScaledQuantizedConvolution(const shared_ptr<Node>& input,
-                                                    const shared_ptr<Node>& filters,
-                                                    const Strides& window_movement_strides,
-                                                    const Strides& window_dilation_strides,
-                                                    const CoordinateDiff& padding_below,
-                                                    const CoordinateDiff& padding_above,
-                                                    const Strides& data_dilation_strides,
-                                                    const shared_ptr<Node>& min_input,
-                                                    const shared_ptr<Node>& max_input,
-                                                    const shared_ptr<Node>& min_filter,
-                                                    const shared_ptr<Node>& max_filter,
-                                                    const shared_ptr<Node>& min_output,
-                                                    const shared_ptr<Node>& max_output)
-        {
-            auto requantization_scale = quantization_util::get_scale(
-                min_input, max_input, min_filter, max_filter, min_output, max_output, element::i8);
-
-            return make_shared<op::QuantizedConvolution>(input,
-                                                         filters,
-                                                         window_movement_strides,
-                                                         window_dilation_strides,
-                                                         padding_below,
-                                                         padding_above,
-                                                         data_dilation_strides,
-                                                         requantization_scale);
-        }
-
         shared_ptr<Node> ScaledQuantizedMaxPool(const shared_ptr<Node>& input,
                                                 const Shape& window_shape,
                                                 const Strides& window_movement_strides,

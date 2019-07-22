@@ -14,23 +14,29 @@
 // limitations under the License.
 //*****************************************************************************
 
+// Add new dialect ops with lowering support to this file
+#ifndef MLIR_OP
+#define MLIR_OP
+#endif
 
-// Add new dialect ops lowerers to this file
+#ifndef MLIR_LAST_OP
+#define MLIR_LAST_OP(OP) MLIR_OP(OP)
+#endif
 
-#define DECL_OP_CONV(OP) \
-class OP##Conversion : public mlir::DialectConversionPattern \
-{\
-public:\
-    explicit OP##Conversion(mlir::MLIRContext *context, DialectLoweringPass& pass)\
-    : mlir::DialectConversionPattern(mlir::OP::getOperationName(), 1, context),\
-      m_pass(pass)\
-    {} \
-    void rewrite(Operation *op, ArrayRef<Value *> operands, PatternRewriter &rewriter) const override; \
-    DialectLoweringPass& m_pass;\
-};
+MLIR_OP(NGAddOp)
+MLIR_OP(NGArgMaxRedOp)
+MLIR_OP(NGArgMinRedOp)
+MLIR_OP(NGConcatOp)
+MLIR_OP(NGDivOp)
+MLIR_OP(NGDotOp)
+MLIR_OP(NGGreaterOp)
+MLIR_OP(NGLessOp)
+MLIR_OP(NGMulOp)
+MLIR_OP(NGMaxOp)
+MLIR_OP(NGMinOp)
+MLIR_OP(NGReluOp)
+MLIR_OP(NGSubOp)
+MLIR_LAST_OP(NGReturnOp)
 
-DECL_OP_CONV(NGAddOp)
-DECL_OP_CONV(NGDotOp)
-DECL_OP_CONV(NGReturnOp)
-
-#undef DECL_OP_CONV
+#undef MLIR_OP
+#undef MLIR_LAST_OP

@@ -107,16 +107,16 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 }
 
 static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
-                                       descriptor::Output& new_output)
+                                       const Output<Node>& new_output)
 {
     for (auto node : collapsed_node->get_users(true))
     {
         NGRAPH_DEBUG << "node_name: " << node->get_name();
         for (size_t i = 0; i < node->get_input_size(); i++)
         {
-            if (node->get_argument(i) == collapsed_node)
+            if (node->input(i).get_source_output().get_node_shared_ptr() == collapsed_node)
             {
-                node->get_inputs().at(i).replace_output(new_output);
+                node->set_argument(i, new_output);
             }
         }
     }
@@ -304,16 +304,12 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto ct_slice = std::make_shared<ngraph::op::Slice>(
             lstm_ht_ct_output, Coordinate{batch_size, 0}, Coordinate{(2 * batch_size), dic});
 
-        if (lstm_node->get_outputs().at(0).get_inputs().size() != 2)
-        {
-            throw ngraph_error("Lstm node doesnt have two outputs");
-        }
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
         // find the user's for {ht|ct} and replace them with lstm_goe_1
         if (ngraph::is_used(pattern_map[ct_label].get()))
         {
-            replace_collapse_node_user(pattern_map[ct_label], ct_slice->get_outputs().at(0));
+            replace_collapse_node_user(pattern_map[ct_label], ct_slice->output(0));
         }
         // find the user's for {ht} and replace them with lstm_goe_0
         ngraph::replace_node(m.get_match_root(), ht_slice);
@@ -541,7 +537,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto rnn_ct_goe = ngraph::op::get_output_elements(lstm_nodes[sequence_len - 1])[1];
         if (rnn_ct_goe)
         {
-            replace_collapse_node_user(rnn_ct_goe, rnn_ht_ct_goe->get_outputs().at(0));
+            replace_collapse_node_user(rnn_ct_goe, rnn_ht_ct_goe->output(0));
         }
 
         // now go through the lstm goe_0 consumers and replace them with the slice
@@ -724,7 +720,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                 Coordinate{((layer - 1) * batch_size * num_rnn_cell_states) + batch_size, 0},
                 Coordinate{layer * batch_size * num_rnn_cell_states, src_iter_feature_size});
 
-            replace_collapse_node_user(rnn_ct_goe1, ct_slice->get_outputs().at(0));
+            replace_collapse_node_user(rnn_ct_goe1, ct_slice->output(0));
         };
 
         // we will replace cell_state {ct} of all the matched RNN cell
@@ -757,7 +753,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             // holds the same output
             if ((index == 0) && goe_0)
             {
-                replace_collapse_node_user(goe_0, mrnn_ht->get_outputs().at(0));
+                replace_collapse_node_user(goe_0, mrnn_ht->output(0));
             }
         }
         return true;

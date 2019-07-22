@@ -50,7 +50,7 @@ namespace ngraph
             SAME_UPPER,
             VALID,
             AUTO = SAME_UPPER,
-            NOTSET = EXPLICIT
+            NOTSET = EXPLICIT,
         };
 
         /// \brief Specifies the algorithm to use for implicit broadcasting of a tensor
