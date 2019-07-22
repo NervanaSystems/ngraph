@@ -187,3 +187,21 @@ TEST(build_graph, function_revalidate_and_infer)
     EXPECT_EQ(r->get_output_shape(0), (Shape{32, 12}));
     EXPECT_EQ(f->get_output_shape(0), (Shape{32, 12}));
 }
+
+TEST(build_graph, validate_function_for_dynamic_shape)
+{
+    auto make_function = [&](bool dynamic_shape) {
+
+        auto param1_shape =
+            dynamic_shape ? PartialShape{Dimension::dynamic(), 2, 3} : Shape{5, 4, 2};
+        auto param2_shape = dynamic_shape ? PartialShape::dynamic() : Shape{5, 2, 3};
+        auto param_1 = std::make_shared<op::Parameter>(element::f32, param1_shape);
+        auto param_2 = std::make_shared<op::Parameter>(element::f32, param2_shape);
+        auto batch_dot = make_shared<op::BatchMatMul>(param_1, param_2);
+        auto f = make_shared<Function>(NodeVector{batch_dot}, ParameterVector{param_1, param_2});
+        return f;
+    };
+
+    EXPECT_EQ(true, make_function(true)->is_dynamic());
+    EXPECT_EQ(false, make_function(false)->is_dynamic());
+}
