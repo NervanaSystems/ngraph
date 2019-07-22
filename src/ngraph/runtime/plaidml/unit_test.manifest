@@ -265,7 +265,6 @@ model_erf_int32
 model_hardmax
 quantized_convolution
 quantized_conv_int32_output
-quantized_dot
 quantized_dot_u8u8
 quantized_dot_int32_output
 
