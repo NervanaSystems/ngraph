@@ -179,6 +179,7 @@ sources = [
     'pyngraph/ops/ceiling.cpp',
     'pyngraph/ops/divide.cpp',
     'pyngraph/ops/dot.cpp',
+    'pyngraph/ops/elu.cpp',
     'pyngraph/ops/equal.cpp',
     'pyngraph/ops/exp.cpp',
     'pyngraph/ops/floor.cpp',
