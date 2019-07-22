@@ -115,13 +115,6 @@ namespace ngraph
                             auto it = reinterpret_cast<const T*>(raw_data.data());
                             return {it, it + (raw_data.size() / sizeof(T))};
                         }
-
-                        template <typename T>
-                        inline std::vector<T> __get_external_data(const std::string& raw_data)
-                        {
-                            auto it = reinterpret_cast<const T*>(raw_data.data());
-                            return {it, it + (raw_data.size() / sizeof(T))};
-                        }
                     }
                 }
 
@@ -138,11 +131,7 @@ namespace ngraph
                     if (tensor.has_raw_data())
                     {
                         return detail::__get_raw_data<double>(tensor.raw_data());
-                    } /*
-                    else
-                    {
-                        return detail::__get_external_data(tensor.)
-                    }*/
+                    }
                     if (tensor.data_type() == onnx::TensorProto_DataType_DOUBLE)
                     {
                         return detail::__get_data<double>(tensor.double_data());
