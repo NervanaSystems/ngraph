@@ -31,7 +31,6 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-
             /// \brief Constructs a batched max pooling operation.
             MaxPool() = default;
 
@@ -145,7 +144,6 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-
             MaxPoolBackprop() = default;
 
             MaxPoolBackprop(const Output<Node>& arg_forward,
@@ -179,7 +177,6 @@ namespace ngraph
             void set_padding_below(const Shape& padding_below) { m_padding_below = padding_below; }
             const Shape& get_padding_above() const { return m_padding_above; }
             void set_padding_above(const Shape& padding_above) { m_padding_above = padding_above; }
-
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;

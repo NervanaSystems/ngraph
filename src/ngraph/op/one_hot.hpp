@@ -64,7 +64,6 @@ namespace ngraph
             /// \return The index of the one-hot axis.
             size_t get_one_hot_axis() const { return m_one_hot_axis; }
             void set_one_hot_axis(size_t one_hot_axis) { m_one_hot_axis = one_hot_axis; }
-
         protected:
             PartialShape m_shape;
             size_t m_one_hot_axis;

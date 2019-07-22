@@ -21,8 +21,8 @@ using namespace ngraph;
 
 const string op::NotEqual::type_name{"NotEqual"};
 
-op::NotEqual::NotEqual(const Output<Node> &arg0,
-                       const Output<Node> &arg1,
+op::NotEqual::NotEqual(const Output<Node>& arg0,
+                       const Output<Node>& arg1,
                        const AutoBroadcastSpec& autob)
     : BinaryElementwiseComparison(arg0, arg1, autob)
 {
