@@ -88,6 +88,7 @@ namespace ngraph
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -207,6 +208,7 @@ namespace ngraph
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -221,7 +223,11 @@ namespace ngraph
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, conv_index);
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx,
+                            conv_index,
+                            deps,
+                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONRELU);
                     };
                     functors.emplace_back(functor);
                 }
@@ -285,6 +291,7 @@ namespace ngraph
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<true>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -402,6 +409,7 @@ namespace ngraph
                             conv_attr.set_output_scales(mask, dyn_scales);
                             conv_attr.set_post_ops(new_pops);
                             mkldnn_emitter->build_convolution_forward<true>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -523,6 +531,7 @@ namespace ngraph
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
                             mkldnn_emitter->build_convolution_forward<true>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,

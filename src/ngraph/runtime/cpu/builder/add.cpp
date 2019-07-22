@@ -59,8 +59,11 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_elementwise_add(
-                                ctx->mkldnn_primitives, sum_pd, deps, add_index);
+                            mkldnn_emitter->build_elementwise_add(ctx->mkldnn_memories,
+                                                                  ctx->mkldnn_primitives,
+                                                                  sum_pd,
+                                                                  deps,
+                                                                  add_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);

@@ -63,8 +63,11 @@ namespace ngraph
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->build_pooling_forward(
-                                    ctx->mkldnn_primitives, max_pool_desc, deps, max_pool_index);
+                                mkldnn_emitter->build_pooling_forward(ctx->mkldnn_memories,
+                                                                      ctx->mkldnn_primitives,
+                                                                      max_pool_desc,
+                                                                      deps,
+                                                                      max_pool_index);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -191,7 +194,8 @@ namespace ngraph
                                                    CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_max_pooling_backward(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_max_pooling_backward(ctx->mkldnn_memories,
+                                                                       ctx->mkldnn_primitives,
                                                                        ctx->mkldnn_workspaces,
                                                                        bwd_pool_desc,
                                                                        fwd_pool_desc,
@@ -274,7 +278,11 @@ namespace ngraph
                     if (ctx->first_iteration)
                     {
                         mkldnn_emitter->build_max_pooling_with_indices_forward(
-                            ctx->mkldnn_primitives, max_pool_desc, deps, max_pool_index);
+                            ctx->mkldnn_memories,
+                            ctx->mkldnn_primitives,
+                            max_pool_desc,
+                            deps,
+                            max_pool_index);
                     }
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -328,6 +336,7 @@ namespace ngraph
                     if (ctx->first_iteration)
                     {
                         mkldnn_emitter->build_max_pooling_with_indices_backward(
+                            ctx->mkldnn_memories,
                             ctx->mkldnn_primitives,
                             bwd_pool_desc,
                             fwd_pool_desc,

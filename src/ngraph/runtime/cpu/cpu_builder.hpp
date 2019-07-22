@@ -23,12 +23,6 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
-#if defined(USE_MKLDNN_V1)
-#define FORMAT format_tag
-#else
-#define FORMAT format
-#endif
-
 #define BUILDER_DECL(op_name)                                                                      \
     build<op_name>(CPU_ExternalFunction * external_function,                                       \
                    const ngraph::Node* node,                                                       \

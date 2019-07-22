@@ -59,9 +59,7 @@ namespace ngraph
                 bool first_iteration;
                 // stores tensor pointers
                 std::vector<void*> buffer_data;
-#if defined(USE_MKLDNN_V1)
                 std::vector<mkldnn::memory*> mkldnn_memories;
-#endif
                 std::vector<mkldnn::primitive*> mkldnn_primitives;
                 std::vector<AlignedBuffer*> memory_buffers;
                 std::vector<char*> mkldnn_workspaces;

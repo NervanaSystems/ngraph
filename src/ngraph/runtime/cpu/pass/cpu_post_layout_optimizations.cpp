@@ -220,7 +220,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         }
 
         auto reshape_m_md = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(reshape_m.get(), 0);
-        if (reshape_m_md.data.format != mkldnn_blocked ||
+        if (reshape_m_md.data.FORMAT_KIND != mkldnn_blocked ||
             !runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(
                 reshape_m_md, ngraph::get_default_order(reshape_m->get_shape())))
         {

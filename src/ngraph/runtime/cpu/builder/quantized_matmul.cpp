@@ -80,6 +80,7 @@ namespace ngraph
                                     scales_size);
                             ip_attr.set_output_scales(0, dyn_scales);
                             mkldnn_emitter->build_inner_product_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 ip_desc,
                                 ip_attr,

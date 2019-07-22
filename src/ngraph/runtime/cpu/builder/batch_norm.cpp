@@ -107,7 +107,8 @@ namespace ngraph
                                                        CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_memories,
+                                                                    ctx->mkldnn_primitives,
                                                                     batchnorm_desc,
                                                                     weights_desc,
                                                                     training,
@@ -174,7 +175,8 @@ namespace ngraph
                                                        CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_memories,
+                                                                    ctx->mkldnn_primitives,
                                                                     batchnorm_desc,
                                                                     weights_desc,
                                                                     training,
@@ -444,7 +446,8 @@ namespace ngraph
                                                    CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->build_batchnorm_backward(ctx->mkldnn_primitives,
+                        mkldnn_emitter->build_batchnorm_backward(ctx->mkldnn_memories,
+                                                                 ctx->mkldnn_primitives,
                                                                  batchnorm_desc,
                                                                  weights_desc,
                                                                  dweights_desc,

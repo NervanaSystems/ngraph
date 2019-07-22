@@ -23,160 +23,22 @@
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
-#if defined(USE_MKLDNN_V1)
+#if not defined(NGRAPH_USE_MKLDNN_V1)
 extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeContext* ctx,
                                                                    size_t index,
                                                                    void* ptr)
 {
-    auto memory = ctx->mkldnn_memories[index]);
-    memory->set_data_handle(ptr);
+    auto primitive = static_cast<mkldnn::memory*>(ctx->mkldnn_primitives[index]);
+    primitive->set_data_handle(ptr);
 }
 
-extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
-                                        size_t primitive_index,
-                                        std::vector<size_t>& deps,
-                                        OpType type)
+extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
+    CPURuntimeContext* ctx, size_t primitive_index, std::vector<size_t>& deps, OpType type)
 {
-    std::map<int, mkldnn::memory> exec_args;
-    switch (type)
-    {
-    case ADD:
-        exec_args = {{MKLDNN_ARG_MULTIPLE_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_MULTIPLE_SRC + 1, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[2]]}};
-        break;
-    case AVGPOOL:
-    case BOUNDEDRELU:
-    case CONVERTLAYOUT:
-    case LEAKYRELU:
-    case LRN:
-    case MAXPOOL:
-    case QUANTIZE:
-    case DEQUANTIZE:
-    case QUANTIZEDAVGPOOL:
-    case QUANTIZEDMAXPOOL:
-    case RELU:
-    case SIGMOID:
-    case SLICE:
-    case SOFTMAX:
-        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[1]]}};
-        break;
-    case AVGPOOLBACKPROP:
-        exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[1]]}};
-        break;
-    case BATCHNORM3ARGS:
-        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[2]]},
-                     {MKLDNN_ARG_MEAN, *ctx->mkldnn_memories[deps[3]]},
-                     {MKLDNN_ARG_VARIANCE, *ctx->mkldnn_memories[deps[4]]}};
-        break;
-    case BATCHNORM5ARGS:
-        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_MEAN, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_VARIANCE, *ctx->mkldnn_memories[deps[2]]},
-                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[3]]},
-                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[4]]}};
-        break;
-    case BATCHNORMBACKPROP:
-        exec_arg = {{MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[0]]},
-                    {MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[1]]},
-                    {MKLDNN_ARG_MEAN, *ctx->mkldnn_memories[deps[2]]},
-                    {MKLDNN_ARG_VARIANCE, *ctx->mkldnn_memories[deps[3]]},
-                    {MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[4]]},
-                    {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[5]]},
-                    {MKLDNN_ARG_DIFF_WEIGHTS, *ctx->mkldnn_memories[deps[6]]}};
-        break;
-    case CONCAT:
-    case QUANTIZEDCONCAT:
-        auto nargs = deps.size();
-        for (size_t i = 0; i < nargs; i++)
-        {
-            exec_args.push_back({MKLDNN_ARG_MULTIPLE_SRC + i, *ctx->mkldnn_memories[deps[i]]});
-        }
-        exec_args.push_back({MKLDNN_ARG_MULTIPLE_DST, *ctx->mkldnn_memories[deps[nargs]]});
-        break;
-    case CONVOLUTION:
-    case CONVOLUTIONRELU:
-    case CONVOLUTIONADD:
-    case GROUPCONVOLUTION:
-    case QUANTIZEDMATMUL:
-    case QUANTIZEDCONVOLUTION:
-        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[2]]}};
-        break;
-    case CONVOLUTIONBIAS:
-    case CONVOLUTIONBIASADD:
-    case GROUPCONVOLUTIONBIAS:
-    case QUANTIZEDDOTBIAS:
-    case QUANTIZEDCONVOLUTIONBIAS:
-    case QUANTIZEDCONVOLUTIONBIASADD; case QUANTIZEDCONVOLUTIONBIASSIGNEDADD:
-        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_BIAS, *ctx->mkldnn_memories[deps[2]]},
-                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[3]]}};
-        break;
-    case CONVOLUTIONBACKPROPDATA:
-        exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
-        break;
-    case CONVOLUTIONBACKPROPWEIGHTS:
-        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DIFF_WEIGHTS, *ctx->mkldnn_memories[deps[2]]}};
-        break;
-    case CONVOLUTIONBACKPROPWEIGHTSBIAS:
-        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DIFF_WEIGHTS, *ctx->mkldnn_memories[deps[2]]},
-                     {MKLDNN_ARG_DIFF_BIAS, *ctx->mkldnn_memories[deps[3]]}};
-        break;
-    case DECONVOLUTIONBIAS:
-        exec_args = {{MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_BIAS, *ctx->mkldnn_memories[deps[2]]},
-                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[3]]}};
-        break;
-    case LSTM:
-    case RNN:
-        exec_arg = {{MKLDNN_ARG_SRC_LAYER, *ctx->mkldnn_memories[deps[0]]},
-                    {MKLDNN_ARG_SRC_ITER, *ctx->mkldnn_memories[deps[1]]},
-                    {MKLDNN_ARG_WEIGHTS_LAYER, *ctx->mkldnn_memories[deps[2]]},
-                    {MKLDNN_ARG_WEIGHTS_ITER, *ctx->mkldnn_memories[deps[3]]},
-                    {MKLDNN_ARG_BIAS, *ctx->mkldnn_memories[deps[4]]},
-                    {MKLDNN_ARG_DST_LAYER, *ctx->mkldnn_memories[deps[5]]},
-                    {MKLDNN_ARG_DST_ITER, *ctx->mkldnn_memories[deps[6]]},
-                    {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[5]]}};
-        break;
-    case MAXPOOLBACKPROPFORWARD:
-    case MAXPOOLWITHINDICES:
-        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[2]]}};
-        break;
-    case MAXPOOLBACKPROPBACKWARD:
-    case MAXPOOLWITHINDICESBACKPROP:
-        exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
-        break;
-    case RELUBACKPROP:
-    case SIGMOIDBACKPROP:
-        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
-        break;
-    }
-
-    mkldnn::stream s(global_cpu_engine);
+    mkldnn::stream s(mkldnn::stream::kind::eager);
     try
     {
-        {*ctx->mkldnn_primitives[primitive_index]}.execute(s, exec_args);
-        s.wait();
+        s.submit({*ctx->mkldnn_primitives[primitive_index]}).wait();
     }
     catch (const mkldnn::error& e)
     {
@@ -188,21 +50,160 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeCon
                                                                    size_t index,
                                                                    void* ptr)
 {
-    auto primitive = static_cast<mkldnn::memory*>(ctx->mkldnn_primitives[index]);
-    primitive->set_data_handle(ptr);
+    auto memory = ctx->mkldnn_memories[index];
+    memory->set_data_handle(ptr);
 }
 
 extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
-    CPURuntimeContext* ctx, size_t primitive_index, std::vector<size_t> deps, OpType type)
+    CPURuntimeContext* ctx, size_t primitive_index, std::vector<size_t>& deps, OpType type)
 {
-    mkldnn::stream s(mkldnn::stream::kind::eager);
+    std::unordered_map<int, mkldnn::memory> exec_args;
+    size_t nargs;
+    switch (type)
+    {
+    case OpType::ADD:
+        exec_args = {{MKLDNN_ARG_MULTIPLE_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_MULTIPLE_SRC + 1, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[2]]}};
+        break;
+    case OpType::AVGPOOL:
+    case OpType::BOUNDEDRELU:
+    case OpType::CONVERTLAYOUT:
+    case OpType::LEAKYRELU:
+    case OpType::LRN:
+    case OpType::MAXPOOL:
+    case OpType::QUANTIZE:
+    case OpType::DEQUANTIZE:
+    case OpType::QUANTIZEDAVGPOOL:
+    case OpType::QUANTIZEDMAXPOOL:
+    case OpType::RELU:
+    case OpType::SIGMOID:
+    case OpType::SLICE:
+    case OpType::SOFTMAX:
+        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[1]]}};
+        break;
+    case OpType::AVGPOOLBACKPROP:
+        exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[1]]}};
+        break;
+    case OpType::BATCHNORM3ARGS:
+        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_MEAN, *ctx->mkldnn_memories[deps[3]]},
+                     {MKLDNN_ARG_VARIANCE, *ctx->mkldnn_memories[deps[4]]}};
+        break;
+    case OpType::BATCHNORM5ARGS:
+        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_MEAN, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_VARIANCE, *ctx->mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[3]]},
+                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[4]]}};
+        break;
+    case OpType::BATCHNORMBACKPROP:
+        exec_args = {{MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_MEAN, *ctx->mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_VARIANCE, *ctx->mkldnn_memories[deps[3]]},
+                     {MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[4]]},
+                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[5]]},
+                     {MKLDNN_ARG_DIFF_WEIGHTS, *ctx->mkldnn_memories[deps[6]]}};
+        break;
+    case OpType::CONCAT:
+    case OpType::QUANTIZEDCONCAT:
+        nargs = deps.size();
+        for (size_t i = 0; i < nargs; i++)
+        {
+            exec_args.insert({MKLDNN_ARG_MULTIPLE_SRC + i, *ctx->mkldnn_memories[deps[i]]});
+        }
+        exec_args.insert({MKLDNN_ARG_MULTIPLE_DST, *ctx->mkldnn_memories[deps[nargs]]});
+        break;
+    case OpType::CONVOLUTION:
+    case OpType::CONVOLUTIONRELU:
+    case OpType::CONVOLUTIONADD:
+    case OpType::GROUPCONVOLUTION:
+    case OpType::QUANTIZEDMATMUL:
+    case OpType::QUANTIZEDCONVOLUTION:
+    case OpType::QUANTIZEDCONVOLUTIONRELU:
+        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[2]]}};
+        break;
+    case OpType::CONVOLUTIONBIAS:
+    case OpType::CONVOLUTIONBIASADD:
+    case OpType::GROUPCONVOLUTIONBIAS:
+    case OpType::QUANTIZEDDOTBIAS:
+    case OpType::QUANTIZEDCONVOLUTIONBIAS:
+    case OpType::QUANTIZEDCONVOLUTIONBIASADD:
+    case OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD:
+        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_BIAS, *ctx->mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[3]]}};
+        break;
+    case OpType::CONVOLUTIONBACKPROPDATA:
+        exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
+        break;
+    case OpType::CONVOLUTIONBACKPROPWEIGHTS:
+        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_DIFF_WEIGHTS, *ctx->mkldnn_memories[deps[2]]}};
+        break;
+    case OpType::CONVOLUTIONBACKPROPWEIGHTSBIAS:
+        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_DIFF_WEIGHTS, *ctx->mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_DIFF_BIAS, *ctx->mkldnn_memories[deps[3]]}};
+        break;
+    case OpType::DECONVOLUTIONBIAS:
+        exec_args = {{MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_BIAS, *ctx->mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[3]]}};
+        break;
+    case OpType::LSTM:
+    case OpType::RNN:
+        exec_args = {{MKLDNN_ARG_SRC_LAYER, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_SRC_ITER, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_WEIGHTS_LAYER, *ctx->mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_WEIGHTS_ITER, *ctx->mkldnn_memories[deps[3]]},
+                     {MKLDNN_ARG_BIAS, *ctx->mkldnn_memories[deps[4]]},
+                     {MKLDNN_ARG_DST_LAYER, *ctx->mkldnn_memories[deps[5]]},
+                     {MKLDNN_ARG_DST_ITER, *ctx->mkldnn_memories[deps[6]]},
+                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[5]]}};
+        break;
+    case OpType::MAXPOOLBACKPROPFORWARD:
+    case OpType::MAXPOOLWITHINDICES:
+        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[2]]}};
+        break;
+    case OpType::MAXPOOLBACKPROPBACKWARD:
+    case OpType::MAXPOOLWITHINDICESBACKPROP:
+        exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
+        break;
+    case OpType::RELUBACKPROP:
+    case OpType::SIGMOIDBACKPROP:
+        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
+        break;
+    }
+
+    mkldnn::stream s(executor::global_cpu_engine);
     try
     {
-        s.submit({*ctx->mkldnn_primitives[primitive_index]}).wait();
+        (*ctx->mkldnn_primitives[primitive_index]).execute(s, exec_args);
+        s.wait();
     }
     catch (const mkldnn::error& e)
     {
-        throw ngraph_error("Could not run mkdnn primitive " + e.message);
+        throw ngraph_error(/*"Could not run mkdnn primitive " + */ e.message);
     }
 }
 #endif

@@ -71,7 +71,8 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_concat(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_concat(ctx->mkldnn_memories,
+                                                         ctx->mkldnn_primitives,
                                                          concat_pd,
                                                          inputs_data_desc,
                                                          deps,

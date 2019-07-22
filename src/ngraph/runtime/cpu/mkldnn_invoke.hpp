@@ -70,6 +70,7 @@ namespace ngraph
                     QUANTIZEDCONVOLUTIONBIAS,
                     QUANTIZEDCONVOLUTIONBIASADD,
                     QUANTIZEDCONVOLUTIONBIASSIGNEDADD,
+                    QUANTIZEDCONVOLUTIONRELU,
                     RELU,
                     RELUBACKPROP,
                     RNN,
@@ -79,17 +80,10 @@ namespace ngraph
                     SOFTMAX
                 };
                 extern "C" void set_memory_ptr(CPURuntimeContext* ctx, size_t index, void* ptr);
-#if defined(USE_MKLDNN_V1)
                 extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
                                                         size_t primitive_index,
                                                         std::vector<size_t>& deps,
                                                         OpType type);
-#else
-                extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
-                                                        size_t primitive_index,
-                                                        std::vector<size_t> deps = {},
-                                                        OpType type = OpType::ANY);
-#endif
             }
         }
     }

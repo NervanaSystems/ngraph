@@ -83,7 +83,8 @@ namespace ngraph
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]),
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]) +
                                         scales_size);
-                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_primitives,
+                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
+                                                                       ctx->mkldnn_primitives,
                                                                        input_desc,
                                                                        result_desc,
                                                                        dyn_scales,
@@ -118,7 +119,8 @@ namespace ngraph
                                                      CPUExecutionContext* ectx) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_primitives,
+                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
+                                                                       ctx->mkldnn_primitives,
                                                                        input_desc,
                                                                        result_desc,
                                                                        scales,
@@ -129,7 +131,9 @@ namespace ngraph
                                 ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, dequantize_index);
+
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                                ctx, dequantize_index, deps, cpu::mkldnn_utils::OpType::DEQUANTIZE);
                         };
                         functors.emplace_back(functor);
                     }
@@ -353,7 +357,8 @@ namespace ngraph
                                 }
                                 // quantize across first dim (mask=2^0) if dyn_scales is a vector
                                 const int mask = scales_size == 1 ? 0 : 1;
-                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_primitives,
+                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
+                                                                       ctx->mkldnn_primitives,
                                                                        input_desc,
                                                                        result_desc,
                                                                        dyn_scales,
@@ -389,7 +394,8 @@ namespace ngraph
                                                           CPUExecutionContext* ectx) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_primitives,
+                                mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
+                                                                       ctx->mkldnn_primitives,
                                                                        input_desc,
                                                                        result_desc,
                                                                        scales,
@@ -400,7 +406,9 @@ namespace ngraph
                                 ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, quantize_index);
+
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                                ctx, quantize_index, deps, cpu::mkldnn_utils::OpType::QUANTIZE);
                         };
                         functors.emplace_back(functor);
                     }

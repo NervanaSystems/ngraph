@@ -43,19 +43,20 @@ namespace ngraph
                 auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                 auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                if (input_desc.data.FORMAT == mkldnn_nchw &&
-                    result_desc.data.FORMAT == mkldnn_goihw)
+#if not defined(NGRAPH_USE_MKLDNN_V1)
+                if (input_desc.data.format == mkldnn_nchw &&
+                    result_desc.data.format == mkldnn_goihw)
                 {
                     //becomes a copy
                     input_desc = result_desc;
                 }
-                else if ((input_desc.data.FORMAT == mkldnn_nchw ||
-                          input_desc.data.FORMAT == mkldnn_nhwc) &&
-                         result_desc.data.FORMAT == mkldnn_OIhw4i16o4i_s8s8)
+                else if ((input_desc.data.format == mkldnn_nchw ||
+                          input_desc.data.format == mkldnn_nhwc) &&
+                         result_desc.data.format == mkldnn_OIhw4i16o4i_s8s8)
                 {
-                    input_desc.data.FORMAT = mkldnn_oihw;
+                    input_desc.data.format = mkldnn_oihw;
                 }
-                else if (input_desc.data.FORMAT == mkldnn_nchw && input_desc.data.ndims == 4 &&
+                else if (input_desc.data.format == mkldnn_nchw && input_desc.data.ndims == 4 &&
                          result_desc.data.ndims == 5 && node->get_users().size() == 1)
                 {
                     Shape weights_shape_groups;
@@ -78,8 +79,9 @@ namespace ngraph
                         mkldnn::memory::dims(weights_shape_groups.begin(),
                                              weights_shape_groups.end()),
                         mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                        mkldnn::memory::FORMAT::goihw);
+                        mkldnn::memory::format::goihw);
                 }
+#endif
 
                 // ConvertLayout needs 3 primitives: input, result, and reorder.
                 size_t reorder_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -89,7 +91,8 @@ namespace ngraph
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_reorder(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_reorder(ctx->mkldnn_memories,
+                                                          ctx->mkldnn_primitives,
                                                           input_desc,
                                                           result_desc,
                                                           deps,

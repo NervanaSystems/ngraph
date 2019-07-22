@@ -56,7 +56,8 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_bounded_relu(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_bounded_relu(ctx->mkldnn_memories,
+                                                               ctx->mkldnn_primitives,
                                                                bounded_relu_desc,
                                                                deps,
                                                                bounded_relu_index);

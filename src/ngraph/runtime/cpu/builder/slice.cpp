@@ -108,7 +108,8 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_slice(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_slice(ctx->mkldnn_memories,
+                                                        ctx->mkldnn_primitives,
                                                         input_desc,
                                                         result_desc,
                                                         lower_bounds,

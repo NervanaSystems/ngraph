@@ -56,8 +56,11 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_leaky_relu(
-                                ctx->mkldnn_primitives, leaky_relu_desc, deps, leaky_relu_index);
+                            mkldnn_emitter->build_leaky_relu(ctx->mkldnn_memories,
+                                                             ctx->mkldnn_primitives,
+                                                             leaky_relu_desc,
+                                                             deps,
+                                                             leaky_relu_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[input_buffer_index]);

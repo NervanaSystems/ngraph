@@ -69,6 +69,7 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -165,6 +166,7 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -224,6 +226,7 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -289,6 +292,7 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -359,6 +363,7 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -427,8 +432,12 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_convolution_backward_data(
-                                ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, conv_index);
+                            mkldnn_emitter->build_convolution_backward_data(ctx->mkldnn_memories,
+                                                                            ctx->mkldnn_primitives,
+                                                                            bwd_desc,
+                                                                            fwd_desc,
+                                                                            deps,
+                                                                            conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -533,7 +542,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_weights(
-                                ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                bwd_desc,
+                                fwd_desc,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -635,7 +649,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_backward_weights_bias(
-                                ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, conv_index);
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                bwd_desc,
+                                fwd_desc,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -693,6 +712,7 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<false>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -754,6 +774,7 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_convolution_forward<true>(
+                                ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
                                 conv_desc,
                                 conv_attr,
@@ -821,7 +842,8 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_deconvolutionbias_forward(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_deconvolutionbias_forward(ctx->mkldnn_memories,
+                                                                            ctx->mkldnn_primitives,
                                                                             deconvbias_desc,
                                                                             deps,
                                                                             conv_index,

@@ -52,8 +52,11 @@ namespace ngraph
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->build_pooling_forward(
-                                    ctx->mkldnn_primitives, qavg_pool_desc, deps, qavg_pool_index);
+                                mkldnn_emitter->build_pooling_forward(ctx->mkldnn_memories,
+                                                                      ctx->mkldnn_primitives,
+                                                                      qavg_pool_desc,
+                                                                      deps,
+                                                                      qavg_pool_index);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[0], ctx->buffer_data[arg_buffer_index]);

@@ -80,6 +80,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             }
 
             bool in_place_concat = true;
+#if not defined(NGRAPH_USE_MKLDNN_V1)
             auto output_md = mkldnn_utils::get_output_mkldnn_md(n.get(), 0);
             auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
             for (size_t i = 0; i < n->get_input_size(); i++)
@@ -98,6 +99,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             {
                 continue;
             }
+#endif
 
             AxisVector axis_list = ngraph::get_default_order(shape);
 
@@ -272,8 +274,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
             // check if input and output formats are the same
             auto output_md = mkldnn_utils::get_output_mkldnn_md(n.get(), 0);
-            auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
             auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), 0);
+#if not defined(NGRAPH_USE_MKLDNN_V1)
+            auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
             auto input_format = static_cast<mkldnn::memory::format>(input_md.data.format);
             if (output_format != input_format)
             {
@@ -281,10 +284,11 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                                 "output format, no in place slice";
                 continue;
             }
+#endif
 
             const auto& dtype = slice->get_input_element_type(0);
             if (runtime::cpu::mkldnn_utils::get_mkldnn_data_type(dtype) ==
-                mkldnn::memory::data_type::data_undef)
+                mkldnn::memory::data_type::DATA_UNDEF)
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: "
                              << slice->get_input_element_type(0).c_type_string()

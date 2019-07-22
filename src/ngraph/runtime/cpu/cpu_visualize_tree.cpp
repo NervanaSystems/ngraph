@@ -49,12 +49,21 @@ static void visualize_layout_format(const Node& node, ostream& ss)
         {
             ss << "\ninput_order=" << reshape->get_input_order();
         }
-        ss << "\nin="
-           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                  static_cast<mkldnn::memory::format>(in_tvl->get_mkldnn_md().data.format));
-        ss << " out="
-           << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                  static_cast<mkldnn::memory::format>(out_tvl->get_mkldnn_md().data.format));
+#if defined(NGRAPH_USE_MKLDNN_V1)
+        ss << "\nin=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_kind_string(
+                             static_cast<mkldnn::memory::FORMAT_KIND>(
+                                 in_tvl->get_mkldnn_md().data.FORMAT_KIND));
+        ss << " out=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_kind_string(
+                             static_cast<mkldnn::memory::FORMAT_KIND>(
+                                 out_tvl->get_mkldnn_md().data.FORMAT_KIND));
+#else
+        ss << "\nin=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                             static_cast<mkldnn::memory::FORMAT_KIND>(
+                                 in_tvl->get_mkldnn_md().data.FORMAT_KIND));
+        ss << " out=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
+                             static_cast<mkldnn::memory::FORMAT_KIND>(
+                                 out_tvl->get_mkldnn_md().data.FORMAT_KIND));
+#endif
         ss << " ";
     }
     catch (...)

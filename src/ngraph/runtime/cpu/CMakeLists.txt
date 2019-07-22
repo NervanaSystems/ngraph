@@ -36,7 +36,7 @@ set(SRC
     builder/avg_pool.cpp
     builder/argmin.cpp
     builder/argmax.cpp
-    builder/batch_norm.cpp
+ #	builder/batch_norm.cpp
     builder/broadcast.cpp
     builder/broadcast_distributed.cpp
     builder/bounded_relu.cpp
@@ -51,7 +51,7 @@ set(SRC
     builder/gather.cpp
     builder/gather_nd.cpp
     builder/leaky_relu.cpp
-    builder/lstm.cpp
+ #  builder/lstm.cpp
     builder/lrn.cpp
     builder/matmul_bias.cpp
     builder/max.cpp
@@ -73,7 +73,7 @@ set(SRC
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
-    builder/rnn.cpp
+ #  builder/rnn.cpp
     builder/scatter_add.cpp
     builder/scatter_nd_add.cpp
     builder/select.cpp
@@ -120,12 +120,21 @@ set(SRC
     pass/cpu_mat_fusion.cpp
     pass/cpu_memory_assignment.cpp
     pass/cpu_memory_optimization.cpp
-    pass/cpu_mkldnn_primitive_build.cpp
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
     ngraph_version.cpp
 )
+
+if (NOT NGRAPH_USE_MKLDNN_V1)
+	set(SRC
+	    ${SRC}
+	    builder/batch_norm.cpp
+	    builder/lstm.cpp
+	    builder/rnn.cpp
+	    )
+endif()	    
+	    
 
 if (NOT NGRAPH_DEX_ONLY)
     set(SRC
@@ -133,6 +142,7 @@ if (NOT NGRAPH_DEX_ONLY)
         cpu_emitter.cpp
         cpu_kernel_emitters.cpp
         cpu_kernel_utils.cpp
+        pass/cpu_mkldnn_primitive_build.cpp
         )
 endif()
 
@@ -161,6 +171,9 @@ if (NGRAPH_CPU_ENABLE)
         set_target_properties(cpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
+    endif()
+    if (NGRAPH_USE_MKLDNN_V1)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_USE_MKLDNN_V1")
     endif()
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
@@ -201,7 +214,8 @@ if (NGRAPH_CPU_ENABLE)
     target_compile_definitions(cpu_backend PRIVATE CPU_BACKEND_DLL_EXPORTS)
 
     add_dependencies(cpu_backend libmkldnn ext_eigen)
-    target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
+   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen libtbb)
+        
     if (NGRAPH_JSON_ENABLE)
         target_link_libraries(cpu_backend PUBLIC libjson)
     endif()

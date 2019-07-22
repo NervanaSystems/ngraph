@@ -52,8 +52,11 @@ namespace ngraph
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_lrn_forward(
-                                ctx->mkldnn_primitives, lrn_desc, deps, lrn_index);
+                            mkldnn_emitter->build_lrn_forward(ctx->mkldnn_memories,
+                                                              ctx->mkldnn_primitives,
+                                                              lrn_desc,
+                                                              deps,
+                                                              lrn_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg_buffer_index]);

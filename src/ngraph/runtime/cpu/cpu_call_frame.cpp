@@ -211,10 +211,8 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         {
             ctx->mkldnn_primitives =
                 std::vector<mkldnn::primitive*>(mkldnn_emitter->get_mkldnn_primitives().size());
-#if defined(USE_MKLDNN_V1)
             ctx->mkldnn_memories =
                 std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
-#endif
         }
         else
         {
@@ -253,6 +251,10 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         for (auto p : ctx->mkldnn_primitives)
         {
             delete p;
+        }
+        for (auto m : ctx->mkldnn_memories)
+        {
+            delete m;
         }
         for (auto buffer : ctx->memory_buffers)
         {
