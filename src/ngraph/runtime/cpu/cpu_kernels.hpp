@@ -270,7 +270,8 @@ namespace ngraph
                                       size_t nelems,
                                       bool training,
                                       const double value,
-                                      const std::vector<std::minstd_rand>& vmsr);
+                                      const std::vector<std::minstd_rand>& vmsr,
+                                      const bool use_seed);
             }
         }
     }

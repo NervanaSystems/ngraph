@@ -45,6 +45,7 @@
 
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
+#include "ngraph/builder/quantized_conv_builder.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/builder/tensor_mask.hpp"
 #include "ngraph/coordinate_transform.hpp"
@@ -92,6 +93,7 @@
 #include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
+#include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"

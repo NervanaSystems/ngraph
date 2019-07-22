@@ -57,7 +57,7 @@ void pass::Manager::initialize_default_passes()
 {
 }
 
-void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
+void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive, bool revalidate)
 {
     bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
 
@@ -139,10 +139,13 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
         }
 
         // Better to do this in node replacement but this will do for now
-        for (auto f_pair : fs)
+        if (revalidate)
         {
-            shared_ptr<Function> f = f_pair.first;
-            f->validate_nodes_and_infer_types();
+            for (auto f_pair : fs)
+            {
+                shared_ptr<Function> f = f_pair.first;
+                f->validate_nodes_and_infer_types();
+            }
         }
 
         if (m_visualize || m_serialize)
