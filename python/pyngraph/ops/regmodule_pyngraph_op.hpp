@@ -39,6 +39,7 @@
 #include "pyngraph/ops/cosh.hpp"
 #include "pyngraph/ops/divide.hpp"
 #include "pyngraph/ops/dot.hpp"
+#include "pyngraph/ops/elu.hpp"
 #include "pyngraph/ops/equal.hpp"
 #include "pyngraph/ops/exp.hpp"
 #include "pyngraph/ops/floor.hpp"
