@@ -26,13 +26,18 @@ namespace ngraph
         class LessEq : public util::BinaryElementwiseComparison
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a less-than-or-equal operation.
+            LessEq() = default;
             /// \brief Constructs a less-than-or-equal operation.
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             /// \param autob Auto broadcast specification
-            LessEq(const std::shared_ptr<Node>& arg0,
-                   const std::shared_ptr<Node>& arg1,
+            LessEq(const Output<Node>& arg0,
+                   const Output<Node>& arg1,
                    const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             virtual std::shared_ptr<Node>
