@@ -26,10 +26,15 @@ namespace ngraph
         class Not : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a logical negation operation.
+            Not() = default;
             /// \brief Constructs a logical negation operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Not(const std::shared_ptr<Node>& arg);
+            Not(const Output<Node>& arg);
 
             void validate_and_infer_types() override;
 
