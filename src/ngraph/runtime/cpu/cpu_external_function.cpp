@@ -155,6 +155,7 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_cse.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
@@ -1341,6 +1342,11 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             "enabled due to concurrent graph execution");
     }
 
+    // reference all the builders for static library
+    #ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+    ngraph::runtime::cpu::register_builders();
+    #endif
+    
     // stream writer to dump the debug manifest for the DEX
     static const string s_debug_dir = "cpu_codegen";
     static StaticInitializers s_static_initializers(s_debug_dir);

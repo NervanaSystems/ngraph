@@ -64,6 +64,10 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(AllReduce);
+
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_allreduce_cpp() {}
+#endif
         }
     }
 }

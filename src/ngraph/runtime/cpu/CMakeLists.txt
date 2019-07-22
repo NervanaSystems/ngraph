@@ -25,6 +25,7 @@ endif()
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
+    cpu_builder_registry.cpp
     cpu_call_frame.cpp
     cpu_executor.cpp
     cpu_external_function.cpp

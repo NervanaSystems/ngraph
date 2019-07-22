@@ -245,6 +245,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(EmbeddingLookup);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_embedding_lookup_cpp() {}
+#endif
         }
     }
 }
