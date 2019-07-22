@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -111,6 +110,7 @@
 #ifdef NGRAPH_MLIR_ENABLE
 #include "contrib/mlir/compiler.hpp"
 #endif
+#include "ngraph/runtime/cpu/builder/add.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -525,6 +525,8 @@ namespace ngraph
             REGISTER_OP_BUILDER(Minimum);
             REGISTER_OP_BUILDER(And);
             REGISTER_OP_BUILDER(Or);
+            REGISTER_OP_BUILDER(Add);
+
 
             REGISTER_CF_BUILDER(Add);
             REGISTER_CF_BUILDER(Subtract);
