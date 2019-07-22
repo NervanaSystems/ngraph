@@ -68,7 +68,7 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
 
     For more information refer to:
     `Fast and Accurate Deep Network Learning by Exponential Linear Units (ELUs)
-    <http://arxiv.org/abs/1511.07289>` _
+    <http://arxiv.org/abs/1511.07289>`_
 
     :param data: Input tensor. One of: input node, array or scalar.
     :param alpha: Multiplier for negative values. One of: input node or scalar value.
