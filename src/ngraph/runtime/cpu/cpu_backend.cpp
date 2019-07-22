@@ -65,7 +65,8 @@ namespace
     public:
         CPUStaticInit()
         {
-            runtime::BackendManager::register_backend("CPU", runtime::cpu::get_backend_constructor_pointer());
+            runtime::BackendManager::register_backend(
+                "CPU", runtime::cpu::get_backend_constructor_pointer());
         }
         ~CPUStaticInit() {}
     } s_cpu_static_init;

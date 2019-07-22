@@ -512,7 +512,6 @@ namespace ngraph
 #ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
             void register_builders_batch_norm_cpp() {}
 #endif
-
         }
     }
 }

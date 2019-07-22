@@ -22,7 +22,8 @@ namespace ngraph
     {
         namespace cpu
         {
-            void register_builders() {
+            void register_builders()
+            {
                 register_builders_add_cpp();
                 register_builders_allreduce_cpp();
                 register_builders_argmax_cpp();
