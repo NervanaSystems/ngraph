@@ -64,6 +64,5 @@ namespace ngraph
         };
     }
 
-    std::shared_ptr<ngraph::Node> operator/(const Output<ngraph::Node> arg0,
-                                            const Output<ngraph::Node> arg1);
+    std::shared_ptr<Node> operator/(const Output<Node>& arg0, const Output<Node>& arg1);
 }
