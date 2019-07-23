@@ -121,6 +121,7 @@ namespace
 
         /// Inserts dealloc Ops for each temporary allocated by AllocOp
         void insertDeallocs(PatternRewriter& rewriter);
+
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
@@ -129,7 +130,7 @@ namespace
         void processFakeInstrs();
         void insertNoAliasArgAttrs();
         Value* insertMemMgrDef(PatternRewriter* rewriter = nullptr);
-        
+
     private:
         NGraphTypeConverter m_typeConverter;
         // Value holding mem manager passed pointer
@@ -339,7 +340,6 @@ namespace
 
     void DialectLoweringPass::insertDeallocs(PatternRewriter& rewriter)
     {
-        
         for (auto value : m_memRefsToDealloc)
         {
             rewriter.create<DeallocOp>(rewriter.getUnknownLoc(), value);
