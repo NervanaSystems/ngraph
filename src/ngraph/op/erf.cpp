@@ -15,12 +15,12 @@
 //*****************************************************************************
 
 #define _USE_MATH_DEFINES
+#include "ngraph/op/erf.hpp"
 #include <cmath>
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/op/erf.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -46,8 +46,7 @@ void op::Erf::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     auto delta = deltas.at(0);
     auto x = get_argument(0);
     auto coff = 2.0 / sqrt(M_PI);
-    auto coff_node  =
-        builder::make_constant(x->get_element_type(), x->get_shape(), coff);
+    auto coff_node = builder::make_constant(x->get_element_type(), x->get_shape(), coff);
 
     shared_ptr<ngraph::Node> neg_one =
         builder::make_constant(x->get_element_type(), x->get_shape(), -1.0);

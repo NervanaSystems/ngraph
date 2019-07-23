@@ -60,8 +60,7 @@ shared_ptr<Node> op::Gelu::copy_with_new_args(const NodeVector& new_args) const
     return make_shared<Gelu>(new_args.at(0));
 }
 
-void op::Gelu::generate_adjoints(autodiff::Adjoints& adjoints,
-                             const NodeVector& deltas)
+void op::Gelu::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
     auto data = get_argument(0);
@@ -84,8 +83,7 @@ void op::Gelu::pre_validate_and_infer_types()
                           ").");
 }
 
-op::GeluBackprop::GeluBackprop(const shared_ptr<Node>& data,
-                               const shared_ptr<Node>& delta)
+op::GeluBackprop::GeluBackprop(const shared_ptr<Node>& data, const shared_ptr<Node>& delta)
     : FusedOp("GeluBackprop", check_single_output_args({data, delta}))
 {
     constructor_validate_and_infer_types();
@@ -113,7 +111,8 @@ NodeVector op::GeluBackprop::decompose_op() const
 
     shared_ptr<ngraph::Node> tmp = data / sqrt_two;
 
-    return {half * (one + make_shared<ngraph::op::Erf>(tmp) + data * sqrt_two_over_pi * make_shared<ngraph::op::Exp>(neg_one * tmp * tmp))};
+    return {half * (one + make_shared<ngraph::op::Erf>(tmp) +
+                    data * sqrt_two_over_pi * make_shared<ngraph::op::Exp>(neg_one * tmp * tmp))};
 }
 
 shared_ptr<Node> op::GeluBackprop::copy_with_new_args(const NodeVector& new_args) const
