@@ -51,6 +51,6 @@ public:
 
 ngraph::runtime::Allocator* ngraph::runtime::get_default_allocator()
 {
-    static DefaultAllocator* allocator = new DefaultAllocator();
-    return allocator;
+    static DefaultAllocator allocator;
+    return &allocator;
 }
