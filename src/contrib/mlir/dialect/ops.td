@@ -18,6 +18,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+// NOTE: This file follows nGraph format style and MLIR naming convention since it does
+// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+
 include "mlir/IR/OpBase.td"
 
 // nGraph Dialect operations definitions
