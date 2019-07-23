@@ -88,6 +88,7 @@ static void
             current_iteration++;
             data_written = false;
             s_condition.notify_all();
+            lock.unlock();
             for (size_t result_index = 0; result_index < results.size(); result_index++)
             {
                 const shared_ptr<runtime::HostTensor>& data = tensors.result_data[result_index];
