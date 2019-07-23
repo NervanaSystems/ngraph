@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#define _USE_MATH_DEFINES
 #include "ngraph/op/erf.hpp"
 #include <cmath>
 #include "ngraph/builder/make_constant.hpp"
