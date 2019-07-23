@@ -218,7 +218,7 @@ int main(int argc, const char* argv[])
     NodeMap train_node_map;
     auto train_function = clone_function(
         Function(
-            NodeVector{loss, softmax, W0_next, b0_next, W1_next, b1_next},
+            OutputVector{loss, softmax, W0_next, b0_next, W1_next, b1_next},
             ParameterVector{X, Y, N, learning_rate, W0, b0, W1, b1}),
         train_node_map);
     auto train_exec = backend->compile(train_function);
@@ -227,7 +227,7 @@ int main(int argc, const char* argv[])
     // X, W0, b0, W1, b1 -> softmax
     NodeMap inference_node_map;
     auto inference_function = clone_function(
-        Function(NodeVector{softmax}, ParameterVector{X, W0, b0, W1, b1}),
+        Function(OutputVector{softmax}, ParameterVector{X, W0, b0, W1, b1}),
         inference_node_map);
     auto inference_exe = backend->compile(inference_function);
 

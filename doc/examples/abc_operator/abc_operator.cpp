@@ -31,7 +31,7 @@ int main()
     auto t1 = (a + b) * c;
 
     // Make the function
-    auto f = std::make_shared<Function>(NodeVector{t1},
+    auto f = std::make_shared<Function>(OutputVector{t1},
                                         ParameterVector{a, b, c});
 
     // Get the backend
