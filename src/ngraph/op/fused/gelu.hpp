@@ -26,8 +26,6 @@ namespace ngraph
     {
         /// \brief Gaussian Error Linear Unit
         /// f(x) = 0.5 * x * (1 + erf( x / sqrt(2) )
-        /// erf'(x) = 2 / sqrt(pi) * exp (-x^2)
-        /// f'(x) = 0.5 * (1 + erf( x / sqrt(2)) + x * sqrt(2 / pi) * exp (-(x / sqrt(2))^2))
         ///
         class Gelu : public ngraph::op::util::FusedOp
         {
@@ -36,6 +34,29 @@ namespace ngraph
             ///
             /// \param data Input tensor
             Gelu(const std::shared_ptr<ngraph::Node>& data);
+
+            virtual NodeVector decompose_op() const override;
+
+            void pre_validate_and_infer_types() override;
+
+            virtual std::shared_ptr<Node>
+                copy_with_new_args(const NodeVector& new_args) const override;
+        protected:
+            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                           const NodeVector& deltas) override;
+        };
+
+        /// \brief Gaussian Error Linear Unit Backprop
+        /// erf'(x) = 2 / sqrt(pi) * exp (-x^2)
+        /// f'(x) = 0.5 * (1 + erf( x / sqrt(2)) + x * sqrt(2 / pi) * exp (-(x / sqrt(2))^2))
+        ///
+        class GeluBackprop : public ngraph::op::util::FusedOp
+        {
+        public:
+            /// \brief Constructs an GeluBackprop operation.
+            ///
+            GeluBackprop(const std::shared_ptr<ngraph::Node>& data,
+                         const std::shared_ptr<ngraph::Node>& delta);
 
             virtual NodeVector decompose_op() const override;
 
