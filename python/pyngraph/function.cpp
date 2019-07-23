@@ -14,6 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+// #include <Python.h>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -64,7 +66,7 @@ void regclass_pyngraph_Function(py::module m)
         }
         else
         {
-            return nullptr;
+            throw std::runtime_error("The provided capsule does not contain an ngraph::Function");
         }
     });
     function.def_static("to_capsule", [](std::shared_ptr<ngraph::Function>& ngraph_function) {
