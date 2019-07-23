@@ -43,6 +43,7 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
             /// \return The padding-below sizes.
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             /// \return The padding-above sizes.
@@ -57,7 +58,6 @@ namespace ngraph
             virtual std::shared_ptr<Node> get_default_value() const override;
 
         protected:
-            void validate_and_infer_types() override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
             CoordinateDiff m_padding_below;

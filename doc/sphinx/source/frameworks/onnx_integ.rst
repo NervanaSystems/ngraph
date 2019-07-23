@@ -17,17 +17,6 @@ as a backend to ONNX with the add-on package `nGraph ONNX`_.
    support.
 
 
-Installation
-------------
-
-To prepare your environment to use nGraph and ONNX, install the Python packages
-for nGraph, ONNX and NumPy:
-
-::
-
-    $ pip install ngraph-core onnx numpy
-
-
 Importing an ONNX model
 -----------------------
 

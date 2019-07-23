@@ -73,7 +73,6 @@ See :ref:`ngraph_plaidml_backend` section on how to build the
 nGraph-PlaidML.
 
 
-
 Other integration paths
 =======================
 
