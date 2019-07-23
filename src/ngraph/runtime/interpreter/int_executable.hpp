@@ -210,7 +210,6 @@ private:
     std::vector<NodeWrapper> m_wrapped_nodes;
     std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
-    static std::atomic<size_t> m_next_group_id;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);

@@ -39,8 +39,6 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-atomic<size_t> runtime::interpreter::INTExecutable::m_next_group_id;
-
 runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
                                                    bool enable_performance_collection)
     : m_is_compiled{true}
@@ -345,7 +343,6 @@ vector<shared_ptr<runtime::Tensor>>
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
-    size_t group_id = m_next_group_id.fetch_add(1);
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         shared_ptr<runtime::HostTensor> tensor;
@@ -368,7 +365,6 @@ vector<shared_ptr<runtime::Tensor>>
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
     shared_ptr<op::Result> result = get_result(output_index);
-    size_t group_id = m_next_group_id.fetch_add(1);
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         shared_ptr<runtime::HostTensor> tensor;
