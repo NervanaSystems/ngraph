@@ -99,7 +99,8 @@ namespace ngraph
                 void build_ng_dialect();
 
                 template <typename Op>
-                static mlir::Operation* create_op(MLIRCompiler& compiler, const ngraph::Node* ng_node)
+                static mlir::Operation* create_op(MLIRCompiler& compiler,
+                                                  const ngraph::Node* ng_node)
                 {
                     throw std::runtime_error("Unimplemented op '" + ng_node->description() +
                                              "' in MLIR Compiler");

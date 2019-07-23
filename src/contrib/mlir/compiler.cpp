@@ -286,7 +286,7 @@ void MLIRCompiler::build_ng_dialect()
         }
         mlir::Operation* op = it->second(*this, np.get());
         // This assumes simple 1:1 mapping between output edges and generated MLIR op results
-        // If the mapping is more complex, the create_op helper can return null operation 
+        // If the mapping is more complex, the create_op helper can return null operation
         // and handles populating the value map itself
         if (op)
         {
@@ -381,8 +381,8 @@ namespace ngraph
                 auto ng_node_concat = static_cast<const ngraph::op::Concat*>(ng_node);
                 auto op = compiler.create_generic_op<mlir::NGConcatOp>(ng_node);
                 op->setAttr("concatenation_axis",
-                           compiler.m_builder->getI64IntegerAttr(
-                               ng_node_concat->get_concatenation_axis()));
+                            compiler.m_builder->getI64IntegerAttr(
+                                ng_node_concat->get_concatenation_axis()));
                 return op;
             }
 
@@ -392,7 +392,7 @@ namespace ngraph
                 auto ng_node_gather = static_cast<const ngraph::op::Gather*>(ng_node);
                 auto op = compiler.create_generic_op<mlir::NGGatherOp>(ng_node);
                 op->setAttr("axis",
-                           compiler.m_builder->getI64IntegerAttr(ng_node_gather->get_axis()));
+                            compiler.m_builder->getI64IntegerAttr(ng_node_gather->get_axis()));
                 return op;
             }
         }
@@ -416,9 +416,12 @@ mlir::Operation* MLIRCompiler::create_generic_op(const ngraph::Node* ng_node)
         res_types.push_back(get_mlir_type(output.get_tensor_ptr().get()));
     }
 
-    return (m_builder
-        ->create<Op, ArrayRef<mlir::Type>, ArrayRef<mlir::Value*>, ArrayRef<mlir::NamedAttribute>>(
-            mlir::UnknownLoc::get(&m_context), res_types, arg_values, {/* no attrs */})).getOperation();
+    return (m_builder->create<Op,
+                              ArrayRef<mlir::Type>,
+                              ArrayRef<mlir::Value*>,
+                              ArrayRef<mlir::NamedAttribute>>(
+                mlir::UnknownLoc::get(&m_context), res_types, arg_values, {/* no attrs */}))
+        .getOperation();
 }
 
 const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
