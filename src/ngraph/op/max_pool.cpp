@@ -25,14 +25,16 @@
 using namespace std;
 using namespace ngraph;
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+const string op::MaxPool::type_name{"MaxPool"};
+
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
                      const Shape& padding_above,
                      const PadType& pad_type,
                      bool ceil_mode)
-    : Op("MaxPool", check_single_output_args({arg}))
+    : Op({arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -43,7 +45,7 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
@@ -54,7 +56,7 @@ op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
 {
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides,
                      const Shape& padding_below,
@@ -121,14 +123,14 @@ void op::MaxPool::validate_and_infer_types()
                                                   m_ceil_mode));
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg,
+op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
                      const Strides& window_movement_strides)
     : MaxPool(arg, window_shape, window_movement_strides, Shape(), Shape())
 {
 }
 
-op::MaxPool::MaxPool(const shared_ptr<Node>& arg, const Shape& window_shape)
+op::MaxPool::MaxPool(const Output<Node>& arg, const Shape& window_shape)
     : MaxPool(arg, window_shape, Strides(), Shape(), Shape())
 {
 }
@@ -145,13 +147,15 @@ shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_ceil_mode);
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
-                                     const shared_ptr<Node>& delta,
+const string op::MaxPoolBackprop::type_name{"MaxPoolBackprop"};
+
+op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
+                                     const Output<Node>& delta,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
                                      const Shape& padding_above)
-    : Op("MaxPoolBackprop", check_single_output_args({arg_forward, delta}))
+    : Op({arg_forward, delta})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -160,14 +164,14 @@ op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
     constructor_validate_and_infer_types();
 }
 
-op::MaxPoolBackprop::MaxPoolBackprop(const shared_ptr<Node>& arg_forward,
-                                     const shared_ptr<Node>& delta,
-                                     const shared_ptr<Node>& result_forward,
+op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
+                                     const Output<Node>& delta,
+                                     const Output<Node>& result_forward,
                                      const Shape& window_shape,
                                      const Strides& window_movement_strides,
                                      const Shape& padding_below,
                                      const Shape& padding_above)
-    : Op("MaxPoolBackprop", check_single_output_args({arg_forward, delta, result_forward}))
+    : Op({arg_forward, delta, result_forward})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)

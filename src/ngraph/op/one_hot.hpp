@@ -45,14 +45,17 @@ namespace ngraph
         class OneHot : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a one-hot operation.
+            OneHot() = default;
             /// \brief Constructs a one-hot operation.
             ///
             /// \param arg          Node that produces the input tensor to be one-hot encoded.
             /// \param shape        The shape of the output tensor, including the new one-hot axis.
             /// \param one_hot_axis The index within the output shape of the new one-hot axis.
-            OneHot(const std::shared_ptr<Node>& arg,
-                   const PartialShape& shape,
-                   size_t one_hot_axis);
+            OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -60,6 +63,7 @@ namespace ngraph
 
             /// \return The index of the one-hot axis.
             size_t get_one_hot_axis() const { return m_one_hot_axis; }
+            void set_one_hot_axis(size_t one_hot_axis) { m_one_hot_axis = one_hot_axis; }
         protected:
             PartialShape m_shape;
             size_t m_one_hot_axis;

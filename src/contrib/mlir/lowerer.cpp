@@ -350,6 +350,7 @@ namespace
         }
         return callBackFuncPtr;
     }
+
     // NGDialect converters
     Type NGraphTypeConverter::convertType(Type type)
     {
@@ -576,7 +577,6 @@ namespace
         // Create Value for result, and extract type info.
         Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
-        auto resultTy = result->getType().cast<MemRefType>();
 
         // Create view to write into result.
         MemRefView vRes(result);
@@ -590,7 +590,6 @@ namespace
         for (auto& operand : operands)
         {
             NGRAPH_CHECK(operand, "Unexpected null operand in ConcatOp");
-            auto operandTy = result->getType().cast<MemRefType>();
 
             // Assuming rank = r, and the concatenation axis is A where A<r, we'll be creating
             // loops of this form:

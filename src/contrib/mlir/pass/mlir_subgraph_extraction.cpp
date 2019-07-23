@@ -75,7 +75,6 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
 
     // Associate nodes of second sub-graph to first one
     auto sg_nodes = sg2.get_nodes();
-    auto& node_map = m_pass.m_node_to_graph;
     for (auto node : sg_nodes)
     {
         NGRAPH_DEBUG << *node;
@@ -113,7 +112,6 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     for (auto op : func->get_ordered_ops())
     {
         NodeVector inputs;
-        int first_graph_id = -1;
         std::unordered_set<int> subgraph_ids;
         // unsupported ops, skip
         if (!is_supported_mlir_op(op))
