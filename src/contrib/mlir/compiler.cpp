@@ -66,6 +66,12 @@ using llvm::make_unique;
 
 using namespace ngraph::runtime::ngmlir;
 
+/// Enable/Disable loop fusion optimization in affine dialect.
+static llvm::cl::opt<bool>
+    clEnableAffineLoopFusion("enable-loop-fusion",
+                             llvm::cl::init(true),
+                             llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
+
 #define COMPILE_OP_DECL(op_name)                                                                   \
     create_op<op_name>(MLIRCompiler & compiler, const ngraph::Node* ng_node)
 
@@ -250,7 +256,7 @@ void MLIRCompiler::lower_ng_dialect()
         NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
 
-    dump_mlir_module("Affine Dialect Dump:");
+    dump_mlir_module("Affine Dialect Dump (Pre-Optimizations):");
 }
 
 // Receives affine dialect as input and applies affine and standard dialect based optimizations.
@@ -258,13 +264,26 @@ void MLIRCompiler::lower_ng_dialect()
 // standard dialect only ops.
 void MLIRCompiler::optimize()
 {
-    mlir::PassManager pm;
-    // Lower affine ops
-    pm.addPass(mlir::createLowerAffinePass());
-    auto rr = pm.run(m_module.get());
-    NGRAPH_CHECK(succeeded(rr), "Affine loop lowering failed");
+    // Run Affine dialect optimizations.
+    mlir::PassManager pm_opts;
+    if (clEnableAffineLoopFusion)
+    {
+        pm_opts.addPass(mlir::createLoopFusionPass());
+    }
 
+    auto opt_res = pm_opts.run(m_module.get());
+    NGRAPH_CHECK(succeeded(opt_res), "Affine optimizations failed");
+    dump_mlir_module("Affine Dialect Dump (Post-Optimizations):");
+
+    // Run Affine dialecto to Std dialect conversion.
+    mlir::PassManager pm_lowering;
+    pm_lowering.addPass(mlir::createLowerAffinePass());
+    auto lowering_res = pm_lowering.run(m_module.get());
+    NGRAPH_CHECK(succeeded(lowering_res), "Affine convertion to Std dialect failed");
     dump_mlir_module("Standard Dialect Dump:");
+
+    // Run Std dialect optimizations.
+    // TODO
 }
 
 // MLIR builders
