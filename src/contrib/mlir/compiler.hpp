@@ -99,7 +99,7 @@ namespace ngraph
                 void build_ng_dialect();
 
                 template <typename Op>
-                static mlir::Value* create_op(MLIRCompiler& compiler, const ngraph::Node* ng_node)
+                static mlir::Operation* create_op(MLIRCompiler& compiler, const ngraph::Node* ng_node)
                 {
                     throw std::runtime_error("Unimplemented op '" + ng_node->description() +
                                              "' in MLIR Compiler");
@@ -108,14 +108,10 @@ namespace ngraph
                 // Generic op lowerer to ng dialect.
                 // Simply maps ngraph tensors to values and generate an OP. No op-specific logic.
                 template <typename Op>
-                Op create_generic_op(const ngraph::Node* ng_node);
-
-                // TODO(amprocte): Can we have a create_variadic_op that is able to handle the
-                // attributes?
-                mlir::Value* create_concat(const ngraph::Node* ng_node);
+                mlir::Operation* create_generic_op(const ngraph::Node* ng_node);
 
                 template <typename RedOp>
-                mlir::Value* create_index_reduction(const ngraph::Node* ng_node);
+                mlir::Operation* create_index_reduction(const ngraph::Node* ng_node);
 
                 void create_return();
 
@@ -149,7 +145,7 @@ namespace ngraph
                 using TensorToInfo = std::pair<descriptor::Tensor*, TensorInfo>;
                 using TensorToInfoMap = std::unordered_map<descriptor::Tensor*, TensorInfo>;
                 using MLIRCompOpFunction =
-                    std::function<mlir::Value*(MLIRCompiler& compiler, const ngraph::Node*)>;
+                    std::function<mlir::Operation*(MLIRCompiler& compiler, const ngraph::Node*)>;
                 using MLIRCompOpMap = std::unordered_map<std::type_index, MLIRCompOpFunction>;
 
                 // Maps tensor to the value it represents in the IR
