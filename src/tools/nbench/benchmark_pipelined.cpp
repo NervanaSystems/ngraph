@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <array>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
@@ -165,7 +166,6 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
         }
     }
 
-    size_t current_iteration = 0;
     thread threads[pipeline_depth];
     for (size_t i = 0; i < pipeline_depth; i++)
     {

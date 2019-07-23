@@ -24,21 +24,18 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
-using namespace std;
-using namespace ngraph;
-
 void set_denormals_flush_to_zero();
 
-void random_init(shared_ptr<runtime::Tensor> tensor);
+void random_init(std::shared_ptr<ngraph::runtime::Tensor> tensor);
 
 std::default_random_engine& get_random_engine();
 
 template <typename T>
-void init_int_tensor(shared_ptr<runtime::Tensor> tensor, T min, T max)
+void init_int_tensor(std::shared_ptr<ngraph::runtime::Tensor> tensor, T min, T max)
 {
     size_t size = tensor->get_element_count();
-    uniform_int_distribution<T> dist(min, max);
-    vector<T> vec(size);
+    std::uniform_int_distribution<T> dist(min, max);
+    std::vector<T> vec(size);
     for (T& element : vec)
     {
         element = dist(get_random_engine());
@@ -47,11 +44,11 @@ void init_int_tensor(shared_ptr<runtime::Tensor> tensor, T min, T max)
 }
 
 template <typename T>
-void init_real_tensor(shared_ptr<runtime::Tensor> tensor, T min, T max)
+void init_real_tensor(std::shared_ptr<ngraph::runtime::Tensor> tensor, T min, T max)
 {
     size_t size = tensor->get_element_count();
-    uniform_real_distribution<T> dist(min, max);
-    vector<T> vec(size);
+    std::uniform_real_distribution<T> dist(min, max);
+    std::vector<T> vec(size);
     for (T& element : vec)
     {
         element = dist(get_random_engine());
