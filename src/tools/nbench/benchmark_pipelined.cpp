@@ -65,7 +65,7 @@ static void
                 {
                     const shared_ptr<runtime::HostTensor>& data = tensors.parameter_data[arg_index];
                     arg->write(data->get_data_ptr(),
-                            data->get_element_count() * data->get_element_type().size());
+                               data->get_element_count() * data->get_element_type().size());
                 }
             }
             data_written = true;
@@ -85,7 +85,7 @@ static void
                 const shared_ptr<runtime::HostTensor>& data = tensors.result_data[result_index];
                 const shared_ptr<runtime::Tensor>& result = results[result_index];
                 result->read(data->get_data_ptr(),
-                            data->get_element_count() * data->get_element_type().size());
+                             data->get_element_count() * data->get_element_type().size());
             }
             current_iteration++;
             data_written = false;
