@@ -18,6 +18,7 @@
 
 #include "ngraph/op/op.hpp"
 #include "ngraph/util.hpp"
+#include "contrib/mlir/compiler.hpp"
 
 namespace ngraph
 {
@@ -38,11 +39,34 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            const NodeVector& get_node_list() const { return m_node_list; }
-            const NodeVector& get_kernel_outputs() const { return m_output_nodes; }
+            const NodeVector& get_node_list() const         { return m_node_list; }
+            const NodeVector& get_kernel_outputs() const    { return m_output_nodes; }
+            /// Compiles the sub-graph associated with this CompiledKernel
+            void compile()
+            {
+                if (m_is_compiled)
+                {
+                    return;
+                }
+                m_mlir_compiler.compile();
+                m_is_compiled = true;
+            }
+            /// Runs the sub-graph 
+            void run(std::vector<void*>& ptr_args)
+            {
+                NGRAPH_CHECK(m_is_compiled, "CompiledKernel node not compiled yet");
+                m_mlir_compiler.set_args(&ptr_args);
+                m_mlir_compiler.run();
+            }
+            bool is_compiled() const 
+            {
+                return m_is_compiled;
+            }
         private:
             NodeVector m_node_list;
             NodeVector m_output_nodes;
+            ngraph::runtime::ngmlir::MLIRCompiler m_mlir_compiler;
+            bool m_is_compiled;
         };
     }
 }

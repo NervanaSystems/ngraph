@@ -17,7 +17,7 @@
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
 #include "contrib/mlir/compiler.hpp"
-#include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "contrib/mlir/compiled_kernel.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 
 using namespace ngraph;
@@ -65,14 +65,10 @@ namespace ngraph
                     {
                         ptr_args.push_back(ctx->buffer_data[buffer_index]);
                     }
-
                     // Compile nodes within the CompiledKernel op.
-                    auto* compiled_kernel = static_cast<const CompiledKernel*>(node);
-
-                    MLIRCompiler mlir_compiler(compiled_kernel, ptr_args);
-                    // TODO: Decouple 'compile' and 'run' APIs. We want to be able to run the same
-                    // jitted code on different arguments.
-                    mlir_compiler.compile_and_run();
+                    CompiledKernel* compiled_kernel = static_cast<CompiledKernel*>(const_cast<Node*>(node));
+                    compiled_kernel->compile();
+                    compiled_kernel->run(ptr_args);
                 };
 
                 functors.emplace_back(functor);

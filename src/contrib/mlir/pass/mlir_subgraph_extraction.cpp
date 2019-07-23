@@ -24,7 +24,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "contrib/mlir/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"

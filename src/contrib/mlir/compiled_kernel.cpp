@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "compiled_kernel.hpp"
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -67,6 +67,8 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     : Op("CompiledKernel", check_single_output_args({args}))
     , m_node_list(node_list)
     , m_output_nodes(outputs)
+    , m_mlir_compiler(this)
+    , m_is_compiled(false)
 {
     constructor_validate_and_infer_types();
     set_output_size(m_output_nodes.size());

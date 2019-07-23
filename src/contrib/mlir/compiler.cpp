@@ -29,7 +29,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "compiled_kernel.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -69,16 +69,6 @@ using namespace ngraph::runtime::ngmlir;
 #define COMPILE_OP_DECL(op_name)                                                                   \
     create_op<op_name>(MLIRCompiler & compiler, const ngraph::Node* ng_node)
 
-MLIRCompiler::MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
-                           const std::vector<void*>& external_tensors)
-    : m_compiled_kernel(compiled_kernel)
-    , m_external_tensors(external_tensors)
-{
-    NGRAPH_CHECK((m_compiled_kernel->get_arguments().size() +
-                  m_compiled_kernel->get_kernel_outputs().size()) == external_tensors.size(),
-                 "Number of arguments and outputs doesn't match number of tensors");
-}
-
 void MLIRCompiler::init_mlir()
 {
     // Mutex to safely initialize MLIR.
@@ -96,11 +86,24 @@ void MLIRCompiler::init_mlir()
     }
 }
 
-void MLIRCompiler::compile_and_run()
+void MLIRCompiler::set_args(std::vector<void*>* external_tensors)
+{
+    NGRAPH_CHECK(m_compiled_kernel, "No compiled kernel set for compiler");
+    NGRAPH_CHECK((m_compiled_kernel->get_arguments().size() +
+                  m_compiled_kernel->get_kernel_outputs().size()) == external_tensors->size(),
+                 "Number of arguments and outputs doesn't match number of tensors");
+    m_external_tensors = external_tensors;
+}
+
+void MLIRCompiler::compile()
 {
     build_ng_dialect_module();
     lower_ng_dialect();
     optimize();
+}
+
+void MLIRCompiler::run()
+{
     bind_arguments();
     execute();
     cleanup();
@@ -471,13 +474,13 @@ void MLIRCompiler::bind_arguments()
     NGRAPH_CHECK(expected_arguments.size(), "Arguments can't be created");
     m_invoke_args = std::move(expected_arguments);
 
-    NGRAPH_CHECK(m_invoke_args.size() == m_external_tensors.size(),
+    NGRAPH_CHECK(m_invoke_args.size() == m_external_tensors->size(),
                  "Number of external tensors doesn't match number of function arguments");
 
     // Assign external tensor pointers to invocation arguments.
     for (size_t i = 0, num_args = m_invoke_args.size(); i < num_args; ++i)
     {
-        ((mlir::StaticFloatMemRef*)m_invoke_args[i])->data = (float*)m_external_tensors[i];
+        ((mlir::StaticFloatMemRef*)m_invoke_args[i])->data = (float*)(*m_external_tensors)[i];
     }
 
     // Add pointer to memory manager
