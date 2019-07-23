@@ -14,21 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/or.hpp"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/op/fused/elu.hpp"
+#include "pyngraph/ops/fused/elu.hpp"
 
-const string op::Or::type_name{"Or"};
+namespace py = pybind11;
 
-op::Or::Or(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
-    : BinaryElementwiseLogical(arg0, arg1, autob)
+void regclass_pyngraph_op_Elu(py::module m)
 {
-    constructor_validate_and_infer_types();
-}
-
-shared_ptr<Node> op::Or::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<Or>(new_args.at(0), new_args.at(1), this->get_autob());
+    py::class_<ngraph::op::Elu, std::shared_ptr<ngraph::op::Elu>, ngraph::op::Op> elu(m, "Elu");
+    elu.doc() = "ngraph.impl.op.Elu wraps ngraph::op::Elu";
+    elu.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }
