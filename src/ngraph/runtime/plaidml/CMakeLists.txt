@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,3 +74,11 @@ target_include_directories(plaidml_backend SYSTEM PUBLIC ${PLAIDML_INCLUDE_DIRS}
 target_link_libraries(plaidml_backend PUBLIC ngraph libplaidml)
 install(TARGETS plaidml_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 
+set(CMAKE_MACOSX_RPATH 1)
+if(APPLE)
+    set_property(TARGET plaidml_backend PROPERTY INSTALL_RPATH "@loader_path/;@loader_path/../../..")
+elseif(DEFINED NGRAPH_RPATH)
+    set_property(TARGET plaidml_backend PROPERTY INSTALL_RPATH "\$ORIGIN;\$ORIGIN/../../..;${NGRAPH_RPATH}")
+else()
+    set_property(TARGET plaidml_backend PROPERTY INSTALL_RPATH "\$ORIGIN;\$ORIGIN/../../..")
+endif()

@@ -1195,6 +1195,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS);
+    REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass);
 
     // Disable CPUFusion if MLIR is enabled to preserve core ops.
     if (std::getenv("NGRAPH_MLIR") == nullptr)
@@ -1291,6 +1292,18 @@ static void dump_one_kernel_with_type(runtime::cpu::CPU_DebugTracer& debug_trace
                                               t_attrs.m_t_shape,
                                               in_out);
         break;
+    case element::Type_t::undefined:
+    case element::Type_t::dynamic:
+    case element::Type_t::boolean:
+    case element::Type_t::bf16:
+    case element::Type_t::f16:
+    case element::Type_t::f64:
+    case element::Type_t::i16:
+    case element::Type_t::i64:
+    case element::Type_t::u16:
+    case element::Type_t::u32:
+    case element::Type_t::u64:
+    default: break;
     }
 }
 
@@ -1619,8 +1632,9 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             case TensorRole::INTERMEDIATE: return string("TensorRole::INTERMEDIATE");
             case TensorRole::CONSTANT: return string("TensorRole::CONSTANT");
             case TensorRole::OUTPUT: return string("TensorRole::OUTPUT");
+            case TensorRole::UNKNOWN:
+            default: throw runtime_error("unhandled CPU tensor role");
             }
-            throw runtime_error("unhandled CPU tensor role");
         };
 
         //dump the tensor roles to debug manifest
