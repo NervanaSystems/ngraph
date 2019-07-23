@@ -32,10 +32,10 @@ using namespace ngraph;
 
 std::shared_ptr<Function> autodiff::backprop_function(const std::shared_ptr<Function>& f)
 {
-    auto Y_out = f->get_output_op(0);
+    auto Y_out = f->output(0);
     auto Xs = f->get_parameters();
-    auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
-    Adjoints adjoints(NodeVector{Y_out}, NodeVector{C});
+    auto C = std::make_shared<op::Parameter>(Y_out.get_element_type(), Y_out.get_shape());
+    Adjoints adjoints(OutputVector{Y_out}, OutputVector{C});
     std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
     transform(Xs.begin(), Xs.end(), dYdXs.begin(), [C, &adjoints](const std::shared_ptr<Node>& X) {
         return adjoints.backprop_node(X);

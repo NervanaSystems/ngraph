@@ -172,8 +172,8 @@ int main(int argc, const char* argv[])
     auto delta = -learning_rate * loss;
 
     // Updates
-    ngraph::autodiff::Adjoints adjoints(NodeVector{loss},
-                                        NodeVector{delta});
+    ngraph::autodiff::Adjoints adjoints(OutputVector{loss},
+                                        OutputVector{delta});
     auto W0_next = W0 + adjoints.backprop_node(W0);
     auto b0_next = b0 + adjoints.backprop_node(b0);
     auto W1_next = W1 + adjoints.backprop_node(W1);
