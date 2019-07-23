@@ -19,10 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Less::Less(const shared_ptr<Node>& arg0,
-               const shared_ptr<Node>& arg1,
-               const AutoBroadcastSpec& autob)
-    : BinaryElementwiseComparison("Less", arg0, arg1, autob)
+const string op::Less::type_name{"Less"};
+
+op::Less::Less(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
+    : BinaryElementwiseComparison(arg0, arg1, autob)
 {
     constructor_validate_and_infer_types();
 }
