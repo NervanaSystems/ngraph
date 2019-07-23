@@ -3027,7 +3027,9 @@ namespace ngraph
                     case ngraph::op::PadMode::REFLECT:
                         pad_mode_string = "ngraph::op::PadMode::REFLECT";
                         break;
-                    case ngraph::op::PadMode::SYMMETRIC: throw ngraph_error("Unsupported PadMode");
+                    case ngraph::op::PadMode::SYMMETRIC:
+                        pad_mode_string = "ngraph::op::PadMode::SYMMETRIC";
+                        break;
                     }
                     writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
