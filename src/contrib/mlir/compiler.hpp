@@ -107,14 +107,8 @@ namespace ngraph
 
                 // Generic op lowerer to ng dialect.
                 // Simply maps ngraph tensors to values and generate an OP. No op-specific logic.
-                template <typename OP>
-                mlir::Value* create_generic_op(const ngraph::Node* ng_node);
-
-                template <typename UnaryOp>
-                mlir::Value* create_unary_op(const ngraph::Node* ng_node);
-
-                template <typename BinOp>
-                mlir::Value* create_binary_op(const ngraph::Node* ng_node);
+                template <typename Op>
+                Op create_generic_op(const ngraph::Node* ng_node);
 
                 // TODO(amprocte): Can we have a create_variadic_op that is able to handle the
                 // attributes?
