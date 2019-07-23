@@ -352,16 +352,11 @@ vector<shared_ptr<runtime::Tensor>>
         auto t =
             make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
         tensor = static_pointer_cast<runtime::HostTensor>(t);
-        // tensor->m_group_id = group_id;
-        // tensor->m_buffer_id = i;
-        // tensor->m_backend = m_backend;
-        // tensor->m_pipeline_depth = pipeline_depth;
         tensors.push_back(tensor);
     }
     vector<shared_ptr<runtime::Tensor>> result_tensors;
     for (const shared_ptr<runtime::HostTensor>& tensor : tensors)
     {
-        // tensor->m_group_tensors = tensors;
         result_tensors.push_back(tensor);
     }
     return result_tensors;
@@ -379,16 +374,11 @@ vector<shared_ptr<runtime::Tensor>>
         shared_ptr<runtime::HostTensor> tensor;
         auto t = make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
         tensor = static_pointer_cast<runtime::HostTensor>(t);
-        // tensor->m_group_id = group_id;
-        // tensor->m_buffer_id = i;
-        // tensor->m_backend = m_backend;
-        // tensor->m_pipeline_depth = pipeline_depth;
         tensors.push_back(tensor);
     }
     vector<shared_ptr<runtime::Tensor>> result_tensors;
     for (const shared_ptr<runtime::HostTensor>& tensor : tensors)
     {
-        // tensor->m_group_tensors = tensors;
         result_tensors.push_back(tensor);
     }
     return result_tensors;
