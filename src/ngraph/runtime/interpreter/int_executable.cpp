@@ -77,7 +77,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    runtime::event::Duration d1("Interpreter", "call");
+    runtime::event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
@@ -127,6 +127,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     for (const NodeWrapper& wrapped : m_wrapped_nodes)
     {
         auto op = wrapped.get_node();
+        runtime::event::Duration d2(op->description(), "Interpreter");
         auto type_id = wrapped.get_typeid();
         if (type_id == OP_TYPEID::Parameter)
         {
