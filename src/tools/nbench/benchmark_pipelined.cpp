@@ -47,6 +47,7 @@ static condition_variable s_condition;
 static size_t current_iteration = 0;
 static size_t s_iterations;
 static size_t s_warmup_iterations;
+static stopwatch s_timer;
 
 static void
     thread_entry(runtime::Executable* exec, const TensorCollection& tensors, size_t pipeline_stage)
@@ -77,9 +78,15 @@ static void
         }
         else
         {
+            if (current_iteration == s_warmup_iterations)
+            {
+                s_timer.start();
+            }
             // our turn to run
-            NGRAPH_INFO << "stage " << pipeline_stage << " for iteration " << current_iteration;
             exec->call(results, args);
+            current_iteration++;
+            data_written = false;
+            s_condition.notify_all();
             for (size_t result_index = 0; result_index < results.size(); result_index++)
             {
                 const shared_ptr<runtime::HostTensor>& data = tensors.result_data[result_index];
@@ -87,9 +94,6 @@ static void
                 result->read(data->get_data_ptr(),
                              data->get_element_count() * data->get_element_type().size());
             }
-            current_iteration++;
-            data_written = false;
-            s_condition.notify_all();
         }
     }
 }
@@ -161,8 +165,6 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
         }
     }
 
-    stopwatch t1;
-
     size_t current_iteration = 0;
     thread threads[pipeline_depth];
     for (size_t i = 0; i < pipeline_depth; i++)
@@ -174,6 +176,9 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     {
         threads[i].join();
     }
+    s_timer.stop();
+    float time = s_timer.get_milliseconds();
+    cout << time / iterations << "ms per iteration" << endl;
 
     vector<runtime::PerformanceCounter> perf_data = exec->get_performance_data();
     return perf_data;
