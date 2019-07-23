@@ -20,12 +20,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::LRN::LRN(const std::shared_ptr<Node>& arg, double alpha, double beta, double bias, size_t nsize)
-    : UnaryElementwiseArithmetic("LRN", arg)
+const string op::LRN::type_name{"LRN"};
+
+op::LRN::LRN(const Output<Node>& arg, double alpha, double beta, double bias, size_t size)
+    : UnaryElementwiseArithmetic(arg)
     , m_alpha(alpha)
     , m_beta(beta)
     , m_bias(bias)
-    , m_size(nsize)
+    , m_size(size)
 {
     constructor_validate_and_infer_types();
 }

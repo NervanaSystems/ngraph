@@ -171,6 +171,7 @@ prelu
 hardsigmoid
 prelu_shared_slope
 prelu_negative_slope
+relu_2Dfprop_i32
 conv_bias_1d
 conv_bias_2d
 conv_bias_3d
@@ -229,6 +230,29 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
+gelu_f32
+gelu_f64
+# From onnx tests
+model_quant_conv_linear_2d
+model_quant_conv_linear_3d
+model_conv_integer
+model_conv_integer_zero_point_zero
+model_conv_integer_pads
+model_lstm_fwd_large_batch_no_clip
+model_global_lp_pool_p3
+model_argmin_no_keepdims
+model_elu
+model_selu
+model_sigmoid
+model_softplus
+model_argmax_int32
+model_argmin_int32
+model_lp_norm_default
+model_instance_normalization
+
+# failings on plaidml_nGPU
+argmin_4D_i64
+argmax_4D_i64
 
 # dgkutnic ww24.5: these tests are to be triaged by the PlaidML team
 # ww25.2: re-scrubbed this list of tests after fixing check_inputs
@@ -240,6 +264,10 @@ batch_norm_training_0eps_f32
 argmin_trivial
 argmax_trivial
 argmin_trivial_in_i32
+argmin_3D_i32
+argmin_3D_i64
+argmax_3D_i32
+argmax_3D_i64
 sum_large_1d_to_scalar
 sum_stable_acc
 one_hot_scalar_2_in_3
@@ -266,6 +294,12 @@ model_hardmax
 quantized_convolution
 quantized_conv_int32_output
 
+# unsupported op: `ReverseSequence`
+model_lstm_bdir_short_input_seq
+model_lstm_mixed_seq_reverse
+model_reverse_sequence_0_batch_1
+model_reverse_sequence_1_batch_0
+
 # node validation error: "Argument shapes are inconsistent."
 model_lstm_fwd_with_clip
 model_lstm_fwd_mixed_seq
@@ -281,3 +315,16 @@ avg_pool_3d_uneven_strided_padded
 rnn_cell_activation_function
 gru_cell_bias_clip
 gru_cell_linear_before_reset
+
+# After https://github.com/NervanaSystems/ngraph/pull/3262, these tests began
+# failing with what appear to be precision issues. That PR simply split the
+# old "backend_test.in.cpp" into multiple files. The only relevant side effect
+# I can think of here is that the order of test execution changed as a result.
+softmax_all
+softmax_axis
+softmax_underflow
+softmax_overflow
+sigmoid_n1c1h2w2
+sigmoid_n1c1h4
+sigmoid_bprop_n1c1h4
+lrn

@@ -997,11 +997,8 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GetOutputElement)
             {
-                auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
-
                 writer.block_begin();
-                writer << "memcpy(" << out[0].get_name() << ", "
-                       << args[get_tuple_element->get_n()].get_name() << ", "
+                writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
                        << out[0].get_size() * out[0].get_element_type().size() << ");\n";
                 writer.block_end();
             }
@@ -1639,23 +1636,12 @@ namespace ngraph
                 auto type_name = embed->get_element_type().c_type_string();
                 auto element_count = shape_size(embed->get_argument(0)->get_shape());
 
-                // FIXME
-                // clang generates 16 bytes aligned store with unaligned address,
-                // which results in segmentation fault.
-                // Workaround for now: Use push_back to avoid generating such store.
-                auto arg1_shape = args[1].get_shape();
-                writer << "ngraph::Shape shape;\n";
-                for (auto i = 0; i < arg1_shape.size(); i++)
-                {
-                    writer << "shape.push_back(" << std::to_string(arg1_shape[i]) << ");\n";
-                }
-
                 writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";
                 writer << "            " << args[0].get_name() << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
                 writer << "            " << out[0].get_name() << ",\n";
                 writer << "            " << element_count << ",\n";
-                writer << "             shape);\n";
+                writer << "           {" << join(args[1].get_shape()) << "});\n";
                 writer.block_end();
             }
 
@@ -1847,7 +1833,7 @@ namespace ngraph
                      args[0].get_element_type() == element::f32 ||
                      args[0].get_element_type() == element::u8 ||
                      args[0].get_element_type() == element::i8) &&
-                    args[0].get_shape().size() <= 3 && out[0].get_shape().size() <= 3)
+                    args[0].get_shape().size() <= 3 && out[0].get_shape().size() <= 5)
                 {
                     writer << "cpu::kernel::gather<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
@@ -1911,7 +1897,7 @@ namespace ngraph
                      args[0].get_element_type() == element::f32 ||
                      args[0].get_element_type() == element::u8 ||
                      args[0].get_element_type() == element::i8) &&
-                    args[0].get_shape().size() <= 3 && args[2].get_shape().size() <= 3)
+                    args[0].get_shape().size() <= 3 && args[2].get_shape().size() <= 5)
                 {
                     writer << "cpu::kernel::scatter_add<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
@@ -3041,6 +3027,7 @@ namespace ngraph
                     case ngraph::op::PadMode::REFLECT:
                         pad_mode_string = "ngraph::op::PadMode::REFLECT";
                         break;
+                    case ngraph::op::PadMode::SYMMETRIC: throw ngraph_error("Unsupported PadMode");
                     }
                     writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";
@@ -3484,6 +3471,7 @@ namespace ngraph
                         func_block += "d_" + out_denom + " = 1;\n";
                     }
                     break;
+                case ngraph::op::SigmoidMultiply::FunctionType::NumTypes:
                 default:
                     throw ngraph_error(
                         "generate_sigmoid_mul_func input function type not supported");
@@ -3901,7 +3889,7 @@ namespace ngraph
                 while (auto goe =
                            std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(it->get_node()))
                 {
-                    it = &goe->get_inputs().at(goe->get_n()).get_output();
+                    it = &goe->get_inputs().at(0).get_output();
                 }
                 return it;
             }
@@ -4023,7 +4011,56 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dropout)
             {
-                throw ngraph_error("Not yet implemented");
+                auto dropout = static_cast<const ngraph::op::Dropout*>(node);
+                size_t ncr = ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores();
+
+                writer.block_begin();
+                writer << "bool training = static_cast<bool>(" << args[1].get_name() << "[0]);\n";
+                writer << "bool use_seed = " << to_string(dropout->get_use_seed()) << ";\n";
+                writer << "int32_t seed = use_seed ? " << to_string(dropout->get_seed())
+                       << " : rand();\n";
+                writer << "double keep_prob = static_cast<double>(" << args[4].get_name()
+                       << "[0]);\n";
+                writer << "size_t count = " << args[0].get_size() << ";\n";
+                writer << "size_t nthr = " << to_string(ncr) << ";\n";
+                //writer << "size_t nthr = " << to_string(ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores()) << ";\n";
+                writer << "size_t chunk_size = (count + nthr - 1) / nthr;\n";
+                writer << "std::vector<std::minstd_rand> vmsr(nthr);\n";
+                writer << "for (size_t i = 0; i < nthr; i++)\n\
+                {\n\
+                    std::minstd_rand msr;\n\
+                    msr.seed(seed+i);\n\
+                    vmsr[i] = msr;\n\
+                }\n";
+
+                writer << "double dropout_prob = 1 - keep_prob;\n";
+                writer << "std::uniform_real_distribution<> gen(0, 1);\n";
+                writer << "#pragma omp parallel num_threads(nthr)\n";
+                writer << "{\n";
+                writer << "size_t tid = omp_get_thread_num();\n";
+                writer << "std::minstd_rand msr;\n msr.seed(seed+tid);\n";
+                writer << "size_t idx_start = tid * chunk_size;\n";
+                writer << "size_t idx_end = std::min(idx_start + chunk_size, count);\n";
+                writer << "for (size_t i = idx_start; i < idx_end; i++)\n";
+                writer << "{\n";
+                writer << "    //out[i] = training ? static_cast<T>(bd(gen)) : "
+                          "static_cast<float>(1);\n";
+                writer << "    //out0[i] = training ? input[i] : static_cast<float>(1);\n";
+                writer << "    if (static_cast<float>(gen(msr)) < dropout_prob)\n";
+                writer << "    {\n";
+                writer << "        " << out[0].get_name() << "[i] = 0;\n";
+                writer << "        " << out[1].get_name() << "[i] = 0;\n";
+                writer << "    }\n";
+                writer << "    else\n";
+                writer << "    {\n";
+                writer << "        " << out[1].get_name() << "[i] = 1;\n";
+                writer << "        " << out[0].get_name() << "[i] = " << args[0].get_name()
+                       << "[i] / static_cast<float>(keep_prob);\n";
+                writer << "    }\n";
+                writer << "}\n"; // for loop ends
+                writer << "}\n"; //#pragma ends
+
+                writer.block_end();
             }
 
             template <>
