@@ -33,7 +33,7 @@ namespace ngraph
             /// \brief Constructs an Gelu operation.
             ///
             /// \param data Input tensor
-            Gelu(const std::shared_ptr<ngraph::Node>& data);
+            Gelu(const Output<Node>& data);
 
             virtual NodeVector decompose_op() const override;
 
@@ -56,8 +56,7 @@ namespace ngraph
         public:
             /// \brief Constructs an GeluBackprop operation.
             ///
-            GeluBackprop(const std::shared_ptr<ngraph::Node>& data,
-                         const std::shared_ptr<ngraph::Node>& delta);
+            GeluBackprop(const Output<Node>& data, const Output<Node>& delta);
 
             virtual NodeVector decompose_op() const override;
 

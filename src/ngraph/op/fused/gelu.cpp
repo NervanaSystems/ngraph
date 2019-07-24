@@ -28,8 +28,8 @@
 using namespace std;
 using namespace ngraph;
 
-op::Gelu::Gelu(const shared_ptr<Node>& data)
-    : FusedOp("Gelu", {data})
+op::Gelu::Gelu(const Output<Node>& data)
+    : FusedOp({data})
 {
     constructor_validate_and_infer_types();
 }
@@ -39,13 +39,11 @@ NodeVector op::Gelu::decompose_op() const
 {
     auto data = get_argument(0);
 
-    shared_ptr<ngraph::Node> half =
-        builder::make_constant(data->get_element_type(), data->get_shape(), 0.5);
+    auto half = builder::make_constant(data->get_element_type(), data->get_shape(), 0.5);
 
-    shared_ptr<ngraph::Node> one =
-        builder::make_constant(data->get_element_type(), data->get_shape(), 1.0);
+    auto one = builder::make_constant(data->get_element_type(), data->get_shape(), 1.0);
 
-    shared_ptr<ngraph::Node> sqrt_two =
+    auto sqrt_two =
         builder::make_constant(data->get_element_type(), data->get_shape(), std::sqrt(2.0));
 
     return {half * data * (one + make_shared<ngraph::op::Erf>(data / sqrt_two))};
@@ -83,8 +81,8 @@ void op::Gelu::pre_validate_and_infer_types()
                           ").");
 }
 
-op::GeluBackprop::GeluBackprop(const shared_ptr<Node>& data, const shared_ptr<Node>& delta)
-    : FusedOp("GeluBackprop", check_single_output_args({data, delta}))
+op::GeluBackprop::GeluBackprop(const Output<Node>& data, const Output<Node>& delta)
+    : FusedOp({data, delta})
 {
     constructor_validate_and_infer_types();
 }
@@ -95,22 +93,19 @@ NodeVector op::GeluBackprop::decompose_op() const
     const double pi = 3.14159265358979323846264338327950288;
     auto data = get_argument(0);
 
-    shared_ptr<ngraph::Node> half =
-        builder::make_constant(data->get_element_type(), data->get_shape(), 0.5);
+    auto half = builder::make_constant(data->get_element_type(), data->get_shape(), 0.5);
 
-    shared_ptr<ngraph::Node> one =
-        builder::make_constant(data->get_element_type(), data->get_shape(), 1.0);
+    auto one = builder::make_constant(data->get_element_type(), data->get_shape(), 1.0);
 
-    shared_ptr<ngraph::Node> neg_one =
-        builder::make_constant(data->get_element_type(), data->get_shape(), -1.0);
+    auto neg_one = builder::make_constant(data->get_element_type(), data->get_shape(), -1.0);
 
-    shared_ptr<ngraph::Node> sqrt_two_over_pi =
+    auto sqrt_two_over_pi =
         builder::make_constant(data->get_element_type(), data->get_shape(), std::sqrt(2.0 / pi));
 
-    shared_ptr<ngraph::Node> sqrt_two =
+    auto sqrt_two =
         builder::make_constant(data->get_element_type(), data->get_shape(), std::sqrt(2.0));
 
-    shared_ptr<ngraph::Node> tmp = data / sqrt_two;
+    auto tmp = data / sqrt_two;
 
     return {half * (one + make_shared<ngraph::op::Erf>(tmp) +
                     data * sqrt_two_over_pi * make_shared<ngraph::op::Exp>(neg_one * tmp * tmp))};
