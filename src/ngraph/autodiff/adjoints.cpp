@@ -51,11 +51,6 @@ OutputVector make_zeros(std::shared_ptr<Node> x)
     return zeros;
 }
 
-autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
-    : Adjoints(OutputVector(ys.begin(), ys.end()), OutputVector(cs.begin(), cs.end()))
-{
-}
-
 autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
 {
     if (ys.size() != cs.size())
