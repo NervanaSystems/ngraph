@@ -71,7 +71,7 @@ public:
         }
     }
 
-    void run_passes(std::shared_ptr<Function>, bool transitive = true, bool revalidate = true);
+    void run_passes(std::shared_ptr<Function>, bool transitive = true);
 
     ManagerState& get_state();
     PassConfig& get_pass_config() { return m_pass_config; }

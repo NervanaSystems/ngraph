@@ -53,7 +53,7 @@ pass::Manager::~Manager()
 {
 }
 
-void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive, bool revalidate)
+void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
 {
     bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
 
