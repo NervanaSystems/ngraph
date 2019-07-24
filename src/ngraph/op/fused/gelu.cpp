@@ -92,6 +92,7 @@ op::GeluBackprop::GeluBackprop(const shared_ptr<Node>& data, const shared_ptr<No
 /// f'(x) = 0.5 * (1 + erf( x / sqrt(2)) + x * sqrt(2 / pi) * exp (-(x / sqrt(2))^2))
 NodeVector op::GeluBackprop::decompose_op() const
 {
+    const double pi = 3.14159265358979323846264338327950288;
     auto data = get_argument(0);
 
     shared_ptr<ngraph::Node> half =
@@ -104,7 +105,7 @@ NodeVector op::GeluBackprop::decompose_op() const
         builder::make_constant(data->get_element_type(), data->get_shape(), -1.0);
 
     shared_ptr<ngraph::Node> sqrt_two_over_pi =
-        builder::make_constant(data->get_element_type(), data->get_shape(), std::sqrt(2.0 / M_PI));
+        builder::make_constant(data->get_element_type(), data->get_shape(), std::sqrt(2.0 / pi));
 
     shared_ptr<ngraph::Node> sqrt_two =
         builder::make_constant(data->get_element_type(), data->get_shape(), std::sqrt(2.0));

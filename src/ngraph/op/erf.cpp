@@ -44,7 +44,8 @@ void op::Erf::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
     auto x = get_argument(0);
-    auto coff = 2.0 / sqrt(M_PI);
+    const double pi = 3.14159265358979323846264338327950288;
+    auto coff = 2.0 / sqrt(pi);
     auto coff_node = builder::make_constant(x->get_element_type(), x->get_shape(), coff);
 
     shared_ptr<ngraph::Node> neg_one =
