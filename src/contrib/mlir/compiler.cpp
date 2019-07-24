@@ -50,6 +50,7 @@
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
+#include <mlir/Conversion/ControlFlowToCFG/ConvertControlFlowToCFG.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
@@ -111,11 +112,16 @@ void MLIRCompiler::compile_and_run()
     cleanup();
 }
 
+unsigned MLIRCompiler::get_mem_mgr_arg_id(mlir::FuncOp& func)
+{
+    return func.getNumArguments() - 1;
+}
+
 // Creates an MLIR module and function with nGraph dialect ops from the input CompiledKernel.
 void MLIRCompiler::build_ng_dialect_module()
 {
     // initialize an empty module
-    m_module = make_unique<mlir::Module>(&m_context);
+    m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
 
     TypeList args_type_list, result_type_list;
 
@@ -136,15 +142,14 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     auto func_type = mlir::FunctionType::get(args_type_list, result_type_list, &m_context);
-    auto function =
-        make_unique<mlir::Function>(mlir::UnknownLoc::get(&m_context), "main", func_type);
-    function->addEntryBlock();
+    auto function = mlir::FuncOp::create(mlir::UnknownLoc::get(&m_context), "main", func_type);
+    function.addEntryBlock();
 
     // populate Tensor->Value maps
     int i = 0;
     for (auto input : kernel_inputs)
     {
-        mlir::Value* arg = function->getArgument(i);
+        mlir::Value* arg = function.getArgument(i);
         TensorInfo tensor_info{arg};
         m_tensor_to_value_map.insert(
             TensorToInfo(input->get_output_tensor_ptr().get(), tensor_info));
@@ -152,9 +157,9 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     // create builder
-    m_builder = llvm::make_unique<mlir::OpBuilder>(function->getBody());
+    m_builder = llvm::make_unique<mlir::OpBuilder>(function.getBody());
     build_ng_dialect();
-    m_module->getFunctions().push_back(function.release());
+    m_module->push_back(function);
     if (failed(m_module->verify()))
     {
         NGRAPH_CHECK(false, "Invalid module after lowering to NG dialect");
@@ -459,8 +464,8 @@ void MLIRCompiler::bind_arguments()
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    mlir::Function* func = m_module->getNamedFunction("main");
-    NGRAPH_CHECK(func && !func->getBlocks().empty(), "Function not found");
+    mlir::FuncOp func = m_module->lookupSymbol<mlir::FuncOp>("main");
+    NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Create list with a type-erased double pointer for each invocation arguments.
     // We currently use 'allocateMemRefArguments', which creates a
@@ -500,11 +505,15 @@ void MLIRCompiler::execute()
     // Lower Standard dialect to LLVM dialect.
     mlir::LLVMTypeConverter llvm_converter(&m_context);
     OwningRewritePatternList patterns;
+    mlir::populateLoopToStdConversionPatterns(patterns, &m_context);
     mlir::populateStdToLLVMConversionPatterns(llvm_converter, patterns);
 
     mlir::ConversionTarget target(m_context);
     target.addLegalDialect<mlir::LLVM::LLVMDialect>();
-    auto result = applyConversionPatterns(*m_module, target, llvm_converter, std::move(patterns));
+    target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
+    target.addDynamicallyLegalOp<mlir::FuncOp>(
+        [&](mlir::FuncOp op) { return llvm_converter.isSignatureLegal(op.getType()); });
+    auto result = applyFullConversion(*m_module, target, std::move(patterns), &llvm_converter);
     NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
 
     dump_mlir_module("LLVM-IR Dialect Dump:");
@@ -554,11 +563,11 @@ void MLIRCompiler::cleanup()
     m_mem_mgr.freeAll();
 }
 
-SmallVector<void*, 8> MLIRCompiler::allocate_memref_args(mlir::Function* func)
+SmallVector<void*, 8> MLIRCompiler::allocate_memref_args(mlir::FuncOp func)
 {
     SmallVector<void*, 8> args;
-    args.reserve(func->getNumArguments());
-    for (const auto& arg : func->getArguments())
+    args.reserve(func.getNumArguments());
+    for (const auto& arg : func.getArguments())
     {
         auto descriptor = allocate_memref_descriptor(arg->getType());
 

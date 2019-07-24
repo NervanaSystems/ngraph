@@ -72,10 +72,7 @@ namespace ngraph
                 /// Returns the memory manager used by this sub-graph compiler.
                 MLIRMemMgr& get_mem_mgr() { return m_mem_mgr; }
                 /// Returns memory manager pointer argument ID in call interface.
-                unsigned get_mem_mgr_arg_id(mlir::Function* func)
-                {
-                    return func->getNumArguments() - 1;
-                }
+                unsigned get_mem_mgr_arg_id(mlir::FuncOp& func);
 
             private:
                 struct TensorInfo
@@ -120,7 +117,7 @@ namespace ngraph
                 void create_return();
 
                 /// Helper to create memref arguments for MLIR function signature
-                llvm::SmallVector<void*, 8> allocate_memref_args(mlir::Function* func);
+                llvm::SmallVector<void*, 8> allocate_memref_args(mlir::FuncOp func);
 
                 /// Helper to allocate a mem ref object. Handles static shapes only for now.
                 mlir::StaticFloatMemRef* allocate_memref_descriptor(mlir::Type type);
@@ -142,7 +139,7 @@ namespace ngraph
                 // compilation.
                 mlir::MLIRContext m_context;
 
-                std::unique_ptr<mlir::Module> m_module;
+                mlir::OwningModuleRef m_module;
                 std::unique_ptr<mlir::OpBuilder> m_builder;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
 

@@ -74,7 +74,7 @@ namespace
                                                                                                    \
         PatternMatchResult matchAndRewrite(Operation* op,                                          \
                                            ArrayRef<Value*> operands,                              \
-                                           PatternRewriter& rewriter) const override;              \
+                                           ConversionPatternRewriter& rewriter) const override;    \
     };
 
 #include "op_lowerers.inc"
@@ -117,10 +117,12 @@ namespace
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
         Value* createTempTensor(Type type, PatternRewriter& rewriter);
 
-        mlir::Function* getCallDecl(StringRef name,
-                                    ArrayRef<Type> args,
-                                    ArrayRef<Type> output,
-                                    PatternRewriter& rewriter);
+        mlir::FuncOp getCallDecl(StringRef name,
+                                 ArrayRef<Type> args,
+                                 ArrayRef<Type> output,
+                                 PatternRewriter& rewriter);
+
+        NGraphTypeConverter& getTypeConverter() { return typeConverter; }
 
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
@@ -146,6 +148,9 @@ namespace
         // Create type converter and initialize conversion patterns.
         NGraphTypeConverter converter;
         OwningRewritePatternList patterns;
+        // Add default FuncOp type conversion. It replaces the incoming FuncOp with a *new* one
+        // with the converted types.
+        mlir::populateFuncOpTypeConversionPattern(patterns, &getContext(), typeConverter);
         populateNGraphToAffineConversionPatterns(patterns);
 
         // Create target that defines legal ops for nGraph dialect to be lowered to.
@@ -153,14 +158,18 @@ namespace
         // TODO: Remove NGFakeInputOp. We need to set NGFakeInputOp as legal op because we generate
         // it as part of the lowering to affine/standard.
         target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
-        target.addLegalOp<NGFakeInputOp>();
+        target.addLegalOp<ModuleOp, ModuleTerminatorOp, NGFakeInputOp>();
+        target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
+            // FuncOp is legal only if types have been converted to Std types.
+            return typeConverter.isSignatureLegal(op.getType());
+        });
 
         // capture output values by looking for the Return and grabbing the values
         // the order of the returned values matches the order of the lowered func signature for
         // results. This is used to find the arg_id that a defined value maps to if it is an output
         findOutputValues();
 
-        if (failed(applyConversionPatterns(getModule(), target, converter, std::move(patterns))))
+        if (failed(applyFullConversion(getModule(), target, std::move(patterns), &converter)))
         {
             emitError(mlir::UnknownLoc::get(&getContext()), "Error lowering nGraph dialect\n");
             signalPassFailure();
@@ -184,13 +193,13 @@ namespace
     void DialectLoweringPass::findOutputValues()
     {
         // get original function
-        auto f = getModule().getNamedFunction("main");
+        auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
         SmallVector<Value*, 4> outputList;
         unsigned outputCount = 0;
 
         // we find out output values by looking at returned values
         // any return should return all outputs of the subgraph
-        f->walk<NGReturnOp>([this, &outputCount](NGReturnOp ret) {
+        f.walk<NGReturnOp>([this, &outputCount](NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
                 auto outputValue = ret.getOperand(i);
@@ -276,9 +285,9 @@ namespace
     void DialectLoweringPass::processFakeInstrs()
     {
         auto context = getModule().getContext();
-        auto f = getModule().getNamedFunction("main");
-        mlir::Block* entryBlock = &*(f->begin());
-        auto oldFuncType = f->getType();
+        auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
+        mlir::Block* entryBlock = &*(f.begin());
+        auto oldFuncType = f.getType();
         ArrayRef<mlir::Type> ipArgs = oldFuncType.getInputs();
         ArrayRef<mlir::Type> opArgs = oldFuncType.getResults();
         SmallVector<mlir::Type, 4> allArgs;
@@ -300,7 +309,7 @@ namespace
         entryBlock->addArgument(indexType);
         // update type
         auto newFuncType = mlir::FunctionType::get(allArgs, {}, context);
-        f->setType(newFuncType);
+        f.setType(newFuncType);
 
         // RAUW fake outputs with result values
         unsigned i = 0;
@@ -323,34 +332,32 @@ namespace
     /// by nGraph op semantics.
     void DialectLoweringPass::insertNoAliasArgAttrs()
     {
-        auto func = getModule().getNamedFunction("main");
+        auto func = getModule().lookupSymbol<mlir::FuncOp>("main");
         unsigned int argIdx = 0;
-        for (auto* arg : func->getArguments())
+        for (auto* arg : func.getArguments())
         {
             if (arg->getType().isa<MemRefType>())
             {
-                func->setArgAttr(argIdx, "llvm.noalias", BoolAttr::get(true, &getContext()));
+                func.setArgAttr(argIdx, "llvm.noalias", BoolAttr::get(true, &getContext()));
             }
 
             ++argIdx;
         }
     }
 
-    mlir::Function* DialectLoweringPass::getCallDecl(StringRef name,
-                                                     ArrayRef<Type> args,
-                                                     ArrayRef<Type> output,
-                                                     PatternRewriter& rewriter)
+    mlir::FuncOp DialectLoweringPass::getCallDecl(StringRef name,
+                                                  ArrayRef<Type> args,
+                                                  ArrayRef<Type> output,
+                                                  PatternRewriter& rewriter)
     {
-        auto callBackFuncPtr = getModule().getNamedFunction(name);
-        if (callBackFuncPtr == nullptr)
+        auto callBackFunc = getModule().lookupSymbol<mlir::FuncOp>(name);
+        if (!callBackFunc)
         {
             auto callBackType = rewriter.getFunctionType(args, output);
-            auto callBackFunc =
-                llvm::make_unique<mlir::Function>(rewriter.getUnknownLoc(), name, callBackType);
-            callBackFuncPtr = callBackFunc.get();
-            getModule().getFunctions().push_back(callBackFunc.release());
+            auto callBackFunc = mlir::FuncOp::create(rewriter.getUnknownLoc(), name, callBackType);
+            getModule().push_back(callBackFunc);
         }
-        return callBackFuncPtr;
+        return callBackFunc;
     }
 
     // NGDialect converters
@@ -382,15 +389,15 @@ namespace
             return mlir::IntegerType::get(1 /* width */, boolType.getContext());
         }
 
-        NGRAPH_CHECK(false, "Unsupported type to lower");
+        // Do not assert/NGRAPH_CHECK here. Type convertion infra expects `convertType` to return
+        // the input type if the type is not supported.
         return type;
     }
 
 #define REWRITER(OP)                                                                               \
     PatternMatchResult OP##Conversion::matchAndRewrite(                                            \
-        Operation* op, ArrayRef<Value*> operands, PatternRewriter& rewriter) const
+        Operation* op, ArrayRef<Value*> operands, ConversionPatternRewriter& rewriter) const
 
-    // ADD
     REWRITER(NGAddOp)
     {
         lower_binary_elementwise<mlir::NGAddOp>(op, operands, rewriter, pass);
