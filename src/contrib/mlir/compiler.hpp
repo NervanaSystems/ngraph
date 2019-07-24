@@ -88,7 +88,6 @@ namespace ngraph
             private:
                 void build_ng_dialect_module();
                 void lower_ng_dialect();
-                void optimize();
                 void bind_arguments();
                 void execute();
                 void cleanup();
@@ -125,10 +124,10 @@ namespace ngraph
                 void create_return();
 
                 /// Helper to create memref arguments for MLIR function signature
-                llvm::SmallVector<void*, 8> allocate_memref_args(mlir::Function* func);
+                llvm::SmallVector<void*, 8> allocate_memref_args();
 
                 /// Helper to allocate a mem ref object. Handles static shapes only for now.
-                mlir::StaticFloatMemRef* allocate_memref_descriptor(mlir::Type type);
+                mlir::StaticFloatMemRef* allocate_memref_descriptor();
 
                 /// Helper to dump MLIR module into llvm::dbgs prepended by the message \p msg.
                 void dump_mlir_module(const std::string msg);
