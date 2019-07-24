@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
+#include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 
@@ -96,6 +97,8 @@ const char* runtime::HostTensor::get_data_ptr() const
 
 void runtime::HostTensor::write(const void* source, size_t n)
 {
+    runtime::event::Duration d1("write", "HostTensor");
+
     if (n > m_buffer_size)
     {
         throw out_of_range("write access past end of tensor");
@@ -106,6 +109,7 @@ void runtime::HostTensor::write(const void* source, size_t n)
 
 void runtime::HostTensor::read(void* target, size_t n) const
 {
+    runtime::event::Duration d1("read", "HostTensor");
     if (n > m_buffer_size)
     {
         throw out_of_range("read access past end of tensor");
