@@ -17,7 +17,7 @@
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
 #include "contrib/mlir/compiler.hpp"
-#include "contrib/mlir/compiled_kernel.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 
 using namespace ngraph;
@@ -67,8 +67,23 @@ namespace ngraph
                     }
                     // Compile nodes within the CompiledKernel op.
                     CompiledKernel* compiled_kernel = static_cast<CompiledKernel*>(const_cast<Node*>(node));
-                    compiled_kernel->compile();
-                    compiled_kernel->run(ptr_args);
+                    bool is_module_ready = true;
+                    auto it = ctx->mlir_compilers.find(compiled_kernel);
+
+                    if (it == ctx->mlir_compilers.end())
+                    {
+                        // create a new compiler for the CK
+                        ctx->mlir_compilers.emplace(compiled_kernel, compiled_kernel);
+                        is_module_ready = false;
+                    }
+
+                    MLIRCompiler& mlir_compiler = ctx->mlir_compilers.find(compiled_kernel)->second;
+                    if (!is_module_ready)
+                    {
+                        mlir_compiler.compile();
+                    }
+                    mlir_compiler.set_args(&ptr_args);
+                    mlir_compiler.run();
                 };
 
                 functors.emplace_back(functor);

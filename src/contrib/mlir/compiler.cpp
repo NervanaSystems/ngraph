@@ -29,7 +29,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
-#include "compiled_kernel.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"

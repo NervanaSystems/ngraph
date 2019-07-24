@@ -23,8 +23,6 @@ set(SRC
     memory_manager.cpp
     pass/mlir_subgraph_extraction.cpp
     pass/mlir_subgraph_extraction.hpp
-    compiled_kernel.cpp
-    compiled_kernel.hpp
 )
 if (NGRAPH_MLIR_ENABLE)
 

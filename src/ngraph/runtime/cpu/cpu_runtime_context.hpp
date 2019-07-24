@@ -25,6 +25,8 @@
 #include <tbb/flow_graph.h>
 #include <tbb/global_control.h>
 #include <tbb/task_scheduler_init.h>
+#include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "contrib/mlir/compiler.hpp"
 
 namespace mkldnn
 {
@@ -66,6 +68,9 @@ namespace ngraph
                 State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;
+#ifdef NGRAPH_MLIR_ENABLE
+                std::unordered_map<ngraph::op::CompiledKernel*, ngraph::runtime::ngmlir::MLIRCompiler> mlir_compilers;
+#endif
             };
             }
 
