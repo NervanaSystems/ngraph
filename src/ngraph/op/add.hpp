@@ -51,13 +51,12 @@ namespace ngraph
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
+            virtual bool is_commutative() const override { return true; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            virtual bool is_commutative() override { return true; }
         };
     }
 
-    std::shared_ptr<ngraph::Node> operator+(const std::shared_ptr<ngraph::Node>& arg0,
-                                            const std::shared_ptr<ngraph::Node>& arg1);
+    std::shared_ptr<Node> operator+(const Output<Node>& arg0, const Output<Node>& arg1);
 }

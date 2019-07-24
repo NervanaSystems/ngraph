@@ -20,8 +20,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Log::Log(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Log", arg)
+const string op::Log::type_name{"Log"};
+
+op::Log::Log(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }

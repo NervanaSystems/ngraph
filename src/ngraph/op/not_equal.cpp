@@ -19,10 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::NotEqual::NotEqual(const shared_ptr<Node>& arg0,
-                       const shared_ptr<Node>& arg1,
+const string op::NotEqual::type_name{"NotEqual"};
+
+op::NotEqual::NotEqual(const Output<Node>& arg0,
+                       const Output<Node>& arg1,
                        const AutoBroadcastSpec& autob)
-    : BinaryElementwiseComparison("NotEqual", arg0, arg1, autob)
+    : BinaryElementwiseComparison(arg0, arg1, autob)
 {
     constructor_validate_and_infer_types();
 }

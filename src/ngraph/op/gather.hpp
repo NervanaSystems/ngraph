@@ -26,13 +26,15 @@ namespace ngraph
         class Gather : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            Gather() = default;
             /// \param params The tensor from which slices are gathered
             /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
             /// \param axis Axis in params to gather
-            Gather(const std::shared_ptr<Node>& params,
-                   const std::shared_ptr<Node>& indices,
-                   size_t axis = 0)
-                : Op("Gather", check_single_output_args({params, indices}))
+            Gather(const Output<Node>& params, const Output<Node>& indices, size_t axis = 0)
+                : Op({params, indices})
                 , m_axis(axis)
             {
                 constructor_validate_and_infer_types();
@@ -46,6 +48,7 @@ namespace ngraph
             }
 
             size_t get_axis() const { return m_axis; }
+            void set_axis(size_t axis) { m_axis = axis; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

@@ -350,6 +350,7 @@ namespace
         }
         return callBackFuncPtr;
     }
+
     // NGDialect converters
     Type NGraphTypeConverter::convertType(Type type)
     {
@@ -576,7 +577,6 @@ namespace
         // Create Value for result, and extract type info.
         Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
-        auto resultTy = result->getType().cast<MemRefType>();
 
         // Create view to write into result.
         MemRefView vRes(result);
@@ -590,7 +590,6 @@ namespace
         for (auto& operand : operands)
         {
             NGRAPH_CHECK(operand, "Unexpected null operand in ConcatOp");
-            auto operandTy = result->getType().cast<MemRefType>();
 
             // Assuming rank = r, and the concatenation axis is A where A<r, we'll be creating
             // loops of this form:
@@ -647,6 +646,123 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGGatherOp)
+    {
+        auto gatherOp = cast<NGGatherOp>(op);
+        auto loc = gatherOp.getLoc();
+        ScopedContext scope(rewriter, loc);
+
+        // Get operands
+        Value* result = m_pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in GatherOp");
+        auto resultTy = result->getType().cast<MemRefType>();
+
+        Value* params = operands[0];
+        Value* indices = operands[1];
+        auto axis = gatherOp.axis().getSExtValue();
+
+        // Create view to write into result.
+        MemRefView vRes(result), vParams(params), vIndices(indices);
+        // Indexed Values
+        IndexedValue iRes(result), iParams(params), iIndices(indices);
+
+        // Construct outer loop for params dims. Exclude the axis dim.
+        SmallVector<ValueHandle, 4> paramsLbs, paramsUbs;
+        SmallVector<IndexHandle, 4> paramsIVs;
+        SmallVector<int64_t, 4> paramsSteps;
+        SmallVector<ValueHandle*, 4> paramsIVPtrs;
+        for (auto i = 0; i < vParams.rank(); i++)
+        {
+            // skip gather axis
+            if (i == axis)
+                continue;
+            paramsLbs.push_back(IndexHandle(vParams.lb(i)));
+            paramsUbs.push_back(IndexHandle(vParams.ub(i)));
+            paramsSteps.push_back(vParams.step(i));
+        }
+        NGRAPH_CHECK(paramsLbs.size() == vParams.rank() - 1 &&
+                         paramsUbs.size() == paramsLbs.size() &&
+                         paramsSteps.size() == paramsLbs.size(),
+                     "Incorrect loop nest bounds size for gather params");
+
+        paramsIVs = IndexHandle::makeIndexHandles(vParams.rank() - 1);
+        paramsIVPtrs = IndexHandle::makeIndexHandlePointers(paramsIVs);
+
+        auto indicesLbs = vIndices.getLbs();
+        auto indicesUbs = vIndices.getUbs();
+        auto indicesSteps = vIndices.getSteps();
+
+        auto indicesIVs = IndexHandle::makeIndexHandles(vIndices.rank());
+        auto indicesIVPtrs = IndexHandle::makeIndexHandlePointers(indicesIVs);
+
+        SmallVector<IndexHandle, 8> paramsIndices, resIndices;
+
+        // Make sure we are going to create loops
+        NGRAPH_CHECK(vParams.rank() > 0, "Invalid size for indices steps");
+
+        // Let params rank : N
+        // Let indices rank : M
+        // Let axis be A
+        // Generate
+        // params loops
+        // for P_0: 0 -> params.dim[0]
+        //   for P_1: 0 -> params.dim[1]
+        //     for P_2: 0 -> params.dim[2]
+        // ...
+        //       for P_(A-1):0 -> params.dim[A-1]
+        //         for P_(A+1):0 -> params.dim[A+1]
+        // ...
+        //           for P_(N-1):0 -> params.dim[N-1]
+        //             indices loops
+        //             for I_0:0 -> indices.dim[0]
+        // ...
+        //               for I_(M-1):0 -> indices.dim[M-1]
+        //                 res[P_0, P_1, .. P_(A-1), I_0, .., I_(M-1), P_(A+1), ... P_(N-1)] =
+        //                   params[P_0, P_1, .. P_(A-1), indices[I_0, .., I_(M-1)], P_(A+1), ... P_(N-1)];
+
+        LoopNestBuilder(paramsIVPtrs, paramsLbs, paramsUbs, paramsSteps)([&] {
+            LoopNestBuilder(indicesIVPtrs, indicesLbs, indicesUbs, indicesSteps)([&] {
+                // Load axis value from indices array and cast it to Index Type
+                ValueHandle axisIdx = ValueHandle::create<IndexCastOp>(
+                    (ValueHandle)iIndices(indicesIVs), rewriter.getIndexType());
+                // construct indices for param
+                // [P_0, P_1, .. P_axis-1, Indices[I0, I1, .. I_k-1], P_axis+1, P_axis+2, .. P_n-1]
+                for (auto i = 0, j = 0; i < vParams.rank(); i++)
+                {
+                    if (i == axis)
+                    {
+                        paramsIndices.push_back(IndexHandle(axisIdx));
+                    }
+                    else
+                    {
+                        paramsIndices.push_back(paramsIVs[j++]);
+                    }
+                }
+
+                // construct indices for result
+                // [P_0, P_1, .. P_axis-1, I0, I1, .. I_k-1, P_axis+1, P_axis+2, .. P_n-1]
+                for (auto i = 0, j = 0; i < vParams.rank() + vIndices.rank() - 1;)
+                {
+                    if (i == axis && indicesIVs.size() > 0)
+                    {
+                        resIndices.append(indicesIVs.begin(), indicesIVs.end());
+                        i += indicesIVs.size();
+                    }
+                    else
+                    {
+                        resIndices.push_back(paramsIVs[j++]);
+                        i++;
+                    }
+                }
+                // Store into result
+                iRes(resIndices) = iParams(paramsIndices);
+            });
+        });
+
+        rewriter.replaceOp(op, {result});
+        return matchSuccess();
+    }
+
     REWRITER(NGReturnOp)
     {
         rewriter.replaceOpWithNewOp<ReturnOp>(op);
@@ -654,7 +770,7 @@ namespace
     }
 
 #undef REWRITER
-
+    /// End of pattern matchers
     template <typename OP>
     void lower_binary_elementwise(Operation* op,
                                   ArrayRef<Value*> operands,
