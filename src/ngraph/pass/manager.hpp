@@ -61,10 +61,8 @@ public:
             m_pass_names.push_back(typeid(T).name());
 #endif
         }
-        if (m_per_pass_validation && !std::is_same<T, Validate>::value)
+        if (m_per_pass_validation)
         {
-            // If the pass is not a Validate pass and per-pass validation is enabled then
-            // add a Validate pass
             auto validate = std::make_shared<Validate>();
             auto validate_base = std::static_pointer_cast<PassBase>(validate);
             m_pass_list.push_back(validate_base);

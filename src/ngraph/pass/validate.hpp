@@ -29,7 +29,7 @@ namespace ngraph
                 : FunctionPass()
             {
             }
-            virtual bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
+            bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
         };
     }
 }
