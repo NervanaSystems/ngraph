@@ -20,8 +20,9 @@ Software requirements
 ---------------------
 
 - Python 3.4 or higher
-- Protocol Buffers (protobuf) ``v.2.6.1`` or higher
+- Protocol Buffers (protobuf) ``v2.6.1`` or higher
 - `OpenCL runtime <opencl_drivers_>`_, required if you plan to use nGraph with an Intel GPU backend
+- `PlaidML <plaidml_pypi_>`_  ``v0.6.3`` or higher, required if you plan to use nGraph’s PlaidML backend
 
 Install protobuf for Ubuntu:
 
@@ -39,25 +40,35 @@ backend.
 
 .. note:: Pre-built packages (binaries) are currently not available for macOS.
 
-Install `ngraph-core`:
+Install ``ngraph-core``:
 
 ::
 
     pip install ngraph-core 
 
-Install `ngraph-onnx`:
+Install ``ngraph-onnx``:
 
 ::
 
     pip install ngraph-onnx 
 
+
+Install ``plaidml`` (optional):
+
+::
+
+    pip install plaidml
+
+.. note:: Installing the ``plaidml`` package is only required for users who plan to use nGraph with the PlaidML backend
+
 Build from source
 -----------------
 
-**Build nGraph with Python bindings**
-
 Complete the following steps to build nGraph with Python bindings from source.
 These steps have been tested on Ubuntu 18.04.
+
+Before you build
+>>>>>>>>>>>>>>>>
 
 Prepare your system:
 
@@ -67,7 +78,37 @@ Prepare your system:
     # apt install -y python3 python3-pip python3-dev python-virtualenv
     # apt install -y build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool
 
-Clone nGraph's `master` branch. Build and install it into
+
+Decide which backends to enable: 
+
+**Intel GPU backend**:
+
+To build nGraph with an Intel GPU backend, add ``-DNGRAPH_INTELGPU_ENABLE=TRUE``
+to the cmake command. For example: 
+
+::
+
+    $ cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_INTELGPU_ENABLE=TRUE
+
+**PlaidML backend**: 
+
+To build nGraph with a PlaidML backend, add ``-DNGRAPH_PLAIDML_ENABLE=TRUE`` to the cmake command. For example:
+
+::
+
+    $ cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_PLAIDML_ENABLE=TRUE
+
+To build nGraph with more than one backend, pass multiple flags to ``cmake``. For example:
+
+:: 
+
+    $ cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_PLAIDML_ENABLE=TRUE DNGRAPH_INTELGPU_ENABLE=TRUE
+
+Build the nGraph wheel
+>>>>>>>>>>>>>>>>>>>>>>
+
+
+Clone nGraph's ``master`` branch. Next, build and install it into
 ``$HOME/ngraph_dist``:
 
 ::
@@ -77,13 +118,6 @@ Clone nGraph's `master` branch. Build and install it into
     $ mkdir ngraph/build && cd ngraph/build
     $ cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE 
     $ make install
-
-To build nGraph with an Intel GPU backend, add ``-DNGRAPH_INTELGPU_ENABLE=TRUE``
-to the cmake command. For example: 
-
-::
-
-    $ cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_INTELGPU_ENABLE=TRUE
 
 Prepare a Python virtual environment for nGraph (recommended):
  
@@ -113,7 +147,8 @@ Build a Python package (Binary wheel) for nGraph:
 For additional information on how to build nGraph Python bindings see the
 `Python API documentation <python_api_>`_.
 
-**Install nGraph**
+Install the nGraph wheel
+>>>>>>>>>>>>>>>>>>>>>>>>
 
 Once the Python binary wheel file ``ngraph-*.whl`` is prepared, install it using
 pip. For example:
@@ -122,7 +157,7 @@ pip. For example:
 
     (nGraph) $ pip install -U dist/ngraph_core-0.0.0.dev0-cp36-cp36m-linux_x86_64.whl
 
-**Verify installation of nGraph**
+Verify installation of nGraph (optional):
 
 To verify that nGraph is properly installed in your Python shell:
 
@@ -141,7 +176,8 @@ both built with the ``NGRAPH_ONNX_IMPORT_ENABLE`` option:
 
 If you don't see any errors, nGraph should be installed correctly.
 
-**Install ngraph-onnx**
+Install ngraph-onnx
+>>>>>>>>>>>>>>>>>>>
 
 ``ngraph-onnx`` is an additional Python library that provides a Python API to run
 ONNX models using nGraph. 
@@ -166,7 +202,7 @@ In your Python virtual environment, install the required packages and
     (nGraph) $ pip install -r requirements_test.txt
     (nGraph) $ pip install -e .
  
-**Verify installation of** ``ngraph-onnx`` 
+Verify installation of ``ngraph-onnx`` (optional):
 
 To verify that ``ngraph-onnx`` installed correctly, you can run our test suite
 using:
@@ -224,7 +260,7 @@ After importing an ONNX model, you will have an nGraph ``Function`` object.
 Now you can create an nGraph ``Runtime`` backend and use it to compile your
 ``Function`` to a backend-specific ``Computation`` object.
 
-Execute your model by calling the created ``Computation`` object with input data.
+Execute your model by calling the created ``computation`` object with input data:
 
 .. code-block:: python
 
@@ -261,4 +297,5 @@ If you encounter any problems with this tutorial, please submit a ticket to our
 .. _onnx_model_zoo: https://github.com/onnx/models
 .. _python_api: https://github.com/NervanaSystems/ngraph/blob/master/python/README.md
 .. _opencl_drivers: https://software.intel.com/en-us/articles/opencl-drivers
+.. _plaidml_pypi: https://pypi.org/project/plaidml/
 .. _issues: https://github.com/NervanaSystems/ngraph/issues
