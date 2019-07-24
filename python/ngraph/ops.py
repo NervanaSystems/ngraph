@@ -21,7 +21,7 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
     Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
-    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
+    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
     GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
     Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
@@ -553,6 +553,35 @@ def tanh(node, name=None):  # type: (Node, str) -> Node
     :return: New node with tanh operation applied on it.
     """
     return Tanh(node)
+
+
+@nameable_op
+def clamp(data, min_value, max_value, name=None):
+    # type: (NodeInput, ScalarData, ScalarData, str) -> NodeInput
+    """Perform clamp element-wise on data from input node.
+
+    Performs a clipping operation on an input value between a pair of boundary values.
+
+    If :code:`data` compares less than :code:`min_value`, sets :code:`min_value`;
+    else if :code:`max_value` compares less than :code:`data`, sets :code:`max_value`;
+    otherwise remains unchanged :code:`data`.
+
+    Computes clamp:
+
+    .. code-block:: python
+
+        if data < min_value:
+            data=min_value
+        elif data > max_value:
+            data=max_value
+
+    :param data: Input tensor. One of: input node, array or scalar.
+    :param min_value: The lower bound of the <min_value;max_value> range. Scalar value.
+    :param max_value: The upper bound of the <min_value;max_value> range Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a clamp operation on its input data element-wise.
+    """
+    return Clamp(as_node(data), min_value, max_value)
 
 
 # matmul ops

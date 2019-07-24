@@ -67,3 +67,36 @@ def test_elu_operator_with_scalar():
     result = computation(data_value)
     expected = np.array([[-2.9797862, 1.], [-2.5939941, 3.]], dtype=np.float32)
     assert np.allclose(result, expected)
+
+
+def test_clamp_operator():
+    runtime = get_runtime()
+
+    data_shape = [2, 2]
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    min_value = np.float32(3)
+    max_value = np.float32(12)
+
+    model = ng.clamp(parameter_data, min_value, max_value)
+    computation = runtime.computation(model, parameter_data)
+
+    data_value = np.array([[-5, 9], [45, 3]], dtype=np.float32)
+
+    result = computation(data_value)
+    expected = np.clip(data_value, min_value, max_value)
+    assert np.allclose(result, expected)
+
+
+def test_clamp_operator_with_array():
+    runtime = get_runtime()
+
+    data_value = np.array([[-5, 9], [45, 3]], dtype=np.float32)
+    min_value = np.float32(3)
+    max_value = np.float32(12)
+
+    model = ng.clamp(data_value, min_value, max_value)
+    computation = runtime.computation(model)
+
+    result = computation()
+    expected = np.clip(data_value, min_value, max_value)
+    assert np.allclose(result, expected)
