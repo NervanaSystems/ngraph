@@ -150,10 +150,11 @@ namespace ngraph
         /// If necessary, wrap \p node with an additional reshape and/or broadcast op.
         /// Return a pointer to the node that produces the wrapped value.
         /// If no additional reshape or broadcast op was needed, simply return \p node.
-        static Output<Node> add_required_ops(const Output<Node>& value,
-                                             const ngraph::Shape& shape_after_possible_reshaping,
-                                             const ngraph::AxisSet& broadcast_axes,
-                                             const ngraph::Shape& final_shape)
+        static std::shared_ptr<Node>
+            add_required_ops(const Output<Node>& value,
+                             const ngraph::Shape& shape_after_possible_reshaping,
+                             const ngraph::AxisSet& broadcast_axes,
+                             const ngraph::Shape& final_shape)
         {
             Output<Node> return_value{value};
 
@@ -171,11 +172,11 @@ namespace ngraph
                     return_value, final_shape, broadcast_axes);
             }
 
-            return return_value;
+            return return_value.get_node_shared_ptr();
         }
 
-        std::pair<Output<Node>, Output<Node>>
-            numpy_broadcast_values(const std::pair<Output<Node>, Output<Node>>& args)
+        std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
+            numpy_broadcast(const std::pair<Output<Node>, Output<Node>>& args)
         {
             NGRAPH_CHECK(args.first.get_node());
             NGRAPH_CHECK(args.second.get_node());
@@ -186,21 +187,21 @@ namespace ngraph
             // Handle the trivial case...
             if (arg1_in_shape == arg2_in_shape)
             {
-                return args;
+                return make_pair(args.first.as_node_shared_ptr(), args.second.as_node_shared_ptr());
             }
 
             Autobroadcast_plan plan =
                 compute_shapes_and_broadcast_axes(arg1_in_shape, arg2_in_shape);
 
-            Output<Node> arg1_out = add_required_ops(args.first,
-                                                     plan.m_arg1_shape_after_possible_reshaping,
-                                                     plan.m_arg1_broadcast_axes,
-                                                     plan.m_final_shape);
+            auto arg1_out = add_required_ops(args.first,
+                                             plan.m_arg1_shape_after_possible_reshaping,
+                                             plan.m_arg1_broadcast_axes,
+                                             plan.m_final_shape);
 
-            Output<Node> arg2_out = add_required_ops(args.second,
-                                                     plan.m_arg2_shape_after_possible_reshaping,
-                                                     plan.m_arg2_broadcast_axes,
-                                                     plan.m_final_shape);
+            auto arg2_out = add_required_ops(args.second,
+                                             plan.m_arg2_shape_after_possible_reshaping,
+                                             plan.m_arg2_broadcast_axes,
+                                             plan.m_final_shape);
 
             return {arg1_out, arg2_out};
         }
