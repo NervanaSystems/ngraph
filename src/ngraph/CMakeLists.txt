@@ -463,6 +463,8 @@ set (SRC
     runtime/backend.hpp
     runtime/backend_manager.cpp
     runtime/backend_manager.hpp
+    runtime/chrome_trace.cpp
+    runtime/chrome_trace.hpp
     runtime/executable.cpp
     runtime/executable.hpp
     runtime/host_tensor.cpp

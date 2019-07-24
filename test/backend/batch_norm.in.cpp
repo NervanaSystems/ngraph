@@ -733,8 +733,8 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
     auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
 
     auto zero = ngraph::make_zero(bn_dgamma->get_element_type(), bn_dgamma->get_shape());
-    ngraph::autodiff::Adjoints adjoints(NodeVector{bn_dx, bn_dgamma, bn_dbeta},
-                                        NodeVector{C, zero, zero});
+    ngraph::autodiff::Adjoints adjoints(OutputVector{bn_dx, bn_dgamma, bn_dbeta},
+                                        OutputVector{C, zero, zero});
 
     auto dinput = adjoints.backprop_node(input);
     auto dgamma = adjoints.backprop_node(gamma);
