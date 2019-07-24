@@ -70,8 +70,8 @@ namespace ngraph
         ///   elements point to ngraph::Node objects whose output values have the same shape.
         ///
         /// \exception ngraph::builder::autobroadcast_incompatible_shapes
-        std::pair<Output<Node>, Output<Node>>
-            numpy_broadcast_values(const std::pair<Output<Node>, Output<Node>>& args);
+        std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
+            numpy_broadcast(const std::pair<Output<Node>, Output<Node>>& args);
 
         /// \brief Wrap two graph nodes, if necessary, to obtain values with identical shapes,
         /// using NumPy's auto-broadcast rules.
@@ -101,6 +101,7 @@ namespace ngraph
         ///   elements point to ngraph::Node objects whose output values have the same shape.
         ///
         /// \exception ngraph::builder::autobroadcast_incompatible_shapes
+        #if 0
         inline std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
             numpy_broadcast(const std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>& args)
                 NGRAPH_DEPRECATED("Replace with numpy_broadcast_values")
@@ -110,6 +111,7 @@ namespace ngraph
             return make_pair(values.first.get_node_shared_ptr(),
                              values.second.get_node_shared_ptr());
         }
+        #endif
 
         /// Create a new \p NodeType node, and any additional nodes required to simulate NumPy-style autobroadcast
         /// semantics.  Intended for binary operations such as "Add".
@@ -151,7 +153,7 @@ namespace ngraph
                                                       const Output<Node>& operand2_reshapeable)
         {
             auto shaped_op1_op2 =
-                numpy_broadcast_values({operand1_reshapeable, operand2_reshapeable});
+                numpy_broadcast({operand1_reshapeable, operand2_reshapeable});
             return std::make_shared<NodeType>(shaped_op1_op2.first, shaped_op1_op2.second);
         }
 
@@ -177,7 +179,7 @@ namespace ngraph
                                                       const Output<Node>& operand3_reshapeable)
         {
             auto shaped_op2_op3 =
-                numpy_broadcast_values({operand2_reshapeable, operand3_reshapeable});
+                numpy_broadcast({operand2_reshapeable, operand3_reshapeable});
             return std::make_shared<NodeType>(
                 operand1, shaped_op2_op3.first, shaped_op2_op3.second);
         }
