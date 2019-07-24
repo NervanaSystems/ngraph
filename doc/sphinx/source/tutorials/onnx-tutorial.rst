@@ -40,26 +40,26 @@ backend.
 
 .. note:: Pre-built packages (binaries) are currently not available for macOS.
 
-Install `ngraph-core`:
+Install ``ngraph-core``:
 
 ::
 
     pip install ngraph-core 
 
-Install `ngraph-onnx`:
+Install ``ngraph-onnx``:
 
 ::
 
     pip install ngraph-onnx 
 
 
-Install `plaidml` (optional):
+Install ``plaidml`` (optional):
 
 ::
 
     pip install plaidml
 
-.. note:: Installing the `plaidml` package is only required for users who plan to use nGraph with the PlaidML backend
+.. note:: Installing the ``plaidml`` package is only required for users who plan to use nGraph with the PlaidML backend
 
 Build from source
 -----------------
@@ -98,7 +98,7 @@ To build nGraph with a PlaidML backend, add ``-DNGRAPH_PLAIDML_ENABLE=TRUE`` to 
 
     $ cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_PLAIDML_ENABLE=TRUE
 
-To build nGraph with more than one backend, pass multiple flags to `cmake`. For example:
+To build nGraph with more than one backend, pass multiple flags to ``cmake``. For example:
 
 :: 
 
@@ -108,7 +108,7 @@ Build the nGraph wheel
 >>>>>>>>>>>>>>>>>>>>>>
 
 
-Clone nGraph's `master` branch. Build and install it into
+Clone nGraph's ``master`` branch. Next, build and install it into
 ``$HOME/ngraph_dist``:
 
 ::
@@ -260,7 +260,7 @@ After importing an ONNX model, you will have an nGraph ``Function`` object.
 Now you can create an nGraph ``Runtime`` backend and use it to compile your
 ``Function`` to a backend-specific ``Computation`` object.
 
-Execute your model by calling the created ``Computation`` object with input data.
+Execute your model by calling the created ``computation`` object with input data:
 
 .. code-block:: python
 
