@@ -263,6 +263,36 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
+#define SELECT_KERNEL_DOT(KV, ET, R1, R2, R3, K)                                                   \
+    if (ET == element::f32)                                                                        \
+    {                                                                                              \
+        KV = K<float, R1, R2, R3>;                                                                 \
+    }                                                                                              \
+    else if (ET == element::f64)                                                                   \
+    {                                                                                              \
+        KV = K<double, R1, R2, R3>;                                                                \
+    }                                                                                              \
+    else if (ET == element::i32)                                                                   \
+    {                                                                                              \
+        KV = K<int32_t, R1, R2, R3>;                                                               \
+    }                                                                                              \
+    else if (ET == element::u32)                                                                   \
+    {                                                                                              \
+        KV = K<uint32_t, R1, R2, R3>;                                                              \
+    }                                                                                              \
+    else if (ET == element::i64)                                                                   \
+    {                                                                                              \
+        KV = K<int64_t, R1, R2, R3>;                                                               \
+    }                                                                                              \
+    else if (ET == element::u64)                                                                   \
+    {                                                                                              \
+        KV = K<uint64_t, R1, R2, R3>;                                                              \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
+    }
+
 // Helper macros for a partial set of element types and ranks
 // Useful for keeping compilation time and memory usage reasonable
 // when the computed expression is complex
