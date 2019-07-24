@@ -144,7 +144,7 @@ namespace ngraph
             // df/dX*
             std::vector<std::shared_ptr<Node>> df_output_params;
 
-            Adjoints adjoints(NodeVector{f->get_output_op(0)}, NodeVector{c_param});
+            Adjoints adjoints(OutputVector{f->output(0)}, OutputVector{c_param});
 
             // for each x "of interest"
             for (auto x : indep_params)
