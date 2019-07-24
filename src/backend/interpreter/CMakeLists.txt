@@ -14,24 +14,15 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_definitions(-DIN_NGRAPH_LIBRARY)
-
-include_directories(ngraph)
-
-add_subdirectory(resource)
-
-# This must be added before any backend that uses MLIR
-if (NGRAPH_MLIR_ENABLE)
-    add_subdirectory(${NGRAPH_MLIR_SOURCE_DIR})
+add_library(interpreter_backend SHARED int_backend.cpp node_wrapper.cpp int_executable.cpp)
+if(NGRAPH_LIB_VERSIONING_ENABLE)
+    set_target_properties(interpreter_backend PROPERTIES
+        VERSION ${NGRAPH_VERSION}
+        SOVERSION ${NGRAPH_API_VERSION})
 endif()
+target_link_libraries(interpreter_backend PUBLIC ngraph)
 
-add_subdirectory(ngraph)
-
-add_subdirectory(backend)
-
-if (NGRAPH_TOOLS_ENABLE)
-    add_subdirectory(tools)
-    message(STATUS "tools enabled")
-else()
-    message(STATUS "tools disabled")
-endif()
+install(TARGETS interpreter_backend
+    LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+    ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+)

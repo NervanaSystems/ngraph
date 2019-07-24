@@ -14,17 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_INTERPRETER_ENABLE)
-    add_library(interpreter_backend SHARED int_backend.cpp node_wrapper.cpp int_executable.cpp)
-    if(NGRAPH_LIB_VERSIONING_ENABLE)
-        set_target_properties(interpreter_backend PROPERTIES
-            VERSION ${NGRAPH_VERSION}
-            SOVERSION ${NGRAPH_API_VERSION})
-    endif()
-    target_link_libraries(interpreter_backend PUBLIC ngraph)
-
-    install(TARGETS interpreter_backend
-        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
-        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
-    )
+if(NGRAPH_INTERPRETER_ENABLE)
+    add_subdirectory(interpreter)
 endif()

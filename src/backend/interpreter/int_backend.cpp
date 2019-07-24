@@ -14,12 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "backend/interpreter/int_backend.hpp"
+#include "backend/interpreter/int_executable.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
-#include "ngraph/runtime/interpreter/int_executable.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 

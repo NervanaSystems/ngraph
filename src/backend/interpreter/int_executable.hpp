@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "backend/interpreter/node_wrapper.hpp"
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/any.hpp"
@@ -70,10 +71,6 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
-#ifdef INTERPRETER_USE_HYBRID
-#include "ngraph/runtime/hybrid/op/function_call.hpp"
-#endif
-#include "ngraph/runtime/interpreter/node_wrapper.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"

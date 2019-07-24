@@ -14,15 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
+#ifdef NGRAPH_INTERPRETER_ENABLE
 #include <random>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include "backend/interpreter/int_executable.hpp"
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/interpreter/int_executable.hpp"
 #include "util/test_tools.hpp"
 
 using namespace std;
@@ -74,3 +75,4 @@ TEST(INTERPRETER, nan_check_output)
     ihandle->set_nan_check(true);
     EXPECT_ANY_THROW(handle->call_with_validate({result}, {a, b}));
 }
+#endif // NGRAPH_INTERPRETER_ENABLE
