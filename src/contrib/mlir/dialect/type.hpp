@@ -199,6 +199,7 @@ namespace mlir
         }
 
         Shape getShape() const { return m_shape; }
+        int64_t getRank() const { return m_shape.size(); }
         EltType getElementType() const { return m_eltType; }
     private:
         NGTensorTypeStorage(EltType eltType, Shape shape)
