@@ -61,7 +61,9 @@ namespace ngraph
                 using TypeList = llvm::SmallVector<mlir::Type, 4>;
 
                 MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel)
-                : m_compiled_kernel(compiled_kernel) {}
+                    : m_compiled_kernel(compiled_kernel)
+                {
+                }
 
                 /// Set runtime tensor arguments for the sub-graph
                 void set_args(std::vector<void*>* external_tensors);

@@ -239,7 +239,7 @@ MLIRCompiler::TensorInfo MLIRCompiler::get_tensor_value(descriptor::Tensor* tens
     return it->second;
 }
 
-// Lowers nGraph dialect all the way to LLVM module. 
+// Lowers nGraph dialect all the way to LLVM module.
 void MLIRCompiler::lower_ng_dialect()
 {
     // Lower NG dialect to Affine
@@ -284,7 +284,7 @@ void MLIRCompiler::lower_ng_dialect()
 
     dump_mlir_module("LLVM-IR Dialect Dump:");
 
-    // Lower to LLVM BC and optimize 
+    // Lower to LLVM BC and optimize
     // Initialize LLVM targets.
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();

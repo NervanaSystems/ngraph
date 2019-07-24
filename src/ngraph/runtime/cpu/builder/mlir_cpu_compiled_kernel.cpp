@@ -66,7 +66,8 @@ namespace ngraph
                         ptr_args.push_back(ctx->buffer_data[buffer_index]);
                     }
                     // Compile nodes within the CompiledKernel op.
-                    CompiledKernel* compiled_kernel = static_cast<CompiledKernel*>(const_cast<Node*>(node));
+                    CompiledKernel* compiled_kernel =
+                        static_cast<CompiledKernel*>(const_cast<Node*>(node));
                     bool is_module_ready = true;
                     auto it = ctx->mlir_compilers.find(compiled_kernel);
 
