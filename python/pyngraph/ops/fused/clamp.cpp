@@ -24,8 +24,8 @@ namespace py = pybind11;
 
 void regclass_pyngraph_op_Clamp(py::module m)
 {
-    py::class_<ngraph::op::Clamp, std::shared_ptr<ngraph::op::Clamp>, ngraph::op::Op> 
-    clamp(m, "Clamp");
+    py::class_<ngraph::op::Clamp, std::shared_ptr<ngraph::op::Clamp>, ngraph::op::Op> clamp(
+        m, "Clamp");
     clamp.doc() = "ngraph.impl.op.Clamp wraps ngraph::op::Clamp";
     clamp.def(py::init<const std::shared_ptr<ngraph::Node>&, const double, const double>());
 }

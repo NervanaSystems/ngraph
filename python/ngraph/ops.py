@@ -563,7 +563,7 @@ def clamp(data, min_value, max_value, name=None):
     Performs a clipping operation on an input value between a pair of boundary values.
 
     If :code:`data` compares less than :code:`min_value`, sets :code:`min_value`;
-    else if :code:`max_value` compares less than :code:`data`, sets :code:`max_value`;
+    else if :code:`max_value` compares more than :code:`data`, sets :code:`max_value`;
     otherwise remains unchanged :code:`data`.
 
     Computes clamp:
@@ -577,7 +577,7 @@ def clamp(data, min_value, max_value, name=None):
 
     :param data: Input tensor. One of: input node, array or scalar.
     :param min_value: The lower bound of the <min_value;max_value> range. Scalar value.
-    :param max_value: The upper bound of the <min_value;max_value> range Scalar value.
+    :param max_value: The upper bound of the <min_value;max_value> range. Scalar value.
     :param name: Optional output node name.
     :return: The new node performing a clamp operation on its input data element-wise.
     """
