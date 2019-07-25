@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "external_data_info.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -340,6 +341,14 @@ namespace ngraph
                 if (m_tensor_proto->has_segment())
                 {
                     throw error::tensor::segments_unsupported{};
+                }
+                if (m_tensor_proto->has_data_location() &&
+                    m_tensor_proto->data_location() ==
+                        onnx::TensorProto_DataLocation::TensorProto_DataLocation_EXTERNAL)
+                {
+                    const auto external_data_info = ExternalDataInfo(*m_tensor_proto);
+                    const auto external_data = external_data_info.load_external_data();
+                    return {std::begin(external_data), std::end(external_data)};
                 }
                 return detail::tensor::get_data<T>(*m_tensor_proto);
             }

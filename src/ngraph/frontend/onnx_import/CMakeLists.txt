@@ -27,6 +27,8 @@ add_library(onnx_import_interface OBJECT
 add_library(onnx_import STATIC
         core/attribute.cpp
         core/attribute.hpp
+        core/external_data_info.cpp
+        core/external_data_info.hpp
         core/graph.cpp
         core/graph.hpp
         core/model.cpp

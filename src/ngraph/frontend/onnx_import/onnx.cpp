@@ -53,7 +53,28 @@ namespace ngraph
             } // namespace error
         }     // namespace detail
 
-        std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights)
+        // TODO CONSIDER CHANGE ONNNX IMPORTER INTERFACE TO OOP
+        void update_external_data_paths(onnx::ModelProto& model_proto, const std::string& model_path)
+        {
+            auto graph_proto = model_proto.mutable_graph();
+            for (auto& initializer_tensor : *graph_proto->mutable_initializer())
+            {
+                // Set full paths to external data
+                const auto location_key_value_index = 0;
+                if (initializer_tensor.has_data_location() &&
+                    initializer_tensor.data_location() ==
+                        onnx::TensorProto_DataLocation::TensorProto_DataLocation_EXTERNAL)
+                {
+                    const auto external_data_relative_path =
+                        initializer_tensor.external_data(location_key_value_index).value();
+                    const auto external_data_full_path = model_path + external_data_relative_path;
+                    initializer_tensor.mutable_external_data(location_key_value_index)
+                        ->set_value(external_data_full_path);
+                }
+            }
+        }
+
+        std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights, const std::string& model_path)
         {
             onnx::ModelProto model_proto;
             // Try parsing input as a binary protobuf message
@@ -69,7 +90,7 @@ namespace ngraph
                     throw detail::error::stream_parse{sin};
                 }
             }
-
+            update_external_data_paths(model_proto, model_path);
             Model model{model_proto};
             Graph graph{model_proto.graph(), model, weights};
             auto function = std::make_shared<Function>(
@@ -88,7 +109,7 @@ namespace ngraph
             {
                 throw detail::error::file_open{path};
             }
-            return import_onnx_model(ifs, weights);
+            return import_onnx_model(ifs, weights, path);
         }
 
         void register_operator(const std::string& name,

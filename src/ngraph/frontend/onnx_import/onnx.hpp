@@ -73,7 +73,9 @@ namespace ngraph
         ///                   and providing through this parameters is invalid (the weights from
         ///                   the model  will take precedence).
         /// \return The function returns a nGraph function representing single output from graph.
-        std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights = {});
+        std::shared_ptr<Function> import_onnx_model(std::istream& sin,
+                                                    const Weights& weights = {},
+                                                    const std::string& model_path = ""); //TODO DOC
 
         /// \brief Convert an ONNX model to nGraph functions
         /// The function translated serialized ONNX model to nGraph functions. The ONNX model
