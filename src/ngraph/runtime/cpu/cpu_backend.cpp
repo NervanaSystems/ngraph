@@ -187,7 +187,7 @@ runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
     {
         return runtime::get_default_allocator();
     }
-    return m_allocator.get();
+    return m_allocator;
 }
 
 void runtime::cpu::CPU_Backend::set_host_memory_allocator(Allocator* allocator)
