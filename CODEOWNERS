@@ -35,7 +35,7 @@ project/doc-contributor-README.rst  @indie
 /python/                            @postrational
 
 /backend/                           @rkimballn1
-/backend/runtime/intelgpu/          @dmyershov
+/backend/intelgpu/                  @dmyershov
 
 /src/resource/                      @rkimballn1
 /src/tools/                         @rkimballn1
