@@ -14,6 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+// NOTE: This file follows nGraph format style and naming convention since it
+// exposes a public API to the rest of nGraph codebase.
+
 #pragma once
 
 #include "memory_manager.hpp"
