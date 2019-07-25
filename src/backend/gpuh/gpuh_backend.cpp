@@ -14,11 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gpuh/gpuh_backend.hpp"
+#include "backend/gpuh/gpuh_backend.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/gpu/gpu_backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;
@@ -41,7 +40,6 @@ extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 }
 
 runtime::gpuh::GPUHBackend::GPUHBackend()
-    : HybridBackend({make_shared<ngraph::runtime::gpu::GPU_Backend>(),
-                     runtime::Backend::create("INTERPRETER")})
+    : HybridBackend({runtime::Backend::create("GPU"), runtime::Backend::create("INTERPRETER")})
 {
 }
