@@ -14,6 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
+#if defined(NGRAPH_CPU_LARGE_BINARY)
+ #define SELECT_REDUCTION_BY_RANK SELECT_KERNEL_BY_RANK
+ #define SELECT_REDUCTION SELECT_KERNEL
+#endif
+
 #define BUILD_REDUCTION_FUNCTOR(OP, K)                                                             \
     auto& functors = external_function->get_functors();                                            \
                                                                                                    \
