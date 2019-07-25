@@ -22,6 +22,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_optimized.hpp"
 
 #define BUILDER_DECL(op_name)                                                                      \
     build<op_name>(CPU_ExternalFunction * external_function,                                       \
@@ -291,33 +292,6 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
-#define SELECT_KERNEL_DOT(KV, ET, R1, R2, R3, K)                                                   \
-    if (ET == element::f32)                                                                        \
-    {                                                                                              \
-        KV = K<float, R1, R2, R3>;                                                                 \
-    }                                                                                              \
-    else if (ET == element::i64)                                                                   \
-    {                                                                                              \
-        KV = K<int64_t, R1, R2, R3>;                                                               \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
-    }
-
-#define SELECT_KERNEL_SOFTMAX(KV, ET, K)                                                           \
-    if (ET == element::f32)                                                                        \
-    {                                                                                              \
-        KV = K<float>;                                                                             \
-    }                                                                                              \
-    else if (ET == element::i64)                                                                   \
-    {                                                                                              \
-        KV = K<int64_t>;                                                                           \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
-    }
 
 // Helper macros for a partial set of element types and ranks
 // Useful for keeping compilation time and memory usage reasonable
@@ -356,20 +330,6 @@
     else if (ET == element::u8)                                                                    \
     {                                                                                              \
         PARTIAL_SELECT_RANK(KV, uint8_t, R, K);                                                    \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
-    }
-
-#define PARTIAL_SELECT_SOFTMAX_BY_RANK(KV, ET, R, K)                                               \
-    if (ET == element::f32)                                                                        \
-    {                                                                                              \
-        PARTIAL_SELECT_RANK(KV, float, R, K);                                                      \
-    }                                                                                              \
-    else if (ET == element::i64)                                                                   \
-    {                                                                                              \
-        PARTIAL_SELECT_RANK(KV, int64_t, R, K);                                                    \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \
