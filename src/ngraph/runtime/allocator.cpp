@@ -32,7 +32,7 @@ void* ngraph::runtime::DefaultAllocator::malloc(size_t size, size_t alignment)
     if (!ptr)
     {
         throw ngraph::ngraph_error("malloc failed to allocate memory of size " +
-                                    std::to_string(size));
+                                   std::to_string(size));
     }
     return ptr;
 }
