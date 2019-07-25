@@ -34,12 +34,15 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Add)
             {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (true)
+                //if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto sum_pd = mkldnn_emitter->get_elementwise_add_desc(node);
+                    QUERY_SCRATCHPAD_SUM(sum_pd)
+
                     // Add needs 4 primitives: input0, input1, result, and sum.
                     size_t add_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(add_index);

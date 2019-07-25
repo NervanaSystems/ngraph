@@ -1910,14 +1910,6 @@ namespace ngraph
                     if ((shape_size(input_shape)) == 1)
                         return false;
 
-#if 1
-                    // TODO support blocked md
-                    if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(md))
-                    {
-                        return false;
-                    }
-#endif
-
                     for (size_t i = 0; i < output_shape.size(); i++)
                     {
                         if (input_shape[axis_order[i]] != output_shape[i])
@@ -2017,28 +2009,22 @@ namespace ngraph
                         //if (false)
                         if (can_be_rotated(reshape, input_md))
                         {
-                            std::cout << "rotate\n";
                             auto output_md = mkldnn_utils::rotate_blocked_md(
                                 input_md, reshape->get_input_order());
                             set_output_layouts(node, {output_md});
                             skip_reshape = true;
                             skip_input_reorder = true;
                         }
-#if 1
                         else if (can_be_squeezed(reshape, input_md, squeezed_axis))
                         {
-                            std::cout << "squeeze\n";
                             auto output_md =
                                 mkldnn_utils::squeeze_blocked_md(input_md, squeezed_axis);
                             set_output_layouts(node, {output_md});
                             skip_reshape = true;
                             skip_input_reorder = true;
                         }
-#endif
-#if 1
                         else if (can_be_expanded(reshape, input_md, expanded_axis))
                         {
-                            std::cout << "expand\n";
                             auto output_md =
                                 mkldnn_utils::expand_blocked_md(input_md, expanded_axis);
                             set_output_layouts(node, {output_md});
@@ -2050,7 +2036,6 @@ namespace ngraph
                             if (!reshape->get_is_transpose())
                                 skip_reshape = true;
                         }
-#endif
                     }
                     else
                     {

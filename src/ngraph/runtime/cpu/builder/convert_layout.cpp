@@ -132,6 +132,10 @@ namespace ngraph
                         mkldnn::memory::format_tag::goihw);
                 }
 #endif
+
+#if defined(NGRAPH_USE_MKLDNN_V1)
+                mkldnn_emitter->query_scratchpad_reorder(input_desc, result_desc);
+#endif
                 // ConvertLayout needs 3 primitives: input, result, and reorder.
                 size_t reorder_index = mkldnn_emitter->reserve_primitive_space(3);
                 auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);

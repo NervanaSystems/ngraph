@@ -210,8 +210,8 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         auto scratchpad_size = mkldnn_emitter->get_max_scratchpad_size();
         ctx->mkldnn_scratchpad_mds =
             std::vector<mkldnn::memory::desc*>(mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
+        std::cout << "max size is " << scratchpad_size << std::endl;
         ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);
-
         if (m_external_function->is_direct_execution())
         {
             ctx->mkldnn_primitives =

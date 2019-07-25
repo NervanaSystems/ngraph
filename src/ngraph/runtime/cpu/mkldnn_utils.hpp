@@ -49,6 +49,14 @@
 
 #define SET_ROUND_MODE attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
 
+#define QUERY_SCRATCHPAD_SUM(X)                                                                    \
+    {                                                                                              \
+    }
+
+#define QUERY_SCRATCHPAD_CONCAT(X)                                                                 \
+    {                                                                                              \
+    }
+
 #else
 #define TENSOR_MAX_DIMS MKLDNN_MAX_NDIMS
 #define FORMAT format_tag
@@ -70,6 +78,19 @@
 #define SET_ROUND_MODE                                                                             \
     {                                                                                              \
     }
+
+#define QUERY_SCRATCHPAD_SUM(X) mkldnn_emitter->query_scratchpad_sum(X);
+
+#define QUERY_SCRATCHPAD_CONCAT(X) mkldnn_emitter->query_scratchpad_concat(X);
+
+#define ATTR_S                                                                                     \
+    mkldnn::primitive_attr attr;                                                                   \
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+
+#define GET_SIZE                                                                                   \
+    mkldnn::memory::desc scratchpad_md = pd.scratchpad_desc();                                     \
+    size_t size = scratchpad_md.get_size();                                                        \
+    m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;
 
 #endif
 

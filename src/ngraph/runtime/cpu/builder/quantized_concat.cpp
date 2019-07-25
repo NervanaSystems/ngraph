@@ -51,6 +51,8 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto concat_pd =
                         mkldnn_emitter->get_concat_desc<ngraph::op::QuantizedConcat>(node, nargs);
+                    QUERY_SCRATCHPAD_CONCAT(concat_pd)
+
                     std::vector<mkldnn::memory::desc> inputs_data_desc;
                     for (size_t i = 0; i < args.size(); i++)
                     {

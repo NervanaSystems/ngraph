@@ -43,6 +43,10 @@ namespace ngraph
                     auto qavg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_forward_desc<ngraph::op::QuantizedAvgPool>(
                             node, false);
+#if defined(NGRAPH_USE_MKLDNN_V1)
+                    mkldnn_emitter->query_scratchpad_pooling_forward(qavg_pool_desc);
+#endif
+
                     // QuantizedAvgPool needs 3 primitives: input, result, and pooling_forward.
                     size_t qavg_pool_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(qavg_pool_index);

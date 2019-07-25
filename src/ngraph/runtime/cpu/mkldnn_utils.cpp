@@ -1321,7 +1321,6 @@ memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_de
 memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& in,
                                                            const AxisVector& axis_order)
 {
-    std::cout << "rotate\n";
     mkldnn_memory_desc_t md;
     md.ndims = in.data.ndims;
     md.format_kind = mkldnn_blocked;

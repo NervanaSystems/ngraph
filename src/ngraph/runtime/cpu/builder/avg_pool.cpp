@@ -55,6 +55,10 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
                                                                                           false);
+#if defined(NGRAPH_USE_MKLDNN_V1)
+                    mkldnn_emitter->query_scratchpad_pooling_forward(avg_pool_desc);
+#endif
+
                     // AvgPool needs 3 primitives: input, result, and pooling_forward.
                     size_t avg_pool_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);
@@ -143,6 +147,11 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_backward_desc<ngraph::op::AvgPoolBackprop>(
                             node);
+#if defined(NGRAPH_USE_MKLDNN_V1)
+                    mkldnn_emitter->query_scratchpad_avg_pooling_backward(avg_pool_fwd_desc,
+                                                                          avg_pool_desc);
+#endif
+
                     // AvgPoolBackprop needs 3 primitives: input, result, and pooling_backward.
                     size_t avg_pool_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(avg_pool_index);

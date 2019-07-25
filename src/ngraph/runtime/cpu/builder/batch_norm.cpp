@@ -81,6 +81,10 @@ namespace ngraph
                     auto batchnorm_desc =
                         mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, true);
 
+#if defined(NGRAPH_USE_MKLDNN_V1)
+                    mkldnn_emitter->query_scratchpad_batchnorm_forward(batchnorm_desc, ops);
+#endif
+
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
                         weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
@@ -149,6 +153,10 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto batchnorm_desc =
                         mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, false);
+
+#if defined(NGRAPH_USE_MKLDNN_V1)
+                    mkldnn_emitter->query_scratchpad_batchnorm_forward(batchnorm_desc, ops);
+#endif
 
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
@@ -422,6 +430,7 @@ namespace ngraph
                     weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
                 auto dweights_desc = mkldnn_emitter->build_memory_descriptor(
                     weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
 
                 // batchnorm backward needs 8 primitives: weights, input, mean, variance,
                 // dinput, dweights, and batch_normalization_backward.
@@ -431,7 +440,11 @@ namespace ngraph
                 const ngraph::op::BatchNormTrainingBackprop* batchnorm =
                     static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
                 auto eps = batchnorm->get_eps_value();
-                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+
+#if defined(NGRAPH_USE_MKLDNN_V1)
+                mkldnn_emitter->query_scratchpad_batchnorm_backward(
+                    batchnorm_desc, input_desc, eps);
+#endif
 
                 auto functor = [&,
                                 batchnorm_desc,

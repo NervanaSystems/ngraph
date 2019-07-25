@@ -44,6 +44,10 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto leaky_relu_desc = mkldnn_emitter->get_leaky_relu_desc(node);
+#if defined(NGRAPH_USE_MKLDNN_V1)
+                    mkldnn_emitter->query_scratchpad_eltwise_forward(leaky_relu_desc);
+#endif
+
                     // CPULeakyRelu needs 3 primitives: input, result, and eltwise_forward.
                     auto leaky_relu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(leaky_relu_index);

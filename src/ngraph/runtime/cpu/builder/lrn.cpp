@@ -44,6 +44,10 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto lrn_desc = mkldnn_emitter->get_lrn_forward_desc(node);
+#if defined(NGRAPH_USE_MKLDNN_V1)
+                    mkldnn_emitter->query_scratchpad_lrn_forward(lrn_desc);
+#endif
+
                     // LRN needs 3 primitives: input, result, and lrn_forward.
                     auto lrn_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(lrn_index);
