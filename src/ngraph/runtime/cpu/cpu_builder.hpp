@@ -268,25 +268,9 @@
     {                                                                                              \
         KV = K<float, R1, R2, R3>;                                                                 \
     }                                                                                              \
-    else if (ET == element::f64)                                                                   \
-    {                                                                                              \
-        KV = K<double, R1, R2, R3>;                                                                \
-    }                                                                                              \
-    else if (ET == element::i32)                                                                   \
-    {                                                                                              \
-        KV = K<int32_t, R1, R2, R3>;                                                               \
-    }                                                                                              \
-    else if (ET == element::u32)                                                                   \
-    {                                                                                              \
-        KV = K<uint32_t, R1, R2, R3>;                                                              \
-    }                                                                                              \
     else if (ET == element::i64)                                                                   \
     {                                                                                              \
         KV = K<int64_t, R1, R2, R3>;                                                               \
-    }                                                                                              \
-    else if (ET == element::u64)                                                                   \
-    {                                                                                              \
-        KV = K<uint64_t, R1, R2, R3>;                                                              \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \
