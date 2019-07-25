@@ -202,18 +202,18 @@ namespace mlir
             return new (storage) NGTensorTypeStorage(eltType, shape);
         }
 
-        Shape getShape() const { return mShape; }
-        EltType getElementType() const { return mEltType; }
+        Shape getShape() const { return shape; }
+        EltType getElementType() const { return eltType; }
     private:
         NGTensorTypeStorage(EltType eltType, Shape shape)
-            : mEltType(eltType)
-            , mShape(shape)
+            : eltType(eltType)
+            , shape(shape)
         {
         }
 
     private:
-        EltType mEltType;
-        Shape mShape;
+        EltType eltType;
+        Shape shape;
     };
 
     /// NGraph Tensor Type

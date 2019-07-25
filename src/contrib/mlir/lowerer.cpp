@@ -54,12 +54,12 @@ namespace
     public:
         NGraphOpLowering(StringRef rootOpName, MLIRContext* context, DialectLoweringPass& pass)
             : ConversionPattern(rootOpName, /*benefit=*/1, context)
-            , mPass(pass){};
+            , pass(pass){};
 
     protected:
         // Back-reference to the lowering pass which contains the lowering state, including the
         // nGraph type converter.
-        DialectLoweringPass& mPass;
+        DialectLoweringPass& pass;
     };
 
 // Conversion classes declarations
@@ -84,13 +84,13 @@ namespace
     void lowerIndexReduction(Operation* op,
                              ArrayRef<Value*> operands,
                              PatternRewriter& rewriter,
-                             DialectLoweringPass& mPass);
+                             DialectLoweringPass& pass);
 
     template <typename OP>
     void lower_binary_elementwise(Operation* op,
                                   ArrayRef<Value*> operands,
                                   PatternRewriter& rewriter,
-                                  DialectLoweringPass& mPass);
+                                  DialectLoweringPass& pass);
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
@@ -109,7 +109,7 @@ namespace
     {
     public:
         DialectLoweringPass(ngmlir::MLIRCompiler& compiler)
-            : mCompiler(compiler)
+            : compiler(compiler)
         {
         }
 
@@ -132,13 +132,13 @@ namespace
         Value* insertMemMgrDef(PatternRewriter* rewriter = nullptr);
 
     private:
-        NGraphTypeConverter mTypeConverter;
+        NGraphTypeConverter typeConverter;
         // Value holding mem manager passed pointer
-        SmallVector<Value*, 4> mMemMgrDefs;
+        SmallVector<Value*, 4> memMgrDefs;
 
         // list of results values to add to func signature
-        SmallVector<Value*, 4> mLoweredOutputValues;
-        ngmlir::MLIRCompiler& mCompiler;
+        SmallVector<Value*, 4> loweredOutputValues;
+        ngmlir::MLIRCompiler& compiler;
     };
 
     void DialectLoweringPass::runOnModule()
@@ -206,7 +206,7 @@ namespace
         // TODO: This resize is making debugging obscure. When the container is not populated due
         // to a bug, null pointers are used by the consumer leading to a crash more difficult to
         // root-cause. We should try to change the current approach or introduce verification code.
-        mLoweredOutputValues.resize(outputCount, nullptr);
+        loweredOutputValues.resize(outputCount, nullptr);
     }
 
     /// Inserts a fake def for Mem Mgr pointer at converted func start
@@ -220,7 +220,7 @@ namespace
         auto op = rewriter->create<NGFakeInputOp>(rewriter->getUnknownLoc(),
                                                   IndexType::get(&getContext()));
         // will be fixed later to read passed arg instead.
-        mMemMgrDefs.push_back(op.getResult());
+        memMgrDefs.push_back(op.getResult());
         return op.getResult();
     }
 
@@ -236,18 +236,18 @@ namespace
                 unsigned argId = (int)attr.getInt();
                 auto fakeOp = rewriter.create<NGFakeInputOp>(
                     op->getLoc(),
-                    mTypeConverter.convertType(origResult->getType()) /* convert to lowered type */
+                    typeConverter.convertType(origResult->getType()) /* convert to lowered type */
                     );
                 // Fake instrution is short-lived. Verify here.
                 fakeOp.verify();
                 auto newResult = fakeOp.getResult();
                 newResults.push_back(newResult);
-                mLoweredOutputValues[argId] = newResult;
+                loweredOutputValues[argId] = newResult;
             }
             else
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
-                auto newResult = createTempTensor(mTypeConverter.convertType(tensorType), rewriter);
+                auto newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
                 newResults.push_back(newResult);
             }
         }
@@ -304,7 +304,7 @@ namespace
 
         // RAUW fake outputs with result values
         unsigned i = 0;
-        for (auto value : mLoweredOutputValues)
+        for (auto value : loweredOutputValues)
         {
             auto op = value->getDefiningOp();
             NGRAPH_CHECK(isa<NGFakeInputOp>(op), "output value not defined by fake output?");
@@ -312,9 +312,9 @@ namespace
             op->erase();
             i++;
         }
-        for (auto v : mMemMgrDefs)
+        for (auto v : memMgrDefs)
         {
-            v->replaceAllUsesWith(entryBlock->getArgument(mCompiler.get_mem_mgr_arg_id(f)));
+            v->replaceAllUsesWith(entryBlock->getArgument(compiler.get_mem_mgr_arg_id(f)));
             v->getDefiningOp()->erase();
         }
     }
@@ -393,61 +393,61 @@ namespace
     // ADD
     REWRITER(NGAddOp)
     {
-        lower_binary_elementwise<mlir::NGAddOp>(op, operands, rewriter, mPass);
+        lower_binary_elementwise<mlir::NGAddOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGSubOp)
     {
-        lower_binary_elementwise<mlir::NGSubOp>(op, operands, rewriter, mPass);
+        lower_binary_elementwise<mlir::NGSubOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMulOp)
     {
-        lower_binary_elementwise<mlir::NGMulOp>(op, operands, rewriter, mPass);
+        lower_binary_elementwise<mlir::NGMulOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGDivOp)
     {
-        lower_binary_elementwise<mlir::NGDivOp>(op, operands, rewriter, mPass);
+        lower_binary_elementwise<mlir::NGDivOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGGreaterOp)
     {
-        lower_binary_elementwise<mlir::NGGreaterOp>(op, operands, rewriter, mPass);
+        lower_binary_elementwise<mlir::NGGreaterOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGLessOp)
     {
-        lower_binary_elementwise<mlir::NGLessOp>(op, operands, rewriter, mPass);
+        lower_binary_elementwise<mlir::NGLessOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMaxOp)
     {
-        lower_binary_elementwise<mlir::NGMaxOp>(op, operands, rewriter, mPass);
+        lower_binary_elementwise<mlir::NGMaxOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMinOp)
     {
-        lower_binary_elementwise<mlir::NGMinOp>(op, operands, rewriter, mPass);
+        lower_binary_elementwise<mlir::NGMinOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGArgMaxRedOp)
     {
-        lowerIndexReduction<mlir::NGArgMaxRedOp>(op, operands, rewriter, mPass);
+        lowerIndexReduction<mlir::NGArgMaxRedOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGArgMinRedOp)
     {
-        lowerIndexReduction<mlir::NGArgMinRedOp>(op, operands, rewriter, mPass);
+        lowerIndexReduction<mlir::NGArgMinRedOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -456,7 +456,7 @@ namespace
     {
         auto loc = cast<NGReluOp>(op).getLoc();
 
-        auto result = mPass.buildOutputDefs(op, rewriter)[0];
+        auto result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result->getType().isa<MemRefType>());
         // Note that builder's current function is still the original function body.
         // use getBlock to get the new block instead.
@@ -515,7 +515,7 @@ namespace
         ScopedContext scope(rewriter, loc);
         Value* lhs = operands[0];
         Value* rhs = operands[1];
-        Value* result = mPass.buildOutputDefs(op, rewriter)[0];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in DotOp");
 
         auto resultTy = result->getType().dyn_cast<MemRefType>();
@@ -576,7 +576,7 @@ namespace
         ScopedContext scope(rewriter, loc);
 
         // Create Value for result, and extract type info.
-        Value* result = mPass.buildOutputDefs(op, rewriter)[0];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
 
         // Create view to write into result.
@@ -659,10 +659,10 @@ namespace
     void lower_binary_elementwise(Operation* op,
                                   ArrayRef<Value*> operands,
                                   PatternRewriter& rewriter,
-                                  DialectLoweringPass& mPass)
+                                  DialectLoweringPass& pass)
     {
         auto loc = cast<OP>(op).getLoc();
-        auto result = mPass.buildOutputDefs(op, rewriter)[0];
+        auto result = pass.buildOutputDefs(op, rewriter)[0];
         NGRAPH_CHECK(result->getType().isa<MemRefType>());
         // get new operands
         Value* lhs = operands[0];
@@ -734,7 +734,7 @@ namespace
     void lowerIndexReduction(Operation* op,
                              ArrayRef<Value*> operands,
                              PatternRewriter& rewriter,
-                             DialectLoweringPass& mPass)
+                             DialectLoweringPass& pass)
     {
         static_assert(std::is_same<RedOp, NGArgMinRedOp>() || std::is_same<RedOp, NGArgMaxRedOp>(),
                       "Template parameter is not supported by lowerIndexReduction");
@@ -754,7 +754,7 @@ namespace
         ScopedContext scope(rewriter, loc);
         Value* arg = operands[0];
 
-        Value* result = mPass.buildOutputDefs(op, rewriter)[0];
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
 
         // Views
         MemRefView vRes(result), vArg(arg);
