@@ -27,12 +27,12 @@
 using namespace ngraph;
 using namespace std;
 
-Output<Node> builder::reshape_value(const Output<Node>& value, const Shape& shape)
+shared_ptr<Node> builder::reshape(const Output<Node>& value, const Shape& shape)
 {
     return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape);
 }
 
-Output<Node> builder::reorder_value_axes(const Output<Node>& value, vector<size_t> axes_order)
+shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
 {
     Shape out_shape = value.get_shape();
     if (axes_order.empty())
@@ -52,15 +52,15 @@ Output<Node> builder::reorder_value_axes(const Output<Node>& value, vector<size_
     return make_shared<op::Reshape>(value, axis_vector, out_shape);
 }
 
-Output<Node> builder::transpose_value(const Output<Node>& value)
+shared_ptr<Node> builder::transpose(const Output<Node>& value)
 {
     vector<size_t> axes_order(value.get_shape().size());
     iota(begin(axes_order), end(axes_order), 0);
     reverse(begin(axes_order), end(axes_order));
-    return builder::reorder_value_axes(value, axes_order);
+    return builder::reorder_axes(value, axes_order);
 }
 
-Output<Node> builder::flatten_value(const Output<Node>& value, int axis)
+shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
 {
     auto data_shape = value.get_shape();
 

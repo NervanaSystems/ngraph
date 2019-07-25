@@ -27,9 +27,12 @@ namespace ngraph
         class QuantizedDot : public Op
         {
         public:
-            QuantizedDot(const std::shared_ptr<Node>& data,
-                         const std::shared_ptr<Node>& weights,
-                         const std::shared_ptr<Node>& scale,
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            QuantizedDot(const Output<Node>& data,
+                         const Output<Node>& weights,
+                         const Output<Node>& scale,
                          bool requantize = true,
                          bool with_relu = false);
 

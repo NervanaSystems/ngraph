@@ -105,7 +105,7 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
 }
 
 static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
-    get_numpy_value_broadcast_shapes(const ngraph::OutputVector& values)
+    get_numpy_broadcast_shapes(const ngraph::OutputVector& values)
 {
     std::vector<ngraph::Shape> input_shapes;
 
@@ -131,15 +131,15 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
 ///
 /// \return     The broadcasted Node.
 ///
-static ngraph::Output<ngraph::Node>
-    broadcast_value_numpy_style(const ngraph::Output<ngraph::Node>& value,
-                                const ngraph::Shape& output_shape,
-                                const ngraph::Shape& source_shape)
+static std::shared_ptr<ngraph::Node>
+    broadcast_node_numpy_style(const ngraph::Output<ngraph::Node>& value,
+                               const ngraph::Shape& output_shape,
+                               const ngraph::Shape& source_shape)
 {
     // If node already has the required shape, return original node
     if (output_shape == value.get_shape())
     {
-        return value;
+        return value.as_node_shared_ptr();
     }
 
     if (source_shape.size() != output_shape.size())
@@ -172,19 +172,11 @@ static ngraph::Output<ngraph::Node>
     return std::make_shared<ngraph::op::Broadcast>(broadcasted_value, output_shape, broadcast_axes);
 }
 
-static std::shared_ptr<ngraph::Node>
-    broadcast_node_numpy_style(const std::shared_ptr<ngraph::Node>& node,
-                               const ngraph::Shape& output_shape,
-                               const ngraph::Shape& source_shape)
-{
-    return broadcast_value_numpy_style(node, output_shape, source_shape).get_node_shared_ptr();
-}
-
 namespace ngraph
 {
     namespace op
     {
-        OutputVector numpy_style_value_broadcast(const OutputVector& values)
+        OutputVector numpy_style_broadcast(const OutputVector& values)
         {
             if (values.size() <= 1)
             {
@@ -192,12 +184,12 @@ namespace ngraph
             }
 
             // find the output tensor's shape, then broadcast all inputs so that they are compatible
-            auto bcast_shapes = get_numpy_value_broadcast_shapes(values);
+            auto bcast_shapes = get_numpy_broadcast_shapes(values);
 
             OutputVector broadcasted_inputs;
             for (std::size_t i = 0; i < values.size(); ++i)
             {
-                broadcasted_inputs.push_back(broadcast_value_numpy_style(
+                broadcasted_inputs.push_back(broadcast_node_numpy_style(
                     values[i], bcast_shapes.first, bcast_shapes.second[i]));
             }
             return broadcasted_inputs;
@@ -222,11 +214,11 @@ namespace ngraph
             return broadcasted_inputs;
         }
 
-        Output<ngraph::Node> numpy_style_value_broadcast(const Output<ngraph::Node>& value,
-                                                         const Shape& shape)
+        std::shared_ptr<ngraph::Node> numpy_style_broadcast(const Output<ngraph::Node>& value,
+                                                            const Shape& shape)
         {
             auto bcast_shape = get_numpy_broadcast_shapes({value.get_shape(), shape});
-            return broadcast_value_numpy_style(value, bcast_shape.first, bcast_shape.second[0]);
+            return broadcast_node_numpy_style(value, bcast_shape.first, bcast_shape.second[0]);
         }
 
         NodeVector
@@ -297,8 +289,8 @@ namespace ngraph
                                     std::next(std::begin(right_shape), right_shape.size() - 2),
                                     std::end(right_shape));
 
-            return {broadcast_value_numpy_style(left, left_output_shape, left_full_shape),
-                    broadcast_value_numpy_style(right, right_output_shape, right_full_shape)};
+            return {broadcast_node_numpy_style(left, left_output_shape, left_full_shape),
+                    broadcast_node_numpy_style(right, right_output_shape, right_full_shape)};
         }
 
         NodeVector
@@ -362,10 +354,9 @@ namespace ngraph
             return {left, broadcast_right};
         }
 
-        OutputVector
-            legacy_style_value_broadcast_for_binary_operation(const Output<ngraph::Node>& left,
-                                                              const Output<ngraph::Node>& right,
-                                                              size_t start_match_axis)
+        OutputVector legacy_style_broadcast_for_binary_operation(const Output<ngraph::Node>& left,
+                                                                 const Output<ngraph::Node>& right,
+                                                                 size_t start_match_axis)
         {
             const auto& left_shape = left.get_shape();
             const auto& right_shape = right.get_shape();

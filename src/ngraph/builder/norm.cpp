@@ -34,10 +34,10 @@ namespace ngraph
     {
         namespace detail
         {
-            Output<Node> lp_norm_value(const Output<Node>& value,
-                                       size_t p_norm,
-                                       const AxisSet& reduction_axes,
-                                       float bias)
+            std::shared_ptr<Node> lp_norm(const Output<Node>& value,
+                                          size_t p_norm,
+                                          const AxisSet& reduction_axes,
+                                          float bias)
             {
                 // In general "entrywise" lp-norm for matrix `A` is defined as following double sum:
                 // ||A||_p = ||vec(A)||_p = [sum_{i=1}^m sum_{j=1}^n abs(a_{i,j})^p]^{1/p}
@@ -68,7 +68,7 @@ namespace ngraph
             }
         }
 
-        Output<Node> l0_norm_value(const Output<Node>& value, const AxisSet& reduction_axes)
+        std::shared_ptr<Node> l0_norm(const Output<Node>& value, const AxisSet& reduction_axes)
         {
             // L0 norm returns number of elements different from zero.
             shared_ptr<Node> zero_node{
@@ -83,8 +83,8 @@ namespace ngraph
             return make_shared<op::Sum>(non_zero_values, reduction_axes);
         }
 
-        Output<Node>
-            l1_norm_value(const Output<Node>& value, const AxisSet& reduction_axes, float bias)
+        std::shared_ptr<Node>
+            l1_norm(const Output<Node>& value, const AxisSet& reduction_axes, float bias)
         {
             shared_ptr<Node> values{
                 make_shared<op::Sum>(make_shared<op::Abs>(value), reduction_axes)};
@@ -97,8 +97,8 @@ namespace ngraph
             return values + bias_node;
         }
 
-        Output<Node>
-            l2_norm_value(const Output<Node>& value, const AxisSet& reduction_axes, float bias)
+        std::shared_ptr<Node>
+            l2_norm(const Output<Node>& value, const AxisSet& reduction_axes, float bias)
         {
             shared_ptr<Node> values{make_shared<op::Sum>(value * value, reduction_axes)};
 
@@ -110,30 +110,30 @@ namespace ngraph
             return {make_shared<op::Sqrt>(values + bias_node)};
         }
 
-        Output<Node> lp_norm_value(const Output<Node>& value,
-                                   const AxisSet& reduction_axes,
-                                   size_t p_norm,
-                                   float bias)
+        std::shared_ptr<Node> lp_norm_(const Output<Node>& value,
+                                       const AxisSet& reduction_axes,
+                                       size_t p_norm,
+                                       float bias)
         {
             // The number of non-zero elements
             if (p_norm == 0)
             {
-                return l0_norm_value(value, reduction_axes);
+                return l0_norm(value, reduction_axes);
             }
             //  sum of absolute values.
             else if (p_norm == 1)
             {
-                return l1_norm_value(value, reduction_axes, bias);
+                return l1_norm(value, reduction_axes, bias);
             }
             // sqrt of sum of squares - Euclidean norm
             else if (p_norm == 2)
             {
-                return l2_norm_value(value, reduction_axes, bias);
+                return l2_norm(value, reduction_axes, bias);
             }
             // generic case
             else
             {
-                return detail::lp_norm_value(value, p_norm, reduction_axes, bias);
+                return detail::lp_norm(value, p_norm, reduction_axes, bias);
             }
         }
 

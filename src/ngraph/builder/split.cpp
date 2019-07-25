@@ -45,27 +45,12 @@ namespace
     }
 }
 
-NodeVector builder::split(const std::shared_ptr<ngraph::Node>& node,
+NodeVector builder::split(const Output<ngraph::Node>& value,
                           const std::vector<size_t>& length_parts,
                           size_t axis)
 {
     size_t start_index{0};
     NodeVector outputs;
-    for (const auto& length_part : length_parts)
-    {
-        size_t end_index{start_index + length_part};
-        outputs.push_back(make_ng_slice(node, {axis}, {start_index}, {end_index}));
-        start_index = end_index;
-    }
-    return outputs;
-}
-
-OutputVector builder::split_value(const Output<ngraph::Node>& value,
-                                  const std::vector<size_t>& length_parts,
-                                  size_t axis)
-{
-    size_t start_index{0};
-    OutputVector outputs;
     for (const auto& length_part : length_parts)
     {
         size_t end_index{start_index + length_part};
@@ -75,20 +60,7 @@ OutputVector builder::split_value(const Output<ngraph::Node>& value,
     return outputs;
 }
 
-NodeVector builder::split(const std::shared_ptr<Node>& node, size_t split_parts, int axis)
-{
-    size_t axis_to_split{static_cast<size_t>(axis)};
-    if (axis < 0)
-    {
-        axis_to_split = node->get_shape().size() + axis;
-    }
-
-    size_t length_axis_to_split{node->get_shape().at(axis_to_split)};
-    std::vector<size_t> length_parts(split_parts, length_axis_to_split / split_parts);
-    return split(node, length_parts, axis_to_split);
-}
-
-OutputVector builder::split_value(const Output<Node>& value, size_t split_parts, int axis)
+NodeVector builder::split(const Output<Node>& value, size_t split_parts, int axis)
 {
     size_t axis_to_split{static_cast<size_t>(axis)};
     if (axis < 0)
@@ -98,5 +70,5 @@ OutputVector builder::split_value(const Output<Node>& value, size_t split_parts,
 
     size_t length_axis_to_split{value.get_shape().at(axis_to_split)};
     std::vector<size_t> length_parts(split_parts, length_axis_to_split / split_parts);
-    return split_value(value, length_parts, axis_to_split);
+    return split(value, length_parts, axis_to_split);
 }
