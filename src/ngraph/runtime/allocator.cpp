@@ -20,37 +20,27 @@ ngraph::runtime::Allocator::~Allocator()
 {
 }
 
-class ngraph::runtime::DefaultAllocator : public ngraph::runtime::Allocator
+void* ngraph::runtime::DefaultAllocator::malloc(size_t size, size_t alignment)
 {
-public:
-    void* malloc(size_t size, size_t alignment)
+    // If allocation succeeds, returns a pointer to the lowest (first) byte in the
+    // allocated memory block that is suitably aligned for any scalar type.
+    // TODO(pruthvi): replace std::malloc with custom aligned_alloc implementation
+    // which is portable and work on all alignment requirement.
+    void* ptr = std::malloc(size);
+
+    // check for exception
+    if (!ptr)
     {
-        // If allocation succeeds, returns a pointer to the lowest (first) byte in the
-        // allocated memory block that is suitably aligned for any scalar type.
-        // TODO(pruthvi): replace std::malloc with custom aligned_alloc implementation
-        // which is portable and work on all alignment requirement.
-        void* ptr = std::malloc(size);
-
-        // check for exception
-        if (!ptr)
-        {
-            throw ngraph::ngraph_error("malloc failed to allocate memory of size " +
-                                       std::to_string(size));
-        }
-        return ptr;
+        throw ngraph::ngraph_error("malloc failed to allocate memory of size " +
+                                    std::to_string(size));
     }
+    return ptr;
+}
 
-    void free(void* ptr)
-    {
-        if (ptr)
-        {
-            std::free(ptr);
-        }
-    }
-};
-
-ngraph::runtime::Allocator* ngraph::runtime::get_default_allocator()
+void ngraph::runtime::DefaultAllocator::free(void* ptr)
 {
-    static std::unique_ptr<DefaultAllocator> allocator(new DefaultAllocator());
-    return allocator.get();
+    if (ptr)
+    {
+        std::free(ptr);
+    }
 }
