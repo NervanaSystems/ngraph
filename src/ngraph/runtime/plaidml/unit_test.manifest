@@ -230,8 +230,15 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
+
+# Need erf
 gelu_f32
 gelu_f64
+gelu_backprop_factor_f32
+gelu_backprop_factor_f64
+backwards_gelu_f32
+backwards_gelu_f64
+
 # From onnx tests
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d
