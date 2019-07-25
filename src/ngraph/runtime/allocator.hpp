@@ -28,9 +28,6 @@ namespace ngraph
     {
         class Allocator;
         class DefaultAllocator;
-        /// \brief Create a default allocator that calls into system
-        ///        allocation libraries
-        ngraph::runtime::Allocator* get_default_allocator();
     }
 }
 
@@ -47,4 +44,11 @@ public:
     /// \brief deallocates the memory pointed by ptr
     /// \param ptr pointer to the aligned memory to be released
     virtual void free(void* ptr) = 0;
+};
+
+class ngraph::runtime::DefaultAllocator : public ngraph::runtime::Allocator
+{
+public:
+    void* malloc(size_t size, size_t alignment) override;
+    void free(void* ptr) override;
 };

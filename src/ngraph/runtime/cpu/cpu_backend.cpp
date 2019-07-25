@@ -185,7 +185,7 @@ runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
 {
     if (!m_allocator)
     {
-        return runtime::get_default_allocator();
+        return &m_default_allocator;
     }
     return m_allocator.get();
 }
