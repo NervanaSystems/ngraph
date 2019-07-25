@@ -73,10 +73,10 @@ namespace ngraph
         ///
         /// \return     L-p norm of value.
         ///
-        std::shared_ptr<Node> lp_norm_(const Output<Node>& value,
-                                       const AxisSet& reduction_axes,
-                                       std::size_t p_norm = 2,
-                                       float bias = 0.f);
+        std::shared_ptr<Node> lp_norm(const Output<Node>& value,
+                                      const AxisSet& reduction_axes,
+                                      std::size_t p_norm = 2,
+                                      float bias = 0.f);
     } // namespace builder
 
 } // namespace ngraph

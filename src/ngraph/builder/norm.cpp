@@ -110,10 +110,10 @@ namespace ngraph
             return {make_shared<op::Sqrt>(values + bias_node)};
         }
 
-        std::shared_ptr<Node> lp_norm_(const Output<Node>& value,
-                                       const AxisSet& reduction_axes,
-                                       size_t p_norm,
-                                       float bias)
+        std::shared_ptr<Node> lp_norm(const Output<Node>& value,
+                                      const AxisSet& reduction_axes,
+                                      size_t p_norm,
+                                      float bias)
         {
             // The number of non-zero elements
             if (p_norm == 0)
