@@ -268,3 +268,33 @@ TEST(dyn_elimination, range_f64)
     ASSERT_TRUE(test::all_close_f(
         vals, vector<double>{-0.5, -0.25, 0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75}));
 }
+
+TEST(dyn_elimination, pad)
+{
+    auto param_arg = make_shared<op::Parameter>(element::f32, Shape{1, 2});
+    auto constant_below = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{2, 3});
+    auto constant_above = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, -1});
+    auto param_value = make_shared<op::Parameter>(element::f32, Shape{});
+
+    auto dyn_pad = make_shared<op::DynPad>(
+        param_arg, constant_below, constant_above, param_value, op::PadMode::CONSTANT);
+
+    auto f = make_shared<Function>(dyn_pad, ParameterVector{param_arg, param_value});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::DynElimination>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::DynPad>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Pad>(f), 1);
+
+    auto replacement = dynamic_pointer_cast<op::Pad>(f->get_results().at(0)->get_argument(0));
+
+    ASSERT_NE(replacement, nullptr);
+    ASSERT_EQ(replacement->get_element_type(), element::f32);
+    ASSERT_EQ(replacement->get_shape(), (Shape{4, 4}));
+    ASSERT_EQ(replacement->get_padding_below(), (CoordinateDiff{2, 3}));
+    ASSERT_EQ(replacement->get_padding_above(), (CoordinateDiff{1, -1}));
+    ASSERT_EQ(replacement->get_pad_mode(), op::PadMode::CONSTANT);
+}

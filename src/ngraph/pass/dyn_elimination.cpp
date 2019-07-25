@@ -19,15 +19,18 @@
 #include "dyn_elimination.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_pad.hpp"
 #include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/pad.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 
@@ -43,6 +46,7 @@ pass::DynElimination::DynElimination()
     construct_dyn_slice();
     construct_dyn_reshape();
     construct_range();
+    construct_dyn_pad();
 }
 
 void pass::DynElimination::construct_transpose()
@@ -712,4 +716,40 @@ void pass::DynElimination::construct_range()
 
     auto range_matcher = make_shared<pattern::Matcher>(range_pat, "DynElimination.Range");
     add_matcher(range_matcher, range_callback, all_pass_property_off);
+}
+
+void pass::DynElimination::construct_dyn_pad()
+{
+    auto arg_label = make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 3});
+    auto pad_below_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
+    auto pad_above_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
+    auto pad_value_label = make_shared<pattern::op::Label>(element::f32, Shape{});
+
+    auto dyn_pad = make_shared<op::DynPad>(
+        arg_label, pad_below_label, pad_above_label, pad_value_label, op::PadMode::CONSTANT);
+
+    auto dyn_pad_callback =
+        [arg_label, pad_below_label, pad_above_label, pad_value_label](pattern::Matcher& m) {
+            auto pattern_map = m.get_pattern_map();
+
+            auto arg = pattern_map[arg_label];
+            auto pad_below = static_pointer_cast<op::Constant>(pattern_map[pad_below_label]);
+            auto pad_above = static_pointer_cast<op::Constant>(pattern_map[pad_above_label]);
+            auto pad_value = pattern_map[pad_value_label];
+            auto dyn_pad_node = static_pointer_cast<op::DynPad>(m.get_match_root());
+
+            auto pad_below_val = pad_below->get_coordinate_diff_val();
+            auto pad_above_val = pad_above->get_coordinate_diff_val();
+
+            auto replacement = std::make_shared<op::Pad>(
+                arg, pad_value, pad_below_val, pad_above_val, dyn_pad_node->get_pad_mode());
+
+            replace_node(dyn_pad_node, replacement);
+            return true;
+        };
+
+    auto dyn_pad_matcher = make_shared<pattern::Matcher>(dyn_pad, "DynElimination.DynPad");
+    add_matcher(dyn_pad_matcher, dyn_pad_callback, all_pass_property_off);
 }

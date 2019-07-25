@@ -225,11 +225,7 @@ CoordinateDiff op::Constant::get_coordinate_diff_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
     std::vector<int64_t> out_coordinate_diff = get_vector<int64_t>();
-    CoordinateDiff output_coordinate_diff(shape_size(m_shape));
-    std::transform(out_coordinate_diff.begin(),
-                   out_coordinate_diff.end(),
-                   output_coordinate_diff.begin(),
-                   [&](const int64_t& v) { return (v > 0) ? v : 0; });
+    CoordinateDiff output_coordinate_diff(out_coordinate_diff.begin(), out_coordinate_diff.end());
     return output_coordinate_diff;
 }
 
