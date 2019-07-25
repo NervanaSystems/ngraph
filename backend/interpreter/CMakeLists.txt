@@ -20,6 +20,7 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
         VERSION ${NGRAPH_VERSION}
         SOVERSION ${NGRAPH_API_VERSION})
 endif()
+target_include_directories(interpreter_backend PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(interpreter_backend PUBLIC ngraph)
 
 install(TARGETS interpreter_backend

@@ -23,10 +23,8 @@
 #include <string>
 #include <vector>
 
-#include "backend/generic_cpu/kernel/broadcast.hpp"
-#include "backend/generic_cpu/kernel/dot.hpp"
-#include "backend/generic_cpu/kernel/reshape.hpp"
-#include "backend/generic_cpu/node_wrapper.hpp"
+#include "node_wrapper.hpp"
+
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/any.hpp"
@@ -161,21 +159,21 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace gcpu
+        namespace interpreter
         {
-            class GCPUBackend;
-            class GCPUExecutable;
-        }
-    }
-}
+            class INTBackend;
+            class INTExecutable;
+        } // namespace interpreter
+    }     // namespace runtime
+} // namespace ngraph
 
-class ngraph::runtime::gcpu::GCPUExecutable : public Executable
+class ngraph::runtime::interpreter::INTExecutable : public Executable
 {
-    friend class GCPUBackend;
+    friend class INTBackend;
 
 public:
-    GCPUExecutable(const std::shared_ptr<Function>& function,
-                   bool enable_performance_collection = false);
+    INTExecutable(const std::shared_ptr<Function>& function,
+                  bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& intputs) override;
@@ -186,9 +184,21 @@ public:
 
     std::vector<PerformanceCounter> get_performance_data() const override;
 
-private:
-    GCPUExecutable(const std::string& model_string);
+    std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index) override;
 
+    std::shared_ptr<runtime::Tensor> create_output_tensor(size_t output_index) override;
+
+    std::vector<std::shared_ptr<runtime::Tensor>>
+        create_input_tensor(size_t input_index, size_t pipeline_depth) override;
+
+    std::vector<std::shared_ptr<runtime::Tensor>>
+        create_output_tensor(size_t output_index, size_t pipeline_depth) override;
+
+private:
+    INTExecutable(const std::string& model_string);
+
+    std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
+    std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
     int get_alignment() const { return 64; }
     bool m_is_compiled = false;
     bool m_nan_check_enabled = false;
@@ -399,12 +409,9 @@ private:
         }
         case OP_TYPEID::GetOutputElement:
         {
-            const op::GetOutputElement* get_output_element =
-                static_cast<const op::GetOutputElement*>(&node);
-            size_t n = get_output_element->get_n();
             size_t element_count = shape_size(node.get_output_shape(0));
             size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(out[0]->get_data_ptr<T>(), args[n]->get_data_ptr<T>(), num_bytes);
+            std::memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), num_bytes);
             break;
         }
         case OP_TYPEID::BatchMatMul:
@@ -483,11 +490,11 @@ private:
             Shape in_shape = node.get_input_shape(0);
             Shape out_shape = node.get_output_shape(0);
             AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            kernel::broadcast<T>(args[0]->get_data_ptr<const T>(),
-                                 out[0]->get_data_ptr<T>(),
-                                 in_shape,
-                                 out_shape,
-                                 broadcast_axes);
+            reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
+                                    out[0]->get_data_ptr<T>(),
+                                    in_shape,
+                                    out_shape,
+                                    broadcast_axes);
             break;
         }
         case OP_TYPEID::BroadcastDistributed:
@@ -736,13 +743,13 @@ private:
         {
             const op::Dot* dot = static_cast<const op::Dot*>(&node);
 
-            kernel::dot(args[0]->get_data_ptr<const T>(),
-                        args[1]->get_data_ptr<const T>(),
-                        out[0]->get_data_ptr<T>(),
-                        node.get_input_shape(0),
-                        node.get_input_shape(1),
-                        node.get_output_shape(0),
-                        dot->get_reduction_axes_count());
+            reference::dot(args[0]->get_data_ptr<const T>(),
+                           args[1]->get_data_ptr<const T>(),
+                           out[0]->get_data_ptr<T>(),
+                           node.get_input_shape(0),
+                           node.get_input_shape(1),
+                           node.get_output_shape(0),
+                           dot->get_reduction_axes_count());
             break;
         }
         case OP_TYPEID::DynReshape:
@@ -1342,11 +1349,11 @@ private:
         case OP_TYPEID::Reshape:
         {
             const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
-            kernel::reshape(args[0]->get_data_ptr<const T>(),
-                            out[0]->get_data_ptr<T>(),
-                            node.get_input_shape(0),
-                            reshape->get_input_order(),
-                            node.get_output_shape(0));
+            reference::reshape(args[0]->get_data_ptr<const T>(),
+                               out[0]->get_data_ptr<T>(),
+                               node.get_input_shape(0),
+                               reshape->get_input_order(),
+                               node.get_output_shape(0));
             break;
         }
         case OP_TYPEID::Result:

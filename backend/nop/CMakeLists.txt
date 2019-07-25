@@ -21,6 +21,7 @@ if (NGRAPH_NOP_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
+    target_include_directories(nop_backend PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(nop_backend PUBLIC ngraph)
 
     install(TARGETS nop_backend

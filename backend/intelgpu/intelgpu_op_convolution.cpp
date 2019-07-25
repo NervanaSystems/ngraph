@@ -14,9 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "backend/intelgpu/intelgpu_kernels.hpp"
-#include "backend/intelgpu/intelgpu_layout.hpp"
-#include "backend/intelgpu/intelgpu_op_custom_kernels.hpp"
+#include "intelgpu_kernels.hpp"
+#include "intelgpu_layout.hpp"
+#include "intelgpu_op_custom_kernels.hpp"
+
 #include "ngraph/code_writer.hpp"
 
 using namespace std;

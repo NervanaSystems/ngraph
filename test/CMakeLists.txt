@@ -316,9 +316,9 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
 
     # TODO: Remove this if-else when all backends are moved from
-    # `src/ngraph/runtime` to `src/backend`.
-    if(EXISTS ${PROJECT_SOURCE_DIR}/src/backend/${BACKEND_DIR}/unit_test.manifest)
-        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/backend/${BACKEND_DIR}/unit_test.manifest)
+    # `/src/ngraph/runtime` to `/backend`.
+    if(EXISTS ${PROJECT_SOURCE_DIR}/backend/${BACKEND_DIR}/unit_test.manifest)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/backend/${BACKEND_DIR}/unit_test.manifest)
     else()
         set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
     endif()
@@ -335,6 +335,11 @@ endforeach()
 add_executable(unit-test ${SRC})
 
 target_include_directories(unit-test PRIVATE ".")
+
+if (NGRAPH_INTERPRETER_ENABLE)
+    # TODO(amprocte): backend_debug_api.cpp wants this. See if we can break the dependency.
+    target_include_directories(unit-test PRIVATE ${PROJECT_SOURCE_DIR}/backend/interpreter)
+endif()
 
 add_definitions("-DCURDIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
 add_definitions("-DJSON_INCLUDES=\"${JSON_INCLUDE_DIR}\"")

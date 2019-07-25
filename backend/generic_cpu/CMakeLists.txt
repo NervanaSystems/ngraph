@@ -25,6 +25,7 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
+    target_include_directories(gcpu_backend PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(gcpu_backend PRIVATE ngraph libeigen)
 
     install(TARGETS gcpu_backend

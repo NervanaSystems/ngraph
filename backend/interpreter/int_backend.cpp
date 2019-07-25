@@ -14,8 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "backend/interpreter/int_backend.hpp"
-#include "backend/interpreter/int_executable.hpp"
+#include "int_backend.hpp"
+#include "int_executable.hpp"
+
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"

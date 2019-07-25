@@ -14,7 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "backend/generic_cpu/gcpu_executable.hpp"
+#include "int_executable.hpp"
+
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
@@ -30,6 +31,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -38,8 +40,8 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& function,
-                                              bool enable_performance_collection)
+runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
+                                                   bool enable_performance_collection)
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
@@ -59,7 +61,7 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& functi
     set_parameters_and_results(*m_function);
 }
 
-runtime::gcpu::GCPUExecutable::GCPUExecutable(const std::string& model_string)
+runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_string)
     : m_is_compiled{true}
     , m_performance_counters_enabled{false}
 {
@@ -71,9 +73,11 @@ runtime::gcpu::GCPUExecutable::GCPUExecutable(const std::string& model_string)
     set_parameters_and_results(*m_function);
 }
 
-bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                         const vector<shared_ptr<runtime::Tensor>>& inputs)
+bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    runtime::event::Duration d1("call", "Interpreter");
+
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
     for (auto tensor : inputs)
@@ -122,6 +126,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     for (const NodeWrapper& wrapped : m_wrapped_nodes)
     {
         auto op = wrapped.get_node();
+        runtime::event::Duration d2(op->description(), "Interpreter");
         auto type_id = wrapped.get_typeid();
         if (type_id == OP_TYPEID::Parameter)
         {
@@ -203,10 +208,10 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     return true;
 }
 
-void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
-                                                   const NodeWrapper& op,
-                                                   const vector<shared_ptr<HostTensor>>& out,
-                                                   const vector<shared_ptr<HostTensor>>& in)
+void runtime::interpreter::INTExecutable::generate_calls(const element::Type& type,
+                                                         const NodeWrapper& op,
+                                                         const vector<shared_ptr<HostTensor>>& out,
+                                                         const vector<shared_ptr<HostTensor>>& in)
 {
     stringstream ss;
     switch (type.get_type_enum())
@@ -231,12 +236,13 @@ void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
     }
 }
 
-void runtime::gcpu::GCPUExecutable::set_nan_check(bool enable)
+void runtime::interpreter::INTExecutable::set_nan_check(bool enable)
 {
     m_nan_check_enabled = enable;
 }
 
-vector<runtime::PerformanceCounter> runtime::gcpu::GCPUExecutable::get_performance_data() const
+vector<runtime::PerformanceCounter>
+    runtime::interpreter::INTExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
     for (const pair<shared_ptr<const Node>, stopwatch> p : m_timer_map)
@@ -246,8 +252,8 @@ vector<runtime::PerformanceCounter> runtime::gcpu::GCPUExecutable::get_performan
     return rc;
 }
 
-void runtime::gcpu::GCPUExecutable::perform_nan_check(const vector<shared_ptr<HostTensor>>& tensors,
-                                                      const Node* op)
+void runtime::interpreter::INTExecutable::perform_nan_check(
+    const vector<shared_ptr<HostTensor>>& tensors, const Node* op)
 {
     size_t arg_number = 1;
     for (const shared_ptr<HostTensor>& tensor : tensors)
@@ -295,11 +301,82 @@ void runtime::gcpu::GCPUExecutable::perform_nan_check(const vector<shared_ptr<Ho
     }
 }
 
-void runtime::gcpu::GCPUExecutable::save(ostream& out)
+void runtime::interpreter::INTExecutable::save(ostream& out)
 {
     cpio::Writer writer(out);
     string si = "INTERPRETER Save File 1.0";
     writer.write("save_info", si.data(), si.size());
     string model = serialize(m_function, 0);
     writer.write("model", model.data(), model.size());
+}
+
+shared_ptr<ngraph::op::Parameter>
+    runtime::interpreter::INTExecutable::get_parameter(size_t index) const
+{
+    const ParameterVector& parameters = get_parameters();
+    NGRAPH_CHECK(index < parameters.size(), "create_tensor for input out of bounds");
+    return parameters[index];
+}
+
+shared_ptr<ngraph::op::Result> runtime::interpreter::INTExecutable::get_result(size_t index) const
+{
+    const ResultVector& results = get_results();
+    NGRAPH_CHECK(index < results.size(), "create_tensor for input out of bounds");
+    return results[index];
+}
+shared_ptr<runtime::Tensor>
+    runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index)
+{
+    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    return make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
+}
+
+shared_ptr<runtime::Tensor>
+    runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index)
+{
+    shared_ptr<op::Result> result = get_result(output_index);
+    return make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
+}
+
+vector<shared_ptr<runtime::Tensor>>
+    runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index,
+                                                             size_t pipeline_depth)
+{
+    vector<shared_ptr<runtime::HostTensor>> tensors;
+    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        shared_ptr<runtime::HostTensor> tensor;
+        auto t =
+            make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
+        tensor = static_pointer_cast<runtime::HostTensor>(t);
+        tensors.push_back(tensor);
+    }
+    vector<shared_ptr<runtime::Tensor>> result_tensors;
+    for (const shared_ptr<runtime::HostTensor>& tensor : tensors)
+    {
+        result_tensors.push_back(tensor);
+    }
+    return result_tensors;
+}
+
+vector<shared_ptr<runtime::Tensor>>
+    runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index,
+                                                              size_t pipeline_depth)
+{
+    vector<shared_ptr<runtime::HostTensor>> tensors;
+    shared_ptr<op::Result> result = get_result(output_index);
+    for (size_t i = 0; i < pipeline_depth; i++)
+    {
+        shared_ptr<runtime::HostTensor> tensor;
+        auto t = make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
+        tensor = static_pointer_cast<runtime::HostTensor>(t);
+        tensors.push_back(tensor);
+    }
+    vector<shared_ptr<runtime::Tensor>> result_tensors;
+    for (const shared_ptr<runtime::HostTensor>& tensor : tensors)
+    {
+        result_tensors.push_back(tensor);
+    }
+    return result_tensors;
 }

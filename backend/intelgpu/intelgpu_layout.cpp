@@ -14,7 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "backend/intelgpu/intelgpu_layout.hpp"
+#include "intelgpu_layout.hpp"
+
 #include "ngraph/except.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"

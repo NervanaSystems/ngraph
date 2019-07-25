@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "backend/interpreter/node_wrapper.hpp"
+#include "node_wrapper.hpp"
 
 using namespace ngraph;
 using namespace std;

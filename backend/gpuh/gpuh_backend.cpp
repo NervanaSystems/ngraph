@@ -14,31 +14,33 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "backend/generic_cpu/node_wrapper.hpp"
+#include "gpuh_backend.hpp"
+
+#include "ngraph/graph_util.hpp"
+#include "ngraph/pass/manager.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::gcpu::NodeWrapper::NodeWrapper(const shared_ptr<const Node>& node)
-    : m_node{node}
+extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 {
-// This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
-// {"Abs", runtime::gcpu::OP_TYPEID::Abs},
-// {"Acos", runtime::gcpu::OP_TYPEID::Acos},
-// ...
-#define NGRAPH_OP(a, b) {#a, runtime::gcpu::OP_TYPEID::a},
-    static unordered_map<string, runtime::gcpu::OP_TYPEID> typeid_map{
-#include "ngraph/op/op_tbl.hpp"
+    class LocalBackendConstructor : public runtime::BackendConstructor
+    {
+    public:
+        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+        {
+            return std::make_shared<runtime::gpuh::GPUHBackend>();
+        }
     };
-#undef NGRAPH_OP
 
-    auto it = typeid_map.find(m_node->description());
-    if (it != typeid_map.end())
-    {
-        m_typeid = it->second;
-    }
-    else
-    {
-        throw unsupported_op("Unsupported op '" + m_node->description() + "'");
-    }
+    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
+        new LocalBackendConstructor());
+    return s_backend_constructor.get();
+}
+
+runtime::gpuh::GPUHBackend::GPUHBackend()
+    : HybridBackend({runtime::Backend::create("GPU"), runtime::Backend::create("INTERPRETER")})
+{
 }

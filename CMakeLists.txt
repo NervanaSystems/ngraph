@@ -565,6 +565,8 @@ endif()
 
 add_subdirectory(src)
 
+add_subdirectory(backend)
+
 add_subdirectory(test)
 
 if (NGRAPH_DOC_BUILD_ENABLE)
