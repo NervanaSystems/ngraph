@@ -1,4 +1,4 @@
-.. Copyright 2017-2019 Intel Corporation
+.. Copyright 2018-2019 Intel Corporation
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
@@ -12,10 +12,12 @@
 .. limitations under the License.
 .. ---------------------------------------------------------------------------
 
-######################
-nGraph Compiler stack 
-######################
 
+.. This documentation is available online at
+.. https://ngraph.ai/documentation
+
+nGraph Compiler stack
+#####################
 
 .. _ngraph_home:
 
@@ -41,19 +43,39 @@ packages, scripts, and other files that use licensing.
 .. _Apache 2.0 license: https://github.com/NervanaSystems/ngraph/blob/master/LICENSE
 .. _repo: https://github.com/NervanaSystems/ngraph
 
+.. _intro:
+
+Introduction
+============
 
 .. toctree::
    :maxdepth: 1
-   :caption: Getting Started
-   
-   frameworks/index.rst
-   frameworks/validated/list.rst
+   :glob:
+
+   introduction.rst
+   buildlb.rst
+
+.. _framework_support:
+
+Framework Support
+=================
+
+.. toctree::
+   :maxdepth: 1
+
+   frameworks/overview.rst
+   frameworks/tensorflow.rst
+   frameworks/onnx.rst
+   frameworks/paddlepaddle.rst
    frameworks/generic-configs.rst
 
+.. _ngraph_core:
+
+nGraph Core
+===========
 
 .. toctree::
    :maxdepth: 1
-   :caption: nGraph Core
 
    buildlb.rst
    core/overview.rst
@@ -62,45 +84,59 @@ packages, scripts, and other files that use licensing.
    core/constructing-graphs/index.rst
    core/passes/passes.rst
 
-   
-.. toctree::
-   :maxdepth: 1
-   :caption: nGraph Python API
 
-   python_api/index.rst
+.. _backend_support:
 
-   
-.. toctree::
-   :maxdepth: 1
-   :caption: Backend Developers
-
-   backends/index.rst
-   backends/cpp-api.rst
-
+Backend Support
+===============
 
 .. toctree::
    :maxdepth: 1
-   :caption: Inspecting Graphs
+
+   backends/overview.rst
+   backends/plaidml.rst
+
+
+.. _distributed:
+
+Distributed Training
+====================
+
+.. toctree::
+   :maxdepth: 1
+
+   distributed/overview.rst
+
+
+.. _validated_workloads:
+
+Validated Workloads
+===================
+
+.. toctree::
+   :maxdepth: 1
+
+   frameworks/validated/list.rst
+
+
+Visualization Tools
+===================
+
+.. toctree::
+   :maxdepth: 1
 
    inspection/index.rst
 
 
+.. _contribution_guide:
+
+Contribution
+============
+
 .. toctree::
    :maxdepth: 1
-   :caption: Project Metadata
 
-   project/release-notes.rst
-   project/introduction.rst
-   project/contribution-guide.rst
-   project/doc-contributor-README.rst
-   project/index.rst
-   project/extras/index.rst 
-   glossary.rst
+   contribution/guide.rst
 
-.. only:: html
-
-Indices and tables
-==================
-
-   * :ref:`search`
-   * :ref:`genindex`
+.. nGraph: https://www.ngraph.ai
+.. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/
