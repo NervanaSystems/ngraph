@@ -30,6 +30,9 @@ namespace ngraph
         class Quantize : public ngraph::op::Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             enum class RoundMode
             {
                 // round to nearest integer
@@ -82,9 +85,9 @@ namespace ngraph
             /// \param type output element type
             /// \param axes axis positions on which `scale` and `zero_point` are specified
             /// \param round_mode describes how to perform ROUND function (see above)
-            Quantize(const std::shared_ptr<Node>& input,
-                     const std::shared_ptr<Node>& scale,
-                     const std::shared_ptr<Node>& zero_point,
+            Quantize(const Output<Node>& input,
+                     const Output<Node>& scale,
+                     const Output<Node>& zero_point,
                      const ngraph::element::Type& type,
                      const ngraph::AxisSet& axes,
                      RoundMode round_mode);
