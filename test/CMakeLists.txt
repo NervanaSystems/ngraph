@@ -24,6 +24,8 @@ endif()
 
 message(STATUS "unit tests enabled")
 
+add_subdirectory(backend_test)
+
 if(LINUX)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 endif()
