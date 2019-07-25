@@ -41,8 +41,21 @@ void ngraph::Event::write_trace(const ngraph::Event& event)
         static bool so_initialized = false;
         if (!so_initialized)
         {
-            // Open the file
-            s_event_log.open("ngraph_event_trace.json", ios_base::trunc);
+            std::string new_path = "ngraph_event_trace.json";
+            //for now, we create one file for each process in a multichip run
+            int size=1;
+            if (getenv("OMPI_COMM_WORLD_SIZE") != NULL)
+                size = atoi(getenv("OMPI_COMM_WORLD_SIZE"));
+            if (size>1 && getenv("OMPI_COMM_WORLD_RANK") != NULL)
+	    {
+                new_path.insert(0, getenv("OMPI_COMM_WORLD_RANK"));
+                s_event_log.open(new_path, ios_base::trunc);
+	    }
+	    else
+	    {
+		// Open the file
+		s_event_log.open("ngraph_event_trace.json", ios_base::trunc);
+	    }
             s_event_log << "[\n";
             so_initialized = true;
         }
