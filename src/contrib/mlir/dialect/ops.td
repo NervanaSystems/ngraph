@@ -186,8 +186,8 @@ def NGDotOp : NG_Binary_Op<"dot">
 // class, but I'm not sure how to add concatenation_axis into the args if we
 // do that.
 def NGConcatOp :
-      NG_OneResult_Op<"concat", [NoSideEffect]>,
-      Arguments<(ins Variadic<NG_TensorType>:$args, I64Attr:$concatenation_axis)>
+    NG_OneResult_Op<"concat", [NoSideEffect]>,
+    Arguments<(ins Variadic<NG_TensorType>:$args, I64Attr:$concatenation_axis)>
 {
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
@@ -200,7 +200,7 @@ class NG_Axis_Reduction_Op<string mnemonic, list<OpTrait> traits = []> :
 {
   let summary = "Base class for reduction operations that perform a reduction "
                 "across the axes of a  single tensor.";
-  let description = "Axes are represented as an array of I64 attributes.";
+  let description = [{Axes are represented as an array of I64 attributes.}];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
@@ -255,6 +255,24 @@ def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red">
 {
   let summary = "Axis logical OR reduction of a boolean tensor.";
   let verifier = [{ return verifyLogicalReductionOp(this); }];
+}
+
+// Gather
+def NGGatherOp : 
+    NG_OneResult_Op<"gather", [NoSideEffect]>,
+    Arguments<(ins NG_TensorType:$params, NG_TensorType:$indices, I64Attr:$axis)>
+{
+  let summary = "Gather slices from params along the specified axis according to indices";
+  let description = [{
+    Gather slices from axis of params according to indices
+    params The tensor from which slices are gathered
+    indices Index tensor. Data type must be `element::i32` or `element::i64`
+    axis Axis in params to gather
+  }];
+
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+
+  let verifier = [{ return verifyOp(this); }];
 }
 
 // Terminator Ops

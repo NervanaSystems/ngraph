@@ -99,8 +99,8 @@ Once the graph is built, we need to package it in a ``Function``:
    :lines: 35-36
 
 The first argument to the constuctor specifies the nodes that the function will 
-return; in this case, the product. A ``NodeVector`` is a vector of shared 
-pointers of ``op::Node``.  The second argument specifies the parameters of the 
+return; in this case, the product. An ``OutputVector`` is a vector of references to 
+outputs of ``op::Node``.  The second argument specifies the parameters of the 
 function, in the order they are to be passed to the compiled function. A 
 ``ParameterVector`` is a vector of shared pointers to ``op::Parameter``. 
 
