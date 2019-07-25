@@ -19,7 +19,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/gpu/gpu_backend.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 using namespace ngraph;
@@ -43,6 +42,6 @@ extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 
 runtime::gpuh::GPUHBackend::GPUHBackend()
     : HybridBackend({make_shared<ngraph::runtime::gpu::GPU_Backend>(),
-                     make_shared<ngraph::runtime::interpreter::INTBackend>()})
+                     runtime::Backend::create("INTERPRETER")})
 {
 }

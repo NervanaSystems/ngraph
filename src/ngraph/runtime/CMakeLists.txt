@@ -29,16 +29,8 @@ if (NGRAPH_GPU_ENABLE)
     add_subdirectory(gpu)
 endif()
 
-if (NGRAPH_NOP_ENABLE)
-    add_subdirectory(nop)
-endif()
-
 if (NGRAPH_GPUH_ENABLE)
     add_subdirectory(gpuh)
-endif()
-
-if (NGRAPH_GENERIC_CPU_ENABLE)
-    add_subdirectory(generic_cpu)
 endif()
 
 if (NGRAPH_PLAIDML_ENABLE)

@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/nop/nop_backend.hpp"
+#include "backend/nop/nop_backend.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/op/convert.hpp"

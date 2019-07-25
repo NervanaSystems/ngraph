@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/generic_cpu/gcpu_backend.hpp"
+#include "backend/generic_cpu/gcpu_backend.hpp"
+#include "backend/generic_cpu/gcpu_executable.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/generic_cpu/gcpu_executable.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
 

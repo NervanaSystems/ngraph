@@ -23,6 +23,10 @@
 #include <string>
 #include <vector>
 
+#include "backend/generic_cpu/kernel/broadcast.hpp"
+#include "backend/generic_cpu/kernel/dot.hpp"
+#include "backend/generic_cpu/kernel/reshape.hpp"
+#include "backend/generic_cpu/node_wrapper.hpp"
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
 #include "ngraph/op/any.hpp"
@@ -69,10 +73,6 @@
 #include "ngraph/op/topk.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/generic_cpu/kernel/broadcast.hpp"
-#include "ngraph/runtime/generic_cpu/kernel/dot.hpp"
-#include "ngraph/runtime/generic_cpu/kernel/reshape.hpp"
-#include "ngraph/runtime/generic_cpu/node_wrapper.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"

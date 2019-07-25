@@ -314,7 +314,14 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     endif()
 
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
-    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+
+    # TODO: Remove this if-else when all backends are moved from
+    # `src/ngraph/runtime` to `src/backend`.
+    if(EXISTS ${PROJECT_SOURCE_DIR}/src/backend/${BACKEND_DIR}/unit_test.manifest)
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/backend/${BACKEND_DIR}/unit_test.manifest)
+    else()
+        set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    endif()
 
     foreach(TEST_SRC ${MULTI_TEST_SRC})
         string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
