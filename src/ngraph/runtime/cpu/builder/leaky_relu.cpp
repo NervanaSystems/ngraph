@@ -58,6 +58,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_leaky_relu(ctx->mkldnn_memories,
                                                              ctx->mkldnn_primitives,
+                                                             ctx->mkldnn_scratchpad_mds,
                                                              leaky_relu_desc,
                                                              deps,
                                                              leaky_relu_index);

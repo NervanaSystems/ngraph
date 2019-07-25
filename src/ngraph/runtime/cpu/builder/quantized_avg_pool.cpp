@@ -54,6 +54,7 @@ namespace ngraph
                             {
                                 mkldnn_emitter->build_pooling_forward(ctx->mkldnn_memories,
                                                                       ctx->mkldnn_primitives,
+                                                                      ctx->mkldnn_scratchpad_mds,
                                                                       qavg_pool_desc,
                                                                       deps,
                                                                       qavg_pool_index);

@@ -400,8 +400,8 @@ namespace ngraph
                                   "*cg_ctx->mkldnn_descriptors["
                                << desc_index << "], " << eps
                                << ", "
-                                  "mkldnn::batch_normalization_flag::use_scale_shift | "
-                                  "mkldnn::batch_normalization_flag::use_global_stats);\n";
+                                  "mkldnn::normalization_flags::use_scale_shift | "
+                                  "mkldnn::normalization_flags::use_global_stats);\n";
 
                         writer << "auto batchnorm_prim_desc = "
                                   "mkldnn::batch_normalization_forward::primitive_desc(batchnorm_"
@@ -430,7 +430,7 @@ namespace ngraph
                                   "*cg_ctx->mkldnn_descriptors["
                                << desc_index << "], " << eps
                                << ", "
-                                  "mkldnn::batch_normalization_flag::use_scale_shift);\n";
+                                  "mkldnn::normalization_flags::use_scale_shift);\n";
 
                         writer << "auto batchnorm_prim_desc = "
                                   "mkldnn::batch_normalization_forward::primitive_desc(batchnorm_"

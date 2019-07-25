@@ -54,6 +54,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_lrn_forward(ctx->mkldnn_memories,
                                                               ctx->mkldnn_primitives,
+                                                              ctx->mkldnn_scratchpad_mds,
                                                               lrn_desc,
                                                               deps,
                                                               lrn_index);

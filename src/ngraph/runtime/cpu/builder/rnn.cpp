@@ -80,6 +80,7 @@ namespace ngraph
                     {
                         mkldnn_emitter->build_rnn_forward(ctx->mkldnn_memories,
                                                           ctx->mkldnn_primitives,
+                                                          ctx->mkldnn_scratchpad_mds,
                                                           ctx->mkldnn_workspaces,
                                                           rnn_desc,
                                                           deps,
@@ -125,6 +126,7 @@ namespace ngraph
                     {
                         mkldnn_emitter->build_vanilla_rnn_forward(ctx->mkldnn_memories,
                                                                   ctx->mkldnn_primitives,
+                                                                  ctx->mkldnn_scratchpad_mds,
                                                                   ctx->mkldnn_workspaces,
                                                                   rnn_desc,
                                                                   deps,

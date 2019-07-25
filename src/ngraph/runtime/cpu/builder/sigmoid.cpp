@@ -54,6 +54,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_sigmoid_forward(ctx->mkldnn_memories,
                                                                   ctx->mkldnn_primitives,
+                                                                  ctx->mkldnn_scratchpad_mds,
                                                                   sigmoid_desc,
                                                                   deps,
                                                                   sigmoid_index);
@@ -101,6 +102,7 @@ namespace ngraph
                     {
                         mkldnn_emitter->build_sigmoid_backward(ctx->mkldnn_memories,
                                                                ctx->mkldnn_primitives,
+                                                               ctx->mkldnn_scratchpad_mds,
                                                                bwd_desc,
                                                                fwd_desc,
                                                                deps,

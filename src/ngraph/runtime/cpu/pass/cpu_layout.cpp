@@ -1584,7 +1584,8 @@ namespace ngraph
 #else
                         auto fmt =
                             static_cast<mkldnn::memory::format_kind>(input_md.data.format_kind);
-                        if (fmt == mkldnn::memory::format_kind::blocked ||
+                        // blocked
+                        if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(input_md) ||
                             fmt == mkldnn::memory::format_kind::undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                         {
@@ -1594,9 +1595,27 @@ namespace ngraph
                         else
                         {
                             vector<memory::desc> o_mds;
-                            //o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
-                            //    node.get(), 0, true, static_cast<memory::format>(fmt)));
-                            o_mds.push_back(input_md);
+                            if (mkldnn_utils::mkldnn_md_matches_format_tag(
+                                    input_md.data, mkldnn::memory::format_tag::nchw) ||
+                                mkldnn_utils::mkldnn_md_matches_format_tag(
+                                    input_md.data, mkldnn::memory::format_tag::nChw8c) ||
+                                mkldnn_utils::mkldnn_md_matches_format_tag(
+                                    input_md.data, mkldnn::memory::format_tag::nChw16c))
+                            {
+                                o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
+                                    node.get(), 0, true, mkldnn::memory::format_tag::nhwc));
+                            }
+                            else
+                            {
+                                auto strides = input_md.data.format_desc.blocking.strides;
+                                memory::dims strides_arg;
+                                for (auto i = 0; i < input_md.data.ndims; i++)
+                                {
+                                    strides_arg.push_back(strides[i]);
+                                }
+                                o_mds.push_back(mkldnn_utils::create_default_mkldnn_md_with_strides(
+                                    node.get(), 0, strides_arg, true));
+                            }
                             set_output_layouts(node, o_mds);
                         }
 #endif
@@ -1637,7 +1656,7 @@ namespace ngraph
 #else
                         auto fmt =
                             static_cast<mkldnn::memory::format_kind>(input_md.data.format_kind);
-                        if (fmt == mkldnn::memory::format_kind::blocked ||
+                        if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(input_md) ||
                             fmt == mkldnn::memory::format_kind::undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                         {
@@ -1647,9 +1666,23 @@ namespace ngraph
                         else
                         {
                             vector<memory::desc> o_mds;
-                            //o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
-                            //    node.get(), 0, true, static_cast<memory::format>(fmt)));
-                            o_mds.push_back(input_md);
+                            if (mkldnn_utils::mkldnn_md_matches_format_tag(
+                                    input_md.data, mkldnn::memory::format_tag::nhwc))
+                            {
+                                o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
+                                    node.get(), 0, true, mkldnn::memory::format_tag::nchw));
+                            }
+                            else
+                            {
+                                auto strides = input_md.data.format_desc.blocking.strides;
+                                memory::dims strides_arg;
+                                for (auto i = 0; i < input_md.data.ndims; i++)
+                                {
+                                    strides_arg.push_back(strides[i]);
+                                }
+                                o_mds.push_back(mkldnn_utils::create_default_mkldnn_md_with_strides(
+                                    node.get(), 0, strides_arg, true));
+                            }
                             set_output_layouts(node, o_mds);
                         }
 #endif
@@ -1738,7 +1771,6 @@ namespace ngraph
                         static_cast<memory::format>(fprop_input_md.data.format);
                     auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, fprop_input_layout);
 #else
-                    //diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, fprop_input_layout);
                     auto strides = fprop_input_md.data.format_desc.blocking.strides;
                     memory::dims strides_arg;
                     for (auto i = 0; i < fprop_input_md.data.ndims; i++)
@@ -1878,6 +1910,14 @@ namespace ngraph
                     if ((shape_size(input_shape)) == 1)
                         return false;
 
+#if 1
+                    // TODO support blocked md
+                    if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(md))
+                    {
+                        return false;
+                    }
+#endif
+
                     for (size_t i = 0; i < output_shape.size(); i++)
                     {
                         if (input_shape[axis_order[i]] != output_shape[i])
@@ -1974,24 +2014,31 @@ namespace ngraph
                         // Case 2: Squeeze dims. Removes size-1 dimensions. Squeeze mkldnn layout
                         // Case 3: Exapnd dims. Add size-1 dimensions. Expand mkldnn layout
                         // Default: Convert to row-major if needed
+                        //if (false)
                         if (can_be_rotated(reshape, input_md))
                         {
+                            std::cout << "rotate\n";
                             auto output_md = mkldnn_utils::rotate_blocked_md(
                                 input_md, reshape->get_input_order());
                             set_output_layouts(node, {output_md});
                             skip_reshape = true;
                             skip_input_reorder = true;
                         }
+#if 1
                         else if (can_be_squeezed(reshape, input_md, squeezed_axis))
                         {
+                            std::cout << "squeeze\n";
                             auto output_md =
                                 mkldnn_utils::squeeze_blocked_md(input_md, squeezed_axis);
                             set_output_layouts(node, {output_md});
                             skip_reshape = true;
                             skip_input_reorder = true;
                         }
+#endif
+#if 1
                         else if (can_be_expanded(reshape, input_md, expanded_axis))
                         {
+                            std::cout << "expand\n";
                             auto output_md =
                                 mkldnn_utils::expand_blocked_md(input_md, expanded_axis);
                             set_output_layouts(node, {output_md});
@@ -2003,6 +2050,7 @@ namespace ngraph
                             if (!reshape->get_is_transpose())
                                 skip_reshape = true;
                         }
+#endif
                     }
                     else
                     {
@@ -2125,7 +2173,7 @@ namespace ngraph
                             kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 1);
                         }
 #else
-                        if (kernel_md.data.format_desc.blocking.inner_nblks != 0)
+                        if (!mkldnn_utils::is_mkldnn_desc_blocked_data_format(kernel_md))
                         {
                             // Propagate delta layout
                             kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 1);
@@ -2255,32 +2303,39 @@ namespace ngraph
                     }
                 }
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormTrainingBackprop)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 2);
-                        auto kernel_layout = static_cast<memory::format>(kernel_md.data.format);
                         auto arg0_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 0, false, memory::format::x);
+                            node.get(), 0, false, memory::FORMAT::x);
                         auto arg1_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, false, memory::format::x);
+                            node.get(), 1, false, memory::FORMAT::x);
                         auto arg3_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 3, false, memory::format::x);
+                            node.get(), 3, false, memory::FORMAT::x);
                         auto arg4_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 4, false, memory::format::x);
+                            node.get(), 4, false, memory::FORMAT::x);
                         auto out1_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 1, true, memory::format::x);
+                            node.get(), 1, true, memory::FORMAT::x);
                         auto out2_md = mkldnn_utils::create_default_mkldnn_md(
-                            node.get(), 2, true, memory::format::x);
+                            node.get(), 2, true, memory::FORMAT::x);
 
+#if not defined(NGRAPH_USE_MKLDNN_V1)
+                        auto kernel_layout = static_cast<memory::format>(kernel_md.data.format);
                         if (!mkldnn_utils::is_mkldnn_blocked_data_format(kernel_layout))
                         {
                             // Propagate delta layout
                             kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 5);
                         }
+#else
+                        if (!mkldnn_utils::is_mkldnn_desc_blocked_data_format(kernel_md))
+                        {
+                            // Propagate delta layout
+                            kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 5);
+                        }
+#endif
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
@@ -2304,9 +2359,7 @@ namespace ngraph
                         throw ngraph_error("Batchnorm Backprop only supported in MKLDNN for now");
                     }
                 }
-#endif
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
                 template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Slice)
                 {
@@ -2318,6 +2371,7 @@ namespace ngraph
                         auto result_shape = slice->get_output_shape(0);
 
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
+#if not defined(NGRAPH_USE_MKLDNN_V1)
                         NGRAPH_DEBUG << "input memory format: " << input_md.data.format << "\n";
                         auto result_format =
                             static_cast<mkldnn::memory::format>(input_md.data.format);
@@ -2349,13 +2403,121 @@ namespace ngraph
                             o_mds.push_back(result_desc);
                             set_output_layouts(node, o_mds);
                         }
+#else
+                        //TODO Do we need more cases?
+                        mkldnn::memory::format_tag result_format =
+                            mkldnn::memory::format_tag::undef;
+                        if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(input_md))
+                        {
+                            if (input_md.data.ndims == 4 &&
+                                mkldnn_utils::mkldnn_md_matches_format_tag(
+                                    input_md, mkldnn::memory::format_tag::nChw8c) &&
+                                lower_bounds[1] % 8 == 0)
+                            {
+                                result_format = mkldnn::memory::format_tag::nChw8c;
+                                std::cout << "nChw8c\n";
+                            }
+                            else if (input_md.data.ndims == 4 &&
+                                     mkldnn_utils::mkldnn_md_matches_format_tag(
+                                         input_md, mkldnn::memory::format_tag::nChw16c) &&
+                                     lower_bounds[1] % 16 == 0)
+                            {
+                                result_format = mkldnn::memory::format_tag::nChw16c;
+                                std::cout << "nChw16\n";
+                            }
+                            else if (input_md.data.ndims == 5 &&
+                                     mkldnn_utils::mkldnn_md_matches_format_tag(
+                                         input_md, mkldnn::memory::format_tag::nCdhw16c) &&
+                                     lower_bounds[1] % 16 == 0)
+                            {
+                                result_format = mkldnn::memory::format_tag::nCdhw16c;
+                                std::cout << "nCdhw16\n";
+                            }
+                            else
+                            {
+                                std::cout << "ndims is " << input_md.data.ndims << ", blocked\n";
+                            }
+                        }
+                        else
+                        {
+                            if (input_md.data.ndims == 1)
+                            {
+                                result_format = mkldnn::memory::format_tag::x;
+                                std::cout << "x\n";
+                            }
+                            else if (input_md.data.ndims == 2 &&
+                                     mkldnn_utils::mkldnn_md_matches_format_tag(
+                                         input_md, mkldnn::memory::format_tag::nc))
+                            {
+                                result_format = mkldnn::memory::format_tag::nc;
+                                std::cout << "nc\n";
+                            }
+                            else if (input_md.data.ndims == 3 &&
+                                     mkldnn_utils::mkldnn_md_matches_format_tag(
+                                         input_md, mkldnn::memory::format_tag::tnc))
+                            {
+                                result_format = mkldnn::memory::format_tag::tnc;
+                                std::cout << "tnc\n";
+                            }
+                            else if (input_md.data.ndims == 3 &&
+                                     mkldnn_utils::mkldnn_md_matches_format_tag(
+                                         input_md, mkldnn::memory::format_tag::ntc))
+                            {
+                                result_format = mkldnn::memory::format_tag::ntc;
+                                std::cout << "ntc\n";
+                            }
+                            else if (input_md.data.ndims == 4 &&
+                                     mkldnn_utils::mkldnn_md_matches_format_tag(
+                                         input_md, mkldnn::memory::format_tag::nchw))
+                            {
+                                result_format = mkldnn::memory::format_tag::nchw;
+                                std::cout << "nchw\n";
+                            }
+                            else if (input_md.data.ndims == 4 &&
+                                     mkldnn_utils::mkldnn_md_matches_format_tag(
+                                         input_md, mkldnn::memory::format_tag::nchw))
+                            {
+                                result_format = mkldnn::memory::format_tag::nhwc;
+                                std::cout << "nhwc\n";
+                            }
+                            else if (input_md.data.ndims == 5 &&
+                                     mkldnn_utils::mkldnn_md_matches_format_tag(
+                                         input_md, mkldnn::memory::format_tag::ncdhw))
+                            {
+                                result_format = mkldnn::memory::format_tag::ncdhw;
+                                std::cout << "ncdhw\n";
+                            }
+                            else if (input_md.data.ndims == 5 &&
+                                     mkldnn_utils::mkldnn_md_matches_format_tag(
+                                         input_md, mkldnn::memory::format_tag::ndhwc))
+                            {
+                                result_format = mkldnn::memory::format_tag::ndhwc;
+                                std::cout << "ndhwc\n";
+                            }
+                            else
+                            {
+                                std::cout << "ndims is " << input_md.data.ndims << ",Not blocked\n";
+                            }
+                        }
+                        if (result_format == mkldnn::memory::format_tag::undef)
+                        {
+                            set_native_layouts(external_function, node);
+                        }
+                        else
+                        {
+                            vector<memory::desc> o_mds;
+                            auto result_desc = mkldnn_utils::create_default_mkldnn_md(
+                                node.get(), 0, true, result_format);
+                            o_mds.push_back(result_desc);
+                            set_output_layouts(node, o_mds);
+                        }
+#endif
                     }
                     else
                     {
                         set_native_layouts(external_function, node);
                     }
                 }
-#endif
 
                 template <typename T>
                 void ConcatLayout(std::shared_ptr<ngraph::Node> node,
@@ -2503,8 +2665,7 @@ namespace ngraph
                         input_md.data.format == mkldnn_format_undef ||
                         !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
 #else
-                    if (input_md.data.format_kind == static_cast<mkldnn_format_kind_t>(
-                                                         mkldnn::memory::format_kind::blocked) ||
+                    if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(input_md) ||
                         input_md.data.format_kind ==
                             static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::undef) ||
                         !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
@@ -2543,92 +2704,85 @@ namespace ngraph
 
 #define TI(x) type_index(typeid(x))
 
-static const runtime::cpu::pass::LayoutOpMap s_dispatcher
-{
+static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::Concat), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Concat>},
-        {TI(ngraph::op::Convert), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convert>},
-        {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
-        {TI(ngraph::op::AvgPoolBackprop),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
-        {TI(ngraph::op::QuantizedConvolution),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolution>},
-        {TI(ngraph::op::Convolution),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
-        {TI(ngraph::op::GroupConvolution),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolution>},
-        {TI(ngraph::op::ConvolutionBackpropData),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},
-        {TI(ngraph::op::ConvolutionBackpropFilters),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropFilters>},
-        {TI(ngraph::op::MaxPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPool>},
-        {TI(ngraph::op::QuantizedMaxPool),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMaxPool>},
-        {TI(ngraph::op::QuantizedAvgPool),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedAvgPool>},
-        {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
-        {TI(ngraph::op::Dequantize),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
-        {TI(ngraph::op::MaxPoolWithIndices),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolWithIndices>},
-        {TI(ngraph::op::MaxPoolBackprop),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolBackprop>},
-        {TI(ngraph::op::MaxPoolWithIndicesBackprop),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolWithIndicesBackprop>},
-        {TI(ngraph::op::ConvolutionBias),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBias>},
-        {TI(ngraph::op::ConvolutionRelu),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionRelu>},
-        {TI(ngraph::op::ConvolutionBiasAdd),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasAdd>},
-        {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
-        {TI(ngraph::op::BatchNormTraining),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTraining>},
-        {TI(ngraph::op::BatchNormInference),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormInference>},
-        {TI(ngraph::op::BatchNormInferenceRelu),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormInferenceRelu>},
-        {TI(ngraph::op::BatchNormTrainingRelu),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTrainingRelu>},
-#if not defined(NGRAPH_USE_MKLDNN_V1)
-        {TI(ngraph::op::BatchNormTrainingBackprop),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTrainingBackprop>},
-#endif
-        {TI(ngraph::op::GetOutputElement),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},
-        {TI(ngraph::op::LRN), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LRN>},
-        {TI(ngraph::op::Reshape), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Reshape>},
-        {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},
-        {TI(ngraph::op::ReluBackprop),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::ReluBackprop>},
-        {TI(ngraph::op::SigmoidBackprop),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::SigmoidBackprop>},
-        {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Lstm>},
-        {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
-        {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Softmax>},
-        {TI(ngraph::op::ConvolutionAdd),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
-#if not defined(NGRAPH_USE_MKLDNN_V1)
-        {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
-#endif
-        {TI(ngraph::op::QuantizedConvolutionRelu),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionRelu>},
-        {TI(ngraph::op::QuantizedConvolutionBias),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBias>},
-        {TI(ngraph::op::QuantizedConvolutionBiasAdd),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasAdd>},
-        {TI(ngraph::op::QuantizedConvolutionBiasSignedAdd),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasSignedAdd>},
-        {TI(ngraph::op::GroupConvolutionBias),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolutionBias>},
-        {TI(ngraph::op::DeconvolutionBias),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::DeconvolutionBias>},
-        {TI(ngraph::op::QuantizedConcat),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConcat>},
-        {TI(ngraph::op::QuantizedDotBias),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedDotBias>},
-        {TI(ngraph::op::QuantizedMatmul),
-         &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMatmul>},
+    {TI(ngraph::op::Convert), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convert>},
+    {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
+    {TI(ngraph::op::AvgPoolBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
+    {TI(ngraph::op::QuantizedConvolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolution>},
+    {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
+    {TI(ngraph::op::GroupConvolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolution>},
+    {TI(ngraph::op::ConvolutionBackpropData),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},
+    {TI(ngraph::op::ConvolutionBackpropFilters),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropFilters>},
+    {TI(ngraph::op::MaxPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPool>},
+    {TI(ngraph::op::QuantizedMaxPool),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMaxPool>},
+    {TI(ngraph::op::QuantizedAvgPool),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedAvgPool>},
+    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
+    {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
+    {TI(ngraph::op::MaxPoolWithIndices),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolWithIndices>},
+    {TI(ngraph::op::MaxPoolBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolBackprop>},
+    {TI(ngraph::op::MaxPoolWithIndicesBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolWithIndicesBackprop>},
+    {TI(ngraph::op::ConvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBias>},
+    {TI(ngraph::op::ConvolutionRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionRelu>},
+    {TI(ngraph::op::ConvolutionBiasAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasAdd>},
+    {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
+    {TI(ngraph::op::BatchNormTraining),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTraining>},
+    {TI(ngraph::op::BatchNormInference),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormInference>},
+    {TI(ngraph::op::BatchNormInferenceRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormInferenceRelu>},
+    {TI(ngraph::op::BatchNormTrainingRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTrainingRelu>},
+    {TI(ngraph::op::BatchNormTrainingBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTrainingBackprop>},
+    {TI(ngraph::op::GetOutputElement),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},
+    {TI(ngraph::op::LRN), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LRN>},
+    {TI(ngraph::op::Reshape), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Reshape>},
+    {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},
+    {TI(ngraph::op::ReluBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ReluBackprop>},
+    {TI(ngraph::op::SigmoidBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::SigmoidBackprop>},
+    {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Lstm>},
+    {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
+    {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Softmax>},
+    {TI(ngraph::op::ConvolutionAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
+    {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
+    {TI(ngraph::op::QuantizedConvolutionRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionRelu>},
+    {TI(ngraph::op::QuantizedConvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBias>},
+    {TI(ngraph::op::QuantizedConvolutionBiasAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasAdd>},
+    {TI(ngraph::op::QuantizedConvolutionBiasSignedAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasSignedAdd>},
+    {TI(ngraph::op::GroupConvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolutionBias>},
+    {TI(ngraph::op::DeconvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::DeconvolutionBias>},
+    {TI(ngraph::op::QuantizedConcat),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConcat>},
+    {TI(ngraph::op::QuantizedDotBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedDotBias>},
+    {TI(ngraph::op::QuantizedMatmul),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMatmul>},
 };
 
 bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::shared_ptr<Node>>& nodes)

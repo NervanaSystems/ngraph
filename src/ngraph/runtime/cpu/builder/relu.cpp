@@ -51,6 +51,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_relu_forward(ctx->mkldnn_memories,
                                                                ctx->mkldnn_primitives,
+                                                               ctx->mkldnn_scratchpad_mds,
                                                                relu_desc,
                                                                deps,
                                                                relu_index);
@@ -102,6 +103,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_relu_backward(ctx->mkldnn_memories,
                                                                 ctx->mkldnn_primitives,
+                                                                ctx->mkldnn_scratchpad_mds,
                                                                 bwd_desc,
                                                                 fwd_desc,
                                                                 deps,

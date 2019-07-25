@@ -110,6 +110,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_slice(ctx->mkldnn_memories,
                                                         ctx->mkldnn_primitives,
+                                                        ctx->mkldnn_scratchpad_mds,
                                                         input_desc,
                                                         result_desc,
                                                         lower_bounds,

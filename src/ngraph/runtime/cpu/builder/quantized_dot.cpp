@@ -89,6 +89,7 @@ namespace ngraph
                             mkldnn_emitter->build_inner_product_forward<true>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 ip_desc,
                                 ip_attr,
                                 executor::global_cpu_engine,

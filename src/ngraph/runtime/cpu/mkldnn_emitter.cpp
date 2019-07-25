@@ -63,6 +63,8 @@ MKLDNNEmitter::~MKLDNNEmitter()
 {
     for (auto p : m_mkldnn_primitives)
         delete p;
+    for (auto s : m_mkldnn_scratchpad_mds)
+        delete s;
 #ifndef _WIN32
     //To avoid memory leak in mkldnn, release any buffers that are not free'd yet.
     //https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
@@ -91,6 +93,11 @@ const std::vector<char*>& MKLDNNEmitter::get_mkldnn_workspaces()
     return m_workspace_bufs;
 }
 
+const std::vector<mkldnn::memory::desc*>& MKLDNNEmitter::get_mkldnn_scratchpad_mds() const
+{
+    return m_mkldnn_scratchpad_mds;
+}
+
 size_t MKLDNNEmitter::insert_primitive(mkldnn::primitive* primitive)
 {
     m_mkldnn_primitives.emplace_back(primitive);
@@ -114,6 +121,12 @@ size_t MKLDNNEmitter::reserve_workspace()
 {
     m_workspaces_size++;
     return m_workspaces_size - 1;
+}
+
+size_t MKLDNNEmitter::insert_scratchpad_md(mkldnn::memory::desc* md)
+{
+    m_mkldnn_scratchpad_mds.emplace_back(md);
+    return (m_mkldnn_scratchpad_mds.size() - 1);
 }
 
 void MKLDNNEmitter::reserve_descriptor_space(size_t count)
@@ -147,6 +160,11 @@ const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps_cg(size_t index) co
 std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index)
 {
     return m_primitive_deps.at(index);
+}
+
+const size_t MKLDNNEmitter::get_max_scratchpad_size() const
+{
+    return m_max_scratchpad_size;
 }
 
 mkldnn::memory::desc
@@ -455,6 +473,7 @@ size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
 #if defined(NGRAPH_USE_MKLDNN_V1)
     size_t mem_size = m_mkldnn_memories.size();
     m_mkldnn_primitives.resize(size + 1, nullptr);
+    m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
     m_mkldnn_memories.resize(mem_size + count - 1, nullptr);
     for (auto i = 0; i < count - 1; i++)
     {
@@ -651,20 +670,26 @@ mkldnn::sum::primitive_desc MKLDNNEmitter::get_elementwise_add_desc(const ngraph
     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
     std::vector<mkldnn::memory::desc> inputs_desc{input0_data_desc, input1_data_desc};
 
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+
     // elementwise sum primtive descriptor
     mkldnn::sum::primitive_desc sum_pd = mkldnn::sum::primitive_desc(
-        result_desc, scale_vector, inputs_desc, executor::global_cpu_engine);
+        result_desc, scale_vector, inputs_desc, executor::global_cpu_engine, attr);
+
     return sum_pd;
 }
 
-void MKLDNNEmitter::build_quantize_reorder(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                           const mkldnn::memory::desc& input_desc,
-                                           const mkldnn::memory::desc& result_desc,
-                                           const std::vector<float>& scales,
-                                           const std::vector<size_t>& deps,
-                                           size_t quantize_index,
-                                           const int mask)
+void MKLDNNEmitter::build_quantize_reorder(
+    std::vector<mkldnn::memory*>& mkldnn_memories,
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+    const mkldnn::memory::desc& input_desc,
+    const mkldnn::memory::desc& result_desc,
+    const std::vector<float>& scales,
+    const std::vector<size_t>& deps,
+    size_t quantize_index,
+    const int mask)
 {
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, input_desc, input_index);
@@ -673,8 +698,12 @@ void MKLDNNEmitter::build_quantize_reorder(std::vector<mkldnn::memory*>& mkldnn_
 
     mkldnn::primitive_attr attr;
     attr.set_output_scales(mask, scales);
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto reorder_prim_desc = mkldnn::reorder::primitive_desc(
         executor::global_cpu_engine, input_desc, executor::global_cpu_engine, result_desc, attr);
+
+    mkldnn_scratchpad_mds[quantize_index] =
+        new mkldnn::memory::desc(reorder_prim_desc.scratchpad_desc());
     mkldnn_primitives[quantize_index] = new mkldnn::reorder(reorder_prim_desc);
 }
 
@@ -716,13 +745,18 @@ mkldnn::memory::format_tag MKLDNNEmitter::query_convolution_forward_weight_forma
 void MKLDNNEmitter::build_deconvolutionbias_forward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::deconvolution_forward::desc& deconv_desc,
     const std::vector<size_t>& deps,
     size_t deconv_index,
     const mkldnn::memory::desc& weights_desc)
 {
-    auto deconv_pd =
-        mkldnn::deconvolution_forward::primitive_desc(deconv_desc, executor::global_cpu_engine);
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+    auto deconv_pd = mkldnn::deconvolution_forward::primitive_desc(
+        deconv_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[deconv_index] = new mkldnn::memory::desc(deconv_pd.scratchpad_desc());
+
     size_t weights_index = deps[0];
     build_memory(mkldnn_memories, weights_desc, weights_index);
     size_t delta_index = deps[1];
@@ -738,6 +772,7 @@ void MKLDNNEmitter::build_deconvolutionbias_forward(
 void MKLDNNEmitter::build_convolution_backward_weights_bias(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::convolution_backward_weights::desc& bwd_desc,
     const mkldnn::convolution_forward::desc& fwd_desc,
     const std::vector<size_t>& deps,
@@ -745,8 +780,12 @@ void MKLDNNEmitter::build_convolution_backward_weights_bias(
 {
     auto conv_fwd_pd =
         mkldnn::convolution_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
+
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto conv_bwd_pd = mkldnn::convolution_backward_weights::primitive_desc(
-        bwd_desc, executor::global_cpu_engine, conv_fwd_pd);
+        bwd_desc, attr, executor::global_cpu_engine, conv_fwd_pd);
+    mkldnn_scratchpad_mds[conv_index] = new mkldnn::memory::desc(conv_bwd_pd.scratchpad_desc());
 
     size_t src_index = deps[0];
     build_memory(mkldnn_memories, conv_bwd_pd.src_desc(), src_index);
@@ -763,6 +802,7 @@ void MKLDNNEmitter::build_convolution_backward_weights_bias(
 void MKLDNNEmitter::build_convolution_backward_weights(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::convolution_backward_weights::desc& bwd_desc,
     const mkldnn::convolution_forward::desc& fwd_desc,
     const std::vector<size_t>& deps,
@@ -771,8 +811,12 @@ void MKLDNNEmitter::build_convolution_backward_weights(
     // Forward primitive descriptor corresponding to this backward weights descriptor
     auto conv_fwd_pd =
         mkldnn::convolution_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
+
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto conv_bwd_pd = mkldnn::convolution_backward_weights::primitive_desc(
-        bwd_desc, executor::global_cpu_engine, conv_fwd_pd);
+        bwd_desc, attr, executor::global_cpu_engine, conv_fwd_pd);
+    mkldnn_scratchpad_mds[conv_index] = new mkldnn::memory::desc(conv_bwd_pd.scratchpad_desc());
 
     size_t src_index = deps[0];
     build_memory(mkldnn_memories, conv_bwd_pd.src_desc(), src_index);
@@ -787,6 +831,7 @@ void MKLDNNEmitter::build_convolution_backward_weights(
 void MKLDNNEmitter::build_convolution_backward_data(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::convolution_backward_data::desc& bwd_desc,
     const mkldnn::convolution_forward::desc& fwd_desc,
     const std::vector<size_t>& deps,
@@ -795,8 +840,12 @@ void MKLDNNEmitter::build_convolution_backward_data(
     // Forward primitive descriptor corresponding to this backward weights descriptor
     auto conv_fwd_pd =
         mkldnn::convolution_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
+
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto conv_bwd_pd = mkldnn::convolution_backward_data::primitive_desc(
-        bwd_desc, executor::global_cpu_engine, conv_fwd_pd);
+        bwd_desc, attr, executor::global_cpu_engine, conv_fwd_pd);
+    mkldnn_scratchpad_mds[conv_index] = new mkldnn::memory::desc(conv_bwd_pd.scratchpad_desc());
 
     size_t weights_index = deps[0];
     build_memory(mkldnn_memories, conv_bwd_pd.weights_desc(), weights_index);
@@ -810,11 +859,17 @@ void MKLDNNEmitter::build_convolution_backward_data(
 
 void MKLDNNEmitter::build_pooling_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                          std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                           const mkldnn::pooling_forward::desc& pool_desc,
                                           const std::vector<size_t>& deps,
                                           size_t pool_index)
 {
-    auto pool_pd = mkldnn::pooling_forward::primitive_desc(pool_desc, executor::global_cpu_engine);
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+    auto pool_pd =
+        mkldnn::pooling_forward::primitive_desc(pool_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[pool_index] = new mkldnn::memory::desc(pool_pd.scratchpad_desc());
+
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, pool_pd.src_desc(), input_index);
     size_t result_index = deps[1];
@@ -823,17 +878,23 @@ void MKLDNNEmitter::build_pooling_forward(std::vector<mkldnn::memory*>& mkldnn_m
     mkldnn_primitives[pool_index] = new mkldnn::pooling_forward(pool_pd);
 }
 
-void MKLDNNEmitter::build_pooling_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                           const mkldnn::pooling_backward::desc& pool_desc,
-                                           const mkldnn::pooling_forward::desc& pool_fwd_desc,
-                                           const std::vector<size_t>& deps,
-                                           size_t pool_index)
+void MKLDNNEmitter::build_pooling_backward(
+    std::vector<mkldnn::memory*>& mkldnn_memories,
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+    const mkldnn::pooling_backward::desc& pool_desc,
+    const mkldnn::pooling_forward::desc& pool_fwd_desc,
+    const std::vector<size_t>& deps,
+    size_t pool_index)
 {
     auto pool_fwd_pd =
         mkldnn::pooling_forward::primitive_desc(pool_fwd_desc, executor::global_cpu_engine);
+
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto pool_bwd_pd = mkldnn::pooling_backward::primitive_desc(
-        pool_desc, executor::global_cpu_engine, pool_fwd_pd);
+        pool_desc, attr, executor::global_cpu_engine, pool_fwd_pd);
+    mkldnn_scratchpad_mds[pool_index] = new mkldnn::memory::desc(pool_bwd_pd.scratchpad_desc());
 
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, pool_bwd_pd.diff_dst_desc(), input_index);
@@ -843,21 +904,27 @@ void MKLDNNEmitter::build_pooling_backward(std::vector<mkldnn::memory*>& mkldnn_
     mkldnn_primitives[pool_index] = new mkldnn::pooling_backward(pool_bwd_pd);
 }
 
-void MKLDNNEmitter::build_max_pooling_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                               std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                               std::vector<char*>& mkldnn_workspaces,
-                                               const mkldnn::pooling_backward::desc& bwd_pool_desc,
-                                               const mkldnn::pooling_forward::desc& fwd_pool_desc,
-                                               const mkldnn::memory::desc& fprop_src_desc,
-                                               std::vector<size_t>& fdeps,
-                                               std::vector<size_t>& bdeps,
-                                               size_t fwd_pool_index,
-                                               size_t bwd_pool_index)
+void MKLDNNEmitter::build_max_pooling_backward(
+    std::vector<mkldnn::memory*>& mkldnn_memories,
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+    std::vector<char*>& mkldnn_workspaces,
+    const mkldnn::pooling_backward::desc& bwd_pool_desc,
+    const mkldnn::pooling_forward::desc& fwd_pool_desc,
+    const mkldnn::memory::desc& fprop_src_desc,
+    std::vector<size_t>& fdeps,
+    std::vector<size_t>& bdeps,
+    size_t fwd_pool_index,
+    size_t bwd_pool_index)
 {
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto pool_fwd_pd =
-        mkldnn::pooling_forward::primitive_desc(fwd_pool_desc, executor::global_cpu_engine);
+        mkldnn::pooling_forward::primitive_desc(fwd_pool_desc, attr, executor::global_cpu_engine);
     auto pool_bwd_pd = mkldnn::pooling_backward::primitive_desc(
-        bwd_pool_desc, executor::global_cpu_engine, pool_fwd_pd);
+        bwd_pool_desc, attr, executor::global_cpu_engine, pool_fwd_pd);
+    mkldnn_scratchpad_mds[fwd_pool_index] = new mkldnn::memory::desc(pool_fwd_pd.scratchpad_desc());
+    mkldnn_scratchpad_mds[bwd_pool_index] = new mkldnn::memory::desc(pool_bwd_pd.scratchpad_desc());
 
     size_t fprop_src_index = fdeps[0];
     build_memory(mkldnn_memories, fprop_src_desc, fprop_src_index);
@@ -887,12 +954,16 @@ void MKLDNNEmitter::build_max_pooling_backward(std::vector<mkldnn::memory*>& mkl
 void MKLDNNEmitter::build_max_pooling_with_indices_forward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::pooling_forward::desc& max_pool_desc,
     const std::vector<size_t>& deps,
     size_t max_pool_index)
 {
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto pool_pd =
-        mkldnn::pooling_forward::primitive_desc(max_pool_desc, executor::global_cpu_engine);
+        mkldnn::pooling_forward::primitive_desc(max_pool_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[max_pool_index] = new mkldnn::memory::desc(pool_pd.scratchpad_desc());
 
     size_t src_index = deps[0];
     build_memory(mkldnn_memories, pool_pd.src_desc(), src_index);
@@ -908,6 +979,7 @@ void MKLDNNEmitter::build_max_pooling_with_indices_forward(
 void MKLDNNEmitter::build_max_pooling_with_indices_backward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::pooling_backward::desc& bwd_pool_desc,
     const mkldnn::pooling_forward::desc& fwd_pool_desc,
     const std::vector<size_t>& deps,
@@ -915,8 +987,12 @@ void MKLDNNEmitter::build_max_pooling_with_indices_backward(
 {
     auto pool_fwd_pd =
         mkldnn::pooling_forward::primitive_desc(fwd_pool_desc, executor::global_cpu_engine);
+
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto pool_bwd_pd = mkldnn::pooling_backward::primitive_desc(
-        bwd_pool_desc, executor::global_cpu_engine, pool_fwd_pd);
+        bwd_pool_desc, attr, executor::global_cpu_engine, pool_fwd_pd);
+    mkldnn_scratchpad_mds[max_pool_index] = new mkldnn::memory::desc(pool_bwd_pd.scratchpad_desc());
 
     size_t diff_dst_index = deps[0];
     build_memory(mkldnn_memories, pool_bwd_pd.diff_dst_desc(), diff_dst_index);
@@ -931,6 +1007,7 @@ void MKLDNNEmitter::build_max_pooling_with_indices_backward(
 
 void MKLDNNEmitter::build_reorder(std::vector<mkldnn::memory*>& mkldnn_memories,
                                   std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                  std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                   const mkldnn::memory::desc& input_desc,
                                   const mkldnn::memory::desc& result_desc,
                                   const std::vector<size_t>& deps,
@@ -947,11 +1024,15 @@ void MKLDNNEmitter::build_reorder(std::vector<mkldnn::memory*>& mkldnn_memories,
 
 void MKLDNNEmitter::build_lrn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                       std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                      std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                       const mkldnn::lrn_forward::desc& lrn_desc,
                                       const std::vector<size_t>& deps,
                                       size_t lrn_index)
 {
-    auto lrn_pd = mkldnn::lrn_forward::primitive_desc(lrn_desc, executor::global_cpu_engine);
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+    auto lrn_pd = mkldnn::lrn_forward::primitive_desc(lrn_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[lrn_index] = new mkldnn::memory::desc(lrn_pd.scratchpad_desc());
 
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, lrn_pd.src_desc(), input_index);
@@ -963,11 +1044,16 @@ void MKLDNNEmitter::build_lrn_forward(std::vector<mkldnn::memory*>& mkldnn_memor
 
 void MKLDNNEmitter::build_relu_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                        std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                       std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                        const mkldnn::eltwise_forward::desc& relu_desc,
                                        const std::vector<size_t>& deps,
                                        size_t relu_index)
 {
-    auto relu_pd = mkldnn::eltwise_forward::primitive_desc(relu_desc, executor::global_cpu_engine);
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+    auto relu_pd =
+        mkldnn::eltwise_forward::primitive_desc(relu_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[relu_index] = new mkldnn::memory::desc(relu_pd.scratchpad_desc());
 
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, relu_pd.src_desc(), input_index);
@@ -979,6 +1065,7 @@ void MKLDNNEmitter::build_relu_forward(std::vector<mkldnn::memory*>& mkldnn_memo
 
 void MKLDNNEmitter::build_relu_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                         std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                        std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                         const mkldnn::eltwise_backward::desc& bwd_desc,
                                         const mkldnn::eltwise_forward::desc& fwd_desc,
                                         const std::vector<size_t>& deps,
@@ -989,8 +1076,11 @@ void MKLDNNEmitter::build_relu_backward(std::vector<mkldnn::memory*>& mkldnn_mem
         mkldnn::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
 
     /* create backward relu primitive_descriptor */
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto relu_bwd_pd = mkldnn::eltwise_backward::primitive_desc(
-        bwd_desc, executor::global_cpu_engine, relu_fwd_pd);
+        bwd_desc, attr, executor::global_cpu_engine, relu_fwd_pd);
+    mkldnn_scratchpad_mds[relu_index] = new mkldnn::memory::desc(relu_bwd_pd.scratchpad_desc());
 
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, relu_bwd_pd.src_desc(), input_index);
@@ -1004,12 +1094,17 @@ void MKLDNNEmitter::build_relu_backward(std::vector<mkldnn::memory*>& mkldnn_mem
 
 void MKLDNNEmitter::build_sigmoid_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                          std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                           const mkldnn::eltwise_forward::desc& sigmoid_desc,
                                           const std::vector<size_t>& deps,
                                           size_t sigmoid_index)
 {
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto sigmoid_pd =
-        mkldnn::eltwise_forward::primitive_desc(sigmoid_desc, executor::global_cpu_engine);
+        mkldnn::eltwise_forward::primitive_desc(sigmoid_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[sigmoid_index] = new mkldnn::memory::desc(sigmoid_pd.scratchpad_desc());
+
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, sigmoid_pd.src_desc(), input_index);
     size_t result_index = deps[1];
@@ -1018,19 +1113,25 @@ void MKLDNNEmitter::build_sigmoid_forward(std::vector<mkldnn::memory*>& mkldnn_m
     mkldnn_primitives[sigmoid_index] = new mkldnn::eltwise_forward(sigmoid_pd);
 }
 
-void MKLDNNEmitter::build_sigmoid_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                           const mkldnn::eltwise_backward::desc& bwd_desc,
-                                           const mkldnn::eltwise_forward::desc& fwd_desc,
-                                           const std::vector<size_t>& deps,
-                                           size_t sigmoid_index)
+void MKLDNNEmitter::build_sigmoid_backward(
+    std::vector<mkldnn::memory*>& mkldnn_memories,
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+    const mkldnn::eltwise_backward::desc& bwd_desc,
+    const mkldnn::eltwise_forward::desc& fwd_desc,
+    const std::vector<size_t>& deps,
+    size_t sigmoid_index)
 {
     // sigmoid forward primitive desc
     auto sigmoid_fwd_pd =
         mkldnn::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
 
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto sigmoid_bwd_pd = mkldnn::eltwise_backward::primitive_desc(
-        bwd_desc, executor::global_cpu_engine, sigmoid_fwd_pd);
+        bwd_desc, attr, executor::global_cpu_engine, sigmoid_fwd_pd);
+    mkldnn_scratchpad_mds[sigmoid_index] =
+        new mkldnn::memory::desc(sigmoid_bwd_pd.scratchpad_desc());
 
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, sigmoid_bwd_pd.src_desc(), input_index);
@@ -1044,6 +1145,7 @@ void MKLDNNEmitter::build_sigmoid_backward(std::vector<mkldnn::memory*>& mkldnn_
 
 void MKLDNNEmitter::build_elementwise_add(std::vector<mkldnn::memory*>& mkldnn_memories,
                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                          std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                           const mkldnn::sum::primitive_desc& sum_pd,
                                           const std::vector<size_t>& deps,
                                           size_t add_index)
@@ -1055,6 +1157,8 @@ void MKLDNNEmitter::build_elementwise_add(std::vector<mkldnn::memory*>& mkldnn_m
     size_t result_index = deps[2];
     build_memory(mkldnn_memories, sum_pd.dst_desc(), result_index);
 
+    mkldnn_scratchpad_mds[add_index] = new mkldnn::memory::desc(sum_pd.scratchpad_desc());
+
     // sum primitive
     mkldnn_primitives[add_index] = new mkldnn::sum(sum_pd);
 }
@@ -1062,6 +1166,7 @@ void MKLDNNEmitter::build_elementwise_add(std::vector<mkldnn::memory*>& mkldnn_m
 void MKLDNNEmitter::build_batchnorm_forward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::batch_normalization_forward::desc& batchnorm_desc,
     const mkldnn::memory::desc& weights_desc,
     bool bn_training_flag,
@@ -1071,8 +1176,11 @@ void MKLDNNEmitter::build_batchnorm_forward(
 {
     mkldnn::primitive_attr bn_attr;
     bn_attr.set_post_ops(pops);
+    bn_attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto batchnorm_pd = mkldnn::batch_normalization_forward::primitive_desc(
         batchnorm_desc, bn_attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[batchnorm_index] =
+        new mkldnn::memory::desc(batchnorm_pd.scratchpad_desc());
 
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, batchnorm_pd.src_desc(), input_index);
@@ -1106,22 +1214,32 @@ void MKLDNNEmitter::build_batchnorm_forward(
     }
 }
 
-#if 0
 void MKLDNNEmitter::build_batchnorm_backward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::batch_normalization_backward::desc& batchnorm_desc,
-	const mkldnn::memory::desc& input_desc,
+    const mkldnn::memory::desc& input_desc,
     const mkldnn::memory::desc& weights_desc,
     const mkldnn::memory::desc& dweights_desc,
-	float& epsilon,
+    float epsilon,
     const std::vector<size_t>& deps,
     size_t batchnorm_index)
 {
-	auto batchnorm_fdesc = mkldnn::batch_normalization_forward::desc(mkldnn::prop_kind::forward_training,
-	           input_desc,epsilon, mkldnn::BN_FLAG_CLASS::use_scale_shift);
-	auto bachnorm_fpd = mkldnn::batch_normalization_forward::primitive_desc(batchnorm_fdesc, executor::global_cpu_engine);
-	auto bachnorm_pd = mkldnn::batch_normalization_backward::primitive_desc(batchnorm_desc, executor::global_cpu_engine, batchnorm_fpd);
+    auto batchnorm_fdesc =
+        mkldnn::batch_normalization_forward::desc(mkldnn::prop_kind::forward_training,
+                                                  input_desc,
+                                                  epsilon,
+                                                  mkldnn::BN_FLAG_CLASS::use_scale_shift);
+    auto batchnorm_fpd = mkldnn::batch_normalization_forward::primitive_desc(
+        batchnorm_fdesc, executor::global_cpu_engine);
+
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+    auto batchnorm_pd = mkldnn::batch_normalization_backward::primitive_desc(
+        batchnorm_desc, attr, executor::global_cpu_engine, batchnorm_fpd);
+    mkldnn_scratchpad_mds[batchnorm_index] =
+        new mkldnn::memory::desc(batchnorm_pd.scratchpad_desc());
 
     size_t weights_index = deps[0];
     build_memory(mkldnn_memories, weights_desc, weights_index);
@@ -1130,7 +1248,7 @@ void MKLDNNEmitter::build_batchnorm_backward(
     size_t mean_index = deps[2];
     build_memory(mkldnn_memories, batchnorm_pd.mean_desc(), mean_index);
     size_t variance_index = deps[3];
-    build_memory(mkldnn_mmeories, batchnorm_pd.variance_desc(), variance_index);
+    build_memory(mkldnn_memories, batchnorm_pd.variance_desc(), variance_index);
     size_t delta_index = deps[4];
     build_memory(mkldnn_memories, batchnorm_pd.diff_src_desc(), delta_index);
     size_t dinput_index = deps[5];
@@ -1138,20 +1256,13 @@ void MKLDNNEmitter::build_batchnorm_backward(
     size_t dweights_index = deps[6];
     build_memory(mkldnn_memories, dweights_desc, dweights_index);
 
-    mkldnn_primitives[batchnorm_index] = new mkldnn::batch_normalization_backward(
-        {batchnorm_desc,
-         executor::global_cpu_engine,
-         {{mkldnn::prop_kind::forward_training,
-           batchnorm_desc.data.data_desc,
-           static_cast<double>(batchnorm_desc.data.batch_norm_epsilon),
-           mkldnn::batch_normalization_flag::use_scale_shift},
-          executor::global_cpu_engine}});
+    mkldnn_primitives[batchnorm_index] = new mkldnn::batch_normalization_backward(batchnorm_pd);
 }
-#endif
 
 #if 0
 void MKLDNNEmitter::build_vanilla_rnn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                       std::vector<mkldnn::primitive*>& mkldnn_primitives,
+									  std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                       std::vector<char*>& mkldnn_workspaces,
                                       const mkldnn::vanilla_rnn_forward::desc& rnn_desc,
                                       std::vector<size_t>& deps,
@@ -1173,8 +1284,12 @@ void MKLDNNEmitter::build_vanilla_rnn_forward(std::vector<mkldnn::memory*>& mkld
     size_t dst_iter_index = deps[6];
     build_memory(mkldnn_memories, rnn_desc.data.dst_iter_desc, dst_iter_index);
 
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto rnn_layer_prim_desc =
-        mkldnn::rnn_forward::primitive_desc(rnn_desc, executor::global_cpu_engine);
+        mkldnn::rnn_forward::primitive_desc(rnn_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[rnn_index] = new mkldnn::memory::desc(rnn_layer_prim_desc.scratchpad_desc());
+
     size_t workspace_index = deps[7];
     build_memory(
         mkldnn_memories, rnn_layer_prim_desc.workspace_primitive_desc().desc(), workspace_index);
@@ -1188,6 +1303,7 @@ void MKLDNNEmitter::build_vanilla_rnn_forward(std::vector<mkldnn::memory*>& mkld
 
 void MKLDNNEmitter::build_lstm_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                       std::vector<mkldnn::primitive*>& mkldnn_primitives,
+									  std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                       std::vector<char*>& mkldnn_workspaces,
                                       const mkldnn::vanilla_lstm_forward::desc& rnn_desc,
                                       std::vector<size_t>& deps,
@@ -1209,8 +1325,12 @@ void MKLDNNEmitter::build_lstm_forward(std::vector<mkldnn::memory*>& mkldnn_memo
     size_t dst_iter_index = deps[6];
     build_memory(mkldnn_memories, rnn_desc.data.dst_iter_desc, dst_iter_index);
 
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto rnn_layer_prim_desc =
-        mkldnn::rnn_forward::primitive_desc(rnn_desc, executor::global_cpu_engine);
+        mkldnn::rnn_forward::primitive_desc(rnn_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[rnn_index] = new mkldnn::memory::desc(rnn_layer_prim_desc.scratchpad_desc());
+
     size_t workspace_index = deps[7];
     build_memory(
         mkldnn_memories, rnn_layer_prim_desc.workspace_primitive_desc().desc(), workspace_index);
@@ -1225,6 +1345,7 @@ void MKLDNNEmitter::build_lstm_forward(std::vector<mkldnn::memory*>& mkldnn_memo
 
 void MKLDNNEmitter::build_concat(std::vector<mkldnn::memory*>& mkldnn_memories,
                                  std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                 std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                  const mkldnn::concat::primitive_desc& concat_pd,
                                  const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                  const std::vector<size_t>& deps,
@@ -1238,12 +1359,15 @@ void MKLDNNEmitter::build_concat(std::vector<mkldnn::memory*>& mkldnn_memories,
     size_t result_index = deps[inputs_data_desc.size()];
     build_memory(mkldnn_memories, concat_pd.dst_desc(), result_index);
 
+    mkldnn_scratchpad_mds[concat_index] = new mkldnn::memory::desc(concat_pd.scratchpad_desc());
+
     // concat primitive
     mkldnn_primitives[concat_index] = new mkldnn::concat(concat_pd);
 }
 
 void MKLDNNEmitter::build_slice(std::vector<mkldnn::memory*>& mkldnn_memories,
                                 std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                 mkldnn::memory::desc input_desc,
                                 const mkldnn::memory::desc& result_desc,
                                 const ngraph::Coordinate& lower_bounds,
@@ -1261,18 +1385,28 @@ void MKLDNNEmitter::build_slice(std::vector<mkldnn::memory*>& mkldnn_memories,
     build_memory(mkldnn_memories, result_desc, result_index);
 
     // reorder primitive
-    mkldnn_primitives[slice_index] =
-        new mkldnn::reorder(*mkldnn_memories[input_index], *mkldnn_memories[result_index]);
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+    auto reorder_pd = mkldnn::reorder::primitive_desc(
+        *mkldnn_memories[input_index], *mkldnn_memories[result_index], attr);
+    mkldnn_scratchpad_mds[slice_index] = new mkldnn::memory::desc(reorder_pd.scratchpad_desc());
+
+    mkldnn_primitives[slice_index] = new mkldnn::reorder(reorder_pd);
 }
 
 void MKLDNNEmitter::build_softmax_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                          std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                           const mkldnn::softmax_forward::desc& softmax_desc,
                                           const std::vector<size_t>& deps,
                                           size_t softmax_index)
 {
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto softmax_pd =
-        mkldnn::softmax_forward::primitive_desc(softmax_desc, executor::global_cpu_engine);
+        mkldnn::softmax_forward::primitive_desc(softmax_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[softmax_index] = new mkldnn::memory::desc(softmax_pd.scratchpad_desc());
+
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, softmax_pd.src_desc(), input_index);
     size_t result_index = deps[1];
@@ -1283,12 +1417,18 @@ void MKLDNNEmitter::build_softmax_forward(std::vector<mkldnn::memory*>& mkldnn_m
 
 void MKLDNNEmitter::build_leaky_relu(std::vector<mkldnn::memory*>& mkldnn_memories,
                                      std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                     std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                      const mkldnn::eltwise_forward::desc& leaky_relu_desc,
                                      const std::vector<size_t>& deps,
                                      size_t leaky_relu_index)
 {
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto leaky_relu_pd =
-        mkldnn::eltwise_forward::primitive_desc(leaky_relu_desc, executor::global_cpu_engine);
+        mkldnn::eltwise_forward::primitive_desc(leaky_relu_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[leaky_relu_index] =
+        new mkldnn::memory::desc(leaky_relu_pd.scratchpad_desc());
+
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, leaky_relu_pd.src_desc(), input_index);
     size_t result_index = deps[1];
@@ -1299,12 +1439,18 @@ void MKLDNNEmitter::build_leaky_relu(std::vector<mkldnn::memory*>& mkldnn_memori
 
 void MKLDNNEmitter::build_bounded_relu(std::vector<mkldnn::memory*>& mkldnn_memories,
                                        std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                       std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                        const mkldnn::eltwise_forward::desc& bounded_relu_desc,
                                        const std::vector<size_t>& deps,
                                        size_t bounded_relu_index)
 {
-    auto bounded_relu_pd =
-        mkldnn::eltwise_forward::primitive_desc(bounded_relu_desc, executor::global_cpu_engine);
+    mkldnn::primitive_attr attr;
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+    auto bounded_relu_pd = mkldnn::eltwise_forward::primitive_desc(
+        bounded_relu_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[bounded_relu_index] =
+        new mkldnn::memory::desc(bounded_relu_pd.scratchpad_desc());
+
     size_t input_index = deps[0];
     build_memory(mkldnn_memories, bounded_relu_pd.src_desc(), input_index);
     size_t result_index = deps[1];
@@ -1378,14 +1524,16 @@ mkldnn::sum::primitive_desc MKLDNNEmitter::get_elementwise_add_desc(const ngraph
     return sum_pd;
 }
 
-void MKLDNNEmitter::build_quantize_reorder(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                           const mkldnn::memory::desc& input_desc,
-                                           const mkldnn::memory::desc& result_desc,
-                                           const std::vector<float>& scales,
-                                           const std::vector<size_t>& deps,
-                                           size_t quantize_index,
-                                           const int mask)
+void MKLDNNEmitter::build_quantize_reorder(
+    std::vector<mkldnn::memory*>& mkldnn_memories,
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+    const mkldnn::memory::desc& input_desc,
+    const mkldnn::memory::desc& result_desc,
+    const std::vector<float>& scales,
+    const std::vector<size_t>& deps,
+    size_t quantize_index,
+    const int mask)
 {
     size_t input_index = deps[0];
     build_memory_primitive(mkldnn_primitives, input_desc, input_index);
@@ -1439,6 +1587,7 @@ mkldnn::memory::format MKLDNNEmitter::query_convolution_forward_weight_format(
 void MKLDNNEmitter::build_deconvolutionbias_forward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::deconvolution_forward::desc& deconv_desc,
     const std::vector<size_t>& deps,
     size_t deconv_index,
@@ -1464,6 +1613,7 @@ void MKLDNNEmitter::build_deconvolutionbias_forward(
 void MKLDNNEmitter::build_convolution_backward_weights_bias(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::convolution_backward_weights::desc& bwd_desc,
     const mkldnn::convolution_forward::desc& fwd_desc,
     const std::vector<size_t>& deps,
@@ -1494,6 +1644,7 @@ void MKLDNNEmitter::build_convolution_backward_weights_bias(
 void MKLDNNEmitter::build_convolution_backward_weights(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::convolution_backward_weights::desc& bwd_desc,
     const mkldnn::convolution_forward::desc& fwd_desc,
     const std::vector<size_t>& deps,
@@ -1519,6 +1670,7 @@ void MKLDNNEmitter::build_convolution_backward_weights(
 void MKLDNNEmitter::build_convolution_backward_data(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::convolution_backward_data::desc& bwd_desc,
     const mkldnn::convolution_forward::desc& fwd_desc,
     const std::vector<size_t>& deps,
@@ -1543,6 +1695,7 @@ void MKLDNNEmitter::build_convolution_backward_data(
 
 void MKLDNNEmitter::build_pooling_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                          std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                           const mkldnn::pooling_forward::desc& pool_desc,
                                           const std::vector<size_t>& deps,
                                           size_t pool_index)
@@ -1558,12 +1711,14 @@ void MKLDNNEmitter::build_pooling_forward(std::vector<mkldnn::memory*>& mkldnn_m
                                     *mkldnn_primitives[result_index]);
 }
 
-void MKLDNNEmitter::build_pooling_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                           const mkldnn::pooling_backward::desc& pool_desc,
-                                           const mkldnn::pooling_forward::desc& pool_fwd_desc,
-                                           const std::vector<size_t>& deps,
-                                           size_t pool_index)
+void MKLDNNEmitter::build_pooling_backward(
+    std::vector<mkldnn::memory*>& mkldnn_memories,
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+    const mkldnn::pooling_backward::desc& pool_desc,
+    const mkldnn::pooling_forward::desc& pool_fwd_desc,
+    const std::vector<size_t>& deps,
+    size_t pool_index)
 {
     size_t input_index = deps[0];
     build_memory_primitive(mkldnn_primitives, pool_desc.data.diff_dst_desc, input_index);
@@ -1579,16 +1734,18 @@ void MKLDNNEmitter::build_pooling_backward(std::vector<mkldnn::memory*>& mkldnn_
         pool_pd, *mkldnn_primitives[input_index], *mkldnn_primitives[result_index]);
 }
 
-void MKLDNNEmitter::build_max_pooling_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                               std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                               std::vector<char*>& mkldnn_workspaces,
-                                               const mkldnn::pooling_backward::desc& bwd_pool_desc,
-                                               const mkldnn::pooling_forward::desc& fwd_pool_desc,
-                                               const mkldnn::memory::desc& fprop_src_desc,
-                                               std::vector<size_t>& fdeps,
-                                               std::vector<size_t>& bdeps,
-                                               size_t fwd_pool_index,
-                                               size_t bwd_pool_index)
+void MKLDNNEmitter::build_max_pooling_backward(
+    std::vector<mkldnn::memory*>& mkldnn_memories,
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+    std::vector<char*>& mkldnn_workspaces,
+    const mkldnn::pooling_backward::desc& bwd_pool_desc,
+    const mkldnn::pooling_forward::desc& fwd_pool_desc,
+    const mkldnn::memory::desc& fprop_src_desc,
+    std::vector<size_t>& fdeps,
+    std::vector<size_t>& bdeps,
+    size_t fwd_pool_index,
+    size_t bwd_pool_index)
 {
     size_t fprop_src_index = fdeps[0];
     build_memory_primitive(mkldnn_primitives, fprop_src_desc, fprop_src_index);
@@ -1629,6 +1786,7 @@ void MKLDNNEmitter::build_max_pooling_backward(std::vector<mkldnn::memory*>& mkl
 void MKLDNNEmitter::build_max_pooling_with_indices_forward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::pooling_forward::desc& max_pool_desc,
     const std::vector<size_t>& deps,
     size_t max_pool_index)
@@ -1652,6 +1810,7 @@ void MKLDNNEmitter::build_max_pooling_with_indices_forward(
 void MKLDNNEmitter::build_max_pooling_with_indices_backward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::pooling_backward::desc& bwd_pool_desc,
     const mkldnn::pooling_forward::desc& fwd_pool_desc,
     const std::vector<size_t>& deps,
@@ -1677,6 +1836,7 @@ void MKLDNNEmitter::build_max_pooling_with_indices_backward(
 
 void MKLDNNEmitter::build_reorder(std::vector<mkldnn::memory*>& mkldnn_memories,
                                   std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                  std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                   const mkldnn::memory::desc& input_desc,
                                   const mkldnn::memory::desc& result_desc,
                                   const std::vector<size_t>& deps,
@@ -1693,6 +1853,7 @@ void MKLDNNEmitter::build_reorder(std::vector<mkldnn::memory*>& mkldnn_memories,
 
 void MKLDNNEmitter::build_lrn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                       std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                      std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                       const mkldnn::lrn_forward::desc& lrn_desc,
                                       const std::vector<size_t>& deps,
                                       size_t lrn_index)
@@ -1710,6 +1871,7 @@ void MKLDNNEmitter::build_lrn_forward(std::vector<mkldnn::memory*>& mkldnn_memor
 
 void MKLDNNEmitter::build_relu_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                        std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                       std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                        const mkldnn::eltwise_forward::desc& relu_desc,
                                        const std::vector<size_t>& deps,
                                        size_t relu_index)
@@ -1727,6 +1889,7 @@ void MKLDNNEmitter::build_relu_forward(std::vector<mkldnn::memory*>& mkldnn_memo
 
 void MKLDNNEmitter::build_relu_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                         std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                        std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                         const mkldnn::eltwise_backward::desc& bwd_desc,
                                         const mkldnn::eltwise_forward::desc& fwd_desc,
                                         const std::vector<size_t>& deps,
@@ -1754,6 +1917,7 @@ void MKLDNNEmitter::build_relu_backward(std::vector<mkldnn::memory*>& mkldnn_mem
 
 void MKLDNNEmitter::build_sigmoid_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                          std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                           const mkldnn::eltwise_forward::desc& sigmoid_desc,
                                           const std::vector<size_t>& deps,
                                           size_t sigmoid_index)
@@ -1769,12 +1933,14 @@ void MKLDNNEmitter::build_sigmoid_forward(std::vector<mkldnn::memory*>& mkldnn_m
                                     *mkldnn_primitives[result_index]);
 }
 
-void MKLDNNEmitter::build_sigmoid_backward(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                           const mkldnn::eltwise_backward::desc& bwd_desc,
-                                           const mkldnn::eltwise_forward::desc& fwd_desc,
-                                           const std::vector<size_t>& deps,
-                                           size_t sigmoid_index)
+void MKLDNNEmitter::build_sigmoid_backward(
+    std::vector<mkldnn::memory*>& mkldnn_memories,
+    std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+    const mkldnn::eltwise_backward::desc& bwd_desc,
+    const mkldnn::eltwise_forward::desc& fwd_desc,
+    const std::vector<size_t>& deps,
+    size_t sigmoid_index)
 {
     size_t input_index = deps[0];
     build_memory_primitive(mkldnn_primitives, bwd_desc.data.data_desc, input_index);
@@ -1796,6 +1962,7 @@ void MKLDNNEmitter::build_sigmoid_backward(std::vector<mkldnn::memory*>& mkldnn_
 
 void MKLDNNEmitter::build_elementwise_add(std::vector<mkldnn::memory*>& mkldnn_memories,
                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                          std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                           const mkldnn::sum::primitive_desc& sum_pd,
                                           const std::vector<size_t>& deps,
                                           size_t add_index)
@@ -1822,6 +1989,7 @@ void MKLDNNEmitter::build_elementwise_add(std::vector<mkldnn::memory*>& mkldnn_m
 void MKLDNNEmitter::build_batchnorm_forward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::batch_normalization_forward::desc& batchnorm_desc,
     const mkldnn::memory::desc& weights_desc,
     bool bn_training_flag,
@@ -1881,9 +2049,12 @@ void MKLDNNEmitter::build_batchnorm_forward(
 void MKLDNNEmitter::build_batchnorm_backward(
     std::vector<mkldnn::memory*>& mkldnn_memories,
     std::vector<mkldnn::primitive*>& mkldnn_primitives,
+    std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
     const mkldnn::batch_normalization_backward::desc& batchnorm_desc,
+    const mkldnn::memory::desc& input_desc,
     const mkldnn::memory::desc& weights_desc,
     const mkldnn::memory::desc& dweights_desc,
+    float epsilon,
     const std::vector<size_t>& deps,
     size_t batchnorm_index)
 {
@@ -1921,6 +2092,7 @@ void MKLDNNEmitter::build_batchnorm_backward(
 
 void MKLDNNEmitter::build_rnn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                       std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                      std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                       std::vector<char*>& mkldnn_workspaces,
                                       const mkldnn::rnn_forward::desc& rnn_desc,
                                       std::vector<size_t>& deps,
@@ -1967,6 +2139,7 @@ void MKLDNNEmitter::build_rnn_forward(std::vector<mkldnn::memory*>& mkldnn_memor
 
 void MKLDNNEmitter::build_concat(std::vector<mkldnn::memory*>& mkldnn_memories,
                                  std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                 std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                  const mkldnn::concat::primitive_desc& concat_pd,
                                  const std::vector<mkldnn::memory::desc>& inputs_data_desc,
                                  const std::vector<size_t>& deps,
@@ -1997,6 +2170,7 @@ void MKLDNNEmitter::build_concat(std::vector<mkldnn::memory*>& mkldnn_memories,
 
 void MKLDNNEmitter::build_slice(std::vector<mkldnn::memory*>& mkldnn_memories,
                                 std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                 mkldnn::memory::desc input_desc,
                                 const mkldnn::memory::desc& result_desc,
                                 const ngraph::Coordinate& lower_bounds,
@@ -2029,6 +2203,7 @@ void MKLDNNEmitter::build_slice(std::vector<mkldnn::memory*>& mkldnn_memories,
 
 void MKLDNNEmitter::build_softmax_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                           std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                          std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                           const mkldnn::softmax_forward::desc& softmax_desc,
                                           const std::vector<size_t>& deps,
                                           size_t softmax_index)
@@ -2046,6 +2221,7 @@ void MKLDNNEmitter::build_softmax_forward(std::vector<mkldnn::memory*>& mkldnn_m
 
 void MKLDNNEmitter::build_leaky_relu(std::vector<mkldnn::memory*>& mkldnn_memories,
                                      std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                     std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                      const mkldnn::eltwise_forward::desc& leaky_relu_desc,
                                      const std::vector<size_t>& deps,
                                      size_t leaky_relu_index)
@@ -2063,6 +2239,7 @@ void MKLDNNEmitter::build_leaky_relu(std::vector<mkldnn::memory*>& mkldnn_memori
 
 void MKLDNNEmitter::build_bounded_relu(std::vector<mkldnn::memory*>& mkldnn_memories,
                                        std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                       std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                        const mkldnn::eltwise_forward::desc& bounded_relu_desc,
                                        const std::vector<size_t>& deps,
                                        size_t bounded_relu_index)

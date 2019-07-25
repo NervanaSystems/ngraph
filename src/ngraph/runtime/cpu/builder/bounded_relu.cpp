@@ -58,6 +58,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_bounded_relu(ctx->mkldnn_memories,
                                                                ctx->mkldnn_primitives,
+                                                               ctx->mkldnn_scratchpad_mds,
                                                                bounded_relu_desc,
                                                                deps,
                                                                bounded_relu_index);

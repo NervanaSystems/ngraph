@@ -71,6 +71,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<false>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -168,6 +169,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<false>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -228,6 +230,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<true>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -294,6 +297,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<true>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -365,6 +369,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<false>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -432,12 +437,14 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_convolution_backward_data(ctx->mkldnn_memories,
-                                                                            ctx->mkldnn_primitives,
-                                                                            bwd_desc,
-                                                                            fwd_desc,
-                                                                            deps,
-                                                                            conv_index);
+                            mkldnn_emitter->build_convolution_backward_data(
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                bwd_desc,
+                                fwd_desc,
+                                deps,
+                                conv_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -544,6 +551,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_backward_weights(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 bwd_desc,
                                 fwd_desc,
                                 deps,
@@ -651,6 +659,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_backward_weights_bias(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 bwd_desc,
                                 fwd_desc,
                                 deps,
@@ -714,6 +723,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<false>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -776,6 +786,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<true>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -842,12 +853,14 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_deconvolutionbias_forward(ctx->mkldnn_memories,
-                                                                            ctx->mkldnn_primitives,
-                                                                            deconvbias_desc,
-                                                                            deps,
-                                                                            conv_index,
-                                                                            weights_desc);
+                            mkldnn_emitter->build_deconvolutionbias_forward(
+                                ctx->mkldnn_memories,
+                                ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
+                                deconvbias_desc,
+                                deps,
+                                conv_index,
+                                weights_desc);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);

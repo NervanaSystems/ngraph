@@ -36,7 +36,7 @@ set(SRC
     builder/avg_pool.cpp
     builder/argmin.cpp
     builder/argmax.cpp
- #	builder/batch_norm.cpp
+ 	builder/batch_norm.cpp
     builder/broadcast.cpp
     builder/broadcast_distributed.cpp
     builder/bounded_relu.cpp
@@ -129,7 +129,6 @@ set(SRC
 if (NOT NGRAPH_USE_MKLDNN_V1)
 	set(SRC
 	    ${SRC}
-	    builder/batch_norm.cpp
 	    builder/lstm.cpp
 	    builder/rnn.cpp
 	    )

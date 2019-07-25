@@ -109,6 +109,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_memories,
                                                                     ctx->mkldnn_primitives,
+                                                                    ctx->mkldnn_scratchpad_mds,
                                                                     batchnorm_desc,
                                                                     weights_desc,
                                                                     training,
@@ -177,6 +178,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_memories,
                                                                     ctx->mkldnn_primitives,
+                                                                    ctx->mkldnn_scratchpad_mds,
                                                                     batchnorm_desc,
                                                                     weights_desc,
                                                                     training,
@@ -426,8 +428,14 @@ namespace ngraph
                 auto batchnorm_index = mkldnn_emitter->reserve_primitive_space(8);
                 auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
 
+                const ngraph::op::BatchNormTrainingBackprop* batchnorm =
+                    static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
+                auto eps = batchnorm->get_eps_value();
+                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+
                 auto functor = [&,
                                 batchnorm_desc,
+                                input_desc,
                                 weights_desc,
                                 dweights_desc,
                                 batchnorm_index,
@@ -448,9 +456,12 @@ namespace ngraph
                     {
                         mkldnn_emitter->build_batchnorm_backward(ctx->mkldnn_memories,
                                                                  ctx->mkldnn_primitives,
+                                                                 ctx->mkldnn_scratchpad_mds,
                                                                  batchnorm_desc,
+                                                                 input_desc,
                                                                  weights_desc,
                                                                  dweights_desc,
+                                                                 eps,
                                                                  deps,
                                                                  batchnorm_index);
                     }

@@ -90,6 +90,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<false>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -210,6 +211,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<false>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -293,6 +295,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<true>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -411,6 +414,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<true>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -533,6 +537,7 @@ namespace ngraph
                             mkldnn_emitter->build_convolution_forward<true>(
                                 ctx->mkldnn_memories,
                                 ctx->mkldnn_primitives,
+                                ctx->mkldnn_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,

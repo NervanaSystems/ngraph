@@ -73,6 +73,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_concat(ctx->mkldnn_memories,
                                                          ctx->mkldnn_primitives,
+                                                         ctx->mkldnn_scratchpad_mds,
                                                          concat_pd,
                                                          inputs_data_desc,
                                                          deps,

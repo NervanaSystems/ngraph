@@ -61,6 +61,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_elementwise_add(ctx->mkldnn_memories,
                                                                   ctx->mkldnn_primitives,
+                                                                  ctx->mkldnn_scratchpad_mds,
                                                                   sum_pd,
                                                                   deps,
                                                                   add_index);

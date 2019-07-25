@@ -210,12 +210,19 @@ namespace ngraph
                     get_mkldnn_format_kind_string_map();
                 const std::string&
                     get_mkldnn_format_kind_string(mkldnn::memory::format_kind fmt_kind);
+                bool inline compare_mkldnn_dims(mkldnn_dims_t& arr1,
+                                                mkldnn_dims_t& arr2,
+                                                size_t size);
+                bool compare_mkldnn_strides_order(mkldnn_dims_t& stride1,
+                                                  mkldnn_dims_t& stride2,
+                                                  size_t size);
                 bool compare_mkldnn_md_formats(const mkldnn::memory::desc& lhs,
                                                const mkldnn::memory::desc& rhs);
-                bool mkldnn_md_matches_format(const mkldnn::memory::desc&,
-                                              const mkldnn::memory::format_tag& fmt);
+                bool mkldnn_md_matches_format_tag(const mkldnn::memory::desc&,
+                                                  const mkldnn::memory::format_tag&);
                 mkldnn::memory::desc create_default_mkldnn_md_with_strides(
                     const Node* node, size_t index, mkldnn::memory::dims& strides, bool is_output);
+                bool is_mkldnn_desc_blocked_data_format(const mkldnn::memory::desc& desc);
 #endif
             }
         }

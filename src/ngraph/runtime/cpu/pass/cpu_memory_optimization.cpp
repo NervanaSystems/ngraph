@@ -80,8 +80,8 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             }
 
             bool in_place_concat = true;
-#if not defined(NGRAPH_USE_MKLDNN_V1)
             auto output_md = mkldnn_utils::get_output_mkldnn_md(n.get(), 0);
+#if not defined(NGRAPH_USE_MKLDNN_V1)
             auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
             for (size_t i = 0; i < n->get_input_size(); i++)
             {
@@ -95,11 +95,23 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     break;
                 }
             }
+#else
+            for (size_t i = 0; i < n->get_input_size(); i++)
+            {
+                auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), i);
+                if (!mkldnn_utils::compare_mkldnn_md_formats(output_md, input_md))
+                {
+                    NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
+                                    "output format, no in place concat";
+                    in_place_concat = false;
+                    break;
+                }
+            }
+#endif
             if (!in_place_concat)
             {
                 continue;
             }
-#endif
 
             AxisVector axis_list = ngraph::get_default_order(shape);
 
@@ -279,6 +291,13 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
             auto input_format = static_cast<mkldnn::memory::format>(input_md.data.format);
             if (output_format != input_format)
+            {
+                NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
+                                "output format, no in place slice";
+                continue;
+            }
+#else
+            if (!mkldnn_utils::compare_mkldnn_md_formats(output_md, input_md))
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
                                 "output format, no in place slice";

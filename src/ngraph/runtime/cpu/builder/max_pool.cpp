@@ -65,6 +65,7 @@ namespace ngraph
                             {
                                 mkldnn_emitter->build_pooling_forward(ctx->mkldnn_memories,
                                                                       ctx->mkldnn_primitives,
+                                                                      ctx->mkldnn_scratchpad_mds,
                                                                       max_pool_desc,
                                                                       deps,
                                                                       max_pool_index);
@@ -196,6 +197,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_max_pooling_backward(ctx->mkldnn_memories,
                                                                        ctx->mkldnn_primitives,
+                                                                       ctx->mkldnn_scratchpad_mds,
                                                                        ctx->mkldnn_workspaces,
                                                                        bwd_pool_desc,
                                                                        fwd_pool_desc,
@@ -280,6 +282,7 @@ namespace ngraph
                         mkldnn_emitter->build_max_pooling_with_indices_forward(
                             ctx->mkldnn_memories,
                             ctx->mkldnn_primitives,
+                            ctx->mkldnn_scratchpad_mds,
                             max_pool_desc,
                             deps,
                             max_pool_index);
@@ -338,6 +341,7 @@ namespace ngraph
                         mkldnn_emitter->build_max_pooling_with_indices_backward(
                             ctx->mkldnn_memories,
                             ctx->mkldnn_primitives,
+                            ctx->mkldnn_scratchpad_mds,
                             bwd_pool_desc,
                             fwd_pool_desc,
                             deps,

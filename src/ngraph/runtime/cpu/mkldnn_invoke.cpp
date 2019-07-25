@@ -19,6 +19,7 @@
 #include <mkldnn.hpp>
 
 #include "mkldnn_invoke.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
@@ -112,12 +113,12 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
         break;
     case OpType::CONCAT:
     case OpType::QUANTIZEDCONCAT:
-        nargs = deps.size();
+        nargs = deps.size() - 1;
         for (size_t i = 0; i < nargs; i++)
         {
             exec_args.insert({MKLDNN_ARG_MULTIPLE_SRC + i, *ctx->mkldnn_memories[deps[i]]});
         }
-        exec_args.insert({MKLDNN_ARG_MULTIPLE_DST, *ctx->mkldnn_memories[deps[nargs]]});
+        exec_args.insert({MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[nargs]]});
         break;
     case OpType::CONVOLUTION:
     case OpType::CONVOLUTIONRELU:
@@ -143,8 +144,8 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
                      {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[3]]}};
         break;
     case OpType::CONVOLUTIONBACKPROPDATA:
-        exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[1]]},
+        exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_WEIGHTS, *ctx->mkldnn_memories[deps[0]]},
                      {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
         break;
     case OpType::CONVOLUTIONBACKPROPWEIGHTS:
@@ -176,12 +177,20 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
                      {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[5]]}};
         break;
     case OpType::MAXPOOLBACKPROPFORWARD:
+        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[1]]}};
+        break;
     case OpType::MAXPOOLWITHINDICES:
         exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[2]]}};
+                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[1]]}};
         break;
     case OpType::MAXPOOLBACKPROPBACKWARD:
+        exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
+        break;
     case OpType::MAXPOOLWITHINDICESBACKPROP:
         exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
                      {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[1]]},
@@ -194,6 +203,11 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
                      {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
         break;
     }
+
+    mkldnn::memory scratchpad(*ctx->mkldnn_scratchpad_mds[primitive_index],
+                              executor::global_cpu_engine,
+                              ctx->scratchpad_buffer->get_ptr());
+    exec_args.insert({MKLDNN_ARG_SCRATCHPAD, scratchpad});
 
     mkldnn::stream s(executor::global_cpu_engine);
     try

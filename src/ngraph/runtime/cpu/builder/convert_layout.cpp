@@ -81,8 +81,57 @@ namespace ngraph
                         mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
                         mkldnn::memory::format::goihw);
                 }
+#else
+                bool input_format_is_nchw = mkldnn_utils::mkldnn_md_matches_format_tag(
+                    input_desc.data, mkldnn::memory::format_tag::nchw);
+                if (input_format_is_nchw &&
+                    mkldnn_utils::mkldnn_md_matches_format_tag(result_desc.data,
+                                                               mkldnn::memory::format_tag::goihw))
+                {
+                    //becomes a copy
+                    input_desc = result_desc;
+                }
+                else if ((input_format_is_nchw ||
+                          mkldnn_utils::mkldnn_md_matches_format_tag(
+                              input_desc.data, mkldnn::memory::format_tag::nhwc)) &&
+                         (mkldnn_utils::mkldnn_md_matches_format_tag(
+                              result_desc.data, mkldnn::memory::format_tag::OIhw4i16o4i) &&
+                          // check if compensation is conv_s8s8(1U)
+                          result_desc.data.extra.flags & 0x1U))
+                {
+                    //input_desc.data.format = mkldnn_oihw;
+                    auto arg0_shape = args[0].get_shape();
+                    input_desc = mkldnn::memory::desc(
+                        mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                        mkldnn::memory::format_tag::oihw);
+                }
+                else if (input_format_is_nchw && input_desc.data.ndims == 4 &&
+                         result_desc.data.ndims == 5 && node->get_users().size() == 1)
+                {
+                    Shape weights_shape_groups;
+                    if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
+                            node->get_users()[0]))
+                    {
+                        weights_shape_groups = gconv->get_weights_dimensions();
+                    }
+                    else if (auto gconvb =
+                                 std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
+                                     node->get_users()[0]))
+                    {
+                        weights_shape_groups = gconvb->get_weights_dimensions();
+                    }
+                    else
+                    {
+                        throw ngraph_error("Incompatible input/output shape in ConvertLayout op");
+                    }
+                    input_desc = mkldnn::memory::desc(
+                        mkldnn::memory::dims(weights_shape_groups.begin(),
+                                             weights_shape_groups.end()),
+                        mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                        mkldnn::memory::format_tag::goihw);
+                }
 #endif
-
                 // ConvertLayout needs 3 primitives: input, result, and reorder.
                 size_t reorder_index = mkldnn_emitter->reserve_primitive_space(3);
                 auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
@@ -93,6 +142,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_reorder(ctx->mkldnn_memories,
                                                           ctx->mkldnn_primitives,
+                                                          ctx->mkldnn_scratchpad_mds,
                                                           input_desc,
                                                           result_desc,
                                                           deps,

@@ -66,6 +66,7 @@ namespace ngraph
                             {
                                 mkldnn_emitter->build_pooling_forward(ctx->mkldnn_memories,
                                                                       ctx->mkldnn_primitives,
+                                                                      ctx->mkldnn_scratchpad_mds,
                                                                       avg_pool_desc,
                                                                       deps,
                                                                       avg_pool_index);
@@ -157,6 +158,7 @@ namespace ngraph
                         {
                             mkldnn_emitter->build_pooling_backward(ctx->mkldnn_memories,
                                                                    ctx->mkldnn_primitives,
+                                                                   ctx->mkldnn_scratchpad_mds,
                                                                    avg_pool_desc,
                                                                    avg_pool_fwd_desc,
                                                                    deps,

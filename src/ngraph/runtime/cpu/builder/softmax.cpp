@@ -59,6 +59,7 @@ namespace ngraph
                             {
                                 mkldnn_emitter->build_softmax_forward(ctx->mkldnn_memories,
                                                                       ctx->mkldnn_primitives,
+                                                                      ctx->mkldnn_scratchpad_mds,
                                                                       softmax_desc,
                                                                       deps,
                                                                       softmax_index);

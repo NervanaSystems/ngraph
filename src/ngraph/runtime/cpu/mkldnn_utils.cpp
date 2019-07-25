@@ -1268,6 +1268,7 @@ memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_de
         error::wrap_c_api(
             mkldnn_memory_desc_init_by_tag(&named_md, blk.ndims, blk.dims, blk.data_type, format),
             "");
+
         return memory::desc(named_md);
     };
 
@@ -1320,6 +1321,7 @@ memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_de
 memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& in,
                                                            const AxisVector& axis_order)
 {
+    std::cout << "rotate\n";
     mkldnn_memory_desc_t md;
     md.ndims = in.data.ndims;
     md.format_kind = mkldnn_blocked;
@@ -1328,15 +1330,19 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
 
     for (size_t i = 0; i < in.data.ndims; i++)
     {
-        md.format_desc.blocking.strides[i] = in.data.format_desc.blocking.strides[axis_order[i]];
-        md.format_desc.blocking.inner_blks[i] =
-            in.data.format_desc.blocking.inner_blks[axis_order[i]];
-        md.format_desc.blocking.inner_idxs[i] =
-            in.data.format_desc.blocking.inner_idxs[axis_order[i]];
         md.padded_dims[i] = in.data.padded_dims[axis_order[i]];
         md.padded_offsets[i] = in.data.padded_offsets[axis_order[i]];
         md.dims[i] = in.data.dims[axis_order[i]];
+        md.format_desc.blocking.strides[i] = in.data.format_desc.blocking.strides[axis_order[i]];
     }
+
+    for (size_t i = 0; i < in.data.format_desc.blocking.inner_nblks; i++)
+    {
+        md.format_desc.blocking.inner_blks[i] = in.data.format_desc.blocking.inner_blks[i];
+        md.format_desc.blocking.inner_idxs[i] =
+            axis_order[in.data.format_desc.blocking.inner_idxs[i]];
+    }
+
     md.offset0 = in.data.offset0;
 
     return try_get_named_md(md);
@@ -1375,13 +1381,38 @@ memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& 
         }
 
         md.format_desc.blocking.strides[j] = in.data.format_desc.blocking.strides[i];
-        md.format_desc.blocking.inner_blks[j] = in.data.format_desc.blocking.inner_blks[i];
-        md.format_desc.blocking.inner_idxs[j] = in.data.format_desc.blocking.inner_idxs[i];
         md.padded_dims[j] = in.data.padded_dims[i];
         md.padded_offsets[j] = in.data.padded_offsets[i];
         md.dims[j] = in.data.dims[i];
 
         j++;
+    }
+
+    std::sort(axis_list.begin(), axis_list.end());
+    auto get_axis_after_squeeze = [&](size_t index) -> int {
+        if (std::find(axis_list.begin(), axis_list.end(), index) != axis_list.end())
+        {
+            return -1;
+        }
+        for (auto axis : axis_list)
+        {
+            if (axis < index)
+            {
+                index--;
+            }
+            else
+            {
+                return index;
+            }
+        }
+        return index;
+    };
+
+    for (size_t i = 0; i < in.data.format_desc.blocking.inner_nblks; i++)
+    {
+        md.format_desc.blocking.inner_blks[i] = in.data.format_desc.blocking.inner_blks[i];
+        md.format_desc.blocking.inner_idxs[i] =
+            get_axis_after_squeeze(in.data.format_desc.blocking.inner_idxs[i]);
     }
     md.offset0 = in.data.offset0;
 
@@ -1409,26 +1440,18 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
             if (i > 0)
             {
                 md.format_desc.blocking.strides[j] = in.data.format_desc.blocking.strides[i - 1];
-                md.format_desc.blocking.inner_blks[j] =
-                    in.data.format_desc.blocking.inner_blks[i - 1];
             }
             else
             {
-                md.format_desc.blocking.inner_blks[j] =
-                    in.data.format_desc.blocking.inner_blks[in.data.ndims - 1];
                 size_t nelems = 1;
                 for (size_t idx = 0; idx < in.data.ndims; idx++)
                     nelems *= in.data.padded_dims[idx];
                 md.format_desc.blocking.strides[j] = nelems;
             }
-            md.format_desc.blocking.inner_idxs[j] = j;
         }
         else
         {
             md.format_desc.blocking.strides[j] = in.data.format_desc.blocking.strides[i];
-            md.format_desc.blocking.inner_blks[j] = in.data.format_desc.blocking.inner_blks[i];
-            //TODO check idx
-            md.format_desc.blocking.inner_idxs[j] = in.data.format_desc.blocking.inner_idxs[i] + k;
             md.padded_dims[j] = in.data.padded_dims[i];
             md.padded_offsets[j] = in.data.padded_offsets[i];
             md.dims[j] = in.data.dims[i];
@@ -1436,6 +1459,23 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
             i++;
         }
     }
+
+    std::vector<size_t> input_axis_after_expand_list;
+    for (size_t i = 0; i < md.ndims; i++)
+    {
+        if (std::find(axis_list.begin(), axis_list.end(), i) == axis_list.end())
+        {
+            input_axis_after_expand_list.push_back(i);
+        }
+    }
+
+    for (size_t i = 0; i < in.data.format_desc.blocking.inner_nblks; i++)
+    {
+        md.format_desc.blocking.inner_blks[i] = in.data.format_desc.blocking.inner_blks[i];
+        md.format_desc.blocking.inner_idxs[i] =
+            input_axis_after_expand_list[in.data.format_desc.blocking.inner_idxs[i]];
+    }
+
     md.offset0 = in.data.offset0;
 
     return try_get_named_md(md);
@@ -1450,19 +1490,135 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format_t
 bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& lhs,
                                                     const mkldnn::memory::desc& rhs)
 {
-    return lhs == rhs;
+    return mkldnn_memory_desc_equal(&(lhs.data), &(rhs.data));
+}
+
+bool inline runtime::cpu::mkldnn_utils::compare_mkldnn_dims(mkldnn_dims_t& arr1,
+                                                            mkldnn_dims_t& arr2,
+                                                            size_t size)
+{
+    for (auto i = 0; i < size; i++)
+    {
+        if (arr1[i] != arr2[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool runtime::cpu::mkldnn_utils::compare_mkldnn_strides_order(mkldnn_dims_t& strides1,
+                                                              mkldnn_dims_t& strides2,
+                                                              size_t size)
+{
+    std::vector<size_t> indices1(size, 0), indices2(size, 0);
+    for (size_t i = 0; i < size; i++)
+    {
+        indices1[i] = i;
+        indices2[i] = i;
+    }
+    std::sort(indices1.begin(), indices1.begin(), [&](const size_t& n1, const size_t& n2) {
+        return strides1[n1] < strides1[n2];
+    });
+    std::sort(indices2.begin(), indices2.begin(), [&](const size_t& n1, const size_t& n2) {
+        return strides2[n1] < strides2[n2];
+    });
+
+    for (auto i = 0; i < size; i++)
+    {
+        if (indices1[i] != indices2[i])
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool runtime::cpu::mkldnn_utils::compare_mkldnn_md_formats(const mkldnn::memory::desc& lhs,
                                                            const mkldnn::memory::desc& rhs)
 {
-    return false;
+    mkldnn_memory_desc_t md1 = lhs.data, md2 = rhs.data;
+
+    if (md1.format_kind != md2.format_kind)
+    {
+        return false;
+    }
+
+    if (md1.format_kind != static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::blocked))
+    {
+        //mkldnn not implemented yet
+        return false;
+    }
+
+    if (md1.ndims != md2.ndims)
+    {
+        return false;
+    }
+
+    auto blk1 = md1.format_desc.blocking;
+    auto blk2 = md2.format_desc.blocking;
+
+    if (blk1.inner_nblks != blk2.inner_nblks ||
+        !compare_mkldnn_dims(blk1.inner_blks, blk2.inner_blks, blk1.inner_nblks) ||
+        !compare_mkldnn_dims(blk1.inner_idxs, blk2.inner_idxs, blk1.inner_nblks))
+    {
+        return false;
+    }
+
+    return compare_mkldnn_strides_order(blk1.strides, blk2.strides, md1.ndims);
 }
 
-bool runtime::cpu::mkldnn_utils::mkldnn_md_matches_format(const mkldnn::memory::desc&,
-                                                          const mkldnn::memory::format_tag& fmt)
+bool runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(const mkldnn::memory::desc& desc,
+                                                              const mkldnn::memory::format_tag& fmt)
 {
-    return false;
+    auto format_tag_to_kind = [](mkldnn::memory::format_tag tag) {
+        switch (tag)
+        {
+        case mkldnn::memory::format_tag::undef: return mkldnn::memory::format_kind::undef;
+        case mkldnn::memory::format_tag::any: return mkldnn::memory::format_kind::any;
+        default: return mkldnn::memory::format_kind::blocked;
+        }
+    };
+
+    mkldnn_memory_desc_t md = desc.data;
+    if (md.format_kind != static_cast<mkldnn_format_kind_t>(format_tag_to_kind(fmt)))
+    {
+        return false;
+    }
+
+    mkldnn_memory_desc_t named_md;
+    try
+    {
+        // Could throw an exception if named `format` is not compatible with `md.dims`
+        error::wrap_c_api(
+            mkldnn_memory_desc_init_by_tag(
+                &named_md, md.ndims, md.dims, md.data_type, static_cast<mkldnn_format_tag_t>(fmt)),
+            "");
+    }
+    catch (const mkldnn::error&)
+    {
+        // Cannot create the named descriptor compatible with `md` desc
+        return false;
+    }
+
+    if (md.format_kind != static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::blocked))
+    {
+        //mkldnn not implemented yet
+        return false;
+    }
+
+    auto blk = md.format_desc.blocking;
+    auto named_blk = named_md.format_desc.blocking;
+
+    if (blk.inner_nblks != named_blk.inner_nblks ||
+        !compare_mkldnn_dims(blk.inner_blks, named_blk.inner_blks, blk.inner_nblks) ||
+        !compare_mkldnn_dims(blk.inner_idxs, named_blk.inner_idxs, blk.inner_nblks) ||
+        !compare_mkldnn_dims(blk.strides, named_blk.strides, md.ndims))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::desc& in,
@@ -1485,5 +1641,29 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::d
     }
 
     return false;
+}
+
+bool runtime::cpu::mkldnn_utils::is_mkldnn_desc_blocked_data_format(
+    const mkldnn::memory::desc& desc)
+{
+    auto blk = desc.data.format_desc.blocking;
+//TODO for v0.x, we just check if nChw8c or nChw16c, should we do the same here?
+#if 0
+	// Check if nChw8c or nChw16c
+	if (desc.data.ndims != 4 || blk.inner_nblks != 1 ||
+		(blk.inner_blks[0] != 8 && blk.inner_blks[0] != 16) ||
+	    blk.inner_idxs[0] != 1)
+	{
+		return false;
+	}
+	std::vector<size_t> perm{0, 1, 2, 3};
+    for (size_t i = 0; i < 3; i++)
+    {
+        if (blk.strides[i] < blk.strides[i + 1]])
+            return false;
+    }
+	return true;
+#endif
+    return blk.inner_nblks != 0;
 }
 #endif

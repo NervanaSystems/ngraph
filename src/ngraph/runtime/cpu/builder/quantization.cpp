@@ -85,6 +85,7 @@ namespace ngraph
                                         scales_size);
                                 mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
                                                                        ctx->mkldnn_primitives,
+                                                                       ctx->mkldnn_scratchpad_mds,
                                                                        input_desc,
                                                                        result_desc,
                                                                        dyn_scales,
@@ -121,6 +122,7 @@ namespace ngraph
                             {
                                 mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
                                                                        ctx->mkldnn_primitives,
+                                                                       ctx->mkldnn_scratchpad_mds,
                                                                        input_desc,
                                                                        result_desc,
                                                                        scales,
@@ -359,6 +361,7 @@ namespace ngraph
                                 const int mask = scales_size == 1 ? 0 : 1;
                                 mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
                                                                        ctx->mkldnn_primitives,
+                                                                       ctx->mkldnn_scratchpad_mds,
                                                                        input_desc,
                                                                        result_desc,
                                                                        dyn_scales,
@@ -396,6 +399,7 @@ namespace ngraph
                             {
                                 mkldnn_emitter->build_quantize_reorder(ctx->mkldnn_memories,
                                                                        ctx->mkldnn_primitives,
+                                                                       ctx->mkldnn_scratchpad_mds,
                                                                        input_desc,
                                                                        result_desc,
                                                                        scales,
