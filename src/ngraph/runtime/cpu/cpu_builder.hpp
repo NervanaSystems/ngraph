@@ -204,6 +204,34 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
+#define SELECT_REDUCTION_BY_RANK(KV, ET, R, K)                                                     \
+    if (ET == element::f32)                                                                        \
+    {                                                                                              \
+        SELECT_RANK(KV, float, R, K);                                                              \
+    }                                                                                              \
+    else if (ET == element::i64)                                                                   \
+    {                                                                                              \
+        SELECT_RANK(KV, int64_t, R, K);                                                            \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
+    }
+
+#define SELECT_REDUCTION(KV, ET, K)                                                                \
+    if (ET == element::f32)                                                                        \
+    {                                                                                              \
+        KV = K<float>;                                                                             \
+    }                                                                                              \
+    else if (ET == element::i64)                                                                   \
+    {                                                                                              \
+        KV = K<int64_t>;                                                                           \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
+    }
+
 #define SELECT_RANK1(KV, ET, R1, R2, K)                                                            \
     if (R1 == 1)                                                                                   \
         KV = K<ET, 1, R2>;                                                                         \
@@ -277,6 +305,20 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
+#define SELECT_KERNEL_SOFTMAX(KV, ET, K)                                                           \
+    if (ET == element::f32)                                                                        \
+    {                                                                                              \
+        KV = K<float>;                                                                             \
+    }                                                                                              \
+    else if (ET == element::i64)                                                                   \
+    {                                                                                              \
+        KV = K<int64_t>;                                                                           \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
+    }
+
 // Helper macros for a partial set of element types and ranks
 // Useful for keeping compilation time and memory usage reasonable
 // when the computed expression is complex
@@ -314,6 +356,20 @@
     else if (ET == element::u8)                                                                    \
     {                                                                                              \
         PARTIAL_SELECT_RANK(KV, uint8_t, R, K);                                                    \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
+    }
+
+#define PARTIAL_SELECT_SOFTMAX_BY_RANK(KV, ET, R, K)                                               \
+    if (ET == element::f32)                                                                        \
+    {                                                                                              \
+        PARTIAL_SELECT_RANK(KV, float, R, K);                                                      \
+    }                                                                                              \
+    else if (ET == element::i64)                                                                   \
+    {                                                                                              \
+        PARTIAL_SELECT_RANK(KV, int64_t, R, K);                                                    \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \

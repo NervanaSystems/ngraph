@@ -44,7 +44,7 @@
     if (reduction_axes.size() == arg_rank)                                                         \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_all<float, 2>)> kernel;          \
-        SELECT_KERNEL_BY_RANK(                                                                     \
+        SELECT_REDUCTION_BY_RANK(                                                                  \
             kernel, result_element_type, arg_rank, runtime::cpu::kernel::reduce_##K##_all);        \
         auto functor = [&, kernel, arg_shape, result_shape, arg_buffer_index, out_buffer_index](   \
             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                   \
@@ -64,10 +64,10 @@
         {                                                                                          \
             std::function<decltype(runtime::cpu::kernel::reduce_##K##_innermost_1rd<float, 2>)>    \
                 kernel;                                                                            \
-            SELECT_KERNEL_BY_RANK(kernel,                                                          \
-                                  result_element_type,                                             \
-                                  arg_rank,                                                        \
-                                  runtime::cpu::kernel::reduce_##K##_innermost_1rd);               \
+            SELECT_REDUCTION_BY_RANK(kernel,                                                       \
+                                     result_element_type,                                          \
+                                     arg_rank,                                                     \
+                                     runtime::cpu::kernel::reduce_##K##_innermost_1rd);            \
             auto functor =                                                                         \
                 [&, kernel, arg_shape, result_shape, arg_buffer_index, out_buffer_index](          \
                     CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                           \
@@ -82,7 +82,7 @@
         }                                                                                          \
                                                                                                    \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_1rd<float, 2>)> kernel;          \
-        SELECT_KERNEL_BY_RANK(                                                                     \
+        SELECT_REDUCTION_BY_RANK(                                                                  \
             kernel, result_element_type, arg_rank, runtime::cpu::kernel::reduce_##K##_1rd);        \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
@@ -105,7 +105,7 @@
     if (reduction_axes.size() == 2 && arg_rank == 3)                                               \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_3d_2rd<float>)> kernel;          \
-        SELECT_KERNEL(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_3d_2rd);     \
+        SELECT_REDUCTION(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_3d_2rd);  \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
                         arg_shape,                                                                 \
@@ -127,7 +127,7 @@
     if (reduction_axes.size() == 2 && arg_rank == 4)                                               \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_4d_2rd<float>)> kernel;          \
-        SELECT_KERNEL(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_4d_2rd);     \
+        SELECT_REDUCTION(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_4d_2rd);  \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
                         arg_shape,                                                                 \
@@ -149,7 +149,7 @@
     if (reduction_axes.size() == 2 && arg_rank == 5)                                               \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_5d_2rd<float>)> kernel;          \
-        SELECT_KERNEL(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_5d_2rd);     \
+        SELECT_REDUCTION(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_5d_2rd);  \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
                         arg_shape,                                                                 \
@@ -170,7 +170,7 @@
                                                                                                    \
     std::function<decltype(runtime::cpu::kernel::K<float>)> ref_kernel;                            \
                                                                                                    \
-    SELECT_KERNEL(ref_kernel, result_element_type, runtime::cpu::kernel::K);                       \
+    SELECT_REDUCTION(ref_kernel, result_element_type, runtime::cpu::kernel::K);                    \
                                                                                                    \
     auto functor = [&,                                                                             \
                     ref_kernel,                                                                    \
