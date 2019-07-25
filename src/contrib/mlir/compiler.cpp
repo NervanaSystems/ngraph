@@ -30,6 +30,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -63,6 +64,7 @@
 using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::make_unique;
+using llvm::ArrayRef;
 
 using namespace ngraph::runtime::ngmlir;
 
@@ -282,11 +284,20 @@ void MLIRCompiler::build_ng_dialect()
             throw unsupported_op{std::string{"The MLIR backend doesn't currently implement the '"} +
                                  np->description() + "' operation"};
         }
-        mlir::Value* mlir_value = it->second(*this, np.get());
-        // builders that have multiple result values will update the value map, and set their ret values to null
-        if (mlir_value)
+        mlir::Operation* op = it->second(*this, np.get());
+        // This assumes simple 1:1 mapping between output edges and generated MLIR op results
+        // If the mapping is more complex, the create_op helper can return null operation
+        // and handles populating the value map itself
+        if (op)
         {
-            update_tensor_value(np->get_output_tensor_ptr().get(), mlir_value);
+            for (auto i = 0; i < op->getNumResults(); i++)
+            {
+                mlir::Value* result = op->getResult(i);
+                if (result)
+                {
+                    update_tensor_value(np->get_output_tensor_ptr(i).get(), result);
+                }
+            }
         }
     }
     create_return();
@@ -299,132 +310,124 @@ namespace ngraph
         namespace ngmlir
         {
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
             {
-                return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGAddOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Subtract)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Subtract)
             {
-                return compiler.create_binary_op<mlir::NGSubOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGSubOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Multiply)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Multiply)
             {
-                return compiler.create_binary_op<mlir::NGMulOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGMulOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Divide)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Divide)
             {
-                return compiler.create_binary_op<mlir::NGDivOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGDivOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Greater)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Greater)
             {
-                return compiler.create_binary_op<mlir::NGGreaterOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGGreaterOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Less)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Less)
             {
-                return compiler.create_binary_op<mlir::NGLessOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGLessOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Maximum)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Maximum)
             {
-                return compiler.create_binary_op<mlir::NGMaxOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGMaxOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Minimum)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Minimum)
             {
-                return compiler.create_binary_op<mlir::NGMinOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGMinOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMax)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMax)
             {
                 return compiler.create_index_reduction<mlir::NGArgMaxRedOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMin)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMin)
             {
                 return compiler.create_index_reduction<mlir::NGArgMinRedOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
             {
-                return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGDotOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Concat)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Concat)
             {
-                return compiler.create_concat(ng_node);
+                auto ng_node_concat = static_cast<const ngraph::op::Concat*>(ng_node);
+                auto op = compiler.create_generic_op<mlir::NGConcatOp>(ng_node);
+                op->setAttr("concatenation_axis",
+                            compiler.m_builder->getI64IntegerAttr(
+                                ng_node_concat->get_concatenation_axis()));
+                return op;
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Gather)
             {
-                return compiler.create_unary_op<mlir::NGReluOp>(ng_node);
+                auto ng_node_gather = static_cast<const ngraph::op::Gather*>(ng_node);
+                auto op = compiler.create_generic_op<mlir::NGGatherOp>(ng_node);
+                op->setAttr("axis",
+                            compiler.m_builder->getI64IntegerAttr(ng_node_gather->get_axis()));
+                return op;
             }
         }
     }
 }
 
-const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
-#define MLIR_OP(OP) {TI(ngraph::op::OP), &MLIRCompiler::create_op<ngraph::op::OP>},
-#include "ops_supported.inc"
-};
-
-template <typename UnaryOp>
-mlir::Value* MLIRCompiler::create_unary_op(const ngraph::Node* ng_node)
-{
-    auto lhs = ng_node->get_argument(0)->get_output_tensor_ptr();
-    auto lhs_v = get_tensor_value(lhs.get()).m_value;
-    auto res_type = get_mlir_type(ng_node->get_output_tensor_ptr().get());
-    return m_builder->create<UnaryOp>(mlir::UnknownLoc::get(&m_context), res_type, lhs_v)
-        .getResult();
-}
-
-template <typename BinOp>
-mlir::Value* MLIRCompiler::create_binary_op(const ngraph::Node* ng_node)
-{
-    auto lhs = ng_node->get_argument(0)->get_output_tensor_ptr();
-    auto rhs = ng_node->get_argument(1)->get_output_tensor_ptr();
-    auto lhs_v = get_tensor_value(lhs.get()).m_value;
-    auto rhs_v = get_tensor_value(rhs.get()).m_value;
-    auto res_type = get_mlir_type(ng_node->get_output_tensor_ptr().get());
-    return m_builder->create<BinOp>(mlir::UnknownLoc::get(&m_context), res_type, lhs_v, rhs_v)
-        .getResult();
-}
-
-mlir::Value* MLIRCompiler::create_concat(const ngraph::Node* ng_node)
+template <typename Op>
+mlir::Operation* MLIRCompiler::create_generic_op(const ngraph::Node* ng_node)
 {
     std::vector<mlir::Value*> arg_values;
-    auto ng_node_concat = static_cast<const ngraph::op::Concat*>(ng_node);
+    std::vector<mlir::Type> res_types;
     for (auto& arg : ng_node->get_arguments())
     {
         auto arg_tensor = arg->get_output_tensor_ptr();
         auto arg_v = get_tensor_value(arg_tensor.get()).m_value;
         arg_values.push_back(arg_v);
     }
-    auto res_type = get_mlir_type(ng_node->get_output_tensor_ptr().get());
-    return m_builder
-        ->create<mlir::NGConcatOp>(
-            mlir::UnknownLoc::get(&m_context),
-            res_type,
-            arg_values,
-            m_builder->getI64IntegerAttr(ng_node_concat->get_concatenation_axis()))
-        .getResult();
+
+    for (auto& output : ng_node->outputs())
+    {
+        res_types.push_back(get_mlir_type(output.get_tensor_ptr().get()));
+    }
+
+    return (m_builder->create<Op,
+                              ArrayRef<mlir::Type>,
+                              ArrayRef<mlir::Value*>,
+                              ArrayRef<mlir::NamedAttribute>>(
+                mlir::UnknownLoc::get(&m_context), res_types, arg_values, {/* no attrs */}))
+        .getOperation();
 }
+
+const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
+#define MLIR_OP(OP) {TI(ngraph::op::OP), &MLIRCompiler::create_op<ngraph::op::OP>},
+#include "ops_supported.inc"
+};
 
 void MLIRCompiler::create_return()
 {
@@ -437,21 +440,16 @@ void MLIRCompiler::create_return()
 }
 
 template <typename RedOp>
-mlir::Value* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_node)
+mlir::Operation* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_node)
 {
     auto* idx_red = static_cast<const ngraph::op::util::IndexReduction*>(ng_node);
-
-    auto arg = idx_red->get_argument(0);
-    size_t red_axis = idx_red->get_reduction_axis();
-
-    mlir::Value* arg_val = get_tensor_value(arg->get_output_tensor_ptr().get()).m_value;
-    mlir::ArrayAttr red_axes_attr = m_builder->getI64ArrayAttr({(int64_t)red_axis});
-
-    return m_builder
-        ->create<RedOp>(
-            mlir::UnknownLoc::get(&m_context), get_mlir_type(ng_node), arg_val, red_axes_attr)
-        .getResult();
+    auto op = create_generic_op<RedOp>(ng_node);
+    mlir::ArrayAttr red_axes_attr =
+        m_builder->getI64ArrayAttr({(int64_t)idx_red->get_reduction_axis()});
+    op->setAttr("axes", red_axes_attr);
+    return op;
 }
+
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
 // helpers to be used inside the function.
 void MLIRCompiler::bind_arguments()

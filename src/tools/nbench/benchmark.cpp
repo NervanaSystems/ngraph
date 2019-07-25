@@ -14,12 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <random>
-#if defined(__x86_64__) || defined(__amd64__)
-#include <xmmintrin.h>
-#endif
-
 #include "benchmark.hpp"
+#include "benchmark_utils.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
@@ -29,106 +25,6 @@
 
 using namespace std;
 using namespace ngraph;
-
-static default_random_engine s_random_engine;
-
-void set_denormals_flush_to_zero()
-{
-#if defined(__x86_64__) || defined(__amd64__)
-    // Avoids perf impact from denormals while benchmarking with random data
-    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
-    _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
-#endif
-}
-
-template <typename T>
-void init_int_tv(shared_ptr<runtime::Tensor> tv, T min, T max)
-{
-    size_t size = tv->get_element_count();
-    uniform_int_distribution<T> dist(min, max);
-    vector<T> vec(size);
-    for (T& element : vec)
-    {
-        element = dist(s_random_engine);
-    }
-    tv->write(vec.data(), vec.size() * sizeof(T));
-}
-
-template <>
-void init_int_tv<char>(shared_ptr<runtime::Tensor> tv, char min, char max)
-{
-    size_t size = tv->get_element_count();
-    uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
-    vector<char> vec(size);
-    for (char& element : vec)
-    {
-        element = static_cast<char>(dist(s_random_engine));
-    }
-    tv->write(vec.data(), vec.size() * sizeof(char));
-}
-
-template <>
-void init_int_tv<int8_t>(shared_ptr<runtime::Tensor> tv, int8_t min, int8_t max)
-{
-    size_t size = tv->get_element_count();
-    uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
-    vector<int8_t> vec(size);
-    for (int8_t& element : vec)
-    {
-        element = static_cast<int8_t>(dist(s_random_engine));
-    }
-    tv->write(vec.data(), vec.size() * sizeof(int8_t));
-}
-
-template <>
-void init_int_tv<uint8_t>(shared_ptr<runtime::Tensor> tv, uint8_t min, uint8_t max)
-{
-    size_t size = tv->get_element_count();
-    uniform_int_distribution<int16_t> dist(static_cast<short>(min), static_cast<short>(max));
-    vector<uint8_t> vec(size);
-    for (uint8_t& element : vec)
-    {
-        element = static_cast<uint8_t>(dist(s_random_engine));
-    }
-    tv->write(vec.data(), vec.size() * sizeof(uint8_t));
-}
-
-template <typename T>
-void init_real_tv(shared_ptr<runtime::Tensor> tv, T min, T max)
-{
-    size_t size = tv->get_element_count();
-    uniform_real_distribution<T> dist(min, max);
-    vector<T> vec(size);
-    for (T& element : vec)
-    {
-        element = dist(s_random_engine);
-    }
-    tv->write(vec.data(), vec.size() * sizeof(T));
-}
-
-static void random_init(shared_ptr<runtime::Tensor> tv)
-{
-    element::Type et = tv->get_element_type();
-    switch (et.get_type_enum())
-    {
-    case element::Type_t::boolean: init_int_tv<char>(tv, 0, 1); break;
-    case element::Type_t::f32: init_real_tv<float>(tv, -1, 1); break;
-    case element::Type_t::f64: init_real_tv<double>(tv, -1, 1); break;
-    case element::Type_t::i8: init_int_tv<int8_t>(tv, -1, 1); break;
-    case element::Type_t::i16: init_int_tv<int16_t>(tv, -1, 1); break;
-    case element::Type_t::i32: init_int_tv<int32_t>(tv, 0, 1); break;
-    case element::Type_t::i64: init_int_tv<int64_t>(tv, 0, 1); break;
-    case element::Type_t::u8: init_int_tv<uint8_t>(tv, 0, 1); break;
-    case element::Type_t::u16: init_int_tv<uint16_t>(tv, 0, 1); break;
-    case element::Type_t::u32: init_int_tv<uint32_t>(tv, 0, 1); break;
-    case element::Type_t::u64: init_int_tv<uint64_t>(tv, 0, 1); break;
-    case element::Type_t::undefined:
-    case element::Type_t::dynamic:
-    case element::Type_t::bf16:
-    case element::Type_t::f16:
-    default: throw runtime_error("unsupported type");
-    }
-}
 
 vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                                                   const string& backend_name,
@@ -140,7 +36,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     stopwatch timer;
     timer.start();
     auto backend = runtime::Backend::create(backend_name);
-    auto compiled_func = backend->compile(f, timing_detail);
+    auto exec = backend->compile(f, timing_detail);
     timer.stop();
     cout.imbue(locale(""));
     cout << "compile time: " << timer.get_milliseconds() << "ms" << endl;
@@ -201,7 +97,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                 }
             }
         }
-        compiled_func->call(results, args);
+        exec->call(results, args);
         if (copy_data)
         {
             for (size_t result_index = 0; result_index < results.size(); result_index++)
@@ -217,6 +113,6 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     float time = t1.get_milliseconds();
     cout << time / iterations << "ms per iteration" << endl;
 
-    vector<runtime::PerformanceCounter> perf_data = compiled_func->get_performance_data();
+    vector<runtime::PerformanceCounter> perf_data = exec->get_performance_data();
     return perf_data;
 }

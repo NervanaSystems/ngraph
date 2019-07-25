@@ -168,6 +168,39 @@ static mlir::LogicalResult verifyCmpOp(T* op)
     return mlir::success();
 }
 
+template <>
+mlir::LogicalResult verifyOp(NGGatherOp* op)
+{
+    Type ty = op->params()->getType();
+    NGTensorType inputType = ty.cast<NGTensorType>();
+
+    ty = op->indices()->getType();
+    NGTensorType indicesType = ty.cast<NGTensorType>();
+
+    // ensure axis < params rank
+    if (op->axis().getSExtValue() >= inputType.getRank())
+        return op->emitOpError("Gather axis is larger than input rank");
+
+    ty = indicesType.getElementType();
+
+    // ensure indices are I32 or I64
+    if (!ty.isa<NGIntegerType>())
+        return op->emitOpError("Indices tensor is not of Integer type");
+
+    NGIntegerType indicesEltType = ty.cast<NGIntegerType>();
+    if (!indicesEltType.isInt32() && !indicesEltType.isInt64())
+        return op->emitOpError("Indices tensor is not of I32 or I64 type");
+
+    mlir::Type r0 = op->res()->getType();
+    NGTensorType resType = r0.cast<NGTensorType>();
+
+    // ensure result is compatible with input
+    if (!resType.getRank() == inputType.getRank() + indicesType.getRank() - 1)
+        return op->emitOpError("Incompatible result shape and/or type");
+
+    return mlir::success();
+}
+
 namespace mlir
 {
 #define GET_OP_CLASSES
