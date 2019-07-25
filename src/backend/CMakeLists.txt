@@ -18,6 +18,10 @@ if(NGRAPH_INTERPRETER_ENABLE)
     add_subdirectory(interpreter)
 endif()
 
+if (NGRAPH_INTELGPU_ENABLE)
+    add_subdirectory(intelgpu)
+endif()
+
 if (NGRAPH_NOP_ENABLE)
     add_subdirectory(nop)
 endif()

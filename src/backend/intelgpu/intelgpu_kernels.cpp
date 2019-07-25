@@ -16,9 +16,9 @@
 
 #include <CPP/custom_gpu_primitive.hpp>
 
-#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
+#include "backend/intelgpu/intelgpu_kernels.hpp"
+#include "backend/intelgpu/intelgpu_layout.hpp"
+#include "backend/intelgpu/intelgpu_op_custom_kernels.hpp"
 
 #include "ngraph/node.hpp"
 #include "ngraph/util.hpp"

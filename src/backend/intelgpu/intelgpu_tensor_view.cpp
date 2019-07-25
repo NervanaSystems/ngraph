@@ -18,9 +18,9 @@
 
 #include <CPP/data.hpp>
 
+#include "backend/intelgpu/intelgpu_layout.hpp"
+#include "backend/intelgpu/intelgpu_tensor_view.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
 
 using namespace ngraph;
 using namespace std;

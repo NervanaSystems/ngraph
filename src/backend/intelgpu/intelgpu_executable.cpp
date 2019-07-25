@@ -16,9 +16,9 @@
 
 #include <iomanip>
 
-#include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
+#include "backend/intelgpu/intelgpu_executable.hpp"
+#include "backend/intelgpu/intelgpu_op_custom_kernels.hpp"
+#include "backend/intelgpu/intelgpu_tensor_view.hpp"
 
 #include "ngraph/util.hpp"
 

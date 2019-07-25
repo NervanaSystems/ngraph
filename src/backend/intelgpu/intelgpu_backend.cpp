@@ -41,6 +41,13 @@
 #include <CPP/softmax.hpp>
 #include <CPP/topology.hpp>
 
+#include "backend/intelgpu/intelgpu_backend.hpp"
+#include "backend/intelgpu/intelgpu_executable.hpp"
+#include "backend/intelgpu/intelgpu_kernels.hpp"
+#include "backend/intelgpu/intelgpu_layout.hpp"
+#include "backend/intelgpu/intelgpu_op_custom_kernels.hpp"
+#include "backend/intelgpu/intelgpu_tensor_view.hpp"
+#include "backend/intelgpu/visualize_tree.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/core_fusion.hpp"
@@ -52,13 +59,6 @@
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_backend.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_executable.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_layout.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_op_custom_kernels.hpp"
-#include "ngraph/runtime/intelgpu/intelgpu_tensor_view.hpp"
-#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
 
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"

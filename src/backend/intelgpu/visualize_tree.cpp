@@ -19,7 +19,7 @@
 #include <memory>
 #include <type_traits>
 
-#include "ngraph/runtime/intelgpu/visualize_tree.hpp"
+#include "backend/intelgpu/visualize_tree.hpp"
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/all.hpp"
