@@ -76,7 +76,7 @@ namespace ngraph
                 std::mutex m_exec_map_mutex;
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;
-                std::unique_ptr<Allocator> m_allocator;
+                Allocator* m_allocator;
             };
 
             class CPU_BACKEND_API CPU_Executable : public runtime::Executable
