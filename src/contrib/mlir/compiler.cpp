@@ -23,6 +23,7 @@
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
 #include "lowerer.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -45,11 +46,14 @@
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>
+#include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Support/ErrorOr.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Target/TargetMachine.h>
 #include <mlir/Conversion/ControlFlowToCFG/ConvertControlFlowToCFG.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
@@ -65,16 +69,37 @@
 #include <memory>
 #include <mutex>
 
+// Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
+#define DEBUG_TYPE "mlir-compiler"
+
 using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::make_unique;
 using llvm::ArrayRef;
+
+using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
 static llvm::cl::opt<bool>
-    clEnableAffineLoopFusion("enable-affine-loop-fusion",
+    clEnableAffineLoopFusion("affine-loop-fusion",
                              llvm::cl::init(false),
                              llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
+
+static llvm::cl::opt<bool>
+    clEnableAffineLoopTiling("affine-loop-tile",
+                             llvm::cl::init(false),
+                             llvm::cl::desc("Enable loop tiling optimization in Affine dialect"));
+
+static llvm::cl::opt<unsigned>
+    clLoopTilingCacheLevel("loop-tile-cache-level",
+                           llvm::cl::init(2),
+                           llvm::cl::desc("Cache level to which to apply loop tiling"));
+
+static llvm::cl::opt<unsigned>
+    clLoopTilingCacheSize("loop-tile-cache-size",
+                          llvm::cl::init(0),
+                          llvm::cl::desc("Cache size to use in loop tiling. Use cache size "
+                                         "provided by TargetTransformInfo by default."));
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
     create_op<op_name>(MLIRCompiler & compiler, const ngraph::Node* ng_node)
@@ -300,13 +325,102 @@ void MLIRCompiler::lower_ng_dialect()
     m_engine = std::move(maybeEngine.get());
 }
 
+/// Creates target machine for current host.
+static llvm::Expected<std::unique_ptr<llvm::TargetMachine>> createDefaultTargetMachine()
+{
+    auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
+    if (!machineBuilder)
+    {
+        return machineBuilder.takeError();
+    }
+
+    // Retrieve host CPU sub-target features.
+    llvm::SubtargetFeatures subtargetFeatures;
+    llvm::StringMap<bool> featureMap;
+    llvm::sys::getHostCPUFeatures(featureMap);
+    for (auto& feature : featureMap)
+    {
+        subtargetFeatures.AddFeature(feature.first(), feature.second);
+    }
+
+    // Relocation model and code model are kept to default values.
+    machineBuilder->setCPU(llvm::sys::getHostCPUName());
+    machineBuilder->setCodeGenOptLevel(llvm::CodeGenOpt::Aggressive);
+    machineBuilder->addFeatures(subtargetFeatures.getFeatures());
+
+    return machineBuilder->createTargetMachine();
+}
+
+/// Returns the cache level size from `targetInfo` for the `cacheLevel` provided. If `userCacheSize`
+/// is not zero, it returns `userCacheSize`.
+static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
+                                  unsigned cacheLevel,
+                                  unsigned userCacheSize)
+{
+    if (userCacheSize)
+    {
+        return userCacheSize;
+    }
+
+    llvm::Optional<unsigned> optCacheLevelSize;
+    switch (cacheLevel)
+    {
+    case 1:
+        optCacheLevelSize = targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L1D);
+        break;
+    case 2:
+        optCacheLevelSize = targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L2D);
+        break;
+    default:
+        NGRAPH_UNREACHABLE("Unsupported cache level: ", cacheLevel, ". Only 1 and 2 are supported");
+    }
+
+    NGRAPH_CHECK(optCacheLevelSize.hasValue() && "Cache level size is not available in TTI");
+    return optCacheLevelSize.getValue();
+}
+
+// Receives affine dialect as input and applies affine and standard dialect based optimizations.
+// Lowering from affine dialect to standard dialect happens along the way. Output consists of
+// standard dialect only ops.
 void MLIRCompiler::optimize()
 {
+    // Create target machine with all the current host features.
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
+    auto expectedTargetMachine = createDefaultTargetMachine();
+    NGRAPH_CHECK(expectedTargetMachine, "Invalid target machine");
+    auto targetMachine = std::move(*expectedTargetMachine);
+
+    // Create target transform info to obtain some target information to be used in MLIR
+    // optimizations. This is a temporary attempt to retrieve some target information by reusing
+    // LLVM TTI infra while MLIR does not have target model.
+    llvm::LLVMContext llvmContext;
+    auto module = make_unique<llvm::Module>("test", llvmContext);
+    module->setDataLayout(targetMachine->createDataLayout());
+    auto ttiSetupFunc = llvm::cast<llvm::Function>(
+        module
+            ->getOrInsertFunction("__ngraph_tti_setup",
+                                  llvm::FunctionType::get(llvm::Type::getVoidTy(llvmContext), {}))
+            .getCallee());
+    auto targetInfo = targetMachine->getTargetTransformInfo(*ttiSetupFunc);
+
     // Run Affine dialect optimizations.
     mlir::PassManager pm_opts;
     if (clEnableAffineLoopFusion)
     {
         pm_opts.addPass(mlir::createLoopFusionPass());
+    }
+
+    if (clEnableAffineLoopTiling)
+    {
+        unsigned cacheLevelSize =
+            getCacheLevelSize(targetInfo, clLoopTilingCacheLevel, clLoopTilingCacheSize);
+        LLVM_DEBUG(llvm::dbgs() << "Enabling Affine Loop Tiling for cache level "
+                                << clLoopTilingCacheLevel
+                                << ": "
+                                << cacheLevelSize
+                                << " bytes.\n");
+        pm_opts.addPass(mlir::createLoopTilingPass(cacheLevelSize));
     }
 
     auto opt_res = pm_opts.run(m_module.get());
