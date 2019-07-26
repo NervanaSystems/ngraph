@@ -398,6 +398,12 @@ namespace ngraph
                             compiler.m_builder->getI64IntegerAttr(ng_node_gather->get_axis()));
                 return op;
             }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
+            {
+                return compiler.create_generic_op<mlir::NGReluOp>(ng_node);
+            }
         }
     }
 }
