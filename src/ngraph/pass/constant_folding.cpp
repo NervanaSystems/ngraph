@@ -38,6 +38,7 @@
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
@@ -58,6 +59,7 @@
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
+#include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -1082,11 +1084,6 @@ static shared_ptr<op::Constant> fold_constant_product(shared_ptr<op::Constant> c
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
-#endif
     switch (input_element_type.get_type_enum())
     {
     case element::Type_t::undefined:
@@ -1124,10 +1121,6 @@ static shared_ptr<op::Constant> fold_constant_product(shared_ptr<op::Constant> c
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
-
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
-#pragma GCC diagnostic pop
-#endif
 }
 
 void pass::ConstantFolding::construct_constant_product()
@@ -1155,4 +1148,93 @@ void pass::ConstantFolding::construct_constant_product()
     auto convert_matcher =
         make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantProduct");
     this->add_matcher(convert_matcher, constant_product_callback, all_pass_property_off);
+}
+
+// TODO(amprocte): Find a way to reduce duplication with Product. (The fact
+// that we bottom out in a reference call makes it a bit tricky.)
+template <typename T>
+static shared_ptr<op::Constant> fold_constant_sum_helper(shared_ptr<op::Constant> constant,
+                                                         const AxisSet& reduction_axes,
+                                                         const Shape& result_shape)
+{
+    vector<T> out_vec(shape_size(result_shape));
+
+    runtime::reference::sum<T>(constant->get_vector<T>().data(),
+                               out_vec.data(),
+                               constant->get_output_shape(0),
+                               result_shape,
+                               reduction_axes);
+
+    return make_shared<op::Constant>(constant->get_output_element_type(0), result_shape, out_vec);
+}
+
+static shared_ptr<op::Constant> fold_constant_sum(shared_ptr<op::Constant> constant,
+                                                  const AxisSet& reduction_axes,
+                                                  const Shape& result_shape)
+{
+    auto& input_element_type = constant->get_output_element_type(0);
+
+    switch (input_element_type.get_type_enum())
+    {
+    case element::Type_t::undefined:
+        NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_sum");
+        break;
+    case element::Type_t::dynamic:
+        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_sum");
+        break;
+    case element::Type_t::boolean:
+        return fold_constant_sum_helper<char>(constant, reduction_axes, result_shape);
+    case element::Type_t::bf16:
+        return fold_constant_sum_helper<bfloat16>(constant, reduction_axes, result_shape);
+    case element::Type_t::f16:
+        return fold_constant_sum_helper<float16>(constant, reduction_axes, result_shape);
+    case element::Type_t::f32:
+        return fold_constant_sum_helper<float>(constant, reduction_axes, result_shape);
+    case element::Type_t::f64:
+        return fold_constant_sum_helper<double>(constant, reduction_axes, result_shape);
+    case element::Type_t::i8:
+        return fold_constant_sum_helper<int8_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::i16:
+        return fold_constant_sum_helper<int16_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::i32:
+        return fold_constant_sum_helper<int32_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::i64:
+        return fold_constant_sum_helper<int64_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u8:
+        return fold_constant_sum_helper<uint8_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u16:
+        return fold_constant_sum_helper<uint16_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u32:
+        return fold_constant_sum_helper<uint32_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u64:
+        return fold_constant_sum_helper<uint64_t>(constant, reduction_axes, result_shape);
+    }
+
+    NGRAPH_UNREACHABLE("Unexpected switch case");
+}
+
+void pass::ConstantFolding::construct_constant_sum()
+{
+    auto constant_label = make_shared<pattern::op::Label>(
+        element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto convert_op = make_shared<op::Sum>(constant_label, AxisSet{0, 1, 2});
+
+    auto constant_sum_callback = [constant_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_sum_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto sum_match = static_pointer_cast<op::Sum>(m.get_match_root());
+
+        replace_node(m.get_match_root(),
+                     fold_constant_sum(constant_match,
+                                       sum_match->get_reduction_axes(),
+                                       sum_match->get_output_shape(0)));
+        return true;
+    };
+
+    auto convert_matcher = make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantSum");
+    this->add_matcher(convert_matcher, constant_sum_callback, all_pass_property_off);
 }
