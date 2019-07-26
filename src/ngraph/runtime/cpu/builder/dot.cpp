@@ -26,8 +26,8 @@ using namespace std;
 using namespace ngraph;
 
 #if defined(NGRAPH_CPU_LARGE_BINARY)
- #define SELECT_DOT_3ARGS SELECT_KERNEL_3ARGS
- #define SELECT_DOT SELECT_KERNEL
+#define SELECT_DOT_3ARGS SELECT_KERNEL_3ARGS
+#define SELECT_DOT SELECT_KERNEL
 #endif
 
 namespace ngraph
@@ -82,8 +82,7 @@ namespace ngraph
 
                     std::function<decltype(runtime::cpu::kernel::dot_scalar<float>)> kernel;
 
-                    SELECT_DOT(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_scalar);
+                    SELECT_DOT(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_scalar);
 
                     auto element_count = shape_size(second.get_shape());
 
@@ -237,8 +236,7 @@ namespace ngraph
 
                 std::function<decltype(runtime::cpu::kernel::dot_ref<float, float, float>)> kernel;
 
-                    SELECT_DOT_3ARGS(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
+                SELECT_DOT_3ARGS(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
 
                 auto functor = [&,
                                 kernel,

@@ -20,9 +20,9 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
+#include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
-#include "ngraph/runtime/cpu/cpu_builder.hpp"
 
 #define SELECT_KERNEL_DOT(KV, ET, R1, R2, R3, K)                                                   \
     if (ET == element::f32)                                                                        \
@@ -52,7 +52,7 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
- #define PARTIAL_SELECT_SOFTMAX_BY_RANK(KV, ET, R, K)                                               \
+#define PARTIAL_SELECT_SOFTMAX_BY_RANK(KV, ET, R, K)                                               \
     if (ET == element::f32)                                                                        \
     {                                                                                              \
         PARTIAL_SELECT_RANK(KV, float, R, K);                                                      \
@@ -94,7 +94,7 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
-#define SELECT_DOT(KV, ET, K)                                                                \
+#define SELECT_DOT(KV, ET, K)                                                                      \
     if (ET == element::f32)                                                                        \
     {                                                                                              \
         KV = K<float>;                                                                             \
@@ -108,16 +108,16 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
-#define SELECT_DOT_3ARGS(KV, ET, K)                                                             \
-    if (ET == element::f32)                                                                    \
+#define SELECT_DOT_3ARGS(KV, ET, K)                                                                \
+    if (ET == element::f32)                                                                        \
     {                                                                                              \
-        KV = K<float, float, float>;                                                                  \
+        KV = K<float, float, float>;                                                               \
     }                                                                                              \
     else if (ET == element::i64)                                                                   \
     {                                                                                              \
-        KV = K<int64_t, int64_t, int64_t>;                                                               \
+        KV = K<int64_t, int64_t, int64_t>;                                                         \
     }                                                                                              \
-        else                                                                                           \
+    else                                                                                           \
     {                                                                                              \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
