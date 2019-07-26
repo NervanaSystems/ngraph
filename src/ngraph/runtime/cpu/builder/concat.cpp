@@ -23,6 +23,10 @@
 using namespace std;
 using namespace ngraph;
 
+#if defined(NGRAPH_CPU_LARGE_BINARY)
+#define SELECT_BY_RANK SELECT_KERNEL_BY_RANK
+#endif
+
 namespace ngraph
 {
     namespace runtime
@@ -141,10 +145,10 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::concat<float, 1>)> kernel;
 
-                    SELECT_KERNEL_BY_RANK(kernel,
-                                          out[0].get_element_type(),
-                                          out[0].get_shape().size(),
-                                          runtime::cpu::kernel::concat);
+                    SELECT_BY_RANK(kernel,
+                                   out[0].get_element_type(),
+                                   out[0].get_shape().size(),
+                                   runtime::cpu::kernel::concat);
 
                     auto functor = [&,
                                     kernel,

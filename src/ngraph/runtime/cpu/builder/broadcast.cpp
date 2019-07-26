@@ -23,6 +23,10 @@
 using namespace std;
 using namespace ngraph;
 
+#if defined(NGRAPH_CPU_LARGE_BINARY)
+#define SELECT_BY_RANK SELECT_KERNEL_BY_RANK
+#endif
+
 namespace ngraph
 {
     namespace runtime
@@ -155,10 +159,10 @@ namespace ngraph
                     }
                 }
 
-                SELECT_KERNEL_BY_RANK(kernel,
-                                      broadcast->get_input_element_type(0),
-                                      out_rank,
-                                      runtime::cpu::kernel::broadcast);
+                SELECT_BY_RANK(kernel,
+                               broadcast->get_input_element_type(0),
+                               out_rank,
+                               runtime::cpu::kernel::broadcast);
             }
 
             template <>
