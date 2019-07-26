@@ -38,7 +38,7 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
-#define SELECT_KERNEL_SOFTMAX(KV, ET, K)                                                           \
+#define SELECT_KERNEL_FOR_LIMITED_ET(KV, ET, K)                                                    \
     if (ET == element::f32)                                                                        \
     {                                                                                              \
         KV = K<float>;                                                                             \
@@ -74,34 +74,6 @@
     else if (ET == element::i64)                                                                   \
     {                                                                                              \
         SELECT_RANK(KV, int64_t, R, K);                                                            \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
-    }
-
-#define SELECT_REDUCTION(KV, ET, K)                                                                \
-    if (ET == element::f32)                                                                        \
-    {                                                                                              \
-        KV = K<float>;                                                                             \
-    }                                                                                              \
-    else if (ET == element::i64)                                                                   \
-    {                                                                                              \
-        KV = K<int64_t>;                                                                           \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
-    }
-
-#define SELECT_DOT(KV, ET, K)                                                                      \
-    if (ET == element::f32)                                                                        \
-    {                                                                                              \
-        KV = K<float>;                                                                             \
-    }                                                                                              \
-    else if (ET == element::i64)                                                                   \
-    {                                                                                              \
-        KV = K<int64_t>;                                                                           \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \

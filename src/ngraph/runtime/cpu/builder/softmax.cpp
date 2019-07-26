@@ -26,7 +26,7 @@ using namespace ngraph;
 
 #if defined(NGRAPH_CPU_LARGE_BINARY)
 #define PARTIAL_SELECT_SOFTMAX_BY_RANK PARTIAL_SELECT_KERNEL_BY_RANK
-#define SELECT_KERNEL_SOFTMAX SELECT_KERNEL
+#define SELECT_KERNEL_FOR_LIMITED_ET SELECT_KERNEL
 #endif
 
 namespace ngraph
@@ -143,9 +143,9 @@ namespace ngraph
                     {
                         std::function<decltype(runtime::cpu::kernel::softmax_3d_2rd<float>)> kernel;
 
-                        SELECT_KERNEL_SOFTMAX(kernel,
-                                              args[0].get_element_type(),
-                                              runtime::cpu::kernel::softmax_3d_2rd);
+                        SELECT_KERNEL_FOR_LIMITED_ET(kernel,
+                                                     args[0].get_element_type(),
+                                                     runtime::cpu::kernel::softmax_3d_2rd);
 
                         auto functor =
                             [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](
@@ -162,9 +162,9 @@ namespace ngraph
                     {
                         std::function<decltype(runtime::cpu::kernel::softmax_4d_3rd<float>)> kernel;
 
-                        SELECT_KERNEL_SOFTMAX(kernel,
-                                              args[0].get_element_type(),
-                                              runtime::cpu::kernel::softmax_4d_3rd);
+                        SELECT_KERNEL_FOR_LIMITED_ET(kernel,
+                                                     args[0].get_element_type(),
+                                                     runtime::cpu::kernel::softmax_4d_3rd);
 
                         auto functor =
                             [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](

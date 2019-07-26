@@ -27,7 +27,7 @@ using namespace ngraph;
 
 #if defined(NGRAPH_CPU_LARGE_BINARY)
 #define SELECT_DOT_3ARGS SELECT_KERNEL_3ARGS
-#define SELECT_DOT SELECT_KERNEL
+#define SELECT_KERNEL_FOR_LIMITED_ET SELECT_KERNEL
 #endif
 
 namespace ngraph
@@ -82,7 +82,8 @@ namespace ngraph
 
                     std::function<decltype(runtime::cpu::kernel::dot_scalar<float>)> kernel;
 
-                    SELECT_DOT(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_scalar);
+                    SELECT_KERNEL_FOR_LIMITED_ET(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_scalar);
 
                     auto element_count = shape_size(second.get_shape());
 
@@ -108,7 +109,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_1d_1d_1rd<float>)> kernel;
 
-                    SELECT_DOT(
+                    SELECT_KERNEL_FOR_LIMITED_ET(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_1d_1rd);
 
                     auto functor = [&,
@@ -137,7 +138,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_2d_1d_1rd<float>)> kernel;
 
-                    SELECT_DOT(
+                    SELECT_KERNEL_FOR_LIMITED_ET(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_2d_1d_1rd);
 
                     auto functor = [&,
@@ -166,7 +167,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_1d_2d_1rd<float>)> kernel;
 
-                    SELECT_DOT(
+                    SELECT_KERNEL_FOR_LIMITED_ET(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_2d_1rd);
 
                     auto functor = [&,

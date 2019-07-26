@@ -16,7 +16,7 @@
 
 #if defined(NGRAPH_CPU_LARGE_BINARY)
 #define SELECT_REDUCTION_BY_RANK SELECT_KERNEL_BY_RANK
-#define SELECT_REDUCTION SELECT_KERNEL
+#define SELECT_KERNEL_FOR_LIMITED_ET SELECT_KERNEL
 #endif
 
 #define BUILD_REDUCTION_FUNCTOR(OP, K)                                                             \
@@ -110,7 +110,8 @@
     if (reduction_axes.size() == 2 && arg_rank == 3)                                               \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_3d_2rd<float>)> kernel;          \
-        SELECT_REDUCTION(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_3d_2rd);  \
+        SELECT_KERNEL_FOR_LIMITED_ET(                                                              \
+            kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_3d_2rd);               \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
                         arg_shape,                                                                 \
@@ -132,7 +133,8 @@
     if (reduction_axes.size() == 2 && arg_rank == 4)                                               \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_4d_2rd<float>)> kernel;          \
-        SELECT_REDUCTION(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_4d_2rd);  \
+        SELECT_KERNEL_FOR_LIMITED_ET(                                                              \
+            kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_4d_2rd);               \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
                         arg_shape,                                                                 \
@@ -154,7 +156,8 @@
     if (reduction_axes.size() == 2 && arg_rank == 5)                                               \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_5d_2rd<float>)> kernel;          \
-        SELECT_REDUCTION(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_5d_2rd);  \
+        SELECT_KERNEL_FOR_LIMITED_ET(                                                              \
+            kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_5d_2rd);               \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
                         arg_shape,                                                                 \
@@ -175,7 +178,7 @@
                                                                                                    \
     std::function<decltype(runtime::cpu::kernel::K<float>)> ref_kernel;                            \
                                                                                                    \
-    SELECT_REDUCTION(ref_kernel, result_element_type, runtime::cpu::kernel::K);                    \
+    SELECT_KERNEL_FOR_LIMITED_ET(ref_kernel, result_element_type, runtime::cpu::kernel::K);        \
                                                                                                    \
     auto functor = [&,                                                                             \
                     ref_kernel,                                                                    \
