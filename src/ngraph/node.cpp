@@ -81,6 +81,7 @@ Node::~Node()
     }
 }
 
+// Add a comment
 std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) const
 {
     return copy_with_new_inputs(inputs, get_control_dependencies());
