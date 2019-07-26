@@ -188,6 +188,11 @@ namespace ngraph
                 {
                     functor = prepare_functor<float>(node, args, out, external_function);
                 }
+                else if (element_type == element::i64)
+                {
+                    functor = prepare_functor<int64_t>(node, args, out, external_function);
+                }
+#if defined(NGRAPH_CPU_LARGE_BINARY)
                 else if (element_type == element::f64)
                 {
                     functor = prepare_functor<double>(node, args, out, external_function);
@@ -203,10 +208,6 @@ namespace ngraph
                 else if (element_type == element::i32)
                 {
                     functor = prepare_functor<int32_t>(node, args, out, external_function);
-                }
-                else if (element_type == element::i64)
-                {
-                    functor = prepare_functor<int64_t>(node, args, out, external_function);
                 }
                 else if (element_type == element::u8)
                 {
@@ -228,6 +229,7 @@ namespace ngraph
                 {
                     functor = prepare_functor<char>(node, args, out, external_function);
                 }
+#endif
                 else
                 {
                     throw ngraph_error("Unsupported type in CPU Builder for Gather");
