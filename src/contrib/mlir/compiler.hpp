@@ -67,6 +67,7 @@ namespace ngraph
 
                 /// Compiles a subgraph with MLIR
                 void compile();
+
                 /// Executes a pre-compiled subgraph
                 void run(std::vector<void*>& external_tensors);
 
@@ -88,6 +89,7 @@ namespace ngraph
             private:
                 void build_ng_dialect_module();
                 void lower_ng_dialect();
+                void optimize();
                 void bind_arguments(std::vector<void*>& external_tensors);
                 void execute();
                 void cleanup();

@@ -234,31 +234,20 @@ MLIRCompiler::TensorInfo MLIRCompiler::get_tensor_value(descriptor::Tensor* tens
 void MLIRCompiler::lower_ng_dialect()
 {
     // Lower NG dialect to Affine
+    mlir::PassManager pm;
+    pm.addPass(mlir::createDialectLoweringPass(this));
+    pm.addPass(mlir::createCanonicalizerPass());
+
+    pm.run(m_module.get());
+
+    if (failed(m_module->verify()))
     {
-        mlir::PassManager pm;
-        pm.addPass(mlir::createDialectLoweringPass(this));
-        pm.addPass(mlir::createCanonicalizerPass());
-
-        pm.run(m_module.get());
-
-        if (failed(m_module->verify()))
-        {
-            NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
-        }
-
-        dump_mlir_module("Affine Dialect Dump:");
+        NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
 
-    // Lower Affine to Std Dialect
-    {
-        mlir::PassManager pm;
-        // Lower affine ops
-        pm.addPass(mlir::createLowerAffinePass());
-        auto rr = pm.run(m_module.get());
-        NGRAPH_CHECK(succeeded(rr), "Affine loop lowering failed");
+    dump_mlir_module("Affine Dialect Dump:");
 
-        dump_mlir_module("Standard Dialect Dump:");
-    }
+    optimize();
 
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
@@ -294,6 +283,18 @@ void MLIRCompiler::lower_ng_dialect()
     auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
+}
+
+void MLIRCompiler::optimize()
+{
+    // Lower Affine to Std Dialect
+    mlir::PassManager pm;
+    // Lower affine ops
+    pm.addPass(mlir::createLowerAffinePass());
+    auto rr = pm.run(m_module.get());
+    NGRAPH_CHECK(succeeded(rr), "Affine loop lowering failed");
+
+    dump_mlir_module("Standard Dialect Dump:");
 }
 
 // MLIR builders
