@@ -6,6 +6,7 @@
   .. toctree::
 
      introduction.rst
+     tutorials/index.rst
 
 
 * Framework Support

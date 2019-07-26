@@ -1,4 +1,4 @@
-.. howto/index: 
+.. core/constructing-graphs/index.rst: 
 
 Constructing graphs
 ===================

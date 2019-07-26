@@ -126,7 +126,7 @@ There are two backends for the CPU: the optimized ``"CPU"`` backend, which uses
 the `Intel MKL-DNN`_, and the ``"INTERPRETER"`` backend, which runs reference 
 versions of kernels that favor implementation clarity over speed. The 
 ``"INTERPRETER"`` backend can be slow, and is primarily intended for testing. 
-See the documentation on :doc:`runtime options for various backends <../../backends/index>` 
+See the documentation on :doc:`runtime options for various backends <../../backends/overview>` 
 for additional details.
 
 To continue with our original example and select the ``"CPU_Backend"``: 

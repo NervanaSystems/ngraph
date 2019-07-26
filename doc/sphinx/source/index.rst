@@ -95,7 +95,7 @@ Backend Support
 
    backends/overview.rst
    backends/backend-api/index.rst
-
+   backends/cpp-api.rst
 
 .. _distributed:
 

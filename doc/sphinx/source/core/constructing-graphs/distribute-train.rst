@@ -39,7 +39,7 @@ To deploy data-parallel training, the ``AllReduce`` op should be added after
 the steps needed to complete the :ref:`derive_for_training`; 
 the new code is highlighted below: 
 
-.. literalinclude:: ../../../../examples/mnist_mlp/dist_mnist_mlp.cpp
+.. literalinclude:: ../../../../examples/mnist_mlp/dist_mnist_mlp.cpp 
    :language: cpp
    :lines: 178-194
    :emphasize-lines: 8-11

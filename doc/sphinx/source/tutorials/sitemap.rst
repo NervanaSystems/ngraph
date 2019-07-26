@@ -4,5 +4,6 @@
    :caption: Tutorials
    :maxdepth: 1
 
-   data_science/index
-   transformers/index
+   onnx-tutorial.rst
+   onnx-models.rst
+   tensorflow-tutorial.rst

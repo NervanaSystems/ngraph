@@ -8,7 +8,7 @@ Integrating new frameworks
 This section details some of the *configuration options* and some of the 
 *environment variables* that can be used to tune for optimal performance when 
 your system already has a version of nGraph installed with one or more of our 
-supported :doc:`../backends/index`.
+supported backends discussed on our doc page: :doc:`../backends/overview`.
 
 Regardless of the framework, after the :doc:`../buildlb` step, a good place 
 to start usually involves making the libraries available to the framework. On 
