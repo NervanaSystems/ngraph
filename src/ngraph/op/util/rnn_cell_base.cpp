@@ -91,7 +91,7 @@ shared_ptr<Node> op::util::RNNCellBase::clip(const Output<Node>& data) const
 {
     if (m_clip == 0.f)
     {
-        return data.as_node_shared_ptr();
+        return data.as_single_output_node();
     }
 
     return make_shared<op::Clamp>(data, -m_clip, m_clip);

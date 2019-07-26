@@ -187,7 +187,8 @@ namespace ngraph
             // Handle the trivial case...
             if (arg1_in_shape == arg2_in_shape)
             {
-                return make_pair(args.first.as_node_shared_ptr(), args.second.as_node_shared_ptr());
+                return make_pair(args.first.as_single_output_node(),
+                                 args.second.as_single_output_node());
             }
 
             Autobroadcast_plan plan =

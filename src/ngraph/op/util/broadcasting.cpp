@@ -139,7 +139,7 @@ static std::shared_ptr<ngraph::Node>
     // If node already has the required shape, return original node
     if (output_shape == value.get_shape())
     {
-        return value.as_node_shared_ptr();
+        return value.as_single_output_node();
     }
 
     if (source_shape.size() != output_shape.size())
