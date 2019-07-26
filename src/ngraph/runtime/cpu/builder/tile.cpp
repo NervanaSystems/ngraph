@@ -21,6 +21,11 @@
 using namespace std;
 using namespace ngraph;
 
+#if defined(NGRAPH_CPU_LARGE_BINARY)
+#define SELECT_KERNEL_FOR_LIMITED_ET SELECT_KERNEL
+#define SELECT_BY_RANK SELECT_KERNEL_BY_RANK
+#endif
+
 namespace ngraph
 {
     namespace runtime
@@ -45,7 +50,7 @@ namespace ngraph
                 {
                     size_t repeats = shape_size(out_shape);
                     std::function<decltype(runtime::cpu::kernel::tile_rank_0<float>)> kernel;
-                    SELECT_KERNEL(
+                    SELECT_KERNEL_FOR_LIMITED_ET(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::tile_rank_0);
                     auto functor = [&, kernel, repeats, arg_buffer_index, out_buffer_index](
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
@@ -59,7 +64,7 @@ namespace ngraph
                 else
                 {
                     std::function<decltype(runtime::cpu::kernel::tile<float, 2>)> kernel;
-                    SELECT_KERNEL_BY_RANK(
+                    SELECT_BY_RANK(
                         kernel, out[0].get_element_type(), arg_rank, runtime::cpu::kernel::tile);
                     auto functor =
                         [&, kernel, arg_shape, out_shape, arg_buffer_index, out_buffer_index](
