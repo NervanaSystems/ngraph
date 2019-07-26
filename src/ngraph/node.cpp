@@ -86,6 +86,18 @@ std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) con
     return copy_with_new_inputs(inputs, get_control_dependencies());
 }
 
+std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
+{
+    for (auto in : output(i).get_target_inputs())
+    {
+        if (in.get_node()->description() == op::GetOutputElement::type_name)
+        {
+            return in.get_node()->shared_from_this();
+        }
+    }
+    return get_output_element(output(i), true);
+}
+
 std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
