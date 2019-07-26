@@ -37,6 +37,10 @@ namespace ngraph
                  const ParameterVector& parameters,
                  const std::string& name = "");
 
+        Function(const OutputVector& results,
+                 const ParameterVector& parameters,
+                 const std::string& name = "");
+
         Function(const std::shared_ptr<Node>& result,
                  const ParameterVector& parameters,
                  const std::string& name = "");
@@ -54,6 +58,8 @@ namespace ngraph
 
         /// Return the op that generates output i
         std::shared_ptr<Node> get_output_op(size_t i) const;
+
+        Output<Node> output(size_t i) const;
 
         /// Return the element type of output i
         const element::Type& get_output_element_type(size_t i) const;

@@ -507,7 +507,8 @@ TEST(cpu_fusion, conv_bias_bprop_n1c1h3w3)
     auto f = make_shared<Function>(
         convolution_bias, ParameterVector{conv_test.data, conv_test.weights, conv_test.bias});
 
-    ngraph::autodiff::Adjoints adjoints(NodeVector{convolution_bias}, NodeVector{conv_test.delta});
+    ngraph::autodiff::Adjoints adjoints(OutputVector{convolution_bias},
+                                        OutputVector{conv_test.delta});
 
     auto d_data = adjoints.backprop_node(conv_test.data);
     auto d_weights = adjoints.backprop_node(conv_test.weights);
@@ -546,7 +547,7 @@ TEST(cpu_fusion, conv_bias_bprop)
     pass_manager.register_pass<pass::VisualizeTree>("conv_bias_bprop_fusion.png");
     auto f = make_shared<Function>(conv_bias, ParameterVector{data_batch, filters, bias});
 
-    ngraph::autodiff::Adjoints adjoints(NodeVector{conv_bias}, NodeVector{delta});
+    ngraph::autodiff::Adjoints adjoints(OutputVector{conv_bias}, OutputVector{delta});
 
     auto d_data = adjoints.backprop_node(data_batch);
     auto d_weights = adjoints.backprop_node(filters);
@@ -1452,7 +1453,7 @@ TEST(cpu_fusion, max_pool_with_indices)
     auto max_pool = std::make_shared<op::MaxPool>(input, window_shape);
     auto C = std::make_shared<op::Parameter>(element::f32, max_pool->get_shape());
 
-    ngraph::autodiff::Adjoints adjoints(NodeVector{max_pool}, NodeVector{C});
+    ngraph::autodiff::Adjoints adjoints(ngraph::OutputVector{max_pool}, ngraph::OutputVector{C});
 
     auto dinput = adjoints.backprop_node(input);
 
@@ -1789,14 +1790,14 @@ static std::shared_ptr<ngraph::Function> make_forward_function()
     return std::make_shared<Function>(NodeVector{max_pool, neg, absn}, ParameterVector{input});
 }
 
-static std::pair<std::shared_ptr<ngraph::Function>, std::vector<std::shared_ptr<ngraph::Node>>>
+static std::pair<std::shared_ptr<ngraph::Function>, OutputVector>
     make_backward_function(std::shared_ptr<ngraph::Function> f)
 {
     // get parameters
     std::vector<std::shared_ptr<ngraph::op::Parameter>> back_parameters = f->get_parameters();
 
-    ngraph::NodeVector adjoints;
-    ngraph::NodeVector outputs;
+    ngraph::OutputVector adjoints;
+    ngraph::OutputVector outputs;
     for (auto Y : f->get_results())
     {
         // Get the output
@@ -1809,7 +1810,7 @@ static std::pair<std::shared_ptr<ngraph::Function>, std::vector<std::shared_ptr<
     ngraph::autodiff::Adjoints adjoint{outputs, adjoints};
 
     // Perform autodiff
-    std::vector<std::shared_ptr<Node>> dYdXs(back_parameters.size());
+    OutputVector dYdXs(back_parameters.size());
     transform(back_parameters.begin(),
               back_parameters.end(),
               dYdXs.begin(),
@@ -1818,7 +1819,8 @@ static std::pair<std::shared_ptr<ngraph::Function>, std::vector<std::shared_ptr<
     // create the backward function
     std::vector<std::shared_ptr<ngraph::op::Parameter>> param_adjoints;
     for (auto n : adjoints)
-        param_adjoints.push_back(std::dynamic_pointer_cast<ngraph::op::Parameter>(n));
+        param_adjoints.push_back(
+            std::dynamic_pointer_cast<ngraph::op::Parameter>(n.get_node_shared_ptr()));
     back_parameters.insert(back_parameters.begin(), param_adjoints.begin(), param_adjoints.end());
 
     return {std::make_shared<ngraph::Function>(dYdXs, back_parameters), adjoints};
@@ -2703,7 +2705,7 @@ void sigmoid_multiply_fusion_backward_compute(runtime::Backend* backend,
     auto sigmoid_mul =
         make_shared<op::SigmoidMultiply>(input_0_alt, input_1_alt, input_0_type, input_1_type);
 
-    ngraph::autodiff::Adjoints adjoints(NodeVector{sigmoid_mul}, NodeVector{delta_param});
+    ngraph::autodiff::Adjoints adjoints(OutputVector{sigmoid_mul}, OutputVector{delta_param});
     auto d_input_0 = adjoints.backprop_node(input_0_adjoint);
     auto d_input_1 = adjoints.backprop_node(input_1_adjoint);
     auto df = make_shared<Function>(NodeVector{d_input_0, d_input_1}, back_params);
