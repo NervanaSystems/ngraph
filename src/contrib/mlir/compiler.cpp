@@ -66,9 +66,8 @@ using llvm::make_unique;
 
 using namespace ngraph::runtime::ngmlir;
 
-/// Enable/Disable loop fusion optimization in affine dialect.
 static llvm::cl::opt<bool>
-    clEnableAffineLoopFusion("enable-loop-fusion",
+    clEnableAffineLoopFusion("enable-affine-loop-fusion",
                              llvm::cl::init(true),
                              llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
 
@@ -97,7 +96,7 @@ void MLIRCompiler::init_mlir()
     {
         mlir::registerDialect<mlir::NGraphOpsDialect>();
         // Register any LLVM command line options
-        llvm::cl::ParseEnvironmentOptions("ngraph", "MLIR_LLVM_OPTIONS", "");
+        llvm::cl::ParseEnvironmentOptions("ngraph", "NGRAPH_MLIR_OPTIONS", "");
         initialized = true;
     }
 }
