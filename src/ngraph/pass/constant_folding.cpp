@@ -1162,15 +1162,15 @@ void pass::ConstantFolding::construct_constant_product()
 template <typename T>
 static shared_ptr<op::Constant> fold_constant_concat_helper(const shared_ptr<op::Concat>& concat)
 {
-    auto concat_args = concat->get_arguments();
+    auto concat_inputs = concat->inputs();
     std::vector<const T*> arg_bufs;
     std::vector<Shape> arg_shapes;
 
-    for (auto& arg : concat_args)
+    for (auto& input : concat_inputs)
     {
-        auto k = static_pointer_cast<op::Constant>(arg);
+        auto k = static_cast<op::Constant*>(input.get_source_output().get_node());
         arg_bufs.push_back(k->get_data_ptr<T>());
-        arg_shapes.push_back(k->get_shape());
+        arg_shapes.push_back(input.get_shape());
     }
 
     std::vector<T> result_vec(shape_size(concat->get_shape()));
@@ -1195,10 +1195,10 @@ void pass::ConstantFolding::construct_constant_concat()
                      << m.get_match_root()->get_name();
 
         auto concat_node = static_pointer_cast<op::Concat>(m.get_match_root());
-        auto concat_args = concat_node->get_arguments();
+        auto concat_inputs = concat_node->inputs();
 
-        if (std::any_of(concat_args.begin(), concat_args.end(), [](const std::shared_ptr<Node>& n) {
-                return !(n->is_constant());
+        if (std::any_of(concat_inputs.begin(), concat_inputs.end(), [](const Input<Node>& input) {
+                return !(input.get_source_output().get_node()->is_constant());
             }))
         {
             return false;
