@@ -45,15 +45,15 @@ packages, scripts, and other files that use licensing.
 
 .. _intro:
 
-Introduction
-============
+Getting Started
+===============
 
 .. toctree::
    :maxdepth: 1
    :glob:
 
    introduction.rst
-   buildlb.rst
+   tutorials/index.rst
 
 .. _framework_support:
 
@@ -67,7 +67,7 @@ Framework Support
    frameworks/tensorflow.rst
    frameworks/onnx.rst
    frameworks/paddlepaddle.rst
-   frameworks/generic-configs.rst
+   frameworks/new-frameworks.rst
 
 .. _ngraph_core:
 

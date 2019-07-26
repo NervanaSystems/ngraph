@@ -1,4 +1,6 @@
-.. frameworks/generic-configs.rst:
+.. frameworks/new-frameworks.rst:
+
+.. _new_frameworks:
 
 Integrating new frameworks
 ==========================

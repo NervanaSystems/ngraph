@@ -16,7 +16,7 @@
      frameworks/tensorflow.rst
      frameworks/onnx.rst
      frameworks/paddlepaddle.rst
-     frameworks/generic-configs.rst
+     frameworks/new-frameworks.rst
 
 
 
@@ -67,11 +67,3 @@
   .. toctree::
 
      contributing/guide.rst
-
-
-* Extras & Glossary
-
-  .. toctree::
-
-     project/extras/index.rst
-     glossary.rst
