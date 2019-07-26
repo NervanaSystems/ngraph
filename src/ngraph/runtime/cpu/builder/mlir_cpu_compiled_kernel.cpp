@@ -83,8 +83,7 @@ namespace ngraph
                     {
                         mlir_compiler.compile();
                     }
-                    mlir_compiler.set_args(&ptr_args);
-                    mlir_compiler.run();
+                    mlir_compiler.run(ptr_args);
                 };
 
                 functors.emplace_back(functor);

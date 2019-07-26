@@ -87,24 +87,15 @@ void MLIRCompiler::init_mlir()
     }
 }
 
-void MLIRCompiler::set_args(std::vector<void*>* external_tensors)
-{
-    NGRAPH_CHECK(m_compiled_kernel, "No compiled kernel set for compiler");
-    NGRAPH_CHECK((m_compiled_kernel->get_arguments().size() +
-                  m_compiled_kernel->get_kernel_outputs().size()) == external_tensors->size(),
-                 "Number of arguments and outputs doesn't match number of tensors");
-    m_external_tensors = external_tensors;
-}
-
 void MLIRCompiler::compile()
 {
     build_ng_dialect_module();
     lower_ng_dialect();
 }
 
-void MLIRCompiler::run()
+void MLIRCompiler::run(std::vector<void*>& external_tensors)
 {
-    bind_arguments();
+    bind_arguments(external_tensors);
     execute();
     cleanup();
 }
@@ -487,12 +478,19 @@ mlir::Operation* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_nod
 }
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
 // helpers to be used inside the function.
-void MLIRCompiler::bind_arguments()
+void MLIRCompiler::bind_arguments(std::vector<void*>& external_tensors)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
     mlir::Function* func = m_module->getNamedFunction("main");
     NGRAPH_CHECK(func && !func->getBlocks().empty(), "Function not found");
+
+    // Set external arguments
+    NGRAPH_CHECK(m_compiled_kernel, "No compiled kernel set for compiler");
+    NGRAPH_CHECK((m_compiled_kernel->get_arguments().size() +
+                  m_compiled_kernel->get_kernel_outputs().size()) == external_tensors.size(),
+                 "Number of arguments and outputs doesn't match number of tensors");
+    m_external_tensors = &external_tensors;
 
     // Create list with a type-erased double pointer for each invocation arguments.
     // We currently use 'allocateMemRefArguments', which creates a

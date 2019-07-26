@@ -65,12 +65,10 @@ namespace ngraph
                 {
                 }
 
-                /// Set runtime tensor arguments for the sub-graph
-                void set_args(std::vector<void*>* external_tensors);
                 /// Compiles a subgraph with MLIR
                 void compile();
                 /// Executes a pre-compiled subgraph
-                void run();
+                void run(std::vector<void*>& external_tensors);
 
                 /// Returns the memory manager used by this sub-graph compiler.
                 MLIRMemMgr& get_mem_mgr() { return m_mem_mgr; }
@@ -90,7 +88,7 @@ namespace ngraph
             private:
                 void build_ng_dialect_module();
                 void lower_ng_dialect();
-                void bind_arguments();
+                void bind_arguments(std::vector<void*>& external_tensors);
                 void execute();
                 void cleanup();
 
