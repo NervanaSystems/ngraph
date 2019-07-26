@@ -104,35 +104,72 @@ namespace ngraph
                     return;
                 }
 
-                std::function<decltype(runtime::cpu::kernel::dot<float, 1, 1, 1>)> kernel;
-                bool kernel_selected = false;
-
                 if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
                     reduction_axes_count == 1)
                 {
-                    SELECT_KERNEL_DOT(
-                        kernel, out[0].get_element_type(), 1, 1, 1, runtime::cpu::kernel::dot);
-                    kernel_selected = true;
+                    std::function<decltype(runtime::cpu::kernel::dot_1d_1d_1rd<float>)> kernel;
+
+                    SELECT_DOT(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_1d_1rd);
+
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               ectx->arena);
+                    };
+                    functors.emplace_back(functor);
+                    return;
                 }
 
                 if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
                     reduction_axes_count == 1)
                 {
-                    SELECT_KERNEL_DOT(
-                        kernel, out[0].get_element_type(), 2, 1, 1, runtime::cpu::kernel::dot);
-                    kernel_selected = true;
+                    std::function<decltype(runtime::cpu::kernel::dot_2d_1d_1rd<float>)> kernel;
+
+                    SELECT_DOT(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_2d_1d_1rd);
+
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    out_buffer_index](CPURuntimeContext* ctx,
+                                                      CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out_buffer_index],
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               ectx->arena);
+                    };
+                    functors.emplace_back(functor);
+                    return;
                 }
 
                 if ((arg0_shape.size() == 1) && (arg1_shape.size() == 2) &&
                     reduction_axes_count == 1)
                 {
-                    SELECT_KERNEL_DOT(
-                        kernel, out[0].get_element_type(), 1, 2, 1, runtime::cpu::kernel::dot);
-                    kernel_selected = true;
-                }
+                    std::function<decltype(runtime::cpu::kernel::dot_1d_2d_1rd<float>)> kernel;
 
-                if (kernel_selected)
-                {
+                    SELECT_DOT(
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_1d_2d_1rd);
+
                     auto functor = [&,
                                     kernel,
                                     arg0_shape,
@@ -198,35 +235,31 @@ namespace ngraph
                     return;
                 }
 
-                if (!kernel_selected)
-                {
-                    std::function<decltype(runtime::cpu::kernel::dot_ref<float, float, float>)>
-                        kernel;
+                std::function<decltype(runtime::cpu::kernel::dot_ref<float, float, float>)> kernel;
 
                     SELECT_DOT_3ARGS(
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
 
-                    auto functor = [&,
-                                    kernel,
-                                    arg0_shape,
-                                    arg1_shape,
-                                    result_shape,
-                                    reduction_axes_count,
-                                    arg0_buffer_index,
-                                    arg1_buffer_index,
-                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
-                        kernel(ctx->buffer_data[arg0_buffer_index],
-                               ctx->buffer_data[arg1_buffer_index],
-                               ctx->buffer_data[out_buffer_index],
-                               arg0_shape,
-                               arg1_shape,
-                               result_shape,
-                               reduction_axes_count,
-                               1.0f); // Requantization scale (1 for non quant dot)
-                    };
-                    functors.emplace_back(functor);
-                }
+                auto functor = [&,
+                                kernel,
+                                arg0_shape,
+                                arg1_shape,
+                                result_shape,
+                                reduction_axes_count,
+                                arg0_buffer_index,
+                                arg1_buffer_index,
+                                out_buffer_index](CPURuntimeContext* ctx,
+                                                  CPUExecutionContext* ectx) {
+                    kernel(ctx->buffer_data[arg0_buffer_index],
+                           ctx->buffer_data[arg1_buffer_index],
+                           ctx->buffer_data[out_buffer_index],
+                           arg0_shape,
+                           arg1_shape,
+                           result_shape,
+                           reduction_axes_count,
+                           1.0f); // Requantization scale (1 for non quant dot)
+                };
+                functors.emplace_back(functor);
             }
 
             REGISTER_OP_BUILDER(Dot);

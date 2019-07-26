@@ -292,7 +292,6 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
-
 // Helper macros for a partial set of element types and ranks
 // Useful for keeping compilation time and memory usage reasonable
 // when the computed expression is complex
