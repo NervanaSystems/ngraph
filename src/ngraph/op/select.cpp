@@ -26,10 +26,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Select::Select(const shared_ptr<Node>& arg0,
-                   const shared_ptr<Node>& arg1,
-                   const shared_ptr<Node>& arg2)
-    : Op("Select", check_single_output_args({arg0, arg1, arg2}))
+const string op::Select::type_name{"Select"};
+
+op::Select::Select(const Output<Node>& arg0, const Output<Node>& arg1, const Output<Node>& arg2)
+    : Op({arg0, arg1, arg2})
 {
     constructor_validate_and_infer_types();
 }
