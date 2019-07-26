@@ -55,7 +55,7 @@ pass::Manager::~Manager()
 
 void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
 {
-    bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
+    static bool profile_enabled = getenv("NGRAPH_PROFILE_PASS_ENABLE") != nullptr;
 
     get_state().set_function(func);
     vector<std::pair<shared_ptr<Function>, bool>> fs{std::make_pair(func, func->is_dynamic())};
