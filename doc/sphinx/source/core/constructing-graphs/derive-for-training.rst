@@ -1,6 +1,7 @@
-.. derive-for-training.rst
+.. core/constructing-graphs/derive-for-training.rst
 
-#########################
+.. _derive_for_training: 
+
 Derive a trainable model 
 #########################
 
