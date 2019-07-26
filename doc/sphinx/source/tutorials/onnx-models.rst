@@ -1,8 +1,8 @@
-.. tutorials/data_science/onnx-models: 
+.. tutorials/onnx-models.rst: 
 
 
 Import a model with ONNX and nGraph
 ###################################
 
-.. include:: ../../core/constructing-graphs/import.rst
+.. include:: ../core/constructing-graphs/import.rst
 
