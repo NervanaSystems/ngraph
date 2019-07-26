@@ -73,7 +73,7 @@ namespace ngraph
                 size_t pc;
 #ifdef NGRAPH_MLIR_ENABLE
                 /// Maps CompiledKernel nodes to their MLIR compiler
-                /// The MLIR compiler caches the compiled code on the first invocation, 
+                /// The MLIR compiler caches the compiled code on the first invocation,
                 /// and may in the future support re-compilation
                 std::unordered_map<ngraph::op::CompiledKernel*,
                                    ngraph::runtime::ngmlir::MLIRCompiler>
