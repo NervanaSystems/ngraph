@@ -1,5 +1,7 @@
 .. project/extras/index.rst
 
+:orphan:
+
 #######
 Extras
 #######
@@ -14,5 +16,4 @@ Compiler stack.
    :maxdepth: 1
    
    homomorphic_encryption.rst
-   distributed_training.rst 
    testing_latency.rst

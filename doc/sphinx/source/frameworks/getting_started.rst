@@ -1,5 +1,7 @@
 .. frameworks/getting_started.rst
 
+:orphan:
+
 Getting Started
 ###############
 
@@ -23,7 +25,7 @@ will install to a system location.
    pip install ngraph-tensorflow-bridge
 
 .. note:: You may need to use the latest versions of ```tensorflow``` and the bridge
-   to get pip installs to work.  See the :doc:`tensorflow_connect` file for more
+   to get pip installs to work.  See the :doc:`tensorflow` file for more
    detail about working with TensorFlow\*.
 
 That's it! Now you can test the installation by running the following command:
@@ -62,7 +64,7 @@ for nGraph, ONNX and NumPy:
 
     $ pip install ngraph-core onnx numpy
 
-Now you can start exploring some of the :doc:`onnx_integ` examples.
+Now you can start exploring some of the :doc:`onnx` examples.
 
 See also nGraph's :doc:`../python_api/index`.
 

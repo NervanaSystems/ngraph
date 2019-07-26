@@ -1,7 +1,0 @@
-.. governance: 
-
-:orphan:
-
-
-Governance
-##########

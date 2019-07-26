@@ -1,13 +1,9 @@
-.. backends/index.rst
+.. backends/overview.rst
 
-#####################
-Working with Backends
-#####################
+Overview
+########
 
-* :ref:`what_is_backend`
-* :ref:`how_to_use`
-* :ref:`miscellaneous_resources`
-
+.. contents::
 
 .. _what_is_backend:
 
@@ -45,8 +41,8 @@ How to use?
 #. A single iteration of the executable is executed by calling the ``call``
    method on the ``Executable`` object.
 
-.. figure:: ../graphics/execution-interface.png
-   :width: 650px
+.. figure:: ../graphics/ExecutionInterfaceRunGraphs.png
+   :width: 100%
 
    The execution interface for nGraph 
 
@@ -73,6 +69,7 @@ Additional resources for device or framework-specific configurations:
 
 OpenCL
 ------
+
 
 OpenCL is needed for the :doc:`plaidml-ng-api/index`; this is not needed if 
 you have only a CPU backend.  
@@ -112,6 +109,10 @@ depending on the parameters specified.
 
 * ``NGRAPH_INTELGPU_DUMP_FUNCTION`` -- dumps nGraph’s functions 
   in dot format.
+
+
+
+.. include:: backends/cpp-api.rst
 
 
 .. _axpy.py example: https://github.com/tensorflow/ngraph-bridge/blob/master/examples/axpy.py

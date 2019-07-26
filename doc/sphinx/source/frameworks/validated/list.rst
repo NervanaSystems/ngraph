@@ -8,9 +8,7 @@ We validated performance [#f1]_ for the following TensorFlow\* and MXNet\*
 workloads:
 
 * :ref:`tensorflow_valid`
-* :ref:`mxnet_valid`
 * :ref:`onnx_valid`
-* :doc:`../../project/extras/testing_latency.rst`
 
 .. _tensorflow_valid:
 
@@ -41,36 +39,6 @@ TensorFlow
    U-Net, Image segmentation
    DCGAN, Generative adversarial network
    DRAW, Image generation
-   A3C, Reinforcement learning
-
-
-.. _mxnet_valid:
-
-MXNet
-=====
-
-.. csv-table::
-   :header: "MXNet Workload", "Genre of Deep Learning"
-   :widths: 27, 53
-   :escape: ~
-
-   Resnet50 v1, Image recognition
-   Resnet50 v2, Image recognition
-   DenseNet-121, Image recognition
-   InceptionV3, Image recognition
-   InceptionV4, Image recognition
-   Inception-ResNetv2, Image recognition
-   MobileNet v1, Image recognition
-   SqueezeNet v1 and v1.1, Image recognition
-   VGG16, Image recognition
-   Faster RCNN, Object detection
-   SSD-VGG16, Object detection
-   GNMT, Language translation
-   Transformer-LT, Language translation
-   Wide & Deep, Recommender system
-   WaveNet, Speech generation
-   DeepSpeech2, Speech recognition
-   DCGAN, Generative adversarial network
    A3C, Reinforcement learning
 
 

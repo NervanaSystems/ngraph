@@ -1,4 +1,4 @@
-.. howto/distribute-train.rst 
+.. core/constructing-graphs/distribute-train.rst 
 
 
 Distribute training across multiple nGraph backends 
@@ -8,10 +8,10 @@ Distribute training across multiple nGraph backends
     however, the following configuration options have worked for nGraph devices 
     with mixed or limited success in testing.
 
-In the :doc:`previous section <../constructing-graphs/derive-for-training>`, 
-we described the steps needed to create a "trainable" nGraph model. Here we 
-demonstrate how to train a data parallel model by distributing the graph to 
-more than one device.
+In the previous section, :ref:`derive_for_training`, we described the 
+steps needed to create a "trainable" nGraph model. Here we demonstrate 
+how to train a data parallel model by distributing the graph to more than 
+one device.
 
 Frameworks can implement distributed training with nGraph versions prior to 
 `0.13`:

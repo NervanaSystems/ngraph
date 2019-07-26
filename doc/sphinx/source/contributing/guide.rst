@@ -1,4 +1,4 @@
-.. contribution-guide:
+.. contribution/guide.rst:
 
 ##################
 Contribution guide
@@ -258,7 +258,8 @@ it is automatically enforced and reduces merge conflicts.
        int* z;
 
 
-To contribute documentation for your code, please see the :doc:`doc-contributor-README`. 
+.. include:: doc-contributor-README.rst 
+
 
 
 .. _Apache 2: https://www.apache.org/licenses/LICENSE-2.0

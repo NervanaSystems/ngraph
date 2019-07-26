@@ -94,7 +94,7 @@ Backend Support
    :maxdepth: 1
 
    backends/overview.rst
-   backends/plaidml.rst
+   backends/backend-api/index.rst
 
 
 .. _distributed:
@@ -136,7 +136,5 @@ Contribution
 .. toctree::
    :maxdepth: 1
 
-   contribution/guide.rst
+   contributing/guide.rst
 
-.. nGraph: https://www.ngraph.ai
-.. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/

@@ -1,5 +1,7 @@
 .. project/release-notes.rst:
 
+:orphan:
+
 Release Notes
 #############
 
@@ -79,7 +81,7 @@ Changelog on Previous Releases
 + offset arg for tensor creation is deprecated
 + static linking support
 + Initial test of 0.21-doc
-+ Updated :doc:`doc-contributor-README` for new community-based contributions. 
++ Updated ``doc-contributor-README`` for new community-based contributions. 
 + Added instructions on how to test or display the installed nGraph version.
 + Added instructions on building nGraph bridge (ngraph-bridge).
 + Updated Backend Developer Guides and ToC structure.

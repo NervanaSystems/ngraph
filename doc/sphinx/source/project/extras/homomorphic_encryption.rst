@@ -1,5 +1,7 @@
 .. project/extras/homomorphic_encryption.rst:
 
+:orphan:
+
 Homomorphic Encryption (HE)
 ===========================
 
