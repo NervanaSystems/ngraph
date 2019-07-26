@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(op_slice, slice_scalar)
+BACKEND_TEST(op_slice, slice_scalar)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -47,7 +47,7 @@ TEST(op_slice, slice_scalar)
         (vector<float>{312}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, slice_matrix)
+BACKEND_TEST(op_slice, slice_matrix)
 {
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -68,7 +68,7 @@ TEST(op_slice, slice_matrix)
         (vector<float>{2, 3, 6, 7, 10, 11}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, vector)
+BACKEND_TEST(op_slice, vector)
 {
     Shape shape_a{16};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -90,7 +90,7 @@ TEST(op_slice, vector)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, slice_matrix_axis_0_overlap)
+BACKEND_TEST(op_slice, slice_matrix_axis_0_overlap)
 {
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -118,7 +118,7 @@ TEST(op_slice, slice_matrix_axis_0_overlap)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, slice_matrix_axis_0_in_place)
+BACKEND_TEST(op_slice, slice_matrix_axis_0_in_place)
 {
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -142,7 +142,7 @@ TEST(op_slice, slice_matrix_axis_0_in_place)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, slice_matrix_axis_0_in_place_twice)
+BACKEND_TEST(op_slice, slice_matrix_axis_0_in_place_twice)
 {
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -166,7 +166,7 @@ TEST(op_slice, slice_matrix_axis_0_in_place_twice)
         (vector<float>{14, 16, 18, 20}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, slice_matrix_axis_0_in_place_twice_overlap)
+BACKEND_TEST(op_slice, slice_matrix_axis_0_in_place_twice_overlap)
 {
     Shape shape_a{5, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -192,7 +192,7 @@ TEST(op_slice, slice_matrix_axis_0_in_place_twice_overlap)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, slice_matrix_axis_0_in_place_with_reshape)
+BACKEND_TEST(op_slice, slice_matrix_axis_0_in_place_with_reshape)
 {
     Shape shape_a{4, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -219,7 +219,7 @@ TEST(op_slice, slice_matrix_axis_0_in_place_with_reshape)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, slice_matrix_strided)
+BACKEND_TEST(op_slice, slice_matrix_strided)
 {
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -240,7 +240,7 @@ TEST(op_slice, slice_matrix_strided)
         (vector<float>{4, 7, 12, 15}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, 3d)
+BACKEND_TEST(op_slice, 3d)
 {
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -268,7 +268,7 @@ TEST(op_slice, 3d)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, slice_3d_strided)
+BACKEND_TEST(op_slice, slice_3d_strided)
 {
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -296,7 +296,7 @@ TEST(op_slice, slice_3d_strided)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, slice_3d_strided_different_strides)
+BACKEND_TEST(op_slice, slice_3d_strided_different_strides)
 {
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -324,7 +324,7 @@ TEST(op_slice, slice_3d_strided_different_strides)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(op_slice, slice_3d_strided_different_strides_int64)
+BACKEND_TEST(op_slice, slice_3d_strided_different_strides_int64)
 {
     Shape shape_a{4, 4, 4};
     auto A = make_shared<op::Parameter>(element::i64, shape_a);
@@ -350,7 +350,7 @@ TEST(op_slice, slice_3d_strided_different_strides_int64)
     EXPECT_EQ((vector<int64_t>{0, 3, 8, 11, 32, 35, 40, 43}), read_vector<int64_t>(result));
 }
 
-TEST(op_slice, slice_3d_start_just_oob)
+BACKEND_TEST(op_slice, slice_3d_start_just_oob)
 {
     Shape shape_a{20, 10, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);

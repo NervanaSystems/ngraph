@@ -41,6 +41,8 @@ int main(int argc, char** argv)
         BackendTest::load_manifest(argv[2]);
     }
 
+    BackendTest::finalize_test_registrations();
+
     int rc = RUN_ALL_TESTS();
     return rc;
 }
