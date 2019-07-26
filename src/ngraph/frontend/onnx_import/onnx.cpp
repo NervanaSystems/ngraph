@@ -56,6 +56,7 @@ namespace ngraph
         // TODO CONSIDER CHANGE ONNNX IMPORTER INTERFACE TO OOP
         void update_external_data_paths(onnx::ModelProto& model_proto, const std::string& model_path)
         {
+            const auto model_dir_path = model_path.substr(0, model_path.find_last_of(R"(/)"));
             auto graph_proto = model_proto.mutable_graph();
             for (auto& initializer_tensor : *graph_proto->mutable_initializer())
             {
@@ -67,7 +68,8 @@ namespace ngraph
                 {
                     const auto external_data_relative_path =
                         initializer_tensor.external_data(location_key_value_index).value();
-                    const auto external_data_full_path = model_path + external_data_relative_path;
+                    const auto external_data_full_path =
+                        model_dir_path + R"(/)" + external_data_relative_path;
                     initializer_tensor.mutable_external_data(location_key_value_index)
                         ->set_value(external_data_full_path);
                 }

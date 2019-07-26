@@ -47,7 +47,7 @@ namespace ngraph
             //TODO OFFSETS, CHECKSUM HANDLING
             std::string read_data;
             read_data.resize(m_data_lenght);
-            external_data_stream.read(&read_data[0], 5);
+            external_data_stream.read(&read_data[0], m_data_lenght);
             external_data_stream.close();
             return read_data;
         }
