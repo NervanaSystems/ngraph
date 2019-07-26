@@ -23,6 +23,10 @@
 using namespace std;
 using namespace ngraph;
 
+#if defined(NGRAPH_CPU_LARGE_BINARY)
+#define SELECT_BY_2RANKS SELECT_KERNEL_BY_2RANKS
+#endif
+
 namespace ngraph
 {
     namespace runtime
@@ -67,11 +71,11 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i64<float, 2, 2>)>
                             kernel;
 
-                        SELECT_KERNEL_BY_2RANKS(kernel,
-                                                args[0].get_element_type(),
-                                                inputs_shape.size(),
-                                                updates_shape.size(),
-                                                runtime::cpu::kernel::scatter_add_i64);
+                        SELECT_BY_2RANKS(kernel,
+                                         args[0].get_element_type(),
+                                         inputs_shape.size(),
+                                         updates_shape.size(),
+                                         runtime::cpu::kernel::scatter_add_i64);
 
                         auto functor = [&,
                                         kernel,
@@ -106,11 +110,11 @@ namespace ngraph
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i32<float, 2, 2>)>
                             kernel;
 
-                        SELECT_KERNEL_BY_2RANKS(kernel,
-                                                args[0].get_element_type(),
-                                                inputs_shape.size(),
-                                                updates_shape.size(),
-                                                runtime::cpu::kernel::scatter_add_i32);
+                        SELECT_BY_2RANKS(kernel,
+                                         args[0].get_element_type(),
+                                         inputs_shape.size(),
+                                         updates_shape.size(),
+                                         runtime::cpu::kernel::scatter_add_i32);
 
                         auto functor = [&,
                                         kernel,

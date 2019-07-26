@@ -79,3 +79,17 @@
     {                                                                                              \
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
+
+#define SELECT_BY_2RANKS(KV, ET, R1, R2, K)                                                        \
+    if (ET == element::f32)                                                                        \
+    {                                                                                              \
+        SELECT_2RANKS(KV, float, R1, R2, K);                                                       \
+    }                                                                                              \
+    else if (ET == element::i64)                                                                   \
+    {                                                                                              \
+        SELECT_2RANKS(KV, int64_t, R1, R2, K);                                                     \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
+    }
