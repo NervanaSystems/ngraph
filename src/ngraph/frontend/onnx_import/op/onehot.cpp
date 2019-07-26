@@ -81,7 +81,7 @@ namespace ngraph
                         std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
                         values->get_element_type());
                     auto broadcasted_values =
-                        ngraph::op::numpy_style_broadcast({one_hot, on_value, off_value});
+                        ngraph::op::numpy_style_broadcast(NodeVector{one_hot, on_value, off_value});
                     on_value = broadcasted_values[1];
                     off_value = broadcasted_values[2];
                     one_hot = one_hot * (on_value - off_value) + off_value;

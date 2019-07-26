@@ -32,8 +32,8 @@ op::SquaredDifference::SquaredDifference(const shared_ptr<Node>& x1, const share
 
 NodeVector op::SquaredDifference::decompose_op() const
 {
-    const auto x1 = get_argument(0);
-    const auto x2 = get_argument(1);
+    const auto x1 = input(0).get_source_output();
+    const auto x2 = input(1).get_source_output();
 
     const auto broadcasted = numpy_style_broadcast({x1, x2});
 
