@@ -52,7 +52,7 @@
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
-#define PARTIAL_SELECT_SOFTMAX_BY_RANK(KV, ET, R, K)                                               \
+#define PARTIAL_SELECT_BY_RANK(KV, ET, R, K)                                                       \
     if (ET == element::f32)                                                                        \
     {                                                                                              \
         PARTIAL_SELECT_RANK(KV, float, R, K);                                                      \
@@ -88,6 +88,20 @@
     else if (ET == element::i64)                                                                   \
     {                                                                                              \
         KV = K<int64_t, int64_t, int64_t>;                                                         \
+    }                                                                                              \
+    else                                                                                           \
+    {                                                                                              \
+        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
+    }
+
+#define SELECT_BY_RANK(KV, ET, R, K)                                                               \
+    if (ET == element::f32)                                                                        \
+    {                                                                                              \
+        SELECT_RANK(KV, float, R, K);                                                              \
+    }                                                                                              \
+    else if (ET == element::i64)                                                                   \
+    {                                                                                              \
+        SELECT_RANK(KV, int64_t, R, K);                                                            \
     }                                                                                              \
     else                                                                                           \
     {                                                                                              \

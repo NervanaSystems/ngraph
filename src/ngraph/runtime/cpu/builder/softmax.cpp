@@ -25,7 +25,7 @@ using namespace std;
 using namespace ngraph;
 
 #if defined(NGRAPH_CPU_LARGE_BINARY)
-#define PARTIAL_SELECT_SOFTMAX_BY_RANK PARTIAL_SELECT_KERNEL_BY_RANK
+#define PARTIAL_SELECT_BY_RANK PARTIAL_SELECT_KERNEL_BY_RANK
 #define SELECT_KERNEL_FOR_LIMITED_ET SELECT_KERNEL
 #endif
 
@@ -79,10 +79,10 @@ namespace ngraph
                     {
                         std::function<decltype(runtime::cpu::kernel::softmax_all<float, 1>)> kernel;
 
-                        PARTIAL_SELECT_SOFTMAX_BY_RANK(kernel,
-                                                       args[0].get_element_type(),
-                                                       args[0].get_shape().size(),
-                                                       runtime::cpu::kernel::softmax_all);
+                        PARTIAL_SELECT_BY_RANK(kernel,
+                                               args[0].get_element_type(),
+                                               args[0].get_shape().size(),
+                                               runtime::cpu::kernel::softmax_all);
 
                         auto functor = [&, kernel, arg_shape, arg_buffer_index, out_buffer_index](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
@@ -101,11 +101,10 @@ namespace ngraph
                                 runtime::cpu::kernel::softmax_innermost_1rd<float, 1>)>
                                 kernel;
 
-                            PARTIAL_SELECT_SOFTMAX_BY_RANK(
-                                kernel,
-                                args[0].get_element_type(),
-                                args[0].get_shape().size(),
-                                runtime::cpu::kernel::softmax_innermost_1rd);
+                            PARTIAL_SELECT_BY_RANK(kernel,
+                                                   args[0].get_element_type(),
+                                                   args[0].get_shape().size(),
+                                                   runtime::cpu::kernel::softmax_innermost_1rd);
 
                             auto functor =
                                 [&, kernel, arg_shape, arg_buffer_index, out_buffer_index](
@@ -122,10 +121,10 @@ namespace ngraph
                             std::function<decltype(runtime::cpu::kernel::softmax_1rd<float, 1>)>
                                 kernel;
 
-                            PARTIAL_SELECT_KERNEL_BY_RANK(kernel,
-                                                          args[0].get_element_type(),
-                                                          args[0].get_shape().size(),
-                                                          runtime::cpu::kernel::softmax_1rd);
+                            PARTIAL_SELECT_BY_RANK(kernel,
+                                                   args[0].get_element_type(),
+                                                   args[0].get_shape().size(),
+                                                   runtime::cpu::kernel::softmax_1rd);
 
                             auto functor =
                                 [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](

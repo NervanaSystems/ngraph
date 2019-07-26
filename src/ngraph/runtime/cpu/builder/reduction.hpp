@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #if defined(NGRAPH_CPU_LARGE_BINARY)
-#define SELECT_REDUCTION_BY_RANK SELECT_KERNEL_BY_RANK
+#define SELECT_BY_RANK SELECT_KERNEL_BY_RANK
 #define SELECT_KERNEL_FOR_LIMITED_ET SELECT_KERNEL
 #endif
 
@@ -49,7 +49,7 @@
     if (reduction_axes.size() == arg_rank)                                                         \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_all<float, 2>)> kernel;          \
-        SELECT_REDUCTION_BY_RANK(                                                                  \
+        SELECT_BY_RANK(                                                                            \
             kernel, result_element_type, arg_rank, runtime::cpu::kernel::reduce_##K##_all);        \
         auto functor = [&, kernel, arg_shape, result_shape, arg_buffer_index, out_buffer_index](   \
             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                   \
@@ -69,10 +69,10 @@
         {                                                                                          \
             std::function<decltype(runtime::cpu::kernel::reduce_##K##_innermost_1rd<float, 2>)>    \
                 kernel;                                                                            \
-            SELECT_REDUCTION_BY_RANK(kernel,                                                       \
-                                     result_element_type,                                          \
-                                     arg_rank,                                                     \
-                                     runtime::cpu::kernel::reduce_##K##_innermost_1rd);            \
+            SELECT_BY_RANK(kernel,                                                                 \
+                           result_element_type,                                                    \
+                           arg_rank,                                                               \
+                           runtime::cpu::kernel::reduce_##K##_innermost_1rd);                      \
             auto functor =                                                                         \
                 [&, kernel, arg_shape, result_shape, arg_buffer_index, out_buffer_index](          \
                     CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                           \
@@ -87,7 +87,7 @@
         }                                                                                          \
                                                                                                    \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_1rd<float, 2>)> kernel;          \
-        SELECT_REDUCTION_BY_RANK(                                                                  \
+        SELECT_BY_RANK(                                                                            \
             kernel, result_element_type, arg_rank, runtime::cpu::kernel::reduce_##K##_1rd);        \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
