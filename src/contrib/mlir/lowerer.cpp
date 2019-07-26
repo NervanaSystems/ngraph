@@ -122,6 +122,9 @@ namespace
                                     ArrayRef<Type> output,
                                     PatternRewriter& rewriter);
 
+        /// Inserts dealloc Ops for each temporary allocated by AllocOp
+        void insertDeallocs(PatternRewriter& rewriter);
+
     private:
         /// Collect a set of patterns to convert from the nGraph dialect to Affine dialect.
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
@@ -134,8 +137,9 @@ namespace
     private:
         NGraphTypeConverter typeConverter;
         // Value holding mem manager passed pointer
-        SmallVector<Value*, 4> memMgrDefs;
-
+        SmallVector<Value*, 4> m_memMgrDefs;
+        // List of temporary memrefs to deallocate at end of function
+        SmallVector<Value*, 4> m_memRefsToDealloc;
         // list of results values to add to func signature
         SmallVector<Value*, 4> loweredOutputValues;
         ngmlir::MLIRCompiler& compiler;
@@ -167,7 +171,6 @@ namespace
         }
 
         processFakeInstrs();
-
         insertNoAliasArgAttrs();
     }
 
@@ -261,6 +264,7 @@ namespace
         NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
 
         Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
+        m_memRefsToDealloc.push_back(alloc);
 
         // TODO:
         // Enable dynamic memref allocation via call-back to nGraph allocator
@@ -333,6 +337,14 @@ namespace
             }
 
             ++argIdx;
+        }
+    }
+
+    void DialectLoweringPass::insertDeallocs(PatternRewriter& rewriter)
+    {
+        for (auto value : m_memRefsToDealloc)
+        {
+            rewriter.create<DeallocOp>(rewriter.getUnknownLoc(), value);
         }
     }
 
@@ -765,6 +777,7 @@ namespace
 
     REWRITER(NGReturnOp)
     {
+        m_pass.insertDeallocs(rewriter);
         rewriter.replaceOpWithNewOp<ReturnOp>(op);
         return matchSuccess();
     }
