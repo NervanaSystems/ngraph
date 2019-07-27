@@ -43,6 +43,7 @@ public:
         SHAPE_OF,
         REVERSE,
         PRODUCT,
+        SUM,
         CONCAT
     };
 
@@ -61,6 +62,7 @@ public:
         construct_constant_shape_of();
         construct_constant_reverse();
         construct_constant_product();
+        construct_constant_sum();
         construct_constant_concat();
     }
 
@@ -86,6 +88,7 @@ public:
             case CFTransformations::SHAPE_OF: construct_constant_shape_of(); break;
             case CFTransformations::REVERSE: construct_constant_reverse(); break;
             case CFTransformations::PRODUCT: construct_constant_product(); break;
+            case CFTransformations::SUM: construct_constant_sum(); break;
             case CFTransformations::CONCAT: construct_constant_concat(); break;
             }
         }
@@ -103,6 +106,7 @@ private:
     void construct_constant_shape_of();
     void construct_constant_reverse();
     void construct_constant_product();
+    void construct_constant_sum();
     void construct_constant_concat();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
