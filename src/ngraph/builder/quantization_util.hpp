@@ -37,7 +37,7 @@ namespace ngraph
     {
         namespace quantization_util
         {
-            std::shared_ptr<Node> max_abs(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+            std::shared_ptr<Node> max_abs(Output<Node> a, Output<Node> b)
             {
                 auto abs_a = std::make_shared<op::Abs>(a);
                 auto abs_b = std::make_shared<op::Abs>(b);
@@ -45,22 +45,22 @@ namespace ngraph
             }
 
             std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
-                quantization_range_for_multiplication(std::shared_ptr<Node> min_a,
-                                                      std::shared_ptr<Node> max_a,
-                                                      std::shared_ptr<Node> min_b,
-                                                      std::shared_ptr<Node> max_b)
+                quantization_range_for_multiplication(Output<Node> min_a,
+                                                      Output<Node> max_a,
+                                                      Output<Node> min_b,
+                                                      Output<Node> max_b)
             {
-                auto type = min_a->get_element_type();
-                if (type != max_a->get_element_type() || type != min_b->get_element_type() ||
-                    type != max_b->get_element_type())
+                auto type = min_a.get_element_type();
+                if (type != max_a.get_element_type() || type != min_b.get_element_type() ||
+                    type != max_b.get_element_type())
                 {
                     throw ngraph_error(
                         "quantization_range_for_multiplication: min and max must have same type");
                 }
 
-                auto shape = min_a->get_shape();
-                if (shape != max_a->get_shape() || shape != min_b->get_shape() ||
-                    shape != max_b->get_shape())
+                auto shape = min_a.get_shape();
+                if (shape != max_a.get_shape() || shape != min_b.get_shape() ||
+                    shape != max_b.get_shape())
                 {
                     throw ngraph_error(
                         "quantization_range_for_multiplication: min and max must have same shape");
@@ -87,28 +87,27 @@ namespace ngraph
                 return std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>(min_c, max_c);
             }
 
-            std::shared_ptr<Node> get_scale(std::shared_ptr<Node> min_input,
-                                            std::shared_ptr<Node> max_input,
-                                            std::shared_ptr<Node> min_filter,
-                                            std::shared_ptr<Node> max_filter,
-                                            std::shared_ptr<Node> min_freezed_output,
-                                            std::shared_ptr<Node> max_freezed_output,
+            std::shared_ptr<Node> get_scale(Output<Node> min_input,
+                                            Output<Node> max_input,
+                                            Output<Node> min_filter,
+                                            Output<Node> max_filter,
+                                            Output<Node> min_freezed_output,
+                                            Output<Node> max_freezed_output,
                                             const ngraph::element::Type& output_type)
             {
-                auto type = min_input->get_element_type();
-                if (type != max_input->get_element_type() ||
-                    type != min_filter->get_element_type() ||
-                    type != max_filter->get_element_type() ||
-                    type != min_freezed_output->get_element_type() ||
-                    type != max_freezed_output->get_element_type())
+                auto type = min_input.get_element_type();
+                if (type != max_input.get_element_type() || type != min_filter.get_element_type() ||
+                    type != max_filter.get_element_type() ||
+                    type != min_freezed_output.get_element_type() ||
+                    type != max_freezed_output.get_element_type())
                 {
                     throw ngraph_error("get_scale: min and max must have same type");
                 }
 
-                auto shape = min_input->get_shape();
-                if (shape != max_input->get_shape() || shape != min_filter->get_shape() ||
-                    shape != max_filter->get_shape() || shape != min_freezed_output->get_shape() ||
-                    shape != max_freezed_output->get_shape())
+                auto shape = min_input.get_shape();
+                if (shape != max_input.get_shape() || shape != min_filter.get_shape() ||
+                    shape != max_filter.get_shape() || shape != min_freezed_output.get_shape() ||
+                    shape != max_freezed_output.get_shape())
                 {
                     throw ngraph_error("get_scale: min and max must have same shape");
                 }
@@ -147,22 +146,21 @@ namespace ngraph
                        (max_abs32 / max_abs8);
             }
 
-            std::shared_ptr<Node> get_bias_scale(std::shared_ptr<Node> min_input,
-                                                 std::shared_ptr<Node> max_input,
-                                                 std::shared_ptr<Node> min_filter,
-                                                 std::shared_ptr<Node> max_filter)
+            std::shared_ptr<Node> get_bias_scale(Output<Node> min_input,
+                                                 Output<Node> max_input,
+                                                 Output<Node> min_filter,
+                                                 Output<Node> max_filter)
             {
-                auto type = min_input->get_element_type();
-                if (type != max_input->get_element_type() ||
-                    type != min_filter->get_element_type() ||
-                    type != max_filter->get_element_type())
+                auto type = min_input.get_element_type();
+                if (type != max_input.get_element_type() || type != min_filter.get_element_type() ||
+                    type != max_filter.get_element_type())
                 {
                     throw ngraph_error("get_bias_scale: min and max must have same type");
                 }
 
-                auto shape = min_input->get_shape();
-                if (shape != max_input->get_shape() || shape != min_filter->get_shape() ||
-                    shape != max_filter->get_shape())
+                auto shape = min_input.get_shape();
+                if (shape != max_input.get_shape() || shape != min_filter.get_shape() ||
+                    shape != max_filter.get_shape())
                 {
                     throw ngraph_error("get_bias_scale: min and max must have same shape");
                 }
@@ -178,23 +176,23 @@ namespace ngraph
                 return (max_abs_input_range * max_abs_filter_range) / range;
             }
 
-            std::shared_ptr<Node> get_sum_scale(std::shared_ptr<Node> min_freezed_output_conv_1,
-                                                std::shared_ptr<Node> max_freezed_output_conv_1,
-                                                std::shared_ptr<Node> min_freezed_output_conv_2,
-                                                std::shared_ptr<Node> max_freezed_output_conv_2)
+            std::shared_ptr<Node> get_sum_scale(Output<Node> min_freezed_output_conv_1,
+                                                Output<Node> max_freezed_output_conv_1,
+                                                Output<Node> min_freezed_output_conv_2,
+                                                Output<Node> max_freezed_output_conv_2)
             {
-                auto type = min_freezed_output_conv_1->get_element_type();
-                if (type != max_freezed_output_conv_1->get_element_type() ||
-                    type != min_freezed_output_conv_2->get_element_type() ||
-                    type != max_freezed_output_conv_2->get_element_type())
+                auto type = min_freezed_output_conv_1.get_element_type();
+                if (type != max_freezed_output_conv_1.get_element_type() ||
+                    type != min_freezed_output_conv_2.get_element_type() ||
+                    type != max_freezed_output_conv_2.get_element_type())
                 {
                     throw ngraph_error("get_sum_scale: min and max must have same type");
                 }
 
-                auto shape = min_freezed_output_conv_1->get_shape();
-                if (shape != max_freezed_output_conv_1->get_shape() ||
-                    shape != min_freezed_output_conv_2->get_shape() ||
-                    shape != max_freezed_output_conv_2->get_shape())
+                auto shape = min_freezed_output_conv_1.get_shape();
+                if (shape != max_freezed_output_conv_1.get_shape() ||
+                    shape != min_freezed_output_conv_2.get_shape() ||
+                    shape != max_freezed_output_conv_2.get_shape())
                 {
                     throw ngraph_error("get_sum_scale: min and max must have same shape");
                 }
@@ -204,19 +202,19 @@ namespace ngraph
                 return max_abs_conv_2 / max_abs_conv_1;
             }
 
-            std::shared_ptr<Node> get_scale(std::shared_ptr<Node> input_min_range,
-                                            std::shared_ptr<Node> input_max_range,
+            std::shared_ptr<Node> get_scale(Output<Node> input_min_range,
+                                            Output<Node> input_max_range,
                                             const ngraph::element::Type& quant_type,
                                             bool bump_by_eps = false)
             {
-                auto type = input_min_range->get_element_type();
-                if (type != input_max_range->get_element_type())
+                auto type = input_min_range.get_element_type();
+                if (type != input_max_range.get_element_type())
                 {
                     throw ngraph_error("get_scale: min and max must have same type");
                 }
 
-                auto shape = input_min_range->get_shape();
-                if (shape != input_max_range->get_shape())
+                auto shape = input_min_range.get_shape();
+                if (shape != input_max_range.get_shape())
                 {
                     throw ngraph_error("get_scale: min and max must have same shape");
                 }
@@ -277,30 +275,29 @@ namespace ngraph
                 }
             }
 
-            std::shared_ptr<Node> get_dot_scale(std::shared_ptr<Node> min_input,
-                                                std::shared_ptr<Node> max_input,
-                                                std::shared_ptr<Node> min_filter,
-                                                std::shared_ptr<Node> max_filter,
-                                                std::shared_ptr<Node> min_freezed_output,
-                                                std::shared_ptr<Node> max_freezed_output,
+            std::shared_ptr<Node> get_dot_scale(Output<Node> min_input,
+                                                Output<Node> max_input,
+                                                Output<Node> min_filter,
+                                                Output<Node> max_filter,
+                                                Output<Node> min_freezed_output,
+                                                Output<Node> max_freezed_output,
                                                 const ngraph::element::Type& input_type,
                                                 const ngraph::element::Type& output_type,
                                                 const bool requantize = true)
             {
-                auto type = min_input->get_element_type();
-                if (type != max_input->get_element_type() ||
-                    type != min_filter->get_element_type() ||
-                    type != max_filter->get_element_type() ||
-                    type != min_freezed_output->get_element_type() ||
-                    type != max_freezed_output->get_element_type())
+                auto type = min_input.get_element_type();
+                if (type != max_input.get_element_type() || type != min_filter.get_element_type() ||
+                    type != max_filter.get_element_type() ||
+                    type != min_freezed_output.get_element_type() ||
+                    type != max_freezed_output.get_element_type())
                 {
                     throw ngraph_error("get_dot_scale: min and max must have same type");
                 }
 
-                auto shape = min_input->get_shape();
-                if (shape != max_input->get_shape() || shape != min_filter->get_shape() ||
-                    shape != max_filter->get_shape() || shape != min_freezed_output->get_shape() ||
-                    shape != max_freezed_output->get_shape())
+                auto shape = min_input.get_shape();
+                if (shape != max_input.get_shape() || shape != min_filter.get_shape() ||
+                    shape != max_filter.get_shape() || shape != min_freezed_output.get_shape() ||
+                    shape != max_freezed_output.get_shape())
                 {
                     throw ngraph_error("get_dot_scale: min and max must have same shape");
                 }
