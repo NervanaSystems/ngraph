@@ -21,11 +21,13 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/floor.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -44,9 +46,11 @@
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/convert.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
+#include "ngraph/runtime/reference/floor.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
@@ -506,7 +510,8 @@ void pass::ConstantFolding::construct_constant_binary()
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
-    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
+    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Ceiling>(n) ||
+           std::dynamic_pointer_cast<op::Floor>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
            std::dynamic_pointer_cast<op::Relu>(n) || std::dynamic_pointer_cast<op::Sign>(n) ||
            std::dynamic_pointer_cast<op::Sqrt>(n);
 }
@@ -543,6 +548,16 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         if (std::dynamic_pointer_cast<op::Abs>(unary))
         {
             runtime::reference::abs<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
+        else if (std::dynamic_pointer_cast<op::Ceiling>(unary))
+        {
+            runtime::reference::ceiling<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
+        else if (std::dynamic_pointer_cast<op::Floor>(unary))
+        {
+            runtime::reference::floor<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
         else if (std::dynamic_pointer_cast<op::Negative>(unary))
