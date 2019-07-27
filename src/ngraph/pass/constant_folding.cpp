@@ -27,11 +27,17 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/equal.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
@@ -51,10 +57,16 @@
 #include "ngraph/runtime/reference/convert.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
+#include "ngraph/runtime/reference/equal.hpp"
+#include "ngraph/runtime/reference/greater.hpp"
+#include "ngraph/runtime/reference/greater_eq.hpp"
+#include "ngraph/runtime/reference/less.hpp"
+#include "ngraph/runtime/reference/less_eq.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
+#include "ngraph/runtime/reference/not_equal.hpp"
 #include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
@@ -365,17 +377,17 @@ void pass::ConstantFolding::construct_constant_broadcast()
         broadcast_matcher, constant_broadcast_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
-template <class T>
+template <class Tin, class Tout>
 shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
                                               shared_ptr<op::Constant> b,
                                               shared_ptr<Node> binary,
                                               NodeExecutorTy func)
 {
     auto out_shape = binary->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
 
     if (func != nullptr)
     {
+        vector<Tout> out_vec(shape_size(out_shape));
         vector<void*> inputs;
         inputs.push_back(const_cast<void*>(a->get_data_ptr()));
         inputs.push_back(const_cast<void*>(b->get_data_ptr()));
@@ -383,53 +395,160 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
         outputs.push_back(out_vec.data());
 
         func(inputs, outputs);
+        return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
     }
     else
     {
         if (std::dynamic_pointer_cast<op::Add>(binary))
         {
-            runtime::reference::add<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::add<Tin>(a->get_data_ptr<Tin>(),
+                                         b->get_data_ptr<Tin>(),
+                                         out_vec.data(),
+                                         shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else if (std::dynamic_pointer_cast<op::And>(binary))
         {
-            runtime::reference::logical_and<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::logical_and<Tin>(a->get_data_ptr<Tin>(),
+                                                 b->get_data_ptr<Tin>(),
+                                                 out_vec.data(),
+                                                 shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else if (std::dynamic_pointer_cast<op::Divide>(binary))
         {
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
             shared_ptr<op::Divide> divop = std::dynamic_pointer_cast<op::Divide>(binary);
             bool pythondiv = divop->is_pythondiv();
-            runtime::reference::divide<T>(a->get_data_ptr<T>(),
-                                          b->get_data_ptr<T>(),
+            runtime::reference::divide<Tin>(a->get_data_ptr<Tin>(),
+                                            b->get_data_ptr<Tin>(),
+                                            out_vec.data(),
+                                            shape_size(out_shape),
+                                            pythondiv);
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::Equal>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::equal<Tin>(a->get_data_ptr<Tin>(),
+                                           b->get_data_ptr<Tin>(),
+                                           out_vec.data(),
+                                           shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::Greater>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::greater<Tin>(a->get_data_ptr<Tin>(),
+                                             b->get_data_ptr<Tin>(),
+                                             out_vec.data(),
+                                             shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::GreaterEq>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::greater_eq<Tin>(a->get_data_ptr<Tin>(),
+                                                b->get_data_ptr<Tin>(),
+                                                out_vec.data(),
+                                                shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::Less>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::less<Tin>(a->get_data_ptr<Tin>(),
+                                          b->get_data_ptr<Tin>(),
                                           out_vec.data(),
-                                          shape_size(out_shape),
-                                          pythondiv);
+                                          shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::LessEq>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::less_eq<Tin>(a->get_data_ptr<Tin>(),
+                                             b->get_data_ptr<Tin>(),
+                                             out_vec.data(),
+                                             shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else if (std::dynamic_pointer_cast<op::Maximum>(binary))
         {
-            runtime::reference::maximum<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::maximum<Tin>(a->get_data_ptr<Tin>(),
+                                             b->get_data_ptr<Tin>(),
+                                             out_vec.data(),
+                                             shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else if (std::dynamic_pointer_cast<op::Minimum>(binary))
         {
-            runtime::reference::minimum<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::minimum<Tin>(a->get_data_ptr<Tin>(),
+                                             b->get_data_ptr<Tin>(),
+                                             out_vec.data(),
+                                             shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else if (std::dynamic_pointer_cast<op::Multiply>(binary))
         {
-            runtime::reference::multiply<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::multiply<Tin>(a->get_data_ptr<Tin>(),
+                                              b->get_data_ptr<Tin>(),
+                                              out_vec.data(),
+                                              shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::NotEqual>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::not_equal<Tin>(a->get_data_ptr<Tin>(),
+                                               b->get_data_ptr<Tin>(),
+                                               out_vec.data(),
+                                               shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else if (std::dynamic_pointer_cast<op::Or>(binary))
         {
-            runtime::reference::logical_or<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::logical_or<Tin>(a->get_data_ptr<Tin>(),
+                                                b->get_data_ptr<Tin>(),
+                                                out_vec.data(),
+                                                shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else if (std::dynamic_pointer_cast<op::Subtract>(binary))
         {
-            runtime::reference::subtract<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::subtract<Tin>(a->get_data_ptr<Tin>(),
+                                              b->get_data_ptr<Tin>(),
+                                              out_vec.data(),
+                                              shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else
         {
@@ -437,17 +556,48 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
                          "fold_constant_binary must be consistent with is_supported_binary_op");
         }
     }
-
-    return make_shared<op::Constant>(a->get_element_type(), out_shape, out_vec);
 }
 
+template <class Tin>
+shared_ptr<op::Constant> fold_constant_binary_helper(const element::Type& et_out,
+                                                     shared_ptr<op::Constant> a,
+                                                     shared_ptr<op::Constant> b,
+                                                     shared_ptr<Node> binary,
+                                                     NodeExecutorTy func)
+{
+    switch (et_out.get_type_enum())
+    {
+    case element::Type_t::undefined:
+        NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_binary_callback");
+    case element::Type_t::dynamic:
+        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_binary_callback");
+    case element::Type_t::boolean: return fold_constant_binary<Tin, char>(a, b, binary, func);
+    case element::Type_t::bf16: return fold_constant_binary<Tin, bfloat16>(a, b, binary, func);
+    case element::Type_t::f16: return fold_constant_binary<Tin, float16>(a, b, binary, func);
+    case element::Type_t::f32: return fold_constant_binary<Tin, float>(a, b, binary, func);
+    case element::Type_t::f64: return fold_constant_binary<Tin, double>(a, b, binary, func);
+    case element::Type_t::i8: return fold_constant_binary<Tin, int8_t>(a, b, binary, func);
+    case element::Type_t::i16: return fold_constant_binary<Tin, int16_t>(a, b, binary, func);
+    case element::Type_t::i32: return fold_constant_binary<Tin, int32_t>(a, b, binary, func);
+    case element::Type_t::i64: return fold_constant_binary<Tin, int64_t>(a, b, binary, func);
+    case element::Type_t::u8: return fold_constant_binary<Tin, uint8_t>(a, b, binary, func);
+    case element::Type_t::u16: return fold_constant_binary<Tin, uint16_t>(a, b, binary, func);
+    case element::Type_t::u32: return fold_constant_binary<Tin, uint32_t>(a, b, binary, func);
+    case element::Type_t::u64: return fold_constant_binary<Tin, uint64_t>(a, b, binary, func);
+    }
+
+    NGRAPH_UNREACHABLE("Unreachable switch case");
+}
 bool is_supported_binary_op(std::shared_ptr<Node> n)
 {
-    return (std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::And>(n) ||
-            std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Maximum>(n) ||
-            std::dynamic_pointer_cast<op::Minimum>(n) ||
-            std::dynamic_pointer_cast<op::Multiply>(n) || std::dynamic_pointer_cast<op::Or>(n) ||
-            std::dynamic_pointer_cast<op::Subtract>(n));
+    return (
+        std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::And>(n) ||
+        std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Equal>(n) ||
+        std::dynamic_pointer_cast<op::Greater>(n) || std::dynamic_pointer_cast<op::GreaterEq>(n) ||
+        std::dynamic_pointer_cast<op::Less>(n) || std::dynamic_pointer_cast<op::LessEq>(n) ||
+        std::dynamic_pointer_cast<op::Maximum>(n) || std::dynamic_pointer_cast<op::Minimum>(n) ||
+        std::dynamic_pointer_cast<op::Multiply>(n) || std::dynamic_pointer_cast<op::NotEqual>(n) ||
+        std::dynamic_pointer_cast<op::Or>(n) || std::dynamic_pointer_cast<op::Subtract>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()
@@ -486,8 +636,9 @@ void pass::ConstantFolding::construct_constant_binary()
         }
 
         std::shared_ptr<Node> replacement;
-        auto type = a_match->get_element_type();
-        switch (type.get_type_enum())
+        auto in_type = a_match->get_output_element_type(0);
+        auto out_type = binary_match->get_output_element_type(0);
+        switch (in_type.get_type_enum())
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_binary_callback");
@@ -496,43 +647,56 @@ void pass::ConstantFolding::construct_constant_binary()
             NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_binary_callback");
             break;
         case element::Type_t::boolean:
-            replacement = fold_constant_binary<char>(a_match, b_match, binary_match, func);
+            replacement =
+                fold_constant_binary_helper<char>(out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::bf16:
-            replacement = fold_constant_binary<bfloat16>(a_match, b_match, binary_match, func);
+            replacement = fold_constant_binary_helper<bfloat16>(
+                out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::f16:
-            replacement = fold_constant_binary<float16>(a_match, b_match, binary_match, func);
+            replacement = fold_constant_binary_helper<float16>(
+                out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::f32:
-            replacement = fold_constant_binary<float>(a_match, b_match, binary_match, func);
+            replacement =
+                fold_constant_binary_helper<float>(out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::f64:
-            replacement = fold_constant_binary<double>(a_match, b_match, binary_match, func);
+            replacement =
+                fold_constant_binary_helper<double>(out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::i8:
-            replacement = fold_constant_binary<int8_t>(a_match, b_match, binary_match, func);
+            replacement =
+                fold_constant_binary_helper<int8_t>(out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::i16:
-            replacement = fold_constant_binary<int16_t>(a_match, b_match, binary_match, func);
+            replacement = fold_constant_binary_helper<int16_t>(
+                out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::i32:
-            replacement = fold_constant_binary<int32_t>(a_match, b_match, binary_match, func);
+            replacement = fold_constant_binary_helper<int32_t>(
+                out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::i64:
-            replacement = fold_constant_binary<int64_t>(a_match, b_match, binary_match, func);
+            replacement = fold_constant_binary_helper<int64_t>(
+                out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::u8:
-            replacement = fold_constant_binary<uint8_t>(a_match, b_match, binary_match, func);
+            replacement = fold_constant_binary_helper<uint8_t>(
+                out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::u16:
-            replacement = fold_constant_binary<uint16_t>(a_match, b_match, binary_match, func);
+            replacement = fold_constant_binary_helper<uint16_t>(
+                out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::u32:
-            replacement = fold_constant_binary<uint32_t>(a_match, b_match, binary_match, func);
+            replacement = fold_constant_binary_helper<uint32_t>(
+                out_type, a_match, b_match, binary_match, func);
             break;
         case element::Type_t::u64:
-            replacement = fold_constant_binary<uint64_t>(a_match, b_match, binary_match, func);
+            replacement = fold_constant_binary_helper<uint64_t>(
+                out_type, a_match, b_match, binary_match, func);
             break;
         }
 
