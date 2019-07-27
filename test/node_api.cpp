@@ -21,6 +21,7 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/log.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
@@ -147,7 +148,6 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/log.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -166,8 +166,8 @@ static void this_test_only_needs_to_successfully_compile()
 // {
 //     EXPECT_STREQ("Add", ngraph::op::Add::type_name.c_str());
 // }
-#define NGRAPH_OP(a, b) TEST(node_api, a) { EXPECT_STREQ(#a, b::a::type_name.c_str()); }
+#define NGRAPH_OP(a, b)                                                                            \
+    TEST(node_api, a) { EXPECT_STREQ(#a, b::a::type_name.c_str()); }
 #include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
 #undef NGRAPH_OP
-
