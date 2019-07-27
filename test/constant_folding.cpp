@@ -416,7 +416,7 @@ TEST(constant_folding, const_sum)
     auto constant = op::Constant::create(element::i32, input_shape, values_in);
     auto convert = make_shared<op::Sum>(constant, AxisSet{1});
     auto f = make_shared<Function>(convert, ParameterVector{});
- 
+
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
