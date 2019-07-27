@@ -36,6 +36,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/sign.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -56,6 +57,7 @@
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
+#include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/util.hpp"
@@ -505,7 +507,8 @@ void pass::ConstantFolding::construct_constant_binary()
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
     return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
-           std::dynamic_pointer_cast<op::Relu>(n) || std::dynamic_pointer_cast<op::Sqrt>(n);
+           std::dynamic_pointer_cast<op::Relu>(n) || std::dynamic_pointer_cast<op::Sign>(n) ||
+           std::dynamic_pointer_cast<op::Sqrt>(n);
 }
 
 template <class T>
@@ -517,7 +520,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
     if (std::dynamic_pointer_cast<op::Sqrt>(unary))
     {
         std::vector<T> values{constant->get_vector<T>()};
-        if (std::any_of(values.begin(), values.end(), [](T i) { return i < 0; }))
+        if (std::any_of(values.begin(), values.end(), [](T i) { return i < T(0); }))
         {
             throw ngraph_error("Square root of negative value");
         }
@@ -550,6 +553,11 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         else if (std::dynamic_pointer_cast<op::Relu>(unary))
         {
             runtime::reference::relu<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
+        else if (std::dynamic_pointer_cast<op::Sign>(unary))
+        {
+            runtime::reference::sign<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
         else if (std::dynamic_pointer_cast<op::Sqrt>(unary))
@@ -599,33 +607,59 @@ void pass::ConstantFolding::construct_constant_unary()
             func = handler->second(unary_match.get());
         }
 
+        std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
-        if (type == element::i32)
+        switch (type.get_type_enum())
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_unary<int>(constant_match, unary_match, func));
-            return true;
-        }
-        else if (type == element::i8)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_unary<int8_t>(constant_match, unary_match, func));
-            return true;
-        }
-        else if (type == element::f32)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_unary<float>(constant_match, unary_match, func));
-            return true;
-        }
-        else if (type == element::f64)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_unary<double>(constant_match, unary_match, func));
-            return true;
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_unary_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_unary_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_unary<char>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_unary<bfloat16>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_unary<float16>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_unary<float>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_unary<double>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_unary<int8_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_unary<int16_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_unary<int32_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_unary<int64_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_unary<uint8_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_unary<uint16_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_unary<uint32_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_unary<uint64_t>(constant_match, unary_match, func);
+            break;
         }
 
-        return false;
+        replace_node(m.get_match_root(), replacement);
+        return true;
     };
 
     auto reshape_matcher = make_shared<pattern::Matcher>(uea, "ConstantFolding.ConstantUnary");
