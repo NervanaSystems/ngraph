@@ -20,6 +20,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::ShapeOf::type_name{"ShapeOf"};
+
 op::ShapeOf::ShapeOf(const shared_ptr<Node>& arg)
     : Op("ShapeOf", check_single_output_args({arg}))
 {

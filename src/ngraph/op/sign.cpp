@@ -19,6 +19,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Sign::type_name{"Sign"};
+
 op::Sign::Sign(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Sign", arg)
 {

@@ -26,6 +26,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Normalize::type_name{"Normalize"};
+
 op::Normalize::Normalize(const shared_ptr<ngraph::Node>& data,
                          const shared_ptr<ngraph::Node>& scale,
                          bool across_spatial,

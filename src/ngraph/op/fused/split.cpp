@@ -21,6 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Split::type_name{"Split"};
+
 op::Split::Split(const shared_ptr<Node>& data, const int axis, const size_t num_split)
     : FusedOp("Split", {data})
     , m_split_evenly{true}

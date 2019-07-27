@@ -24,6 +24,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::DynReplaceSlice::type_name{"DynReplaceSlice"};
+
 op::DynReplaceSlice::DynReplaceSlice(const shared_ptr<Node>& arg,
                                      const shared_ptr<Node>& replacement,
                                      const shared_ptr<Node>& lower_bounds,

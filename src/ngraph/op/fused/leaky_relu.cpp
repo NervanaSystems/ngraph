@@ -23,6 +23,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::LeakyRelu::type_name{"LeakyRelu"};
+
 op::LeakyRelu::LeakyRelu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
     : FusedOp("LeakyRelu", {data, alpha})
 {

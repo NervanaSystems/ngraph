@@ -22,6 +22,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Clamp::type_name{"Clamp"};
+
 op::Clamp::Clamp(const shared_ptr<Node>& data, const double min, const double max)
     : FusedOp("Clamp", {data})
     , m_min{min}

@@ -21,6 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::StopGradient::type_name{"StopGradient"};
+
 op::StopGradient::StopGradient(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("StopGradient", arg)
 {

@@ -21,6 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Parameter::type_name{"Parameter"};
+
 op::Parameter::Parameter(const element::Type& element_type,
                          const PartialShape& pshape,
                          const bool cacheable)

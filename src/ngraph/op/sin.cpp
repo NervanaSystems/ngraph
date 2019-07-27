@@ -21,6 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Sin::type_name{"Sin"};
+
 op::Sin::Sin(const shared_ptr<Node>& arg)
     : UnaryElementwiseArithmetic("Sin", arg)
 {

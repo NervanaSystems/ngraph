@@ -29,6 +29,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::PRelu::type_name{"PRelu"};
+
 op::PRelu::PRelu(const shared_ptr<Node>& data, const shared_ptr<Node>& slope)
     : FusedOp("PRelu", {data, slope})
 {

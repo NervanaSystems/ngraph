@@ -27,6 +27,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::MVN::type_name{"MVN"};
+
 op::MVN::MVN(const std::shared_ptr<Node>& data,
              bool across_channels,
              bool normalize_variance,

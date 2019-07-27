@@ -25,6 +25,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Gemm::type_name{"Gemm"};
+
 op::Gemm::Gemm(const std::shared_ptr<ngraph::Node>& A,
                const std::shared_ptr<ngraph::Node>& B,
                const std::shared_ptr<ngraph::Node>& C,

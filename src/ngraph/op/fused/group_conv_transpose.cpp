@@ -27,6 +27,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::GroupConvolutionTranspose::type_name{"GroupConvolutionTranspose"};
+
 op::GroupConvolutionTranspose::GroupConvolutionTranspose(const shared_ptr<Node>& data,
                                                          const shared_ptr<Node>& filters,
                                                          const Strides& strides,

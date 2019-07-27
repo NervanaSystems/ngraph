@@ -26,6 +26,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Squeeze::type_name{"Squeeze"};
+
 op::Squeeze::Squeeze(const shared_ptr<Node>& data, const shared_ptr<Node>& axes)
     : FusedOp("Squeeze", {data, axes})
 {

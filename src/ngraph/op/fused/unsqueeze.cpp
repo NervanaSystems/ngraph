@@ -26,6 +26,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Unsqueeze::type_name{"Unsqueeze"};
+
 op::Unsqueeze::Unsqueeze(const shared_ptr<Node>& data, const shared_ptr<Node>& axes)
     : FusedOp("Unsqueeze", {data, axes})
 {

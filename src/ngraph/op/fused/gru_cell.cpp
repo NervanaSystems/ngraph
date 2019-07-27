@@ -31,6 +31,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::GRUCell::type_name{"GRUCell"};
+
 op::GRUCell::GRUCell(const shared_ptr<Node>& X,
                      const shared_ptr<Node>& W,
                      const shared_ptr<Node>& R,

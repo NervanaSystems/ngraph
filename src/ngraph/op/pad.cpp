@@ -21,6 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Pad::type_name{"Pad"};
+
 op::Pad::Pad(const shared_ptr<Node>& arg,
              const shared_ptr<Node>& arg_pad_value,
              const CoordinateDiff& padding_below,

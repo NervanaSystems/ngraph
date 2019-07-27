@@ -21,6 +21,9 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Sigmoid::type_name{"Sigmoid"};
+const string op::SigmoidBackprop::type_name{"SigmoidBackprop"};
+
 shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);

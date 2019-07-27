@@ -36,6 +36,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::FakeQuantize::type_name{"FakeQuantize"};
+
 op::FakeQuantize::FakeQuantize(const shared_ptr<Node>& data,
                                const shared_ptr<Node>& input_low,
                                const shared_ptr<Node>& input_high,

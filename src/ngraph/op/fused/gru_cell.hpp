@@ -41,7 +41,11 @@ namespace ngraph
         class GRUCell : public util::FusedOp, public util::RNNCellBase
         {
         public:
-            ///
+             NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+
+           ///
             /// \brief      Constructs GRUCell node.
             ///
             /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].

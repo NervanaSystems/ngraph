@@ -21,6 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::ScaleShift::type_name{"ScaleShift"};
+
 op::ScaleShift::ScaleShift(const std::shared_ptr<ngraph::Node>& data,
                            const std::shared_ptr<ngraph::Node>& scale,
                            const std::shared_ptr<ngraph::Node>& shift)

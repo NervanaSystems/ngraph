@@ -24,6 +24,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::DynSlice::type_name{"DynSlice"};
+
 op::DynSlice::DynSlice(const shared_ptr<Node>& arg,
                        const shared_ptr<Node>& lower_bounds,
                        const shared_ptr<Node>& upper_bounds,

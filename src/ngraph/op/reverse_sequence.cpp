@@ -25,6 +25,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::ReverseSequence::type_name{"ReverseSequence"};
+
 op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
                                      const std::shared_ptr<Node> seq_indices,
                                      size_t batch_axis,

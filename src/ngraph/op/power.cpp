@@ -22,6 +22,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Power::type_name{"Power"};
+
 op::Power::Power(const shared_ptr<Node>& arg0,
                  const shared_ptr<Node>& arg1,
                  const AutoBroadcastSpec& autob)

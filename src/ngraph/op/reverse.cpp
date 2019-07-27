@@ -23,6 +23,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Reverse::type_name{"Reverse"};
+
 op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
     : Op("Reverse", check_single_output_args({arg}))
     , m_reversed_axes(reversed_axes)

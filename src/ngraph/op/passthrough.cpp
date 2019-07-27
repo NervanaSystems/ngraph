@@ -18,6 +18,11 @@
 
 #include "ngraph/op/passthrough.hpp"
 
+using namespace std;
+using namespace ngraph;
+
+const string op::Passthrough::type_name{"Passthrough"};
+
 ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
                                      const std::string& language,
                                      const std::string& function,

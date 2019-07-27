@@ -23,6 +23,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::CompiledKernel::type_name{"CompiledKernel"};
+
 shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector& new_args) const
 {
     auto args = inputs();

@@ -24,6 +24,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::DynReshape::type_name{"DynReshape"};
+
 op::DynReshape::DynReshape(const shared_ptr<Node>& arg,
                            const shared_ptr<Node>& pattern,
                            bool zero_flag)

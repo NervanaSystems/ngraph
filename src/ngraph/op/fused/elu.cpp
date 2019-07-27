@@ -28,6 +28,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Elu::type_name{"Elu"};
+
 op::Elu::Elu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
     : FusedOp("Elu", {data, alpha})
 {

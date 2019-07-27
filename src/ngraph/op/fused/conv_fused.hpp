@@ -28,6 +28,10 @@ namespace ngraph
         class ConvolutionBias : public ngraph::op::util::FusedOp
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+
             ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
                             const std::shared_ptr<Node>& bias,
                             const bool with_relu = false);
@@ -79,7 +83,11 @@ namespace ngraph
         class ConvolutionBiasBackpropFiltersBias : public ngraph::op::util::FusedOp
         {
         public:
-            ConvolutionBiasBackpropFiltersBias(const std::shared_ptr<Node>& data_batch,
+             NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+
+           ConvolutionBiasBackpropFiltersBias(const std::shared_ptr<Node>& data_batch,
                                                const Shape& filters_shape,
                                                const Shape& bias_shape,
                                                const std::shared_ptr<Node>& output_delta,
@@ -169,6 +177,10 @@ namespace ngraph
         class ConvolutionBiasAdd : public ngraph::op::util::FusedOp
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+
             ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
                                const std::shared_ptr<Node>& sum_input,
                                bool with_relu = false);

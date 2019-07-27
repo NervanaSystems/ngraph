@@ -19,6 +19,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::DynPad::type_name{"DynPad"};
+
 op::DynPad::DynPad(const std::shared_ptr<Node>& arg,
                    const std::shared_ptr<Node>& padding_below,
                    const std::shared_ptr<Node>& padding_above,
