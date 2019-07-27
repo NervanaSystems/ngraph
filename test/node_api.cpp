@@ -147,6 +147,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/log.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -157,4 +158,16 @@ static void this_test_only_needs_to_successfully_compile()
 #define NGRAPH_OP(a, b) NGRAPH_INFO << b::a::type_name;
 #include "ngraph/op/fused_op_tbl.hpp"
 #include "ngraph/op/op_tbl.hpp"
+#undef NGRAPH_OP
 }
+
+// This makes a series of unit tests that look remarkably like this:
+// TEST(node_api, Add)
+// {
+//     EXPECT_STREQ("Add", ngraph::op::Add::type_name.c_str());
+// }
+#define NGRAPH_OP(a, b) TEST(node_api, a) { EXPECT_STREQ(#a, b::a::type_name.c_str()); }
+#include "ngraph/op/fused_op_tbl.hpp"
+#include "ngraph/op/op_tbl.hpp"
+#undef NGRAPH_OP
+
