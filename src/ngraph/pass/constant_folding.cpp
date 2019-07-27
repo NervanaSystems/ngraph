@@ -20,6 +20,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -31,6 +32,7 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -43,6 +45,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/add.hpp"
+#include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convert.hpp"
@@ -52,6 +55,7 @@
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
+#include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
@@ -387,14 +391,9 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
             runtime::reference::add<T>(
                 a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Subtract>(binary))
+        else if (std::dynamic_pointer_cast<op::And>(binary))
         {
-            runtime::reference::subtract<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
-        }
-        else if (std::dynamic_pointer_cast<op::Multiply>(binary))
-        {
-            runtime::reference::multiply<T>(
+            runtime::reference::logical_and<T>(
                 a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
         else if (std::dynamic_pointer_cast<op::Divide>(binary))
@@ -407,14 +406,29 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
                                           shape_size(out_shape),
                                           pythondiv);
         }
+        else if (std::dynamic_pointer_cast<op::Maximum>(binary))
+        {
+            runtime::reference::maximum<T>(
+                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
         else if (std::dynamic_pointer_cast<op::Minimum>(binary))
         {
             runtime::reference::minimum<T>(
                 a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
-        else if (std::dynamic_pointer_cast<op::Maximum>(binary))
+        else if (std::dynamic_pointer_cast<op::Multiply>(binary))
         {
-            runtime::reference::maximum<T>(
+            runtime::reference::multiply<T>(
+                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
+        else if (std::dynamic_pointer_cast<op::Or>(binary))
+        {
+            runtime::reference::logical_or<T>(
+                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
+        else if (std::dynamic_pointer_cast<op::Subtract>(binary))
+        {
+            runtime::reference::subtract<T>(
                 a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
         else
@@ -429,10 +443,11 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
 
 bool is_supported_binary_op(std::shared_ptr<Node> n)
 {
-    return (std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::Subtract>(n) ||
-            std::dynamic_pointer_cast<op::Multiply>(n) ||
+    return (std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::And>(n) ||
             std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Maximum>(n) ||
-            std::dynamic_pointer_cast<op::Minimum>(n));
+            std::dynamic_pointer_cast<op::Minimum>(n) ||
+            std::dynamic_pointer_cast<op::Multiply>(n) || std::dynamic_pointer_cast<op::Or>(n) ||
+            std::dynamic_pointer_cast<op::Subtract>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()
@@ -470,33 +485,59 @@ void pass::ConstantFolding::construct_constant_binary()
             func = handler->second(binary_match.get());
         }
 
+        std::shared_ptr<Node> replacement;
         auto type = a_match->get_element_type();
-        if (type == element::i32)
+        switch (type.get_type_enum())
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_binary<int>(a_match, b_match, binary_match, func));
-            return true;
-        }
-        else if (type == element::i8)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_binary<int8_t>(a_match, b_match, binary_match, func));
-            return true;
-        }
-        else if (type == element::f32)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_binary<float>(a_match, b_match, binary_match, func));
-            return true;
-        }
-        else if (type == element::f64)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_binary<double>(a_match, b_match, binary_match, func));
-            return true;
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_binary_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_binary_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_binary<char>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_binary<bfloat16>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_binary<float16>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_binary<float>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_binary<double>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_binary<int8_t>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_binary<int16_t>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_binary<int32_t>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_binary<int64_t>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_binary<uint8_t>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_binary<uint16_t>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_binary<uint32_t>(a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_binary<uint64_t>(a_match, b_match, binary_match, func);
+            break;
         }
 
-        return false;
+        replace_node(m.get_match_root(), replacement);
+        return true;
     };
 
     auto reshape_matcher = make_shared<pattern::Matcher>(bea, "ConstantFolding.ConstantBinary");
