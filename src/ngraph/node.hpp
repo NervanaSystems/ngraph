@@ -122,9 +122,6 @@ namespace ngraph
         /// \param output_size Number of outputs for this node
         Node(const OutputVector& arguments, size_t output_size = 1);
 
-        /// \brief Construct a node with arguments. Will be deprecated.
-        Node(const std::string& node_type, const NodeVector& arguments, size_t output_size = 1);
-
         /// \brief Constructor for Node subclasses that have metaclasses. Will be deprecated.
         /// \param arguments The 0th output of node i will connect to input i
         /// \param output_size Number of outputs for this node
@@ -154,7 +151,7 @@ namespace ngraph
         /// \brief Get the string name for the type of the node, such as `Add` or `Multiply`.
         ///        The class name, must not contain spaces as it is used for codegen.
         /// \returns A const reference to the node's type name
-        virtual const std::string& description() const;
+        virtual const std::string& description() const = 0;
         /// \brief Get the unique name of the node.
         /// \returns A const reference to the node's unique name.
         const std::string& get_name() const;
@@ -417,7 +414,6 @@ namespace ngraph
 
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
-        const std::string m_node_type;
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
         std::string m_unique_name;

@@ -40,13 +40,6 @@ Node::Node(size_t output_size)
     set_output_size(output_size);
 }
 
-Node::Node(const std::string& node_type, const NodeVector& arguments, size_t output_size)
-    : m_node_type(node_type)
-{
-    set_arguments(arguments);
-    set_output_size(output_size);
-}
-
 Node::Node(const NodeVector& arguments, size_t output_size)
     : Node()
 {
@@ -268,11 +261,6 @@ bool Node::is_output() const
 bool Node::is_constant() const
 {
     return false;
-}
-
-const std::string& Node::description() const
-{
-    return m_node_type;
 }
 
 const std::string& Node::get_friendly_name() const
