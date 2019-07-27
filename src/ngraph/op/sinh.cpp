@@ -24,7 +24,7 @@ using namespace ngraph;
 const string op::Sinh::type_name{"Sinh"};
 
 op::Sinh::Sinh(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Sinh", arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }

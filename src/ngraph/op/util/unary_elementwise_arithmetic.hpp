@@ -55,12 +55,6 @@ namespace ngraph
                 /// \param arg Output that produces the input tensor.
                 UnaryElementwiseArithmetic(const Output<Node>& arg);
 
-                /// \brief Constructs a unary elementwise arithmetic operation.
-                ///
-                /// \param arg Node that produces the input tensor.
-                UnaryElementwiseArithmetic(const std::string& node_type,
-                                           const std::shared_ptr<Node>& arg);
-
             public:
                 void validate_and_infer_types() override;
             };

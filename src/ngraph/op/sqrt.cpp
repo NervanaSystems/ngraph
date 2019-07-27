@@ -24,7 +24,7 @@ using namespace ngraph;
 const string op::Sqrt::type_name{"Sqrt"};
 
 op::Sqrt::Sqrt(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Sqrt", arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }

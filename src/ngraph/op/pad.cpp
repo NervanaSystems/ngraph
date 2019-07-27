@@ -28,7 +28,7 @@ op::Pad::Pad(const shared_ptr<Node>& arg,
              const CoordinateDiff& padding_below,
              const CoordinateDiff& padding_above,
              PadMode pad_mode)
-    : Op("Pad", check_single_output_args({arg, arg_pad_value}))
+    : Op(check_single_output_args({arg, arg_pad_value}))
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_padding_interior_fake(padding_below.size())

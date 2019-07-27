@@ -25,7 +25,7 @@ using namespace ngraph;
 const string op::Transpose::type_name{"Transpose"};
 
 op::Transpose::Transpose(const shared_ptr<Node>& arg, const shared_ptr<Node>& input_order)
-    : Op("Transpose", check_single_output_args({arg, input_order}))
+    : Op(check_single_output_args({arg, input_order}))
 {
     constructor_validate_and_infer_types();
 }

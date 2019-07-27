@@ -36,7 +36,7 @@ namespace ngraph
             ScatterAdd(const std::shared_ptr<Node>& inputs,
                        const std::shared_ptr<Node>& indices,
                        const std::shared_ptr<Node>& updates)
-                : Op("ScatterAdd", check_single_output_args({inputs, indices, updates}))
+                : Op(check_single_output_args({inputs, indices, updates}))
             {
                 constructor_validate_and_infer_types();
             }

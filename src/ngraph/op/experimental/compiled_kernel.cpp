@@ -66,7 +66,7 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
 ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
                                            const NodeVector& outputs,
                                            const NodeVector& args)
-    : Op("CompiledKernel", check_single_output_args({args}))
+    : Op(check_single_output_args({args}))
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {

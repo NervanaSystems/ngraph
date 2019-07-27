@@ -33,12 +33,6 @@ op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::shar
 {
 }
 
-op::util::UnaryElementwiseArithmetic::UnaryElementwiseArithmetic(const std::string& node_type,
-                                                                 const std::shared_ptr<Node>& arg)
-    : Op(node_type, check_single_output_args({arg}))
-{
-}
-
 void op::util::UnaryElementwiseArithmetic::validate_and_infer_types()
 {
     validate_and_infer_elementwise_arithmetic();
