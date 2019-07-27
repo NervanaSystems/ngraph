@@ -608,8 +608,12 @@ void pass::ConstantFolding::construct_constant_binary()
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto b = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
-    auto is_bea = pattern::has_class<op::util::BinaryElementwiseArithmetic>();
-    auto bea = std::make_shared<pattern::op::Any>(a, is_bea, NodeVector{a, b});
+    auto is_be = [](std::shared_ptr<Node> n) {
+        return (pattern::has_class<op::util::BinaryElementwiseArithmetic>()(n) ||
+                pattern::has_class<op::util::BinaryElementwiseComparison>()(n) ||
+                pattern::has_class<op::util::BinaryElementwiseLogical>()(n));
+    };
+    auto be = std::make_shared<pattern::op::Any>(a, is_be, NodeVector{a, b});
 
     auto constant_binary_callback = [&, a, b](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_binary_callback against node = "
@@ -706,7 +710,7 @@ void pass::ConstantFolding::construct_constant_binary()
         return true;
     };
 
-    auto reshape_matcher = make_shared<pattern::Matcher>(bea, "ConstantFolding.ConstantBinary");
+    auto reshape_matcher = make_shared<pattern::Matcher>(be, "ConstantFolding.ConstantBinary");
     this->add_matcher(
         reshape_matcher, constant_binary_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
