@@ -26,8 +26,10 @@ static string s_manifest = "${MANIFEST}";
 class UnhandledOp : public ngraph::op::Op
 {
 public:
+    const std::string& description() const override { static string desc = "UnhandledOp"; return desc; }
+
     UnhandledOp(const std::shared_ptr<Node>& arg)
-        : Op("Unsupported_op", check_single_output_args({arg}))
+        : Op(check_single_output_args({arg}))
     {
         constructor_validate_and_infer_types();
     }
