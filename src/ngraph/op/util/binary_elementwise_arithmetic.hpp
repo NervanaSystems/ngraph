@@ -63,16 +63,6 @@ namespace ngraph
                                             const Output<Node>& arg1,
                                             const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
-                /// \brief Constructs a binary elementwise arithmetic operation.
-                ///
-                /// \param arg0 Node that produces the first input tensor.
-                /// \param arg1 Node that produces the second input tensor.
-                /// \param autob AutoBroadcast mode.
-                BinaryElementwiseArithmetic(const std::string& node_type,
-                                            const std::shared_ptr<Node>& arg0,
-                                            const std::shared_ptr<Node>& arg1,
-                                            const AutoBroadcastSpec& autob = AutoBroadcastSpec());
-
             public:
                 void validate_and_infer_types() override;
 
