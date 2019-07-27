@@ -30,7 +30,7 @@ using namespace ngraph;
 const string op::HardSigmoid::type_name{"HardSigmoid"};
 
 op::HardSigmoid::HardSigmoid(const shared_ptr<Node>& data, float alpha, float beta)
-    : FusedOp("HardSigmoid", {data})
+    : FusedOp(check_single_output_args({data}))
     , m_alpha(alpha)
     , m_beta(beta)
 {

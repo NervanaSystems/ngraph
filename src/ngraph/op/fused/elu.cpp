@@ -31,7 +31,7 @@ using namespace ngraph;
 const string op::Elu::type_name{"Elu"};
 
 op::Elu::Elu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
-    : FusedOp("Elu", {data, alpha})
+    : FusedOp(check_single_output_args({data, alpha}))
 {
     constructor_validate_and_infer_types();
 }

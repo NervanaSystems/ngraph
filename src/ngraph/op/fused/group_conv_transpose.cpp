@@ -39,7 +39,7 @@ op::GroupConvolutionTranspose::GroupConvolutionTranspose(const shared_ptr<Node>&
                                                          const size_t groups,
                                                          const PadType& pad_type,
                                                          const Shape& output_shape)
-    : FusedOp("GroupConvolutionTranspose", check_single_output_args({data, filters}))
+    : FusedOp(check_single_output_args({data, filters}))
     , m_strides(strides)
     , m_dilations(dilations)
     , m_padding_begin(padding_begin)

@@ -33,7 +33,7 @@ op::Normalize::Normalize(const shared_ptr<ngraph::Node>& data,
                          bool across_spatial,
                          bool channel_shared,
                          float eps)
-    : FusedOp("Normalize", {data, scale})
+    : FusedOp(check_single_output_args({data, scale}))
     , m_across_spatial{across_spatial}
     , m_channel_shared{channel_shared}
     , m_eps{eps}

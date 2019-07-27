@@ -79,7 +79,7 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<Node>& data_batch,
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides,
                                      const bool with_relu)
-    : FusedOp("ConvolutionBias", check_single_output_args({data_batch, filters, bias}))
+    : FusedOp(check_single_output_args({data_batch, filters, bias}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -284,8 +284,7 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     const CoordinateDiff& padding_below_forward,
     const CoordinateDiff& padding_above_forward,
     const Strides& data_dilation_strides_forward)
-    : FusedOp("ConvolutionBiasBackpropFiltersBias",
-              check_single_output_args({data_batch, output_delta}))
+    : FusedOp(check_single_output_args({data_batch, output_delta}))
     , m_filters_shape(filters_shape)
     , m_bias_shape(bias_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
@@ -372,8 +371,7 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<Node>& data_bat
                                            const CoordinateDiff& padding_above,
                                            const Strides& data_dilation_strides,
                                            bool with_relu)
-    : FusedOp("ConvolutionBiasAdd",
-              check_single_output_args({data_batch, filters, bias, add_input}))
+    : FusedOp(check_single_output_args({data_batch, filters, bias, add_input}))
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)

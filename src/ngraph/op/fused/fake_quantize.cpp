@@ -44,7 +44,7 @@ op::FakeQuantize::FakeQuantize(const shared_ptr<Node>& data,
                                const shared_ptr<Node>& output_low,
                                const shared_ptr<Node>& output_high,
                                size_t levels)
-    : FusedOp("FakeQuantize", {data, input_low, input_high, output_low, output_high})
+    : FusedOp(check_single_output_args({data, input_low, input_high, output_low, output_high}))
     , m_levels(levels)
 {
     constructor_validate_and_infer_types();

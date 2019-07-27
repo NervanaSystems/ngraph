@@ -35,11 +35,6 @@ op::util::FusedOp::FusedOp(const OutputVector& args)
 {
 }
 
-op::util::FusedOp::FusedOp(const std::string& node_type, const NodeVector& args)
-    : Op(node_type, args)
-{
-}
-
 void op::util::FusedOp::validate_and_infer_types()
 {
     pre_validate_and_infer_types();

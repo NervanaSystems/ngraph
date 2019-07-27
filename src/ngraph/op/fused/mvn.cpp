@@ -33,7 +33,7 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
              bool across_channels,
              bool normalize_variance,
              double eps)
-    : FusedOp("MVN", {data})
+    : FusedOp(check_single_output_args({data}))
     , m_eps{eps}
     , m_across_channels{across_channels}
     , m_normalize_variance{normalize_variance}
@@ -54,7 +54,7 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
              AxisSet reduction_axes,
              bool normalize_variance,
              double eps)
-    : FusedOp("MVN", {data})
+    : FusedOp(check_single_output_args({data}))
     , m_eps{eps}
     , m_across_channels{false}
     , m_normalize_variance{normalize_variance}

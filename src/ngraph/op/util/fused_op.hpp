@@ -52,11 +52,6 @@ namespace ngraph
                 FusedOp(const NodeVector& args);
 
                 FusedOp(const OutputVector& args);
-
-                /// \brief Constructs a FusedOp
-                ///
-                /// \param args Nodes that produce the input tensors for the fused op
-                FusedOp(const std::string& node_type, const NodeVector& args);
             };
         }
     }

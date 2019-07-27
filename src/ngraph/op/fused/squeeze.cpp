@@ -29,7 +29,7 @@ using namespace ngraph;
 const string op::Squeeze::type_name{"Squeeze"};
 
 op::Squeeze::Squeeze(const shared_ptr<Node>& data, const shared_ptr<Node>& axes)
-    : FusedOp("Squeeze", {data, axes})
+    : FusedOp(check_single_output_args({data, axes}))
 {
     constructor_validate_and_infer_types();
 }
