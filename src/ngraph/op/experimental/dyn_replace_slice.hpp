@@ -30,7 +30,6 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-
             /// \brief Constructs a dynamic tensor replace-slice operation.
             ///
             /// \param arg The tensor in which to replace the slice.

@@ -30,7 +30,7 @@ op::DetectionOutput::DetectionOutput(const std::shared_ptr<Node>& box_logits,
                                      const std::shared_ptr<Node>& aux_box_preds,
                                      const DetectionOutputAttrs& attrs)
     : Op(check_single_output_args(
-             {box_logits, class_preds, proposals, aux_class_preds, aux_box_preds}))
+          {box_logits, class_preds, proposals, aux_class_preds, aux_box_preds}))
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();

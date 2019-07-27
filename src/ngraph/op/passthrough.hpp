@@ -41,7 +41,6 @@ public:
     NGRAPH_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
-    
     Passthrough(const std::string& logical_type, // aka "What this operation is doing"
                 const std::string& language,     // The language the implementation is written in
                 const std::string& function,     // The operation implementation

@@ -29,7 +29,6 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-
             /// \param inputs Tensor
             /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
             /// \param updates Tensor: Must have same type as inputs

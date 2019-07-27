@@ -38,7 +38,6 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-
             /// \brief Constructions a tensor-typed parameter node.
             ///
             /// \param element_type The element type of the parameter.

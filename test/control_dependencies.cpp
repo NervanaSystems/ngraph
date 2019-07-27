@@ -53,7 +53,11 @@ public:
         return move(clone);
     }
 
-    const std::string& description() const override { static string desc = "ControlDependencyOp"; return desc; }
+    const std::string& description() const override
+    {
+        static string desc = "ControlDependencyOp";
+        return desc;
+    }
 
     ControlDependencyOp(const NodeVector& args, const std::set<std::shared_ptr<Node>>& deps)
         : Op(args)

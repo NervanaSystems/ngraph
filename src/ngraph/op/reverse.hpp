@@ -49,7 +49,6 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-
             /// \brief Constructs a reverse operation.
             ///
             /// \param arg The input tensor, some of whose axes are to be reversed.
