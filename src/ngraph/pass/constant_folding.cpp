@@ -21,6 +21,7 @@
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
@@ -36,13 +37,16 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/sign.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/op/sum.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convert.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
@@ -56,8 +60,10 @@
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
+#include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
+#include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -505,7 +511,8 @@ void pass::ConstantFolding::construct_constant_binary()
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
     return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
-           std::dynamic_pointer_cast<op::Relu>(n) || std::dynamic_pointer_cast<op::Sqrt>(n);
+           std::dynamic_pointer_cast<op::Relu>(n) || std::dynamic_pointer_cast<op::Sign>(n) ||
+           std::dynamic_pointer_cast<op::Sqrt>(n);
 }
 
 template <class T>
@@ -517,7 +524,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
     if (std::dynamic_pointer_cast<op::Sqrt>(unary))
     {
         std::vector<T> values{constant->get_vector<T>()};
-        if (std::any_of(values.begin(), values.end(), [](T i) { return i < 0; }))
+        if (std::any_of(values.begin(), values.end(), [](T i) { return i < T(0); }))
         {
             throw ngraph_error("Square root of negative value");
         }
@@ -550,6 +557,11 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
         else if (std::dynamic_pointer_cast<op::Relu>(unary))
         {
             runtime::reference::relu<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
+        else if (std::dynamic_pointer_cast<op::Sign>(unary))
+        {
+            runtime::reference::sign<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
         else if (std::dynamic_pointer_cast<op::Sqrt>(unary))
@@ -599,33 +611,59 @@ void pass::ConstantFolding::construct_constant_unary()
             func = handler->second(unary_match.get());
         }
 
+        std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
-        if (type == element::i32)
+        switch (type.get_type_enum())
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_unary<int>(constant_match, unary_match, func));
-            return true;
-        }
-        else if (type == element::i8)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_unary<int8_t>(constant_match, unary_match, func));
-            return true;
-        }
-        else if (type == element::f32)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_unary<float>(constant_match, unary_match, func));
-            return true;
-        }
-        else if (type == element::f64)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_unary<double>(constant_match, unary_match, func));
-            return true;
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_unary_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_unary_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_unary<char>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_unary<bfloat16>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_unary<float16>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_unary<float>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_unary<double>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_unary<int8_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_unary<int16_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_unary<int32_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_unary<int64_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_unary<uint8_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_unary<uint16_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_unary<uint32_t>(constant_match, unary_match, func);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_unary<uint64_t>(constant_match, unary_match, func);
+            break;
         }
 
-        return false;
+        replace_node(m.get_match_root(), replacement);
+        return true;
     };
 
     auto reshape_matcher = make_shared<pattern::Matcher>(uea, "ConstantFolding.ConstantUnary");
@@ -1082,11 +1120,6 @@ static shared_ptr<op::Constant> fold_constant_product(shared_ptr<op::Constant> c
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
-#endif
     switch (input_element_type.get_type_enum())
     {
     case element::Type_t::undefined:
@@ -1124,10 +1157,6 @@ static shared_ptr<op::Constant> fold_constant_product(shared_ptr<op::Constant> c
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
-
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
-#pragma GCC diagnostic pop
-#endif
 }
 
 void pass::ConstantFolding::construct_constant_product()
@@ -1155,4 +1184,198 @@ void pass::ConstantFolding::construct_constant_product()
     auto convert_matcher =
         make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantProduct");
     this->add_matcher(convert_matcher, constant_product_callback, all_pass_property_off);
+}
+
+// TODO(amprocte): Find a way to reduce duplication with Product. (The fact
+// that we bottom out in a reference call makes it a bit tricky.)
+template <typename T>
+static shared_ptr<op::Constant> fold_constant_sum_helper(shared_ptr<op::Constant> constant,
+                                                         const AxisSet& reduction_axes,
+                                                         const Shape& result_shape)
+{
+    vector<T> out_vec(shape_size(result_shape));
+
+    runtime::reference::sum<T>(constant->get_vector<T>().data(),
+                               out_vec.data(),
+                               constant->get_output_shape(0),
+                               result_shape,
+                               reduction_axes);
+
+    return make_shared<op::Constant>(constant->get_output_element_type(0), result_shape, out_vec);
+}
+
+static shared_ptr<op::Constant> fold_constant_sum(shared_ptr<op::Constant> constant,
+                                                  const AxisSet& reduction_axes,
+                                                  const Shape& result_shape)
+{
+    auto& input_element_type = constant->get_output_element_type(0);
+
+    switch (input_element_type.get_type_enum())
+    {
+    case element::Type_t::undefined:
+        NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_sum");
+        break;
+    case element::Type_t::dynamic:
+        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_sum");
+        break;
+    case element::Type_t::boolean:
+        return fold_constant_sum_helper<char>(constant, reduction_axes, result_shape);
+    case element::Type_t::bf16:
+        return fold_constant_sum_helper<bfloat16>(constant, reduction_axes, result_shape);
+    case element::Type_t::f16:
+        return fold_constant_sum_helper<float16>(constant, reduction_axes, result_shape);
+    case element::Type_t::f32:
+        return fold_constant_sum_helper<float>(constant, reduction_axes, result_shape);
+    case element::Type_t::f64:
+        return fold_constant_sum_helper<double>(constant, reduction_axes, result_shape);
+    case element::Type_t::i8:
+        return fold_constant_sum_helper<int8_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::i16:
+        return fold_constant_sum_helper<int16_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::i32:
+        return fold_constant_sum_helper<int32_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::i64:
+        return fold_constant_sum_helper<int64_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u8:
+        return fold_constant_sum_helper<uint8_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u16:
+        return fold_constant_sum_helper<uint16_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u32:
+        return fold_constant_sum_helper<uint32_t>(constant, reduction_axes, result_shape);
+    case element::Type_t::u64:
+        return fold_constant_sum_helper<uint64_t>(constant, reduction_axes, result_shape);
+    }
+
+    NGRAPH_UNREACHABLE("Unexpected switch case");
+}
+
+void pass::ConstantFolding::construct_constant_sum()
+{
+    auto constant_label = make_shared<pattern::op::Label>(
+        element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto convert_op = make_shared<op::Sum>(constant_label, AxisSet{0, 1, 2});
+
+    auto constant_sum_callback = [constant_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_sum_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto sum_match = static_pointer_cast<op::Sum>(m.get_match_root());
+
+        replace_node(m.get_match_root(),
+                     fold_constant_sum(constant_match,
+                                       sum_match->get_reduction_axes(),
+                                       sum_match->get_output_shape(0)));
+        return true;
+    };
+
+    auto convert_matcher = make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantSum");
+    this->add_matcher(convert_matcher, constant_sum_callback, all_pass_property_off);
+}
+
+template <typename T>
+static shared_ptr<op::Constant> fold_constant_concat_helper(const shared_ptr<op::Concat>& concat)
+{
+    auto concat_inputs = concat->inputs();
+    std::vector<const T*> arg_bufs;
+    std::vector<Shape> arg_shapes;
+
+    for (auto& input : concat_inputs)
+    {
+        auto k = static_cast<op::Constant*>(input.get_source_output().get_node());
+        arg_bufs.push_back(k->get_data_ptr<T>());
+        arg_shapes.push_back(input.get_shape());
+    }
+
+    std::vector<T> result_vec(shape_size(concat->get_shape()));
+
+    runtime::reference::concat<T>(arg_bufs,
+                                  result_vec.data(),
+                                  arg_shapes,
+                                  concat->get_shape(),
+                                  concat->get_concatenation_axis());
+
+    return make_shared<op::Constant>(
+        concat->get_output_element_type(0), concat->get_output_shape(0), result_vec);
+}
+
+void pass::ConstantFolding::construct_constant_concat()
+{
+    auto concat_op = make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Concat>());
+
+    auto constant_concat_callback = [](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_concat_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto concat_node = static_pointer_cast<op::Concat>(m.get_match_root());
+        auto concat_inputs = concat_node->inputs();
+
+        if (std::any_of(concat_inputs.begin(), concat_inputs.end(), [](const Input<Node>& input) {
+                return !(input.get_source_output().get_node()->is_constant());
+            }))
+        {
+            return false;
+        }
+
+        std::shared_ptr<op::Constant> replacement;
+
+        switch (concat_node->get_output_element_type(0).get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_concat");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_concat");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_concat_helper<char>(concat_node);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_concat_helper<bfloat16>(concat_node);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_concat_helper<float16>(concat_node);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_concat_helper<float>(concat_node);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_concat_helper<double>(concat_node);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_concat_helper<int8_t>(concat_node);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_concat_helper<int16_t>(concat_node);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_concat_helper<int32_t>(concat_node);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_concat_helper<int64_t>(concat_node);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_concat_helper<uint8_t>(concat_node);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_concat_helper<uint16_t>(concat_node);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_concat_helper<uint32_t>(concat_node);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_concat_helper<uint64_t>(concat_node);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto concat_matcher =
+        make_shared<pattern::Matcher>(concat_op, "ConstantFolding.ConstantConcat");
+    this->add_matcher(concat_matcher, constant_concat_callback, all_pass_property_off);
 }
