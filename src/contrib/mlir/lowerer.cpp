@@ -137,9 +137,9 @@ namespace
     private:
         NGraphTypeConverter typeConverter;
         // Value holding mem manager passed pointer
-        SmallVector<Value*, 4> m_memMgrDefs;
+        SmallVector<Value*, 4> memMgrDefs;
         // List of temporary memrefs to deallocate at end of function
-        SmallVector<Value*, 4> m_memRefsToDealloc;
+        SmallVector<Value*, 4> memRefsToDealloc;
         // list of results values to add to func signature
         SmallVector<Value*, 4> loweredOutputValues;
         ngmlir::MLIRCompiler& compiler;
@@ -264,7 +264,7 @@ namespace
         NGRAPH_CHECK(memRefType.hasStaticShape(), "Dynamic shapes are not supported");
 
         Value* alloc = rewriter.create<mlir::AllocOp>(rewriter.getUnknownLoc(), memRefType);
-        m_memRefsToDealloc.push_back(alloc);
+        memRefsToDealloc.push_back(alloc);
 
         // TODO:
         // Enable dynamic memref allocation via call-back to nGraph allocator
@@ -342,7 +342,7 @@ namespace
 
     void DialectLoweringPass::insertDeallocs(PatternRewriter& rewriter)
     {
-        for (auto value : m_memRefsToDealloc)
+        for (auto value : memRefsToDealloc)
         {
             rewriter.create<DeallocOp>(rewriter.getUnknownLoc(), value);
         }
@@ -777,7 +777,7 @@ namespace
 
     REWRITER(NGReturnOp)
     {
-        m_pass.insertDeallocs(rewriter);
+        pass.insertDeallocs(rewriter);
         rewriter.replaceOpWithNewOp<ReturnOp>(op);
         return matchSuccess();
     }
