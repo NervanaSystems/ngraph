@@ -67,9 +67,12 @@ namespace ngraph
                 }
             }
 
-            // In English: return type is void and T must be a floating point type.
+            // In English: return type is void and T must be a standard floating point type, or
+            // bfloat16, or float16.
             template <typename T>
-            typename std::enable_if<std::is_floating_point<T>::value>::type
+            typename std::enable_if<std::is_floating_point<T>::value ||
+                                    std::is_same<T, bfloat16>::value ||
+                                    std::is_same<T, float16>::value>::type
                 divide(const T* arg0, const T* arg1, T* out, size_t count, bool pythondiv)
             {
                 (void)pythondiv;
