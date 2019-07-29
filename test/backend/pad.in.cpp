@@ -939,3 +939,36 @@ NGRAPH_TEST(${BACKEND_NAME}, pad_2channel_2image_asym)
                                   read_vector<float>(result),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, pad_symmetric)
+{
+    Shape shape_a{2, 3};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape shape_b{};
+    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    Shape shape_r{4, 7};
+    CoordinateDiff padding_below{1, 2};
+    CoordinateDiff padding_above{1, 2};
+    auto f = make_shared<Function>(
+        make_shared<op::Pad>(A, B, padding_below, padding_above, op::PadMode::SYMMETRIC),
+        ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, test::NDArray<float, 2>({{1, 2, 3}, {4, 5, 6}}).get_vector());
+    auto b = backend->create_tensor(element::f32, shape_b);
+    copy_data(b, vector<float>{2112});
+    auto result = backend->create_tensor(element::f32, shape_r);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_TRUE(test::all_close_f((test::NDArray<float, 2>({{2, 1, 1, 2, 3, 3, 2},
+                                                            {2, 1, 1, 2, 3, 3, 2},
+                                                            {5, 4, 4, 5, 6, 6, 5},
+                                                            {5, 4, 4, 5, 6, 6, 5}})
+                                       .get_vector()),
+                                  read_vector<float>(result),
+                                  MIN_FLOAT_TOLERANCE_BITS));
+}

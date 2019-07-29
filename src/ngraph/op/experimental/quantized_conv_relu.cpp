@@ -26,15 +26,17 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const shared_ptr<Node>& data_batch,
-                                                       const shared_ptr<Node>& filters,
+const string op::QuantizedConvolutionRelu::type_name{"QuantizedConvolutionRelu"};
+
+op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const Output<Node>& data_batch,
+                                                       const Output<Node>& filters,
                                                        const Strides& window_movement_strides,
                                                        const Strides& window_dilation_strides,
                                                        const CoordinateDiff& padding_below,
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides,
-                                                       const shared_ptr<Node>& scale)
-    : Op("QuantizedConvolutionRelu", check_single_output_args({data_batch, filters, scale}))
+                                                       const Output<Node>& scale)
+    : Op({data_batch, filters, scale})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -43,8 +45,8 @@ op::QuantizedConvolutionRelu::QuantizedConvolutionRelu(const shared_ptr<Node>& d
 {
     constructor_validate_and_infer_types();
 
-    auto& data_batch_shape = data_batch->get_shape();
-    auto& filters_shape = filters->get_shape();
+    auto& data_batch_shape = data_batch.get_shape();
+    auto& filters_shape = filters.get_shape();
 
     set_output_type(0,
                     element::u8,
