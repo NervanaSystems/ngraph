@@ -89,7 +89,8 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
     auto backend_results = execute(backend_f, batchmatmul_args, "${BACKEND_NAME}");
     for (size_t i = 0; i < ref_results.size(); i++)
     {
-        EXPECT_TRUE(test::all_close(ref_results.at(i), backend_results.at(i), 1.0e-4f, 1.0e-4f));
+        EXPECT_TRUE(test::all_close_f(
+            ref_results.at(i), backend_results.at(i), DEFAULT_FLOAT_TOLERANCE_BITS + 3));
     }
 }
 #endif
