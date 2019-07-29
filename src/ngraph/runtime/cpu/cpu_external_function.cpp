@@ -678,6 +678,11 @@ using namespace ngraph::runtime;
     writer.block_begin();
     writer << "mkldnn_primitives = std::vector<mkldnn::primitive*>("
            << to_string(m_mkldnn_emitter->get_mkldnn_primitives_cg().size()) << ");\n";
+    writer << "mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>("
+           << to_string(m_mkldnn_emitter->get_mkldnn_scratchpad_mds().size()) << ");\n";
+    writer << "size_t scratchpad_size = " << m_mkldnn_emitter->get_max_scratchpad_size() << ";\n";
+    writer << "size_t alignment = 4096;\n";
+    writer << "scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);\n";
     writer.block_end();
     writer << "\n";
 

@@ -1343,6 +1343,8 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
     }
 
     md.offset0 = in.data.offset0;
+    md.extra.flags = in.data.extra.flags;
+    md.extra.scale_adjust = in.data.extra.scale_adjust;
 
     return try_get_named_md(md);
 }
@@ -1414,6 +1416,8 @@ memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& 
             get_axis_after_squeeze(in.data.format_desc.blocking.inner_idxs[i]);
     }
     md.offset0 = in.data.offset0;
+    md.extra.flags = in.data.extra.flags;
+    md.extra.scale_adjust = in.data.extra.scale_adjust;
 
     return try_get_named_md(md);
 }
@@ -1476,6 +1480,8 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
     }
 
     md.offset0 = in.data.offset0;
+    md.extra.flags = in.data.extra.flags;
+    md.extra.scale_adjust = in.data.extra.scale_adjust;
 
     return try_get_named_md(md);
 }
@@ -1489,7 +1495,44 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format_t
 bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& lhs,
                                                     const mkldnn::memory::desc& rhs)
 {
-    return mkldnn_memory_desc_equal(&(lhs.data), &(rhs.data));
+    mkldnn_memory_desc_t md1 = lhs.data, md2 = rhs.data;
+
+    if (md1.format_kind != md2.format_kind)
+    {
+        return false;
+    }
+
+    if (md1.format_kind != static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::blocked))
+    {
+        //mkldnn not implemented yet
+        return false;
+    }
+
+    if (md1.offset0 != md2.offset0 || md1.extra.flags != md2.extra.flags ||
+        md1.extra.scale_adjust != md2.extra.scale_adjust)
+    {
+        return false;
+    }
+
+    auto blk1 = md1.format_desc.blocking;
+    auto blk2 = md2.format_desc.blocking;
+
+    if (md1.ndims != md2.ndims || !compare_mkldnn_dims(md1.dims, md2.dims, md1.ndims) ||
+        !compare_mkldnn_dims(md1.padded_dims, md2.padded_dims, md1.ndims) ||
+        !compare_mkldnn_dims(md1.padded_offsets, md2.padded_offsets, md1.ndims) ||
+        !compare_mkldnn_dims(blk1.strides, blk2.strides, md1.ndims))
+    {
+        return false;
+    }
+
+    if (blk1.inner_nblks != blk2.inner_nblks ||
+        !compare_mkldnn_dims(blk1.inner_blks, blk2.inner_blks, blk1.inner_nblks) ||
+        !compare_mkldnn_dims(blk1.inner_idxs, blk2.inner_idxs, blk1.inner_nblks))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 bool inline runtime::cpu::mkldnn_utils::compare_mkldnn_dims(mkldnn_dims_t& arr1,

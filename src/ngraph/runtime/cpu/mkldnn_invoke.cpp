@@ -177,20 +177,12 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
                      {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[5]]}};
         break;
     case OpType::MAXPOOLBACKPROPFORWARD:
-        exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[2]]},
-                     {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[1]]}};
-        break;
     case OpType::MAXPOOLWITHINDICES:
         exec_args = {{MKLDNN_ARG_SRC, *ctx->mkldnn_memories[deps[0]]},
                      {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[2]]},
                      {MKLDNN_ARG_DST, *ctx->mkldnn_memories[deps[1]]}};
         break;
     case OpType::MAXPOOLBACKPROPBACKWARD:
-        exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DIFF_SRC, *ctx->mkldnn_memories[deps[2]]}};
-        break;
     case OpType::MAXPOOLWITHINDICESBACKPROP:
         exec_args = {{MKLDNN_ARG_DIFF_DST, *ctx->mkldnn_memories[deps[0]]},
                      {MKLDNN_ARG_WORKSPACE, *ctx->mkldnn_memories[deps[1]]},

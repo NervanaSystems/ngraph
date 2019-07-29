@@ -2400,7 +2400,6 @@ namespace ngraph
                                 lower_bounds[1] % 8 == 0)
                             {
                                 result_format = mkldnn::memory::format_tag::nChw8c;
-                                std::cout << "nChw8c\n";
                             }
                             else if (input_md.data.ndims == 4 &&
                                      mkldnn_utils::mkldnn_md_matches_format_tag(
@@ -2408,7 +2407,6 @@ namespace ngraph
                                      lower_bounds[1] % 16 == 0)
                             {
                                 result_format = mkldnn::memory::format_tag::nChw16c;
-                                std::cout << "nChw16\n";
                             }
                             else if (input_md.data.ndims == 5 &&
                                      mkldnn_utils::mkldnn_md_matches_format_tag(
@@ -2416,11 +2414,6 @@ namespace ngraph
                                      lower_bounds[1] % 16 == 0)
                             {
                                 result_format = mkldnn::memory::format_tag::nCdhw16c;
-                                std::cout << "nCdhw16\n";
-                            }
-                            else
-                            {
-                                std::cout << "ndims is " << input_md.data.ndims << ", blocked\n";
                             }
                         }
                         else
@@ -2428,60 +2421,48 @@ namespace ngraph
                             if (input_md.data.ndims == 1)
                             {
                                 result_format = mkldnn::memory::format_tag::x;
-                                std::cout << "x\n";
                             }
                             else if (input_md.data.ndims == 2 &&
                                      mkldnn_utils::mkldnn_md_matches_format_tag(
                                          input_md, mkldnn::memory::format_tag::nc))
                             {
                                 result_format = mkldnn::memory::format_tag::nc;
-                                std::cout << "nc\n";
                             }
                             else if (input_md.data.ndims == 3 &&
                                      mkldnn_utils::mkldnn_md_matches_format_tag(
                                          input_md, mkldnn::memory::format_tag::tnc))
                             {
                                 result_format = mkldnn::memory::format_tag::tnc;
-                                std::cout << "tnc\n";
                             }
                             else if (input_md.data.ndims == 3 &&
                                      mkldnn_utils::mkldnn_md_matches_format_tag(
                                          input_md, mkldnn::memory::format_tag::ntc))
                             {
                                 result_format = mkldnn::memory::format_tag::ntc;
-                                std::cout << "ntc\n";
                             }
                             else if (input_md.data.ndims == 4 &&
                                      mkldnn_utils::mkldnn_md_matches_format_tag(
                                          input_md, mkldnn::memory::format_tag::nchw))
                             {
                                 result_format = mkldnn::memory::format_tag::nchw;
-                                std::cout << "nchw\n";
                             }
                             else if (input_md.data.ndims == 4 &&
                                      mkldnn_utils::mkldnn_md_matches_format_tag(
                                          input_md, mkldnn::memory::format_tag::nchw))
                             {
                                 result_format = mkldnn::memory::format_tag::nhwc;
-                                std::cout << "nhwc\n";
                             }
                             else if (input_md.data.ndims == 5 &&
                                      mkldnn_utils::mkldnn_md_matches_format_tag(
                                          input_md, mkldnn::memory::format_tag::ncdhw))
                             {
                                 result_format = mkldnn::memory::format_tag::ncdhw;
-                                std::cout << "ncdhw\n";
                             }
                             else if (input_md.data.ndims == 5 &&
                                      mkldnn_utils::mkldnn_md_matches_format_tag(
                                          input_md, mkldnn::memory::format_tag::ndhwc))
                             {
                                 result_format = mkldnn::memory::format_tag::ndhwc;
-                                std::cout << "ndhwc\n";
-                            }
-                            else
-                            {
-                                std::cout << "ndims is " << input_md.data.ndims << ",Not blocked\n";
                             }
                         }
                         if (result_format == mkldnn::memory::format_tag::undef)

@@ -208,16 +208,17 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context()
         const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
         // Create scratchpad
         auto scratchpad_size = mkldnn_emitter->get_max_scratchpad_size();
-        ctx->mkldnn_scratchpad_mds =
-            std::vector<mkldnn::memory::desc*>(mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
         std::cout << "max size is " << scratchpad_size << std::endl;
-        ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);
         if (m_external_function->is_direct_execution())
         {
             ctx->mkldnn_primitives =
                 std::vector<mkldnn::primitive*>(mkldnn_emitter->get_mkldnn_primitives().size());
             ctx->mkldnn_memories =
                 std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
+            ctx->mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>(
+                mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
+            ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);
+            //ctx->scratchpad_buffer = new AlignedBuffer(1048576, alignment);
         }
         else
         {

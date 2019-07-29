@@ -410,6 +410,7 @@ size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
 #if defined(NGRAPH_USE_MKLDNN_V1)
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
+        m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
         m_mkldnn_memories.resize(mem_size + 4, nullptr);
         m_primitive_deps[m_mkldnn_primitives.size() - 1] = {
             mem_size, mem_size + 1, mem_size + 2, mem_size + 3};
@@ -424,6 +425,7 @@ size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
 #if defined(NGRAPH_USE_MKLDNN_V1)
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
+        m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
         m_mkldnn_memories.resize(mem_size + 3, nullptr);
         m_primitive_deps[m_mkldnn_primitives.size() - 1] = {mem_size, mem_size + 1, mem_size + 2};
 #else
@@ -443,6 +445,7 @@ size_t MKLDNNEmitter::inner_product_forward_init(bool with_bias)
 #if defined(NGRAPH_USE_MKLDNN_V1)
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
+        m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
         m_mkldnn_memories.resize(mem_size + 4, nullptr);
         m_primitive_deps[m_mkldnn_primitives.size() - 1] = {
             mem_size, mem_size + 1, mem_size + 2, mem_size + 3};
@@ -457,6 +460,7 @@ size_t MKLDNNEmitter::inner_product_forward_init(bool with_bias)
 #if defined(NGRAPH_USE_MKLDNN_V1)
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
+        m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
         m_mkldnn_memories.resize(mem_size + 3, nullptr);
         m_primitive_deps[m_mkldnn_primitives.size() - 1] = {mem_size, mem_size + 1, mem_size + 2};
 #else
@@ -1023,7 +1027,6 @@ void MKLDNNEmitter::build_reorder(std::vector<mkldnn::memory*>& mkldnn_memories,
     auto reorder_pd = mkldnn::reorder::primitive_desc(
         *mkldnn_memories[input_index], *mkldnn_memories[result_index], attr);
     mkldnn_scratchpad_mds[reorder_index] = new mkldnn::memory::desc(reorder_pd.scratchpad_desc());
-
     mkldnn_primitives[reorder_index] = new mkldnn::reorder(reorder_pd);
 }
 
@@ -1626,9 +1629,8 @@ void MKLDNNEmitter::query_scratchpad_reorder(const mkldnn::memory::desc& input_d
                                              const mkldnn::memory::desc& result_desc)
 {
     ATTR_S
-    auto input = mkldnn::memory(input_desc, executor::global_cpu_engine);
-    auto output = mkldnn::memory(result_desc, executor::global_cpu_engine);
-    auto pd = mkldnn::reorder::primitive_desc(input, output, attr);
+    auto pd = mkldnn::reorder::primitive_desc(
+        executor::global_cpu_engine, input_desc, executor::global_cpu_engine, result_desc, attr);
     GET_SIZE
 }
 

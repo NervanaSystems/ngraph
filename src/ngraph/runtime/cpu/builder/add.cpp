@@ -34,8 +34,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Add)
             {
-                if (true)
-                //if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
 

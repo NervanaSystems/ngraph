@@ -99,7 +99,6 @@ namespace ngraph
                           // check if compensation is conv_s8s8(1U)
                           result_desc.data.extra.flags & 0x1U))
                 {
-                    //input_desc.data.format = mkldnn_oihw;
                     auto arg0_shape = args[0].get_shape();
                     input_desc = mkldnn::memory::desc(
                         mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
@@ -131,9 +130,7 @@ namespace ngraph
                         mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
                         mkldnn::memory::format_tag::goihw);
                 }
-#endif
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
                 mkldnn_emitter->query_scratchpad_reorder(input_desc, result_desc);
 #endif
                 // ConvertLayout needs 3 primitives: input, result, and reorder.

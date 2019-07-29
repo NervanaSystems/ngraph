@@ -30,7 +30,6 @@ namespace ngraph
             {
                 enum class OpType
                 {
-                    ANY,
                     ADD,
                     AVGPOOL,
                     AVGPOOLBACKPROP,
