@@ -532,6 +532,12 @@ namespace ngraph
                 return functor;
             }
 
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sign)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sign);
+            }
+
 #define TI(x) type_index(typeid(x))
 
             BuildOpMap& GetGlobalBuildDispatcher()
@@ -606,6 +612,7 @@ namespace ngraph
             REGISTER_CF_BUILDER(LessEq);
             REGISTER_CF_BUILDER(And);
             REGISTER_CF_BUILDER(Or);
+            REGISTER_CF_BUILDER(Sign);
         }
     }
 }
