@@ -65,14 +65,25 @@ namespace ngraph
                     {
                         ptr_args.push_back(ctx->buffer_data[buffer_index]);
                     }
-
                     // Compile nodes within the CompiledKernel op.
-                    auto* compiled_kernel = static_cast<const CompiledKernel*>(node);
+                    CompiledKernel* compiled_kernel =
+                        static_cast<CompiledKernel*>(const_cast<Node*>(node));
+                    bool is_module_ready = true;
+                    auto it = ctx->mlir_compilers.find(compiled_kernel);
 
-                    MLIRCompiler mlir_compiler(compiled_kernel, ptr_args);
-                    // TODO: Decouple 'compile' and 'run' APIs. We want to be able to run the same
-                    // jitted code on different arguments.
-                    mlir_compiler.compile_and_run();
+                    if (it == ctx->mlir_compilers.end())
+                    {
+                        // create a new compiler for the CK
+                        ctx->mlir_compilers.emplace(compiled_kernel, compiled_kernel);
+                        is_module_ready = false;
+                    }
+
+                    MLIRCompiler& mlir_compiler = ctx->mlir_compilers.find(compiled_kernel)->second;
+                    if (!is_module_ready)
+                    {
+                        mlir_compiler.compile();
+                    }
+                    mlir_compiler.run(ptr_args);
                 };
 
                 functors.emplace_back(functor);
