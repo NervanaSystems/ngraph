@@ -25,6 +25,8 @@ set (SRC
     builder/autobroadcast.cpp
     builder/autobroadcast.hpp
     builder/make_constant.hpp
+    builder/matmul_factory.cpp
+    builder/matmul_factory.hpp
     builder/norm.cpp
     builder/norm.hpp
     builder/numpy_transpose.cpp

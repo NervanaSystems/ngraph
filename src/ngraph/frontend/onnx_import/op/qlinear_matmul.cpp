@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "qlinear_matmul.hpp"
-#include "frontend/onnx_import/utils/matmul_factory.hpp"
+#include "ngraph/builder/matmul_factory.hpp"
 
 namespace ngraph
 {
@@ -27,7 +27,7 @@ namespace ngraph
             {
                 NodeVector qlinear_matmul(const Node& node)
                 {
-                    auto factory = matmul::QLinearMatmulFactory(node.get_ng_inputs());
+                    auto factory = builder::QLinearMatmulFactory(node.get_ng_inputs());
                     std::size_t left_rank{factory.get_left()->get_shape().size()};
                     std::size_t right_rank{factory.get_right()->get_shape().size()};
 
