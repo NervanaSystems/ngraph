@@ -24,11 +24,6 @@
 using namespace std;
 using namespace ngraph;
 
-#if defined(NGRAPH_CPU_LARGE_BINARY)
-#define PARTIAL_SELECT_BY_RANK PARTIAL_SELECT_KERNEL_BY_RANK
-#define SELECT_KERNEL_FOR_LIMITED_ET SELECT_KERNEL
-#endif
-
 namespace ngraph
 {
     namespace runtime

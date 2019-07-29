@@ -23,10 +23,6 @@
 using namespace std;
 using namespace ngraph;
 
-#if defined(NGRAPH_CPU_LARGE_BINARY)
-#define SELECT_BY_RANK SELECT_KERNEL_BY_RANK
-#endif
-
 namespace ngraph
 {
     namespace runtime

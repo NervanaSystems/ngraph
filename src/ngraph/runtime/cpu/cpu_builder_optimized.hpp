@@ -24,6 +24,13 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
+#if defined(NGRAPH_CPU_LARGE_BINARY)
+#define SELECT_KERNEL_FOR_LIMITED_ET SELECT_KERNEL
+#define SELECT_BY_RANK SELECT_KERNEL_BY_RANK
+#define PARTIAL_SELECT_BY_RANK PARTIAL_SELECT_KERNEL_BY_RANK
+#define SELECT_BY_2RANKS SELECT_KERNEL_BY_2RANKS
+#endif
+
 static bool is_fp_i64(const ngraph::element::Type& et)
 {
 #if defined(NGRAPH_CPU_LARGE_BINARY)
