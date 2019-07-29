@@ -348,7 +348,9 @@ namespace ngraph
                 {
                     const auto external_data_info = ExternalDataInfo(*m_tensor_proto);
                     const auto external_data = external_data_info.load_external_data();
-                    return {std::begin(external_data), std::end(external_data)};
+
+                    auto data_it = reinterpret_cast<const T*>(external_data.data());
+                    return {data_it, data_it + (external_data.size() / sizeof(T))};
                 }
                 return detail::tensor::get_data<T>(*m_tensor_proto);
             }

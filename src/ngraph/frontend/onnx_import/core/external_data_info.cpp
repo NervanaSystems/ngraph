@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <onnx/onnx_pb.h>
 #include <fstream>
 #include <iostream>
+#include <onnx/onnx_pb.h>
 
 #include "external_data_info.hpp"
 
@@ -41,13 +41,17 @@ namespace ngraph
 
         std::string ExternalDataInfo::load_external_data() const
         {
-            std::ifstream external_data_stream(m_data_location, std::ios::binary | std::ios::in);
+            std::ifstream external_data_stream(m_data_location,
+                                               std::ios::binary | std::ios::in | std::ios::ate);
             if (external_data_stream.fail())
                 throw invalid_external_data{*this};
+            std::streamsize data_byte_lenght = external_data_stream.tellg();
+            std::cout << "data_byte_lenght: " << data_byte_lenght << "\n";
+            external_data_stream.seekg(0, std::ios::beg);
             //TODO OFFSETS, CHECKSUM HANDLING
             std::string read_data;
-            read_data.resize(m_data_lenght);
-            external_data_stream.read(&read_data[0], m_data_lenght);
+            read_data.resize(data_byte_lenght);
+            external_data_stream.read(&read_data[0], data_byte_lenght);
             external_data_stream.close();
             return read_data;
         }

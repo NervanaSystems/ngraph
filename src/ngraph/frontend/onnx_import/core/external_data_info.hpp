@@ -36,22 +36,24 @@ namespace ngraph
 
             std::string load_external_data() const;
 
-           struct invalid_external_data : ngraph_error
+            struct invalid_external_data : ngraph_error
             {
                 invalid_external_data(const ExternalDataInfo& external_data_info)
-                    : ngraph_error{std::string{"invalid external data - "}
-                                   + "location: " + external_data_info.m_data_location +
-                                   + ", offset: " + std::to_string(external_data_info.m_offset)
-                                   + ", lenght: " + std::to_string(external_data_info.m_data_lenght)
-                                   + ", sha1_digest: " + std::to_string(external_data_info.m_sha1_digest)}
+                    : ngraph_error{std::string{"invalid external data - "} + "location: " +
+                                   external_data_info.m_data_location + ", offset: " +
+                                   std::to_string(external_data_info.m_offset) + ", lenght: " +
+                                   std::to_string(external_data_info.m_data_lenght) +
+                                   ", sha1_digest: " +
+                                   std::to_string(external_data_info.m_sha1_digest)}
                 {
                 }
             };
+
         private:
             std::string m_data_location;
-            int m_offset;
-            int m_data_lenght;
-            int m_sha1_digest;
+            int m_offset = 0;
+            int m_data_lenght = 0;
+            int m_sha1_digest = 0;
         };
 
     } // namespace onnx_import

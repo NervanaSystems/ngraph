@@ -54,7 +54,8 @@ namespace ngraph
         }     // namespace detail
 
         // TODO CONSIDER CHANGE ONNNX IMPORTER INTERFACE TO OOP
-        void update_external_data_paths(onnx::ModelProto& model_proto, const std::string& model_path)
+        void update_external_data_paths(onnx::ModelProto& model_proto,
+                                        const std::string& model_path)
         {
             const auto model_dir_path = model_path.substr(0, model_path.find_last_of(R"(/)"));
             auto graph_proto = model_proto.mutable_graph();
@@ -76,7 +77,9 @@ namespace ngraph
             }
         }
 
-        std::shared_ptr<Function> import_onnx_model(std::istream& sin, const Weights& weights, const std::string& model_path)
+        std::shared_ptr<Function> import_onnx_model(std::istream& sin,
+                                                    const Weights& weights,
+                                                    const std::string& model_path)
         {
             onnx::ModelProto model_proto;
             // Try parsing input as a binary protobuf message
