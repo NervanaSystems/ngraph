@@ -408,6 +408,57 @@ TEST(constant_folding, const_product)
     ASSERT_EQ(values_expected, values_out);
 }
 
+TEST(constant_folding, const_sum)
+{
+    Shape input_shape{3, 3};
+
+    vector<int32_t> values_in{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    auto constant = op::Constant::create(element::i32, input_shape, values_in);
+    auto convert = make_shared<op::Sum>(constant, AxisSet{1});
+    auto f = make_shared<Function>(convert, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Sum>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int32_t>();
+
+    vector<int32_t> values_expected{6, 15, 24};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, const_concat)
+{
+    auto constant0 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6});
+    auto constant1 = op::Constant::create(element::i32, Shape{2, 1}, vector<int32_t>{7, 8});
+    auto concat = make_shared<op::Concat>(NodeVector{constant0, constant1}, 1);
+    auto f = make_shared<Function>(concat, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Concat>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int32_t>();
+
+    vector<int32_t> values_expected{1, 2, 3, 7, 4, 5, 6, 8};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
 TEST(constant_folding, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::ConstantFolding>();

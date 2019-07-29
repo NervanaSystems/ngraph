@@ -14,6 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+// NOTE: This file follows nGraph format style and naming convention since it
+// exposes a public API to the rest of nGraph codebase.
+
 #include "compiler.hpp"
 
 #include "dialect/dialect.hpp"
@@ -422,6 +425,12 @@ namespace ngraph
                 op->setAttr("axis",
                             compiler.m_builder->getI64IntegerAttr(ng_node_gather->get_axis()));
                 return op;
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
+            {
+                return compiler.create_generic_op<mlir::NGReluOp>(ng_node);
             }
         }
     }

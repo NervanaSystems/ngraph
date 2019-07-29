@@ -96,6 +96,10 @@ static void
                 result->read(data->get_data_ptr(),
                              data->get_element_count() * data->get_element_type().size());
             }
+            if (current_iteration == (s_iterations + s_warmup_iterations - 1))
+            {
+                s_timer.stop();
+            }
         }
     }
 }
@@ -177,7 +181,6 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     {
         threads[i].join();
     }
-    s_timer.stop();
     float time = s_timer.get_milliseconds();
     cout << time / iterations << "ms per iteration" << endl;
 
