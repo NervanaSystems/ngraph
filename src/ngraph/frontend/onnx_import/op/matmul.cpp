@@ -27,7 +27,7 @@ namespace ngraph
             {
                 NodeVector matmul(const Node& node)
                 {
-                    auto factory = matmul::MatmulFactory(node);
+                    auto factory = matmul::MatmulFactory(node.get_ng_inputs());
                     std::size_t left_rank{factory.get_left()->get_shape().size()};
                     std::size_t right_rank{factory.get_right()->get_shape().size()};
 
