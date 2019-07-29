@@ -78,14 +78,6 @@ ngraph::NodeVector MatmulFactory::make_matmul_op()
     std::size_t left_rank{left->get_shape().size()};
     std::size_t right_rank{right->get_shape().size()};
 
-    if (left_rank == 0 || right_rank == 0)
-    {
-        NGRAPH_WARN << (m_onnx_node) << " "
-                    << "ONNX standard doesn't allow scalar operands, however nGraph "
-                       "accepts them. Consider use of element-wise multiplication instead "
-                       "to conform with ONNX standard.";
-    }
-
     // First (easy) case that is already internally handled by Ngraph Dot operator.
     // Multiply two tensors where both of them has rank lower equal 2.
     if (left_rank <= 2 && right_rank <= 2)

@@ -28,6 +28,17 @@ namespace ngraph
                 NodeVector matmul(const Node& node)
                 {
                     auto factory = matmul::MatmulFactory(node);
+                    std::size_t left_rank{factory.get_left()->get_shape().size()};
+                    std::size_t right_rank{factory.get_right()->get_shape().size()};
+
+                    if (left_rank == 0 || right_rank == 0)
+                    {
+                        NGRAPH_WARN
+                            << (node) << " "
+                            << "ONNX standard doesn't allow scalar operands, however nGraph "
+                               "accepts them. Consider use of element-wise multiplication instead "
+                               "to conform with ONNX standard.";
+                    }
                     return factory.make_matmul_op();
                 }
             } // namespace set_1
