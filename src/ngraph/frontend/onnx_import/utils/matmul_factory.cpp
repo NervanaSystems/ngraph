@@ -22,12 +22,12 @@
 #include "matmul_factory.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization/quantized_linear_matmul.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "utils/reshape.hpp"
 
 using namespace ngraph::onnx_import::matmul;
 
@@ -57,7 +57,7 @@ static std::shared_ptr<ngraph::Node> get_sub_matrix(const std::shared_ptr<ngraph
     auto sub_matrix = std::shared_ptr<ngraph::Node>{
         std::make_shared<ngraph::op::Slice>(node, lower_bounds, upper_bounds)};
     // Remove first single entry dim.
-    return ngraph::onnx_import::reshape::squeeze(sub_matrix);
+    return ngraph::builder::squeeze(sub_matrix);
 }
 
 std::shared_ptr<ngraph::Node> MatmulFactory::get_left()
@@ -112,11 +112,11 @@ ngraph::NodeVector MatmulFactory::make_matmul_op()
     // This will make easier further dot product calculations.
     if (left_shape.size() > 3)
     {
-        left = onnx_import::reshape::collapse(left, 0, left_shape.size() - 3);
+        left = builder::collapse(left, 0, left_shape.size() - 3);
     }
     if (right_shape.size() > 3)
     {
-        right = onnx_import::reshape::collapse(right, 0, right_shape.size() - 3);
+        right = builder::collapse(right, 0, right_shape.size() - 3);
     }
 
     // Perform multiple small dot products
@@ -137,7 +137,7 @@ ngraph::NodeVector MatmulFactory::make_matmul_op()
 
         // Expand sub_dot result with single empty outermost axis, in order to
         // later concatenate sub_dots at this axis.
-        small_dots.at(g) = onnx_import::reshape::expand_dims(sub_dot);
+        small_dots.at(g) = builder::expand_dims(sub_dot);
     }
 
     // Concatenate sub_dots on groups axis.

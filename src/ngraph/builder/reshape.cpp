@@ -75,3 +75,51 @@ shared_ptr<Node> builder::flatten(const shared_ptr<Node>& node, int axis)
     return make_shared<op::Reshape>(
         node, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size});
 }
+
+shared_ptr<Node> builder::squeeze(const shared_ptr<Node>& node, vector<size_t> axes)
+{
+    if (axes.empty())
+    {
+        return node;
+    }
+
+    Shape in_shape{node->get_shape()};
+    for (size_t idx = 0; idx < axes.size(); ++idx)
+    {
+        in_shape.at(idx) = 0;
+    }
+    Shape output_shape;
+    for (auto axis : in_shape)
+    {
+        if (axis != 0)
+        {
+            output_shape.push_back(axis);
+        }
+    }
+    return builder::reshape(node, output_shape);
+}
+
+shared_ptr<Node>
+    builder::collapse(const shared_ptr<Node>& node, const size_t start_axis, const size_t end_axis)
+{
+    auto shape = node->get_shape();
+    size_t collapsed_axis_size = accumulate(next(begin(shape), start_axis),
+                                            next(begin(shape), end_axis + 1),
+                                            1UL,
+                                            multiplies<size_t>());
+
+    Shape output_shape{collapsed_axis_size};
+    output_shape.insert(end(output_shape), next(begin(shape), end_axis + 1), end(shape));
+    return builder::reshape(node, output_shape);
+}
+
+shared_ptr<Node> builder::expand_dims(const shared_ptr<Node>& node, size_t axis)
+{
+    Shape output_shape(node->get_shape());
+    // Add empty axis at specified position.
+    auto empty_axis_it = begin(output_shape);
+    advance(empty_axis_it, axis);
+    output_shape.insert(empty_axis_it, 1);
+    return make_shared<op::Reshape>(
+        node, get_default_order(node->get_shape().size()), output_shape);
+}

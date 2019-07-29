@@ -59,5 +59,40 @@ namespace ngraph
         ///
         /// \return The new node will be a 2D matrix representing the flattened input node.
         std::shared_ptr<Node> flatten(const std::shared_ptr<Node>& node, int axis);
+
+        /// \brief      Remove empty axes from input tensor.
+        ///
+        /// \param[in]  node  The node to be squeezed.
+        /// \param[in]  axes  The vector defining indexes of axes to be removed.
+        ///
+        /// \return     The squeezed node.
+        ///
+        std::shared_ptr<Node> squeeze(const std::shared_ptr<Node>& node,
+                                      std::vector<std::size_t> axes = {0});
+
+        /// \brief      Collapse specified axes into single one.
+        ///
+        /// \note       Collapsed axes create a continuous range starting from outermost axis.
+        ///
+        /// \param[in]  node        The node to be reshaped.
+        /// \param[in]  start_axis  The start axis index.
+        /// \param[in]  end_axis    The end axis (inclusive) index.
+        ///
+        /// \return     The node with collapsed specified axes.
+        ///
+        std::shared_ptr<Node> collapse(const std::shared_ptr<Node>& node,
+                                       const std::size_t start_axis,
+                                       const std::size_t end_axis);
+
+        /// \brief      Expands node tensor shape with empty axis at
+        ///             specified position.
+        ///
+        /// \param[in]  node  The node to be expanded.
+        /// \param[in]  axis  The position in the expanded axes where the
+        ///                   new axis is placed.
+        ///
+        /// \return     The node with added empty axis.
+        ///
+        std::shared_ptr<Node> expand_dims(const std::shared_ptr<Node>& node, std::size_t axis = 0);
     } // namespace  builder
 } // namespace  ngraph
