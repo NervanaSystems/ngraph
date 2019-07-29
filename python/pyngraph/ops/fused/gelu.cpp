@@ -25,6 +25,6 @@ namespace py = pybind11;
 void regclass_pyngraph_op_Gelu(py::module m)
 {
     py::class_<ngraph::op::Gelu, std::shared_ptr<ngraph::op::Gelu>, ngraph::op::Op> gelu(m, "Gelu");
-    gelu.doc() = "ngraph.impl.op.Elu wraps ngraph::op::Gelu";
+    gelu.doc() = "ngraph.impl.op.Gelu wraps ngraph::op::Gelu";
     gelu.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

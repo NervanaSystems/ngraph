@@ -531,7 +531,7 @@ def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Nod
 def gelu(node, name=None):  # type: (NodeInput, str) -> Node
     r"""Perform Gaussian Error Linear Unit operation element-wise on data from input node.
 
-    Computes Gaussian error linear:
+    Computes GELU function:
 
     .. math:: f(x) = 0.5\cdot x\cdot(1 + erf( \dfrac{x}{\sqrt{2}})
 
