@@ -68,7 +68,7 @@ using namespace ngraph::runtime::ngmlir;
 
 static llvm::cl::opt<bool>
     clEnableAffineLoopFusion("enable-affine-loop-fusion",
-                             llvm::cl::init(true),
+                             llvm::cl::init(false),
                              llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
@@ -274,7 +274,7 @@ void MLIRCompiler::optimize()
     NGRAPH_CHECK(succeeded(opt_res), "Affine optimizations failed");
     dump_mlir_module("Affine Dialect Dump (Post-Optimizations):");
 
-    // Run Affine dialecto to Std dialect conversion.
+    // Run Affine dialect to Std dialect conversion.
     mlir::PassManager pm_lowering;
     pm_lowering.addPass(mlir::createLowerAffinePass());
     auto lowering_res = pm_lowering.run(m_module.get());
