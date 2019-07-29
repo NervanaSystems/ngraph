@@ -65,20 +65,6 @@ static bool is_fp_i64(const ngraph::element::Type& et)
         throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
     }
 
-#define SELECT_DOT_3ARGS(KV, ET, K)                                                                \
-    if (ET == element::f32)                                                                        \
-    {                                                                                              \
-        KV = K<float, float, float>;                                                               \
-    }                                                                                              \
-    else if (ET == element::i64)                                                                   \
-    {                                                                                              \
-        KV = K<int64_t, int64_t, int64_t>;                                                         \
-    }                                                                                              \
-    else                                                                                           \
-    {                                                                                              \
-        throw ngraph_error("Unsupported element type " + ET.c_type_string() + " for kernel " #K);  \
-    }
-
 #define SELECT_BY_RANK(KV, ET, R, K)                                                               \
     if (ET == element::f32)                                                                        \
     {                                                                                              \

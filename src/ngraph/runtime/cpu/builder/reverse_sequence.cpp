@@ -21,10 +21,6 @@
 using namespace std;
 using namespace ngraph;
 
-#if defined(NGRAPH_CPU_LARGE_BINARY)
-#define SELECT_BY_RANK SELECT_KERNEL_BY_RANK
-#endif
-
 namespace ngraph
 {
     namespace runtime
@@ -51,10 +47,10 @@ namespace ngraph
 
                 if (args[1].get_element_type() == element::i32)
                 {
-                    SELECT_BY_RANK(kernel,
-                                   args[0].get_element_type(),
-                                   arg_shape.size(),
-                                   runtime::cpu::kernel::reverse_sequence_sli32);
+                    SELECT_KERNEL_BY_RANK(kernel,
+                                          args[0].get_element_type(),
+                                          arg_shape.size(),
+                                          runtime::cpu::kernel::reverse_sequence_sli32);
                 }
                 else
                 {

@@ -72,8 +72,9 @@ namespace ngraph
                             cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, softmax_index);
                         };
                     functors.emplace_back(functor);
+                    return;
                 }
-                else
+                else if (is_fp_i64(args[0].get_element_type()))
                 {
                     if (axes.size() == arg_shape.size())
                     {
@@ -92,6 +93,7 @@ namespace ngraph
                                    ectx->arena);
                         };
                         functors.emplace_back(functor);
+                        return;
                     }
                     else if (axes.size() == 1)
                     {
@@ -115,6 +117,7 @@ namespace ngraph
                                            ectx->arena);
                                 };
                             functors.emplace_back(functor);
+                            return;
                         }
                         else
                         {
@@ -136,6 +139,7 @@ namespace ngraph
                                            ectx->arena);
                                 };
                             functors.emplace_back(functor);
+                            return;
                         }
                     }
                     else if (arg_shape.size() == 3 && axes.size() == 2)
@@ -156,6 +160,7 @@ namespace ngraph
                                        ectx->arena);
                             };
                         functors.emplace_back(functor);
+                        return;
                     }
                     else if (arg_shape.size() == 4 && axes.size() == 3)
                     {
@@ -175,28 +180,22 @@ namespace ngraph
                                        ectx->arena);
                             };
                         functors.emplace_back(functor);
-                    }
-                    else if (softmax->get_element_type() == element::f32)
-                    {
-                        NGRAPH_WARN << "Falling back to refernce kernel for softmax " << arg_shape
-                                    << " over " << axes;
-                        auto functor = [&, arg_shape, axes, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                            runtime::reference::softmax<float>(
-                                static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
-                                static_cast<float*>(ctx->buffer_data[out_buffer_index]),
-                                arg_shape,
-                                axes);
-                        };
-                        functors.emplace_back(functor);
-                    }
-                    else
-                    {
-                        NGRAPH_ERR << "Unsupported Softmax " << arg_shape << " over " << axes
-                                   << " in cpu buiilder";
-                        throw ngraph_error("Unsupported Softmax");
+                        return;
                     }
                 }
+                NGRAPH_WARN << "Falling back to refernce kernel for softmax " << arg_shape
+                            << " over " << axes;
+                std::function<decltype(runtime::cpu::kernel::ref_softmax<float>)> kernel;
+                SELECT_KERNEL(
+                    kernel, args[0].get_element_type(), runtime::cpu::kernel::ref_softmax);
+                auto functor = [&, arg_shape, axes, arg_buffer_index, out_buffer_index](
+                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                    kernel(ctx->buffer_data[arg_buffer_index],
+                           ctx->buffer_data[out_buffer_index],
+                           arg_shape,
+                           axes);
+                };
+                functors.emplace_back(functor);
             }
 
             REGISTER_OP_BUILDER(Softmax);

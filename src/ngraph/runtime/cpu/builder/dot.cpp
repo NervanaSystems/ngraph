@@ -26,7 +26,6 @@ using namespace std;
 using namespace ngraph;
 
 #if defined(NGRAPH_CPU_LARGE_BINARY)
-#define SELECT_DOT_3ARGS SELECT_KERNEL_3ARGS
 #define SELECT_KERNEL_FOR_LIMITED_ET SELECT_KERNEL
 #endif
 
@@ -241,7 +240,8 @@ namespace ngraph
 
                 std::function<decltype(runtime::cpu::kernel::dot_ref<float, float, float>)> kernel;
 
-                SELECT_DOT_3ARGS(kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
+                SELECT_KERNEL_3ARGS(
+                    kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
 
                 auto functor = [&,
                                 kernel,
