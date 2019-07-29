@@ -24,6 +24,19 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
+static bool is_fp_i64(const ngraph::element::Type& et)
+{
+#if defined(NGRAPH_CPU_LARGE_BINARY)
+    return true;
+#endif
+
+    if (et == ngraph::element::f32 || et == ngraph::element::i64)
+    {
+        return true;
+    }
+    return false;
+}
+
 #define SELECT_KERNEL_FOR_LIMITED_ET(KV, ET, K)                                                    \
     if (ET == element::f32)                                                                        \
     {                                                                                              \

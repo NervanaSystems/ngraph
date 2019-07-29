@@ -131,7 +131,7 @@ namespace ngraph
                 }
                 else
                 {
-                    if (is_strided(strides))
+                    if (is_strided(strides) && is_fp_i64(args[0].get_element_type()))
                     {
                         std::function<decltype(runtime::cpu::kernel::strided_slice<float, 2>)>
                             kernel;
@@ -162,7 +162,7 @@ namespace ngraph
                         };
                         functors.emplace_back(functor);
                     }
-                    else
+                    else if (is_fp_i64(args[0].get_element_type()))
                     {
                         std::function<decltype(runtime::cpu::kernel::slice<float, 2>)> kernel;
 
@@ -185,6 +185,31 @@ namespace ngraph
                                    out_shape,
                                    lower_bounds,
                                    ectx->arena);
+                        };
+                        functors.emplace_back(functor);
+                    }
+                    else
+                    {
+                        std::function<decltype(runtime::cpu::kernel::ref_slice<float>)> kernel;
+                        SELECT_KERNEL(
+                            kernel, args[0].get_element_type(), runtime::cpu::kernel::ref_slice);
+                        auto functor = [&,
+                                        kernel,
+                                        arg_shape,
+                                        out_shape,
+                                        lower_bounds,
+                                        upper_bounds,
+                                        strides,
+                                        arg_buffer_index,
+                                        out_buffer_index](CPURuntimeContext* ctx,
+                                                          CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   arg_shape,
+                                   lower_bounds,
+                                   upper_bounds,
+                                   strides,
+                                   out_shape);
                         };
                         functors.emplace_back(functor);
                     }
