@@ -557,16 +557,17 @@ def tanh(node, name=None):  # type: (Node, str) -> Node
 
 @nameable_op
 def clamp(data, min_value, max_value, name=None):
-    # type: (NodeInput, ScalarData, ScalarData, str) -> NodeInput
+    # type: (NodeInput, ScalarData, ScalarData, str) -> Node
     """Perform clamp element-wise on data from input node.
 
     Performs a clipping operation on an input value between a pair of boundary values.
 
-    If :code:`data` compares less than :code:`min_value`, sets :code:`min_value`;
-    else if :code:`max_value` compares more than :code:`data`, sets :code:`max_value`;
-    otherwise remains unchanged :code:`data`.
+    For each element in :code:`data`, if the element's value is lower than :code:`min_value`,
+    it will be replaced with :code:`min_value`. If the value is higher than :code:`max_value`,
+    it will be replaced by :code:`max_value`.
+    Intermediate values of :code:`data` are returned without change.
 
-    Computes clamp:
+    Clamp uses the following logic:
 
     .. code-block:: python
 
