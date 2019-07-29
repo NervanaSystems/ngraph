@@ -14,28 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/runtime/reference/convert.hpp"
 
-#include <cstddef>
-#include "ngraph/tensor_value.hpp"
-#include "ngraph/type/element_type.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+void runtime::reference::convert(const TensorValue& arg, TensorValue& out)
 {
-    namespace runtime
-    {
-        namespace reference
-        {
-            template <typename T>
-            void add(const T* arg0, const T* arg1, T* out, size_t count)
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg0[i] + arg1[i];
-                }
-            }
-
-            void add(const TensorValue& arg0, const TensorValue& arg1, TensorValue& out);
-        }
-    }
+    WITH_ET(arg.element_type(), Targ, {
+        WITH_ET(out.element_type(), Tout, {
+            convert(arg.buffer<Targ>(), out.buffer<Tout>(), shape_size(arg.shape()));
+        });
+    });
 }

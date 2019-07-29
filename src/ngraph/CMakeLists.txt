@@ -470,6 +470,10 @@ set (SRC
     runtime/host_tensor.cpp
     runtime/host_tensor.hpp
     runtime/performance_counter.hpp
+    runtime/reference/add.hpp
+    runtime/reference/add.cpp
+    runtime/reference/convert.hpp
+    runtime/reference/convert.cpp
     runtime/tensor.cpp
     runtime/tensor.hpp
     shape.cpp
@@ -481,6 +485,8 @@ set (SRC
     state/rng_state.cpp
     strides.cpp
     strides.hpp
+    tensor_value.cpp
+    tensor_value.hpp
     type/bfloat16.cpp
     type/bfloat16.hpp
     type/float16.cpp

@@ -83,3 +83,39 @@ TEST(element_type, merge_both_static_unequal)
     ASSERT_TRUE(t.is_static());
     ASSERT_EQ(t, element::f32);
 }
+
+template <typename T>
+static std::string get_type_name()
+{
+    NGRAPH_CHECK(false, "Unhandled element type");
+}
+
+template <>
+std::string get_type_name<int32_t>()
+{
+    return "int32_t";
+}
+
+template <>
+std::string get_type_name<int64_t>()
+{
+    return "int64_t";
+}
+
+TEST(element_type, with_et)
+{
+    WITH_ET(element::i32, T, { ASSERT_EQ(get_type_name<T>(), "int32_t"); });
+
+    WITH_ET(element::i64, T, { ASSERT_EQ(get_type_name<T>(), "int64_t"); });
+    WITH_ET(element::i64, T, ASSERT_EQ(get_type_name<T>(), "int64_t"));
+
+    WITH_ET(element::i32, T, {
+        WITH_ET(element::i64, U, {
+            WITH_ET(element::i32, V, {
+                ASSERT_EQ(get_type_name<T>(), "int32_t");
+                ASSERT_EQ(get_type_name<U>(), "int64_t");
+                ASSERT_EQ(get_type_name<V>(), "int32_t");
+            });
+        });
+    });
+}

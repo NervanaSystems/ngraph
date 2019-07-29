@@ -18,6 +18,8 @@
 
 #include <cstddef>
 
+#include "ngraph/tensor_value.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -27,9 +29,19 @@ namespace ngraph
             template <typename TI, typename TO>
             void convert(const TI* arg, TO* out, size_t count)
             {
-                for (size_t i = 0; i < count; ++i)
+                if (element::from<TO>() == element::boolean)
                 {
-                    out[i] = static_cast<TO>(arg[i]);
+                    for (size_t i = 0; i < count; ++i)
+                    {
+                        out[i] = static_cast<TO>(static_cast<bool>(arg[i]));
+                    }
+                }
+                else
+                {
+                    for (size_t i = 0; i < count; ++i)
+                    {
+                        out[i] = static_cast<TO>(arg[i]);
+                    }
                 }
             }
 
@@ -41,6 +53,8 @@ namespace ngraph
                     out[i] = static_cast<char>(static_cast<bool>(arg[i]));
                 }
             }
+
+            void convert(const TensorValue& arg, TensorValue& out);
         }
     }
 }

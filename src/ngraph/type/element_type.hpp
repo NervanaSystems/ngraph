@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/check.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type/bfloat16.hpp"
@@ -175,3 +176,105 @@ namespace ngraph
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }
 }
+
+#define WITH_ET(et_val, et_type, stmt)                                                             \
+    do                                                                                             \
+    {                                                                                              \
+        switch ((et_val).get_type_enum())                                                          \
+        {                                                                                          \
+        case ::ngraph::element::Type_t::boolean:                                                   \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = char;                                                              \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::bf16:                                                      \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = ::ngraph::bfloat16;                                                \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::f16:                                                       \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = ::ngraph::float16;                                                 \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::f32:                                                       \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = float;                                                             \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::f64:                                                       \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = double;                                                            \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::i8:                                                        \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = int8_t;                                                            \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::i16:                                                       \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = int16_t;                                                           \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::i32:                                                       \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = int32_t;                                                           \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::i64:                                                       \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = int64_t;                                                           \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::u8:                                                        \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = uint8_t;                                                           \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::u16:                                                       \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = uint16_t;                                                          \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::u32:                                                       \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = uint32_t;                                                          \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::u64:                                                       \
+            do                                                                                     \
+            {                                                                                      \
+                using et_type = uint64_t;                                                          \
+                stmt;                                                                              \
+            } while (0);                                                                           \
+            break;                                                                                 \
+        case ::ngraph::element::Type_t::undefined:                                                 \
+        case ::ngraph::element::Type_t::dynamic:                                                   \
+        default: NGRAPH_CHECK(false, "invalid element type ", (et_val)); break;                    \
+        }                                                                                          \
+    } while (0)

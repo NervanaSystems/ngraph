@@ -76,6 +76,7 @@ set(SRC
     shape.cpp
     specialize_function.cpp
     tensor.cpp
+    tensor_value.cpp
     type_prop/all.cpp
     type_prop/any.cpp
     type_prop/avg_pool.cpp

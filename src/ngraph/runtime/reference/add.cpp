@@ -14,28 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/runtime/reference/add.hpp"
 
-#include <cstddef>
-#include "ngraph/tensor_value.hpp"
-#include "ngraph/type/element_type.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+void runtime::reference::add(const TensorValue& arg0, const TensorValue& arg1, TensorValue& out)
 {
-    namespace runtime
-    {
-        namespace reference
-        {
-            template <typename T>
-            void add(const T* arg0, const T* arg1, T* out, size_t count)
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg0[i] + arg1[i];
-                }
-            }
-
-            void add(const TensorValue& arg0, const TensorValue& arg1, TensorValue& out);
-        }
-    }
+    NGRAPH_CHECK(arg0.element_type() == arg1.element_type() &&
+                 arg0.element_type() == out.element_type());
+    NGRAPH_CHECK(arg0.shape() == arg1.shape() && arg0.shape() == out.shape());
+    WITH_ET(arg0.element_type(), T, {
+        add<T>(arg0.buffer<T>(), arg1.buffer<T>(), out.buffer<T>(), shape_size(arg0.shape()));
+    });
 }

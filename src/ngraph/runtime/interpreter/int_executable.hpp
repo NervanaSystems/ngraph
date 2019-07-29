@@ -253,11 +253,19 @@ private:
         }
         case OP_TYPEID::Add:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            /*            size_t element_count = shape_size(node.get_output_shape(0));
             reference::add<T>(args[0]->get_data_ptr<const T>(),
                               args[1]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               element_count);
+*/
+            TensorValue tv_a0(
+                args[0]->get_element_type(), args[0]->get_shape(), args[0]->get_data_ptr<void>());
+            TensorValue tv_a1(
+                args[1]->get_element_type(), args[1]->get_shape(), args[1]->get_data_ptr<void>());
+            TensorValue tv_o0(
+                out[0]->get_element_type(), out[0]->get_shape(), out[0]->get_data_ptr<void>());
+            reference::add(tv_a0, tv_a1, tv_o0);
             break;
         }
         case OP_TYPEID::All:
@@ -562,9 +570,13 @@ private:
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
-            element::Type type = node.get_element_type();
-            std::stringstream ss;
-            size_t element_count = shape_size(node.get_output_shape(0));
+            TensorValue tv_arg(
+                args[0]->get_element_type(), args[0]->get_shape(), args[0]->get_data_ptr<void>());
+            TensorValue tv_out(
+                out[0]->get_element_type(), out[0]->get_shape(), out[0]->get_data_ptr<void>());
+            reference::convert(tv_arg, tv_out);
+            break;
+            /*            size_t element_count = shape_size(node.get_output_shape(0));
             switch (type.get_type_enum())
             {
             case element::Type_t::boolean:
@@ -627,7 +639,7 @@ private:
                 ss << "unsupported element type " << type << " op Convert";
                 throw std::runtime_error(ss.str());
             }
-            break;
+            break;*/
         }
         case OP_TYPEID::Convolution:
         {

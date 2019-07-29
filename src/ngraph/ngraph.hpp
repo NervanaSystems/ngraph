@@ -181,4 +181,5 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/shape_util.hpp"
 #include "ngraph/specialize_function.hpp"
+#include "ngraph/tensor_value.hpp"
 #include "ngraph/type/element_type.hpp"
