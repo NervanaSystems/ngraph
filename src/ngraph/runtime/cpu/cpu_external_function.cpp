@@ -1194,6 +1194,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(RecurrentReshapeElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CoreFusion, true, ngraph::pass, ngraph::pass::FusionType::ALL_FUSIONS);
+    REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass);
 
     // Disable CPUFusion if MLIR is enabled to preserve core ops.
     if (std::getenv("NGRAPH_MLIR") == nullptr)

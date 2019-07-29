@@ -16,25 +16,14 @@ We are pleased to announce the release of version |version|-doc.
 
 Core updates for |version|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-+ PlaidML support
-+ More ONNX ops
-+ Elementwise divide defaults to Python semantics
-+ GenerateMask seed optional
-+ Graph visualization improvements
-+ **Known Issues**
-  
-  - When using TensorFlow\* v1.14.0 with ```ngraph-bridge`` v0.16.0rc0 and CPU
-    backend, we saw notable to severe decreases in throughput in many models.
++ Better PlaidML support
 
 
 Latest doc updates
 ~~~~~~~~~~~~~~~~~~
 
-+ Document new debug tool
-+ Note deprecation of MXNet's ``ngraph-mxnet`` PyPI
-+ Note default change to `svg` files for graphs and visualization
-+ Add more prominent tips for contributors who find the doc-contributor-README
++ Add instructions how to build ``NGRAPH_PLAIDML`` backend.
+
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
@@ -42,6 +31,27 @@ Latest doc updates
 
 Changelog on Previous Releases
 ==============================
+
+0.23
+----
+
++ PlaidML support
++ More ONNX ops
++ Elementwise divide defaults to Python semantics
++ GenerateMask seed optional
++ Document new debug tool
++ Graph visualization improvements
++ Note deprecation of MXNet's ``ngraph-mxnet`` PyPI
++ Note default change to `svg` files for graphs and visualization
++ Add more prominent tips for contributors who find the doc-contributor-README
++ Better GSG / Install Guide structure.
++ Added group edits and new illustrations from PR 2994 to `introduction.rst`.
++ Ensure ngraph-bridge link in README goes to right place.
++ Make project `extras` their own subdirectory with index to help organize them.
++ **Known Issues**
+  
+  - When using TensorFlow\* v1.14.0 with ```ngraph-bridge`` v0.16.0rc0 and CPU
+    backend, we saw notable to severe decreases in throughput in many models.
 
 0.22
 ----
