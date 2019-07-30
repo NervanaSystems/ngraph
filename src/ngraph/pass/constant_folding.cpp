@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <stdint.h>
 #include <numeric>
+#include <stdint.h>
 
 #include "constant_folding.hpp"
 #include "ngraph/graph_util.hpp"
