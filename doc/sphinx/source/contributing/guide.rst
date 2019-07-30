@@ -1,5 +1,7 @@
 .. contribution/guide.rst:
 
+.. _contribution_guide:
+
 ##################
 Contribution guide
 ##################

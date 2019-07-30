@@ -1,5 +1,7 @@
 .. frameworks/validated/list.rst: 
 
+.. _validated_workloads:
+
 #################################
 Validated workloads by framework
 #################################

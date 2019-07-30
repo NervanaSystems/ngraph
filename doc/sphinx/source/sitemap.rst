@@ -1,11 +1,11 @@
 :orphan:
 
-* :ref:`intro`
+* :ref:`getting_started`
 
   .. toctree::
-     :glob:
 
-     introduction/*
+     introduction
+     tutorials/index.rst
 
 
 * :ref:`framework_support`
@@ -15,7 +15,10 @@
      frameworks/overview.rst
      frameworks/tensorflow.rst
      frameworks/onnx.rst
-     frameworks/paddlepaddle.rst
+     frameworks/paddlepaddle.rst     
+     frameworks/new-frameworks.rst
+
+
 
 
 * :ref:`ngraph_core`

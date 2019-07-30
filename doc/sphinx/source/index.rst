@@ -43,19 +43,16 @@ packages, scripts, and other files that use licensing.
 .. _Apache 2.0 license: https://github.com/NervanaSystems/ngraph/blob/master/LICENSE
 .. _repo: https://github.com/NervanaSystems/ngraph
 
-.. _intro:
 
 Getting Started
 ===============
 
 .. toctree::
    :maxdepth: 1
-   :glob:
 
    introduction.rst
    tutorials/index.rst
 
-.. _framework_support:
 
 Framework Support
 =================
@@ -69,7 +66,6 @@ Framework Support
    frameworks/paddlepaddle.rst
    frameworks/new-frameworks.rst
 
-.. _ngraph_core:
 
 nGraph Core
 ===========
@@ -85,8 +81,6 @@ nGraph Core
    core/passes/passes.rst
 
 
-.. _backend_support:
-
 Backend Support
 ===============
 
@@ -97,7 +91,6 @@ Backend Support
    backends/backend-api/index.rst
    backends/cpp-api.rst
 
-.. _distributed:
 
 Distributed Training
 ====================
@@ -107,8 +100,6 @@ Distributed Training
 
    distributed/overview.rst
 
-
-.. _validated_workloads:
 
 Validated Workloads
 ===================
@@ -126,9 +117,6 @@ Visualization Tools
    :maxdepth: 1
 
    inspection/index.rst
-
-
-.. _contribution_guide:
 
 Contribution
 ============

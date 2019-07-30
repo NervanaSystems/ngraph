@@ -1,5 +1,7 @@
 .. distributed/overview.rst
 
+.. _distributed: 
+
 Overview
 ########
 

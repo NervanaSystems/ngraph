@@ -1,6 +1,8 @@
 .. core/overview.rst:
 
 
+.. _ngraph_core:
+
 Overview
 ========
 

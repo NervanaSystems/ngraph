@@ -1,8 +1,15 @@
-.. project/introduction.rst:
+.. introduction.rst:
 
+
+.. _getting_started:
+
+Getting Started
+###############
+
+.. _introduction:
 
 Introduction
-############
+============
 
 Future developments in :abbr:`Artificial Intelligence (AI)` will increasingly 
 rely on better methods to accelerate the performance of deep learning workloads. 
