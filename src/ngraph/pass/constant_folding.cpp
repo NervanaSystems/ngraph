@@ -22,6 +22,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
@@ -29,6 +30,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/floor.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
@@ -37,6 +39,7 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
@@ -55,11 +58,13 @@
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convert.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/equal.hpp"
+#include "ngraph/runtime/reference/floor.hpp"
 #include "ngraph/runtime/reference/greater.hpp"
 #include "ngraph/runtime/reference/greater_eq.hpp"
 #include "ngraph/runtime/reference/less.hpp"
@@ -68,6 +73,7 @@
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
+#include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/not_equal.hpp"
 #include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
@@ -719,9 +725,10 @@ void pass::ConstantFolding::construct_constant_binary()
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
-    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
-           std::dynamic_pointer_cast<op::Relu>(n) || std::dynamic_pointer_cast<op::Sign>(n) ||
-           std::dynamic_pointer_cast<op::Sqrt>(n);
+    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Ceiling>(n) ||
+           std::dynamic_pointer_cast<op::Floor>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
+           std::dynamic_pointer_cast<op::Not>(n) || std::dynamic_pointer_cast<op::Relu>(n) ||
+           std::dynamic_pointer_cast<op::Sign>(n) || std::dynamic_pointer_cast<op::Sqrt>(n);
 }
 
 template <class T>
@@ -758,9 +765,24 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
             runtime::reference::abs<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
+        else if (std::dynamic_pointer_cast<op::Ceiling>(unary))
+        {
+            runtime::reference::ceiling<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
+        else if (std::dynamic_pointer_cast<op::Floor>(unary))
+        {
+            runtime::reference::floor<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
         else if (std::dynamic_pointer_cast<op::Negative>(unary))
         {
             runtime::reference::negate<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
+        else if (std::dynamic_pointer_cast<op::Not>(unary))
+        {
+            runtime::reference::logical_not<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
         else if (std::dynamic_pointer_cast<op::Relu>(unary))
@@ -791,9 +813,11 @@ void pass::ConstantFolding::construct_constant_unary()
 {
     auto constant_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
-    auto is_uea = pattern::has_class<op::util::UnaryElementwiseArithmetic>();
-    auto uea =
-        std::make_shared<pattern::op::Any>(constant_label, is_uea, NodeVector{constant_label});
+    auto is_ue = [](std::shared_ptr<Node> n) {
+        return (pattern::has_class<op::util::UnaryElementwiseArithmetic>()(n) ||
+                pattern::has_class<op::Not>()(n));
+    };
+    auto ue = std::make_shared<pattern::op::Any>(constant_label, is_ue, NodeVector{constant_label});
 
     auto constant_unary_callback = [&, constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_unary_callback against node = "
@@ -875,7 +899,7 @@ void pass::ConstantFolding::construct_constant_unary()
         return true;
     };
 
-    auto reshape_matcher = make_shared<pattern::Matcher>(uea, "ConstantFolding.ConstantUnary");
+    auto reshape_matcher = make_shared<pattern::Matcher>(ue, "ConstantFolding.ConstantUnary");
     this->add_matcher(reshape_matcher, constant_unary_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 

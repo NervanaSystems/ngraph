@@ -471,6 +471,18 @@ namespace ngraph
             }
 
             template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Floor)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::floor);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Ceiling)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::ceil);
+            }
+
+            template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Equal)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::equal);
@@ -536,6 +548,12 @@ namespace ngraph
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sign)
             {
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sign);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Not)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::logical_not);
             }
 
 #define TI(x) type_index(typeid(x))
@@ -604,6 +622,8 @@ namespace ngraph
             REGISTER_CF_BUILDER(Negative);
             REGISTER_CF_BUILDER(Relu);
             REGISTER_CF_BUILDER(Sqrt);
+            REGISTER_CF_BUILDER(Floor);
+            REGISTER_CF_BUILDER(Ceiling);
             REGISTER_CF_BUILDER(Equal);
             REGISTER_CF_BUILDER(NotEqual);
             REGISTER_CF_BUILDER(Greater);
@@ -613,6 +633,7 @@ namespace ngraph
             REGISTER_CF_BUILDER(And);
             REGISTER_CF_BUILDER(Or);
             REGISTER_CF_BUILDER(Sign);
+            REGISTER_CF_BUILDER(Not);
         }
     }
 }
