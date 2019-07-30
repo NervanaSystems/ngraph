@@ -471,6 +471,18 @@ namespace ngraph
             }
 
             template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Floor)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::floor);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Ceiling)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::ceil);
+            }
+
+            template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Equal)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::equal);
@@ -604,6 +616,8 @@ namespace ngraph
             REGISTER_CF_BUILDER(Negative);
             REGISTER_CF_BUILDER(Relu);
             REGISTER_CF_BUILDER(Sqrt);
+            REGISTER_CF_BUILDER(Floor);
+            REGISTER_CF_BUILDER(Ceiling);
             REGISTER_CF_BUILDER(Equal);
             REGISTER_CF_BUILDER(NotEqual);
             REGISTER_CF_BUILDER(Greater);
