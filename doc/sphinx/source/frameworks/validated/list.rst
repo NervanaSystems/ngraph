@@ -2,9 +2,8 @@
 
 .. _validated_workloads:
 
-#################################
-Validated workloads by framework
-#################################
+Validated Workloads
+===================
 
 We validated performance [#f1]_ for the following TensorFlow\* and MXNet\* 
 workloads:
