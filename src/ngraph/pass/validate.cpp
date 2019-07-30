@@ -14,25 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/pass/validate.hpp"
+#include "ngraph/graph_util.hpp"
 
-#include <cstddef>
+using namespace ngraph;
 
-namespace ngraph
+bool pass::Validate::run_on_function(std::shared_ptr<Function> f)
 {
-    namespace runtime
-    {
-        namespace reference
-        {
-            template <typename T>
-            void abs(const T* arg, T* out, size_t count)
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    // TODO: generic "abs" doesn't work here for some reason.
-                    out[i] = (arg[i] < T(0) ? T(-arg[i]) : arg[i]);
-                }
-            }
-        }
-    }
+    f->validate_nodes_and_infer_types();
+    return false;
 }

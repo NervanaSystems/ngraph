@@ -408,6 +408,32 @@ TEST(constant_folding, const_product)
     ASSERT_EQ(values_expected, values_out);
 }
 
+TEST(constant_folding, const_sum)
+{
+    Shape input_shape{3, 3};
+
+    vector<int32_t> values_in{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    auto constant = op::Constant::create(element::i32, input_shape, values_in);
+    auto convert = make_shared<op::Sum>(constant, AxisSet{1});
+    auto f = make_shared<Function>(convert, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Sum>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int32_t>();
+
+    vector<int32_t> values_expected{6, 15, 24};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
 TEST(constant_folding, const_concat)
 {
     auto constant0 =
@@ -429,6 +455,215 @@ TEST(constant_folding, const_concat)
     auto values_out = new_const->get_vector<int32_t>();
 
     vector<int32_t> values_expected{1, 2, 3, 7, 4, 5, 6, 8};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, const_equal)
+{
+    auto constant0 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6});
+    auto constant1 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{1, 2, 2, 3, 5, 6});
+    auto eq = make_shared<op::Equal>(constant0, constant1);
+    auto f = make_shared<Function>(eq, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Equal>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<char>();
+
+    vector<char> values_expected{1, 1, 0, 0, 1, 1};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, const_not_equal)
+{
+    auto constant0 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6});
+    auto constant1 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{1, 2, 2, 3, 5, 6});
+    auto eq = make_shared<op::NotEqual>(constant0, constant1);
+    auto f = make_shared<Function>(eq, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::NotEqual>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<char>();
+
+    vector<char> values_expected{0, 0, 1, 1, 0, 0};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, const_greater)
+{
+    auto constant0 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6});
+    auto constant1 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{2, 2, 2, 5, 5, 5});
+    auto eq = make_shared<op::Greater>(constant0, constant1);
+    auto f = make_shared<Function>(eq, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Greater>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<char>();
+
+    vector<char> values_expected{0, 0, 1, 0, 0, 1};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, const_greater_eq)
+{
+    auto constant0 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6});
+    auto constant1 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{2, 2, 2, 5, 5, 5});
+    auto eq = make_shared<op::GreaterEq>(constant0, constant1);
+    auto f = make_shared<Function>(eq, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::GreaterEq>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<char>();
+
+    vector<char> values_expected{0, 1, 1, 0, 1, 1};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, const_less)
+{
+    auto constant0 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6});
+    auto constant1 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{2, 2, 2, 5, 5, 5});
+    auto eq = make_shared<op::Less>(constant0, constant1);
+    auto f = make_shared<Function>(eq, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Less>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<char>();
+
+    vector<char> values_expected{1, 0, 0, 1, 0, 0};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, const_less_eq)
+{
+    auto constant0 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6});
+    auto constant1 =
+        op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{2, 2, 2, 5, 5, 5});
+    auto eq = make_shared<op::LessEq>(constant0, constant1);
+    auto f = make_shared<Function>(eq, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::LessEq>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<char>();
+
+    vector<char> values_expected{1, 1, 0, 1, 1, 0};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, const_and)
+{
+    auto constant0 =
+        op::Constant::create(element::boolean, Shape{2, 3}, vector<int32_t>{0, 0, 1, 0, 1, 1});
+    auto constant1 =
+        op::Constant::create(element::boolean, Shape{2, 3}, vector<int32_t>{0, 1, 1, 1, 0, 1});
+    auto eq = make_shared<op::And>(constant0, constant1);
+    auto f = make_shared<Function>(eq, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::And>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<char>();
+
+    vector<char> values_expected{0, 0, 1, 0, 0, 1};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, const_or)
+{
+    auto constant0 =
+        op::Constant::create(element::boolean, Shape{2, 3}, vector<int32_t>{0, 0, 1, 0, 1, 1});
+    auto constant1 =
+        op::Constant::create(element::boolean, Shape{2, 3}, vector<int32_t>{0, 1, 1, 1, 0, 1});
+    auto eq = make_shared<op::Or>(constant0, constant1);
+    auto f = make_shared<Function>(eq, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Or>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<char>();
+
+    vector<char> values_expected{0, 1, 1, 1, 1, 1};
+
     ASSERT_EQ(values_expected, values_out);
 }
 

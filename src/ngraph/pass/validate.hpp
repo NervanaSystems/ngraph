@@ -16,23 +16,20 @@
 
 #pragma once
 
-#include <cstddef>
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace pass
     {
-        namespace reference
+        class Validate : public FunctionPass
         {
-            template <typename T>
-            void abs(const T* arg, T* out, size_t count)
+        public:
+            Validate()
+                : FunctionPass()
             {
-                for (size_t i = 0; i < count; i++)
-                {
-                    // TODO: generic "abs" doesn't work here for some reason.
-                    out[i] = (arg[i] < T(0) ? T(-arg[i]) : arg[i]);
-                }
             }
-        }
+            bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
+        };
     }
 }
