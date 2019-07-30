@@ -767,6 +767,35 @@ TEST(constant_folding, constant_dyn_reshape)
     ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
+TEST(constant_folding, constant_transpose)
+{
+    Shape shape_in{2, 4};
+    vector<double> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+
+    Shape shape_perm{2};
+    vector<int64_t> values_perm{1, 0};
+
+    auto constant_in = make_shared<op::Constant>(element::f64, shape_in, values_in);
+    auto constant_perm = make_shared<op::Constant>(element::i64, shape_perm, values_perm);
+    auto transpose = make_shared<op::Transpose>(constant_in, constant_perm);
+    auto f = make_shared<Function>(transpose, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<double>();
+
+    vector<double> values_permute{0, 4, 1, 5, 2, 6, 3, 7};
+    ASSERT_TRUE(test::all_close_f(values_permute, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
 TEST(constant_folding, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::ConstantFolding>();
