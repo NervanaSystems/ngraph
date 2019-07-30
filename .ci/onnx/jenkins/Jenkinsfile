@@ -62,11 +62,17 @@ def getGitPrInfo(String project) {
         commitHash : "",
         commitSubject : ""
     ]
-    dir ("${WORKDIR}/${project}") {
-        gitPrInfo.prAuthorEmail = sh (script: 'git log -1 --pretty="format:%ae" ', returnStdout: true).trim()
-        gitPrInfo.commitAuthorEmail = sh (script: 'git log -1 --pretty="format:%ce" ', returnStdout: true).trim()
-        gitPrInfo.commitHash = sh (script: 'git log -1 --pretty="format:%H" ', returnStdout: true).trim()
-        gitPrInfo.commitSubject = sh (script: 'git log -1 --pretty="format:%s" ', returnStdout: true).trim()
+    try {
+        dir ("${WORKDIR}/${project}") {
+            gitPrInfo.prAuthorEmail = sh (script: 'git log -1 --pretty="format:%ae" ', returnStdout: true).trim()
+            gitPrInfo.commitAuthorEmail = sh (script: 'git log -1 --pretty="format:%ce" ', returnStdout: true).trim()
+            gitPrInfo.commitHash = sh (script: 'git log -1 --pretty="format:%H" ', returnStdout: true).trim()
+            gitPrInfo.commitSubject = sh (script: 'git log -1 --pretty="format:%s" ', returnStdout: true).trim()
+        }
+    }
+    catch(e) {
+        echo "Failed to retrieve ${project} git repository information!"
+        echo "ERROR: ${e}"
     }
     return gitPrInfo
 }
