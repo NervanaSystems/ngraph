@@ -37,8 +37,8 @@ namespace ngraph
                            const ParameterVector& body_parameters,
                            const OutputVector& body_outputs,
                            const OutputVector& outputs,
-                           const AxisSet& sequence_inputs,
-                           const AxisSet& sequence_outputs);
+                           const std::vector<bool>& sequence_inputs,
+                           const std::vector<bool>& sequence_outputs);
 
             void validate_and_infer_types() override;
 
@@ -54,13 +54,13 @@ namespace ngraph
             OutputVector& get_tensor_iterator_outputs();
             void set_tensor_iterator_outputs(const OutputVector& tensor_iterator_outputs);
 
-            const AxisSet& get_sequence_inputs() const;
-            AxisSet& get_sequence_inputs();
-            void set_sequence_inputs(const AxisSet& sequence_inputs);
+            const std::vector<bool>& get_sequence_inputs() const;
+            std::vector<bool>& get_sequence_inputs();
+            void set_sequence_inputs(const std::vector<bool>& sequence_inputs);
 
-            const AxisSet& get_sequence_outputs() const;
-            AxisSet& get_sequence_outputs();
-            void set_sequence_outputs(const AxisSet& sequence_inputs);
+            const std::vector<bool>& get_sequence_outputs() const;
+            std::vector<bool>& get_sequence_outputs();
+            void set_sequence_outputs(const std::vector<bool>& sequence_inputs);
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -68,8 +68,8 @@ namespace ngraph
             ParameterVector m_body_parameters;
             OutputVector m_body_outputs;
             OutputVector m_tensor_iterator_outputs;
-            AxisSet m_sequence_inputs;
-            AxisSet m_sequence_outputs;
+            std::vector<bool> m_sequence_inputs;
+            std::vector<bool> m_sequence_outputs;
         };
     }
 }

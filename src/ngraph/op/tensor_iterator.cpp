@@ -25,8 +25,8 @@ op::TensorIterator::TensorIterator(const OutputVector& body_inputs,
                                    const ParameterVector& body_parameters,
                                    const OutputVector& body_outputs,
                                    const OutputVector& tensor_iterator_outputs,
-                                   const AxisSet& sequence_inputs,
-                                   const AxisSet& sequence_outputs)
+                                   const std::vector<bool>& sequence_inputs,
+                                   const std::vector<bool>& sequence_outputs)
     : Op(body_inputs)
     , m_body_parameters(body_parameters)
     , m_body_outputs(body_outputs)
@@ -47,15 +47,17 @@ void op::TensorIterator::validate_and_infer_types()
     size_t iteration_count{0};
     // If true, iteration count is dynamic
     bool iteration_count_dynamic{false};
-    // true when we something about the count
+    // true when we know something about the count
     bool iteration_count_valid{false};
-    for (size_t axis = 0; axis < get_input_size(); ++axis)
+    for (auto input : inputs())
     {
-        PartialShape sequence_shape = get_input_partial_shape(axis);
+        size_t input_index = input.get_index();
+        Output<Node> value = input.get_source_output();
+        PartialShape sequence_shape = value.get_partial_shape();
         PartialShape iterator_shape = sequence_shape;
         Rank sequence_rank = sequence_shape.rank();
 
-        if (m_sequence_inputs.find(axis) != m_sequence_inputs.end())
+        if (m_sequence_inputs.at(input_index))
         {
             if (sequence_rank.is_dynamic())
             {
@@ -67,7 +69,7 @@ void op::TensorIterator::validate_and_infer_types()
                 NODE_VALIDATION_CHECK(this,
                                       static_cast<size_t>(sequence_shape.rank()) != 0,
                                       "Input ",
-                                      axis,
+                                      input_index,
                                       " is specified to be a sequence but is scalar.");
                 Dimension sequence_dim = sequence_shape[0];
                 vector<Dimension> dimensions = static_cast<vector<Dimension>>(sequence_shape);
@@ -92,9 +94,11 @@ void op::TensorIterator::validate_and_infer_types()
         }
         NODE_VALIDATION_CHECK(
             this,
-            iterator_shape.compatible(m_body_parameters.at(axis)->get_partial_shape()),
+            iterator_shape.compatible(m_body_parameters.at(input_index)->get_partial_shape()),
             "Iterator body param is not compatible with value");
     }
+    // The body may depend on the body parameters as well as values from outside the body
+    // Body parameters depend on the loop initialization
 }
 
 const ParameterVector& op::TensorIterator::get_body_parameters() const
@@ -142,32 +146,32 @@ void op::TensorIterator::set_tensor_iterator_outputs(const OutputVector& tensor_
     m_tensor_iterator_outputs = tensor_iterator_outputs;
 }
 
-const AxisSet& op::TensorIterator::get_sequence_inputs() const
+const vector<bool>& op::TensorIterator::get_sequence_inputs() const
 {
     return m_sequence_inputs;
 }
 
-AxisSet& op::TensorIterator::get_sequence_inputs()
+vector<bool>& op::TensorIterator::get_sequence_inputs()
 {
     return m_sequence_inputs;
 }
 
-void op::TensorIterator::set_sequence_inputs(const AxisSet& sequence_inputs)
+void op::TensorIterator::set_sequence_inputs(const vector<bool>& sequence_inputs)
 {
     m_sequence_inputs = sequence_inputs;
 }
 
-const AxisSet& op::TensorIterator::get_sequence_outputs() const
+const vector<bool>& op::TensorIterator::get_sequence_outputs() const
 {
     return m_sequence_outputs;
 }
 
-AxisSet& op::TensorIterator::get_sequence_outputs()
+vector<bool>& op::TensorIterator::get_sequence_outputs()
 {
     return m_sequence_outputs;
 }
 
-void op::TensorIterator::set_sequence_outputs(const AxisSet& sequence_outputs)
+void op::TensorIterator::set_sequence_outputs(const vector<bool>& sequence_outputs)
 {
     m_sequence_outputs = sequence_outputs;
 }

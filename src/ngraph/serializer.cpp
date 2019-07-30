@@ -235,6 +235,8 @@ public:
     json serialize_node_reference(const Node& node);
     json serialize_node(const Node& node);
     json serialize_axis_set(const AxisSet& axis_set);
+    template <typename T>
+    json serialize_sequence(T sequence);
 
 protected:
     size_t m_indent{0};
@@ -260,6 +262,8 @@ public:
     shared_ptr<Node> deserialize_node_reference(json j);
     shared_ptr<Node> deserialize_node(json j);
     AxisSet deserialize_axis_set(json j);
+    template <typename T>
+    T deserialize_sequence(json j);
 
 protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
@@ -620,6 +624,31 @@ AxisSet JSONDeserializer::deserialize_axis_set(json j)
     if (j.is_array())
     {
         result = j.get<set<size_t>>();
+    }
+    return result;
+}
+
+template <typename T>
+json JSONSerializer::serialize_sequence(T sequence)
+{
+    json result;
+    for (auto elt : sequence)
+    {
+        result.push_back(static_cast<typename T::value_type>(elt));
+    }
+    return result;
+}
+
+template <typename T>
+T JSONDeserializer::deserialize_sequence(json j)
+{
+    T result;
+    if (j.is_array())
+    {
+        for (json elt : j)
+        {
+            result.push_back(static_cast<typename T::value_type>(elt));
+        }
     }
     return result;
 }
@@ -1935,8 +1964,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             OutputVector body_outputs = deserialize_output_vector(node_js["body_outputs"]);
             OutputVector tensor_iterator_outputs =
                 deserialize_output_vector(node_js["tensor_iterator_outputs"]);
-            AxisSet sequence_inputs = deserialize_axis_set(node_js["sequence_inputs"]);
-            AxisSet sequence_outputs = deserialize_axis_set(node_js["sequence_outputs"]);
+            vector<bool> sequence_inputs =
+                deserialize_sequence<vector<bool>>(node_js["sequence_inputs"]);
+            vector<bool> sequence_outputs =
+                deserialize_sequence<vector<bool>>(node_js["sequence_outputs"]);
             node = make_shared<op::TensorIterator>(tensor_input_args,
                                                    body_parameters,
                                                    body_outputs,
@@ -2983,8 +3014,8 @@ json JSONSerializer::serialize_node(const Node& n)
         node["body_outputs"] = serialize_output_vector(tmp->get_body_outputs());
         node["tensor_iterator_outputs"] =
             serialize_output_vector(tmp->get_tensor_iterator_outputs());
-        node["sequence_inputs"] = serialize_axis_set(tmp->get_sequence_inputs());
-        node["sequence_outputs"] = serialize_axis_set(tmp->get_sequence_outputs());
+        node["sequence_inputs"] = serialize_sequence(tmp->get_sequence_inputs());
+        node["sequence_outputs"] = serialize_sequence(tmp->get_sequence_outputs());
         break;
     }
     case OP_TYPEID::Tile: { break;
