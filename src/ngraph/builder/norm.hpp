@@ -25,7 +25,7 @@ namespace ngraph
 {
     namespace builder
     {
-        /// \brief      Creates output which calculates L-0 norm of input tensor.
+        /// \brief      Calculates L-0 norm of input tensor.
         ///
         /// \note       The L-0 norm represents the cardinality of elements different
         ///             from zero. This actually is not a "true" norm.
@@ -78,5 +78,4 @@ namespace ngraph
                                       std::size_t p_norm = 2,
                                       float bias = 0.f);
     } // namespace builder
-
 } // namespace ngraph
