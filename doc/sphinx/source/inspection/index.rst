@@ -2,8 +2,8 @@
 
 .. _inspection:
 
-Visualization Tools
-###################
+Diagnostics and Visualization
+#############################
 
 nGraph provides serialization and deserialization facilities, along with the 
 ability to create image formats or a PDF. 
