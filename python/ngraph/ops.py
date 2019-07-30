@@ -22,11 +22,11 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
-    GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
-    Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
-    Sqrt, Subtract, Sum, Tan, Tanh, TopK
+    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, Equal, \
+    Exp, Floor, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, \
+    MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, \
+    Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, \
+    Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
 
 from typing import Callable, Iterable, List, Union
 
@@ -525,6 +525,27 @@ def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Nod
     """Return node which casts input node values to specified type."""
     new_element_type = get_element_type(new_type)
     return Convert(node, new_element_type)
+
+
+@nameable_op
+def depth_to_space(node, block_size, name=None):  # type: (Node, int, str) -> Node
+    """Rearranges input tensor from depth into blocks of spatial data.
+
+    Values from the height and width dimensions are moved to the depth dimension.
+
+    Input tensor has shape [N,C,H,W], where N is the batch axis, C is the channel or depth,
+    H is the height and W is the width.
+
+    Output node produces a tensor with shape:
+
+    [N, C * :code:`block_size` * :code:`block_size`, H / :code:`block_size`, W / :code:`block_size`]
+
+    :param node: The node with input tensor data.
+    :param block_size: The size of the block of value to be moved.
+    :param name: Optional output node name.
+    :return: The new node performing an DepthToSpace operation on its input tensor.
+    """
+    return DepthToSpace(node, block_size)
 
 
 @nameable_op

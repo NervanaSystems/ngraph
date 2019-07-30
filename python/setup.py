@@ -177,6 +177,7 @@ sources = [
     'pyngraph/ops/cos.cpp',
     'pyngraph/ops/cosh.cpp',
     'pyngraph/ops/ceiling.cpp',
+    'pyngraph/ops/fused/depth_to_space.cpp',
     'pyngraph/ops/divide.cpp',
     'pyngraph/ops/dot.cpp',
     'pyngraph/ops/elu.cpp',

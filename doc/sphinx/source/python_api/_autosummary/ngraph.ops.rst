@@ -30,6 +30,7 @@ ngraph.ops
       convolution_backprop_data
       cos
       cosh
+      depth_to_space
       divide
       dot
       elu
