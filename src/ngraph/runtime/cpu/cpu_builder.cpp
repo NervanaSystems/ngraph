@@ -38,6 +38,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
@@ -104,9 +105,12 @@
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/halide_op.hpp"
-#include "ngraph/runtime/cpu/op/loop_kernel.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
+
+#ifdef NGRAPH_MLIR_ENABLE
+#include "contrib/mlir/compiler.hpp"
+#endif
 
 using namespace std;
 using namespace ngraph;
@@ -466,14 +470,100 @@ namespace ngraph
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sqrt);
             }
 
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Floor)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::floor);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Ceiling)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::ceil);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Equal)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::equal);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::NotEqual)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::not_equal);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Greater)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::greater);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::GreaterEq)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::greater_eq);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Less)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::less);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::LessEq)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::less_eq);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::And)
+            {
+                auto element_count = shape_size(node->get_shape());
+
+                auto functor = [&, element_count](const std::vector<void*>& inputs,
+                                                  std::vector<void*>& outputs) {
+                    runtime::cpu::kernel::logical_and(
+                        inputs[0], inputs[1], outputs[0], element_count, 0);
+                };
+                return functor;
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Or)
+            {
+                auto element_count = shape_size(node->get_shape());
+
+                auto functor = [&, element_count](const std::vector<void*>& inputs,
+                                                  std::vector<void*>& outputs) {
+                    runtime::cpu::kernel::logical_or(
+                        inputs[0], inputs[1], outputs[0], element_count, 0);
+                };
+                return functor;
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sign)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sign);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Not)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::logical_not);
+            }
+
 #define TI(x) type_index(typeid(x))
 
             BuildOpMap& GetGlobalBuildDispatcher()
             {
                 static BuildOpMap build_dispatcher{
                     {TI(ngraph::op::Parameter), &runtime::cpu::Builder::nop},
-                    {TI(ngraph::runtime::cpu::op::LoopKernel),
-                     &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::LoopKernel>},
+                    {TI(ngraph::op::CompiledKernel),
+                     &runtime::cpu::Builder::build<ngraph::op::CompiledKernel>},
                     {TI(ngraph::runtime::cpu::op::HalideOp),
                      &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::HalideOp>}};
 
@@ -532,6 +622,18 @@ namespace ngraph
             REGISTER_CF_BUILDER(Negative);
             REGISTER_CF_BUILDER(Relu);
             REGISTER_CF_BUILDER(Sqrt);
+            REGISTER_CF_BUILDER(Floor);
+            REGISTER_CF_BUILDER(Ceiling);
+            REGISTER_CF_BUILDER(Equal);
+            REGISTER_CF_BUILDER(NotEqual);
+            REGISTER_CF_BUILDER(Greater);
+            REGISTER_CF_BUILDER(GreaterEq);
+            REGISTER_CF_BUILDER(Less);
+            REGISTER_CF_BUILDER(LessEq);
+            REGISTER_CF_BUILDER(And);
+            REGISTER_CF_BUILDER(Or);
+            REGISTER_CF_BUILDER(Sign);
+            REGISTER_CF_BUILDER(Not);
         }
     }
 }

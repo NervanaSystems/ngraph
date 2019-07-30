@@ -29,8 +29,12 @@ namespace ngraph
         class GroupConvolution : public ngraph::op::util::FusedOp
         {
         public:
-            GroupConvolution(const std::shared_ptr<Node>& data_batch,
-                             const std::shared_ptr<Node>& filters,
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            GroupConvolution();
+            GroupConvolution(const Output<Node>& data_batch,
+                             const Output<Node>& filters,
                              const Strides& window_movement_strides,
                              const Strides& window_dilation_strides,
                              const CoordinateDiff& padding_below,
@@ -66,8 +70,8 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-            size_t m_groups;
-            PadType m_pad_type;
+            size_t m_groups{0};
+            PadType m_pad_type{PadType::NOTSET};
         };
     }
 }

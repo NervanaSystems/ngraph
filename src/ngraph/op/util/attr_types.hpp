@@ -27,7 +27,8 @@ namespace ngraph
         {
             CONSTANT = 0,
             EDGE,
-            REFLECT
+            REFLECT,
+            SYMMETRIC
         };
 
         /// \brief Padding Type used for `Convolution` and `Pooling`
@@ -49,7 +50,7 @@ namespace ngraph
             SAME_UPPER,
             VALID,
             AUTO = SAME_UPPER,
-            NOTSET = EXPLICIT
+            NOTSET = EXPLICIT,
         };
 
         /// \brief Specifies the algorithm to use for implicit broadcasting of a tensor

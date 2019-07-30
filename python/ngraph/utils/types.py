@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ NodeInput = Union[Node, NumericData]
 
 ngraph_to_numpy_types_map = [
     (NgraphType.boolean, np.bool),
+    (NgraphType.f16, np.float16),
     (NgraphType.f32, np.float32),
     (NgraphType.f64, np.float64),
     (NgraphType.i8, np.int8),

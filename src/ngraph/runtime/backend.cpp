@@ -86,7 +86,20 @@ void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec
 {
 }
 
+bool runtime::Backend::is_device_memory(void* ptr)
+{
+    // override this method for each supported backend to determine if the passed pointer is in
+    // device pinned memory or not
+    return false;
+}
+
 std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_stream)
 {
     throw runtime_error("load opertion unimplemented.");
+}
+
+bool runtime::Backend::set_config(const map<string, string>& config, string& error)
+{
+    error = "set_config not supported";
+    return false;
 }

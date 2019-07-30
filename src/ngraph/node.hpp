@@ -73,6 +73,8 @@ namespace ngraph
                                                          size_t i);
     const NodeVector& check_single_output_args(const NodeVector& args);
 
+    OutputVector as_output_vector(const NodeVector& args);
+
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
@@ -212,8 +214,9 @@ namespace ngraph
         virtual bool is_constant() const;
         virtual bool is_null() const { return false; }
         virtual bool is_op() const { return false; }
-        virtual bool is_commutative() { return false; }
+        virtual bool is_commutative() const { return false; }
         virtual bool is_dynamic() const;
+        virtual bool has_state() const { return false; }
         size_t get_instance_id() const { return m_instance_id; }
         friend std::ostream& operator<<(std::ostream&, const Node&);
         virtual std::ostream& write_short_description(std::ostream&) const;
@@ -233,14 +236,28 @@ namespace ngraph
             NGRAPH_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node
-        const std::set<std::shared_ptr<Node>>& get_control_dependencies() const;
+        const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
 
+        /// Get nodes dependent on this node
+        const std::vector<Node*>& get_control_dependents() const;
+
+        /// This node cannot execute until node executes
         void add_control_dependency(std::shared_ptr<Node> node);
 
-        void remove_control_dependency(std::shared_ptr<Node> node)
-        {
-            m_control_dependencies.erase(node);
-        }
+        /// Remove the dependency of this node on node
+        void remove_control_dependency(std::shared_ptr<Node> node);
+
+        /// Remove all dependencies from this node
+        void clear_control_dependencies();
+
+        /// Remove this node as a dependency from all dependent nodes
+        void clear_control_dependents();
+
+        /// This node absorbs the control dependencies of source_node
+        void add_node_control_dependencies(std::shared_ptr<Node> source_node);
+
+        /// This node becomes a dependent of every node dependent on source_node
+        void add_node_control_dependents(std::shared_ptr<Node> source_node);
 
         /// Returns the number of outputs from the node.
         size_t get_output_size() const;
@@ -261,6 +278,8 @@ namespace ngraph
 
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
+
+        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
 
         /// Checks that there is exactly one output and returns its shape
         // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
@@ -292,7 +311,7 @@ namespace ngraph
             "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
-        const std::set<descriptor::Input*>& get_output_inputs(size_t i) const
+        const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
             NGRAPH_DEPRECATED("use node->output(i).get_target_inputs() instead");
 
         /// Returns the number of inputs for the op
@@ -320,10 +339,17 @@ namespace ngraph
         virtual NodeVector get_arguments() const;
         // Will be deprecated
         std::shared_ptr<Node> get_argument(size_t index) const;
+
+    protected:
         // Will be replaced with an OutputVector version
         virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const = 0;
 
-        virtual std::vector<std::shared_ptr<Function>> get_functions() const;
+    public:
+        std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& new_args) const;
+
+        std::shared_ptr<Node> copy_with_new_inputs(
+            const OutputVector& inputs,
+            const std::vector<std::shared_ptr<Node>>& control_dependencies) const;
 
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
@@ -389,11 +415,13 @@ namespace ngraph
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
 
-        std::set<std::shared_ptr<Node>> m_control_dependencies;
+        std::vector<Node*> m_control_dependents;
+        std::vector<std::shared_ptr<Node>> m_control_dependencies;
         const std::string m_node_type;
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
         std::string m_unique_name;
+        NGRAPH_API
         static std::atomic<size_t> m_next_instance_id;
         std::unordered_set<std::string> m_provenance_tags;
         std::deque<descriptor::Input> m_inputs;
@@ -481,7 +509,7 @@ namespace ngraph
     };
 
     /// \brief A handle for one of a node's outputs.
-    template <typename NodeType>
+    template <typename NodeType = Node>
     class Output
     {
     public:
@@ -489,7 +517,7 @@ namespace ngraph
         /// \param node A pointer to the node for the output handle.
         /// \param index The index of the output.
         Output(NodeType* node, size_t index)
-            : m_node(node)
+            : m_node(node->shared_from_this())
             , m_index(index)
         {
         }
@@ -500,7 +528,7 @@ namespace ngraph
         ///
         /// TODO: Make a plan to deprecate this.
         Output(const std::shared_ptr<NodeType>& node, size_t index)
-            : m_node(node.get())
+            : m_node(node)
             , m_index(index)
         {
         }
@@ -513,12 +541,28 @@ namespace ngraph
         {
         }
 
+        /// A null output
+        Output() = default;
+
+        /// This output position for a different node
+        Output<NodeType> for_node(const std::shared_ptr<NodeType>& node)
+        {
+            return Output(node, m_index);
+        }
+
         /// \return A pointer to the node referred to by this output handle.
-        NodeType* get_node() const { return m_node; }
+        NodeType* get_node() const { return m_node.get(); }
         /// \return A `shared_ptr` to the node referred to by this output handle.
         ///
         /// TODO: Make a plan to deprecate this.
-        std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node->shared_from_this(); }
+        std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node; }
+        /// \return A useable shared pointer to this output. If index 0, the node,
+        /// otherwise find or create a GOE.
+        std::shared_ptr<Node> as_single_output_node() const NGRAPH_DEPRECATED("Transitional.")
+        {
+            return m_node->get_output_as_single_output_node(m_index);
+        }
+
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const { return m_index; }
         /// \return A reference to the tensor descriptor for this output.
@@ -570,8 +614,8 @@ namespace ngraph
         bool operator<=(const Output& other) const { return !(*this > other); }
         bool operator>=(const Output& other) const { return !(*this < other); }
     private:
-        NodeType* const m_node;
-        const size_t m_index;
+        std::shared_ptr<NodeType> m_node;
+        size_t m_index{0};
     };
 
     inline Input<Node> Node::input(size_t input_index)

@@ -1,8 +1,12 @@
 :orphan:
- 
-.. _sitemap.rst:
- 
-.. toctree::
-   :includehidden: 
 
-   index.rst
+  .. toctree::
+     :includehidden:
+
+     frameworks/index
+     project/index
+     python_api/index
+     inspection/index
+     core/overview
+     backends/index
+     project/extras/index

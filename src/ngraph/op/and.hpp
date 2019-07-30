@@ -33,7 +33,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a logical-and operation.
-            And();
+            And() = default;
 
             /// \brief Constructs a logical-and operation.
             ///
@@ -51,8 +51,7 @@ namespace ngraph
 
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual bool is_commutative() override { return true; }
+            virtual bool is_commutative() const override { return true; }
         };
     }
 }

@@ -24,6 +24,7 @@
 #include "ngraph/type/element_type.hpp"
 #include "node.hpp"
 #include "tensor.hpp"
+#include "utils/common.hpp"
 #include "weight.hpp"
 
 namespace ngraph
@@ -41,17 +42,8 @@ namespace ngraph
                     {
                     }
                 };
-                struct unsupported_element_type : ngraph_error
-                {
-                    explicit unsupported_element_type(TensorProto_DataType type)
-                        : ngraph_error{"unsupported value info element type: " +
-                                       onnx::TensorProto_DataType_Name(
-                                           static_cast<onnx::TensorProto_DataType>(type))}
-                    {
-                    }
-                };
-            }
-        }
+            } // namespace value_info
+        }     // namespace error
 
         class ValueInfo
         {
@@ -83,24 +75,8 @@ namespace ngraph
                 {
                     throw error::value_info::unspecified_element_type{};
                 }
-                switch (m_value_info_proto->type().tensor_type().elem_type())
-                {
-                case onnx::TensorProto_DataType::TensorProto_DataType_BOOL: return element::boolean;
-                case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT:
-                case onnx::TensorProto_DataType::TensorProto_DataType_FLOAT16: return element::f32;
-                case onnx::TensorProto_DataType::TensorProto_DataType_DOUBLE: return element::f64;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT8: return element::i8;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT16: return element::i16;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT32: return element::i32;
-                case onnx::TensorProto_DataType::TensorProto_DataType_INT64: return element::i64;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT8: return element::u8;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT16: return element::u16;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT32: return element::u32;
-                case onnx::TensorProto_DataType::TensorProto_DataType_UINT64: return element::u64;
-                default:
-                    throw error::value_info::unsupported_element_type{
-                        m_value_info_proto->type().tensor_type().elem_type()};
-                }
+                return common::get_ngraph_element_type(
+                    m_value_info_proto->type().tensor_type().elem_type());
             }
 
             std::shared_ptr<ngraph::Node>
