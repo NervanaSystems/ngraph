@@ -86,6 +86,7 @@
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1153,6 +1154,15 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     auto dex = is_direct_execution();
     auto is_supported = [dex](const Node& node) {
+
+        // this checks averts the decomposition of LSTMCell
+        // we will map LSTMCell to LSTM CPU op in the later
+        // graph pass
+        if (typeid(ngraph::op::LSTMCell) == typeid(node))
+        {
+            return true;
+        }
+
         if (dex)
         {
             auto handler = GetGlobalBuildDispatcher().find(type_index(typeid(node)));
@@ -1177,7 +1187,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     };
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass);
-    //REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
+    REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported);
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass);
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass);
