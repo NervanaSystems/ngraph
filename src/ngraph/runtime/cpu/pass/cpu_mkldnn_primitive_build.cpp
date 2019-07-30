@@ -55,17 +55,7 @@
 #include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 
-#define WRITE_MKLDNN_DIMS(X)                                                                       \
-    writer << "mkldnn::memory::dims{";                                                             \
-    if (X.size() > 1)                                                                              \
-    {                                                                                              \
-        for (auto i = 0; i < X.size() - 1; i++)                                                    \
-        {                                                                                          \
-            writer << std::to_string(X[i]) << ", ";                                                \
-        }                                                                                          \
-    }                                                                                              \
-    writer << std::to_string(X[X.size() - 1]);                                                     \
-    writer << "}, \n"
+#define WRITE_MKLDNN_DIMS(X) writer << "mkldnn::memory::dims{" << join(X) << "}, \n";
 
 using namespace ngraph;
 using namespace ngraph::op;
@@ -102,9 +92,13 @@ namespace ngraph
                     auto input1_data_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto sum_pd = mkldnn_emitter.get_elementwise_add_desc(node);
+                    mkldnn_emitter.query_scratchpad_sum(sum_pd);
+
                     // Add needs 4 primitives: input0, input1, result, and sum.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(4);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -121,16 +115,22 @@ namespace ngraph
                            << desc_index << "], "
                            << "*cg_ctx->mkldnn_descriptors[" << desc_index + 1 << "]};\n";
 
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     // elementwise sum primitive descriptor
                     writer << "mkldnn::sum::primitive_desc sum_pd = "
                               "mkldnn::sum::primitive_desc(*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 2 << "], "
-                                                "scale_vector, inputs_desc);\n";
+                           << desc_index + 2
+                           << "], "
+                              "scale_vector, inputs_desc, cg_ctx->global_cpu_engine, attr);\n";
 
                     writer << "\n// build sum primitive\n";
                     // sum primitive
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::sum(sum_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(sum_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -241,8 +241,8 @@ namespace ngraph
                     // Lstm/Rnn needs 9 primitives: src_layer, src_iter, weights_layer, weights_iter, bias,
                     // dst_layer, dst_iter, workspace, and rnn_forward.
                     // It needs a new workspace.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(9, true /* new workspace */);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(9, true /* new workspace */);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -284,10 +284,10 @@ namespace ngraph
                               "cg_ctx->global_cpu_engine);\n";
                     writer << "cg_ctx->mkldnn_memories[" << std::to_string(deps[7])
                            << "] = new "
-                              "mkldnn::memory({rnn_prim_desc.workspace_primitive_desc().desc(), "
+                              "mkldnn::memory({rnn_prim_desc.workspace_desc(), "
                               "cg_ctx->global_cpu_engine}, nullptr);\n";
                     writer << "auto workspace = "
-                              "(char*)malloc(rnn_prim_desc.workspace_primitive_desc().get_size());"
+                              "(char*)malloc(rnn_prim_desc.workspace_desc().get_size());"
                               "\n";
                     writer << "if (!workspace)\n";
                     writer.block_begin();
@@ -335,8 +335,8 @@ namespace ngraph
 
                     // batchnorm forward needs 6 primitives: input, weights, result, mean,
                     // variance, and batch_normalization_forward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(6);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(6);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -363,6 +363,17 @@ namespace ngraph
                         weights_shape, args[0].get_element_type(), mkldnn::memory::format_tag::nc);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    const float ops_scale = 1.f;
+                    const float ops_alpha = -0.f; // relu negative slope
+                    const float ops_beta = 0.f;
+
+                    mkldnn::post_ops ops;
+                    if (append_relu)
+                    {
+                        ops.append_eltwise(
+                            ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+                    }
+
                     bool use_global_stats;
                     const mkldnn::memory::desc *mean_desc, *variance_desc;
                     if (training && args.size() == 3)
@@ -370,12 +381,20 @@ namespace ngraph
                         mean_desc = &mkldnn_utils::get_output_mkldnn_md(node, 1);
                         variance_desc = &mkldnn_utils::get_output_mkldnn_md(node, 2);
                         use_global_stats = false;
+                        // query scratchpad size
+                        auto batchnorm_desc =
+                            mkldnn_emitter.get_batchnorm_forward_desc<OP>(node, true);
+                        mkldnn_emitter.query_scratchpad_batchnorm_forward(batchnorm_desc, ops);
                     }
                     else
                     {
                         mean_desc = &mkldnn_utils::get_input_mkldnn_md(node, 3);
                         variance_desc = &mkldnn_utils::get_input_mkldnn_md(node, 4);
                         use_global_stats = true;
+                        // query scratchpad size
+                        auto batchnorm_desc =
+                            mkldnn_emitter.get_batchnorm_forward_desc<OP>(node, false);
+                        mkldnn_emitter.query_scratchpad_batchnorm_forward(batchnorm_desc, ops);
                     }
 
                     auto batchnorm = static_cast<const OP*>(node);
@@ -383,6 +402,7 @@ namespace ngraph
 
                     writer << "mkldnn::primitive_attr bn_attr;\n";
                     writer << "bn_attr.set_post_ops(pops);\n";
+                    writer << "bn_attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     writer << "\n// build batchnorm primitive descriptor\n";
                     if (use_global_stats)
@@ -402,18 +422,6 @@ namespace ngraph
                                << ", "
                                   "mkldnn::normalization_flags::use_scale_shift | "
                                   "mkldnn::normalization_flags::use_global_stats);\n";
-
-                        writer << "auto batchnorm_prim_desc = "
-                                  "mkldnn::batch_normalization_forward::primitive_desc(batchnorm_"
-                                  "desc, "
-                                  "bn_attr, cg_ctx->global_cpu_engine);\n";
-
-                        writer << "\n// build batchnorm primitive\n";
-
-                        // batchnorm primitive
-                        writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
-                               << "] = new "
-                                  "mkldnn::batch_normalization_forward(batchnorm_prim_desc);\n";
                     }
                     else
                     {
@@ -431,19 +439,21 @@ namespace ngraph
                                << desc_index << "], " << eps
                                << ", "
                                   "mkldnn::normalization_flags::use_scale_shift);\n";
-
-                        writer << "auto batchnorm_prim_desc = "
-                                  "mkldnn::batch_normalization_forward::primitive_desc(batchnorm_"
-                                  "desc, "
-                                  "bn_attr, cg_ctx->global_cpu_engine);\n";
-
-                        writer << "\n// build batchnorm primitive\n";
-
-                        // batchnorm primitive
-                        writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
-                               << "] = new "
-                                  "mkldnn::batch_normalization_forward(batchnorm_prim_desc);\n";
                     }
+                    writer << "auto batchnorm_prim_desc = "
+                              "mkldnn::batch_normalization_forward::primitive_desc(batchnorm_"
+                              "desc, "
+                              "bn_attr, cg_ctx->global_cpu_engine);\n";
+
+                    writer << "\n// build batchnorm primitive\n";
+
+                    // batchnorm primitive
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new "
+                              "mkldnn::batch_normalization_forward(batchnorm_prim_desc);\n";
+                    writer
+                        << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                        << "] = new mkldnn::memory::desc(batchnorm_prim_desc.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -528,10 +538,15 @@ namespace ngraph
                     auto dweights_desc = mkldnn_emitter.build_memory_descriptor(
                         weights_shape, args[0].get_element_type(), mkldnn::memory::format_tag::nc);
 
+                    // query scratchpad size
+                    auto batchnorm_desc = mkldnn_emitter.get_batchnorm_backward_desc(node);
+                    mkldnn_emitter.query_scratchpad_batchnorm_backward(
+                        batchnorm_desc, input_desc, eps);
+
                     // batchnorm backward needs 8 primitives: weights, input, mean, variance,
                     // dinput, dweights, and batch_normalization_backward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(8);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(8);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -547,24 +562,44 @@ namespace ngraph
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
-                    writer << "\n// build batchnorm primitives\n";
-                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
-                           << "] = new mkldnn::batch_normalization_backward("
-                           << "{{mkldnn::prop_kind::backward, "
+                    writer << "auto batchnorm_fdesc = "
+                              "mkldnn::batch_normalization_forward::desc(mkldnn::prop_kind::"
+                              "forward_training, "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1 << "], " << eps
+                           << ", "
+                              "mkldnn::normalization_flags::use_scale_shift);\n";
+                    writer << "auto batchnorm_fpd = "
+                              "mkldnn::batch_normalization_forward::primitive_desc("
+                              "batchnorm_fdesc, cg_ctx->global_cpu_engine);\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
+                    writer << "auto batchnorm_desc = "
+                              "mkldnn::batch_normalization_backward::desc(mkldnn::prop_kind::"
+                              "backward, "
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 4 << "], "
                                                 "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "], " << eps
                            << ", "
-                              "mkldnn::batch_normalization_flag::use_scale_shift}, "
-                              "cg_ctx->global_cpu_engine, "
-                              "{{mkldnn::prop_kind::forward_training, "
+                              "mkldnn::normalization_flags::use_scale_shift);\n";
+                    writer << "auto batchnorm_prim_desc = "
+                              "mkldnn::batch_normalization_backward::primitive_desc(batchnorm_"
+                              "desc, "
+                              "attr, cg_ctx->global_cpu_engine, batchnorm_fpd);\n";
 
-                              "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 1 << "], " << eps
-                           << ", "
-                              "mkldnn::batch_normalization_flag::use_scale_shift}, "
-                              "cg_ctx->global_cpu_engine}});\n";
+                    writer << "\n// build batchnorm primitive\n";
+
+                    // batchnorm primitive
+                    writer << "\n// build batchnorm primitives\n";
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new "
+                              "mkldnn::batch_normalization_backward(batchnorm_prim_desc);\n";
+                    writer
+                        << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                        << "] = new mkldnn::memory::desc(batchnorm_prim_desc.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -582,9 +617,14 @@ namespace ngraph
                     size_t concat_dim = concat->get_concatenation_axis();
                     size_t nargs = node->get_inputs().size();
 
+                    // query scratchpad size
+                    auto concat_pd =
+                        mkldnn_emitter.get_concat_desc<ngraph::op::Concat>(node, nargs);
+                    mkldnn_emitter.query_scratchpad_concat(concat_pd);
+
                     // Concat needs number of inputs plus 2 primitives; those two are for result and concat.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(nargs + 2);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(nargs + 2);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -608,15 +648,21 @@ namespace ngraph
                     writer << "inputs_desc.push_back(*cg_ctx->mkldnn_descriptors[i]);\n";
                     writer.block_end();
 
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "auto concat_prim_desc = "
                               "mkldnn::concat::primitive_desc( "
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index + nargs << "], "
-                           << std::to_string(static_cast<int>(concat_dim)) << ", inputs_desc);\n";
+                           << std::to_string(static_cast<int>(concat_dim))
+                           << ", inputs_desc, cg_ctx->global_cpu_engine, attr);\n";
 
                     writer << "\n// build concat primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::concat(concat_prim_desc);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(concat_prim_desc.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -634,9 +680,13 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto lrn_desc = mkldnn_emitter.get_lrn_forward_desc(node);
+                    mkldnn_emitter.query_scratchpad_lrn_forward(lrn_desc);
+
                     // LRN needs 3 primitives: input, result, and lrn_forward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -659,6 +709,9 @@ namespace ngraph
                            << desc_index << "], " << nsize << ", " << alpha << ", " << beta << ", "
                            << bias << ");\n";
 
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "auto lrn_prim_desc = "
                               "mkldnn::lrn_forward::primitive_desc(lrn_desc, "
                               "cg_ctx->global_cpu_engine);\n";
@@ -666,6 +719,8 @@ namespace ngraph
                     writer << "\n// build lrn primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::lrn_forward(lrn_prim_desc);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(lrn_prim_desc.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -686,8 +741,8 @@ namespace ngraph
                     auto input_sub_desc = input_desc.submemory_desc(dims, offsets);
 
                     // Slice needs 3 primitives: input, result, and reorder.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -697,13 +752,21 @@ namespace ngraph
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "\n// build reorder primitives\n";
-                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
-                           << "] = new mkldnn::reorder("
+                    writer << "auto reorder_pd = "
+                              "mkldnn::reorder::primitive_desc("
                               "*cg_ctx->mkldnn_memories["
                            << std::to_string(deps[0]) << "]"
                                                          ", *cg_ctx->mkldnn_memories["
-                           << std::to_string(deps[1]) << "]);\n";
+                           << std::to_string(deps[1]) << "], attr);\n";
+
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::reorder(reorder_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(reorder_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -718,6 +781,12 @@ namespace ngraph
                     std::ofstream& desc_file)
                 {
                     auto convolution = static_cast<const OP*>(node);
+
+                    // query scratchpad size
+                    auto conv_desc = mkldnn_emitter.get_convolution_forward_desc<OP>(node);
+                    auto conv_attr = mkldnn_emitter.get_convolution_forward_attr<OP>(node);
+                    mkldnn_emitter.query_scratchpad_convolution_forward(conv_desc, conv_attr);
+
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides())
@@ -735,13 +804,13 @@ namespace ngraph
 
                     if (mkldnn_emitter.has_bias<OP>())
                     {
-                        index = mkldnn_emitter.reserve_primitive_space_cg(5);
+                        index = mkldnn_emitter.reserve_primitive_space(5);
                     }
                     else
                     {
-                        index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                        index = mkldnn_emitter.reserve_primitive_space(4);
                     }
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -776,8 +845,7 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(strides);
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
                     WRITE_MKLDNN_DIMS(pad_below);
-                    WRITE_MKLDNN_DIMS(pad_above);
-                    writer << ";\n";
+                    writer << "mkldnn::memory::dims{" << join(pad_above) << "});\n";
 
                     writer << "mkldnn::post_ops ops;\n";
                     if (std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
@@ -804,15 +872,20 @@ namespace ngraph
 
                     writer << "mkldnn::primitive_attr conv_attr;\n";
                     writer << "conv_attr.set_post_ops(ops);\n";
+                    writer << "conv_attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     if (mkldnn_emitter.is_quantized_conv<OP>())
                     {
                         writer << "conv_attr.set_output_scales(mask, dyn_scales);\n";
                     }
 
+                    writer << "auto conv_pd = mkldnn::convolution_forward::primitive_desc("
+                              "conv_desc, conv_attr, "
+                              "cg_ctx->global_cpu_engine);\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
-                           << "] = new mkldnn::convolution_forward({conv_desc, conv_attr, "
-                              "cg_ctx->global_cpu_engine});\n";
+                           << "] = new mkldnn::convolution_forward(conv_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(conv_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -927,6 +1000,13 @@ namespace ngraph
                     }
                     auto convolution = static_cast<const OP*>(node);
 
+                    // query scratchpad size
+                    auto bwd_desc = mkldnn_emitter.get_convolution_backward_weights_desc<OP>(node);
+                    auto fwd_desc =
+                        mkldnn_emitter.get_convolution_forward_desc_for_backward_op<OP>(node);
+                    mkldnn_emitter.query_scratchpad_convolution_backward_weights(fwd_desc,
+                                                                                 bwd_desc);
+
                     Strides window_dilation_strides_adjusted;
                     for (size_t s : convolution->get_window_dilation_strides_forward())
                     {
@@ -952,15 +1032,15 @@ namespace ngraph
                     // diff_bias, and convolution_backward_weights.
                     if (has_bias)
                     {
-                        index = mkldnn_emitter.reserve_primitive_space_cg(5);
+                        index = mkldnn_emitter.reserve_primitive_space(5);
                         auto out1_desc = mkldnn_utils::get_output_mkldnn_md(node, 1);
                         descs.push_back(out1_desc);
                     }
                     else
                     {
-                        index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                        index = mkldnn_emitter.reserve_primitive_space(4);
                     }
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -984,8 +1064,7 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(strides);
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
                     WRITE_MKLDNN_DIMS(pad_below);
-                    WRITE_MKLDNN_DIMS(pad_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(pad_above) << "});\n";
 
                     writer << "\nauto bwd_desc = "
                               "mkldnn::convolution_backward_weights::desc(\n";
@@ -1002,21 +1081,26 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(strides);
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
                     WRITE_MKLDNN_DIMS(pad_below);
-                    WRITE_MKLDNN_DIMS(pad_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(pad_above) << "});\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     writer << "\n// create forward primitive descriptor\n";
-                    writer << "mkldnn::convolution_forward::primitive_desc fwd_pd{fwd_desc, "
-                              "cg_ctx->global_cpu_engine};\n";
+                    writer << "auto fwd_pd = mkldnn::convolution_forward::primitive_desc(fwd_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
 
                     writer << "\n// create backward primitive_descriptor\n";
-                    writer
-                        << "mkldnn::convolution_backward_weights::primitive_desc bwd_pd{bwd_desc, "
-                           "cg_ctx->global_cpu_engine, fwd_pd};\n";
+                    writer << "auto bwd_pd = "
+                              "mkldnn::convolution_backward_weights::primitive_desc(bwd_desc, "
+                              "attr, "
+                              "cg_ctx->global_cpu_engine, fwd_pd);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::convolution_backward_weights(bwd_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(bwd_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1045,6 +1129,13 @@ namespace ngraph
                 {
                     auto convolution = static_cast<const ConvolutionBackpropData*>(node);
 
+                    // query scratchpad size
+                    auto bwd_desc = mkldnn_emitter.get_convolution_backward_data_desc<
+                        ngraph::op::ConvolutionBackpropData>(node);
+                    auto fwd_desc = mkldnn_emitter.get_convolution_forward_desc_for_backward_op<
+                        ngraph::op::ConvolutionBackpropData>(node);
+                    mkldnn_emitter.query_scratchpad_convolution_backward_data(fwd_desc, bwd_desc);
+
                     Strides window_dilation_strides_adjusted;
                     for (size_t s : convolution->get_window_dilation_strides_forward())
                     {
@@ -1066,8 +1157,8 @@ namespace ngraph
                     std::vector<mkldnn::memory::desc> descs = {arg0_desc, arg1_desc, out0_desc};
                     // ConvolutionBackpropData needs 4 primitives: weights, diff_dst, diff_src,
                     // and convolution_backward_data.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(4);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1087,8 +1178,7 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(strides);
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
                     WRITE_MKLDNN_DIMS(pad_below);
-                    WRITE_MKLDNN_DIMS(pad_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(pad_above) << "});\n";
 
                     writer << "\nauto bwd_desc = "
                               "mkldnn::convolution_backward_data::desc(\n";
@@ -1101,20 +1191,25 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(strides);
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
                     WRITE_MKLDNN_DIMS(pad_below);
-                    WRITE_MKLDNN_DIMS(pad_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(pad_above) << "});\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     writer << "\n// create forward primitive descriptor\n";
-                    writer << "mkldnn::convolution_forward::primitive_desc fwd_pd{fwd_desc, "
-                              "cg_ctx->global_cpu_engine};\n";
+                    writer << "auto fwd_pd = mkldnn::convolution_forward::primitive_desc(fwd_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
 
                     writer << "\n// create backward primitive_descriptor\n";
-                    writer << "mkldnn::convolution_backward_data::primitive_desc bwd_pd{bwd_desc, "
-                              "cg_ctx->global_cpu_engine, fwd_pd};\n";
+                    writer << "auto bwd_pd = "
+                              "mkldnn::convolution_backward_data::primitive_desc(bwd_desc, attr, "
+                              "cg_ctx->global_cpu_engine, fwd_pd);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::convolution_backward_data(bwd_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(bwd_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1124,6 +1219,13 @@ namespace ngraph
                     DeconvolutionBias)
                 {
                     auto dconv = static_cast<const DeconvolutionBias*>(node);
+
+                    // query scratchpad size
+                    auto deconvbias_desc =
+                        mkldnn_emitter
+                            .get_deconvolutionbias_forward_data<ngraph::op::DeconvolutionBias>(
+                                node);
+                    mkldnn_emitter.query_scratchpad_deconvolution_forward(deconvbias_desc);
 
                     // For dilation, MKLDNN wants to know how many elements to insert between, not how far
                     // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
@@ -1149,8 +1251,8 @@ namespace ngraph
 
                     // DeconvolutionBias needs 5 primitives: weights, delta, bias, result,
                     // and deconvolutionbias.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(5);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(5);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
@@ -1174,6 +1276,7 @@ namespace ngraph
 
                     writer << "mkldnn::primitive_attr dconv_attr;\n";
                     writer << "dconv_attr.set_post_ops(pops);\n";
+                    writer << "dconv_attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     writer << "\nauto dconv_desc = "
                               "mkldnn::deconvolution_forward::desc(\n"
@@ -1192,16 +1295,18 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_dilation_strides_adjusted);
                     WRITE_MKLDNN_DIMS(padding_below);
-                    WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(padding_above) << "});\n";
 
                     writer << "\n// create forward primitive descriptor\n";
-                    writer << "mkldnn::deconvolution_forward::primitive_desc dconv_pd{dconv_desc, "
-                              "dconv_attr, cg_ctx->global_cpu_engine};\n";
+                    writer << "auto dconv_pd = "
+                              "mkldnn::deconvolution_forward::primitive_desc(dconv_desc, "
+                              "dconv_attr, cg_ctx->global_cpu_engine);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::deconvolution_forward(dconv_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(dconv_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1219,6 +1324,12 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto max_pool_desc =
+                        mkldnn_emitter.get_max_pooling_forward_desc<ngraph::op::MaxPool>(node,
+                                                                                         false);
+                    mkldnn_emitter.query_scratchpad_pooling_forward(max_pool_desc);
+
                     auto window_shape = pool->get_window_shape();
                     auto window_strides = pool->get_window_movement_strides();
                     auto padding_below = pool->get_padding_below();
@@ -1227,8 +1338,8 @@ namespace ngraph
                     CodeWriter writer;
                     std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
 
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
@@ -1246,12 +1357,19 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
                     WRITE_MKLDNN_DIMS(padding_below);
-                    WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(padding_above) << "});\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
+                    writer << "auto max_pool_pd = mkldnn::pooling_forward::primitive_desc("
+                              "max_pool_desc, attr, "
+                              "cg_ctx->global_cpu_engine);\n";
 
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
-                           << "] = new mkldnn::pooling_forward({max_pool_desc, "
-                              "cg_ctx->global_cpu_engine});\n";
+                           << "] = new mkldnn::pooling_forward(max_pool_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(max_pool_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1270,6 +1388,12 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto avg_pool_desc =
+                        mkldnn_emitter.get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
+                                                                                         false);
+                    mkldnn_emitter.query_scratchpad_pooling_forward(avg_pool_desc);
+
                     auto window_shape = pool->get_window_shape();
                     auto window_strides = pool->get_window_movement_strides();
                     auto padding_below = pool->get_padding_below();
@@ -1280,8 +1404,8 @@ namespace ngraph
                     CodeWriter writer;
                     std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
 
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
@@ -1306,12 +1430,19 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
                     WRITE_MKLDNN_DIMS(padding_below);
-                    WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(padding_above) << "});\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
+                    writer << "auto avg_pool_pd = mkldnn::pooling_forward::primitive_desc("
+                              "avg_pool_desc, attr, "
+                              "cg_ctx->global_cpu_engine);\n";
 
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
-                           << "] = new mkldnn::pooling_forward({avg_pool_desc, "
-                              "cg_ctx->global_cpu_engine});\n";
+                           << "] = new mkldnn::pooling_forward(avg_pool_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(avg_pool_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1358,9 +1489,14 @@ namespace ngraph
                     auto padding_below = pool->get_padding_below();
                     auto padding_above = pool->get_padding_above();
 
+                    // query scratchpad size
+                    auto max_pool_desc = mkldnn_emitter.get_max_pooling_with_indices_forward_desc<
+                        ngraph::op::MaxPoolWithIndices>(node);
+                    mkldnn_emitter.query_scratchpad_pooling_forward(max_pool_desc);
+
                     // MaxPoolWithIndices needs 4 primitives: input, result, workspace, and pooling_forward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(4);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1380,19 +1516,23 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
                     WRITE_MKLDNN_DIMS(padding_below);
-                    WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(padding_above) << "});\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     writer << "\n// build primitive descriptor\n";
                     writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{pool_desc, "
                               "cg_ctx->global_cpu_engine};\n";
-                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[2])
-                           << "] = new mkldnn::memory(fwd_pd.workspace_primitive_desc().desc(), "
+                    writer << "cg_ctx->mkldnn_memories[" << std::to_string(deps[2])
+                           << "] = new mkldnn::memory(fwd_pd.workspace_desc(), "
                               "cg_ctx->global_cpu_engine, nullptr);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::pooling_forward(fwd_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(fwd_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1412,9 +1552,19 @@ namespace ngraph
                                            ? "mkldnn::algorithm::pooling_avg_include_padding"
                                            : "mkldnn::algorithm::pooling_avg_exclude_padding";
 
+                    // query scratchpad size
+                    auto avg_pool_fwd_desc =
+                        mkldnn_emitter.get_avg_pooling_forward_desc<ngraph::op::AvgPoolBackprop>(
+                            node, true);
+                    auto avg_pool_desc =
+                        mkldnn_emitter.get_avg_pooling_backward_desc<ngraph::op::AvgPoolBackprop>(
+                            node);
+                    mkldnn_emitter.query_scratchpad_avg_pooling_backward(avg_pool_fwd_desc,
+                                                                         avg_pool_desc);
+
                     // AvgPoolBackprop needs 3 primitives: diff_dst, diff_src, and pooling_backward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1435,8 +1585,7 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
                     WRITE_MKLDNN_DIMS(padding_below);
-                    WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(padding_above) << "});\n";
 
                     writer << "auto bwd_desc = "
                               "mkldnn::pooling_backward::desc(\n";
@@ -1448,18 +1597,22 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
                     WRITE_MKLDNN_DIMS(padding_below);
-                    WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(padding_above) << "});\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     writer << "\n// build primitive descriptor\n";
                     writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, "
                               "cg_ctx->global_cpu_engine};\n";
-                    writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, "
+                    writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, attr, "
                               "cg_ctx->global_cpu_engine, fwd_pd};\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::pooling_backward(bwd_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(bwd_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1477,11 +1630,21 @@ namespace ngraph
                     auto padding_below = pool->get_padding_below();
                     auto padding_above = pool->get_padding_above();
 
+                    // query scratchpad size
+                    auto fwd_pool_desc =
+                        mkldnn_emitter.get_max_pooling_forward_desc<ngraph::op::MaxPoolBackprop>(
+                            node, true);
+                    auto bwd_pool_desc =
+                        mkldnn_emitter.get_max_pooling_backward_desc<ngraph::op::MaxPoolBackprop>(
+                            node);
+                    mkldnn_emitter.query_scratchpad_max_pooling_backward(fwd_pool_desc,
+                                                                         bwd_pool_desc);
+
                     // MaxPoolBackprop needs 6 primitives: fprop_src, diff_dst, diff_src, workspace
                     // pooling forward, and pooling_backward.
                     // It needs a new workspace.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(6, true /* new workspace */);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(6, true /* new workspace */);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1502,8 +1665,7 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
                     WRITE_MKLDNN_DIMS(padding_below);
-                    WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(padding_above) << "});\n";
 
                     writer << "\nauto bwd_desc = "
                               "mkldnn::pooling_backward::desc(\n"
@@ -1515,22 +1677,24 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
                     WRITE_MKLDNN_DIMS(padding_below);
-                    WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(padding_above) << "});\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     writer << "\n// build primitive descriptor\n";
-                    writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, "
+                    writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, attr, "
                               "cg_ctx->global_cpu_engine};\n";
-                    writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, "
+                    writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, attr, "
                               "cg_ctx->global_cpu_engine, fwd_pd};\n";
 
                     // This is implemented differently from cpu builder,
                     // we only use one index and one deps here.
-                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[3])
-                           << "] = new mkldnn::memory(fwd_pd.workspace_primitive_desc().desc(), "
+                    writer << "cg_ctx->mkldnn_memories[" << std::to_string(deps[3])
+                           << "] = new mkldnn::memory(fwd_pd.workspace_desc(), "
                               "cg_ctx->global_cpu_engine, nullptr);\n";
                     writer << "auto workspace = "
-                              "(char*)malloc(fwd_pd.workspace_primitive_desc().get_size());"
+                              "(char*)malloc(fwd_pd.workspace_desc().get_size());"
                               "\n";
                     writer << "if (!workspace)\n";
                     writer.block_begin();
@@ -1544,9 +1708,13 @@ namespace ngraph
 
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[4])
                            << "] = new mkldnn::pooling_forward(fwd_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(deps[4])
+                           << "] = new mkldnn::memory::desc(fwd_pd.scratchpad_desc());\n";
 
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::pooling_backward(bwd_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(bwd_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1563,10 +1731,22 @@ namespace ngraph
                     auto padding_below = pool->get_padding_below();
                     auto padding_above = pool->get_padding_above();
 
+                    //query scratchpad size
+                    auto fwd_pool_desc =
+                        mkldnn_emitter
+                            .get_max_pooling_forward_desc<ngraph::op::MaxPoolWithIndicesBackprop>(
+                                node, true);
+                    auto bwd_pool_desc =
+                        mkldnn_emitter
+                            .get_max_pooling_backward_desc<ngraph::op::MaxPoolWithIndicesBackprop>(
+                                node);
+                    mkldnn_emitter.query_scratchpad_max_pooling_with_indices_backward(
+                        fwd_pool_desc, bwd_pool_desc);
+
                     // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace, diff_src
                     // and pooling_backward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(4);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1586,8 +1766,7 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
                     WRITE_MKLDNN_DIMS(padding_below);
-                    WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(padding_above) << "});\n";
 
                     writer << "auto bwd_desc = "
                               "mkldnn::pooling_backward::desc(\n"
@@ -1599,23 +1778,27 @@ namespace ngraph
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
                     WRITE_MKLDNN_DIMS(padding_below);
-                    WRITE_MKLDNN_DIMS(padding_above);
-                    writer << ");\n";
+                    writer << "mkldnn::memory::dims{" << join(padding_above) << "});\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     writer << "\n// build primitive descriptor\n";
                     writer << "mkldnn::pooling_forward::primitive_desc fwd_pd{fwd_desc, "
                               "cg_ctx->global_cpu_engine};\n";
-                    writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, "
+                    writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, attr, "
                               "cg_ctx->global_cpu_engine, fwd_pd};\n";
                     // this is different from cpu builder because we do not write workspace desc to desc_file.
                     // here workspace's mkldnn primitive index is in deps[2] in stead of deps[1].
-                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[2])
-                           << "] = new mkldnn::memory(fwd_pd.workspace_primitive_desc().desc(), "
+                    writer << "cg_ctx->mkldnn_memories[" << std::to_string(deps[2])
+                           << "] = new mkldnn::memory(fwd_pd.workspace_desc(), "
                               "cg_ctx->global_cpu_engine, nullptr);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::pooling_backward(bwd_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(bwd_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1628,18 +1811,31 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-#if 0
-                    // This is a special case to handle nchw(oihw) to goihw/Goihw16g/Goihw8g for
-                    // GroupConvolution's weights.
-                    if (input_desc.data.format_tag == mkldnn_nchw &&
-                        result_desc.data.format_tag == mkldnn_goihw)
+                    bool input_format_is_nchw = mkldnn_utils::mkldnn_md_matches_format_tag(
+                        input_desc.data, mkldnn::memory::format_tag::nchw);
+                    if (input_format_is_nchw &&
+                        mkldnn_utils::mkldnn_md_matches_format_tag(
+                            result_desc.data, mkldnn::memory::format_tag::goihw))
                     {
+                        //becomes a copy
                         input_desc = result_desc;
                     }
-                    else if (input_desc.data.format_tag == mkldnn_nchw &&
-                             input_desc.data.ndims == 4 /*nchw*/ &&
-                             result_desc.data.ndims == 5 /*Goihw16g/Goihw8g/etc*/ &&
-                             node->get_users().size() == 1)
+                    else if ((input_format_is_nchw ||
+                              mkldnn_utils::mkldnn_md_matches_format_tag(
+                                  input_desc.data, mkldnn::memory::format_tag::nhwc)) &&
+                             (mkldnn_utils::mkldnn_md_matches_format_tag(
+                                  result_desc.data, mkldnn::memory::format_tag::OIhw4i16o4i) &&
+                              // check if compensation is conv_s8s8(1U)
+                              result_desc.data.extra.flags & 0x1U))
+                    {
+                        auto arg0_shape = args[0].get_shape();
+                        input_desc = mkldnn::memory::desc(
+                            mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
+                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                            mkldnn::memory::format_tag::oihw);
+                    }
+                    else if (input_format_is_nchw && input_desc.data.ndims == 4 &&
+                             result_desc.data.ndims == 5 && node->get_users().size() == 1)
                     {
                         Shape weights_shape_groups;
                         if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
@@ -1664,11 +1860,13 @@ namespace ngraph
                             mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
                             mkldnn::memory::format_tag::goihw);
                     }
-#endif
+
+                    // query scratchpad size
+                    mkldnn_emitter.query_scratchpad_reorder(input_desc, result_desc);
 
                     // ConvertLayout needs 3 primitives: input, result, and reorder.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1677,13 +1875,21 @@ namespace ngraph
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "\n// build reorder primitive\n";
-                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
-                           << "] = new mkldnn::reorder("
+                    writer << "auto reorder_pd = "
+                              "mkldnn::reorder::primitive_desc("
                               "*cg_ctx->mkldnn_memories["
                            << std::to_string(deps[0]) << "]"
                                                          ", *cg_ctx->mkldnn_memories["
-                           << std::to_string(deps[1]) << "]);\n";
+                           << std::to_string(deps[1]) << "], attr);\n";
+
+                    writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
+                           << "] = new mkldnn::reorder(reorder_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(reorder_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1695,9 +1901,14 @@ namespace ngraph
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto bwd_desc = mkldnn_emitter.get_relu_backward_desc(node);
+                    auto fwd_desc = mkldnn_emitter.get_relu_forward_desc(node);
+                    mkldnn_emitter.query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
+
                     // ReluBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(4);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1720,6 +1931,9 @@ namespace ngraph
                                                 "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], negative_slope);\n";
 
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "\n// create forward relu primitive descriptor\n";
                     writer
                         << "auto relu_fwd_pd = mkldnn::eltwise_forward::primitive_desc(fwd_desc, "
@@ -1727,12 +1941,14 @@ namespace ngraph
 
                     writer << "\n// create backward relu primitive_descriptor\n";
                     writer << "auto relu_bwd_pd = "
-                              "mkldnn::eltwise_backward::primitive_desc(bwd_desc, "
+                              "mkldnn::eltwise_backward::primitive_desc(bwd_desc, attr, "
                               "cg_ctx->global_cpu_engine, relu_fwd_pd);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::eltwise_backward(relu_bwd_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(relu_bwd_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1743,9 +1959,13 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto relu_desc = mkldnn_emitter.get_relu_forward_desc(node);
+                    mkldnn_emitter.query_scratchpad_eltwise_forward(relu_desc);
+
                     // Relu needs 3 primitives: input, result, and eltwise_forward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1761,14 +1981,20 @@ namespace ngraph
                               "mkldnn::algorithm::eltwise_relu, "
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], negative_slope);\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "\n// create relu primitive_descriptor\n";
                     writer << "auto relu_pd = "
-                              "mkldnn::eltwise_forward::primitive_desc(relu_desc, "
+                              "mkldnn::eltwise_forward::primitive_desc(relu_desc, attr, "
                               "cg_ctx->global_cpu_engine);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::eltwise_forward(relu_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(relu_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1781,9 +2007,13 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto leaky_relu_desc = mkldnn_emitter.get_leaky_relu_desc(node);
+                    mkldnn_emitter.query_scratchpad_eltwise_forward(leaky_relu_desc);
+
                     // CPULeakyRelu needs 3 primitives: input, result, and eltwise_forward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1799,14 +2029,20 @@ namespace ngraph
                               "mkldnn::algorithm::eltwise_relu, "
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], alpha, 0.0f);\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "\n// create relu primitive_descriptor\n";
                     writer << "auto relu_pd = "
-                              "mkldnn::eltwise_forward::primitive_desc(relu_desc, "
+                              "mkldnn::eltwise_forward::primitive_desc(relu_desc, attr, "
                               "cg_ctx->global_cpu_engine);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::eltwise_forward(relu_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(relu_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1819,9 +2055,13 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto bounded_relu_desc = mkldnn_emitter.get_bounded_relu_desc(node);
+                    mkldnn_emitter.query_scratchpad_eltwise_forward(bounded_relu_desc);
+
                     // BoundedRelu needs 3 primitives: input, result, and eltwise_forward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1837,14 +2077,20 @@ namespace ngraph
                               "mkldnn::algorithm::eltwise_bounded_relu, "
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], alpha, 0.0f);\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "\n// create relu primitive_descriptor\n";
                     writer << "auto relu_pd = "
-                              "mkldnn::eltwise_forward::primitive_desc(relu_desc, "
+                              "mkldnn::eltwise_forward::primitive_desc(relu_desc, attr, "
                               "cg_ctx->global_cpu_engine);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::eltwise_forward(relu_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(relu_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1855,9 +2101,13 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto sigmoid_desc = mkldnn_emitter.get_sigmoid_forward_desc(node, false);
+                    mkldnn_emitter.query_scratchpad_eltwise_forward(sigmoid_desc);
+
                     // Sigmoid needs 3 primitives: input, result, and eltwise_forward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1872,14 +2122,20 @@ namespace ngraph
                               "mkldnn::algorithm::eltwise_logistic, "
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], 0, 0);\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "\n// create sigmoid primitive_descriptor\n";
                     writer << "auto sigmoid_pd = "
-                              "mkldnn::eltwise_forward::primitive_desc(sigmoid_desc, "
+                              "mkldnn::eltwise_forward::primitive_desc(sigmoid_desc, attr, "
                               "cg_ctx->global_cpu_engine);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::eltwise_forward(sigmoid_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(sigmoid_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1892,9 +2148,14 @@ namespace ngraph
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto fwd_desc = mkldnn_emitter.get_sigmoid_forward_desc(node, true);
+                    auto bwd_desc = mkldnn_emitter.get_sigmoid_backward_desc(node);
+                    mkldnn_emitter.query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
+
                     // SigmoidBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(4);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(4);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1916,6 +2177,9 @@ namespace ngraph
                                                 "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], 0, 0);\n";
 
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "\n// create forward sigmoid primitive descriptor\n";
                     writer << "auto sigmoid_fwd_pd = "
                               "mkldnn::eltwise_forward::primitive_desc(fwd_desc, "
@@ -1923,12 +2187,14 @@ namespace ngraph
 
                     writer << "\n// create backward sigmoid primitive_descriptor\n";
                     writer << "auto sigmoid_bwd_pd = "
-                              "mkldnn::eltwise_backward::primitive_desc(bwd_desc, "
+                              "mkldnn::eltwise_backward::primitive_desc(bwd_desc, attr, "
                               "cg_ctx->global_cpu_engine, sigmoid_fwd_pd);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::eltwise_backward(sigmoid_bwd_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(sigmoid_bwd_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1947,9 +2213,13 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto softmax_desc = mkldnn_emitter.get_softmax_forward_desc(node);
+                    mkldnn_emitter.query_scratchpad_softmax_forward(softmax_desc);
+
                     // Softmax needs 3 primitives: input, result, and softmax_forward.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1963,14 +2233,20 @@ namespace ngraph
                               "mkldnn::softmax_forward::desc(mkldnn::prop_kind::forward_scoring, "
                               "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], " << softmax_axis << ");\n";
+
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+
                     writer << "\n// create softmax primitive_descriptor\n";
                     writer << "auto softmax_pd = "
-                              "mkldnn::softmax_forward::primitive_desc(softmax_desc, "
+                              "mkldnn::softmax_forward::primitive_desc(softmax_desc, attr, "
                               "cg_ctx->global_cpu_engine);\n";
 
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::softmax_forward(softmax_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(softmax_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -1981,9 +2257,12 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    mkldnn_emitter.query_scratchpad_reorder(input_desc, result_desc);
+
                     // Quantize needs 3 primitives: input, result, and reorder.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -1995,6 +2274,7 @@ namespace ngraph
 
                     writer << "mkldnn::primitive_attr attr;\n";
                     writer << "attr.set_output_scales(mask, dyn_scales);\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     writer << "\n// build reorder primitive\n";
                     writer << "auto reorder_pd = "
@@ -2005,6 +2285,8 @@ namespace ngraph
                            << std::to_string(deps[1]) << "], attr);\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::reorder(reorder_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(reorder_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -2015,9 +2297,12 @@ namespace ngraph
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    mkldnn_emitter.query_scratchpad_reorder(input_desc, result_desc);
+
                     // Dequantize needs 3 primitives: input, result, and reorder.
-                    index = mkldnn_emitter.reserve_primitive_space_cg(3);
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    index = mkldnn_emitter.reserve_primitive_space(3);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -2029,6 +2314,7 @@ namespace ngraph
 
                     writer << "mkldnn::primitive_attr attr;\n";
                     writer << "attr.set_output_scales(mask, dyn_scales);\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     writer << "\n// build reorder primitive\n";
                     writer << "auto reorder_pd = "
@@ -2039,6 +2325,8 @@ namespace ngraph
                            << std::to_string(deps[1]) << "], attr);\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::reorder(reorder_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(reorder_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -2071,17 +2359,22 @@ namespace ngraph
 
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
+                    // query scratchpad size
+                    auto ip_desc = mkldnn_emitter.get_inner_product_forward_desc<OP>(node);
+                    auto ip_attr = mkldnn_emitter.get_inner_product_forward_attr<OP>(node);
+                    mkldnn_emitter.query_scratchpad_ip_forward(ip_desc, ip_attr);
+
                     if (has_bias)
                     {
                         // QuantizedDotBias needs 5 primitives: input, weights, bias, result, and inner_product.
-                        index = mkldnn_emitter.reserve_primitive_space_cg(5);
+                        index = mkldnn_emitter.reserve_primitive_space(5);
                     }
                     else
                     {
                         // QuantizedDot needs 4 primitives: input, weights, result, and inner_product.
-                        index = mkldnn_emitter.reserve_primitive_space_cg(4);
+                        index = mkldnn_emitter.reserve_primitive_space(4);
                     }
-                    deps = mkldnn_emitter.get_primitive_deps_cg(index);
+                    deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
 
@@ -2125,6 +2418,7 @@ namespace ngraph
 
                     writer << "mkldnn::primitive_attr ip_attr;\n";
                     writer << "ip_attr.set_post_ops(ops);\n";
+                    writer << "ip_attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
 
                     if (mkldnn_emitter.is_quantized_inner_product<OP>())
                     {
@@ -2138,6 +2432,8 @@ namespace ngraph
                     writer << "\n// build primitive\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::inner_product_forward(ip_pd);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(ip_pd.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }

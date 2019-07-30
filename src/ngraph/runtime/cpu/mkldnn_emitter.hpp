@@ -133,17 +133,14 @@ namespace ngraph
                 ~MKLDNNEmitter();
 
                 const std::vector<mkldnn::primitive*>& get_mkldnn_primitives() const;
-                const std::vector<mkldnn::primitive*>& get_mkldnn_primitives_cg() const;
                 std::vector<mkldnn::primitive*>& get_mkldnn_primitives();
                 const std::vector<mkldnn::memory*>& get_mkldnn_memories() const;
-                const std::vector<mkldnn::memory*>& get_mkldnn_memories_cg() const;
                 const std::vector<char*>& get_mkldnn_workspaces();
                 const std::vector<mkldnn::memory::desc*>& get_mkldnn_scratchpad_mds() const;
 
                 // reserve the space for primitives for each op, different op requires different number of primitives.
                 // some ops require a new workspace.
                 size_t reserve_primitive_space(size_t count, bool new_workspace = false);
-                size_t reserve_primitive_space_cg(size_t count, bool new_workspace = false);
                 size_t insert_primitive(mkldnn::primitive* primitive);
                 size_t insert_memory(mkldnn::memory* memory);
                 size_t insert_workspace(std::unique_ptr<MKLDNNWorkspace>& workspace);
@@ -151,7 +148,6 @@ namespace ngraph
                                         std::unique_ptr<MKLDNNWorkspace>& workspace);
                 size_t insert_scratchpad_md(mkldnn::memory::desc* md);
                 const std::vector<size_t>& get_primitive_deps(size_t index) const;
-                const std::vector<size_t>& get_primitive_deps_cg(size_t index) const;
                 size_t reserve_workspace();
                 void reserve_descriptor_space(size_t count);
                 size_t get_mkldnn_descriptors_size();
@@ -1806,10 +1802,8 @@ namespace ngraph
             private:
                 std::vector<mkldnn::memory*> m_mkldnn_memories;
                 std::vector<mkldnn::primitive*> m_mkldnn_primitives;
-                std::vector<mkldnn::primitive*> m_mkldnn_primitives_cg;
                 std::vector<mkldnn::stream> m_mkldnn_streams;
                 std::unordered_map<size_t, std::vector<size_t>> m_primitive_deps;
-                std::unordered_map<size_t, std::vector<size_t>> m_primitive_deps_cg;
                 std::vector<std::unique_ptr<MKLDNNWorkspace>> m_workspaces;
                 std::vector<char*> m_workspace_bufs;
                 std::vector<mkldnn::memory::desc*> m_mkldnn_scratchpad_mds;

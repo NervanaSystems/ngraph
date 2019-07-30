@@ -78,11 +78,6 @@ std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives()
     return m_mkldnn_primitives;
 }
 
-const std::vector<mkldnn::primitive*>& MKLDNNEmitter::get_mkldnn_primitives_cg() const
-{
-    return m_mkldnn_primitives_cg;
-}
-
 const std::vector<mkldnn::memory*>& MKLDNNEmitter::get_mkldnn_memories() const
 {
     return m_mkldnn_memories;
@@ -150,11 +145,6 @@ size_t MKLDNNEmitter::insert_workspace(std::vector<char*>& mkldnn_workspaces,
 const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index) const
 {
     return m_primitive_deps.at(index);
-}
-
-const std::vector<size_t>& MKLDNNEmitter::get_primitive_deps_cg(size_t index) const
-{
-    return m_primitive_deps_cg.at(index);
 }
 
 std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index)
@@ -496,21 +486,6 @@ size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
         m_primitive_deps[m_mkldnn_primitives.size() - 1].push_back(0);
     }
     return m_mkldnn_primitives.size() - 1;
-}
-
-size_t MKLDNNEmitter::reserve_primitive_space_cg(size_t count, bool new_workspace)
-{
-    size_t size = m_mkldnn_primitives_cg.size();
-    m_mkldnn_primitives_cg.resize(size + count, nullptr);
-    for (auto i = 0; i < count - 1; i++)
-    {
-        m_primitive_deps_cg[m_mkldnn_primitives_cg.size() - 1].push_back(size + i);
-    }
-    if (new_workspace)
-    {
-        m_primitive_deps_cg[m_mkldnn_primitives_cg.size() - 1].push_back(0);
-    }
-    return m_mkldnn_primitives_cg.size() - 1;
 }
 
 size_t MKLDNNEmitter::build_quantized_inner_product_forward(

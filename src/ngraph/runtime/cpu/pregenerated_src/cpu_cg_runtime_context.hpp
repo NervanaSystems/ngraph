@@ -39,7 +39,7 @@ R"(
                     CONVOLUTIONBIASADD,
                     CONVOLUTIONBACKPROPDATA,
                     CONVOLUTIONBACKPROPWEIGHTS,
-                    CONVOLUTIONBACKPROPWEIGHTSBIAS,
+                    CONVOLUTIONBIASBACKPROPWEIGHTSBIAS,
                     GROUPCONVOLUTION,
                     GROUPCONVOLUTIONBIAS,
                     DECONVOLUTIONBIAS,
@@ -194,7 +194,7 @@ struct CPURuntimeContextCG
                      {MKLDNN_ARG_DIFF_DST, *mkldnn_memories[deps[1]]},
                      {MKLDNN_ARG_DIFF_WEIGHTS, *mkldnn_memories[deps[2]]}};
         break;
-    case OpType::CONVOLUTIONBACKPROPWEIGHTSBIAS:
+    case OpType::CONVOLUTIONBIASBACKPROPWEIGHTSBIAS:
         exec_args = {{MKLDNN_ARG_SRC, *mkldnn_memories[deps[0]]},
                      {MKLDNN_ARG_DIFF_DST, *mkldnn_memories[deps[1]]},
                      {MKLDNN_ARG_DIFF_WEIGHTS, *mkldnn_memories[deps[2]]},
@@ -218,16 +218,24 @@ struct CPURuntimeContextCG
                      {MKLDNN_ARG_WORKSPACE, *mkldnn_memories[deps[5]]}};
         break;
     case OpType::MAXPOOLBACKPROPFORWARD:
+        exec_args = {{MKLDNN_ARG_SRC, *mkldnn_memories[deps[0]]},
+                     {MKLDNN_ARG_WORKSPACE, *mkldnn_memories[deps[3]]},
+                     {MKLDNN_ARG_DST, *mkldnn_memories[deps[2]]}};
+        break;
     case OpType::MAXPOOLWITHINDICES:
         exec_args = {{MKLDNN_ARG_SRC, *mkldnn_memories[deps[0]]},
                      {MKLDNN_ARG_WORKSPACE, *mkldnn_memories[deps[2]]},
                      {MKLDNN_ARG_DST, *mkldnn_memories[deps[1]]}};
         break;
     case OpType::MAXPOOLBACKPROPBACKWARD:
+        exec_args = {{MKLDNN_ARG_DIFF_DST, *mkldnn_memories[deps[1]]},
+                     {MKLDNN_ARG_WORKSPACE, *mkldnn_memories[deps[3]]},
+                     {MKLDNN_ARG_DIFF_SRC, *mkldnn_memories[deps[2]]}};
+		break;
     case OpType::MAXPOOLWITHINDICESBACKPROP:
         exec_args = {{MKLDNN_ARG_DIFF_DST, *mkldnn_memories[deps[0]]},
-                     {MKLDNN_ARG_WORKSPACE, *mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_DIFF_SRC, *mkldnn_memories[deps[2]]}};
+                     {MKLDNN_ARG_WORKSPACE, *mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_DIFF_SRC, *mkldnn_memories[deps[1]]}};
         break;
     case OpType::RELUBACKPROP:
     case OpType::SIGMOIDBACKPROP:

@@ -677,7 +677,9 @@ using namespace ngraph::runtime;
     writer << "void inline CPURuntimeContextCG::init_mkldnn_primitives()\n";
     writer.block_begin();
     writer << "mkldnn_primitives = std::vector<mkldnn::primitive*>("
-           << to_string(m_mkldnn_emitter->get_mkldnn_primitives_cg().size()) << ");\n";
+           << to_string(m_mkldnn_emitter->get_mkldnn_primitives().size()) << ");\n";
+    writer << "mkldnn_memories = std::vector<mkldnn::memory*>("
+           << to_string(m_mkldnn_emitter->get_mkldnn_memories().size()) << ");\n";
     writer << "mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>("
            << to_string(m_mkldnn_emitter->get_mkldnn_scratchpad_mds().size()) << ");\n";
     writer << "size_t scratchpad_size = " << m_mkldnn_emitter->get_max_scratchpad_size() << ";\n";
@@ -745,9 +747,8 @@ using namespace ngraph::runtime;
         writer.block_begin();
         writer << "// read in memory descriptors and build mkldnn primitives\n";
         writer << "std::ifstream desc_file (\"" << m_desc_filename << "\", std::ios::binary);\n";
-        writer << "deserialize_memory_descs_and_build_memory_primitives(" << m_desc_filename
-               << ", cg_ctx, " << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size())
-               << ");\n";
+        writer << "deserialize_memory_descs_and_build_memory(" << m_desc_filename << ", cg_ctx, "
+               << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size()) << ");\n";
         writer.block_end();
     }
 
@@ -1056,6 +1057,9 @@ using namespace ngraph::runtime;
     string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
     string code = writer.get_code();
     runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_output_dir, filename);
+
+    string filename1 = file_util::path_join(s_output_dir, "code.cpp");
+    runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_output_dir, filename1);
 
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
