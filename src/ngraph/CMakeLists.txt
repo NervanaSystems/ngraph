@@ -334,6 +334,8 @@ set (SRC
     op/fused/leaky_relu.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
+    op/fused/matmul.cpp
+    op/fused/matmul.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize.cpp
