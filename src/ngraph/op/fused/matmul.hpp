@@ -50,8 +50,8 @@ namespace ngraph
             int get_transpose_a() const { return m_transpose_a; }
             int get_transpose_b() const { return m_transpose_b; }
         private:
-            const int& m_transpose_a;
-            const int& m_transpose_b;
+            const int m_transpose_a;
+            const int m_transpose_b;
         };
     } // namespace op
 } // namespace ngraph
