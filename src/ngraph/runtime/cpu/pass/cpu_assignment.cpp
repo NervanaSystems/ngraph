@@ -722,9 +722,9 @@ namespace ngraph
                 }
 
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::CPULeakyRelu)
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::LeakyRelu)
                 {
-                    auto leaky_relu = static_cast<ngraph::op::CPULeakyRelu*>(node);
+                    auto leaky_relu = static_cast<ngraph::op::LeakyRelu*>(node);
 
                     auto arg0_shape = node->get_input_shape(0);
                     auto arg0_rank = arg0_shape.size();
@@ -988,8 +988,7 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Relu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Relu>},
     {TI(ngraph::op::ReluBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::ReluBackprop>},
-    {TI(ngraph::op::CPULeakyRelu),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::CPULeakyRelu>},
+    {TI(ngraph::op::LeakyRelu), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::LeakyRelu>},
     {TI(ngraph::op::Sigmoid), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Sigmoid>},
     {TI(ngraph::op::SigmoidBackprop),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
