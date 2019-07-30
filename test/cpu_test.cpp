@@ -1178,11 +1178,23 @@ TEST(cpu_test, constant_unary_binary)
     vector<int> values_c{-1, -1, -1, -1};
     vector<int> values_d{1, 4, 9, 16};
     vector<int> values_e{1, -2, -3, 4};
+    vector<int> values_f{3, -1, -3, 0};
+    vector<int> values_g{1, 2, 3, 4};
+    vector<int> values_h{2, 2, 3, 3};
+    vector<char> values_i{0, 0, 1, 1};
+    vector<char> values_j{0, 1, 0, 1};
+    vector<float> values_k{-0.1f, 0.0f, -1.5f, 2.6f};
     auto a = make_shared<op::Constant>(element::i32, shape_in, values_a);
     auto b = make_shared<op::Constant>(element::i32, shape_in, values_b);
     auto c = make_shared<op::Constant>(element::i32, shape_in, values_c);
     auto d = make_shared<op::Constant>(element::i32, shape_in, values_d);
     auto e = make_shared<op::Constant>(element::i32, shape_in, values_e);
+    auto f = make_shared<op::Constant>(element::i32, shape_in, values_f);
+    auto g = make_shared<op::Constant>(element::i32, shape_in, values_g);
+    auto h = make_shared<op::Constant>(element::i32, shape_in, values_h);
+    auto i = make_shared<op::Constant>(element::boolean, shape_in, values_i);
+    auto j = make_shared<op::Constant>(element::boolean, shape_in, values_j);
+    auto k = make_shared<op::Constant>(element::f32, shape_in, values_k);
 
     auto add = a + b;
     auto sub = a - b;
@@ -1195,15 +1207,52 @@ TEST(cpu_test, constant_unary_binary)
     auto sqrt = make_shared<op::Sqrt>(d);
     auto neg_sqrt = make_shared<op::Sqrt>(c);
     auto relu = make_shared<op::Relu>(e);
+    auto sign = make_shared<op::Sign>(f);
+    auto equal = make_shared<op::Equal>(g, h);
+    auto not_equal = make_shared<op::NotEqual>(g, h);
+    auto greater = make_shared<op::Greater>(g, h);
+    auto greater_eq = make_shared<op::GreaterEq>(g, h);
+    auto less = make_shared<op::Less>(g, h);
+    auto less_eq = make_shared<op::LessEq>(g, h);
+    auto logical_and = make_shared<op::And>(i, j);
+    auto logical_or = make_shared<op::Or>(i, j);
+    auto ceil = make_shared<op::Ceiling>(k);
+    auto floor = make_shared<op::Floor>(k);
 
-    auto f = make_shared<Function>(NodeVector{add, sub, mul, divn, min, max, absn, neg, sqrt, relu},
-                                   ParameterVector{});
-    auto f_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
+    auto func = make_shared<Function>(
+        NodeVector{add,        sub,  mul,     divn,        min,        max,       absn,
+                   neg,        sqrt, relu,    sign,        equal,      not_equal, greater,
+                   greater_eq, less, less_eq, logical_and, logical_or, ceil,      floor},
+        ParameterVector{});
+
+    auto func_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>(
         ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
-    pass_manager.run_passes(f);
+    pass_manager.run_passes(func);
+
+    ASSERT_EQ(count_ops_of_type<op::Add>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Subtract>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Multiply>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Divide>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Minimum>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Maximum>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Abs>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Negative>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Sqrt>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Relu>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Sign>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Equal>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::NotEqual>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Greater>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::GreaterEq>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Less>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::LessEq>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::And>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Or>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Ceiling>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Floor>(func), 0);
 
     //expected values
     vector<int> add_expected{2, 4, 6, 8};
@@ -1215,18 +1264,42 @@ TEST(cpu_test, constant_unary_binary)
     vector<int> abs_neg_expected{1, 1, 1, 1};
     vector<int> sqrt_expected{1, 2, 3, 4};
     vector<int> relu_expected{1, 0, 0, 4};
+    vector<int> sign_expected{1, -1, -1, 0};
+    vector<char> equal_expected{0, 1, 1, 0};
+    vector<char> not_equal_expected{1, 0, 0, 1};
+    vector<char> greater_expected{0, 0, 0, 1};
+    vector<char> greater_eq_expected{0, 1, 1, 1};
+    vector<char> less_expected{1, 0, 0, 0};
+    vector<char> less_eq_expected{1, 1, 1, 0};
+    vector<char> and_expected{0, 0, 0, 1};
+    vector<char> or_expected{0, 1, 1, 1};
+    vector<float> ceil_expected{0.0f, 0.0f, -1.0f, 3.0f};
+    vector<float> floor_expected{-1.0f, 0.0f, -2.0f, 2.0f};
 
-    ASSERT_EQ(get_result_constant<int>(f, 0), add_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 1), sub_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 2), mul_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 3), div_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 4), min_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 5), max_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 6), abs_neg_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 7), abs_neg_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 8), sqrt_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 9), relu_expected);
-    ASSERT_ANY_THROW(pass_manager.run_passes(f_error));
+    ASSERT_EQ(get_result_constant<int>(func, 0), add_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 1), sub_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 2), mul_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 3), div_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 4), min_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 5), max_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 6), abs_neg_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 7), abs_neg_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 8), sqrt_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 9), relu_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 10), sign_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 11), equal_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 12), not_equal_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 13), greater_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 14), greater_eq_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 15), less_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 16), less_eq_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 17), and_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 18), or_expected);
+    ASSERT_TRUE(test::all_close_f(
+        get_result_constant<float>(func, 19), ceil_expected, MIN_FLOAT_TOLERANCE_BITS));
+    ASSERT_TRUE(test::all_close_f(
+        get_result_constant<float>(func, 20), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
+    ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
 }
 
 TEST(cpu_test, conv_test_winograd)
