@@ -131,7 +131,6 @@ set(SRC
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
-    ngraph_version.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)
