@@ -45,7 +45,8 @@ public:
         PRODUCT,
         SUM,
         CONCAT,
-        SLICE
+        SLICE,
+        DYN_SLICE
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -66,6 +67,7 @@ public:
         construct_constant_sum();
         construct_constant_concat();
         construct_constant_slice();
+        construct_constant_dyn_slice();
     }
 
     //this allows to specify the order in which matchers will be run
@@ -93,6 +95,7 @@ public:
             case CFTransformations::SUM: construct_constant_sum(); break;
             case CFTransformations::CONCAT: construct_constant_concat(); break;
             case CFTransformations::SLICE: construct_constant_slice(); break;
+            case CFTransformations::DYN_SLICE: construct_constant_dyn_slice(); break;
             }
         }
     }
@@ -112,6 +115,7 @@ private:
     void construct_constant_sum();
     void construct_constant_concat();
     void construct_constant_slice();
+    void construct_constant_dyn_slice();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };
