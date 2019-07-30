@@ -54,8 +54,8 @@ namespace ngraph
         }     // namespace detail
 
         // TODO CONSIDER CHANGE ONNNX IMPORTER INTERFACE TO OOP
-        void update_external_data_paths(onnx::ModelProto& model_proto,
-                                        const std::string& model_path)
+        static void update_external_data_paths(onnx::ModelProto& model_proto,
+                                               const std::string& model_path)
         {
             const auto model_dir_path = model_path.substr(0, model_path.find_last_of(R"(/)"));
             auto graph_proto = model_proto.mutable_graph();
