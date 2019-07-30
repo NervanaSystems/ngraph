@@ -28,8 +28,9 @@
 using namespace std;
 using namespace ngraph;
 
-op::Elu::Elu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
-    : FusedOp("Elu", {data, alpha})
+op::Elu::Elu(const shared_ptr<Node>& data, const double& alpha)
+    : FusedOp("Elu", {data})
+    , m_alpha{alpha}
 {
     constructor_validate_and_infer_types();
 }
@@ -37,7 +38,8 @@ op::Elu::Elu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
 NodeVector op::Elu::decompose_op() const
 {
     auto data = get_argument(0);
-    auto alpha_node = get_argument(1);
+    shared_ptr<Node> alpha_node =
+        make_shared<op::Constant>(data->get_element_type(), Shape{}, vector<double>{m_alpha});
 
     alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data->get_shape());
 
@@ -52,9 +54,9 @@ NodeVector op::Elu::decompose_op() const
 
 shared_ptr<Node> op::Elu::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
+    if (new_args.size() != 1)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<Elu>(new_args.at(0), new_args.at(1));
+    return make_shared<Elu>(new_args.at(0), m_alpha);
 }
