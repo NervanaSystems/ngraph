@@ -69,3 +69,11 @@
   .. toctree::
 
      contributing/guide.rst
+
+
+
+* :ref:`tutorials`
+
+  .. toctree::
+
+     tutorials/index.rst
