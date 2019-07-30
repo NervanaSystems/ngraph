@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <stdint.h>
+#include <numeric>
 
 #include "constant_folding.hpp"
 #include "ngraph/graph_util.hpp"
