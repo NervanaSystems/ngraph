@@ -58,11 +58,11 @@ namespace ngraph
             const AxisSet& get_ellipsis_mask() const { return m_ellipsis_mask; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void validate_and_infer_types() override;
 
         private:
             /// Helper method to compute output shape

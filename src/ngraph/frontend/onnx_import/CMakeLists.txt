@@ -155,6 +155,8 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
+        op/reverse_sequence.cpp
+        op/reverse_sequence.h
         op/selu.cpp
         op/selu.hpp
         op/shape.hpp
@@ -204,6 +206,8 @@ add_library(onnx_import STATIC
         utils/convpool.hpp
         utils/matmul_factory.cpp
         utils/matmul_factory.hpp
+        utils/pooling_factory.cpp
+        utils/pooling_factory.hpp
         utils/reduction.cpp
         utils/reduction.hpp
         utils/reshape.cpp

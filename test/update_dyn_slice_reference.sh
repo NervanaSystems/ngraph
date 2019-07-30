@@ -15,4 +15,4 @@
 # limitations under the License.
 # ******************************************************************************
 declare THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-python ${THIS_SCRIPT_DIR}/ref_generators/generate_dyn_slice_ref.py ${THIS_SCRIPT_DIR}/dyn_slice_test.in.cpp
+python ${THIS_SCRIPT_DIR}/ref_generators/generate_dyn_slice_ref.py ${THIS_SCRIPT_DIR}/backend/dyn_slice_reference.in.cpp

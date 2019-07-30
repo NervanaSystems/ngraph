@@ -74,13 +74,14 @@ namespace ngraph
             bool get_use_seed() const { return m_use_seed; }
             /// GenerateMask has state.
             bool has_state() const override { return true; }
+            void validate_and_infer_types() override;
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override
             {
             }
 
-            void validate_and_infer_types() override;
             element::Type m_element_type;
             // These will be deprecated
             Shape m_shape;

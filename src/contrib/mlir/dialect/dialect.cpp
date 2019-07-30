@@ -14,6 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+// NOTE: This file follows nGraph format style and MLIR naming convention since it does
+// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+
 #include "dialect.hpp"
 #include "ngraph/check.hpp"
 #include "ops.hpp"
@@ -21,8 +24,8 @@
 
 using namespace mlir;
 
-NGDialect::NGDialect(mlir::MLIRContext* ctx)
-    : mlir::Dialect("ng", ctx)
+NGraphOpsDialect::NGraphOpsDialect(mlir::MLIRContext* ctx)
+    : mlir::Dialect(getDialectNamespace(), ctx)
 {
     addTypes<NGTensorType>();
     addTypes<NGIntegerType>();
@@ -34,19 +37,19 @@ NGDialect::NGDialect(mlir::MLIRContext* ctx)
         >();
 }
 
-void NGDialect::printType(mlir::Type type, raw_ostream& os) const
+void NGraphOpsDialect::printType(mlir::Type type, raw_ostream& os) const
 {
     switch (type.getKind())
     {
     case NG_TENSOR_TYPE_ID:
     {
         os << "tensor<";
-        auto tensor_ty = type.cast<NGTensorType>();
-        for (auto dim : tensor_ty.getShape())
+        auto tensorTy = type.cast<NGTensorType>();
+        for (auto dim : tensorTy.getShape())
         {
             os << dim << 'x';
         }
-        os << tensor_ty.getElementType() << '>';
+        os << tensorTy.getElementType() << '>';
         return;
     }
     case NG_I8_TYPE_ID:
@@ -58,8 +61,8 @@ void NGDialect::printType(mlir::Type type, raw_ostream& os) const
     case NG_U32_TYPE_ID:
     case NG_U64_TYPE_ID:
     {
-        auto int_ty = type.cast<NGIntegerType>();
-        os << "i" << int_ty.getWidth();
+        auto intTy = type.cast<NGIntegerType>();
+        os << "i" << intTy.getWidth();
         return;
     }
     case NG_BOOL_TYPE_ID:

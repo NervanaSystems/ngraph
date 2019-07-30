@@ -432,10 +432,6 @@ shared_ptr<runtime::Executable>
     {
         pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
             IntelGPUBackend::is_supported_impl);
-        // Run this pass for the second time since, some fused operators like LSTMCell may use
-        // other fused operators inside.
-        pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(
-            IntelGPUBackend::is_supported_impl);
         pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
     }
 
@@ -2070,6 +2066,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::FakeQuantize:
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
+        case OP_TYPEID::Gelu:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::GRN:
         case OP_TYPEID::GroupConvolutionTranspose:
@@ -2197,6 +2194,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::DepthToSpace:
     case OP_TYPEID::Elu:
     case OP_TYPEID::FakeQuantize:
+    case OP_TYPEID::Gelu:
     case OP_TYPEID::Gemm:
     case OP_TYPEID::GRN:
     case OP_TYPEID::GroupConvolutionTranspose:

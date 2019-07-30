@@ -27,12 +27,26 @@ namespace ngraph
         {
             namespace pass
             {
+                class CPUPreFusion;
                 class CPUFusion;
                 class CPUQuantFusion;
             }
         }
     }
 }
+
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUPreFusion : public ngraph::pass::GraphRewrite
+{
+public:
+    CPUPreFusion()
+        : GraphRewrite()
+    {
+        construct_maxpool_relu_switch();
+    }
+
+private:
+    void construct_maxpool_relu_switch();
+};
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {
@@ -78,6 +92,7 @@ public:
                 construct_deconvolution_affine_folding_relu();
             }
             construct_dropout();
+            construct_batch_norm_infer_relu_with_multiply_add();
         }
     }
 
@@ -90,6 +105,7 @@ private:
     void construct_sigmoid_multiply();
     void construct_batch_norm_relu();
     void construct_batch_norm_relu_global_stats();
+    void construct_batch_norm_infer_relu_with_multiply_add();
     void construct_conv_relu();
     void construct_conv_bias_relu();
     void construct_conv_bias_add();
