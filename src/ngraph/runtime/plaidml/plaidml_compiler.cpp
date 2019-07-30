@@ -84,6 +84,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     // compilation.
 
     ngraph::pass::Manager pass_manager;
+    pass_manager.set_per_pass_validation(false);
 
     // We apply the same general-purposes passes as the CPU backend.
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
@@ -124,7 +125,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     auto rewrite_func = clone_function(*func);
 
     // Apply passes, with revalidation disabled.
-    pass_manager.run_passes(rewrite_func, true, false);
+    pass_manager.run_passes(rewrite_func);
 
     // Compile the resulting function.
     Build b;
