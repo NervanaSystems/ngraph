@@ -86,8 +86,7 @@ void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
     auto order = ngraph::get_default_order(zsum->get_shape());
     auto zreshape = make_shared<op::Reshape>(zsum, order, shape);
 
-    auto adjoint =
-        z - builder::make_with_numpy_broadcast<op::Multiply>(shared_from_this(), zreshape);
+    auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
 
     auto x = get_argument(0);
     adjoints.add_delta(x, adjoint);
