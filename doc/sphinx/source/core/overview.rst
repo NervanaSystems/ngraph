@@ -3,8 +3,8 @@
 
 .. _ngraph_core:
 
-Overview
-========
+nGraph Core
+===========
 
 .. figure:: ../graphics/whole-stack.png
    :alt: The whole stack
