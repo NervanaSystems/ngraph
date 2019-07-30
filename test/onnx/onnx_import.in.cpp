@@ -1621,3 +1621,14 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, external_data)
 
     test_case.run();
 }
+
+NGRAPH_TEST(onnx_${BACKEND_NAME}, external_data_optinal_fields)
+{
+    const auto external_data_fn = onnx_import::import_onnx_model(
+        file_util::path_join(SERIALIZED_ZOO, "onnx/external_data_optinal_fields.prototxt"));
+    auto test_case = ngraph::test::NgraphTestCase(external_data_fn, "${BACKEND_NAME}");
+    test_case.add_input<float>({1.f, 2.f, 3.f, 4.f});
+    test_case.add_expected_output<float>(Shape{2, 2}, {3.f, 6.f, 9.f, 12.f});
+
+    test_case.run();
+}

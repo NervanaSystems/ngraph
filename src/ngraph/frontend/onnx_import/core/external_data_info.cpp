@@ -19,6 +19,7 @@
 #include <onnx/onnx_pb.h>
 
 #include "external_data_info.hpp"
+#include "log.hpp"
 
 namespace ngraph
 {
@@ -45,13 +46,29 @@ namespace ngraph
                                                std::ios::binary | std::ios::in | std::ios::ate);
             if (external_data_stream.fail())
                 throw invalid_external_data{*this};
-            std::streamsize data_byte_lenght = external_data_stream.tellg();
-            std::cout << "data_byte_lenght: " << data_byte_lenght << "\n";
-            external_data_stream.seekg(0, std::ios::beg);
-            //TODO OFFSETS, CHECKSUM HANDLING
+
+            std::streamsize read_data_lenght;
+            if (m_data_lenght == 0) // read entire file
+                read_data_lenght = external_data_stream.tellg();
+            else
+                read_data_lenght = m_data_lenght;
+
+            const auto page_size = 4096;
+            if (m_offset != 0 && m_offset % page_size != 0)
+            {
+                NGRAPH_WARN << "offset should be multiples 4096 (page size) to enable mmap support";
+            }
+            // default value of m_offset is 0
+            external_data_stream.seekg(m_offset, std::ios::beg);
+
+            if (m_sha1_digest != 0)
+            {
+                NGRAPH_WARN << "SHA1 checksum is not supported";
+            }
+
             std::string read_data;
-            read_data.resize(data_byte_lenght);
-            external_data_stream.read(&read_data[0], data_byte_lenght);
+            read_data.resize(read_data_lenght);
+            external_data_stream.read(&read_data[0], read_data_lenght);
             external_data_stream.close();
             return read_data;
         }
