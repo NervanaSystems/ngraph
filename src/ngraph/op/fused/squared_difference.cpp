@@ -35,7 +35,7 @@ NodeVector op::SquaredDifference::decompose_op() const
     const auto x1 = input(0).get_source_output();
     const auto x2 = input(1).get_source_output();
 
-    const auto broadcasted = numpy_style_broadcast({x1, x2});
+    const auto broadcasted = numpy_style_broadcast_values({x1, x2});
 
     const auto difference = broadcasted.at(0) - broadcasted.at(1);
 

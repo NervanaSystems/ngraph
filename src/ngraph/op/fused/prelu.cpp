@@ -50,7 +50,7 @@ NodeVector op::PRelu::decompose_op() const
     }
     else if (data_shape != slope_shape)
     {
-        slope = numpy_style_broadcast({slope, data})[0];
+        slope = numpy_style_broadcast_values({slope, data})[0];
     }
 
     // x <  0 => f(x) = x * slope

@@ -40,7 +40,7 @@ namespace ngraph
         /// \param values Original list of inputs
         ///
         /// \return Numpy-style broadcasted list of nodes.
-        OutputVector numpy_style_broadcast(const OutputVector& values);
+        OutputVector numpy_style_broadcast_values(const OutputVector& values);
 
         /// \brief Cast shape of an output to the requested output shape using NumPy's broadcasting rules
         ///
@@ -85,9 +85,9 @@ namespace ngraph
         /// \param start_match_axis position in shape denoting start of the mutually equal shape
         ///
         /// \return Left and right node after broadcasting.
-        OutputVector legacy_style_broadcast_for_binary_operation(const Output<Node>& left,
-                                                                 const Output<Node>& right,
-                                                                 size_t start_match_axis);
+        OutputVector legacy_style_broadcast_values_for_binary_operation(const Output<Node>& left,
+                                                                        const Output<Node>& right,
+                                                                        size_t start_match_axis);
 
         /// \brief      Broadcast shape of two nodes to make them compatible for a matrix multiplication.
         ///
@@ -117,8 +117,8 @@ namespace ngraph
         ///
         /// \return     The vector containing both outputs broadcasted.
         ///
-        OutputVector numpy_style_broadcast_for_matmul_operation(const Output<Node>& left,
-                                                                const Output<Node>& right);
+        OutputVector numpy_style_broadcast_values_for_matmul_operation(const Output<Node>& left,
+                                                                       const Output<Node>& right);
 
         /// \brief Generate a list of broadcast axes.
         ///
