@@ -30,7 +30,7 @@ namespace ngraph
                 for (size_t i = 0; i < count; i++)
                 {
                     // TODO: generic "abs" doesn't work here for some reason.
-                    out[i] = (arg[i] < 0 ? -arg[i] : arg[i]);
+                    out[i] = (arg[i] < T(0) ? T(-arg[i]) : arg[i]);
                 }
             }
         }

@@ -207,20 +207,20 @@ add_subdirectory(util)
 
 # backend specific test files must meet the following requirements:
 # 1) The must be named <name>.in.cpp
-# 2) They must be in the test directory
+# 2) They must be in the `test/backend` directory
 # 3) Include "util/test_control.hpp" in your cpp file
 # 4) add the line `static string s_manifest = "${MANIFEST}";` to your cpp file
 # 5) Use the `NGRAPH_TEST` macro in place of `TEST`.
 # All such files are configured via cmake which replaces all instances of cmake variables
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
-    autodiff.in.cpp
     backend/abc.in.cpp
     backend/aliased_output.in.cpp
     backend/all.in.cpp
     backend/any.in.cpp
     backend/api.in.cpp
     backend/arg_reduce.in.cpp
+    backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
     backend/batch_norm.in.cpp
     backend/binary_elementwise.in.cpp
@@ -231,7 +231,13 @@ set(MULTI_TEST_SRC
     backend/constant.in.cpp
     backend/convert.in.cpp
     backend/convolution.in.cpp
+    backend/convolution_reference.in.cpp
     backend/dot.in.cpp
+    backend/dyn_broadcast.in.cpp
+    backend/dyn_replace_slice_reference.in.cpp
+    backend/dyn_reshape.in.cpp
+    backend/dyn_slice_reference.in.cpp
+    backend/dynamic.in.cpp
     backend/embedding_lookup.in.cpp
     backend/function_name.in.cpp
     backend/fused_op.in.cpp
@@ -253,6 +259,7 @@ set(MULTI_TEST_SRC
     backend/product.in.cpp
     backend/quantize_dequantize.in.cpp
     backend/quantized_convolution.in.cpp
+    backend/range.in.cpp
     backend/relu.in.cpp
     backend/replace_slice.in.cpp
     backend/reshape.in.cpp
@@ -267,14 +274,11 @@ set(MULTI_TEST_SRC
     backend/sum.in.cpp
     backend/tensorview_custom_mem.in.cpp
     backend/topk.in.cpp
+    backend/transpose.in.cpp
     backend/unhandled_op.in.cpp
     backend/unary_elementwise.in.cpp
     backend/validate_call.in.cpp
     backend/zero_sized.in.cpp
-    convolution_test.in.cpp
-    dyn_replace_slice_test.in.cpp
-    dyn_slice_test.in.cpp
-    dynamic.in.cpp
 )
 
 if (NGRAPH_MLIR_ENABLE)
@@ -282,11 +286,11 @@ if (NGRAPH_MLIR_ENABLE)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND MULTI_TEST_SRC distributed.in.cpp)
+    list(APPEND MULTI_TEST_SRC backend/distributed.in.cpp)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
+    list(APPEND MULTI_TEST_SRC backend/graph_comparison.in.cpp)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)

@@ -13,6 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
+// NOTE: This file follows nGraph format style and MLIR naming convention since it does
+// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+
 #pragma once
 
 #include "mlir/IR/Dialect.h"
@@ -198,19 +202,19 @@ namespace mlir
             return new (storage) NGTensorTypeStorage(eltType, shape);
         }
 
-        Shape getShape() const { return m_shape; }
-        int64_t getRank() const { return m_shape.size(); }
-        EltType getElementType() const { return m_eltType; }
+        Shape getShape() const { return shape; }
+        int64_t getRank() const { return shape.size(); }
+        EltType getElementType() const { return eltType; }
     private:
         NGTensorTypeStorage(EltType eltType, Shape shape)
-            : m_eltType(eltType)
-            , m_shape(shape)
+            : eltType(eltType)
+            , shape(shape)
         {
         }
 
     private:
-        EltType m_eltType;
-        Shape m_shape;
+        EltType eltType;
+        Shape shape;
     };
 
     /// NGraph Tensor Type

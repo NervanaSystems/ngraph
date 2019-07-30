@@ -14,32 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+#pragma once
 
-#include "memory_manager.hpp"
-#include <memory>
-#include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/pass/pass.hpp"
 
-using namespace ngraph::runtime::ngmlir;
-
-/// Call back to allocate memory for temps from JIT'ed code
-extern "C" NGRAPH_API void* __mlir_allocate(MLIRMemMgr* memMgr, size_t size)
+namespace ngraph
 {
-    return memMgr->allocate(size);
-}
-
-void* MLIRMemMgr::allocate(size_t size)
-{
-    void* ptr = malloc(size);
-    ptrList.push_back(ptr);
-    return ptr;
-}
-
-void MLIRMemMgr::freeAll()
-{
-    for (auto p : ptrList)
+    namespace pass
     {
-        free(p);
+        class Validate : public FunctionPass
+        {
+        public:
+            Validate()
+                : FunctionPass()
+            {
+            }
+            bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
+        };
     }
 }

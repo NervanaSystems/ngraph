@@ -24,21 +24,23 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedDotBias::QuantizedDotBias(const shared_ptr<Node>& data,
-                                       const shared_ptr<Node>& weights,
-                                       const shared_ptr<Node>& bias,
-                                       const shared_ptr<Node>& scale,
+const string op::QuantizedDotBias::type_name{"QuantizedDotBias"};
+
+op::QuantizedDotBias::QuantizedDotBias(const Output<Node>& data,
+                                       const Output<Node>& weights,
+                                       const Output<Node>& bias,
+                                       const Output<Node>& scale,
                                        bool requantize,
                                        bool with_relu)
-    : Op("QuantizedDotBias", check_single_output_args({data, weights, bias, scale}))
+    : Op({data, weights, bias, scale})
     , m_requantize(requantize)
     , m_with_relu(with_relu)
 {
     constructor_validate_and_infer_types();
 
-    auto& data_shape = data->get_shape();
-    auto& weights_shape = weights->get_shape();
-    auto& bias_shape = bias->get_shape();
+    auto& data_shape = data.get_shape();
+    auto& weights_shape = weights.get_shape();
+    auto& bias_shape = bias.get_shape();
     NODE_VALIDATION_CHECK(this,
                           data_shape.size() == 2 && weights_shape.size() == 2 &&
                               data_shape[1] == weights_shape[1],

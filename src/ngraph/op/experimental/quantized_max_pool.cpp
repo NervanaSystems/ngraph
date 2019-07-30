@@ -22,12 +22,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedMaxPool::QuantizedMaxPool(const shared_ptr<Node>& arg,
+const string op::QuantizedMaxPool::type_name{"QuantizedMaxPool"};
+
+op::QuantizedMaxPool::QuantizedMaxPool(const Output<Node>& arg,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides,
                                        const Shape& padding_below,
                                        const Shape& padding_above)
-    : Op("QuantizedMaxPool", check_single_output_args({arg}))
+    : Op({arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -35,7 +37,7 @@ op::QuantizedMaxPool::QuantizedMaxPool(const shared_ptr<Node>& arg,
 {
     constructor_validate_and_infer_types();
 
-    if (arg->get_element_type() != element::u8 && arg->get_element_type() != element::i8)
+    if (arg.get_element_type() != element::u8 && arg.get_element_type() != element::i8)
     {
         throw ngraph_error("QuantizedMaxPool supported only for i8/u8!");
     }
