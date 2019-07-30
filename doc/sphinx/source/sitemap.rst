@@ -1,15 +1,14 @@
 :orphan:
 
-
-* Introduction
+* :ref:`intro`
 
   .. toctree::
+     :glob:
 
-     introduction.rst
-     tutorials/index.rst
+     introduction/*
 
 
-* Framework Support
+* :ref:`framework_support`
 
   .. toctree::
 
@@ -17,11 +16,9 @@
      frameworks/tensorflow.rst
      frameworks/onnx.rst
      frameworks/paddlepaddle.rst
-     frameworks/new-frameworks.rst
 
 
-
-* nGraph Core
+* :ref:`ngraph_core`
 
   .. toctree::
 
@@ -33,37 +30,38 @@
      core/passes/passes.rst
 
 
-* Python API
+* :ref:`backend_support`
 
   .. toctree::
-
-     python_api/index.rst
-
-
-* Backend APIs
-
-  .. toctree::
-     :maxdepth: 2
 
      backends/overview.rst
-     backends/backend-api/index.rst
+     backends/plaidml-ng-api/index.rst
 
 
-* Distributed Training
-  
+* :ref:`distributed`
+
   .. toctree::
-  
+
      distributed/overview.rst
 
 
-* Graph Inspection 
+
+* :ref:`validated_workloads`
+
+  .. toctree::
+
+     validated_workloads/list.rst
+
+
+* :ref:`inspection`
 
   .. toctree::
 
      inspection/index.rst
 
 
-* Contributing 
+
+* :ref:`contribution_guide`
 
   .. toctree::
 
