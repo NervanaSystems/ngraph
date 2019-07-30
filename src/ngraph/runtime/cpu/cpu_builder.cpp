@@ -470,6 +470,86 @@ namespace ngraph
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sqrt);
             }
 
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Floor)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::floor);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Ceiling)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::ceil);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Equal)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::equal);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::NotEqual)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::not_equal);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Greater)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::greater);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::GreaterEq)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::greater_eq);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Less)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::less);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::LessEq)
+            {
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::less_eq);
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::And)
+            {
+                auto element_count = shape_size(node->get_shape());
+
+                auto functor = [&, element_count](const std::vector<void*>& inputs,
+                                                  std::vector<void*>& outputs) {
+                    runtime::cpu::kernel::logical_and(
+                        inputs[0], inputs[1], outputs[0], element_count, 0);
+                };
+                return functor;
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Or)
+            {
+                auto element_count = shape_size(node->get_shape());
+
+                auto functor = [&, element_count](const std::vector<void*>& inputs,
+                                                  std::vector<void*>& outputs) {
+                    runtime::cpu::kernel::logical_or(
+                        inputs[0], inputs[1], outputs[0], element_count, 0);
+                };
+                return functor;
+            }
+
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sign)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sign);
+            }
+
 #define TI(x) type_index(typeid(x))
 
             BuildOpMap& GetGlobalBuildDispatcher()
@@ -536,6 +616,17 @@ namespace ngraph
             REGISTER_CF_BUILDER(Negative);
             REGISTER_CF_BUILDER(Relu);
             REGISTER_CF_BUILDER(Sqrt);
+            REGISTER_CF_BUILDER(Floor);
+            REGISTER_CF_BUILDER(Ceiling);
+            REGISTER_CF_BUILDER(Equal);
+            REGISTER_CF_BUILDER(NotEqual);
+            REGISTER_CF_BUILDER(Greater);
+            REGISTER_CF_BUILDER(GreaterEq);
+            REGISTER_CF_BUILDER(Less);
+            REGISTER_CF_BUILDER(LessEq);
+            REGISTER_CF_BUILDER(And);
+            REGISTER_CF_BUILDER(Or);
+            REGISTER_CF_BUILDER(Sign);
         }
     }
 }

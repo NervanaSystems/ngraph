@@ -279,6 +279,8 @@ namespace ngraph
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
+        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
+
         /// Checks that there is exactly one output and returns its shape
         // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
         // calling code, or updates to the calling code if it is making an invalid assumption of
@@ -554,6 +556,13 @@ namespace ngraph
         ///
         /// TODO: Make a plan to deprecate this.
         std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node; }
+        /// \return A useable shared pointer to this output. If index 0, the node,
+        /// otherwise find or create a GOE.
+        std::shared_ptr<Node> as_single_output_node() const NGRAPH_DEPRECATED("Transitional.")
+        {
+            return m_node->get_output_as_single_output_node(m_index);
+        }
+
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const { return m_index; }
         /// \return A reference to the tensor descriptor for this output.
