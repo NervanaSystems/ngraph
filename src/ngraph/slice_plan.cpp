@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/slice_plan.hpp"
+#include <algorithm>
+
 #include "ngraph/check.hpp"
+#include "ngraph/slice_plan.hpp"
 
 using namespace ngraph;
 
