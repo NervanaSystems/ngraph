@@ -49,6 +49,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sign.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -83,6 +84,7 @@
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
+#include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
@@ -1611,4 +1613,97 @@ void pass::ConstantFolding::construct_constant_concat()
     auto concat_matcher =
         make_shared<pattern::Matcher>(concat_op, "ConstantFolding.ConstantConcat");
     this->add_matcher(concat_matcher, constant_concat_callback, all_pass_property_off);
+}
+
+template <class T>
+shared_ptr<op::Constant> fold_constant_slice(shared_ptr<op::Constant> constant,
+                                             shared_ptr<op::Slice> slice)
+{
+    auto out_shape = slice->get_shape();
+    vector<T> out_vec(shape_size(out_shape));
+
+    runtime::reference::slice<T>(constant->get_data_ptr<T>(),
+                                 out_vec.data(),
+                                 constant->get_shape(),
+                                 slice->get_lower_bounds(),
+                                 slice->get_upper_bounds(),
+                                 slice->get_strides(),
+                                 out_shape);
+
+    return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_slice()
+{
+    auto data_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto slice_op = make_shared<op::Slice>(
+        data_label, Coordinate{1, 1, 1}, Coordinate{2, 3, 4}, Strides{1, 1, 2});
+
+    auto constant_slice_callback = [data_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_slice_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
+        auto slice = static_pointer_cast<op::Slice>(m.get_match_root());
+
+        std::shared_ptr<op::Constant> replacement;
+
+        switch (slice->get_output_element_type(0).get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_slice");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_slice");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_slice<char>(data_node, slice);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_slice<bfloat16>(data_node, slice);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_slice<float16>(data_node, slice);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_slice<float>(data_node, slice);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_slice<double>(data_node, slice);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_slice<int8_t>(data_node, slice);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_slice<int16_t>(data_node, slice);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_slice<int32_t>(data_node, slice);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_slice<int64_t>(data_node, slice);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_slice<uint8_t>(data_node, slice);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_slice<uint16_t>(data_node, slice);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_slice<uint32_t>(data_node, slice);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_slice<uint64_t>(data_node, slice);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto slice_matcher = make_shared<pattern::Matcher>(slice_op, "ConstantFolding.ConstantSlice");
+    this->add_matcher(slice_matcher, constant_slice_callback, all_pass_property_off);
 }
