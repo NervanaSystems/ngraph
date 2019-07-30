@@ -1183,6 +1183,7 @@ TEST(cpu_test, constant_unary_binary)
     vector<int> values_h{2, 2, 3, 3};
     vector<char> values_i{0, 0, 1, 1};
     vector<char> values_j{0, 1, 0, 1};
+    vector<float> values_k{-0.1f, 0.0f, -1.5f, 2.6f};
     auto a = make_shared<op::Constant>(element::i32, shape_in, values_a);
     auto b = make_shared<op::Constant>(element::i32, shape_in, values_b);
     auto c = make_shared<op::Constant>(element::i32, shape_in, values_c);
@@ -1193,6 +1194,7 @@ TEST(cpu_test, constant_unary_binary)
     auto h = make_shared<op::Constant>(element::i32, shape_in, values_h);
     auto i = make_shared<op::Constant>(element::boolean, shape_in, values_i);
     auto j = make_shared<op::Constant>(element::boolean, shape_in, values_j);
+    auto k = make_shared<op::Constant>(element::f32, shape_in, values_k);
 
     auto add = a + b;
     auto sub = a - b;
@@ -1214,27 +1216,14 @@ TEST(cpu_test, constant_unary_binary)
     auto less_eq = make_shared<op::LessEq>(g, h);
     auto logical_and = make_shared<op::And>(i, j);
     auto logical_or = make_shared<op::Or>(i, j);
+    auto ceil = make_shared<op::Ceiling>(k);
+    auto floor = make_shared<op::Floor>(k);
 
-    auto func = make_shared<Function>(NodeVector{add,
-                                                 sub,
-                                                 mul,
-                                                 divn,
-                                                 min,
-                                                 max,
-                                                 absn,
-                                                 neg,
-                                                 sqrt,
-                                                 relu,
-                                                 sign,
-                                                 equal,
-                                                 not_equal,
-                                                 greater,
-                                                 greater_eq,
-                                                 less,
-                                                 less_eq,
-                                                 logical_and,
-                                                 logical_or},
-                                      ParameterVector{});
+    auto func = make_shared<Function>(
+        NodeVector{add,        sub,  mul,     divn,        min,        max,       absn,
+                   neg,        sqrt, relu,    sign,        equal,      not_equal, greater,
+                   greater_eq, less, less_eq, logical_and, logical_or, ceil,      floor},
+        ParameterVector{});
 
     auto func_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
 
@@ -1262,6 +1251,8 @@ TEST(cpu_test, constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::LessEq>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::And>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Or>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Ceiling>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Floor>(func), 0);
 
     //expected values
     vector<int> add_expected{2, 4, 6, 8};
@@ -1282,6 +1273,8 @@ TEST(cpu_test, constant_unary_binary)
     vector<char> less_eq_expected{1, 1, 1, 0};
     vector<char> and_expected{0, 0, 0, 1};
     vector<char> or_expected{0, 1, 1, 1};
+    vector<float> ceil_expected{0.0f, 0.0f, -1.0f, 3.0f};
+    vector<float> floor_expected{-1.0f, 0.0f, -2.0f, 2.0f};
 
     ASSERT_EQ(get_result_constant<int>(func, 0), add_expected);
     ASSERT_EQ(get_result_constant<int>(func, 1), sub_expected);
@@ -1302,6 +1295,10 @@ TEST(cpu_test, constant_unary_binary)
     ASSERT_EQ(get_result_constant<char>(func, 16), less_eq_expected);
     ASSERT_EQ(get_result_constant<char>(func, 17), and_expected);
     ASSERT_EQ(get_result_constant<char>(func, 18), or_expected);
+    ASSERT_TRUE(test::all_close_f(
+        get_result_constant<float>(func, 19), ceil_expected, MIN_FLOAT_TOLERANCE_BITS));
+    ASSERT_TRUE(test::all_close_f(
+        get_result_constant<float>(func, 20), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
     ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
 }
 
