@@ -183,6 +183,7 @@ sources = [
     'pyngraph/ops/equal.cpp',
     'pyngraph/ops/exp.cpp',
     'pyngraph/ops/floor.cpp',
+    'pyngraph/ops/fused/gemm.cpp',
     'pyngraph/ops/greater.cpp',
     'pyngraph/ops/greater_eq.cpp',
     'pyngraph/ops/less.cpp',

@@ -23,7 +23,7 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
     Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
-    GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
+    Gemm, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
     Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
     Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
     Sqrt, Subtract, Sum, Tan, Tanh, TopK
@@ -518,6 +518,50 @@ def broadcast_to(node, new_shape, axis=None, name=None):
     :return: New node with broadcast shape.
     """
     return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
+
+
+@nameable_op
+def gemm(A,                      # type: Node
+         B,                      # type: Node
+         C,                      # type: Node
+         alpha,                  # type: ScalarData
+         beta,                   # type: ScalarData
+         transA,                 # type: bool
+         transB,                 # type: bool
+         name=None,              # type: str
+         ):
+    # type: (...) -> Node
+    r"""Perform General matrix-matrix multiplication on input tensors A, B and C.
+
+    Computes:
+
+    .. math:: Y = alpha\cdot A'\cdot B' +  beta\cdot C
+
+    :code:`A'`: The transpose of matrix :code:`A` with shape (M, K),
+                if :code:`transA` is :code:`True`, otherwise :code:`A` with shape (K, N).
+
+    :code:`B'`: The transpose of matrix :code:`B` with shape (K, N),
+                if :code:`transB` is :code:`True`, otherwise :code:`B` with shape (N, K).
+
+    :code:`C`: Matrix broadcastable to shape (M, N).
+
+    :code:`Y`: Matrix with shape (M, N).
+
+    For more information refer to:
+    `Low-memory GEMM-based convolution algorithms for deep neural networks
+    <https://arxiv.org/pdf/1709.03395.pdf>`_
+
+    :param A: The node with input tensor A.
+    :param B: The node with input tensor B.
+    :param C: The node with input tensor C.
+    :param alpha: Scalar multiplier for the product of input tensors A * B.
+    :param beta: Scalar multiplier for input tensor C.
+    :param transA: Whether A should be transposed. Boolean value.
+    :param transB: Whether B should be transposed. Boolean value.
+    :param name: Optional name for the output node.
+    :return: Return node with tensor of shape (M, N).
+    """
+    return Gemm(A, B, C, alpha, beta, transA, transB)
 
 
 @nameable_op

@@ -36,6 +36,7 @@ ngraph.ops
       equal
       exp
       floor
+      gemm
       get_output_element
       greater
       greater_eq
