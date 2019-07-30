@@ -243,45 +243,59 @@ void pass::ConstantFolding::construct_constant_reshape()
             func = handler->second(reshape_match.get());
         }
 
+        std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
-        if (type == element::i32)
+        switch (type.get_type_enum())
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<int32_t>(constant_match, reshape_match, func));
-            return true;
-        }
-        if (type == element::i64)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<int64_t>(constant_match, reshape_match, func));
-            return true;
-        }
-        else if (type == element::i8)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<int8_t>(constant_match, reshape_match, func));
-            return true;
-        }
-        else if (type == element::f32)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<float>(constant_match, reshape_match, func));
-            return true;
-        }
-        else if (type == element::f64)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<double>(constant_match, reshape_match, func));
-            return true;
-        }
-        else if (type == element::bf16)
-        {
-            replace_node(
-                m.get_match_root(),
-                fold_constant_reshape<ngraph::bfloat16>(constant_match, reshape_match, func));
-            return true;
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false,
+                         "Encountered 'undefined' element type in constant_reshape_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_reshape_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_reshape<char>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_reshape<bfloat16>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_reshape<float16>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_reshape<float>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_reshape<double>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_reshape<int8_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_reshape<int16_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_reshape<int32_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_reshape<int64_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_reshape<uint8_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_reshape<uint16_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_reshape<uint32_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_reshape<uint64_t>(constant_match, reshape_match, func);
+            break;
         }
 
+        replace_node(m.get_match_root(), replacement);
         return false;
     };
 
