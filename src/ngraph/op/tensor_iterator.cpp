@@ -24,15 +24,11 @@ const string op::TensorIterator::type_name{"TensorIterator"};
 op::TensorIterator::TensorIterator(const OutputVector& body_inputs,
                                    const ParameterVector& body_parameters,
                                    const OutputVector& body_outputs,
-                                   const OutputVector& tensor_iterator_outputs,
-                                   const std::vector<bool>& sequence_inputs,
-                                   const std::vector<bool>& sequence_outputs)
+                                   const OutputVector& tensor_iterator_outputs)
     : Op(body_inputs)
     , m_body_parameters(body_parameters)
     , m_body_outputs(body_outputs)
     , m_tensor_iterator_outputs(tensor_iterator_outputs)
-    , m_sequence_inputs(sequence_inputs)
-    , m_sequence_outputs(sequence_outputs)
 {
     constructor_validate_and_infer_types();
 }
@@ -57,41 +53,39 @@ void op::TensorIterator::validate_and_infer_types()
         PartialShape iterator_shape = sequence_shape;
         Rank sequence_rank = sequence_shape.rank();
 
-        if (m_sequence_inputs.at(input_index))
+        if (sequence_rank.is_dynamic())
         {
-            if (sequence_rank.is_dynamic())
+            // Can't determine the sequence length
+            iteration_count_dynamic = true;
+        }
+        else
+        {
+            NODE_VALIDATION_CHECK(this,
+                                  static_cast<size_t>(sequence_shape.rank()) != 0,
+                                  "Input ",
+                                  input_index,
+                                  " is specified to be a sequence but is scalar.");
+            Dimension sequence_dim = sequence_shape[0];
+            vector<Dimension> dimensions = static_cast<vector<Dimension>>(sequence_shape);
+            dimensions.erase(dimensions.begin());
+            iterator_shape = PartialShape(dimensions);
+
+            if (sequence_dim.is_dynamic())
             {
                 // Can't determine the sequence length
                 iteration_count_dynamic = true;
             }
             else
             {
-                NODE_VALIDATION_CHECK(this,
-                                      static_cast<size_t>(sequence_shape.rank()) != 0,
-                                      "Input ",
-                                      input_index,
-                                      " is specified to be a sequence but is scalar.");
-                Dimension sequence_dim = sequence_shape[0];
-                vector<Dimension> dimensions = static_cast<vector<Dimension>>(sequence_shape);
-                dimensions.erase(dimensions.begin());
-                iterator_shape = PartialShape(dimensions);
-
-                if (sequence_dim.is_dynamic())
+                size_t sequence_length = static_cast<size_t>(sequence_dim);
+                if (!iteration_count_valid || (sequence_length < iteration_count))
                 {
-                    // Can't determine the sequence length
-                    iteration_count_dynamic = true;
-                }
-                else
-                {
-                    size_t sequence_length = static_cast<size_t>(sequence_dim);
-                    if (!iteration_count_valid || (sequence_length < iteration_count))
-                    {
-                        iteration_count = sequence_length;
-                        iteration_count_valid = true;
-                    }
+                    iteration_count = sequence_length;
+                    iteration_count_valid = true;
                 }
             }
         }
+
         NODE_VALIDATION_CHECK(
             this,
             iterator_shape.compatible(m_body_parameters.at(input_index)->get_partial_shape()),
@@ -146,35 +140,6 @@ void op::TensorIterator::set_tensor_iterator_outputs(const OutputVector& tensor_
     m_tensor_iterator_outputs = tensor_iterator_outputs;
 }
 
-const vector<bool>& op::TensorIterator::get_sequence_inputs() const
-{
-    return m_sequence_inputs;
-}
-
-vector<bool>& op::TensorIterator::get_sequence_inputs()
-{
-    return m_sequence_inputs;
-}
-
-void op::TensorIterator::set_sequence_inputs(const vector<bool>& sequence_inputs)
-{
-    m_sequence_inputs = sequence_inputs;
-}
-
-const vector<bool>& op::TensorIterator::get_sequence_outputs() const
-{
-    return m_sequence_outputs;
-}
-
-vector<bool>& op::TensorIterator::get_sequence_outputs()
-{
-    return m_sequence_outputs;
-}
-
-void op::TensorIterator::set_sequence_outputs(const vector<bool>& sequence_outputs)
-{
-    m_sequence_outputs = sequence_outputs;
-}
 std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
 {
     OutputVector output_vector;
@@ -182,10 +147,6 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
     {
         output_vector.push_back(arg);
     }
-    return make_shared<TensorIterator>(output_vector,
-                                       m_body_parameters,
-                                       m_body_outputs,
-                                       m_tensor_iterator_outputs,
-                                       m_sequence_inputs,
-                                       m_sequence_outputs);
+    return make_shared<TensorIterator>(
+        output_vector, m_body_parameters, m_body_outputs, m_tensor_iterator_outputs);
 }

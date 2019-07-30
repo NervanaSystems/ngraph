@@ -33,12 +33,18 @@ namespace ngraph
             /// \brief Constructs an empty TensorIterator operation
             TensorIterator() = default;
 
+            /// \param body_arguments sequences that will be iterated over.
+            /// The shortest sequence determines the number of steps.
+            /// \param body_parameters Parameters that will be bound to successive
+            /// input sequence elements.
+            /// \param body_outputs Values computed on each iteration. These will be sequences.
+            /// body_outputs dependencies on parameters will be per-iteration, dependencies on
+            /// nodes not dependent on parameters will be constant per iteration.
+            /// \param outputs Values returned from TensorIterator.
             TensorIterator(const OutputVector& body_arguments,
                            const ParameterVector& body_parameters,
                            const OutputVector& body_outputs,
-                           const OutputVector& outputs,
-                           const std::vector<bool>& sequence_inputs,
-                           const std::vector<bool>& sequence_outputs);
+                           const OutputVector& outputs);
 
             void validate_and_infer_types() override;
 
@@ -54,22 +60,12 @@ namespace ngraph
             OutputVector& get_tensor_iterator_outputs();
             void set_tensor_iterator_outputs(const OutputVector& tensor_iterator_outputs);
 
-            const std::vector<bool>& get_sequence_inputs() const;
-            std::vector<bool>& get_sequence_inputs();
-            void set_sequence_inputs(const std::vector<bool>& sequence_inputs);
-
-            const std::vector<bool>& get_sequence_outputs() const;
-            std::vector<bool>& get_sequence_outputs();
-            void set_sequence_outputs(const std::vector<bool>& sequence_inputs);
-
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
             ParameterVector m_body_parameters;
             OutputVector m_body_outputs;
             OutputVector m_tensor_iterator_outputs;
-            std::vector<bool> m_sequence_inputs;
-            std::vector<bool> m_sequence_outputs;
         };
     }
 }
