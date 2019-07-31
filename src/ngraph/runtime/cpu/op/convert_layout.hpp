@@ -35,12 +35,15 @@ namespace ngraph
                 class ConvertLayout : public ngraph::op::Op
                 {
                 public:
+                    CPU_BACKEND_API
+                    static const std::string type_name;
+                    const std::string& description() const override { return type_name; }
                     CPU_BACKEND_API ConvertLayout(
-                        const std::shared_ptr<Node>& arg,
+                        const Output<Node>& arg,
                         const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);
 
                     CPU_BACKEND_API ConvertLayout(
-                        const std::shared_ptr<Node>& arg,
+                        const Output<Node>& arg,
                         size_t output_index,
                         const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);
 

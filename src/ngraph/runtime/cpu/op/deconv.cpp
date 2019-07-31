@@ -26,17 +26,19 @@
 using namespace std;
 using namespace ngraph;
 
+const std::string op::DeconvolutionBias::type_name{"DeconvolutionBias"};
+
 op::DeconvolutionBias::DeconvolutionBias(const Shape& data_batch_shape,
-                                         const shared_ptr<Node>& filters,
-                                         const shared_ptr<Node>& output_delta,
-                                         const shared_ptr<Node>& bias,
+                                         const Output<Node>& filters,
+                                         const Output<Node>& output_delta,
+                                         const Output<Node>& bias,
                                          const Strides& window_movement_strides_forward,
                                          const Strides& window_dilation_strides_forward,
                                          const CoordinateDiff& padding_below_forward,
                                          const CoordinateDiff& padding_above_forward,
                                          const Strides& data_dilation_strides_forward,
                                          const bool with_relu)
-    : Op("DeconvolutionBias", check_single_output_args({filters, output_delta, bias}))
+    : Op({filters, output_delta, bias})
     , m_data_batch_shape(data_batch_shape)
     , m_window_movement_strides_forward(window_movement_strides_forward)
     , m_window_dilation_strides_forward(window_dilation_strides_forward)
@@ -46,8 +48,8 @@ op::DeconvolutionBias::DeconvolutionBias(const Shape& data_batch_shape,
     , m_with_relu(with_relu)
 {
     NGRAPH_DEBUG << "DeconvolutionBias ctor" << endl;
-    NGRAPH_DEBUG << "data: " << data_batch_shape << ", filters: " << filters->get_shape()
-                 << ", output_delta: " << output_delta->get_shape();
+    NGRAPH_DEBUG << "data: " << data_batch_shape << ", filters: " << filters.get_shape()
+                 << ", output_delta: " << output_delta.get_shape();
     constructor_validate_and_infer_types();
 }
 
