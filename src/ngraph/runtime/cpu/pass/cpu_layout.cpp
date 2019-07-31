@@ -76,7 +76,7 @@ using namespace mkldnn;
 using namespace ngraph;
 using namespace ngraph::runtime::cpu;
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
 #define FORMAT format
 #else
 #define FORMAT format_tag
@@ -133,7 +133,7 @@ static shared_ptr<Node>
                 new runtime::cpu::op::ConvertLayout(output.get_node(), output.get_index(), layout));
             new_args.push_back(new_node);
             replace_node = true;
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
             NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
                          << output.get_node()->get_name()
                          << "(layout: " << tvl->get_mkldnn_md().data.format << ") and "
@@ -186,7 +186,7 @@ static void set_output_layouts(shared_ptr<Node>& node, const vector<memory::desc
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
         layout->set_mkldnn_md(output_mds[i]);
         tv->set_tensor_layout(layout);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
         NGRAPH_DEBUG << "Setting Node: " << node->get_name()
                      << " output layout: " << output_mds[i].data.format << endl;
 #endif
@@ -229,7 +229,7 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
                     input.replace_output(new_node->get_outputs().at(0));
                 }
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                 NGRAPH_DEBUG << "Inserted conversion node " << new_node->get_name() << " between "
                              << output.get_node()->get_name()
                              << "(layout: " << cpu_tvl->get_mkldnn_md().data.format << ") and "
@@ -295,7 +295,7 @@ static void set_layouts_unaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction*
     auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
     // Non MKLDNN kernels can handle MKLDNN layouts as long as there are not padded
     bool md_check;
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
     md_check = input_md.data.format != mkldnn_format_undef &&
                !mkldnn_utils::is_mkldnn_padded_layout(
                    input_md, ngraph::get_default_order(node->get_input_shape(0)));
@@ -323,7 +323,7 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
     std::vector<mkldnn::memory::desc> arg_mds{mkldnn_utils::get_input_mkldnn_md(node.get(), 0),
                                               mkldnn_utils::get_input_mkldnn_md(node.get(), 1)};
     bool md_check;
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
     md_check = arg_mds[0].data.format != mkldnn_format_undef &&
                arg_mds[1].data.format != mkldnn_format_undef &&
                !mkldnn_utils::is_mkldnn_padded_layout(
@@ -494,7 +494,7 @@ namespace ngraph
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc,
                                                                   executor::global_cpu_engine);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                     i_mds.push_back(prim_desc.src_primitive_desc().desc());
                     i_mds.push_back(prim_desc.weights_primitive_desc().desc());
 
@@ -581,7 +581,7 @@ namespace ngraph
                     }
                     inner_product_forward::primitive_desc prim_desc(*fwd_desc,
                                                                     executor::global_cpu_engine);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                     i_mds.push_back(prim_desc.src_primitive_desc().desc());
                     i_mds.push_back(prim_desc.weights_primitive_desc().desc());
 
@@ -966,7 +966,7 @@ namespace ngraph
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         i_mds.push_back(deconv_prim_desc.weights_primitive_desc()
                                             .desc()); //TODO: Find what format this is?
                         i_mds.push_back(deconv_prim_desc.src_primitive_desc().desc());
@@ -1058,7 +1058,7 @@ namespace ngraph
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         i_mds.push_back(prim_desc.weights_primitive_desc().desc());
                         i_mds.push_back(prim_desc.diff_dst_primitive_desc().desc());
                         o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
@@ -1173,7 +1173,7 @@ namespace ngraph
                                                                       executor::global_cpu_engine);
                     convolution_backward_weights::primitive_desc prim_desc(
                         *bwd_desc, executor::global_cpu_engine, fwd_prim_desc);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                     i_mds.push_back(prim_desc.src_primitive_desc().desc());
                     i_mds.push_back(prim_desc.diff_dst_primitive_desc().desc());
                     o_mds.push_back(prim_desc.diff_weights_primitive_desc().desc());
@@ -1279,7 +1279,7 @@ namespace ngraph
                             pooling_forward::primitive_desc(desc,
                                                             executor::global_cpu_engine);
                         i_mds.push_back(input_desc);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         o_mds.push_back(prim_desc.dst_primitive_desc().desc());
 #else
                         o_mds.push_back(prim_desc.dst_desc());
@@ -1391,7 +1391,7 @@ namespace ngraph
                                                                  executor::global_cpu_engine,
                                                                  fwd_prim_desc);
                             i_mds.push_back(input_desc);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                             o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
 #else
                             o_mds.push_back(prim_desc.diff_src_desc());
@@ -1457,7 +1457,7 @@ namespace ngraph
                             pooling_forward::primitive_desc(desc,
                                                             executor::global_cpu_engine);
                         i_mds.push_back(input_desc);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         o_mds.push_back(prim_desc.dst_primitive_desc().desc());
 #else
                         o_mds.push_back(prim_desc.dst_desc());
@@ -1465,7 +1465,7 @@ namespace ngraph
 
                         if (pk == prop_kind::forward_training)
                         {
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                             o_mds.push_back(prim_desc.workspace_primitive_desc().desc());
 #else
                             o_mds.push_back(prim_desc.workspace_desc());
@@ -1498,7 +1498,7 @@ namespace ngraph
                                     PADDING;
                             	auto prim_desc = pooling_forward::primitive_desc(desc,
                                    executor::global_cpu_engine);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                             	o_mds.push_back(prim_desc.workspace_primitive_desc().desc());
 #else
                                 o_mds.push_back(prim_desc.workspace_desc());
@@ -1559,7 +1559,7 @@ namespace ngraph
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         auto tv = node->get_output_tensor_ptr(0);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         auto fmt = static_cast<mkldnn::memory::format>(input_md.data.format);
                         if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
@@ -1633,7 +1633,7 @@ namespace ngraph
                     {
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                         auto tv = node->get_output_tensor_ptr(0);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         auto fmt = static_cast<mkldnn::memory::format>(input_md.data.format);
                         if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
@@ -1766,7 +1766,7 @@ namespace ngraph
 
                     auto fprop_input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                     auto fprop_input_layout =
                         static_cast<memory::format>(fprop_input_md.data.format);
                     auto diff_dst_desc = memory::desc(mkldnn_arg1_shape, et, fprop_input_layout);
@@ -1815,7 +1815,7 @@ namespace ngraph
 
                         if (with_indices)
                         {
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                             i_mds.push_back(fwd_prim_desc.workspace_primitive_desc().desc());
 #else
                             i_mds.push_back(fwd_prim_desc.workspace_desc());
@@ -1825,7 +1825,7 @@ namespace ngraph
                         {
                             i_mds.push_back(diff_dst_desc);
                         }
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
 #else
                         o_mds.push_back(prim_desc.diff_src_desc());
@@ -2085,7 +2085,7 @@ namespace ngraph
                 void CPULayout::LAYOUT_DECL(ngraph::op::GetOutputElement)
                 {
                     auto goe = static_cast<const ngraph::op::GetOutputElement*>(node.get());
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                     if (mkldnn_utils::get_input_mkldnn_md(node.get(), 0).data.format ==
                         mkldnn_format_undef)
                     {
@@ -2150,7 +2150,7 @@ namespace ngraph
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
                         auto kernel_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         auto kernel_layout = static_cast<memory::format>(kernel_md.data.format);
                         if (!mkldnn_utils::is_mkldnn_blocked_data_format(kernel_layout))
                         {
@@ -2307,7 +2307,7 @@ namespace ngraph
                         auto out2_md = mkldnn_utils::create_default_mkldnn_md(
                             node.get(), 2, true, memory::FORMAT::x);
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         auto kernel_layout = static_cast<memory::format>(kernel_md.data.format);
                         if (!mkldnn_utils::is_mkldnn_blocked_data_format(kernel_layout))
                         {
@@ -2356,7 +2356,7 @@ namespace ngraph
                         auto result_shape = slice->get_output_shape(0);
 
                         auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         NGRAPH_DEBUG << "input memory format: " << input_md.data.format << "\n";
                         auto result_format =
                             static_cast<mkldnn::memory::format>(input_md.data.format);
@@ -2494,7 +2494,7 @@ namespace ngraph
                     size_t concat_dim = concat->get_concatenation_axis();
                     auto result_desc = mkldnn_utils::create_default_mkldnn_md(
                         node.get(), 0, true, memory::FORMAT::any);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                     std::vector<mkldnn::memory::primitive_desc> inputs_pd;
                     for (size_t i = 0; i < node->get_input_size(); i++)
                     {
@@ -2626,7 +2626,7 @@ namespace ngraph
                     auto input_md = mkldnn_utils::get_input_mkldnn_md(node.get(), 0);
                     auto tv = node->get_output_tensor_ptr(0);
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                     if (input_md.data.format == mkldnn_blocked ||
                         input_md.data.format == mkldnn_format_undef ||
                         !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
@@ -2644,7 +2644,7 @@ namespace ngraph
                     else
                     {
                         vector<memory::desc> o_mds;
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                         o_mds.push_back(mkldnn_utils::create_default_mkldnn_md(
                             node.get(),
                             0,

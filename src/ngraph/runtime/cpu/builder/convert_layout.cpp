@@ -43,7 +43,7 @@ namespace ngraph
                 auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                 auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                 if (input_desc.data.format == mkldnn_nchw &&
                     result_desc.data.format == mkldnn_goihw)
                 {

@@ -37,7 +37,7 @@ namespace ngraph
                         "Lstm is supported only through MKLDNN and doesnt have reference "
                         "INTERPRETER implementation");
                 }
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                 if (args.size() != 5)
                 {
                     throw ngraph_error(
@@ -66,7 +66,7 @@ namespace ngraph
                 auto lstm_desc =
                     mkldnn_emitter->get_rnn_forward_desc<ngraph::op::Lstm>(node, args, out);
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                 auto weights_layer_buffer_index =
                     external_function->get_buffer_index(args[2].get_name());
                 auto weights_iter_buffer_index =

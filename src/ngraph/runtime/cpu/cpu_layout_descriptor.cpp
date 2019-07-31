@@ -21,7 +21,7 @@
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
 #define UNDEF format_undef
 #define F32 f32
 #else
@@ -117,7 +117,7 @@ namespace ngraph
                 // http://intel.github.io/mkl-dnn/understanding_memory_formats.html
                 try
                 {
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                     auto mem_prim_desc =
                         mkldnn::memory::primitive_desc(md, executor::global_cpu_engine);
                     m_buffer_size = mem_prim_desc.get_size();

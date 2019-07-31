@@ -41,7 +41,7 @@ namespace ngraph
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto relu_desc = mkldnn_emitter->get_relu_forward_desc(node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_eltwise_forward(relu_desc);
 #endif
 
@@ -91,7 +91,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bwd_desc = mkldnn_emitter->get_relu_backward_desc(node);
                     auto fwd_desc = mkldnn_emitter->get_relu_forward_desc(node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
 #endif
 

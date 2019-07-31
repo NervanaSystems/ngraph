@@ -702,7 +702,7 @@ namespace ngraph
                         SET_ROUND_MODE
                         attr.set_output_scales(0, get_output_scale<OP, float>(node));
                     }
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
 #endif
                     return attr;
@@ -758,7 +758,7 @@ namespace ngraph
                         SET_ROUND_MODE
                         attr.set_output_scales(0, get_output_scale<OP, float>(node));
                     }
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
 #endif
                     return attr;
@@ -1178,7 +1178,7 @@ namespace ngraph
                                         const std::vector<size_t>& deps,
                                         size_t bounded_relu_index);
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                 // TODO(jmenon): Get rid of TensorViewWrappers at some point
                 mkldnn::memory::desc
                     build_memory_descriptor(const TensorViewWrapper& tvw,

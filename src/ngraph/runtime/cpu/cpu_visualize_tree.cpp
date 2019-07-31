@@ -49,7 +49,7 @@ static void visualize_layout_format(const Node& node, ostream& ss)
         {
             ss << "\ninput_order=" << reshape->get_input_order();
         }
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
         ss << "\nin=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_kind_string(
                              static_cast<mkldnn::memory::FORMAT_KIND>(
                                  in_tvl->get_mkldnn_md().data.FORMAT_KIND));

@@ -55,7 +55,7 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
                                                                                           false);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_pooling_forward(avg_pool_desc);
 #endif
 
@@ -147,7 +147,7 @@ namespace ngraph
                     auto avg_pool_desc =
                         mkldnn_emitter->get_avg_pooling_backward_desc<ngraph::op::AvgPoolBackprop>(
                             node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_avg_pooling_backward(avg_pool_fwd_desc,
                                                                           avg_pool_desc);
 #endif

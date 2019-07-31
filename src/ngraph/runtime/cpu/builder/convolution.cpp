@@ -55,7 +55,7 @@ namespace ngraph
                         mkldnn_emitter->get_convolution_forward_desc<ngraph::op::Convolution>(node);
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::Convolution>(node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
 #endif
 
@@ -157,7 +157,7 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionRelu>(
                             node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
 #endif
 
@@ -221,7 +221,7 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionBias>(
                             node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
 #endif
 
@@ -290,7 +290,7 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::ConvolutionBiasAdd>(node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
 #endif
 
@@ -367,7 +367,7 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionAdd>(
                             node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
 #endif
 
@@ -442,7 +442,7 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropData>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropData>(node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_convolution_backward_data(fwd_desc, bwd_desc);
 #endif
 
@@ -557,7 +557,7 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropFilters>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropFilters>(node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_convolution_backward_weights(fwd_desc,
                                                                                   bwd_desc);
 #endif
@@ -669,7 +669,7 @@ namespace ngraph
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_convolution_backward_weights(fwd_desc,
                                                                                   bwd_desc);
 #endif
@@ -741,7 +741,7 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter->get_convolution_forward_attr<ngraph::op::GroupConvolution>(
                             node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
 #endif
 
@@ -807,7 +807,7 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::GroupConvolutionBias>(node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
 #endif
 
@@ -878,7 +878,7 @@ namespace ngraph
                             ->get_deconvolutionbias_forward_data<ngraph::op::DeconvolutionBias>(
                                 node);
                     auto weights_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_deconvolution_forward(deconvbias_desc);
 #endif
 

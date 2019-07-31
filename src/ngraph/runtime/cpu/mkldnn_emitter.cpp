@@ -162,7 +162,7 @@ mkldnn::memory::desc
                                                    const mkldnn::memory::dims& strides,
                                                    mkldnn::memory::data_type dtype) const
 {
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
     return mkldnn::memory::desc(dim, dtype, strides);
 #else
     mkldnn_memory_desc_t md;
@@ -194,7 +194,7 @@ size_t MKLDNNEmitter::build_quantize_reorder(const mkldnn::memory::desc& input_d
     attr.set_output_scales(0, scales);
     size_t input_index, result_index, primitive_index;
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
     input_index = build_memory(input_desc);
     result_index = build_memory(result_desc);
     auto reorder_prim_desc = mkldnn::reorder::primitive_desc(
@@ -243,7 +243,7 @@ size_t MKLDNNEmitter::build_reorder(const mkldnn::memory::desc& input_desc,
 {
     size_t input_index, result_index, primitive_index;
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
     input_index = build_memory(input_desc);
     result_index = build_memory(result_desc);
     primitive_index = insert_primitive(
@@ -397,7 +397,7 @@ size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
     if (with_bias)
     {
 // Inputs, Weights, Bias, Results, Conv
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
         m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
@@ -412,7 +412,7 @@ size_t MKLDNNEmitter::convolution_forward_init(bool with_bias)
     else
     {
 // Inputs, Weights, Results, Conv
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
         m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
@@ -432,7 +432,7 @@ size_t MKLDNNEmitter::inner_product_forward_init(bool with_bias)
     if (with_bias)
     {
 // Inputs, Weights, Bias, Results, inner_product
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
         m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
@@ -447,7 +447,7 @@ size_t MKLDNNEmitter::inner_product_forward_init(bool with_bias)
     else
     {
 // Inputs, Weights, Results, inner_product
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
         size_t mem_size = m_mkldnn_memories.size();
         m_mkldnn_primitives.resize(size + 1, nullptr);
         m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
@@ -464,7 +464,7 @@ size_t MKLDNNEmitter::inner_product_forward_init(bool with_bias)
 size_t MKLDNNEmitter::reserve_primitive_space(size_t count, bool new_workspace)
 {
     size_t size = m_mkldnn_primitives.size();
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
     size_t mem_size = m_mkldnn_memories.size();
     m_mkldnn_primitives.resize(size + 1, nullptr);
     m_mkldnn_scratchpad_mds.resize(size + 1, nullptr);
@@ -505,7 +505,7 @@ size_t MKLDNNEmitter::build_quantized_inner_product_forward(
     ip_attr.set_output_scales(0, output_scale);
 
     size_t ip_index;
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
     size_t input_data_index = build_memory(input_data_desc);
     size_t weights_index = build_memory(weights_desc);
     size_t bias_index = build_memory(bias_desc);
@@ -568,7 +568,7 @@ size_t MKLDNNEmitter::build_quantized_inner_product_forward(
     ip_attr.set_output_scales(0, output_scale);
 
     size_t ip_index;
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
     size_t input_data_index = build_memory(input_data_desc);
     size_t weights_index = build_memory(weights_desc);
     size_t result_index = build_memory(result_desc);
@@ -603,7 +603,7 @@ size_t MKLDNNEmitter::build_quantized_inner_product_forward(
     return ip_index;
 }
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
 mkldnn::memory::desc
     MKLDNNEmitter::build_memory_descriptor(const TensorViewWrapper& tvw,
                                            mkldnn::memory::format_tag fmt_tag) const

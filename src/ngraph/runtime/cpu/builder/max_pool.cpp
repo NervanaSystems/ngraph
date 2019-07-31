@@ -54,7 +54,7 @@ namespace ngraph
                     auto max_pool_desc =
                         mkldnn_emitter->get_max_pooling_forward_desc<ngraph::op::MaxPool>(node,
                                                                                           false);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_pooling_forward(max_pool_desc);
 #endif
 
@@ -144,7 +144,7 @@ namespace ngraph
                         mkldnn_emitter->get_max_pooling_backward_desc<ngraph::op::MaxPoolBackprop>(
                             node);
                     auto fprop_src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_max_pooling_backward(fwd_pool_desc,
                                                                           bwd_pool_desc);
 #endif
@@ -273,7 +273,7 @@ namespace ngraph
                     mkldnn_emitter
                         ->get_max_pooling_with_indices_forward_desc<ngraph::op::MaxPoolWithIndices>(
                             node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                 mkldnn_emitter->query_scratchpad_pooling_forward(max_pool_desc);
 #endif
 
@@ -334,7 +334,7 @@ namespace ngraph
                     mkldnn_emitter
                         ->get_max_pooling_backward_desc<ngraph::op::MaxPoolWithIndicesBackprop>(
                             node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                 mkldnn_emitter->query_scratchpad_max_pooling_with_indices_backward(fwd_pool_desc,
                                                                                    bwd_pool_desc);
 #endif

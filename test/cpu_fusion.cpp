@@ -2088,7 +2088,7 @@ TEST(batch_fusion, group_convolution)
     EXPECT_TRUE(test::all_close_f(rv, erv));
 }
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});

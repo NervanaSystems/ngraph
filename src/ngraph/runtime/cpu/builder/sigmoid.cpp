@@ -43,7 +43,7 @@ namespace ngraph
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto sigmoid_desc = mkldnn_emitter->get_sigmoid_forward_desc(node, false);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                 mkldnn_emitter->query_scratchpad_eltwise_forward(sigmoid_desc);
 #endif
 
@@ -90,7 +90,7 @@ namespace ngraph
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto fwd_desc = mkldnn_emitter->get_sigmoid_forward_desc(node, true);
                 auto bwd_desc = mkldnn_emitter->get_sigmoid_backward_desc(node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                 mkldnn_emitter->query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
 #endif
 

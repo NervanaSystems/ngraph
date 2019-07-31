@@ -142,7 +142,7 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t n) const
         auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
             this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
         memory input{{input_desc, executor::global_cpu_engine}, aligned_buffer};
         memory output{{output_desc, executor::global_cpu_engine}, target};
         reorder prim{input, output};

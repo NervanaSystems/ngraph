@@ -70,7 +70,7 @@ public:
             construct_conv_add();
             construct_conv_add_relu();
             construct_update_slice();
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
             construct_fuse_lstm_recurrent_state();
 #endif
             if (std::getenv("NGRAPH_DECONV_FUSE") != nullptr)
@@ -105,7 +105,7 @@ private:
     void construct_groupconv_batchnorm_global_stats_folding();
     void construct_groupconv_batchnorm_global_stats_folding_relu();
     void construct_update_slice();
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
     void construct_fuse_lstm_recurrent_state();
 #endif
     void construct_deconvolution_affine_folding();

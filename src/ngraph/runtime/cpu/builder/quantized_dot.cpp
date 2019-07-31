@@ -63,7 +63,7 @@ namespace ngraph
                     auto ip_attr =
                         mkldnn_emitter
                             ->get_inner_product_forward_attr<ngraph::op::QuantizedDotBias>(node);
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_ip_forward(ip_desc, ip_attr);
 #endif
 

@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <mkldnn.hpp>
 #include "ngraph/op/op.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
@@ -48,7 +49,7 @@ namespace ngraph
         class Rnn : public Op
         {
         public:
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
             CPU_BACKEND_API Rnn(std::shared_ptr<Node> src_layer,
                                 std::shared_ptr<Node> src_iter,
                                 std::shared_ptr<Node> weights_layer,

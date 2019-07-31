@@ -55,7 +55,7 @@ static const mkldnn_version_t* get_mkldnn_version()
 }
 #endif
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
 #define DATA_UNDEF data_undef
 #else
 #define DATA_UNDEF undef
@@ -263,7 +263,7 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::No
     }
 }
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
 std::map<element::Type, const mkldnn::memory::data_type>&
     runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
 {

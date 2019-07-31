@@ -24,7 +24,7 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
 #define FORMAT format
 #define FORMAT_KIND format
 #define FORMAT_KIND_UNDEF mkdnn_format_undef
@@ -226,7 +226,7 @@ namespace ngraph
                     return true;
                 }
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                 std::map<mkldnn::memory::format_kind, const std::string>&
                     get_mkldnn_format_kind_string_map();
                 const std::string&

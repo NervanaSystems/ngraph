@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
 shared_ptr<Node> op::Rnn::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 6)

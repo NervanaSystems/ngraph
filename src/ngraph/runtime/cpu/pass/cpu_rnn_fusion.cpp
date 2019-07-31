@@ -283,7 +283,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 
         auto bias = std::make_shared<ngraph::op::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
         std::shared_ptr<Node> src_iter =
             std::make_shared<ngraph::op::Concat>(NodeVector{hidden_state, cell_state}, 0);
         if (src_layer->get_shape()[1] != slc || src_iter->get_shape()[1] != sic)
@@ -359,7 +359,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto lstm_ht = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
     auto lstm_ct = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
     auto lstm_src_iter = std::make_shared<ngraph::op::Concat>(NodeVector{lstm_ht, lstm_ct}, 0);
     auto lstm_src_iter_label =
         std::make_shared<pattern::op::Label>(lstm_src_iter, nullptr, NodeVector{lstm_src_iter});
@@ -393,7 +393,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     ngraph::runtime::cpu::rnn_utils::rnntype ref_rnn_type =
         ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
     auto lstm = std::make_shared<ngraph::op::Lstm>(lstm_src_layer,
                                                    lstm_src_iter_label,
                                                    lstm_weights_layer_label,
@@ -814,7 +814,7 @@ static std::shared_ptr<Node> stack_rnn_inputs(NodeVector rnn_input_nodes)
 void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
 {
     auto rnn_src_layer = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
     auto rnn_src_iter = std::make_shared<pattern::op::Label>(element::f32, Shape{20, 100});
 #else
     auto rnn_src_iter = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
@@ -834,7 +834,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     auto ref_rnn_node = std::make_shared<ngraph::op::Rnn>(rnn_src_layer,
                                                           rnn_src_iter,
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                                                           rnn_src_iter_c,
 #endif
                                                           rnn_weights_layer,
@@ -855,7 +855,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     auto callback = [rnn_src_layer,
                      rnn_src_iter,
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                      rnn_src_iter_c,
 #endif
                      rnn_weights_layer,
@@ -927,7 +927,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto mrnn_src_layer =
             m.get_bound_nodes_for_pattern(rnn_src_layer)[number_of_rnn_cell_matched - 1];
         auto mrnn_src_iter = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_src_iter));
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
         auto mrnn_src_iter_c = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_src_iter_c));
 #endif
         auto mrnn_weights_layer =
@@ -937,7 +937,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
         NGRAPH_DEBUG << "src_layer: " << join(mrnn_src_layer->get_shape());
         NGRAPH_DEBUG << "src_iter: " << join(mrnn_src_iter->get_shape());
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
         NGRAPH_DEBUG << "src_iter_c: " << join(mrnn_src_iter_c->get_shape());
 #endif
         NGRAPH_DEBUG << "weights_layer: " << join(mrnn_weights_layer->get_shape());
@@ -956,7 +956,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
         auto rnn = std::make_shared<ngraph::op::Rnn>(mrnn_src_layer,
                                                      mrnn_src_iter,
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                                                      mrnn_src_iter_c,
 #endif
                                                      mrnn_weights_layer,
@@ -971,7 +971,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                      rnn_type);
 
         auto mrnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
         auto mrnn_ht_ct = std::make_shared<ngraph::op::GetOutputElement>(rnn, 1);
 
         // Replace all the users of RNN cell state {ct} across different user.
@@ -1169,7 +1169,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
 
         auto src_layer = rnn_ltor_node->get_arguments()[0];
         auto src_iter = construct_birnn_inputs(1);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
         auto weights_layer = construct_birnn_inputs(2);
         auto weights_iter = construct_birnn_inputs(3);
         auto bias = construct_birnn_inputs(4);

@@ -81,7 +81,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
             bool in_place_concat = true;
             auto output_md = mkldnn_utils::get_output_mkldnn_md(n.get(), 0);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
             auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
             for (size_t i = 0; i < n->get_input_size(); i++)
             {
@@ -287,7 +287,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             // check if input and output formats are the same
             auto output_md = mkldnn_utils::get_output_mkldnn_md(n.get(), 0);
             auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), 0);
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
             auto output_format = static_cast<mkldnn::memory::format>(output_md.data.format);
             auto input_format = static_cast<mkldnn::memory::format>(input_md.data.format);
             if (output_format != input_format)

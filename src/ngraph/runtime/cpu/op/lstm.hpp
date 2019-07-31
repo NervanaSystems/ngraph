@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <mkldnn.hpp>
 #include "ngraph/op/op.hpp"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/util.hpp"
@@ -40,7 +41,7 @@ namespace ngraph
 
 // This version of the LSTM op supports MKLDNN emitter code, this can be used standalone for computing RNN
 // without fusing RNN cell (LSTM)'s across time steps.
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
             Lstm(std::shared_ptr<Node> src_layer,
                  std::shared_ptr<Node> src_iter,
                  std::shared_ptr<Node> weights_layer,

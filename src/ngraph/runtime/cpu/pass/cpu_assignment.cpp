@@ -637,7 +637,7 @@ namespace ngraph
                 {
                     auto src_layer_rank = node->get_input_shape(0).size();
                     auto src_iter_rank = node->get_input_shape(1).size();
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                     auto weights_layer_rank = node->get_input_shape(2).size();
                     auto weights_iter_rank = node->get_input_shape(3).size();
                     auto bias_rank = node->get_input_shape(4).size();

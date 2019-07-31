@@ -81,7 +81,7 @@ namespace ngraph
                     auto batchnorm_desc =
                         mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, true);
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_batchnorm_forward(batchnorm_desc, ops);
 #endif
 
@@ -154,7 +154,7 @@ namespace ngraph
                     auto batchnorm_desc =
                         mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, false);
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_batchnorm_forward(batchnorm_desc, ops);
 #endif
 
@@ -441,7 +441,7 @@ namespace ngraph
                     static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
                 auto eps = batchnorm->get_eps_value();
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR >= 1
                 mkldnn_emitter->query_scratchpad_batchnorm_backward(
                     batchnorm_desc, input_desc, eps);
 #endif
