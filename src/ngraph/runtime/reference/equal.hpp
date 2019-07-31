@@ -16,8 +16,10 @@
 
 #pragma once
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
 
 #include <cstddef>
 
@@ -42,4 +44,6 @@ namespace ngraph
     }
 }
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
