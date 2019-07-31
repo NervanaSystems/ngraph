@@ -19,12 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::BoundedRelu::BoundedRelu(shared_ptr<Node> arg, float alpha)
-    : UnaryElementwiseArithmetic("BoundedRelu", {arg})
+const std::string op::BoundedRelu::type_name{"BoundedRelu"};
+
+op::BoundedRelu::BoundedRelu(const Output<Node>& arg, float alpha)
+    : UnaryElementwiseArithmetic(arg)
     , m_alpha(alpha)
 {
     constructor_validate_and_infer_types();
-    set_output_type(0, arg->get_element_type(), arg->get_shape());
+    set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
 shared_ptr<Node> op::BoundedRelu::copy_with_new_args(const NodeVector& new_args) const

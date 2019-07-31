@@ -153,7 +153,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
     auto b = std::make_shared<pattern::op::Label>(element::f32, shape_b);
 
     auto pmmb = std::make_shared<ngraph::op::MatmulBias>(
-        W, x, nullptr, W->get_shape(), x->get_shape(), false, false);
+        W, x, Output<Node>(), W->get_shape(), x->get_shape(), false, false);
     auto pbroadcast = std::make_shared<ngraph::op::Broadcast>(b, pmmb->get_shape(), AxisSet{0});
     auto padd = pmmb + pbroadcast;
 
@@ -243,7 +243,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 
         auto cg = std::shared_ptr<Node>(new ngraph::op::MatmulBias(pattern_map[W],
                                                                    pattern_map[x],
-                                                                   nullptr,
+                                                                   Output<Node>(),
                                                                    shape_arg0,
                                                                    shape_arg1,
                                                                    transpose_w,
