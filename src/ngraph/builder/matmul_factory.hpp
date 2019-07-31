@@ -22,12 +22,7 @@ namespace ngraph
 {
     namespace builder
     {
-        /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX MatMul operation.
-        ///
-        /// \note
-        /// The sub-graph is needed to adjust nGraph's Dot operation semantics to semantics
-        /// expected by ONNX, which are modeled on NumPy's "stacks of arrays" approach.
-        /// Differences are apparent with matrices of rank > 2.
+        /// \brief  Factory class which generates an nGraph sub-graph performing MatMul operation.
         ///
         /// This default implementation `MatmulFactory` creates a `MatMul` operation for floating-point data.
         /// Subclasses: `QLinearMatmulFactory` and `MatmulIntegerFactory` implement quantized versions.
@@ -38,8 +33,6 @@ namespace ngraph
                 : m_inputs(inputs)
             {
             }
-
-            virtual ~MatmulFactory() = default;
 
             /// \brief Create a sub-graph representing an ONNX MatMul operation.
             ///

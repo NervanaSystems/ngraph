@@ -91,6 +91,7 @@
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
@@ -2074,6 +2075,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::LeakyRelu:
         case OP_TYPEID::LSTMCell:
+        case OP_TYPEID::MatMul:
         case OP_TYPEID::MVN:
         case OP_TYPEID::Normalize:
         case OP_TYPEID::PRelu:
