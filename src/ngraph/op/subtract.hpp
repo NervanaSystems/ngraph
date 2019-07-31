@@ -26,13 +26,17 @@ namespace ngraph
         class Subtract : public util::BinaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            Subtract() = default;
             /// \brief Constructs an subtraction operation.
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             /// \param autob Auto broadcast specification
-            Subtract(const std::shared_ptr<Node>& arg0,
-                     const std::shared_ptr<Node>& arg1,
+            Subtract(const Output<Node>& arg0,
+                     const Output<Node>& arg1,
                      const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             virtual std::shared_ptr<Node>
@@ -42,6 +46,6 @@ namespace ngraph
                                            const NodeVector& deltas) override;
         };
     }
-    std::shared_ptr<ngraph::Node> operator-(const std::shared_ptr<ngraph::Node> arg0,
-                                            const std::shared_ptr<ngraph::Node> arg1);
+    std::shared_ptr<ngraph::Node> operator-(const Output<ngraph::Node> arg0,
+                                            const Output<ngraph::Node> arg1);
 }
