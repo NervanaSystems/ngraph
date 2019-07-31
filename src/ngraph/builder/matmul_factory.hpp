@@ -34,6 +34,8 @@ namespace ngraph
             {
             }
 
+            virtual ~MatmulFactory() = default;
+
             /// \brief Create a sub-graph representing an ONNX MatMul operation.
             ///
             /// \return NodeVector containing the sub-graph output node.

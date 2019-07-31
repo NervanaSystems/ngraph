@@ -76,7 +76,7 @@ NodeVector op::MatMul::decompose_op() const
         B = builder::reorder_axes(B, axes_order);
     }
 
-    auto factory = builder::MatmulFactory({A, B});
+    builder::MatmulFactory factory({A, B});
     return factory.make_matmul_op();
 }
 
