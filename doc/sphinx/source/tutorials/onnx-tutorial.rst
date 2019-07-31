@@ -79,10 +79,10 @@ Prepare your system:
     # apt install -y build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool
 
 
-Decide which backends to enable: 
+Choose which backends to enable: 
 
-Intel GPU backend
->>>>>>>>>>>>>>>>>
+**Intel GPU backend**
+
 
 To build nGraph with an Intel GPU backend, add ``-DNGRAPH_INTELGPU_ENABLE=TRUE``
 to the cmake command. For example: 
@@ -91,8 +91,7 @@ to the cmake command. For example:
 
     $ cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_INTELGPU_ENABLE=TRUE
 
-PlaidML backend
->>>>>>>>>>>>>>> 
+**PlaidML backend** 
 
 To build nGraph with a PlaidML backend, add ``-DNGRAPH_PLAIDML_ENABLE=TRUE`` to the cmake command. For example:
 
@@ -221,10 +220,9 @@ After installing ``ngraph-onnx`` from source, you can run inference on an
 ONNX model. The model is a file which contains a graph representing a
 mathematical formula (for example, a function such as y = f(x)). 
 
-Import a model
---------------
+**Import a model**
 
-Download models from the `ONNX model zoo <onnx_model_zoo_>`_. For example,
+Download a model from the `ONNX model zoo <onnx_model_zoo_>`_. For example,
 ResNet-50:
 
 ::
@@ -252,8 +250,7 @@ nGraph model:
 This creates an nGraph ``Function`` object, which can be used to execute a
 computation on a chosen backend.
 
-Run the computation
--------------------
+**Run the computation**
 
 An ONNX model usually contains a trained neural network. To run inference on
 this model, you execute the computation contained within the model.
@@ -281,9 +278,8 @@ Execute your model by calling the created ``computation`` object with input data
              7.45318757e-05, 4.80892748e-04, 5.67404088e-04, 9.48728994e-05,
              ...
 
-Run on an Intel GPU
-~~~~~~~~~~~~~~~~~~~
-
+Add additional backends
+-----------------------
 
 For running the computation on an Intel GPU, use the following line to create
 the runtime:  

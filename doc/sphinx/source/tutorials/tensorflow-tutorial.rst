@@ -314,6 +314,16 @@ To determine what backends are available, use the following API:
 
     ngraph_bridge.list_backends()
 
+**Intel GPU**
+
+To add the ``INTELGPU`` backend:
+
+::
+
+    ngraph_bridge.set_backend('INTELGPU')
+
+**PLaidML**
+
 To add the ``PLAIDML`` backend:
 
 ::
