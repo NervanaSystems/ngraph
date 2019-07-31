@@ -63,7 +63,7 @@ namespace ngraph
                 {
                 }
 
-                virtual std::string& description() const override
+                const std::string& description() const override
                 {
                     static std::string desc = "AnyOf";
                     return desc;

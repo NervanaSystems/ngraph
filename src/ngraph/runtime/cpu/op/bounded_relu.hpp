@@ -30,7 +30,6 @@ namespace ngraph
         class BoundedRelu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
-            CPU_BACKEND_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a BoundedRelu operation.
