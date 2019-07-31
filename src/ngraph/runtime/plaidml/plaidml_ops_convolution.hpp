@@ -19,6 +19,7 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
 
 namespace ngraph
 {
@@ -39,7 +40,7 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::Convolution final : public ngraph::op::Op
 {
 public:
-    NGRAPH_API
+    PLAIDML_BACKEND_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
     Convolution(std::shared_ptr<ngraph::op::Convolution> src,
@@ -66,7 +67,7 @@ private:
 class ngraph::runtime::plaidml::op::ConvolutionBackpropData final : public ngraph::op::Op
 {
 public:
-    NGRAPH_API
+    PLAIDML_BACKEND_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
     ConvolutionBackpropData(std::shared_ptr<ngraph::op::ConvolutionBackpropData> src,
@@ -93,7 +94,7 @@ private:
 class ngraph::runtime::plaidml::op::ConvolutionBackpropFilters final : public ngraph::op::Op
 {
 public:
-    NGRAPH_API
+    PLAIDML_BACKEND_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
     ConvolutionBackpropFilters(std::shared_ptr<ngraph::op::ConvolutionBackpropFilters> src,

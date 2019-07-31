@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
 #include "ngraph/runtime/plaidml/plaidml_ops_convolution.hpp"
 
 namespace ngraph
@@ -38,7 +39,7 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::Winograd final : public ngraph::op::Op
 {
 public:
-    NGRAPH_API
+    PLAIDML_BACKEND_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
     Winograd(std::shared_ptr<Convolution> conv, const OutputVector& args);
