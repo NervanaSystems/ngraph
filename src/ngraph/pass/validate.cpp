@@ -14,31 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/pass/validate.hpp"
+#include "ngraph/graph_util.hpp"
 
-#include <map>
-#include <string>
+using namespace ngraph;
 
-namespace ngraph
+bool pass::Validate::run_on_function(std::shared_ptr<Function> f)
 {
-    namespace pass
-    {
-        class PassConfig;
-    }
+    f->validate_nodes_and_infer_types();
+    return false;
 }
-
-class ngraph::pass::PassConfig
-{
-public:
-    PassConfig();
-    const std::map<std::string, bool>& get_enables() const { return m_pass_enables; }
-    void set_pass_enable(const std::string& name, bool enable);
-    bool get_pass_enable(const std::string& name) const;
-    const std::map<std::string, bool>& get_pass_attributes() const { return m_pass_attributes; }
-    void set_pass_attribute(const std::string& name, bool enable);
-    bool get_pass_attribute(const std::string& name) const;
-
-private:
-    std::map<std::string, bool> m_pass_enables;
-    std::map<std::string, bool> m_pass_attributes;
-};

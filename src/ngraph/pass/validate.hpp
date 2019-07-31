@@ -16,29 +16,20 @@
 
 #pragma once
 
-#include <map>
-#include <string>
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
     namespace pass
     {
-        class PassConfig;
+        class Validate : public FunctionPass
+        {
+        public:
+            Validate()
+                : FunctionPass()
+            {
+            }
+            bool run_on_function(std::shared_ptr<ngraph::Function> f) override;
+        };
     }
 }
-
-class ngraph::pass::PassConfig
-{
-public:
-    PassConfig();
-    const std::map<std::string, bool>& get_enables() const { return m_pass_enables; }
-    void set_pass_enable(const std::string& name, bool enable);
-    bool get_pass_enable(const std::string& name) const;
-    const std::map<std::string, bool>& get_pass_attributes() const { return m_pass_attributes; }
-    void set_pass_attribute(const std::string& name, bool enable);
-    bool get_pass_attribute(const std::string& name) const;
-
-private:
-    std::map<std::string, bool> m_pass_enables;
-    std::map<std::string, bool> m_pass_attributes;
-};

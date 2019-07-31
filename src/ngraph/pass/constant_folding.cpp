@@ -14,23 +14,38 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <numeric>
 #include <stdint.h>
 
 #include "constant_folding.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/equal.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/floor.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
@@ -38,6 +53,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/sign.hpp"
+#include "ngraph/op/slice.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -45,15 +61,26 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/add.hpp"
+#include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convert.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/divide.hpp"
+#include "ngraph/runtime/reference/equal.hpp"
+#include "ngraph/runtime/reference/floor.hpp"
+#include "ngraph/runtime/reference/greater.hpp"
+#include "ngraph/runtime/reference/greater_eq.hpp"
+#include "ngraph/runtime/reference/less.hpp"
+#include "ngraph/runtime/reference/less_eq.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
+#include "ngraph/runtime/reference/not.hpp"
+#include "ngraph/runtime/reference/not_equal.hpp"
+#include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
@@ -61,9 +88,11 @@
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
+#include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
+#include "ngraph/slice_plan.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -221,45 +250,59 @@ void pass::ConstantFolding::construct_constant_reshape()
             func = handler->second(reshape_match.get());
         }
 
+        std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
-        if (type == element::i32)
+        switch (type.get_type_enum())
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<int32_t>(constant_match, reshape_match, func));
-            return true;
-        }
-        if (type == element::i64)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<int64_t>(constant_match, reshape_match, func));
-            return true;
-        }
-        else if (type == element::i8)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<int8_t>(constant_match, reshape_match, func));
-            return true;
-        }
-        else if (type == element::f32)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<float>(constant_match, reshape_match, func));
-            return true;
-        }
-        else if (type == element::f64)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_reshape<double>(constant_match, reshape_match, func));
-            return true;
-        }
-        else if (type == element::bf16)
-        {
-            replace_node(
-                m.get_match_root(),
-                fold_constant_reshape<ngraph::bfloat16>(constant_match, reshape_match, func));
-            return true;
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false,
+                         "Encountered 'undefined' element type in constant_reshape_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_reshape_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_reshape<char>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_reshape<bfloat16>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_reshape<float16>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_reshape<float>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_reshape<double>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_reshape<int8_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_reshape<int16_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_reshape<int32_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_reshape<int64_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_reshape<uint8_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_reshape<uint16_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_reshape<uint32_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_reshape<uint64_t>(constant_match, reshape_match, func);
+            break;
         }
 
+        replace_node(m.get_match_root(), replacement);
         return false;
     };
 
@@ -267,6 +310,235 @@ void pass::ConstantFolding::construct_constant_reshape()
         make_shared<pattern::Matcher>(reshape, "ConstantFolding.ConstantReshape");
     this->add_matcher(
         reshape_matcher, constant_reshape_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+}
+
+template <class T>
+shared_ptr<op::Constant> fold_constant_dyn_reshape(shared_ptr<op::Constant> constant_data,
+                                                   shared_ptr<op::DynReshape> dyn_reshape)
+{
+    auto out_shape = dyn_reshape->get_shape();
+
+    AxisVector input_order(constant_data->get_shape().size());
+    std::iota(input_order.begin(), input_order.end(), 0);
+
+    vector<T> out_vec(shape_size(out_shape));
+
+    runtime::reference::reshape<T>(constant_data->get_data_ptr<T>(),
+                                   out_vec.data(),
+                                   constant_data->get_shape(),
+                                   input_order,
+                                   out_shape);
+
+    return make_shared<op::Constant>(dyn_reshape->get_element_type(), out_shape, out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_dyn_reshape()
+{
+    auto constant_data_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
+    auto constant_shape_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
+    auto dyn_reshape = make_shared<op::DynReshape>(constant_data_label, constant_shape_label);
+
+    // Note: No need to capture or consider constant_shape_label, because
+    // shape propagation will have transferred the info to dyn_reshape's
+    // output.
+    auto constant_dyn_reshape_callback = [constant_data_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_dyn_reshape_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_data_match =
+            static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
+        auto dyn_reshape_match = static_pointer_cast<op::DynReshape>(m.get_match_root());
+
+        std::shared_ptr<Node> replacement;
+        auto type = dyn_reshape_match->get_element_type();
+        switch (type.get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false,
+                         "Encountered 'undefined' element type in constant_dyn_reshape_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false,
+                         "Encountered 'dynamic' element type in constant_dyn_reshape_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_dyn_reshape<char>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::bf16:
+            replacement =
+                fold_constant_dyn_reshape<bfloat16>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::f16:
+            replacement =
+                fold_constant_dyn_reshape<float16>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_dyn_reshape<float>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_dyn_reshape<double>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_dyn_reshape<int8_t>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::i16:
+            replacement =
+                fold_constant_dyn_reshape<int16_t>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::i32:
+            replacement =
+                fold_constant_dyn_reshape<int32_t>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::i64:
+            replacement =
+                fold_constant_dyn_reshape<int64_t>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::u8:
+            replacement =
+                fold_constant_dyn_reshape<uint8_t>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::u16:
+            replacement =
+                fold_constant_dyn_reshape<uint16_t>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::u32:
+            replacement =
+                fold_constant_dyn_reshape<uint32_t>(constant_data_match, dyn_reshape_match);
+            break;
+        case element::Type_t::u64:
+            replacement =
+                fold_constant_dyn_reshape<uint64_t>(constant_data_match, dyn_reshape_match);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return false;
+    };
+
+    auto dyn_reshape_matcher =
+        make_shared<pattern::Matcher>(dyn_reshape, "ConstantFolding.ConstantDynReshape");
+    this->add_matcher(
+        dyn_reshape_matcher, constant_dyn_reshape_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+}
+
+template <class T>
+shared_ptr<op::Constant> fold_constant_transpose(shared_ptr<op::Constant> constant_data,
+                                                 shared_ptr<op::Constant> constant_perm,
+                                                 shared_ptr<op::Transpose> transpose)
+{
+    auto out_shape = transpose->get_shape();
+    auto input_order = constant_perm->get_axis_vector_val();
+
+    vector<T> out_vec(shape_size(out_shape));
+
+    runtime::reference::reshape<T>(constant_data->get_data_ptr<T>(),
+                                   out_vec.data(),
+                                   constant_data->get_shape(),
+                                   input_order,
+                                   out_shape);
+
+    return make_shared<op::Constant>(transpose->get_element_type(), out_shape, out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_transpose()
+{
+    auto constant_data_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
+    auto constant_perm_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto transpose = make_shared<op::Transpose>(constant_data_label, constant_perm_label);
+
+    auto constant_transpose_callback = [constant_data_label,
+                                        constant_perm_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_transpose_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_data_match =
+            static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
+        auto constant_perm_match =
+            static_pointer_cast<op::Constant>(pattern_map[constant_perm_label]);
+        auto transpose_match = static_pointer_cast<op::Transpose>(m.get_match_root());
+
+        std::shared_ptr<Node> replacement;
+        auto type = transpose_match->get_element_type();
+        switch (type.get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false,
+                         "Encountered 'undefined' element type in constant_transpose_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false,
+                         "Encountered 'dynamic' element type in constant_transpose_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_transpose<char>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_transpose<bfloat16>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_transpose<float16>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_transpose<float>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_transpose<double>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_transpose<int8_t>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_transpose<int16_t>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_transpose<int32_t>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_transpose<int64_t>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_transpose<uint8_t>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_transpose<uint16_t>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_transpose<uint32_t>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_transpose<uint64_t>(
+                constant_data_match, constant_perm_match, transpose_match);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return false;
+    };
+
+    auto transpose_matcher =
+        make_shared<pattern::Matcher>(transpose, "ConstantFolding.ConstantTranspose");
+    this->add_matcher(
+        transpose_matcher, constant_transpose_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 template <class T>
@@ -365,17 +637,17 @@ void pass::ConstantFolding::construct_constant_broadcast()
         broadcast_matcher, constant_broadcast_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
-template <class T>
+template <class Tin, class Tout>
 shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
                                               shared_ptr<op::Constant> b,
                                               shared_ptr<Node> binary,
                                               NodeExecutorTy func)
 {
     auto out_shape = binary->get_shape();
-    vector<T> out_vec(shape_size(out_shape));
 
     if (func != nullptr)
     {
+        vector<Tout> out_vec(shape_size(out_shape));
         vector<void*> inputs;
         inputs.push_back(const_cast<void*>(a->get_data_ptr()));
         inputs.push_back(const_cast<void*>(b->get_data_ptr()));
@@ -383,43 +655,160 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
         outputs.push_back(out_vec.data());
 
         func(inputs, outputs);
+        return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
     }
     else
     {
         if (std::dynamic_pointer_cast<op::Add>(binary))
         {
-            runtime::reference::add<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::add<Tin>(a->get_data_ptr<Tin>(),
+                                         b->get_data_ptr<Tin>(),
+                                         out_vec.data(),
+                                         shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Subtract>(binary))
+        else if (std::dynamic_pointer_cast<op::And>(binary))
         {
-            runtime::reference::subtract<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
-        }
-        else if (std::dynamic_pointer_cast<op::Multiply>(binary))
-        {
-            runtime::reference::multiply<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::logical_and<Tin>(a->get_data_ptr<Tin>(),
+                                                 b->get_data_ptr<Tin>(),
+                                                 out_vec.data(),
+                                                 shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else if (std::dynamic_pointer_cast<op::Divide>(binary))
         {
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
             shared_ptr<op::Divide> divop = std::dynamic_pointer_cast<op::Divide>(binary);
             bool pythondiv = divop->is_pythondiv();
-            runtime::reference::divide<T>(a->get_data_ptr<T>(),
-                                          b->get_data_ptr<T>(),
-                                          out_vec.data(),
-                                          shape_size(out_shape),
-                                          pythondiv);
+            runtime::reference::divide<Tin>(a->get_data_ptr<Tin>(),
+                                            b->get_data_ptr<Tin>(),
+                                            out_vec.data(),
+                                            shape_size(out_shape),
+                                            pythondiv);
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Minimum>(binary))
+        else if (std::dynamic_pointer_cast<op::Equal>(binary))
         {
-            runtime::reference::minimum<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::equal<Tin>(a->get_data_ptr<Tin>(),
+                                           b->get_data_ptr<Tin>(),
+                                           out_vec.data(),
+                                           shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::Greater>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::greater<Tin>(a->get_data_ptr<Tin>(),
+                                             b->get_data_ptr<Tin>(),
+                                             out_vec.data(),
+                                             shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::GreaterEq>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::greater_eq<Tin>(a->get_data_ptr<Tin>(),
+                                                b->get_data_ptr<Tin>(),
+                                                out_vec.data(),
+                                                shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::Less>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::less<Tin>(a->get_data_ptr<Tin>(),
+                                          b->get_data_ptr<Tin>(),
+                                          out_vec.data(),
+                                          shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::LessEq>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::less_eq<Tin>(a->get_data_ptr<Tin>(),
+                                             b->get_data_ptr<Tin>(),
+                                             out_vec.data(),
+                                             shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else if (std::dynamic_pointer_cast<op::Maximum>(binary))
         {
-            runtime::reference::maximum<T>(
-                a->get_data_ptr<T>(), b->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::maximum<Tin>(a->get_data_ptr<Tin>(),
+                                             b->get_data_ptr<Tin>(),
+                                             out_vec.data(),
+                                             shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::Minimum>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::minimum<Tin>(a->get_data_ptr<Tin>(),
+                                             b->get_data_ptr<Tin>(),
+                                             out_vec.data(),
+                                             shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::Multiply>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::multiply<Tin>(a->get_data_ptr<Tin>(),
+                                              b->get_data_ptr<Tin>(),
+                                              out_vec.data(),
+                                              shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::NotEqual>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
+            vector<char> out_vec(shape_size(out_shape));
+            runtime::reference::not_equal<Tin>(a->get_data_ptr<Tin>(),
+                                               b->get_data_ptr<Tin>(),
+                                               out_vec.data(),
+                                               shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::Or>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::logical_or<Tin>(a->get_data_ptr<Tin>(),
+                                                b->get_data_ptr<Tin>(),
+                                                out_vec.data(),
+                                                shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (std::dynamic_pointer_cast<op::Subtract>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::subtract<Tin>(a->get_data_ptr<Tin>(),
+                                              b->get_data_ptr<Tin>(),
+                                              out_vec.data(),
+                                              shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else
         {
@@ -427,16 +816,48 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
                          "fold_constant_binary must be consistent with is_supported_binary_op");
         }
     }
-
-    return make_shared<op::Constant>(a->get_element_type(), out_shape, out_vec);
 }
 
+template <class Tin>
+shared_ptr<op::Constant> fold_constant_binary_helper(const element::Type& et_out,
+                                                     shared_ptr<op::Constant> a,
+                                                     shared_ptr<op::Constant> b,
+                                                     shared_ptr<Node> binary,
+                                                     NodeExecutorTy func)
+{
+    switch (et_out.get_type_enum())
+    {
+    case element::Type_t::undefined:
+        NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_binary_callback");
+    case element::Type_t::dynamic:
+        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_binary_callback");
+    case element::Type_t::boolean: return fold_constant_binary<Tin, char>(a, b, binary, func);
+    case element::Type_t::bf16: return fold_constant_binary<Tin, bfloat16>(a, b, binary, func);
+    case element::Type_t::f16: return fold_constant_binary<Tin, float16>(a, b, binary, func);
+    case element::Type_t::f32: return fold_constant_binary<Tin, float>(a, b, binary, func);
+    case element::Type_t::f64: return fold_constant_binary<Tin, double>(a, b, binary, func);
+    case element::Type_t::i8: return fold_constant_binary<Tin, int8_t>(a, b, binary, func);
+    case element::Type_t::i16: return fold_constant_binary<Tin, int16_t>(a, b, binary, func);
+    case element::Type_t::i32: return fold_constant_binary<Tin, int32_t>(a, b, binary, func);
+    case element::Type_t::i64: return fold_constant_binary<Tin, int64_t>(a, b, binary, func);
+    case element::Type_t::u8: return fold_constant_binary<Tin, uint8_t>(a, b, binary, func);
+    case element::Type_t::u16: return fold_constant_binary<Tin, uint16_t>(a, b, binary, func);
+    case element::Type_t::u32: return fold_constant_binary<Tin, uint32_t>(a, b, binary, func);
+    case element::Type_t::u64: return fold_constant_binary<Tin, uint64_t>(a, b, binary, func);
+    }
+
+    NGRAPH_UNREACHABLE("Unreachable switch case");
+}
 bool is_supported_binary_op(std::shared_ptr<Node> n)
 {
-    return (std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::Subtract>(n) ||
-            std::dynamic_pointer_cast<op::Multiply>(n) ||
-            std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Maximum>(n) ||
-            std::dynamic_pointer_cast<op::Minimum>(n));
+    return (
+        std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::And>(n) ||
+        std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Equal>(n) ||
+        std::dynamic_pointer_cast<op::Greater>(n) || std::dynamic_pointer_cast<op::GreaterEq>(n) ||
+        std::dynamic_pointer_cast<op::Less>(n) || std::dynamic_pointer_cast<op::LessEq>(n) ||
+        std::dynamic_pointer_cast<op::Maximum>(n) || std::dynamic_pointer_cast<op::Minimum>(n) ||
+        std::dynamic_pointer_cast<op::Multiply>(n) || std::dynamic_pointer_cast<op::NotEqual>(n) ||
+        std::dynamic_pointer_cast<op::Or>(n) || std::dynamic_pointer_cast<op::Subtract>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()
@@ -445,8 +866,12 @@ void pass::ConstantFolding::construct_constant_binary()
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto b = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
-    auto is_bea = pattern::has_class<op::util::BinaryElementwiseArithmetic>();
-    auto bea = std::make_shared<pattern::op::Any>(a, is_bea, NodeVector{a, b});
+    auto is_be = [](std::shared_ptr<Node> n) {
+        return (pattern::has_class<op::util::BinaryElementwiseArithmetic>()(n) ||
+                pattern::has_class<op::util::BinaryElementwiseComparison>()(n) ||
+                pattern::has_class<op::util::BinaryElementwiseLogical>()(n));
+    };
+    auto be = std::make_shared<pattern::op::Any>(a, is_be, NodeVector{a, b});
 
     auto constant_binary_callback = [&, a, b](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_binary_callback against node = "
@@ -474,45 +899,86 @@ void pass::ConstantFolding::construct_constant_binary()
             func = handler->second(binary_match.get());
         }
 
-        auto type = a_match->get_element_type();
-        if (type == element::i32)
+        std::shared_ptr<Node> replacement;
+        auto in_type = a_match->get_output_element_type(0);
+        auto out_type = binary_match->get_output_element_type(0);
+        switch (in_type.get_type_enum())
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_binary<int>(a_match, b_match, binary_match, func));
-            return true;
-        }
-        else if (type == element::i8)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_binary<int8_t>(a_match, b_match, binary_match, func));
-            return true;
-        }
-        else if (type == element::f32)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_binary<float>(a_match, b_match, binary_match, func));
-            return true;
-        }
-        else if (type == element::f64)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_binary<double>(a_match, b_match, binary_match, func));
-            return true;
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_binary_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_binary_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement =
+                fold_constant_binary_helper<char>(out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_binary_helper<bfloat16>(
+                out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_binary_helper<float16>(
+                out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::f32:
+            replacement =
+                fold_constant_binary_helper<float>(out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::f64:
+            replacement =
+                fold_constant_binary_helper<double>(out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::i8:
+            replacement =
+                fold_constant_binary_helper<int8_t>(out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_binary_helper<int16_t>(
+                out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_binary_helper<int32_t>(
+                out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_binary_helper<int64_t>(
+                out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_binary_helper<uint8_t>(
+                out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_binary_helper<uint16_t>(
+                out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_binary_helper<uint32_t>(
+                out_type, a_match, b_match, binary_match, func);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_binary_helper<uint64_t>(
+                out_type, a_match, b_match, binary_match, func);
+            break;
         }
 
-        return false;
+        replace_node(m.get_match_root(), replacement);
+        return true;
     };
 
-    auto reshape_matcher = make_shared<pattern::Matcher>(bea, "ConstantFolding.ConstantBinary");
+    auto reshape_matcher = make_shared<pattern::Matcher>(be, "ConstantFolding.ConstantBinary");
     this->add_matcher(
         reshape_matcher, constant_binary_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
 {
-    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
-           std::dynamic_pointer_cast<op::Relu>(n) || std::dynamic_pointer_cast<op::Sign>(n) ||
-           std::dynamic_pointer_cast<op::Sqrt>(n);
+    return std::dynamic_pointer_cast<op::Abs>(n) || std::dynamic_pointer_cast<op::Ceiling>(n) ||
+           std::dynamic_pointer_cast<op::Floor>(n) || std::dynamic_pointer_cast<op::Negative>(n) ||
+           std::dynamic_pointer_cast<op::Not>(n) || std::dynamic_pointer_cast<op::Relu>(n) ||
+           std::dynamic_pointer_cast<op::Sign>(n) || std::dynamic_pointer_cast<op::Sqrt>(n);
 }
 
 template <class T>
@@ -549,9 +1015,24 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
             runtime::reference::abs<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
+        else if (std::dynamic_pointer_cast<op::Ceiling>(unary))
+        {
+            runtime::reference::ceiling<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
+        else if (std::dynamic_pointer_cast<op::Floor>(unary))
+        {
+            runtime::reference::floor<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
         else if (std::dynamic_pointer_cast<op::Negative>(unary))
         {
             runtime::reference::negate<T>(
+                constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
+        }
+        else if (std::dynamic_pointer_cast<op::Not>(unary))
+        {
+            runtime::reference::logical_not<T>(
                 constant->get_data_ptr<T>(), out_vec.data(), shape_size(out_shape));
         }
         else if (std::dynamic_pointer_cast<op::Relu>(unary))
@@ -582,9 +1063,11 @@ void pass::ConstantFolding::construct_constant_unary()
 {
     auto constant_label = make_shared<pattern::op::Label>(
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
-    auto is_uea = pattern::has_class<op::util::UnaryElementwiseArithmetic>();
-    auto uea =
-        std::make_shared<pattern::op::Any>(constant_label, is_uea, NodeVector{constant_label});
+    auto is_ue = [](std::shared_ptr<Node> n) {
+        return (pattern::has_class<op::util::UnaryElementwiseArithmetic>()(n) ||
+                pattern::has_class<op::Not>()(n));
+    };
+    auto ue = std::make_shared<pattern::op::Any>(constant_label, is_ue, NodeVector{constant_label});
 
     auto constant_unary_callback = [&, constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_unary_callback against node = "
@@ -666,7 +1149,7 @@ void pass::ConstantFolding::construct_constant_unary()
         return true;
     };
 
-    auto reshape_matcher = make_shared<pattern::Matcher>(uea, "ConstantFolding.ConstantUnary");
+    auto reshape_matcher = make_shared<pattern::Matcher>(ue, "ConstantFolding.ConstantUnary");
     this->add_matcher(reshape_matcher, constant_unary_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
@@ -1378,4 +1861,247 @@ void pass::ConstantFolding::construct_constant_concat()
     auto concat_matcher =
         make_shared<pattern::Matcher>(concat_op, "ConstantFolding.ConstantConcat");
     this->add_matcher(concat_matcher, constant_concat_callback, all_pass_property_off);
+}
+
+template <class T>
+shared_ptr<op::Constant> fold_constant_slice(shared_ptr<op::Constant> constant,
+                                             shared_ptr<op::Slice> slice)
+{
+    auto out_shape = slice->get_shape();
+    vector<T> out_vec(shape_size(out_shape));
+
+    runtime::reference::slice<T>(constant->get_data_ptr<T>(),
+                                 out_vec.data(),
+                                 constant->get_shape(),
+                                 slice->get_lower_bounds(),
+                                 slice->get_upper_bounds(),
+                                 slice->get_strides(),
+                                 out_shape);
+
+    return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_slice()
+{
+    auto data_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto slice_op = make_shared<op::Slice>(
+        data_label, Coordinate{1, 1, 1}, Coordinate{2, 3, 4}, Strides{1, 1, 2});
+
+    auto constant_slice_callback = [data_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_slice_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
+        auto slice = static_pointer_cast<op::Slice>(m.get_match_root());
+
+        std::shared_ptr<op::Constant> replacement;
+
+        switch (slice->get_output_element_type(0).get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_slice");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_slice");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_slice<char>(data_node, slice);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_slice<bfloat16>(data_node, slice);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_slice<float16>(data_node, slice);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_slice<float>(data_node, slice);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_slice<double>(data_node, slice);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_slice<int8_t>(data_node, slice);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_slice<int16_t>(data_node, slice);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_slice<int32_t>(data_node, slice);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_slice<int64_t>(data_node, slice);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_slice<uint8_t>(data_node, slice);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_slice<uint16_t>(data_node, slice);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_slice<uint32_t>(data_node, slice);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_slice<uint64_t>(data_node, slice);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto slice_matcher = make_shared<pattern::Matcher>(slice_op, "ConstantFolding.ConstantSlice");
+    this->add_matcher(slice_matcher, constant_slice_callback, all_pass_property_off);
+}
+
+template <class T>
+shared_ptr<op::Constant> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
+                                                 shared_ptr<op::Constant> lb,
+                                                 shared_ptr<op::Constant> ub,
+                                                 shared_ptr<op::Constant> strides,
+                                                 shared_ptr<op::DynSlice> slice)
+{
+    SlicePlan plan = make_slice_plan(data->get_shape(),
+                                     lb->get_vector<int64_t>(),
+                                     ub->get_vector<int64_t>(),
+                                     strides->get_vector<int64_t>(),
+                                     slice->get_lower_bounds_mask(),
+                                     slice->get_upper_bounds_mask(),
+                                     slice->get_new_axis(),
+                                     slice->get_shrink_axis(),
+                                     slice->get_ellipsis_mask());
+
+    vector<T> slice_out_vec(shape_size(plan.reshape_in_shape));
+    runtime::reference::slice<T>(data->get_data_ptr<T>(),
+                                 slice_out_vec.data(),
+                                 data->get_shape(),
+                                 Coordinate(plan.begins.begin(), plan.begins.end()),
+                                 Coordinate(plan.ends.begin(), plan.ends.end()),
+                                 Strides(plan.strides.begin(), plan.strides.end()),
+                                 plan.reshape_in_shape);
+
+    vector<T> reshape_out_vec(shape_size(plan.reshape_out_shape));
+    runtime::reference::reshape<T>(slice_out_vec.data(),
+                                   reshape_out_vec.data(),
+                                   plan.reshape_in_shape,
+                                   get_default_order(plan.reshape_in_shape.size()),
+                                   plan.reshape_out_shape);
+
+    vector<T> reverse_out_vec(shape_size(plan.reshape_out_shape));
+    runtime::reference::reverse<T>(reshape_out_vec.data(),
+                                   reverse_out_vec.data(),
+                                   plan.reshape_out_shape,
+                                   plan.reshape_out_shape,
+                                   plan.reverse_axes);
+
+    return make_shared<op::Constant>(
+        data->get_element_type(), plan.reshape_out_shape, reverse_out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_dyn_slice()
+{
+    auto data_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto lb_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
+    auto ub_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
+    auto strides_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
+    auto dyn_slice_op = make_shared<op::DynSlice>(data_label,
+                                                  lb_label,
+                                                  ub_label,
+                                                  strides_label,
+                                                  AxisSet{},
+                                                  AxisSet{},
+                                                  AxisSet{},
+                                                  AxisSet{},
+                                                  AxisSet{});
+
+    auto constant_dyn_slice_callback = [data_label, lb_label, ub_label, strides_label](
+        pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_dyn_slice_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
+        auto lb_node = static_pointer_cast<op::Constant>(pattern_map[lb_label]);
+        auto ub_node = static_pointer_cast<op::Constant>(pattern_map[ub_label]);
+        auto strides_node = static_pointer_cast<op::Constant>(pattern_map[strides_label]);
+        auto dyn_slice = static_pointer_cast<op::DynSlice>(m.get_match_root());
+
+        std::shared_ptr<op::Constant> replacement;
+
+        switch (dyn_slice->get_output_element_type(0).get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_dyn_slice");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_dyn_slice");
+            break;
+        case element::Type_t::boolean:
+            replacement =
+                fold_constant_dyn_slice<char>(data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_dyn_slice<bfloat16>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_dyn_slice<float16>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_dyn_slice<float>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_dyn_slice<double>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_dyn_slice<int8_t>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_dyn_slice<int16_t>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_dyn_slice<int32_t>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_dyn_slice<int64_t>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_dyn_slice<uint8_t>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_dyn_slice<uint16_t>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_dyn_slice<uint32_t>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_dyn_slice<uint64_t>(
+                data_node, lb_node, ub_node, strides_node, dyn_slice);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto dyn_slice_matcher =
+        make_shared<pattern::Matcher>(dyn_slice_op, "ConstantFolding.ConstantDynSlice");
+    this->add_matcher(dyn_slice_matcher, constant_dyn_slice_callback, all_pass_property_off);
 }
