@@ -18,6 +18,7 @@
 
 #include "ngraph/coordinate.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/strides.hpp"
 
 namespace ngraph
@@ -50,7 +51,7 @@ namespace ngraph
         class UpdateSlice : public Op
         {
         public:
-            NGRAPH_API
+            CPU_BACKEND_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a tensor slice update operation.

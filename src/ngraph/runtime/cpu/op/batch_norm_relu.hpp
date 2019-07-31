@@ -30,7 +30,7 @@ namespace ngraph
         class BatchNormTrainingRelu : public Op
         {
         public:
-            NGRAPH_API
+            CPU_BACKEND_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             CPU_BACKEND_API BatchNormTrainingRelu(double eps,
@@ -60,7 +60,7 @@ namespace ngraph
         class BatchNormInferenceRelu : public Op
         {
         public:
-            NGRAPH_API
+            CPU_BACKEND_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             BatchNormInferenceRelu(double eps,

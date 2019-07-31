@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/util.hpp"
 
@@ -27,7 +28,7 @@ namespace ngraph
         class Lstm : public Op
         {
         public:
-            NGRAPH_API
+            CPU_BACKEND_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             // INPUTS:
