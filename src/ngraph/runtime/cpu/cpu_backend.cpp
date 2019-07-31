@@ -58,6 +58,16 @@ extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
 }
 #endif
 
+void runtime::cpu::static_initialize()
+{
+    static bool s_is_initialized = false;
+    if (!s_is_initialized)
+    {
+        s_is_initialized = true;
+        BackendManager::register_backend("CPU", runtime::cpu::get_backend_constructor_pointer());
+    }
+}
+
 namespace
 {
     static class CPUStaticInit
