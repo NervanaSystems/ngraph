@@ -44,7 +44,12 @@ public:
         REVERSE,
         PRODUCT,
         SUM,
-        CONCAT
+        CONCAT,
+        GATHER,
+        SLICE,
+        DYN_SLICE,
+        DYN_RESHAPE,
+        TRANSPOSE
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -64,6 +69,11 @@ public:
         construct_constant_product();
         construct_constant_sum();
         construct_constant_concat();
+        construct_constant_gather();
+        construct_constant_slice();
+        construct_constant_dyn_slice();
+        construct_constant_dyn_reshape();
+        construct_constant_transpose();
     }
 
     //this allows to specify the order in which matchers will be run
@@ -90,6 +100,11 @@ public:
             case CFTransformations::PRODUCT: construct_constant_product(); break;
             case CFTransformations::SUM: construct_constant_sum(); break;
             case CFTransformations::CONCAT: construct_constant_concat(); break;
+            case CFTransformations::GATHER: construct_constant_gather(); break;
+            case CFTransformations::SLICE: construct_constant_slice(); break;
+            case CFTransformations::DYN_SLICE: construct_constant_dyn_slice(); break;
+            case CFTransformations::DYN_RESHAPE: construct_constant_dyn_reshape(); break;
+            case CFTransformations::TRANSPOSE: construct_constant_transpose(); break;
             }
         }
     }
@@ -108,6 +123,11 @@ private:
     void construct_constant_product();
     void construct_constant_sum();
     void construct_constant_concat();
+    void construct_constant_gather();
+    void construct_constant_slice();
+    void construct_constant_dyn_slice();
+    void construct_constant_dyn_reshape();
+    void construct_constant_transpose();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };
