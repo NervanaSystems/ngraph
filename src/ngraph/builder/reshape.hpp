@@ -27,37 +27,37 @@ namespace ngraph
 {
     namespace builder
     {
-        /// \brief      Change shape of input tensor.
+        /// \brief      Change shape of a value
         ///
-        /// \param[in]  node   The node producing the tensor to be reshaped.
-        /// \param[in]  shape  The new shape for input tensor.
+        /// \param[in]  value  The value to be reshaped.
+        /// \param[in]  shape  The new shape.
         ///
-        /// \return     The node representing a Reshape operation.
+        /// \return     The reshaped value.
         ///
-        std::shared_ptr<Node> reshape(const std::shared_ptr<Node>& node, const Shape& shape);
+        std::shared_ptr<Node> reshape(const Output<Node>& value, const Shape& shape);
 
         /// \brief Permute axes according to specified axes_order parameter.
         ///
-        /// \param node The node which axes we want to permute.
-        /// \param axes_order The permutation of node tensor axes.
+        /// \param value The vlaue whose axes we want to permute.
+        /// \param axes_order The permutation of axes.
         ///
-        /// \return: New node with permuted axes.
-        std::shared_ptr<Node> reorder_axes(const std::shared_ptr<Node>& node,
-                                           std::vector<std::size_t> axes_order);
+        /// \return: Value with permuted axes.
+        std::shared_ptr<Node> reorder_axes(const Output<Node>& value,
+                                           std::vector<size_t> axes_order = {});
 
-        /// \brief Return transposed tensor (with axes in reversed order).
+        /// \brief Return transposed vlaue (with axes in reversed order).
         ///
-        /// \param node Input tensor we want to transpose
+        /// \param value Value to transpose.
         ///
-        /// \return: New node with reversed dimensions.
-        std::shared_ptr<Node> transpose(const std::shared_ptr<Node>& node);
+        /// \return: Value with reversed dimensions.
+        std::shared_ptr<Node> transpose(const Output<Node>& value);
 
-        /// \brief Flatten the input tensor into a 2D matrix.
+        /// \brief Flatten a value into a 2D matrix.
         ///
-        /// \param node The tensor to be flattened.
+        /// \param value The tensor to be flattened.
         /// \param axis The axis dividing shape.
         ///
-        /// \return The new node will be a 2D matrix representing the flattened input node.
-        std::shared_ptr<Node> flatten(const std::shared_ptr<Node>& node, int axis);
+        /// \return The new value will be a 2D matrix representing the flattened input node.
+        std::shared_ptr<Node> flatten(const Output<Node>& value, int axis);
     } // namespace  builder
 } // namespace  ngraph
