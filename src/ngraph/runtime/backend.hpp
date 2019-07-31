@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 
 #include "ngraph/function.hpp"
 #include "ngraph/pass/pass_config.hpp"
@@ -172,5 +173,7 @@ public:
     virtual bool is_device_memory(void* ptr);
 
 private:
+    // mutex to modify s_backend_shared_library_search_directory thread safe
+    static std::mutex m_mtx;
     static std::string s_backend_shared_library_search_directory;
 };

@@ -31,10 +31,11 @@
 using namespace std;
 using namespace ngraph;
 
+std::mutex runtime::Backend::m_mtx;
 std::string runtime::Backend::s_backend_shared_library_search_directory;
 
 // This finds the full path of the containing shared library
-static string find_my_file()
+static string find_my_pathname()
 {
 #ifdef _WIN32
     HMODULE hModule = GetModuleHandleW(L"ngraph.dll");
@@ -48,7 +49,7 @@ static string find_my_file()
     return path;
 #else
     Dl_info dl_info;
-    dladdr(reinterpret_cast<void*>(find_my_file), &dl_info);
+    dladdr(reinterpret_cast<void*>(find_my_pathname), &dl_info);
     return dl_info.dli_fname;
 #endif
 }
@@ -116,7 +117,7 @@ void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec
 
 std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_stream)
 {
-    throw runtime_error("load opertion unimplemented.");
+    throw runtime_error("load operation unimplemented.");
 }
 
 bool runtime::Backend::is_device_memory(void* ptr)
@@ -128,6 +129,7 @@ bool runtime::Backend::is_device_memory(void* ptr)
 
 void runtime::Backend::set_backend_shared_library_search_directory(const string& path)
 {
+    std::lock_guard<std::mutex> lock(runtime::Backend::m_mtx);
     s_backend_shared_library_search_directory = path;
 }
 
@@ -135,7 +137,7 @@ const string& runtime::Backend::get_backend_shared_library_search_directory()
 {
     if (s_backend_shared_library_search_directory.empty())
     {
-        s_backend_shared_library_search_directory = find_my_file();
+        s_backend_shared_library_search_directory = find_my_pathname();
     }
     return s_backend_shared_library_search_directory;
 }
