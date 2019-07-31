@@ -21,7 +21,9 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
@@ -64,7 +66,9 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/add.hpp"
+#include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
@@ -1720,6 +1724,75 @@ void pass::ConstantFolding::construct_constant_arithmetic_reduction()
     this->add_matcher(arithmetic_reduction_matcher,
                       constant_arithmetic_reduction_callback,
                       all_pass_property_off);
+}
+
+static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
+                                                                shared_ptr<Node> reduction_node)
+{
+    vector<char> out_vec(shape_size(reduction_node->get_shape()));
+
+    if (auto p = dynamic_pointer_cast<::ngraph::op::All>(reduction_node))
+    {
+        runtime::reference::all(constant->get_vector<char>().data(),
+                                out_vec.data(),
+                                constant->get_output_shape(0),
+                                reduction_node->get_shape(),
+                                p->get_reduction_axes());
+    }
+    else if (auto p = dynamic_pointer_cast<::ngraph::op::Any>(reduction_node))
+    {
+        runtime::reference::any(constant->get_vector<char>().data(),
+                                out_vec.data(),
+                                constant->get_output_shape(0),
+                                reduction_node->get_shape(),
+                                p->get_reduction_axes());
+    }
+    else
+    {
+        NGRAPH_CHECK(false,
+                     "Internal nGraph error: Ops handled in "
+                     "fold_constant_logical_reduction must be consistent with those "
+                     "matched in construct_constant_logical_reduction");
+    }
+
+    return make_shared<op::Constant>(
+        reduction_node->get_output_element_type(0), reduction_node->get_shape(), out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_logical_reduction()
+{
+    auto constant_data_label = make_shared<pattern::op::Label>(
+        element::boolean, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto constant_axes_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto is_supported_reduction = [](std::shared_ptr<Node> n) {
+        return (pattern::has_class<::ngraph::op::All>()(n) ||
+                pattern::has_class<::ngraph::op::Any>()(n));
+    };
+    auto reduction =
+        std::make_shared<pattern::op::Any>(element::i32,
+                                           Shape{2},
+                                           is_supported_reduction,
+                                           NodeVector{constant_data_label, constant_axes_label});
+
+    auto constant_logical_reduction_callback = [constant_data_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_logical_reduction_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
+        auto reduction_match = m.get_match_root();
+
+        replace_node(reduction_match,
+                     fold_constant_logical_reduction(constant_match, reduction_match));
+        return true;
+    };
+
+    auto logical_reduction_matcher =
+        make_shared<pattern::Matcher>(reduction, "ConstantFolding.ConstantLogicalReduction");
+    this->add_matcher(
+        logical_reduction_matcher, constant_logical_reduction_callback, all_pass_property_off);
 }
 
 template <typename T>

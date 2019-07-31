@@ -43,6 +43,7 @@ public:
         SHAPE_OF,
         REVERSE,
         ARITHMETIC_REDUCTION,
+        LOGICAL_REDUCTION,
         CONCAT,
         GATHER,
         SLICE,
@@ -66,6 +67,7 @@ public:
         construct_constant_shape_of();
         construct_constant_reverse();
         construct_constant_arithmetic_reduction();
+        construct_constant_logical_reduction();
         construct_constant_concat();
         construct_constant_gather();
         construct_constant_slice();
@@ -98,6 +100,9 @@ public:
             case CFTransformations::ARITHMETIC_REDUCTION:
                 construct_constant_arithmetic_reduction();
                 break;
+            case CFTransformations::LOGICAL_REDUCTION:
+                construct_constant_logical_reduction();
+                break;
             case CFTransformations::CONCAT: construct_constant_concat(); break;
             case CFTransformations::GATHER: construct_constant_gather(); break;
             case CFTransformations::SLICE: construct_constant_slice(); break;
@@ -120,6 +125,7 @@ private:
     void construct_constant_shape_of();
     void construct_constant_reverse();
     void construct_constant_arithmetic_reduction();
+    void construct_constant_logical_reduction();
     void construct_constant_concat();
     void construct_constant_gather();
     void construct_constant_slice();
