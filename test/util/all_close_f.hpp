@@ -59,6 +59,13 @@ static_assert((DEFAULT_DOUBLE_TOLERANCE_BITS >= 0) &&
                   (DEFAULT_DOUBLE_TOLERANCE_BITS < DOUBLE_MANTISSA_BITS),
               "DEFAULT_DOUBLE_TOLERANCE_BITS must be in range [0, 53)");
 
+#ifndef DEFAULT_FLOAT_MIN_SIGNAL
+#define DEFAULT_FLOAT_MIN_SIGNAL 1e-20f
+#endif
+#ifndef DEFAULT_DOUBLE_MIN_SIGNAL
+#define DEFAULT_DOUBLE_MIN_SIGNAL 1e-30f
+#endif
+
 namespace ngraph
 {
     namespace test
@@ -83,7 +90,7 @@ namespace ngraph
         ///
         /// This function uses hard-coded value of 8 bit exponent_bits, so it's only valid for
         /// bfloat and f32.
-        uint32_t float_distance(float a, float b, float min_signal = 0.0f);
+        uint32_t float_distance(float a, float b, float min_signal = DEFAULT_FLOAT_MIN_SIGNAL);
 
         /// \brief Determine distance between two f64 numbers
         /// \param a First number to compare
@@ -102,7 +109,7 @@ namespace ngraph
         /// double (s1, e11, m52) has 52 + 1 = 53 bits of mantissa or bit_precision
         ///
         /// This function uses hard-coded value of 11 bit exponent_bits, so it's only valid for f64.
-        uint64_t float_distance(double a, double b, double min_signal = 0.0);
+        uint64_t float_distance(double a, double b, double min_signal = DEFAULT_DOUBLE_MIN_SIGNAL);
 
         /// \brief Check if the two f32 numbers are close
         /// \param a First number to compare
@@ -128,7 +135,7 @@ namespace ngraph
         bool close_f(float a,
                      float b,
                      int tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS,
-                     float min_signal = 0.0f);
+                     float min_signal = DEFAULT_FLOAT_MIN_SIGNAL);
 
         /// \brief Check if the two f64 numbers are close
         /// \param a First number to compare
@@ -151,7 +158,7 @@ namespace ngraph
         bool close_f(double a,
                      double b,
                      int tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS,
-                     double min_signal = 0.0);
+                     double min_signal = DEFAULT_DOUBLE_MIN_SIGNAL);
 
         /// \brief Determine distances between two vectors of f32 numbers
         /// \param a Vector of floats to compare
@@ -162,7 +169,7 @@ namespace ngraph
         /// See float_distance for limitations and assumptions.
         std::vector<uint32_t> float_distances(const std::vector<float>& a,
                                               const std::vector<float>& b,
-                                              float min_signal = 0.0f);
+                                              float min_signal = DEFAULT_FLOAT_MIN_SIGNAL);
 
         /// \brief Determine distances between two vectors of f64 numbers
         /// \param a Vector of doubles to compare
@@ -173,7 +180,7 @@ namespace ngraph
         /// See float_distance for limitations and assumptions.
         std::vector<uint64_t> float_distances(const std::vector<double>& a,
                                               const std::vector<double>& b,
-                                              double min_signal = 0.0);
+                                              double min_signal = DEFAULT_DOUBLE_MIN_SIGNAL);
 
         /// \brief Determine number of matching mantissa bits given a distance
         /// \param distance Distance calculated by float_distance
@@ -198,7 +205,7 @@ namespace ngraph
         ::testing::AssertionResult all_close_f(const std::vector<float>& a,
                                                const std::vector<float>& b,
                                                int tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS,
-                                               float min_signal = 0.0f);
+                                               float min_signal = DEFAULT_FLOAT_MIN_SIGNAL);
 
         /// \brief Check if the two double floating point vectors are all close
         /// \param a First number to compare
@@ -209,7 +216,7 @@ namespace ngraph
         ::testing::AssertionResult all_close_f(const std::vector<double>& a,
                                                const std::vector<double>& b,
                                                int tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS,
-                                               double min_signal = 0.0);
+                                               double min_signal = DEFAULT_DOUBLE_MIN_SIGNAL);
 
         /// \brief Check if the two TensorViews are all close in float
         /// \param a First Tensor to compare
@@ -220,7 +227,7 @@ namespace ngraph
         ::testing::AssertionResult all_close_f(const std::shared_ptr<runtime::Tensor>& a,
                                                const std::shared_ptr<runtime::Tensor>& b,
                                                int tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS,
-                                               float min_signal = 0.0f);
+                                               float min_signal = DEFAULT_FLOAT_MIN_SIGNAL);
 
         /// \brief Check if the two vectors of TensorViews are all close in float
         /// \param as First vector of Tensor to compare
@@ -232,6 +239,6 @@ namespace ngraph
             all_close_f(const std::vector<std::shared_ptr<runtime::Tensor>>& as,
                         const std::vector<std::shared_ptr<runtime::Tensor>>& bs,
                         int tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS,
-                        float min_signal = 0.0f);
+                        float min_signal = DEFAULT_FLOAT_MIN_SIGNAL);
     }
 }

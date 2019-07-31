@@ -74,9 +74,11 @@ uint32_t test::float_distance(float a, float b, float min_signal)
     uint32_t a_uint_abs = (abs_value_bits_mask & a_fu.i);
     uint32_t b_uint_abs = (abs_value_bits_mask & b_fu.i);
     uint32_t min_signal_uint_abs = (abs_value_bits_mask & min_signal_fu.i);
-    if ((a_uint_abs < min_signal_uint_abs) && (b_uint_abs < min_signal_uint_abs))
+    if ((a_fu.i == 0 && b_uint_abs < min_signal_uint_abs) ||
+        (b_fu.i == 0 && a_uint_abs < min_signal_uint_abs))
     {
-        // Both a & b below minimum signal
+        // One of a or b are zero. Since this algorthm breaks if one value is zero we
+        // special case this
         distance = FLOAT_BELOW_MIN_SIGNAL;
     }
     else
@@ -129,9 +131,11 @@ uint64_t test::float_distance(double a, double b, double min_signal)
     uint64_t a_uint_abs = (abs_value_bits_mask & a_du.i);
     uint64_t b_uint_abs = (abs_value_bits_mask & b_du.i);
     uint64_t min_signal_uint_abs = (abs_value_bits_mask & min_signal_du.i);
-    if ((a_uint_abs < min_signal_uint_abs) && (b_uint_abs < min_signal_uint_abs))
+    if ((a_du.i == 0 && b_uint_abs < min_signal_uint_abs) ||
+        (b_du.i == 0 && a_uint_abs < min_signal_uint_abs))
     {
-        // Both a & b below minimum signal
+        // One of a or b are zero. Since this algorthm breaks if one value is zero we
+        // special case this
         distance = DOUBLE_BELOW_MIN_SIGNAL;
     }
     else
