@@ -46,6 +46,8 @@ public:
         SUM,
         CONCAT,
         GATHER,
+        SLICE,
+        DYN_SLICE,
         DYN_RESHAPE,
         TRANSPOSE
     };
@@ -68,6 +70,8 @@ public:
         construct_constant_sum();
         construct_constant_concat();
         construct_constant_gather();
+        construct_constant_slice();
+        construct_constant_dyn_slice();
         construct_constant_dyn_reshape();
         construct_constant_transpose();
     }
@@ -97,6 +101,8 @@ public:
             case CFTransformations::SUM: construct_constant_sum(); break;
             case CFTransformations::CONCAT: construct_constant_concat(); break;
             case CFTransformations::GATHER: construct_constant_gather(); break;
+            case CFTransformations::SLICE: construct_constant_slice(); break;
+            case CFTransformations::DYN_SLICE: construct_constant_dyn_slice(); break;
             case CFTransformations::DYN_RESHAPE: construct_constant_dyn_reshape(); break;
             case CFTransformations::TRANSPOSE: construct_constant_transpose(); break;
             }
@@ -118,6 +124,8 @@ private:
     void construct_constant_sum();
     void construct_constant_concat();
     void construct_constant_gather();
+    void construct_constant_slice();
+    void construct_constant_dyn_slice();
     void construct_constant_dyn_reshape();
     void construct_constant_transpose();
 

@@ -768,6 +768,72 @@ TEST(constant_folding, const_gather)
     ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
+TEST(constant_folding, const_slice)
+{
+    Shape shape_in{16};
+
+    vector<int> values_in{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    auto slice = make_shared<op::Slice>(constant, Coordinate{2}, Coordinate{15}, Strides{3});
+
+    auto f = make_shared<Function>(slice, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Slice>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> sliced_values{3, 6, 9, 12, 15};
+    ASSERT_EQ(sliced_values, values_out);
+}
+
+TEST(constant_folding, const_dyn_slice)
+{
+    Shape shape_in{16};
+
+    vector<int> values_in{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    auto constant_data = make_shared<op::Constant>(element::i32, shape_in, values_in);
+    vector<int> values_lb{2};
+    auto constant_lb = make_shared<op::Constant>(element::i64, Shape{1}, values_lb);
+    vector<int> values_ub{15};
+    auto constant_ub = make_shared<op::Constant>(element::i64, Shape{1}, values_ub);
+    vector<int> values_strides{3};
+    auto constant_strides = make_shared<op::Constant>(element::i64, Shape{1}, values_strides);
+    auto dyn_slice = make_shared<op::DynSlice>(constant_data,
+                                               constant_lb,
+                                               constant_ub,
+                                               constant_strides,
+                                               AxisSet{},
+                                               AxisSet{},
+                                               AxisSet{},
+                                               AxisSet{},
+                                               AxisSet{});
+
+    auto f = make_shared<Function>(dyn_slice, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::DynSlice>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int>();
+
+    vector<int> sliced_values{3, 6, 9, 12, 15};
+    ASSERT_EQ(sliced_values, values_out);
+}
+
 TEST(constant_folding, constant_dyn_reshape)
 {
     Shape shape_in{2, 4};
