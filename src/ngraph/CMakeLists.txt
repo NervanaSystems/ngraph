@@ -433,6 +433,8 @@ set (SRC
     pass/shape_relevance.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
+    pass/validate.cpp
+    pass/validate.hpp
     pass/visualize_tree.cpp
     pass/visualize_tree.hpp
     pass/zero_dim_tensor_elimination.cpp
@@ -476,6 +478,8 @@ set (SRC
     shape.hpp
     shape_util.cpp
     shape_util.hpp
+    slice_plan.cpp
+    slice_plan.hpp
     specialize_function.cpp
     specialize_function.hpp
     state/rng_state.cpp

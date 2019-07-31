@@ -55,16 +55,19 @@ NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
     vector<float> weights(512, 0.5f);
     vector<float> rv(128);
 
-    auto a = backend->create_tensor(element::f32, shape_a, input.data());
-    auto b = backend->create_tensor(element::f32, shape_b, weights.data());
-    auto result = backend->create_tensor(element::f32, shape_r, rv.data());
+    auto a = backend->create_tensor(element::f32, shape_a);
+    auto b = backend->create_tensor(element::f32, shape_b);
+    auto result = backend->create_tensor(element::f32, shape_r);
 
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a, b});
+    copy_data(a, input);
+    copy_data(b, weights);
 
-    vector<float> rv_saved(rv);
+    auto exec = backend->compile(f);
+    exec->call_with_validate({result}, {a, b});
+
+    vector<float> rv_saved(read_vector<float>(result));
 
     b->set_stale(false);
-    handle->call_with_validate({result}, {a, b});
-    EXPECT_TRUE(test::all_close_f(rv_saved, rv));
+    exec->call_with_validate({result}, {a, b});
+    EXPECT_TRUE(test::all_close_f(rv_saved, read_vector<float>(result)));
 }

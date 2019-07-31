@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -27,9 +28,12 @@ namespace ngraph
         class QuantizedMatmul : public Op
         {
         public:
-            QuantizedMatmul(const std::shared_ptr<Node>& data,
-                            const std::shared_ptr<Node>& weights,
-                            const std::shared_ptr<Node>& scale,
+            CPU_BACKEND_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            QuantizedMatmul(const Output<Node>& data,
+                            const Output<Node>& weights,
+                            const Output<Node>& scale,
                             bool requantize = true,
                             bool with_relu = false);
 

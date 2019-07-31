@@ -14,17 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include "ngraph/pass/validate.hpp"
+#include "ngraph/graph_util.hpp"
 
-#include "ngraph/op/fused/elu.hpp"
-#include "pyngraph/ops/elu.hpp"
+using namespace ngraph;
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_Elu(py::module m)
+bool pass::Validate::run_on_function(std::shared_ptr<Function> f)
 {
-    py::class_<ngraph::op::Elu, std::shared_ptr<ngraph::op::Elu>, ngraph::op::Op> elu(m, "Elu");
-    elu.doc() = "ngraph.impl.op.Elu wraps ngraph::op::Elu";
-    elu.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
+    f->validate_nodes_and_infer_types();
+    return false;
 }
