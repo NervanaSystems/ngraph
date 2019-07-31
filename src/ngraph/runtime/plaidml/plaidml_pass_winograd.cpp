@@ -114,7 +114,8 @@ ngraph::runtime::plaidml::pass::Winograd::Winograd()
     auto callback = [](pattern::Matcher& m) {
         auto conv = std::static_pointer_cast<plaidml::op::Convolution>(m.get_match_root());
         OutputVector args;
-        for(auto input : conv->inputs()){
+        for (auto input : conv->inputs())
+        {
             args.push_back(input.get_source_output());
         }
         std::shared_ptr<ngraph::op::Constant> a;
