@@ -78,9 +78,11 @@ build nGraph bridge from source.
    review the `TensorFlow configuration <tensorflow_configuration_>`_ details. 
 
 
-**Prepare you build environment**
+Before you build
+>>>>>>>>>>>>>>>>
 
-Install the following requirements before building ``nGraph-bridge``. 
+
+Install the following requirements before building ``nGraph-bridge``: ``bazel``, ``cmake``, ``virtualenv``, and ``gcc 4.8``.
 
 Install ``bazel``:
 
@@ -90,7 +92,7 @@ Install ``bazel``:
     bash bazel-0.25.2-installer-linux-x86_64.sh --user
 
 Add and source the ``bin`` path to your ``~/.bashrc`` file to call
-bazel:
+``bazel``:
 
 ::
 
@@ -99,7 +101,8 @@ bazel:
 
 Install ``cmake``, ``virtualenv``, and ``gcc 4.8``.
 
-**Build an nGraph bridge**
+Build ``ngraph-bridge``
+>>>>>>>>>>>>>>>>>>>>>>>
 
 Once TensorFlow's dependencies are installed, clone the ``ngraph-bridge`` repo:
 
@@ -158,9 +161,8 @@ respectively.
 Select the help option of ``build_ngtf.py`` script to learn more about various
 build options and how to build other backends. 
 
-**Verify installation of** ``ngraph-bridge``
 
-To verify that ``ngraph-bridge`` installed correctly, use:
+Verify that ``ngraph-bridge`` installed correctly (optional):
 
 ::
 
