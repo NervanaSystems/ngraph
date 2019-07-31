@@ -28,8 +28,8 @@ namespace ngraph
                 NodeVector matmul(const Node& node)
                 {
                     auto factory = builder::MatmulFactory(node.get_ng_inputs());
-                    std::size_t left_rank{factory.get_left()->get_shape().size()};
-                    std::size_t right_rank{factory.get_right()->get_shape().size()};
+                    std::size_t left_rank{node.get_ng_inputs().at(0)->get_shape().size()};
+                    std::size_t right_rank{node.get_ng_inputs().at(1)->get_shape().size()};
 
                     if (left_rank == 0 || right_rank == 0)
                     {
