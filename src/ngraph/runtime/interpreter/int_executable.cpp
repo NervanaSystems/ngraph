@@ -235,6 +235,12 @@ void runtime::interpreter::INTExecutable::generate_calls(const element::Type& ty
     }
 }
 
+TensorMap
+    runtime::interpreter::INTExecutable::mk_tensor_map(const std::shared_ptr<HostTensor>& tensor)
+{
+    return TensorMap(tensor->get_element_type(), tensor->get_shape(), tensor->get_data_ptr<void>());
+}
+
 void runtime::interpreter::INTExecutable::set_nan_check(bool enable)
 {
     m_nan_check_enabled = enable;

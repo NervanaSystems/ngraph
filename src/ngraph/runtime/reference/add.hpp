@@ -35,7 +35,7 @@ namespace ngraph
                 }
             }
 
-            void add(const TensorValue& arg0, const TensorValue& arg1, TensorValue& out);
+            void add(const TensorBase& arg0, const TensorBase& arg1, TensorBase&& out);
         }
     }
 }

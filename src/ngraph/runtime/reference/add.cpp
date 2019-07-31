@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-void runtime::reference::add(const TensorValue& arg0, const TensorValue& arg1, TensorValue& out)
+void runtime::reference::add(const TensorBase& arg0, const TensorBase& arg1, TensorBase&& out)
 {
     NGRAPH_CHECK(arg0.element_type() == arg1.element_type() &&
                  arg0.element_type() == out.element_type());

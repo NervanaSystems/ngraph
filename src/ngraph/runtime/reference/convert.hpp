@@ -54,7 +54,7 @@ namespace ngraph
                 }
             }
 
-            void convert(const TensorValue& arg, TensorValue& out);
+            void convert(const TensorBase& arg, TensorBase&& out);
         }
     }
 }

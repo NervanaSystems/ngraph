@@ -16,79 +16,144 @@
 
 #pragma once
 
+#include <cstring>
 #include <memory>
 #include <vector>
 
+// TODO(amprocte): See about pulling `aligned_buffer` and `allocator` out of
+// `runtime`.
+#include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/runtime/allocator.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
 {
-    class TensorValue
+    class TensorBase
     {
     public:
-        TensorValue(TensorValue&) = delete;
-        TensorValue(const TensorValue&) = delete;
-        TensorValue& operator=(TensorValue&) = delete;
-        TensorValue& operator=(const TensorValue&) = delete;
-        TensorValue& operator=(TensorValue&& other)
-        {
-            m_element_type = other.m_element_type;
-            m_shape = other.m_shape;
-            m_raw_buffer = other.m_raw_buffer;
-            other.m_element_type = element::f32;
-            other.m_shape = Shape{0};
-            other.m_raw_buffer = nullptr;
-        }
-        TensorValue()
-            : TensorValue(element::f32, Shape{0}, nullptr)
-        {
-        }
-        TensorValue(TensorValue&& other)
-            : m_element_type(other.m_element_type)
-            , m_shape(other.m_shape)
-            , m_raw_buffer(other.m_raw_buffer)
-        {
-            other.m_element_type = element::f32;
-            other.m_shape = Shape{0};
-            other.m_raw_buffer = nullptr;
-        }
-        TensorValue(const element::Type& element_type, const Shape& shape, void* raw_buffer)
-            : m_element_type(element_type)
-            , m_shape(shape)
-            , m_raw_buffer(raw_buffer)
-        {
-        }
-        template <typename T>
-        TensorValue(const Shape& shape, T* raw_buffer)
-            : TensorValue(element::from<T>(), shape, raw_buffer)
-        {
-        }
-        // template<typename T>
-        // TensorValue(NDArrayBase<T>& nd_array)
-        //     : TensorValue(element::from<T>(), nd_array.get_shape(), nd_array.data())
-        // {
-        // }
+        ~TensorBase() {}
         const element::Type& element_type() const { return m_element_type; }
         const Shape& shape() const { return m_shape; }
-        void* raw_buffer() { return m_raw_buffer; }
-        const void* raw_buffer() const { return m_raw_buffer; }
         template <typename T>
         const T* buffer() const
         {
             NGRAPH_CHECK(m_element_type == element::from<T>());
-            return reinterpret_cast<const T*>(m_raw_buffer);
+            return reinterpret_cast<const T*>(raw_buffer());
         }
         template <typename T>
         T* buffer()
         {
             NGRAPH_CHECK(m_element_type == element::from<T>());
-            return reinterpret_cast<T*>(m_raw_buffer);
+            return reinterpret_cast<T*>(raw_buffer());
         }
+
+        template <typename T>
+        const T* buffer_unsafe() const
+        {
+            return reinterpret_cast<const T*>(raw_buffer());
+        }
+        template <typename T>
+        T* buffer_unsafe()
+        {
+            return reinterpret_cast<T*>(raw_buffer());
+        }
+
+        virtual void* raw_buffer() = 0;
+        virtual const void* raw_buffer() const = 0;
+
+    protected:
+        TensorBase(const element::Type& element_type, const Shape& shape)
+            : m_element_type(element_type)
+            , m_shape(shape)
+        {
+        }
+
+        // TODO: would like to make this private, but TensorValue's move ctor
+        // needs to zero it out.
+        Shape m_shape;
 
     private:
         element::Type m_element_type;
-        Shape m_shape;
+    };
+
+    class TensorMap : public TensorBase
+    {
+    public:
+        TensorMap(const element::Type& element_type, const Shape& shape, void* raw_buffer)
+            : TensorBase(element_type, shape)
+            , m_raw_buffer(raw_buffer)
+        {
+        }
+        TensorMap()
+            : TensorMap(element::f32, Shape{0}, nullptr)
+        {
+        }
+        TensorMap(const TensorMap& other)
+            : TensorMap(other.element_type(), other.shape(), other.m_raw_buffer)
+        {
+        }
+        template <typename T>
+        TensorMap(const Shape& shape, T* raw_buffer)
+            : TensorMap(element::from<T>(), shape, raw_buffer)
+        {
+        }
+
+        void* raw_buffer() final override { return m_raw_buffer; }
+        const void* raw_buffer() const final override { return m_raw_buffer; }
+    private:
         void* m_raw_buffer;
+    };
+
+    class TensorValue : public TensorBase
+    {
+    public:
+        TensorValue(const element::Type& element_type,
+                    const Shape& shape,
+                    void* raw_buffer,
+                    runtime::Allocator* allocator = nullptr)
+            : TensorBase(element_type, shape)
+            , m_aligned_buffer(
+                  shape_size(shape) * element_type.size(), element_type.size(), allocator)
+        {
+            NGRAPH_CHECK(raw_buffer != nullptr || shape_size(shape) == 0);
+            if (raw_buffer != nullptr)
+            {
+                std::memcpy(m_aligned_buffer.get_ptr(),
+                            raw_buffer,
+                            shape_size(shape) * element_type.size());
+            }
+        }
+        TensorValue()
+            : TensorValue(element::f32, Shape{0}, nullptr, nullptr)
+        {
+        }
+        TensorValue(runtime::Allocator* allocator)
+            : TensorValue(element::f32, Shape{0}, nullptr, allocator)
+        {
+        }
+        TensorValue(TensorValue&& other)
+            : TensorBase(other.element_type(), other.shape())
+            , m_aligned_buffer(std::move(other.m_aligned_buffer))
+        {
+            other.m_shape = Shape{0};
+        }
+        template <typename T>
+        TensorValue(const Shape& shape, T* raw_buffer, runtime::Allocator* allocator = nullptr)
+            : TensorValue(element::from<T>(), shape, raw_buffer, allocator)
+        {
+        }
+        template <typename T>
+        TensorValue(const Shape& shape,
+                    const std::vector<T>& vec,
+                    runtime::Allocator* allocator = nullptr)
+            : TensorValue(element::from<T>(), shape, vec.data(), allocator)
+        {
+        }
+
+        void* raw_buffer() final override { return m_aligned_buffer.get_ptr(); }
+        const void* raw_buffer() const final override { return m_aligned_buffer.get_ptr(); }
+    private:
+        runtime::AlignedBuffer m_aligned_buffer;
     };
 }

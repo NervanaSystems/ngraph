@@ -219,6 +219,8 @@ private:
                         const std::vector<std::shared_ptr<HostTensor>>& outputs,
                         const std::vector<std::shared_ptr<HostTensor>>& inputs);
 
+    static TensorMap mk_tensor_map(const std::shared_ptr<HostTensor>& tensor);
+
     template <typename T>
     void op_engine(const NodeWrapper& node_wrapper,
                    const std::vector<std::shared_ptr<HostTensor>>& out,
@@ -259,13 +261,7 @@ private:
                               out[0]->get_data_ptr<T>(),
                               element_count);
 */
-            TensorValue tv_a0(
-                args[0]->get_element_type(), args[0]->get_shape(), args[0]->get_data_ptr<void>());
-            TensorValue tv_a1(
-                args[1]->get_element_type(), args[1]->get_shape(), args[1]->get_data_ptr<void>());
-            TensorValue tv_o0(
-                out[0]->get_element_type(), out[0]->get_shape(), out[0]->get_data_ptr<void>());
-            reference::add(tv_a0, tv_a1, tv_o0);
+            reference::add(mk_tensor_map(args[0]), mk_tensor_map(args[1]), mk_tensor_map(out[0]));
             break;
         }
         case OP_TYPEID::All:
@@ -570,11 +566,7 @@ private:
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
-            TensorValue tv_arg(
-                args[0]->get_element_type(), args[0]->get_shape(), args[0]->get_data_ptr<void>());
-            TensorValue tv_out(
-                out[0]->get_element_type(), out[0]->get_shape(), out[0]->get_data_ptr<void>());
-            reference::convert(tv_arg, tv_out);
+            reference::convert(mk_tensor_map(args[0]), mk_tensor_map(out[0]));
             break;
             /*            size_t element_count = shape_size(node.get_output_shape(0));
             switch (type.get_type_enum())

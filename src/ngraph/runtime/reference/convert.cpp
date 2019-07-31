@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-void runtime::reference::convert(const TensorValue& arg, TensorValue& out)
+void runtime::reference::convert(const TensorBase& arg, TensorBase&& out)
 {
     WITH_ET(arg.element_type(), Targ, {
         WITH_ET(out.element_type(), Tout, {
