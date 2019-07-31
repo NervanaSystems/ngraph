@@ -785,7 +785,6 @@ TEST(constant_folding, constant_dyn_reshape)
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-
     ASSERT_EQ(count_ops_of_type<op::DynReshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
