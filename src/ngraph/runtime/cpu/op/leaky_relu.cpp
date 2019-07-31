@@ -22,7 +22,7 @@ using namespace ngraph;
 const std::string op::CPULeakyRelu::type_name{"CPULeakyRelu"};
 
 op::CPULeakyRelu::CPULeakyRelu(const Output<Node>& arg, float alpha)
-    : UnaryElementwiseArithmetic({arg})
+    : UnaryElementwiseArithmetic(arg)
     , m_alpha(alpha)
 {
     constructor_validate_and_infer_types();
