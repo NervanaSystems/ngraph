@@ -537,19 +537,15 @@ def gemm(A,                      # type: Node
 
     .. math:: Y = alpha\cdot A'\cdot B' +  beta\cdot C
 
-    :code:`A'`: The transpose of matrix :code:`A` with shape (M, K),
-                if :code:`transA` is :code:`True`, otherwise :code:`A` with shape (K, N).
+    :code:`A'` is the transpose of matrix :code:`A` with shape (M, K),
+    if :code:`transA` is :code:`True`, otherwise :code:`A` with shape (K, N).
 
-    :code:`B'`: The transpose of matrix :code:`B` with shape (K, N),
-                if :code:`transB` is :code:`True`, otherwise :code:`B` with shape (N, K).
+    :code:`B'` is the transpose of matrix :code:`B` with shape (K, N),
+    if :code:`transB` is :code:`True`, otherwise :code:`B` with shape (N, K).
 
     :code:`C`: Matrix broadcastable to shape (M, N).
 
     :code:`Y`: Matrix with shape (M, N).
-
-    For more information refer to:
-    `Low-memory GEMM-based convolution algorithms for deep neural networks
-    <https://arxiv.org/pdf/1709.03395.pdf>`_
 
     :param A: The node with input tensor A.
     :param B: The node with input tensor B.
