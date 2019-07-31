@@ -40,7 +40,7 @@ namespace ngraph
                 MPI_Initialized(&flag);
                 if (!flag && !m_initialized_mpi)
                 {
-                    MPI_Init(NULL, NULL);
+                    create_context();
                     m_initialized_mpi = true;
                 }
             }
@@ -51,9 +51,19 @@ namespace ngraph
                 MPI_Finalized(&is_mpi_finalized);
                 if (!is_mpi_finalized && m_initialized_mpi)
                 {
-                    MPI_Finalize();
+                    free_context();
                     m_initialized_mpi = false;
                 }
+            }
+
+            void create_context()
+            {
+                MPI_Init(NULL, NULL);
+            }
+
+            void free_context()
+            {
+                MPI_Finalize();
             }
 
             const std::string& get_name() const override { return m_name; }
