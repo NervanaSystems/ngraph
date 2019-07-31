@@ -210,12 +210,14 @@ struct CPURuntimeContextCG
     case OpType::RNN:
         exec_args = {{MKLDNN_ARG_SRC_LAYER, *mkldnn_memories[deps[0]]},
                      {MKLDNN_ARG_SRC_ITER, *mkldnn_memories[deps[1]]},
-                     {MKLDNN_ARG_WEIGHTS_LAYER, *mkldnn_memories[deps[2]]},
-                     {MKLDNN_ARG_WEIGHTS_ITER, *mkldnn_memories[deps[3]]},
-                     {MKLDNN_ARG_BIAS, *mkldnn_memories[deps[4]]},
-                     {MKLDNN_ARG_DST_LAYER, *mkldnn_memories[deps[5]]},
-                     {MKLDNN_ARG_DST_ITER, *mkldnn_memories[deps[6]]},
-                     {MKLDNN_ARG_WORKSPACE, *mkldnn_memories[deps[5]]}};
+					 {MKLDNN_ARG_SRC_ITER_C, *mkldnn_memories[deps[2]]},
+                     {MKLDNN_ARG_WEIGHTS_LAYER, *mkldnn_memories[deps[3]]},
+                     {MKLDNN_ARG_WEIGHTS_ITER, *mkldnn_memories[deps[4]]},
+                     {MKLDNN_ARG_BIAS, *mkldnn_memories[deps[5]]},
+                     {MKLDNN_ARG_DST_LAYER, *mkldnn_memories[deps[6]]},
+                     {MKLDNN_ARG_DST_ITER, *mkldnn_memories[deps[7]]},
+                     {MKLDNN_ARG_DST_ITER_C, *mkldnn_memories[deps[8]]},
+                     {MKLDNN_ARG_WORKSPACE, *mkldnn_memories[deps[9]]}};
         break;
     case OpType::MAXPOOLBACKPROPFORWARD:
         exec_args = {{MKLDNN_ARG_SRC, *mkldnn_memories[deps[0]]},

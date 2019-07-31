@@ -1765,6 +1765,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
         prelu, "CPUFusion.deconvolution_affine_folding_relu");
     this->add_matcher(m, callback);
 }
+
+#if not defined(NGRAPH_USE_MKLDNN_V1)
 void ngraph::runtime::cpu::pass::CPUFusion::construct_fuse_lstm_recurrent_state()
 {
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
@@ -1813,6 +1815,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fuse_lstm_recurrent_state(
                                                         "CPUFusion.fuse_lstm_recurrent_state");
     this->add_matcher(m, callback);
 }
+#endif
 
 void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
 {

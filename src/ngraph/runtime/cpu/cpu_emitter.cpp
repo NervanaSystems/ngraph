@@ -640,11 +640,15 @@ namespace ngraph
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
                        << args[4].get_name() << ");\n";
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[5]) << ", "
-                       << out[0].get_name() << ");\n";
+                       << args[5].get_name() << ");\n";
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[6]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[7]) << ", "
                        << out[1].get_name() << ");\n";
-                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[7])
-                       << ", cg_ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[8]) << ", "
+                       << out[2].get_name() << ");\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[9])
+                       << ", cg_ctx->mkldnn_workspaces[" << deps[10] << "]);\n";
 
                 writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                 writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(rnn_index)

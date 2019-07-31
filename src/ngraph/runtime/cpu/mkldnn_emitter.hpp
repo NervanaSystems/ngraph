@@ -1220,19 +1220,20 @@ namespace ngraph
                                                           attr);
                 }
 
-#if 0
+                mkldnn::memory::format_tag query_convolution_forward_weight_format_tag(
+                    const mkldnn::memory::desc& input_data_desc,
+                    const mkldnn::memory::desc& weights_desc_any,
+                    const mkldnn::memory::desc& result_desc,
+                    const ngraph::Strides& filter_strides,
+                    const ngraph::Strides& window_dilation_strides_adjusted,
+                    const ngraph::CoordinateDiff& padding_below,
+                    const ngraph::CoordinateDiff& padding_above);
+
                 template <typename OP>
-                void  get_rnn_forward_descs(const ngraph::Node* node,
+                mkldnn::lstm_forward::desc
+                    get_rnn_forward_desc(const ngraph::Node* node,
                                          const std::vector<TensorViewWrapper>& args,
-                                         const std::vector<TensorViewWrapper>& out,
-										 mkldnn::rnn_direction& r_direction,
-										 mkldnn::memory::desc& src_layer_desc,
-										 mkldnn::memory::desc& src_iter_desc,
-										 mkldnn::memory::desc& weights_layer_desc,
-										 mkldnn::memory::desc& weights_iter_desc,
-										 mkldnn::memory::desc& bias_desc,
-										 mkldnn::memory::desc& dst_layer_desc,
-										 mkldnn::memory::desc& dst_iter_desc)
+                                         const std::vector<TensorViewWrapper>& out)
                 {
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
@@ -1278,8 +1279,8 @@ namespace ngraph
                         src_sequence_length_max,
                         batch,
                         static_cast<unsigned long>(rnn_node->get_src_layer_feature_size())};
-                    Shape src_iter_tz{
-                        num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+                    Shape src_iter_tz{num_fused_layers, direction, batch, feature_size};
+                    Shape src_iter_c_tz{num_fused_layers, direction, batch, feature_size};
                     Shape wei_layer_tz{
                         num_fused_layers,
                         direction,
@@ -1290,122 +1291,49 @@ namespace ngraph
                         num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
                     Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
                     Shape dst_layer_tz{src_sequence_length_max, batch, direction * feature_size};
-                    Shape dst_iter_tz{
-                        num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+                    Shape dst_iter_tz{num_fused_layers, direction, batch, feature_size};
+                    Shape dst_iter_c_tz{num_fused_layers, direction, batch, feature_size};
 
                     // We create the memory descriptors used by the user
-                    src_layer_desc = build_memory_descriptor(
+                    auto src_layer_desc = build_memory_descriptor(
                         src_layer_tz, args[0].get_element_type(), mkldnn::memory::FORMAT::tnc);
-                    src_iter_desc = build_memory_descriptor(
-                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::FORMAT::ldsnc);
-                    weights_layer_desc =
-                        build_memory_descriptor(wei_layer_tz,
-                                                args[2].get_element_type(),
-                                                mkldnn::memory::FORMAT::ldigo);
-                    weights_iter_desc = build_memory_descriptor(
-                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::FORMAT::ldigo);
-                    bias_desc = build_memory_descriptor(
-                        bias_tz, args[4].get_element_type(), mkldnn::memory::FORMAT::ldgo);
-                    dst_layer_desc = build_memory_descriptor(
+                    auto src_iter_desc = build_memory_descriptor(
+                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::FORMAT::ldnc);
+                    auto src_iter_c_desc = build_memory_descriptor(
+                        src_iter_c_tz, args[2].get_element_type(), mkldnn::memory::FORMAT::ldnc);
+                    auto weights_layer_desc = build_memory_descriptor(
+                        wei_layer_tz, args[3].get_element_type(), mkldnn::memory::FORMAT::ldigo);
+                    auto weights_iter_desc = build_memory_descriptor(
+                        wei_iter_tz, args[4].get_element_type(), mkldnn::memory::FORMAT::ldigo);
+                    auto bias_desc = build_memory_descriptor(
+                        bias_tz, args[5].get_element_type(), mkldnn::memory::FORMAT::ldgo);
+                    auto dst_layer_desc = build_memory_descriptor(
                         dst_layer_tz, out[0].get_element_type(), mkldnn::memory::FORMAT::tnc);
-                    dst_iter_desc = build_memory_descriptor(
-                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::FORMAT::ldsnc);
+                    auto dst_iter_desc = build_memory_descriptor(
+                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::FORMAT::ldnc);
+                    auto dst_iter_c_desc = build_memory_descriptor(
+                        dst_iter_c_tz, out[2].get_element_type(), mkldnn::memory::FORMAT::ldnc);
 
-                    r_direction = get_mkldnn_rnn_direction();
+                    return mkldnn::lstm_forward::desc(mkldnn::prop_kind::forward_training,
+                                                      get_mkldnn_rnn_direction(),
+                                                      src_layer_desc,
+                                                      src_iter_desc,
+                                                      src_iter_c_desc,
+                                                      weights_layer_desc,
+                                                      weights_iter_desc,
+                                                      bias_desc,
+                                                      dst_layer_desc,
+                                                      dst_iter_desc,
+                                                      dst_iter_c_desc);
                 }
 
-                mkldnn::vanillar_rnn_forward::desc
-                    get_vanilla_rnn_forward_desc(const ngraph::Node* node,
-                                         const std::vector<TensorViewWrapper>& args,
-                                         const std::vector<TensorViewWrapper>& out)
-                {
-                    mkldnn::rnn_direction r_direction;
-                    mkldnn::memory::desc src_layer_desc,
-                    src_iter_desc,
-                    weights_layer_desc,
-                    weights_iter_desc,
-                    bias_desc,
-                    dst_layer_desc,
-                    dst_iter_desc;
-
-                    get_rnn_forward_descs<ngraph::Op::Rnn>(node, args, out, r_direction, src_layer_desc,
-                                                     src_iter_desc,
-                                                     weights_layer_desc,
-                                                     weights_iter_desc,
-                                                     bias_desc,
-                                                     dst_layer_desc,
-                                                     dst_iter_desc);
-
-                    return mkldnn::vanillar_rnn_forward::desc(mkldnn::prop_kind::forward_training,
-                                                     mkldnn::algorithm::vanilla_rnn,
-                                                     r_direction,
-                                                     src_layer_desc,
-                                                     src_iter_desc,
-                                                     weights_layer_desc,
-                                                     weights_iter_desc,
-                                                     bias_desc,
-                                                     dst_layer_desc,
-                                                     dst_iter_desc);
-                }
-
-                mkldnn::vanillar_lstm_forward::desc
-                    get_vanilla_lstm_forward_desc(const ngraph::Node* node,
-                                         const std::vector<TensorViewWrapper>& args,
-                                         const std::vector<TensorViewWrapper>& out)
-                {
-                    mkldnn::rnn_direction r_direction;
-                    mkldnn::memory::desc src_layer_desc,
-                    src_iter_desc,
-                    weights_layer_desc,
-                    weights_iter_desc,
-                    bias_desc,
-                    dst_layer_desc,
-                    dst_iter_desc;
-
-                    get_rnn_forward_descs<ngraph::Op::Lstm>(node, args, out, r_direction, src_layer_desc,
-                                                     src_iter_desc,
-                                                     weights_layer_desc,
-                                                     weights_iter_desc,
-                                                     bias_desc,
-                                                     dst_layer_desc,
-                                                     dst_iter_desc);
-
-                    return mkldnn::vanillar_lstm_forward::desc(mkldnn::prop_kind::forward_training,
-                                                     r_direction,
-                                                     src_layer_desc,
-                                                     src_iter_desc,
-                                                     weights_layer_desc,
-                                                     weights_iter_desc,
-                                                     bias_desc,
-                                                     dst_layer_desc,
-                                                     dst_iter_desc);
-                }
-#endif
-
-                mkldnn::memory::format_tag query_convolution_forward_weight_format_tag(
-                    const mkldnn::memory::desc& input_data_desc,
-                    const mkldnn::memory::desc& weights_desc_any,
-                    const mkldnn::memory::desc& result_desc,
-                    const ngraph::Strides& filter_strides,
-                    const ngraph::Strides& window_dilation_strides_adjusted,
-                    const ngraph::CoordinateDiff& padding_below,
-                    const ngraph::CoordinateDiff& padding_above);
-
-#if 0
-                void build_vanilla_rnn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
+                void build_rnn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                        std::vector<mkldnn::primitive*>& mkldnn_primitives,
+                                       std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                        std::vector<char*>& mkldnn_workspaces,
-                                       const mkldnn::vanilla_rnn_forward::desc& desc,
+                                       const mkldnn::lstm_forward::desc& desc,
                                        std::vector<size_t>& deps,
                                        size_t rnn_idx);
-
-                void build_vanilla_lstm_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                       std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                       std::vector<char*>& mkldnn_workspaces,
-                                       const mkldnn::vanilla_lstm_forward::desc& desc,
-                                       std::vector<size_t>& deps,
-                                       size_t rnn_idx);
-#endif
 
                 template <bool with_bias>
                 void build_convolution_forward(
@@ -1529,6 +1457,7 @@ namespace ngraph
                 void query_scratchpad_reorder(const mkldnn::memory::desc& input_desc,
                                               const mkldnn::memory::desc& result_desc);
                 void query_scratchpad_lrn_forward(const mkldnn::lrn_forward::desc& desc);
+                void query_scratchpad_rnn_forward(const mkldnn::lstm_forward::desc& desc);
                 void query_scratchpad_slice(mkldnn::memory::desc& input_desc,
                                             const mkldnn::memory::desc& output_desc,
                                             const ngraph::Coordinate& lower_bounds,

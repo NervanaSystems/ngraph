@@ -51,7 +51,7 @@ set(SRC
     builder/gather.cpp
     builder/gather_nd.cpp
     builder/leaky_relu.cpp
- #  builder/lstm.cpp
+	builder/lstm.cpp
     builder/lrn.cpp
     builder/matmul_bias.cpp
     builder/max.cpp
@@ -73,7 +73,7 @@ set(SRC
     builder/reshape.cpp
     builder/reverse.cpp
     builder/reverse_sequence.cpp
- #  builder/rnn.cpp
+    builder/rnn.cpp
     builder/scatter_add.cpp
     builder/scatter_nd_add.cpp
     builder/select.cpp
@@ -125,15 +125,6 @@ set(SRC
     pass/cpu_workspace_insertion.cpp
     ngraph_version.cpp
 )
-
-if (NOT NGRAPH_USE_MKLDNN_V1)
-	set(SRC
-	    ${SRC}
-	    builder/lstm.cpp
-	    builder/rnn.cpp
-	    )
-endif()	    
-	    
 
 if (NOT NGRAPH_DEX_ONLY)
     set(SRC

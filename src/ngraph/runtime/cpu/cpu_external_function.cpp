@@ -1058,9 +1058,6 @@ using namespace ngraph::runtime;
     string code = writer.get_code();
     runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_output_dir, filename);
 
-    string filename1 = file_util::path_join(s_output_dir, "code.cpp");
-    runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_output_dir, filename1);
-
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
 

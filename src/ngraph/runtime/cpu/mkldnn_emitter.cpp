@@ -1242,12 +1242,11 @@ void MKLDNNEmitter::build_batchnorm_backward(
     mkldnn_primitives[batchnorm_index] = new mkldnn::batch_normalization_backward(batchnorm_pd);
 }
 
-#if 0
-void MKLDNNEmitter::build_vanilla_rnn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
+void MKLDNNEmitter::build_rnn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
                                       std::vector<mkldnn::primitive*>& mkldnn_primitives,
-									  std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
+                                      std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
                                       std::vector<char*>& mkldnn_workspaces,
-                                      const mkldnn::vanilla_rnn_forward::desc& rnn_desc,
+                                      const mkldnn::lstm_forward::desc& rnn_desc,
                                       std::vector<size_t>& deps,
                                       size_t rnn_index)
 {
@@ -1255,76 +1254,37 @@ void MKLDNNEmitter::build_vanilla_rnn_forward(std::vector<mkldnn::memory*>& mkld
     build_memory(mkldnn_memories, rnn_desc.data.src_layer_desc, src_layer_index);
     size_t src_iter_index = deps[1];
     build_memory(mkldnn_memories, rnn_desc.data.src_iter_desc, src_iter_index);
-    size_t weights_layer_index = deps[2];
+    size_t src_iter_c_index = deps[2];
+    build_memory(mkldnn_memories, rnn_desc.data.src_iter_c_desc, src_iter_c_index);
+    size_t weights_layer_index = deps[3];
     build_memory(mkldnn_memories, rnn_desc.data.weights_layer_desc, weights_layer_index);
-
-    size_t weights_iter_index = m_primitive_deps[rnn_index][3];
+    size_t weights_iter_index = deps[4];
     build_memory(mkldnn_memories, rnn_desc.data.weights_iter_desc, weights_iter_index);
-    size_t bias_index = deps[4];
+    size_t bias_index = deps[5];
     build_memory(mkldnn_memories, rnn_desc.data.bias_desc, bias_index);
-    size_t dst_layer_index = deps[5];
+    size_t dst_layer_index = deps[6];
     build_memory(mkldnn_memories, rnn_desc.data.dst_layer_desc, dst_layer_index);
-    size_t dst_iter_index = deps[6];
+    size_t dst_iter_index = deps[7];
     build_memory(mkldnn_memories, rnn_desc.data.dst_iter_desc, dst_iter_index);
+    size_t dst_iter_c_index = deps[8];
+    build_memory(mkldnn_memories, rnn_desc.data.dst_iter_c_desc, dst_iter_c_index);
 
     mkldnn::primitive_attr attr;
     attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
     auto rnn_layer_prim_desc =
-        mkldnn::rnn_forward::primitive_desc(rnn_desc, attr, executor::global_cpu_engine);
-    mkldnn_scratchpad_mds[rnn_index] = new mkldnn::memory::desc(rnn_layer_prim_desc.scratchpad_desc());
+        mkldnn::lstm_forward::primitive_desc(rnn_desc, attr, executor::global_cpu_engine);
+    mkldnn_scratchpad_mds[rnn_index] =
+        new mkldnn::memory::desc(rnn_layer_prim_desc.scratchpad_desc());
 
-    size_t workspace_index = deps[7];
-    build_memory(
-        mkldnn_memories, rnn_layer_prim_desc.workspace_primitive_desc().desc(), workspace_index);
+    size_t workspace_index = deps[9];
+    build_memory(mkldnn_memories, rnn_layer_prim_desc.workspace_desc(), workspace_index);
     auto workspace = std::unique_ptr<MKLDNNWorkspace>(
-        new MKLDNNWorkspace(rnn_layer_prim_desc.workspace_primitive_desc().get_size()));
+        new MKLDNNWorkspace(rnn_layer_prim_desc.workspace_desc().get_size()));
     auto workspace_buf_index = insert_workspace(mkldnn_workspaces, workspace);
-    deps[8] = workspace_buf_index;
+    deps[10] = workspace_buf_index;
 
-    mkldnn_primitives[rnn_index] = new mkldnn::rnn_forward(rnn_layer_prim_desc);
+    mkldnn_primitives[rnn_index] = new mkldnn::lstm_forward(rnn_layer_prim_desc);
 }
-
-void MKLDNNEmitter::build_lstm_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                      std::vector<mkldnn::primitive*>& mkldnn_primitives,
-									  std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
-                                      std::vector<char*>& mkldnn_workspaces,
-                                      const mkldnn::vanilla_lstm_forward::desc& rnn_desc,
-                                      std::vector<size_t>& deps,
-                                      size_t rnn_index)
-{
-    size_t src_layer_index = deps[0];
-    build_memory(mkldnn_memories, rnn_desc.data.src_layer_desc, src_layer_index);
-    size_t src_iter_index = deps[1];
-    build_memory(mkldnn_memories, rnn_desc.data.src_iter_desc, src_iter_index);
-    size_t weights_layer_index = deps[2];
-    build_memory(mkldnn_memories, rnn_desc.data.weights_layer_desc, weights_layer_index);
-
-    size_t weights_iter_index = m_primitive_deps[rnn_index][3];
-    build_memory(mkldnn_memories, rnn_desc.data.weights_iter_desc, weights_iter_index);
-    size_t bias_index = deps[4];
-    build_memory(mkldnn_memories, rnn_desc.data.bias_desc, bias_index);
-    size_t dst_layer_index = deps[5];
-    build_memory(mkldnn_memories, rnn_desc.data.dst_layer_desc, dst_layer_index);
-    size_t dst_iter_index = deps[6];
-    build_memory(mkldnn_memories, rnn_desc.data.dst_iter_desc, dst_iter_index);
-
-    mkldnn::primitive_attr attr;
-    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
-    auto rnn_layer_prim_desc =
-        mkldnn::rnn_forward::primitive_desc(rnn_desc, attr, executor::global_cpu_engine);
-    mkldnn_scratchpad_mds[rnn_index] = new mkldnn::memory::desc(rnn_layer_prim_desc.scratchpad_desc());
-
-    size_t workspace_index = deps[7];
-    build_memory(
-        mkldnn_memories, rnn_layer_prim_desc.workspace_primitive_desc().desc(), workspace_index);
-    auto workspace = std::unique_ptr<MKLDNNWorkspace>(
-        new MKLDNNWorkspace(rnn_layer_prim_desc.workspace_primitive_desc().get_size()));
-    auto workspace_buf_index = insert_workspace(mkldnn_workspaces, workspace);
-    deps[8] = workspace_buf_index;
-
-    mkldnn_primitives[rnn_index] = new mkldnn::rnn_forward(rnn_layer_prim_desc);
-}
-#endif
 
 void MKLDNNEmitter::build_concat(std::vector<mkldnn::memory*>& mkldnn_memories,
                                  std::vector<mkldnn::primitive*>& mkldnn_primitives,
@@ -1606,6 +1566,13 @@ void MKLDNNEmitter::query_scratchpad_reorder(const mkldnn::memory::desc& input_d
     ATTR_S
     auto pd = mkldnn::reorder::primitive_desc(
         executor::global_cpu_engine, input_desc, executor::global_cpu_engine, result_desc, attr);
+    GET_SIZE
+}
+
+void MKLDNNEmitter::query_scratchpad_rnn_forward(const mkldnn::lstm_forward::desc& desc)
+{
+    ATTR_S
+    auto pd = mkldnn::lstm_forward::primitive_desc(desc, attr, executor::global_cpu_engine);
     GET_SIZE
 }
 

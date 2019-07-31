@@ -135,7 +135,6 @@ namespace ngraph
                     construct_string = writer.get_code();
                 }
 
-#if 0
                 template <typename OP>
                 void construct_primitive_build_string_rnn(
                     ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
@@ -161,25 +160,21 @@ namespace ngraph
                     auto rnn_cell_n_states =
                         static_cast<unsigned long>(rnn_node->get_num_cell_states());
 
-                    auto get_mkldnn_rnn_cell_type = [&]() {
-                        switch (rnn_node->get_rnn_type())
+                    auto get_mkldnn_rnn_direction_string = [&]() {
+                        switch (direction)
                         {
-                        case rnn_utils::rnntype::vanilla_rnn:
-                            return std::string("mkldnn::algorithm::vanilla_rnn");
-                        case rnn_utils::rnntype::vanilla_gru:
-                            return std::string("mkldnn::algorithm::vanilla_gru");
-                        case rnn_utils::rnntype::vanilla_lstm:
-                            return std::string("mkldnn::algorithm::vanilla_lstm");
-                        default: throw ngraph_error("unsupported mkldnn rnn algorithm");
+                        case 1:
+                            return std::string("mkldnn::rnn_direction::unidirectional_left2right");
+                        case 2: return std::string("mkldnn::rnn_direction::bidirectional_concat");
+                        default: throw ngraph_error("unsupported mkldnn rnn direction");
                         }
                     };
 
                     auto get_mkldnn_rnn_direction = [&]() {
                         switch (direction)
                         {
-                        case 1:
-                            return std::string("mkldnn::rnn_direction::unidirectional_left2right");
-                        case 2: return std::string("mkldnn::rnn_direction::bidirectional_concat");
+                        case 1: return mkldnn::rnn_direction::unidirectional_left2right;
+                        case 2: return mkldnn::rnn_direction::bidirectional_concat;
                         default: throw ngraph_error("unsupported mkldnn rnn direction");
                         }
                     };
@@ -205,8 +200,8 @@ namespace ngraph
                         src_sequence_length_max,
                         batch,
                         static_cast<unsigned long>(rnn_node->get_src_layer_feature_size())};
-                    Shape src_iter_tz{
-                        num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+                    Shape src_iter_tz{num_fused_layers, direction, batch, feature_size};
+                    Shape src_iter_c_tz{num_fused_layers, direction, batch, feature_size};
                     Shape wei_layer_tz{
                         num_fused_layers,
                         direction,
@@ -217,14 +212,18 @@ namespace ngraph
                         num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
                     Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
                     Shape dst_layer_tz{src_sequence_length_max, batch, direction * feature_size};
-                    Shape dst_iter_tz{
-                        num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
+                    Shape dst_iter_tz{num_fused_layers, direction, batch, feature_size};
+                    Shape dst_iter_c_tz{num_fused_layers, direction, batch, feature_size};
 
                     // We create the memory descriptors used by the user
                     auto src_layer_md = mkldnn_emitter.build_memory_descriptor(
                         src_layer_tz, args[0].get_element_type(), mkldnn::memory::format_tag::tnc);
                     auto src_iter_md = mkldnn_emitter.build_memory_descriptor(
-                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::format_tag::ldsnc);
+                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::format_tag::ldnc);
+                    auto src_iter_c_md =
+                        mkldnn_emitter.build_memory_descriptor(src_iter_c_tz,
+                                                               args[1].get_element_type(),
+                                                               mkldnn::memory::format_tag::ldnc);
                     auto wei_layer_md =
                         mkldnn_emitter.build_memory_descriptor(wei_layer_tz,
                                                                args[2].get_element_type(),
@@ -236,12 +235,28 @@ namespace ngraph
                     auto dst_layer_md = mkldnn_emitter.build_memory_descriptor(
                         dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format_tag::tnc);
                     auto dst_iter_md = mkldnn_emitter.build_memory_descriptor(
-                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format_tag::ldsnc);
+                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format_tag::ldnc);
+                    auto dst_iter_c_md = mkldnn_emitter.build_memory_descriptor(
+                        dst_iter_c_tz, out[1].get_element_type(), mkldnn::memory::format_tag::ldnc);
 
-                    // Lstm/Rnn needs 9 primitives: src_layer, src_iter, weights_layer, weights_iter, bias,
-                    // dst_layer, dst_iter, workspace, and rnn_forward.
+                    // query scratchpad size
+                    auto rnn_desc = mkldnn::lstm_forward::desc(mkldnn::prop_kind::forward_training,
+                                                               get_mkldnn_rnn_direction(),
+                                                               src_layer_md,
+                                                               src_iter_md,
+                                                               src_iter_c_md,
+                                                               wei_layer_md,
+                                                               wei_iter_md,
+                                                               bias_md,
+                                                               dst_layer_md,
+                                                               dst_iter_md,
+                                                               dst_iter_c_md);
+                    mkldnn_emitter.query_scratchpad_rnn_forward(rnn_desc);
+
+                    // Lstm/Rnn needs 11 primitives: src_layer, src_iter, src_iter_c, weights_layer, weights_iter, bias,
+                    // dst_layer, dst_iter, dst_iter_c, workspace, and rnn_forward.
                     // It needs a new workspace.
-                    index = mkldnn_emitter.reserve_primitive_space(9, true /* new workspace */);
+                    index = mkldnn_emitter.reserve_primitive_space(11, true /* new workspace */);
                     deps = mkldnn_emitter.get_primitive_deps(index);
 
                     CodeWriter writer;
@@ -249,23 +264,22 @@ namespace ngraph
                     // Write memory descriptors to file
                     std::vector<mkldnn::memory::desc> descs = {src_layer_md,
                                                                src_iter_md,
+                                                               src_iter_c_md,
                                                                wei_layer_md,
                                                                wei_iter_md,
                                                                bias_md,
                                                                dst_layer_md,
-                                                               dst_iter_md};
+                                                               dst_iter_md,
+                                                               dst_iter_c_md};
                     auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
-                    writer << "mkldnn::rnn_cell::desc rnn_cell_desc(" << get_mkldnn_rnn_cell_type()
-                           << ");\n";
                     writer << "\n// build lstm/rnn primitive descriptor\n";
                     writer << "auto rnn_desc = "
-                              "mkldnn::rnn_forward::desc(mkldnn::prop_kind::forward_training, "
-                              "rnn_cell_desc, "
-                           << get_mkldnn_rnn_direction() << ", "
-                                                            "*cg_ctx->mkldnn_descriptors["
+                              "mkldnn::lstm_forward::desc(mkldnn::prop_kind::forward_training, "
+                           << get_mkldnn_rnn_direction_string() << ", "
+                                                                   "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], "
                                             "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "], "
@@ -278,14 +292,22 @@ namespace ngraph
                                                 "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 5 << "], "
                                                 "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 6 << "]);\n";
+                           << desc_index + 6 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 7 << "], "
+                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 8 << "]);\n";
 
-                    writer << "auto rnn_prim_desc = mkldnn::rnn_forward::primitive_desc(rnn_desc, "
+                    writer << "mkldnn::primitive_attr attr;\n";
+                    writer << "attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);\n";
+                    writer << "auto rnn_prim_desc = mkldnn::lstm_forward::primitive_desc(rnn_desc, "
+                              "attr, "
                               "cg_ctx->global_cpu_engine);\n";
-                    writer << "cg_ctx->mkldnn_memories[" << std::to_string(deps[7])
+
+                    writer << "cg_ctx->mkldnn_memories[" << std::to_string(deps[9])
                            << "] = new "
-                              "mkldnn::memory({rnn_prim_desc.workspace_desc(), "
-                              "cg_ctx->global_cpu_engine}, nullptr);\n";
+                              "mkldnn::memory(rnn_prim_desc.workspace_desc(), "
+                              "cg_ctx->global_cpu_engine, nullptr);\n";
                     writer << "auto workspace = "
                               "(char*)malloc(rnn_prim_desc.workspace_desc().get_size());"
                               "\n";
@@ -295,12 +317,14 @@ namespace ngraph
                     writer.block_end();
                     writer << "cg_ctx->mkldnn_workspaces.push_back(workspace);\n";
 
-                    deps[8] = mkldnn_emitter.reserve_workspace();
+                    deps[10] = mkldnn_emitter.reserve_workspace();
 
                     writer << "\n// build lstm/rnn primitive\n";
                     // lstm/rnn primitive
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
-                           << "] = new mkldnn::rnn_forward(rnn_prim_desc);\n";
+                           << "] = new mkldnn::lstm_forward(rnn_prim_desc);\n";
+                    writer << "cg_ctx->mkldnn_scratchpad_mds[" << std::to_string(index)
+                           << "] = new mkldnn::memory::desc(rnn_prim_desc.scratchpad_desc());\n";
 
                     construct_string = writer.get_code();
                 }
@@ -318,7 +342,6 @@ namespace ngraph
                     construct_primitive_build_string_rnn<Rnn>(
                         mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
-#endif
 
                 template <typename OP>
                 void construct_primitive_build_string_batchnorm(
@@ -2480,10 +2503,10 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<BatchNormTrainingBackprop>},
     {TI(CPULeakyRelu), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<CPULeakyRelu>},
     {TI(LRN), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<LRN>},
-    //{TI(Lstm), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Lstm>},
+    {TI(Lstm), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Lstm>},
     {TI(Relu), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Relu>},
     {TI(ReluBackprop), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ReluBackprop>},
-    //{TI(Rnn), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Rnn>},
+    {TI(Rnn), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Rnn>},
     {TI(Convolution), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Convolution>},
     {TI(ConvolutionRelu),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<ConvolutionRelu>},
