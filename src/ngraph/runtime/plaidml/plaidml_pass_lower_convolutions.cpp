@@ -97,7 +97,7 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
             {
                 replace_node(target,
                              std::make_shared<plaidml::op::Convolution>(conv,
-                                                                        NodeVector{lhs, rhs},
+                                                                        OutputVector{lhs, rhs},
                                                                         std::move(lhs_axes),
                                                                         std::move(rhs_axes),
                                                                         std::move(out_axes)));
@@ -113,7 +113,7 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
                 replace_node(
                     target,
                     std::make_shared<plaidml::op::ConvolutionBackpropData>(conv_bp_data,
-                                                                           NodeVector{lhs, rhs},
+                                                                           OutputVector{lhs, rhs},
                                                                            std::move(lhs_axes),
                                                                            std::move(rhs_axes),
                                                                            std::move(out_axes)));
@@ -126,13 +126,13 @@ ngraph::runtime::plaidml::pass::LowerConvolutions::LowerConvolutions()
                 std::dynamic_pointer_cast<ngraph::op::ConvolutionBackpropFilters>(node);
             if (conv_bp_filters)
             {
-                replace_node(
-                    target,
-                    std::make_shared<plaidml::op::ConvolutionBackpropFilters>(conv_bp_filters,
-                                                                              NodeVector{lhs, rhs},
-                                                                              std::move(lhs_axes),
-                                                                              std::move(rhs_axes),
-                                                                              std::move(out_axes)));
+                replace_node(target,
+                             std::make_shared<plaidml::op::ConvolutionBackpropFilters>(
+                                 conv_bp_filters,
+                                 OutputVector{lhs, rhs},
+                                 std::move(lhs_axes),
+                                 std::move(rhs_axes),
+                                 std::move(out_axes)));
                 return true;
             }
         }
