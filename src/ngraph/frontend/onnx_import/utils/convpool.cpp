@@ -15,10 +15,8 @@
 //*****************************************************************************
 
 #include <cmath>
-#include <string>
 #include <unordered_map>
 
-#include "convpool.hpp"
 #include "core/attribute.hpp"
 #include "core/node.hpp"
 #include "exceptions.hpp"

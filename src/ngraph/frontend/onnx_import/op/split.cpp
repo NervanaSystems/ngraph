@@ -17,7 +17,6 @@
 #include <cstdint>
 #include <vector>
 
-#include "exceptions.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "op/split.hpp"
 
