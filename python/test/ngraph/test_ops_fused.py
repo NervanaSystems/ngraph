@@ -23,12 +23,11 @@ def test_elu_operator():
     runtime = get_runtime()
 
     data_shape = [2, 2]
-    alpha_shape = [2]
+    alpha_value = np.float32(2)
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
-    parameter_alpha = ng.parameter(alpha_shape, name='Alpha', dtype=np.float32)
 
-    model = ng.elu(parameter_data, parameter_alpha)
-    computation = runtime.computation(model, parameter_data, parameter_alpha)
+    model = ng.elu(parameter_data, alpha_value)
+    computation = runtime.computation(model, parameter_data)
 
     value_data = np.array([[-5, 1], [-2, 3]], dtype=np.float32)
     value_alpha = np.array([3, 3], dtype=np.float32)
