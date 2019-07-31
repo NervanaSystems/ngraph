@@ -14,17 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/fused/elu.hpp"
-#include "pyngraph/ops/elu.hpp"
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Elu(py::module m)
-{
-    py::class_<ngraph::op::Elu, std::shared_ptr<ngraph::op::Elu>, ngraph::op::Op> elu(m, "Elu");
-    elu.doc() = "ngraph.impl.op.Elu wraps ngraph::op::Elu";
-    elu.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
-}
+void regclass_pyngraph_op_Clamp(py::module m);
