@@ -48,7 +48,7 @@ static void test_allreduce_common(reduction::Type reduce_type)
         auto a = backend->create_tensor(element::f32, shape);
         auto result = backend->create_tensor(element::f32, shape);
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -84,7 +84,7 @@ static void test_allreduce_common(reduction::Type reduce_type)
                     v[i] = i + 2;
             }
         }
-#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 
