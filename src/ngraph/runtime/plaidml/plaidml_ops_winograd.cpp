@@ -30,9 +30,11 @@ namespace ngraph
     }
 }
 
+const std::string ngraph::runtime::plaidml::op::Winograd::type_name{"Winograd"};
+
 ngraph::runtime::plaidml::op::Winograd::Winograd(std::shared_ptr<plaidml::op::Convolution> conv,
-                                                 const NodeVector& args)
-    : Op{"Winograd", args}
+                                                 const OutputVector& args)
+    : Op{args}
     , m_conv{std::move(conv)}
 {
     constructor_validate_and_infer_types();
@@ -50,7 +52,7 @@ std::shared_ptr<ngraph::Node>
     {
         throw ngraph_error{"Winograd requires five inputs (data, filters, A, B, and G)"};
     }
-    return std::make_shared<Winograd>(m_conv, new_args);
+    return std::make_shared<Winograd>(m_conv, as_output_vector(new_args));
 }
 
 void ngraph::runtime::plaidml::ImplWinograd::Apply()
