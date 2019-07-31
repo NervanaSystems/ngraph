@@ -68,7 +68,7 @@ Complete the following steps to build nGraph with Python bindings from source.
 These steps have been tested on Ubuntu 18.04.
 
 Before you build
->>>>>>>>>>>>>>>>
+~~~~~~~~~~~~~~~~
 
 Prepare your system:
 
@@ -81,7 +81,8 @@ Prepare your system:
 
 Decide which backends to enable: 
 
-**Intel GPU backend**:
+Intel GPU backend
+>>>>>>>>>>>>>>>>>
 
 To build nGraph with an Intel GPU backend, add ``-DNGRAPH_INTELGPU_ENABLE=TRUE``
 to the cmake command. For example: 
@@ -90,7 +91,8 @@ to the cmake command. For example:
 
     $ cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_INTELGPU_ENABLE=TRUE
 
-**PlaidML backend**: 
+PlaidML backend
+>>>>>>>>>>>>>>> 
 
 To build nGraph with a PlaidML backend, add ``-DNGRAPH_PLAIDML_ENABLE=TRUE`` to the cmake command. For example:
 
@@ -105,7 +107,7 @@ To build nGraph with more than one backend, pass multiple flags to ``cmake``. Fo
     $ cmake ../ -DCMAKE_INSTALL_PREFIX=$HOME/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_PLAIDML_ENABLE=TRUE DNGRAPH_INTELGPU_ENABLE=TRUE
 
 Build the nGraph wheel
->>>>>>>>>>>>>>>>>>>>>>
+~~~~~~~~~~~~~~~~~~~~~~
 
 
 Clone nGraph's ``master`` branch. Next, build and install it into
@@ -148,7 +150,7 @@ For additional information on how to build nGraph Python bindings see the
 `Python API documentation <python_api_>`_.
 
 Install the nGraph wheel
->>>>>>>>>>>>>>>>>>>>>>>>
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once the Python binary wheel file ``ngraph-*.whl`` is prepared, install it using
 pip. For example:
@@ -177,7 +179,7 @@ both built with the ``NGRAPH_ONNX_IMPORT_ENABLE`` option:
 If you don't see any errors, nGraph should be installed correctly.
 
 Install ngraph-onnx
->>>>>>>>>>>>>>>>>>>
+~~~~~~~~~~~~~~~~~~~
 
 ``ngraph-onnx`` is an additional Python library that provides a Python API to run
 ONNX models using nGraph. 
@@ -279,7 +281,9 @@ Execute your model by calling the created ``computation`` object with input data
              7.45318757e-05, 4.80892748e-04, 5.67404088e-04, 9.48728994e-05,
              ...
 
-**Run the computation on an Intel GPU**
+Run on an Intel GPU
+~~~~~~~~~~~~~~~~~~~
+
 
 For running the computation on an Intel GPU, use the following line to create
 the runtime:  

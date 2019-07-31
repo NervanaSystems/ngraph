@@ -79,8 +79,7 @@ build nGraph bridge from source.
 
 
 Before you build
->>>>>>>>>>>>>>>>
-
+~~~~~~~~~~~~~~~~
 
 Install the following requirements before building ``nGraph-bridge``: ``bazel``, ``cmake``, ``virtualenv``, and ``gcc 4.8``.
 
@@ -101,8 +100,8 @@ Add and source the ``bin`` path to your ``~/.bashrc`` file to call
 
 Install ``cmake``, ``virtualenv``, and ``gcc 4.8``.
 
-Build ``ngraph-bridge``
->>>>>>>>>>>>>>>>>>>>>>>
+Build ngraph-bridge
+~~~~~~~~~~~~~~~~~~~
 
 Once TensorFlow's dependencies are installed, clone the ``ngraph-bridge`` repo:
 
@@ -169,7 +168,7 @@ Verify that ``ngraph-bridge`` installed correctly (optional):
     python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
         import ngraph_bridge; print(ngraph_bridge.__version__)"
 
-This will produce something like this:
+Running this code produces something like:
 
 ::
 
