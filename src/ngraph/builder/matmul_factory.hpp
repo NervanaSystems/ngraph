@@ -46,7 +46,7 @@ namespace ngraph
             /// \return NodeVector containing the sub-graph output node.
             virtual NodeVector make_matmul_op();
 
-        private:
+        protected:
             /// \return Node representing the left operand.
             virtual std::shared_ptr<Node> get_left();
 
@@ -57,7 +57,6 @@ namespace ngraph
             virtual std::shared_ptr<Node> make_dot(const std::shared_ptr<Node>& left,
                                                    const std::shared_ptr<Node>& right);
 
-        protected:
             const NodeVector m_inputs;
         };
 
@@ -70,7 +69,7 @@ namespace ngraph
             {
             }
 
-        private:
+        protected:
             std::shared_ptr<Node> get_right() override;
             std::shared_ptr<Node> make_dot(const std::shared_ptr<Node>& left,
                                            const std::shared_ptr<Node>& right) override;
@@ -85,7 +84,7 @@ namespace ngraph
             {
             }
 
-        private:
+        protected:
             std::shared_ptr<Node> make_dot(const std::shared_ptr<Node>& left,
                                            const std::shared_ptr<Node>& right) override;
         };
