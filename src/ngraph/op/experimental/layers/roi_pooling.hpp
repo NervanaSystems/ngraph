@@ -31,7 +31,7 @@ namespace ngraph
             /// \param coords         Coordinates of bounding boxes
             /// \param output_size    Height/Width of ROI output features
             /// \param spatial_scale  Ratio of input feature map over input image size
-            /// \param method         Kind of pooling - Max or Bilinear
+            /// \param method         Method of pooling - Max or Bilinear
             ROIPooling(const std::shared_ptr<Node>& input,
                        const std::shared_ptr<Node>& coords,
                        const Shape& output_size,
