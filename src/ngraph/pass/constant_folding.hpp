@@ -45,7 +45,9 @@ public:
         PRODUCT,
         SUM,
         CONCAT,
-        GATHER
+        GATHER,
+        DYN_RESHAPE,
+        TRANSPOSE
     };
 
     ConstantFolding(const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
@@ -66,6 +68,8 @@ public:
         construct_constant_sum();
         construct_constant_concat();
         construct_constant_gather();
+        construct_constant_dyn_reshape();
+        construct_constant_transpose();
     }
 
     //this allows to specify the order in which matchers will be run
@@ -93,6 +97,8 @@ public:
             case CFTransformations::SUM: construct_constant_sum(); break;
             case CFTransformations::CONCAT: construct_constant_concat(); break;
             case CFTransformations::GATHER: construct_constant_gather(); break;
+            case CFTransformations::DYN_RESHAPE: construct_constant_dyn_reshape(); break;
+            case CFTransformations::TRANSPOSE: construct_constant_transpose(); break;
             }
         }
     }
@@ -112,6 +118,8 @@ private:
     void construct_constant_sum();
     void construct_constant_concat();
     void construct_constant_gather();
+    void construct_constant_dyn_reshape();
+    void construct_constant_transpose();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
 };
