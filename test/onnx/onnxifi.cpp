@@ -17,7 +17,7 @@
 #include <cstring>
 
 #include <gtest/gtest.h>
-#include <onnxifi.h>
+#include <onnx/onnxifi.h>
 
 #include "ngraph/runtime/backend_manager.hpp"
 
