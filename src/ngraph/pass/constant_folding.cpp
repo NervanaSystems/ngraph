@@ -244,7 +244,7 @@ void pass::ConstantFolding::construct_constant_pad()
     };
 
     auto pad_matcher = make_shared<pattern::Matcher>(pad, "ConstantFolding.ConstantPad");
-    this->add_matcher(pad_matcher, constant_pad_callback, all_pass_property_off);
+    this->add_matcher(pad_matcher, constant_pad_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 void pass::ConstantFolding::construct_constant_reshape()
@@ -332,7 +332,7 @@ void pass::ConstantFolding::construct_constant_reshape()
     auto reshape_matcher =
         make_shared<pattern::Matcher>(reshape, "ConstantFolding.ConstantReshape");
     this->add_matcher(
-        reshape_matcher, constant_reshape_callback, all_pass_property_off);
+        reshape_matcher, constant_reshape_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -447,7 +447,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
     auto dyn_reshape_matcher =
         make_shared<pattern::Matcher>(dyn_reshape, "ConstantFolding.ConstantDynReshape");
     this->add_matcher(
-        dyn_reshape_matcher, constant_dyn_reshape_callback, all_pass_property_off);
+        dyn_reshape_matcher, constant_dyn_reshape_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -565,7 +565,7 @@ void pass::ConstantFolding::construct_constant_transpose()
     auto transpose_matcher =
         make_shared<pattern::Matcher>(transpose, "ConstantFolding.ConstantTranspose");
     this->add_matcher(
-        transpose_matcher, constant_transpose_callback, all_pass_property_off);
+        transpose_matcher, constant_transpose_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -663,7 +663,7 @@ void pass::ConstantFolding::construct_constant_broadcast()
     auto broadcast_matcher =
         make_shared<pattern::Matcher>(broadcast, "ConstantFolding.ConstantBroadcast");
     this->add_matcher(
-        broadcast_matcher, constant_broadcast_callback, all_pass_property_off);
+        broadcast_matcher, constant_broadcast_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class Tin, class Tout>
@@ -1001,7 +1001,7 @@ void pass::ConstantFolding::construct_constant_binary()
 
     auto reshape_matcher = make_shared<pattern::Matcher>(be, "ConstantFolding.ConstantBinary");
     this->add_matcher(
-        reshape_matcher, constant_binary_callback, all_pass_property_off);
+        reshape_matcher, constant_binary_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
@@ -1183,7 +1183,7 @@ void pass::ConstantFolding::construct_constant_unary()
     };
 
     auto reshape_matcher = make_shared<pattern::Matcher>(ue, "ConstantFolding.ConstantUnary");
-    this->add_matcher(reshape_matcher, constant_unary_callback, all_pass_property_off);
+    this->add_matcher(reshape_matcher, constant_unary_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class QUANT, class REAL>
@@ -1260,7 +1260,7 @@ void pass::ConstantFolding::construct_constant_dequantize()
     auto dequantize_matcher =
         make_shared<pattern::Matcher>(dequant, "ConstantFolding.ConstantDequantize");
     this->add_matcher(
-        dequantize_matcher, constant_dequantize_callback, all_pass_property_off);
+        dequantize_matcher, constant_dequantize_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class REAL, class QUANT>
@@ -1339,7 +1339,7 @@ void pass::ConstantFolding::construct_constant_quantize()
     auto quantize_matcher =
         make_shared<pattern::Matcher>(quant, "ConstantFolding.ConstantQuantize");
     this->add_matcher(
-        quantize_matcher, constant_quantize_callback, all_pass_property_off);
+        quantize_matcher, constant_quantize_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 // Helper for mapping element::Types to runtime::reference::convert, which is templated in C++
@@ -1496,7 +1496,8 @@ void pass::ConstantFolding::construct_constant_convert()
 
     auto convert_matcher =
         make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantConvert");
-    this->add_matcher(convert_matcher, constant_convert_callback, all_pass_property_off);
+    this->add_matcher(
+        convert_matcher, constant_convert_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 // ShapeOf is a bit of an odd duck: it doesn't matter if the input's value is
@@ -1534,7 +1535,8 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
     auto shape_of_matcher =
         make_shared<pattern::Matcher>(shape_of_op, "ConstantFolding.ConstantShapeOf");
-    this->add_matcher(shape_of_matcher, constant_shape_of_callback, all_pass_property_off);
+    this->add_matcher(
+        shape_of_matcher, constant_shape_of_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <typename T>
@@ -1623,7 +1625,8 @@ void pass::ConstantFolding::construct_constant_reverse()
 
     auto convert_matcher =
         make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantReverse");
-    this->add_matcher(convert_matcher, constant_reverse_callback, all_pass_property_off);
+    this->add_matcher(
+        convert_matcher, constant_reverse_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <typename T>
@@ -1713,7 +1716,8 @@ void pass::ConstantFolding::construct_constant_product()
 
     auto convert_matcher =
         make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantProduct");
-    this->add_matcher(convert_matcher, constant_product_callback, all_pass_property_off);
+    this->add_matcher(
+        convert_matcher, constant_product_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 // TODO(amprocte): Find a way to reduce duplication with Product. (The fact
@@ -1804,7 +1808,7 @@ void pass::ConstantFolding::construct_constant_sum()
     };
 
     auto convert_matcher = make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantSum");
-    this->add_matcher(convert_matcher, constant_sum_callback, all_pass_property_off);
+    this->add_matcher(convert_matcher, constant_sum_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <typename T>
@@ -1911,7 +1915,7 @@ void pass::ConstantFolding::construct_constant_concat()
 
     auto concat_matcher =
         make_shared<pattern::Matcher>(concat_op, "ConstantFolding.ConstantConcat");
-    this->add_matcher(concat_matcher, constant_concat_callback, all_pass_property_off);
+    this->add_matcher(concat_matcher, constant_concat_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 // "Inner" helper for fold_constant_gather, which has to switch on the indices
@@ -2053,7 +2057,7 @@ void pass::ConstantFolding::construct_constant_gather()
 
     auto gather_matcher =
         make_shared<pattern::Matcher>(gather_op, "ConstantFolding.ConstantGather");
-    this->add_matcher(gather_matcher, constant_gather_callback, all_pass_property_off);
+    this->add_matcher(gather_matcher, constant_gather_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -2148,7 +2152,7 @@ void pass::ConstantFolding::construct_constant_slice()
     };
 
     auto slice_matcher = make_shared<pattern::Matcher>(slice_op, "ConstantFolding.ConstantSlice");
-    this->add_matcher(slice_matcher, constant_slice_callback, all_pass_property_off);
+    this->add_matcher(slice_matcher, constant_slice_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -2300,7 +2304,8 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
 
     auto dyn_slice_matcher =
         make_shared<pattern::Matcher>(dyn_slice_op, "ConstantFolding.ConstantDynSlice");
-    this->add_matcher(dyn_slice_matcher, constant_dyn_slice_callback, all_pass_property_off);
+    this->add_matcher(
+        dyn_slice_matcher, constant_dyn_slice_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -2396,7 +2401,7 @@ void pass::ConstantFolding::construct_constant_range()
     };
 
     auto range_matcher = make_shared<pattern::Matcher>(range_op, "ConstantFolding.ConstantRange");
-    this->add_matcher(range_matcher, constant_range_callback, all_pass_property_off);
+    this->add_matcher(range_matcher, constant_range_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -2497,5 +2502,5 @@ void pass::ConstantFolding::construct_constant_select()
 
     auto select_matcher =
         make_shared<pattern::Matcher>(select_op, "ConstantFolding.ConstantSelect");
-    this->add_matcher(select_matcher, constant_select_callback, all_pass_property_off);
+    this->add_matcher(select_matcher, constant_select_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
