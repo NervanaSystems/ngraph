@@ -64,21 +64,6 @@
     }
 
 using namespace ngraph;
-static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
-                                       descriptor::Output& new_output)
-{
-    for (auto node : collapsed_node->get_users(true))
-    {
-        NGRAPH_DEBUG << "node_name: " << node->get_name();
-        for (size_t i = 0; i < node->get_input_size(); i++)
-        {
-            if (node->get_argument(i) == collapsed_node)
-            {
-                node->get_inputs().at(i).replace_output(new_output);
-            }
-        }
-    }
-}
 
 void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 {
@@ -111,6 +96,10 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto src_iter =
             std::make_shared<ngraph::op::Concat>(NodeVector{pattern_map[H_t], pattern_map[C_t]}, 0);
         auto bias_iofc = target_lstm_node->get_argument(5);
+
+        // we need to reorder W, R and bias from IOFC to IFCO gate order
+        // Note: ONNX runtime provides W, R and bias in the gate order [IOFC] but
+        // MKLDNN computes LSTM kernel in the [IFCO] order.
 
         auto get_weights_ifco_gate_order =
             [&](std::shared_ptr<Node> weights_graph_node) -> std::shared_ptr<Node> {
