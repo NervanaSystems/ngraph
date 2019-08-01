@@ -19,12 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::ROIPooling::type_name{"ROIPooling"};
+
 op::ROIPooling::ROIPooling(const shared_ptr<Node>& input,
                            const std::shared_ptr<Node>& coords,
                            const Shape& output_size,
                            const float spatial_scale,
                            const std::string& kind)
-    : Op("ROIPooling", check_single_output_args({input, coords}))
+    : Op(check_single_output_args({input, coords}))
     , m_output_size(output_size)
     , m_spatial_scale(spatial_scale)
     , m_kind(kind)
