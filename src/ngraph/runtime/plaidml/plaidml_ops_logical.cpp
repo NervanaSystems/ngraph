@@ -81,6 +81,6 @@ void ngraph::runtime::plaidml::ImplXor::Apply()
                    .add(builder::Input{op_input(0), "A"})
                    .add(builder::Input{op_input(1), "B"})
                    .add(builder::Output{"C"})
-                   .add(builder::Elementwise{"C", "A ? cmp_eq(B, 0) : B"})
+                   .add(builder::Elementwise{"C", "A ? (B ? 0 : A) : B"})
                    .finalize());
 }
