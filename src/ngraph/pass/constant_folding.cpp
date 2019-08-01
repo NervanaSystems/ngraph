@@ -32,6 +32,7 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
+#include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
@@ -53,6 +54,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
+#include "ngraph/op/select.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/sqrt.hpp"
@@ -86,9 +88,11 @@
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
+#include "ngraph/runtime/reference/range.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
+#include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/runtime/reference/sign.hpp"
 #include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
@@ -2246,4 +2250,197 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
     auto dyn_slice_matcher =
         make_shared<pattern::Matcher>(dyn_slice_op, "ConstantFolding.ConstantDynSlice");
     this->add_matcher(dyn_slice_matcher, constant_dyn_slice_callback, all_pass_property_off);
+}
+
+template <class T>
+shared_ptr<op::Constant> fold_constant_range(shared_ptr<op::Constant> start,
+                                             shared_ptr<op::Constant> step,
+                                             shared_ptr<op::Range> range)
+{
+    vector<T> out_vec(shape_size(range->get_shape()));
+    runtime::reference::range<T>(start->get_vector<T>().data(),
+                                 step->get_vector<T>().data(),
+                                 range->get_shape(),
+                                 out_vec.data());
+
+    return make_shared<op::Constant>(range->get_element_type(), range->get_shape(), out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_range()
+{
+    auto start_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{}, pattern::has_class<op::Constant>());
+    auto stop_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{}, pattern::has_class<op::Constant>());
+    auto step_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{}, pattern::has_class<op::Constant>());
+    auto range_op = make_shared<op::Range>(start_label, stop_label, step_label);
+
+    auto constant_range_callback = [start_label, stop_label, step_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_range_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto start_node = static_pointer_cast<op::Constant>(pattern_map[start_label]);
+        auto stop_node = static_pointer_cast<op::Constant>(pattern_map[stop_label]);
+        auto step_node = static_pointer_cast<op::Constant>(pattern_map[step_label]);
+        auto range = static_pointer_cast<op::Range>(m.get_match_root());
+
+        std::shared_ptr<op::Constant> replacement;
+
+        switch (range->get_output_element_type(0).get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_range_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_range_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_range<char>(start_node, step_node, range);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_range<bfloat16>(start_node, step_node, range);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_range<float16>(start_node, step_node, range);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_range<float>(start_node, step_node, range);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_range<double>(start_node, step_node, range);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_range<int8_t>(start_node, step_node, range);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_range<int16_t>(start_node, step_node, range);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_range<int32_t>(start_node, step_node, range);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_range<int64_t>(start_node, step_node, range);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_range<uint8_t>(start_node, step_node, range);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_range<uint16_t>(start_node, step_node, range);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_range<uint32_t>(start_node, step_node, range);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_range<uint64_t>(start_node, step_node, range);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto range_matcher = make_shared<pattern::Matcher>(range_op, "ConstantFolding.ConstantRange");
+    this->add_matcher(range_matcher, constant_range_callback, all_pass_property_off);
+}
+
+template <class T>
+shared_ptr<op::Constant> fold_constant_select(shared_ptr<op::Constant> selection,
+                                              shared_ptr<op::Constant> t,
+                                              shared_ptr<op::Constant> f,
+                                              shared_ptr<op::Select> select)
+{
+    auto out_shape = select->get_shape();
+    vector<T> out_vec(shape_size(out_shape));
+
+    runtime::reference::select<T>(selection->get_data_ptr<char>(),
+                                  t->get_data_ptr<T>(),
+                                  f->get_data_ptr<T>(),
+                                  out_vec.data(),
+                                  shape_size(out_shape));
+
+    return make_shared<op::Constant>(select->get_element_type(), out_shape, out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_select()
+{
+    auto selection_label = make_shared<pattern::op::Label>(
+        element::boolean, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto t_label = make_shared<pattern::op::Label>(
+        element::i64, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto f_label = make_shared<pattern::op::Label>(
+        element::i64, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto select_op = make_shared<op::Select>(selection_label, t_label, f_label);
+
+    auto constant_select_callback = [selection_label, t_label, f_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_select_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto selection_node = static_pointer_cast<op::Constant>(pattern_map[selection_label]);
+        auto t_node = static_pointer_cast<op::Constant>(pattern_map[t_label]);
+        auto f_node = static_pointer_cast<op::Constant>(pattern_map[f_label]);
+        auto select = static_pointer_cast<op::Select>(m.get_match_root());
+
+        std::shared_ptr<op::Constant> replacement;
+
+        switch (select->get_output_element_type(0).get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_select_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_select_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_select<char>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_select<bfloat16>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_select<float16>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_select<float>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_select<double>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_select<int8_t>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_select<int16_t>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_select<int32_t>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_select<int64_t>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_select<uint8_t>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_select<uint16_t>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_select<uint32_t>(selection_node, t_node, f_node, select);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_select<uint64_t>(selection_node, t_node, f_node, select);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto select_matcher =
+        make_shared<pattern::Matcher>(select_op, "ConstantFolding.ConstantSelect");
+    this->add_matcher(select_matcher, constant_select_callback, all_pass_property_off);
 }
