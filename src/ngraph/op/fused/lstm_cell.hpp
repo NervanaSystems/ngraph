@@ -103,6 +103,39 @@ namespace ngraph
             ///
             /// \brief      Constructs LSTMCell node.
             ///
+            /// \param[in]  X                  The input tensor with shape: [batch_size, input_size].
+            /// \param[in]  Hi                 The hidden state tensor at current time step with shape:
+            ///                                [batch_size, hidden_size].
+            /// \param[in]  Ci                 The cell state tensor at current time step with shape:
+            ///                                [batch_size, hidden_size].
+            /// \param[in]  WR                 Tensor with weights for matrix multiplication operation:
+            ///                                [4 * hidden_size, hidden_size + input_size]. gate order: fico
+            /// \param[in]  B                  The bias tensor for input gate with shape: [4*hidden_size].
+            /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
+            /// \param[in]  activations        The vector of activation functions used inside
+            ///                                recurrent cell.
+            /// \param[in]  activations_alpha  The vector of alpha parameters for activation
+            ///                                functions in order respective to activation list.
+            /// \param[in]  activations_beta   The vector of beta parameters for activation functions
+            ///                                in order respective to activation list.
+            /// \param[in]  clip               The value defining clipping range [-clip, clip] on
+            ///                                input of activation functions.
+            ///
+            LSTMCell(const Output<Node>& X,
+                     const Output<Node>& Hi,
+                     const Output<Node>& Ci,
+                     const Output<Node>& WR,
+                     std::size_t hidden_size,
+                     const Output<Node>& B,
+                     const std::vector<std::string>& activations =
+                         std::vector<std::string>{"sigmoid", "tanh", "tanh"},
+                     const std::vector<float>& activations_alpha = {},
+                     const std::vector<float>& activations_beta = {},
+                     float clip = 0.f);
+
+            ///
+            /// \brief      Constructs LSTMCell node.
+            ///
             /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
             /// \param[in]  W                 The weight tensor with shape: [4*hidden_size,
             ///                                                              input_size].
@@ -156,6 +189,15 @@ namespace ngraph
             void add_default_bias_input();
             /// brief Add and initialize peepholes weights input to all zeros.
             void add_default_peepholes_input();
+            /// brief Add bias converted from fico to iofc format at given position
+            void add_converted_bias(const std::shared_ptr<Node>& bias, size_t position);
+            /// brief Add splitted and converted weights from fico to iofc format at given position
+            void add_converted_weights(const std::shared_ptr<Node>& WR,
+                                       int w_position,
+                                       int r_position);
+            /// brief Change format of given node
+            std::shared_ptr<Node> convert_node_format(const std::shared_ptr<Node>& node,
+                                                      std::vector<std::size_t> new_format);
 
             ///
             /// \brief The Activation function f.
@@ -177,5 +219,5 @@ namespace ngraph
             static constexpr std::size_t s_gates_count{4};
             static constexpr std::size_t s_peepholes_count{3};
         };
-    }
-}
+    } // namespace op
+} // namespace ngraph

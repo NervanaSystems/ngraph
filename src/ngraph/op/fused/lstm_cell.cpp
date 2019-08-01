@@ -20,6 +20,7 @@
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
@@ -70,6 +71,30 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
     , m_input_forget{input_forget}
 {
     add_default_bias_input();
+    add_default_peepholes_input();
+    constructor_validate_and_infer_types();
+}
+
+ngraph::op::LSTMCell::LSTMCell(const Output<Node>& X,
+                               const Output<Node>& Hi,
+                               const Output<Node>& Ci,
+                               const Output<Node>& WR,
+                               std::size_t hidden_size,
+                               const Output<Node>& B,
+                               const std::vector<std::string>& activations,
+                               const std::vector<float>& activations_alpha,
+                               const std::vector<float>& activations_beta,
+                               float clip)
+    : FusedOp({X})
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
+    , m_activation_f{get_activation_function(0)}
+    , m_activation_g{get_activation_function(1)}
+    , m_activation_h{get_activation_function(2)}
+{
+    add_converted_weights(WR.get_node_shared_ptr(), 1, 2);
+    set_argument(3, Hi);
+    set_argument(4, Ci);
+    add_converted_bias(B.get_node_shared_ptr(), 5);
     add_default_peepholes_input();
     constructor_validate_and_infer_types();
 }
@@ -168,7 +193,8 @@ void op::LSTMCell::pre_validate_and_infer_types()
     const Shape& p_shape{p_pshape.to_shape()};
 
     NODE_VALIDATION_CHECK(this,
-                          (b_shape == Shape{2 * s_gates_count * get_hidden_size()}),
+                          (b_shape == Shape{2 * s_gates_count * get_hidden_size()} ||
+                           b_shape == Shape{s_gates_count * get_hidden_size()}),
                           "Input tensor B must have shape (",
                           8 * get_hidden_size(),
                           "). Actual shape is:",
@@ -276,10 +302,14 @@ NodeVector op::LSTMCell::decompose_op() const
 
 Output<Node> op::LSTMCell::get_bias() const
 {
-    Output<Node> bias;
-    // Split B onto Wb an Rb and add them.
-    NodeVector b_W_R = builder::split(input_value(5), 2);
-    bias = b_W_R.at(0) + b_W_R.at(1);
+    Output<Node> bias = input_value(5);
+    // check if we should split Bias.
+    if (s_gates_count * get_hidden_size() != shape_size(bias.get_shape()))
+    {
+        // Split B onto Wb an Rb and add them.
+        NodeVector b_W_R = builder::split(bias, 2);
+        bias = b_W_R.at(0) + b_W_R.at(1);
+    }
     return bias;
 }
 
@@ -306,6 +336,38 @@ void op::LSTMCell::add_default_peepholes_input()
                              Shape{s_peepholes_count * get_hidden_size()},
                              vector<float>(s_peepholes_count * get_hidden_size(), 0.f));
     set_argument(6, P);
+}
+
+void ngraph::op::LSTMCell::add_converted_bias(const shared_ptr<Node>& bias, size_t position)
+{
+    shared_ptr<Node> converted_bias = convert_node_format(bias, {1, 3, 0, 2});
+    set_argument(position, converted_bias);
+}
+
+void ngraph::op::LSTMCell::add_converted_weights(const std::shared_ptr<Node>& WR,
+                                                 int w_position,
+                                                 int r_position)
+{
+    NodeVector splitted_full_weights = builder::split(
+        WR, vector<size_t>{WR->get_shape().at(1) - get_hidden_size(), get_hidden_size()}, 1);
+    shared_ptr<Node> converted_weights =
+        convert_node_format(splitted_full_weights.at(0), {1, 3, 0, 2});
+    shared_ptr<Node> converted_recurse_weights =
+        convert_node_format(splitted_full_weights.at(1), {1, 3, 0, 2});
+    set_argument(w_position, converted_weights);
+    set_argument(r_position, converted_recurse_weights);
+}
+
+shared_ptr<Node> ngraph::op::LSTMCell::convert_node_format(const shared_ptr<Node>& node,
+                                                           vector<size_t> new_format)
+{
+    NodeVector splitted_node = builder::split(node, new_format.size());
+    NodeVector nodes_in_new_format;
+    for (const auto& data : new_format)
+    {
+        nodes_in_new_format.push_back(splitted_node.at(data));
+    }
+    return make_shared<op::Concat>(nodes_in_new_format, 0);
 }
 
 shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) const
