@@ -34,6 +34,7 @@ public:
     {
         RESHAPE,
         BROADCAST,
+        DYN_BROADCAST,
         PAD,
         DEQUANTIZE,
         UNARY,
@@ -60,6 +61,7 @@ public:
         m_cfmap = cfmap;
         construct_constant_reshape();
         construct_constant_broadcast();
+        construct_constant_dyn_broadcast();
         construct_constant_pad();
         construct_constant_unary();
         construct_constant_binary();
@@ -93,6 +95,7 @@ public:
             {
             case CFTransformations::RESHAPE: construct_constant_reshape(); break;
             case CFTransformations::BROADCAST: construct_constant_broadcast(); break;
+            case CFTransformations::DYN_BROADCAST: construct_constant_dyn_broadcast(); break;
             case CFTransformations::PAD: construct_constant_pad(); break;
             case CFTransformations::UNARY: construct_constant_unary(); break;
             case CFTransformations::BINARY: construct_constant_binary(); break;
@@ -118,6 +121,7 @@ public:
 private:
     void construct_constant_reshape();
     void construct_constant_broadcast();
+    void construct_constant_dyn_broadcast();
     void construct_constant_pad();
     void construct_constant_unary();
     void construct_constant_binary();
