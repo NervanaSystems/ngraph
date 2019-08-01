@@ -891,6 +891,65 @@ TEST(constant_folding, constant_transpose)
     ASSERT_TRUE(test::all_close_f(values_permute, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
+void range_test_check(const vector<double>& values_out, const vector<double>& values_expected)
+{
+    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+void range_test_check(const vector<float>& values_out, const vector<float>& values_expected)
+{
+    ASSERT_TRUE(test::all_close_f(values_out, values_expected, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value>::type
+    range_test_check(const vector<T>& values_out, const vector<T>& values_expected)
+{
+    ASSERT_EQ(values_out, values_expected);
+}
+
+template <typename T>
+void range_test(T start, T stop, T step, const vector<T>& values_expected)
+{
+    vector<T> values_start{start};
+    vector<T> values_stop{stop};
+    vector<T> values_step{step};
+
+    auto constant_start = make_shared<op::Constant>(element::from<T>(), Shape{}, values_start);
+    auto constant_stop = make_shared<op::Constant>(element::from<T>(), Shape{}, values_stop);
+    auto constant_step = make_shared<op::Constant>(element::from<T>(), Shape{}, values_step);
+    auto range = make_shared<op::Range>(constant_start, constant_stop, constant_step);
+    auto f = make_shared<Function>(range, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Range>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+
+    auto values_out = new_const->template get_vector<T>();
+
+    range_test_check(values_out, values_expected);
+}
+
+TEST(constant_folding, constant_range)
+{
+    range_test<int8_t>(5, 12, 2, {5, 7, 9, 11});
+    range_test<int32_t>(5, 12, 2, {5, 7, 9, 11});
+    range_test<int64_t>(5, 12, 2, {5, 7, 9, 11});
+    range_test<uint64_t>(5, 12, 2, {5, 7, 9, 11});
+    range_test<double>(5, 12, 2, {5, 7, 9, 11});
+    range_test<float>(5, 12, 2, {5, 7, 9, 11});
+
+    range_test<int32_t>(5, 12, -2, {});
+    range_test<float>(12, 4, -2, {12, 10, 8, 6});
+}
+
 TEST(constant_folding, constant_select)
 {
     Shape shape{2, 4};

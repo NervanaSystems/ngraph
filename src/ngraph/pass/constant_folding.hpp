@@ -50,6 +50,7 @@ public:
         DYN_SLICE,
         DYN_RESHAPE,
         TRANSPOSE,
+        RANGE,
         SELECT
     };
 
@@ -75,6 +76,7 @@ public:
         construct_constant_dyn_slice();
         construct_constant_dyn_reshape();
         construct_constant_transpose();
+        construct_constant_range();
         construct_constant_select();
     }
 
@@ -107,6 +109,7 @@ public:
             case CFTransformations::DYN_SLICE: construct_constant_dyn_slice(); break;
             case CFTransformations::DYN_RESHAPE: construct_constant_dyn_reshape(); break;
             case CFTransformations::TRANSPOSE: construct_constant_transpose(); break;
+            case CFTransformations::RANGE: construct_constant_range(); break;
             case CFTransformations::SELECT: construct_constant_select(); break;
             }
         }
@@ -131,6 +134,7 @@ private:
     void construct_constant_dyn_slice();
     void construct_constant_dyn_reshape();
     void construct_constant_transpose();
+    void construct_constant_range();
     void construct_constant_select();
 
     ngraph::BuildNodeExecutorMap m_cfmap;
