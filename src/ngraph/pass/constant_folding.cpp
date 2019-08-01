@@ -1600,37 +1600,37 @@ static shared_ptr<op::Constant>
 {
     vector<T> out_vec(shape_size(reduction_node->get_shape()));
 
-    if (auto p = dynamic_pointer_cast<op::Max>(reduction_node))
+    if (auto max = dynamic_pointer_cast<op::Max>(reduction_node))
     {
         runtime::reference::max<T>(constant->get_vector<T>().data(),
                                    out_vec.data(),
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
-                                   p->get_reduction_axes());
+                                   max->get_reduction_axes());
     }
-    else if (auto p = dynamic_pointer_cast<op::Min>(reduction_node))
+    else if (auto min = dynamic_pointer_cast<op::Min>(reduction_node))
     {
         runtime::reference::min<T>(constant->get_vector<T>().data(),
                                    out_vec.data(),
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
-                                   p->get_reduction_axes());
+                                   min->get_reduction_axes());
     }
-    else if (auto p = dynamic_pointer_cast<op::Product>(reduction_node))
+    else if (auto prod = dynamic_pointer_cast<op::Product>(reduction_node))
     {
         runtime::reference::product<T>(constant->get_vector<T>().data(),
                                        out_vec.data(),
                                        constant->get_output_shape(0),
                                        reduction_node->get_shape(),
-                                       p->get_reduction_axes());
+                                       prod->get_reduction_axes());
     }
-    else if (auto s = dynamic_pointer_cast<op::Sum>(reduction_node))
+    else if (auto sum = dynamic_pointer_cast<op::Sum>(reduction_node))
     {
         runtime::reference::sum<T>(constant->get_vector<T>().data(),
                                    out_vec.data(),
                                    constant->get_output_shape(0),
                                    reduction_node->get_shape(),
-                                   s->get_reduction_axes());
+                                   sum->get_reduction_axes());
     }
     else
     {
@@ -1733,21 +1733,21 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
 {
     vector<char> out_vec(shape_size(reduction_node->get_shape()));
 
-    if (auto p = dynamic_pointer_cast<::ngraph::op::All>(reduction_node))
+    if (auto all = dynamic_pointer_cast<::ngraph::op::All>(reduction_node))
     {
         runtime::reference::all(constant->get_vector<char>().data(),
                                 out_vec.data(),
                                 constant->get_output_shape(0),
                                 reduction_node->get_shape(),
-                                p->get_reduction_axes());
+                                all->get_reduction_axes());
     }
-    else if (auto p = dynamic_pointer_cast<::ngraph::op::Any>(reduction_node))
+    else if (auto any = dynamic_pointer_cast<::ngraph::op::Any>(reduction_node))
     {
         runtime::reference::any(constant->get_vector<char>().data(),
                                 out_vec.data(),
                                 constant->get_output_shape(0),
                                 reduction_node->get_shape(),
-                                p->get_reduction_axes());
+                                any->get_reduction_axes());
     }
     else
     {
