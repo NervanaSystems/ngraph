@@ -21,7 +21,9 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
@@ -41,7 +43,9 @@
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/maximum.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
@@ -64,7 +68,9 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/add.hpp"
+#include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
@@ -78,7 +84,9 @@
 #include "ngraph/runtime/reference/greater_eq.hpp"
 #include "ngraph/runtime/reference/less.hpp"
 #include "ngraph/runtime/reference/less_eq.hpp"
+#include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
+#include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
@@ -1608,180 +1616,207 @@ void pass::ConstantFolding::construct_constant_reverse()
 }
 
 template <typename T>
-static shared_ptr<op::Constant> fold_constant_product_helper(shared_ptr<op::Constant> constant,
-                                                             const AxisSet& reduction_axes,
-                                                             const Shape& result_shape)
+static shared_ptr<op::Constant>
+    fold_constant_arithmetic_reduction_helper(shared_ptr<op::Constant> constant,
+                                              shared_ptr<Node> reduction_node)
 {
-    vector<T> out_vec(shape_size(result_shape));
+    vector<T> out_vec(shape_size(reduction_node->get_shape()));
 
-    runtime::reference::product<T>(constant->get_vector<T>().data(),
+    if (auto max = dynamic_pointer_cast<op::Max>(reduction_node))
+    {
+        runtime::reference::max<T>(constant->get_vector<T>().data(),
                                    out_vec.data(),
                                    constant->get_output_shape(0),
-                                   result_shape,
-                                   reduction_axes);
+                                   reduction_node->get_shape(),
+                                   max->get_reduction_axes());
+    }
+    else if (auto min = dynamic_pointer_cast<op::Min>(reduction_node))
+    {
+        runtime::reference::min<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_output_shape(0),
+                                   reduction_node->get_shape(),
+                                   min->get_reduction_axes());
+    }
+    else if (auto prod = dynamic_pointer_cast<op::Product>(reduction_node))
+    {
+        runtime::reference::product<T>(constant->get_vector<T>().data(),
+                                       out_vec.data(),
+                                       constant->get_output_shape(0),
+                                       reduction_node->get_shape(),
+                                       prod->get_reduction_axes());
+    }
+    else if (auto sum = dynamic_pointer_cast<op::Sum>(reduction_node))
+    {
+        runtime::reference::sum<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_output_shape(0),
+                                   reduction_node->get_shape(),
+                                   sum->get_reduction_axes());
+    }
+    else
+    {
+        NGRAPH_CHECK(false,
+                     "Internal nGraph error: Ops handled in "
+                     "fold_constant_arithmetic_reduction_helper must be consistent with those "
+                     "matched in construct_constant_arithmetic_reduction");
+    }
 
-    return make_shared<op::Constant>(constant->get_output_element_type(0), result_shape, out_vec);
+    return make_shared<op::Constant>(
+        reduction_node->get_output_element_type(0), reduction_node->get_shape(), out_vec);
 }
 
-static shared_ptr<op::Constant> fold_constant_product(shared_ptr<op::Constant> constant,
-                                                      const AxisSet& reduction_axes,
-                                                      const Shape& result_shape)
+static shared_ptr<op::Constant>
+    fold_constant_arithmetic_reduction(shared_ptr<op::Constant> constant,
+                                       shared_ptr<Node> reduction_node)
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
     switch (input_element_type.get_type_enum())
     {
     case element::Type_t::undefined:
-        NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_product");
+        NGRAPH_CHECK(false,
+                     "Encountered 'undefined' element type in fold_constant_arithmetic_reduction");
         break;
     case element::Type_t::dynamic:
-        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_product");
+        NGRAPH_CHECK(false,
+                     "Encountered 'dynamic' element type in fold_constant_arithmetic_reduction");
         break;
     case element::Type_t::boolean:
-        return fold_constant_product_helper<char>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<char>(constant, reduction_node);
     case element::Type_t::bf16:
-        return fold_constant_product_helper<bfloat16>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<bfloat16>(constant, reduction_node);
     case element::Type_t::f16:
-        return fold_constant_product_helper<float16>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<float16>(constant, reduction_node);
     case element::Type_t::f32:
-        return fold_constant_product_helper<float>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<float>(constant, reduction_node);
     case element::Type_t::f64:
-        return fold_constant_product_helper<double>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<double>(constant, reduction_node);
     case element::Type_t::i8:
-        return fold_constant_product_helper<int8_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<int8_t>(constant, reduction_node);
     case element::Type_t::i16:
-        return fold_constant_product_helper<int16_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<int16_t>(constant, reduction_node);
     case element::Type_t::i32:
-        return fold_constant_product_helper<int32_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<int32_t>(constant, reduction_node);
     case element::Type_t::i64:
-        return fold_constant_product_helper<int64_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<int64_t>(constant, reduction_node);
     case element::Type_t::u8:
-        return fold_constant_product_helper<uint8_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<uint8_t>(constant, reduction_node);
     case element::Type_t::u16:
-        return fold_constant_product_helper<uint16_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<uint16_t>(constant, reduction_node);
     case element::Type_t::u32:
-        return fold_constant_product_helper<uint32_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<uint32_t>(constant, reduction_node);
     case element::Type_t::u64:
-        return fold_constant_product_helper<uint64_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<uint64_t>(constant, reduction_node);
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
 }
 
-void pass::ConstantFolding::construct_constant_product()
+void pass::ConstantFolding::construct_constant_arithmetic_reduction()
 {
-    auto constant_label = make_shared<pattern::op::Label>(
+    auto constant_data_label = make_shared<pattern::op::Label>(
         element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto convert_op = make_shared<op::Product>(constant_label, AxisSet{0, 1, 2});
+    auto constant_axes_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto is_supported_reduction = [](std::shared_ptr<Node> n) {
+        return (pattern::has_class<op::Max>()(n) || pattern::has_class<op::Min>()(n) ||
+                pattern::has_class<op::Product>()(n) || pattern::has_class<op::Sum>()(n));
+    };
+    auto reduction =
+        std::make_shared<pattern::op::Any>(element::i32,
+                                           Shape{2},
+                                           is_supported_reduction,
+                                           NodeVector{constant_data_label, constant_axes_label});
 
-    auto constant_product_callback = [constant_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_product_callback against node = "
+    auto constant_arithmetic_reduction_callback = [constant_data_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_arithmetic_reduction_callback against node = "
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto product_match = static_pointer_cast<op::Product>(m.get_match_root());
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
+        auto reduction_match = m.get_match_root();
 
-        replace_node(m.get_match_root(),
-                     fold_constant_product(constant_match,
-                                           product_match->get_reduction_axes(),
-                                           product_match->get_output_shape(0)));
+        replace_node(reduction_match,
+                     fold_constant_arithmetic_reduction(constant_match, reduction_match));
         return true;
     };
 
-    auto convert_matcher =
-        make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantProduct");
-    this->add_matcher(convert_matcher, constant_product_callback, all_pass_property_off);
+    auto arithmetic_reduction_matcher =
+        make_shared<pattern::Matcher>(reduction, "ConstantFolding.ConstantArithmeticReduction");
+    this->add_matcher(arithmetic_reduction_matcher,
+                      constant_arithmetic_reduction_callback,
+                      all_pass_property_off);
 }
 
-// TODO(amprocte): Find a way to reduce duplication with Product. (The fact
-// that we bottom out in a reference call makes it a bit tricky.)
-template <typename T>
-static shared_ptr<op::Constant> fold_constant_sum_helper(shared_ptr<op::Constant> constant,
-                                                         const AxisSet& reduction_axes,
-                                                         const Shape& result_shape)
+static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
+                                                                shared_ptr<Node> reduction_node)
 {
-    vector<T> out_vec(shape_size(result_shape));
+    vector<char> out_vec(shape_size(reduction_node->get_shape()));
 
-    runtime::reference::sum<T>(constant->get_vector<T>().data(),
-                               out_vec.data(),
-                               constant->get_output_shape(0),
-                               result_shape,
-                               reduction_axes);
-
-    return make_shared<op::Constant>(constant->get_output_element_type(0), result_shape, out_vec);
-}
-
-static shared_ptr<op::Constant> fold_constant_sum(shared_ptr<op::Constant> constant,
-                                                  const AxisSet& reduction_axes,
-                                                  const Shape& result_shape)
-{
-    auto& input_element_type = constant->get_output_element_type(0);
-
-    switch (input_element_type.get_type_enum())
+    if (auto all = dynamic_pointer_cast<::ngraph::op::All>(reduction_node))
     {
-    case element::Type_t::undefined:
-        NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_sum");
-        break;
-    case element::Type_t::dynamic:
-        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_sum");
-        break;
-    case element::Type_t::boolean:
-        return fold_constant_sum_helper<char>(constant, reduction_axes, result_shape);
-    case element::Type_t::bf16:
-        return fold_constant_sum_helper<bfloat16>(constant, reduction_axes, result_shape);
-    case element::Type_t::f16:
-        return fold_constant_sum_helper<float16>(constant, reduction_axes, result_shape);
-    case element::Type_t::f32:
-        return fold_constant_sum_helper<float>(constant, reduction_axes, result_shape);
-    case element::Type_t::f64:
-        return fold_constant_sum_helper<double>(constant, reduction_axes, result_shape);
-    case element::Type_t::i8:
-        return fold_constant_sum_helper<int8_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::i16:
-        return fold_constant_sum_helper<int16_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::i32:
-        return fold_constant_sum_helper<int32_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::i64:
-        return fold_constant_sum_helper<int64_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::u8:
-        return fold_constant_sum_helper<uint8_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::u16:
-        return fold_constant_sum_helper<uint16_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::u32:
-        return fold_constant_sum_helper<uint32_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::u64:
-        return fold_constant_sum_helper<uint64_t>(constant, reduction_axes, result_shape);
+        runtime::reference::all(constant->get_vector<char>().data(),
+                                out_vec.data(),
+                                constant->get_output_shape(0),
+                                reduction_node->get_shape(),
+                                all->get_reduction_axes());
+    }
+    else if (auto any = dynamic_pointer_cast<::ngraph::op::Any>(reduction_node))
+    {
+        runtime::reference::any(constant->get_vector<char>().data(),
+                                out_vec.data(),
+                                constant->get_output_shape(0),
+                                reduction_node->get_shape(),
+                                any->get_reduction_axes());
+    }
+    else
+    {
+        NGRAPH_CHECK(false,
+                     "Internal nGraph error: Ops handled in "
+                     "fold_constant_logical_reduction must be consistent with those "
+                     "matched in construct_constant_logical_reduction");
     }
 
-    NGRAPH_UNREACHABLE("Unexpected switch case");
+    return make_shared<op::Constant>(
+        reduction_node->get_output_element_type(0), reduction_node->get_shape(), out_vec);
 }
 
-void pass::ConstantFolding::construct_constant_sum()
+void pass::ConstantFolding::construct_constant_logical_reduction()
 {
-    auto constant_label = make_shared<pattern::op::Label>(
-        element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto convert_op = make_shared<op::Sum>(constant_label, AxisSet{0, 1, 2});
+    auto constant_data_label = make_shared<pattern::op::Label>(
+        element::boolean, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto constant_axes_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto is_supported_reduction = [](std::shared_ptr<Node> n) {
+        return (pattern::has_class<::ngraph::op::All>()(n) ||
+                pattern::has_class<::ngraph::op::Any>()(n));
+    };
+    auto reduction =
+        std::make_shared<pattern::op::Any>(element::i32,
+                                           Shape{2},
+                                           is_supported_reduction,
+                                           NodeVector{constant_data_label, constant_axes_label});
 
-    auto constant_sum_callback = [constant_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_sum_callback against node = "
+    auto constant_logical_reduction_callback = [constant_data_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_logical_reduction_callback against node = "
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto sum_match = static_pointer_cast<op::Sum>(m.get_match_root());
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
+        auto reduction_match = m.get_match_root();
 
-        replace_node(m.get_match_root(),
-                     fold_constant_sum(constant_match,
-                                       sum_match->get_reduction_axes(),
-                                       sum_match->get_output_shape(0)));
+        replace_node(reduction_match,
+                     fold_constant_logical_reduction(constant_match, reduction_match));
         return true;
     };
 
-    auto convert_matcher = make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantSum");
-    this->add_matcher(convert_matcher, constant_sum_callback, all_pass_property_off);
+    auto logical_reduction_matcher =
+        make_shared<pattern::Matcher>(reduction, "ConstantFolding.ConstantLogicalReduction");
+    this->add_matcher(
+        logical_reduction_matcher, constant_logical_reduction_callback, all_pass_property_off);
 }
 
 template <typename T>
