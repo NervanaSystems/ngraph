@@ -29,8 +29,10 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Softmax::type_name{"Softmax"};
+
 op::Softmax::Softmax(const shared_ptr<Node>& arg, const AxisSet& axes)
-    : UnaryElementwiseArithmetic("Softmax", arg)
+    : UnaryElementwiseArithmetic(arg)
     , m_axes(axes)
 {
     constructor_validate_and_infer_types();
