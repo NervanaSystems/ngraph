@@ -21,6 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
+const std::string op::Lstm::type_name{"Lstm"};
+
 #if MKLDNN_VERSION_MAJOR >= 1
 shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
 {
@@ -37,23 +39,21 @@ shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
                              m_rnntype);
 }
 
-op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
-               std::shared_ptr<Node> src_iter,
-               std::shared_ptr<Node> src_iter_c,
-               std::shared_ptr<Node> weights_layer,
-               std::shared_ptr<Node> weights_iter,
-               std::shared_ptr<Node> bias,
+op::Lstm::Lstm(const Output<Node>& src_layer,
+               const Output<Node>& src_iter,
+               const Output<Node>& src_iter_c,
+               const Output<Node>& weights_layer,
+               const Output<Node>& weights_iter,
+               const Output<Node>& bias,
                ngraph::runtime::cpu::rnn_utils::rnntype rnn_type)
-    : Op("Lstm",
-         check_single_output_args(
-             {src_layer, src_iter, src_iter_c, weights_layer, weights_iter, bias}))
-    , m_output_tensor_shape(src_layer->get_shape())
-    , m_output_cell_shape(src_iter->get_shape())
+    : Op({src_layer, src_iter, src_iter_c, weights_layer, weights_iter, bias})
+    , m_output_tensor_shape(src_layer.get_shape())
+    , m_output_cell_shape(src_iter.get_shape())
     , m_num_timesteps(1)
     , m_num_gates_per_cell(4)
     , m_src_sequence_length(1)
-    , m_src_layer_feature_size(src_layer->get_shape()[1])
-    , m_src_iter_feature_size(src_iter->get_shape()[1])
+    , m_src_layer_feature_size(src_layer.get_shape()[1])
+    , m_src_iter_feature_size(src_iter.get_shape()[1])
     , m_num_cell_states(2)
     , m_direction(1)
     , m_num_fused_layers(1)
@@ -61,38 +61,38 @@ op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
 {
     constructor_validate_and_infer_types();
 
-    if (src_layer->get_shape().size() != weights_layer->get_shape().size())
+    if (src_layer.get_shape().size() != weights_layer.get_shape().size())
     {
         throw ngraph_error("src_layer and i2h weights size dont match");
     }
 
-    if (src_iter->get_shape().size() != weights_iter->get_shape().size())
+    if (src_iter.get_shape().size() != weights_iter.get_shape().size())
     {
         throw ngraph_error("src_iter and h2h weights size dont match");
     }
 
-    if (src_layer->get_shape().size() == 2)
+    if (src_layer.get_shape().size() == 2)
     {
-        m_batch_size = src_layer->get_shape()[0] / m_num_timesteps;
+        m_batch_size = src_layer.get_shape()[0] / m_num_timesteps;
     }
     else
     {
         throw ngraph_error("src_layer doesnt have a rank 2");
     }
 
-    if (shape_size(src_layer->get_shape()) !=
+    if (shape_size(src_layer.get_shape()) !=
         m_src_sequence_length * m_batch_size * m_src_layer_feature_size)
     {
         throw ngraph_error("src_layer size is not equal t*n*c");
     }
 
-    if (bias->get_shape()[0] != weights_layer->get_shape()[1] ||
-        bias->get_shape()[0] != weights_iter->get_shape()[1])
+    if (bias.get_shape()[0] != weights_layer.get_shape()[1] ||
+        bias.get_shape()[0] != weights_iter.get_shape()[1])
     {
         throw ngraph_error("bias and weights_shape are not compatible");
     }
 
-    auto et = src_layer->get_element_type();
+    auto et = src_layer.get_element_type();
     for (auto rnn_input : inputs())
     {
         if (rnn_input.get_element_type() != et)
@@ -103,13 +103,12 @@ op::Lstm::Lstm(std::shared_ptr<Node> src_layer,
 
     set_output_size(3);
     set_output_type(0,
-                    src_layer->get_element_type(),
+                    src_layer.get_element_type(),
                     Shape{(m_num_timesteps * m_batch_size), m_src_iter_feature_size});
-    set_output_type(1, src_layer->get_element_type(), Shape{m_batch_size, m_src_iter_feature_size});
-    set_output_type(2, src_layer->get_element_type(), Shape{m_batch_size, m_src_iter_feature_size});
+    set_output_type(1, src_layer.get_element_type(), Shape{m_batch_size, m_src_iter_feature_size});
+    set_output_type(2, src_layer.get_element_type(), Shape{m_batch_size, m_src_iter_feature_size});
 }
 #else
-const std::string op::Lstm::type_name{"Lstm"};
 
 shared_ptr<Node> op::Lstm::copy_with_new_args(const NodeVector& new_args) const
 {
