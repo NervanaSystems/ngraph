@@ -67,3 +67,49 @@ def test_elu_operator_with_scalar():
     result = computation(data_value)
     expected = np.array([[-2.9797862, 1.], [-2.5939941, 3.]], dtype=np.float32)
     assert np.allclose(result, expected)
+
+
+def test_fake_quantize():
+    runtime = get_runtime()
+
+    data_value = np.arange(24.0, dtype=np.float32).reshape(1, 2, 3, 4)
+    input_low_value = np.float32(0)
+    input_high_value = np.float32(23)
+    output_low_value = np.float32(2)
+    output_high_value = np.float32(16)
+    levels = np.float32(4)
+
+    data_shape = [1, 2, 3, 4]
+    bound_shape = []
+    parameter_data = ng.parameter(data_shape, name='data', dtype=np.float32)
+    parameter_input_low = ng.parameter(bound_shape, name='input_low', dtype=np.float32)
+    parameter_input_high = ng.parameter(bound_shape, name='input_high', dtype=np.float32)
+    parameter_output_low = ng.parameter(bound_shape, name='output_low', dtype=np.float32)
+    parameter_output_high = ng.parameter(bound_shape, name='output_high', dtype=np.float32)
+
+    model = ng.fake_quantize(parameter_data,
+                             parameter_input_low,
+                             parameter_input_high,
+                             parameter_output_low,
+                             parameter_output_high,
+                             levels)
+    computation = runtime.computation(model,
+                                      parameter_data,
+                                      parameter_input_low,
+                                      parameter_input_high,
+                                      parameter_output_low,
+                                      parameter_output_high)
+
+    result = computation(data_value,
+                         input_low_value,
+                         input_high_value,
+                         output_low_value,
+                         output_high_value)
+
+    expected = np.array([[[[[2., 2., 2., 2.],
+                            [6.6666669, 6.6666669, 6.6666669, 6.6666669],
+                            [6.6666669, 6.6666669, 6.6666669, 6.6666669]],
+                        [[11.33333301, 11.33333301, 11.33333301, 11.33333301],
+                            [11.33333301, 11.33333301, 11.33333301, 11.33333301],
+                            [16., 16., 16., 16.]]]]], dtype=np.float32)
+    assert np.allclose(result, expected)

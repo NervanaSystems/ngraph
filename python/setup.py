@@ -182,6 +182,7 @@ sources = [
     'pyngraph/ops/elu.cpp',
     'pyngraph/ops/equal.cpp',
     'pyngraph/ops/exp.cpp',
+    'pyngraph/ops/fused/fake_quantize.cpp',
     'pyngraph/ops/floor.cpp',
     'pyngraph/ops/greater.cpp',
     'pyngraph/ops/greater_eq.cpp',

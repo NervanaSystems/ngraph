@@ -43,6 +43,7 @@
 #include "pyngraph/ops/equal.hpp"
 #include "pyngraph/ops/exp.hpp"
 #include "pyngraph/ops/floor.hpp"
+#include "pyngraph/ops/fused/fake_quantize.hpp"
 #include "pyngraph/ops/get_output_element.hpp"
 #include "pyngraph/ops/greater.hpp"
 #include "pyngraph/ops/greater_eq.hpp"

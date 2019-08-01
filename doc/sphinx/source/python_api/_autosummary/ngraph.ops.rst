@@ -35,6 +35,7 @@ ngraph.ops
       elu
       equal
       exp
+      fake_quantize
       floor
       get_output_element
       greater
