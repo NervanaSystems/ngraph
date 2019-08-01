@@ -186,6 +186,7 @@ sources = [
     'pyngraph/ops/floor.cpp',
     'pyngraph/ops/greater.cpp',
     'pyngraph/ops/greater_eq.cpp',
+    'pyngraph/ops/fused/grn.cpp',
     'pyngraph/ops/less.cpp',
     'pyngraph/ops/less_eq.cpp',
     'pyngraph/ops/log.cpp',
