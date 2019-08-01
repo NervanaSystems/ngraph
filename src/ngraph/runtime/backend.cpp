@@ -16,7 +16,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#else
+#elif defined(__linux) || defined(__APPLE__)
 #include <dlfcn.h>
 #endif
 
@@ -47,7 +47,7 @@ static string find_my_pathname()
     path = file_util::get_directory(path);
     path += "/";
     return path;
-#else
+#elif defined(__linux) || defined(__APPLE__)
     Dl_info dl_info;
     dladdr(reinterpret_cast<void*>(find_my_pathname), &dl_info);
     return dl_info.dli_fname;
