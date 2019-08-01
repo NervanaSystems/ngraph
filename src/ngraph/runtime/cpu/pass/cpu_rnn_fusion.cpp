@@ -96,24 +96,27 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
     auto C_t = std::make_shared<pattern::op::Label>(element::f32, Shape{batch_size, hidden_size});
 
     auto lstm_cell = std::make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+    auto lstm_cell_goe_0 = std::make_shared<ngraph::op::GetOutputElement>(lstm_cell, 0);
+    // We cannot attach labels to multi-output nodes, so we attach a label to the goe instead
+    auto lstm_cell_goe_0_label =
+        std::make_shared<pattern::op::Label>(lstm_cell_goe_0, nullptr, NodeVector{lstm_cell_goe_0});
 
-    auto callback = [X, W, R, H_t, C_t](pattern::Matcher& m) {
+    auto callback = [X, W, R, H_t, C_t, lstm_cell_goe_0_label](pattern::Matcher& m) {
 
         auto pattern_map = m.get_pattern_map();
         ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
-        auto lstm = std::dynamic_pointer_cast<op::LSTMCell>(m.get_match_root());
+        auto lstmcell_op = std::dynamic_pointer_cast<op::LSTMCell>(m.get_match_root());
         auto src_iter =
             std::make_shared<ngraph::op::Concat>(NodeVector{pattern_map[H_t], pattern_map[C_t]}, 0);
         auto bias = op::Constant::create(pattern_map[X]->get_element_type(),
-                                         Shape{4 * lstm->get_hidden_size()},
-                                         std::vector<float>(4 * lstm->get_hidden_size(), 0.f));
+                                         Shape{4 * lstmcell_op->get_hidden_size()},
+                                         std::vector<float>(4 * lstmcell_op->get_hidden_size(), 0.f));
 
         // we need to reorder W, R and bias from IOFC to IFCO gate order
         // Note: ONNX runtime provides W, R and bias in the gate order [IOFC] but
         // MKLDNN computes LSTM kernel in the [IFCO] order.
-        size_t hidden_size = lstm->get_hidden_size();
 
         auto get_weights_ifco_gate_order =
             [&](std::shared_ptr<Node> weights_graph_node) -> std::shared_ptr<Node> {
@@ -126,8 +129,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             {
                 auto slice = std::make_shared<ngraph::op::Slice>(
                     weights_graph_node, Coordinate{i * dim0, 0}, Coordinate{(i + 1) * dim0, dim1});
-                std::cout << "lower_bounds: " << slice->get_lower_bounds()
-                          << "upper_bounds: " << slice->get_upper_bounds() << std::endl;
                 gate_slices.push_back(slice);
             }
 
@@ -142,9 +143,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto R_ifco = get_weights_ifco_gate_order(R_ldigo);
 
         auto W_reshape = std::make_shared<op::Reshape>(
-            W_ifco, AxisVector{0, 1}, Shape{W_ldigo->get_shape()[1], W_ldigo->get_shape()[0]});
+            W_ifco, AxisVector{1, 0}, Shape{W_ldigo->get_shape()[1], W_ldigo->get_shape()[0]});
         auto R_reshape = std::make_shared<op::Reshape>(
-            R_ifco, AxisVector{0, 1}, Shape{R_ldigo->get_shape()[1], R_ldigo->get_shape()[0]});
+            R_ifco, AxisVector{1, 0}, Shape{R_ldigo->get_shape()[1], R_ldigo->get_shape()[0]});
 
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             pattern_map[X], src_iter, W_reshape, R_reshape, bias, rnn_type);
@@ -172,18 +173,18 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto ct_slice = std::make_shared<ngraph::op::Slice>(
             lstm_ht_ct_output, Coordinate{batch_size, 0}, Coordinate{(2 * batch_size), dic});
 
-        if (lstm_node->get_outputs().at(0).get_inputs().size() != 2)
+        if (lstm_node->get_outputs().size() != 2)
         {
             throw ngraph_error("Lstm node doesnt have two outputs");
         }
 
         // find the user's for {ht} and replace them with lstm_goe_0
-        if (dst_iter != NULL)
+        if (std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(dst_iter) != nullptr)
         {
             ngraph::replace_node(dst_iter, ct_slice);
         }
         // find the user's for {ht} and replace them with lstm_goe_0
-        if (dst_layer != NULL)
+        if (std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(dst_layer) != nullptr)
         {
             ngraph::replace_node(dst_layer, lstm_ht_output);
         }

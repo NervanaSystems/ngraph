@@ -3848,7 +3848,7 @@ TEST(cpu_fusion, lstm_cell)
     };
     auto ht_function_cpu = make_function();
     auto ht_function_inter = make_function();
-    test::Uniform<float> rng(1.0f, 1.0f);
+    test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
     for (shared_ptr<op::Parameter> param : ht_function_cpu->get_parameters())
@@ -3858,14 +3858,6 @@ TEST(cpu_fusion, lstm_cell)
         args.push_back(tensor_val);
     }
 
-    for (auto arg : args)
-    {
-        std::cout << "##########################" << std::endl;
-        for (auto val : arg)
-        {
-            std::cout << val << std::endl;
-        }
-    }
     auto int_results = execute(ht_function_inter, args, "INTERPRETER");
     auto cpu_results = execute(ht_function_cpu, args, "CPU");
     for (size_t i = 0; i < cpu_results.size(); i++)
