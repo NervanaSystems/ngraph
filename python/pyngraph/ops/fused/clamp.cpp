@@ -17,14 +17,15 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/fused/elu.hpp"
-#include "pyngraph/ops/elu.hpp"
+#include "ngraph/op/fused/clamp.hpp"
+#include "pyngraph/ops/fused/clamp.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Elu(py::module m)
+void regclass_pyngraph_op_Clamp(py::module m)
 {
-    py::class_<ngraph::op::Elu, std::shared_ptr<ngraph::op::Elu>, ngraph::op::Op> elu(m, "Elu");
-    elu.doc() = "ngraph.impl.op.Elu wraps ngraph::op::Elu";
-    elu.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
+    py::class_<ngraph::op::Clamp, std::shared_ptr<ngraph::op::Clamp>, ngraph::op::Op> clamp(
+        m, "Clamp");
+    clamp.doc() = "ngraph.impl.op.Clamp wraps ngraph::op::Clamp";
+    clamp.def(py::init<const std::shared_ptr<ngraph::Node>&, const double, const double>());
 }

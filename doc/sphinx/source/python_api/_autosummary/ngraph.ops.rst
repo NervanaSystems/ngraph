@@ -23,6 +23,7 @@ ngraph.ops
       broadcast
       broadcast_to
       ceiling
+      clamp
       concat
       constant
       convert

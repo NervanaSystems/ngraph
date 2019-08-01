@@ -170,6 +170,7 @@ sources = [
     'pyngraph/ops/avg_pool.cpp',
     'pyngraph/ops/broadcast.cpp',
     'pyngraph/ops/broadcast_distributed.cpp',
+    'pyngraph/ops/fused/clamp.cpp',
     'pyngraph/ops/concat.cpp',
     'pyngraph/ops/constant.cpp',
     'pyngraph/ops/convert.cpp',

@@ -61,6 +61,7 @@ from _pyngraph.op import Constant
 """
 Constant.get_data = lambda self: np.array(self, copy=True)
 
+from _pyngraph.op import Clamp
 from _pyngraph.op import Convert
 from _pyngraph.op import Convolution
 from _pyngraph.op import ConvolutionBackpropData
