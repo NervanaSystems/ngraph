@@ -1540,8 +1540,7 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_transpose)
             -0.0270785f,  -0.00680824f, -0.06650258f, 0.08004665f,  0.07918708f,  -0.0724144f,
             0.06256775f,  -0.17838378f, -0.18863615f, 0.20064656f,  0.133717f,    -0.06876295f,
             -0.06398046f, -0.00864975f, 0.19289537f,  -0.01490572f, -0.13673618f, 0.01949645f});
-    test_case.set_tolerance(3);
-    test_case.run();
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, group_conv_transpose_output_shape)

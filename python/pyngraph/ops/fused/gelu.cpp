@@ -14,32 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/tanh.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/subtract.hpp"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/op/fused/gelu.hpp"
+#include "pyngraph/ops/fused/gelu.hpp"
 
-const string op::Tanh::type_name{"Tanh"};
+namespace py = pybind11;
 
-op::Tanh::Tanh(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic(arg)
+void regclass_pyngraph_op_Gelu(py::module m)
 {
-    constructor_validate_and_infer_types();
-}
-
-shared_ptr<Node> op::Tanh::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<Tanh>(new_args.at(0));
-}
-
-void op::Tanh::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
-{
-    auto delta = deltas.at(0);
-
-    auto x = get_argument(0);
-
-    adjoints.add_delta(x, delta - (delta * (shared_from_this() * shared_from_this())));
+    py::class_<ngraph::op::Gelu, std::shared_ptr<ngraph::op::Gelu>, ngraph::op::Op> gelu(m, "Gelu");
+    gelu.doc() = "ngraph.impl.op.Gelu wraps ngraph::op::Gelu";
+    gelu.def(py::init<const std::shared_ptr<ngraph::Node>&>());
 }

@@ -22,8 +22,10 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Tan::type_name{"Tan"};
+
 op::Tan::Tan(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Tan", arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
