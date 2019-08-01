@@ -2203,6 +2203,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::GRUCell:
     case OP_TYPEID::LeakyRelu:
     case OP_TYPEID::LSTMCell:
+    case OP_TYPEID::MatMul:
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:
     case OP_TYPEID::PRelu:
