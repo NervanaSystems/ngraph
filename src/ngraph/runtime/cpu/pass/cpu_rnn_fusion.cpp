@@ -82,43 +82,36 @@ static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
 
 void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 {
-    size_t batch_size = 2;
-    size_t input_size = 3;
-    size_t hidden_size = 3;
-    size_t gates_count = 4;
+    size_t ref_batch_size = 2;
+    size_t ref_input_size = 3;
+    size_t ref_hidden_size = 3;
+    size_t ref_gates_count = 4;
 
-    auto X = std::make_shared<pattern::op::Label>(element::f32, Shape{batch_size, input_size});
-    auto W = std::make_shared<pattern::op::Label>(element::f32,
-                                                  Shape{gates_count * hidden_size, input_size});
-    auto R = std::make_shared<pattern::op::Label>(element::f32,
-                                                  Shape{gates_count * hidden_size, hidden_size});
-    auto H_t = std::make_shared<pattern::op::Label>(element::f32, Shape{batch_size, hidden_size});
-    auto C_t = std::make_shared<pattern::op::Label>(element::f32, Shape{batch_size, hidden_size});
+    auto X =
+        std::make_shared<pattern::op::Label>(element::f32, Shape{ref_batch_size, ref_input_size});
+    auto W = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{ref_gates_count * ref_hidden_size, ref_input_size});
+    auto R = std::make_shared<pattern::op::Label>(
+        element::f32, Shape{ref_gates_count * ref_hidden_size, ref_hidden_size});
+    auto H_t =
+        std::make_shared<pattern::op::Label>(element::f32, Shape{ref_batch_size, ref_hidden_size});
+    auto C_t =
+        std::make_shared<pattern::op::Label>(element::f32, Shape{ref_batch_size, ref_hidden_size});
 
-    auto lstm_cell = std::make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
-    auto lstm_cell_goe_0 = std::make_shared<ngraph::op::GetOutputElement>(lstm_cell, 0);
-    // We cannot attach labels to multi-output nodes, so we attach a label to the goe instead
-    auto lstm_cell_goe_0_label =
-        std::make_shared<pattern::op::Label>(lstm_cell_goe_0, nullptr, NodeVector{lstm_cell_goe_0});
+    auto ref_lstm_cell = std::make_shared<op::LSTMCell>(X, W, R, H_t, C_t, ref_hidden_size);
 
-    auto callback = [X, W, R, H_t, C_t, lstm_cell_goe_0_label](pattern::Matcher& m) {
+    auto callback = [X, W, R, H_t, C_t](pattern::Matcher& m) {
 
         auto pattern_map = m.get_pattern_map();
         ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
+        auto target_lstm_node = m.get_match_root();
         auto lstmcell_op = std::dynamic_pointer_cast<op::LSTMCell>(m.get_match_root());
         auto src_iter =
             std::make_shared<ngraph::op::Concat>(NodeVector{pattern_map[H_t], pattern_map[C_t]}, 0);
-        auto bias =
-            op::Constant::create(pattern_map[X]->get_element_type(),
-                                 Shape{4 * lstmcell_op->get_hidden_size()},
-                                 std::vector<float>(4 * lstmcell_op->get_hidden_size(), 0.f));
-
-        // we need to reorder W, R and bias from IOFC to IFCO gate order
-        // Note: ONNX runtime provides W, R and bias in the gate order [IOFC] but
-        // MKLDNN computes LSTM kernel in the [IFCO] order.
-
+        auto bias_iofc = target_lstm_node->get_argument(5);
+  
         auto get_weights_ifco_gate_order =
             [&](std::shared_ptr<Node> weights_graph_node) -> std::shared_ptr<Node> {
             // slices will be in ICFO order
@@ -138,31 +131,49 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             return weights_ifco;
         };
 
-        auto W_ldigo = pattern_map[W];
-        auto R_ldigo = pattern_map[R];
-        auto W_ifco = get_weights_ifco_gate_order(W_ldigo);
-        auto R_ifco = get_weights_ifco_gate_order(R_ldigo);
+        auto get_bias_ifco_gate_order =
+            [&](std::shared_ptr<Node> bias_graph_node) -> std::shared_ptr<Node> {
+            // slices will be in ICFO order
+            std::vector<std::shared_ptr<Node>> gate_slices;
+            std::cout << "bias_name: " << bias_graph_node->get_name() << std::endl;
+
+            size_t hidden_size = lstmcell_op->get_hidden_size();
+            for (size_t i = 0; i < 4; i++)
+            {
+                auto slice = std::make_shared<ngraph::op::Slice>(
+                    bias_graph_node, Coordinate{2 * i * hidden_size}, Coordinate{(2*i + 1) * hidden_size});
+                gate_slices.push_back(slice);
+            }
+
+            auto bias_ifco = std::make_shared<ngraph::op::Concat>(
+                NodeVector{gate_slices[0], gate_slices[2], gate_slices[3], gate_slices[1]}, 0);
+            return bias_ifco;
+        };
+
+        auto W_iofc = pattern_map[W];
+        auto R_iofc = pattern_map[R];
+        auto W_ifco = get_weights_ifco_gate_order(W_iofc);
+        auto R_ifco = get_weights_ifco_gate_order(R_iofc);
+        auto bias_ifco = get_bias_ifco_gate_order(bias_iofc);
 
         auto W_reshape = std::make_shared<op::Reshape>(
-            W_ifco, AxisVector{1, 0}, Shape{W_ldigo->get_shape()[1], W_ldigo->get_shape()[0]});
+            W_ifco, AxisVector{1, 0}, Shape{W_ifco->get_shape()[1], W_ifco->get_shape()[0]});
         auto R_reshape = std::make_shared<op::Reshape>(
-            R_ifco, AxisVector{1, 0}, Shape{R_ldigo->get_shape()[1], R_ldigo->get_shape()[0]});
+            R_ifco, AxisVector{1, 0}, Shape{R_ifco->get_shape()[1], R_ifco->get_shape()[0]});
 
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
-            pattern_map[X], src_iter, W_reshape, R_reshape, bias, rnn_type);
+            pattern_map[X], src_iter, W_reshape, R_reshape, bias_ifco, rnn_type);
 
         auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 0);
         auto lstm_ht_ct_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
 
         // set LSTM cell attributes
-        size_t lstm_n_gates = 4;
-        size_t batch_size = pattern_map[X]->get_shape()[0];
-        size_t direction = 1;
-        size_t layers = 1;
+        const size_t lstm_n_gates = 4;
+        const size_t batch_size = pattern_map[X]->get_shape()[0];
+        const size_t direction = 1;
+        const size_t layers = 1;
         auto dlc = pattern_map[W]->get_shape()[0] / (lstm_n_gates * direction * layers);
-        auto slc = pattern_map[W]->get_shape()[1];
         auto dic = pattern_map[R]->get_shape()[0] / (lstm_n_gates * direction * layers);
-        auto sic = pattern_map[R]->get_shape()[1];
 
         auto goe_nodes = ngraph::op::get_output_elements(m.get_match_root());
         auto dst_layer = goe_nodes[0];
@@ -192,7 +203,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         return true;
     };
 
-    auto m = std::make_shared<ngraph::pattern::Matcher>(lstm_cell, "LSTMFusion.onnx_lstm_cell");
+    auto m = std::make_shared<ngraph::pattern::Matcher>(ref_lstm_cell, "LSTMFusion.onnx_lstm_cell");
     this->add_matcher(m, callback);
 }
 

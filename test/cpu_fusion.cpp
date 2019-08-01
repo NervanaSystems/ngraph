@@ -3827,9 +3827,9 @@ TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
 TEST(cpu_fusion, lstm_cell)
 {
     auto make_function = []() {
-        const size_t batch_size = 2;
-        const size_t input_size = 2;
-        const size_t hidden_size = 3;
+        const size_t batch_size = 3;
+        const size_t input_size = 4;
+        const size_t hidden_size = 4;
         const size_t gates_count = 4;
 
         const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
