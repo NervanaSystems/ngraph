@@ -144,7 +144,7 @@ def NGCoshOp     : NG_Unary_Arith_Op<"cosh">;
 def NGExpOp      : NG_Unary_Arith_Op<"exp">;
 def NGFloorOp    : NG_Unary_Arith_Op<"floor">;
 def NGLogOp      : NG_Unary_Arith_Op<"log">;
-def NGNegOp      : NG_Unary_Arith_Op<"neg">;
+def NGNegativeOp : NG_Unary_Arith_Op<"neg">;
 def NGNotOp      : NG_Unary_Arith_Op<"not">;
 def NGSignOp     : NG_Unary_Arith_Op<"sign">;
 def NGSinOp      : NG_Unary_Arith_Op<"sin">;

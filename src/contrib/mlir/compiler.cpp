@@ -39,6 +39,7 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
@@ -455,6 +456,12 @@ namespace ngraph
             mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
             {
                 return compiler.create_generic_op<mlir::NGReluOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Negative)
+            {
+                return compiler.create_generic_op<mlir::NGNegativeOp>(ng_node);
             }
         }
     }

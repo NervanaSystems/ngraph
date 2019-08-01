@@ -526,6 +526,58 @@ namespace
         return matchSuccess();
     }
 
+    // Negative
+    REWRITER(NGNegativeOp)
+    {
+        auto loc = cast<NGNegativeOp>(op).getLoc();
+
+        auto result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        // Note that builder's current function is still the original function body.
+        // use getBlock to get the new block instead.
+
+        // get new operands
+        Value* lhs = operands[0];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        // Steps
+        auto steps = vLHS.getSteps();
+
+        NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
+        Type elemTy = lhs->getType().dyn_cast<MemRefType>().getElementType();
+
+        LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+            ValueHandle val = iLHS(ivs);
+            if (auto floatTy = elemTy.dyn_cast<FloatType>())
+            {
+                ValueHandle two = intrinsics::constant_float(llvm::APFloat(2.0f), floatTy);
+                iRes(ivs) = val - val * two;
+            }
+            else if (auto intTy = elemTy.dyn_cast<IntegerType>())
+            {
+                ValueHandle two = intrinsics::constant_int(2, intTy.getWidth());
+                iRes(ivs) = val - val * two;
+            }
+            else
+            {
+                NGRAPH_CHECK(false, "Unsupported type for Negative");
+            }
+        });
+
+        rewriter.replaceOp(op, {result});
+        return matchSuccess();
+    }
+
     REWRITER(NGDotOp)
     {
         auto dot = cast<NGDotOp>(op);
