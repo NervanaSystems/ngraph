@@ -146,6 +146,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -1920,6 +1921,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Unsqueeze>(args[0], args[1]);
             break;
         }
+        case OP_TYPEID::Xor:
+        {
+            node = make_shared<op::Xor>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            break;
+        }
         case OP_TYPEID::UnknownOp:
         {
             stringstream ss;
@@ -2911,6 +2917,15 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Transpose: { break;
     }
     case OP_TYPEID::Unsqueeze: { break;
+    }
+    case OP_TYPEID::Xor:
+    {
+        auto tmp = dynamic_cast<const op::Xor*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }

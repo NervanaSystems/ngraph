@@ -59,6 +59,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
@@ -96,6 +97,7 @@
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
+#include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/util.hpp"
 
@@ -814,6 +816,17 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
                                               shape_size(out_shape));
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
+        else if (std::dynamic_pointer_cast<op::Xor>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::logical_xor<Tin>(a->get_data_ptr<Tin>(),
+                                                 b->get_data_ptr<Tin>(),
+                                                 out_vec.data(),
+                                                 shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
         else
         {
             NGRAPH_CHECK(false,
@@ -854,14 +867,15 @@ shared_ptr<op::Constant> fold_constant_binary_helper(const element::Type& et_out
 }
 bool is_supported_binary_op(std::shared_ptr<Node> n)
 {
-    return (
-        std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::And>(n) ||
-        std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Equal>(n) ||
-        std::dynamic_pointer_cast<op::Greater>(n) || std::dynamic_pointer_cast<op::GreaterEq>(n) ||
-        std::dynamic_pointer_cast<op::Less>(n) || std::dynamic_pointer_cast<op::LessEq>(n) ||
-        std::dynamic_pointer_cast<op::Maximum>(n) || std::dynamic_pointer_cast<op::Minimum>(n) ||
-        std::dynamic_pointer_cast<op::Multiply>(n) || std::dynamic_pointer_cast<op::NotEqual>(n) ||
-        std::dynamic_pointer_cast<op::Or>(n) || std::dynamic_pointer_cast<op::Subtract>(n));
+    return (std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::And>(n) ||
+            std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Equal>(n) ||
+            std::dynamic_pointer_cast<op::Greater>(n) ||
+            std::dynamic_pointer_cast<op::GreaterEq>(n) || std::dynamic_pointer_cast<op::Less>(n) ||
+            std::dynamic_pointer_cast<op::LessEq>(n) || std::dynamic_pointer_cast<op::Maximum>(n) ||
+            std::dynamic_pointer_cast<op::Minimum>(n) ||
+            std::dynamic_pointer_cast<op::Multiply>(n) ||
+            std::dynamic_pointer_cast<op::NotEqual>(n) || std::dynamic_pointer_cast<op::Or>(n) ||
+            std::dynamic_pointer_cast<op::Subtract>(n) || std::dynamic_pointer_cast<op::Xor>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()

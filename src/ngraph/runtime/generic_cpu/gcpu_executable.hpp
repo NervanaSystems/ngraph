@@ -51,6 +51,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/product.hpp"
@@ -67,6 +68,7 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/generic_cpu/kernel/broadcast.hpp"
@@ -154,6 +156,7 @@
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
+#include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
 
@@ -1605,6 +1608,15 @@ private:
             {
                 throw ngraph_error("Unexpected type");
             }
+            break;
+        }
+        case OP_TYPEID::Xor:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   element_count);
             break;
         }
         case OP_TYPEID::DynBroadcast:
