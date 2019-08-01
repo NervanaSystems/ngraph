@@ -2409,27 +2409,8 @@ namespace ngraph
                             mkldnn::memory::format_tag::undef;
                         if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(input_md))
                         {
-                            if (input_md.data.ndims == 4 &&
-                                mkldnn_utils::mkldnn_md_matches_format_tag(
-                                    input_md, mkldnn::memory::format_tag::nChw8c) &&
-                                lower_bounds[1] % 8 == 0)
-                            {
-                                result_format = mkldnn::memory::format_tag::nChw8c;
-                            }
-                            else if (input_md.data.ndims == 4 &&
-                                     mkldnn_utils::mkldnn_md_matches_format_tag(
-                                         input_md, mkldnn::memory::format_tag::nChw16c) &&
-                                     lower_bounds[1] % 16 == 0)
-                            {
-                                result_format = mkldnn::memory::format_tag::nChw16c;
-                            }
-                            else if (input_md.data.ndims == 5 &&
-                                     mkldnn_utils::mkldnn_md_matches_format_tag(
-                                         input_md, mkldnn::memory::format_tag::nCdhw16c) &&
-                                     lower_bounds[1] % 16 == 0)
-                            {
-                                result_format = mkldnn::memory::format_tag::nCdhw16c;
-                            }
+                            set_native_layouts(external_function, node);
+                            return;
                         }
                         else
                         {
