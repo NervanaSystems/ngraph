@@ -53,7 +53,10 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_reorder(input_desc, result_desc);
+#endif
 
                     auto scale_const_op = std::dynamic_pointer_cast<ngraph::op::Constant>(
                         dequantize->get_argument(1));
@@ -325,7 +328,10 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+
+#if MKLDNN_VERSION_MAJOR >= 1
                     mkldnn_emitter->query_scratchpad_reorder(input_desc, result_desc);
+#endif
 
                     auto scale_const_op =
                         std::dynamic_pointer_cast<ngraph::op::Constant>(quantize->get_argument(1));

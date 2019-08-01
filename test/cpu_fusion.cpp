@@ -4121,7 +4121,9 @@ TEST(cpu_fusion, fuse_2_layer_rnn)
     for (auto& node : rnn_ops)
     {
         EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
+#if MKLDNN_VERSION_MAJOR < 1
         EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
+#endif
     }
 }
 
@@ -4143,7 +4145,9 @@ TEST(cpu_fusion, fuse_1_layer_rnn)
     for (auto& node : rnn_ops)
     {
         EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
+#if MKLDNN_VERSION_MAJOR < 1
         EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
+#endif
     }
 }
 
