@@ -1,8 +1,7 @@
 .. import.rst:
 
-###############
 Import a model
-###############
+##############
 
 :ref:`from_onnx`
 
