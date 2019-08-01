@@ -14,20 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <string>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include "ngraph/node.hpp"
-#include "null_node.hpp"
+#include "ngraph/op/fused/clamp.hpp"
+#include "pyngraph/ops/fused/clamp.hpp"
 
-namespace ngraph
+namespace py = pybind11;
+
+void regclass_pyngraph_op_Clamp(py::module m)
 {
-    namespace onnx_import
-    {
-        const std::string NullNode::type_name{"NullNode"};
-
-        std::shared_ptr<Node> NullNode::copy_with_new_args(const NodeVector& new_args) const
-        {
-            return std::make_shared<NullNode>();
-        }
-    } // namespace onnx_import
-} // namespace ngraph
+    py::class_<ngraph::op::Clamp, std::shared_ptr<ngraph::op::Clamp>, ngraph::op::Op> clamp(
+        m, "Clamp");
+    clamp.doc() = "ngraph.impl.op.Clamp wraps ngraph::op::Clamp";
+    clamp.def(py::init<const std::shared_ptr<ngraph::Node>&, const double, const double>());
+}
