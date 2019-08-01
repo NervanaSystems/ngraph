@@ -1160,6 +1160,12 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         // graph pass
         if (typeid(ngraph::op::LSTMCell) == typeid(node))
         {
+            // MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell has peephole.
+            // LSTMCell with no peephole support is constant initialized to zero
+            if (typeid(ngraph::op::Constant) != typeid(node.get_argument(6)))
+            {
+                return false;
+            }
             return true;
         }
 

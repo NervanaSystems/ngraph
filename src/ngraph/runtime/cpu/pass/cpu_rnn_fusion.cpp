@@ -111,7 +111,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto src_iter =
             std::make_shared<ngraph::op::Concat>(NodeVector{pattern_map[H_t], pattern_map[C_t]}, 0);
         auto bias_iofc = target_lstm_node->get_argument(5);
-  
+
         auto get_weights_ifco_gate_order =
             [&](std::shared_ptr<Node> weights_graph_node) -> std::shared_ptr<Node> {
             // slices will be in ICFO order
@@ -135,13 +135,14 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             [&](std::shared_ptr<Node> bias_graph_node) -> std::shared_ptr<Node> {
             // slices will be in ICFO order
             std::vector<std::shared_ptr<Node>> gate_slices;
-            std::cout << "bias_name: " << bias_graph_node->get_name() << std::endl;
 
             size_t hidden_size = lstmcell_op->get_hidden_size();
             for (size_t i = 0; i < 4; i++)
             {
-                auto slice = std::make_shared<ngraph::op::Slice>(
-                    bias_graph_node, Coordinate{2 * i * hidden_size}, Coordinate{(2*i + 1) * hidden_size});
+                auto slice =
+                    std::make_shared<ngraph::op::Slice>(bias_graph_node,
+                                                        Coordinate{2 * i * hidden_size},
+                                                        Coordinate{(2 * i + 1) * hidden_size});
                 gate_slices.push_back(slice);
             }
 
