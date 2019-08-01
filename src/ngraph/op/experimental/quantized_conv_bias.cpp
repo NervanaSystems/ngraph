@@ -27,17 +27,19 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& data_batch,
-                                                       const shared_ptr<Node>& filters,
-                                                       const shared_ptr<Node>& bias,
+const string op::QuantizedConvolutionBias::type_name{"QuantizedConvolutionBias"};
+
+op::QuantizedConvolutionBias::QuantizedConvolutionBias(const Output<Node>& data_batch,
+                                                       const Output<Node>& filters,
+                                                       const Output<Node>& bias,
                                                        const Strides& window_movement_strides,
                                                        const Strides& window_dilation_strides,
                                                        const CoordinateDiff& padding_below,
                                                        const CoordinateDiff& padding_above,
                                                        const Strides& data_dilation_strides,
-                                                       const shared_ptr<Node>& scale,
+                                                       const Output<Node>& scale,
                                                        const bool with_relu)
-    : Op("QuantizedConvolutionBias", check_single_output_args({data_batch, filters, bias, scale}))
+    : Op({data_batch, filters, bias, scale})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -47,8 +49,8 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const shared_ptr<Node>& d
 {
     constructor_validate_and_infer_types();
 
-    auto& data_batch_shape = data_batch->get_shape();
-    auto& filters_shape = filters->get_shape();
+    auto& data_batch_shape = data_batch.get_shape();
+    auto& filters_shape = filters.get_shape();
 
     // TODO: call ngraph util
     // util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
@@ -92,20 +94,21 @@ shared_ptr<Node> op::QuantizedConvolutionBias::copy_with_new_args(const NodeVect
                                                          m_with_relu));
 }
 
-op::QuantizedConvolutionBiasAdd::QuantizedConvolutionBiasAdd(const shared_ptr<Node>& data_batch,
-                                                             const shared_ptr<Node>& filters,
-                                                             const shared_ptr<Node>& bias,
-                                                             const shared_ptr<Node>& sum_input,
+const string op::QuantizedConvolutionBiasAdd::type_name{"QuantizedConvolutionBiasAdd"};
+
+op::QuantizedConvolutionBiasAdd::QuantizedConvolutionBiasAdd(const Output<Node>& data_batch,
+                                                             const Output<Node>& filters,
+                                                             const Output<Node>& bias,
+                                                             const Output<Node>& sum_input,
                                                              const Strides& window_movement_strides,
                                                              const Strides& window_dilation_strides,
                                                              const CoordinateDiff& padding_below,
                                                              const CoordinateDiff& padding_above,
                                                              const Strides& data_dilation_strides,
-                                                             const shared_ptr<Node>& scale,
-                                                             const shared_ptr<Node>& sum_scale,
+                                                             const Output<Node>& scale,
+                                                             const Output<Node>& sum_scale,
                                                              const bool with_relu)
-    : Op("QuantizedConvolutionBiasAdd",
-         check_single_output_args({data_batch, filters, bias, sum_input, scale, sum_scale}))
+    : Op({data_batch, filters, bias, sum_input, scale, sum_scale})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -115,8 +118,8 @@ op::QuantizedConvolutionBiasAdd::QuantizedConvolutionBiasAdd(const shared_ptr<No
 {
     constructor_validate_and_infer_types();
 
-    auto& data_batch_shape = data_batch->get_shape();
-    auto& filters_shape = filters->get_shape();
+    auto& data_batch_shape = data_batch.get_shape();
+    auto& filters_shape = filters.get_shape();
 
     // TODO: call ngraph util
     // util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());
@@ -163,21 +166,22 @@ shared_ptr<Node>
                                                             m_with_relu));
 }
 
+const string op::QuantizedConvolutionBiasSignedAdd::type_name{"QuantizedConvolutionBiasSignedAdd"};
+
 op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
-    const shared_ptr<Node>& data_batch,
-    const shared_ptr<Node>& filters,
-    const shared_ptr<Node>& bias,
-    const shared_ptr<Node>& sum_input,
+    const Output<Node>& data_batch,
+    const Output<Node>& filters,
+    const Output<Node>& bias,
+    const Output<Node>& sum_input,
     const Strides& window_movement_strides,
     const Strides& window_dilation_strides,
     const CoordinateDiff& padding_below,
     const CoordinateDiff& padding_above,
     const Strides& data_dilation_strides,
-    const shared_ptr<Node>& scale,
-    const shared_ptr<Node>& sum_scale,
+    const Output<Node>& scale,
+    const Output<Node>& sum_scale,
     const bool with_relu)
-    : Op("QuantizedConvolutionBiasSignedAdd",
-         check_single_output_args({data_batch, filters, bias, sum_input, scale, sum_scale}))
+    : Op({data_batch, filters, bias, sum_input, scale, sum_scale})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -187,8 +191,8 @@ op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
 {
     constructor_validate_and_infer_types();
 
-    auto& data_batch_shape = data_batch->get_shape();
-    auto& filters_shape = filters->get_shape();
+    auto& data_batch_shape = data_batch.get_shape();
+    auto& filters_shape = filters.get_shape();
 
     // TODO: call ngraph util
     // util::validate_convbias_shapes(data_batch_shape, filters_shape, bias->get_shape());

@@ -349,7 +349,7 @@ namespace ngraph
     // Check if all paths from X to a result go through Y
     bool is_post_dominated(Node* X, Node* Y);
 
-    bool is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant);
+    bool is_equal_to_const_value(std::string const_value, const Output<Node>& reduce_constant);
 
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
@@ -383,7 +383,7 @@ namespace ngraph
                                                     const element::Type& element_type,
                                                     const Shape& shape);
 
-    bool is_zero(std::shared_ptr<Node> reduce_constant);
+    bool is_zero(const Output<Node>& reduce_constant);
 
     NodeVector get_subgraph_outputs(const NodeVector& nodes,
                                     const NodeVector& exclusions,

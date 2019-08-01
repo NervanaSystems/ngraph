@@ -39,14 +39,14 @@ namespace ngraph
         {
             // TODO: this code is falling back to fp32 dot
             //       1) add support in reference kernel for zero point
-            shared_ptr<Node> QuantizedLinearMatmul(const shared_ptr<Node>& input0,
-                                                   const shared_ptr<Node>& input1,
-                                                   const shared_ptr<Node>& input0_scale,
-                                                   const shared_ptr<Node>& input0_zero_point,
-                                                   const shared_ptr<Node>& input1_scale,
-                                                   const shared_ptr<Node>& input1_zero_point,
-                                                   const shared_ptr<Node>& output_scale,
-                                                   const shared_ptr<Node>& output_zero_point)
+            shared_ptr<Node> QuantizedLinearMatmul(const Output<Node>& input0,
+                                                   const Output<Node>& input1,
+                                                   const Output<Node>& input0_scale,
+                                                   const Output<Node>& input0_zero_point,
+                                                   const Output<Node>& input1_scale,
+                                                   const Output<Node>& input1_zero_point,
+                                                   const Output<Node>& output_scale,
+                                                   const Output<Node>& output_zero_point)
             {
                 // Check if zero point is constant and zero
                 if (ngraph::is_zero(input0_zero_point) && ngraph::is_zero(input1_zero_point) &&
@@ -62,13 +62,13 @@ namespace ngraph
                     auto dq_input0 = make_shared<op::Dequantize>(input0,
                                                                  input0_scale,
                                                                  input0_zero_point,
-                                                                 input0_scale->get_element_type(),
+                                                                 input0_scale.get_element_type(),
                                                                  axes);
 
                     auto dq_input1 = make_shared<op::Dequantize>(input1,
                                                                  input1_scale,
                                                                  input1_zero_point,
-                                                                 input1_scale->get_element_type(),
+                                                                 input1_scale.get_element_type(),
                                                                  axes);
 
                     auto dot = make_shared<op::Dot>(dq_input0, dq_input1, 1);
@@ -76,24 +76,23 @@ namespace ngraph
                         dot,
                         output_scale,
                         output_zero_point,
-                        output_zero_point->get_element_type(),
+                        output_zero_point.get_element_type(),
                         axes,
                         op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
                 }
             }
 
-            shared_ptr<Node> QuantizedLinearMatmulInteger(const shared_ptr<Node>& input0,
-                                                          const shared_ptr<Node>& input1)
+            shared_ptr<Node> QuantizedLinearMatmulInteger(const Output<Node>& input0,
+                                                          const Output<Node>& input1)
             {
                 auto output_scale = make_constant(element::f32, Shape{}, 1);
                 return make_shared<op::QuantizedDot>(input0, input1, output_scale, false, false);
             }
 
-            shared_ptr<Node>
-                QuantizedLinearMatmulInteger(const std::shared_ptr<Node>& input0,
-                                             const std::shared_ptr<Node>& input1,
-                                             const std::shared_ptr<Node>& input0_zero_point,
-                                             const std::shared_ptr<Node>& input1_zero_point)
+            shared_ptr<Node> QuantizedLinearMatmulInteger(const Output<Node>& input0,
+                                                          const Output<Node>& input1,
+                                                          const Output<Node>& input0_zero_point,
+                                                          const Output<Node>& input1_zero_point)
             {
                 // Check if zero points are constant and zero
                 if (ngraph::is_zero(input0_zero_point) && ngraph::is_zero(input1_zero_point))
