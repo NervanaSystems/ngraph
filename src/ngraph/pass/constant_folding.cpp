@@ -104,6 +104,19 @@
 using namespace std;
 using namespace ngraph;
 
+static bool revalidate_and_ensure_static(shared_ptr<Node> n)
+{
+    n->revalidate_and_infer_types();
+    for (auto& o : n->outputs())
+    {
+        if (o.get_partial_shape().is_dynamic() || o.get_element_type().is_dynamic())
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 template <class T>
 shared_ptr<op::Constant> fold_constant_reshape(shared_ptr<op::Constant> constant,
                                                shared_ptr<op::Reshape> reshape,
@@ -191,6 +204,8 @@ void pass::ConstantFolding::construct_constant_pad()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto pad_match = static_pointer_cast<op::Pad>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(pad_match));
+
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
         {
@@ -229,7 +244,7 @@ void pass::ConstantFolding::construct_constant_pad()
     };
 
     auto pad_matcher = make_shared<pattern::Matcher>(pad, "ConstantFolding.ConstantPad");
-    this->add_matcher(pad_matcher, constant_pad_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+    this->add_matcher(pad_matcher, constant_pad_callback, all_pass_property_off);
 }
 
 void pass::ConstantFolding::construct_constant_reshape()
@@ -246,6 +261,8 @@ void pass::ConstantFolding::construct_constant_reshape()
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto reshape_match = static_pointer_cast<op::Reshape>(m.get_match_root());
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(reshape_match));
 
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
@@ -315,7 +332,7 @@ void pass::ConstantFolding::construct_constant_reshape()
     auto reshape_matcher =
         make_shared<pattern::Matcher>(reshape, "ConstantFolding.ConstantReshape");
     this->add_matcher(
-        reshape_matcher, constant_reshape_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        reshape_matcher, constant_reshape_callback, all_pass_property_off);
 }
 
 template <class T>
@@ -358,6 +375,8 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
         auto constant_data_match =
             static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
         auto dyn_reshape_match = static_pointer_cast<op::DynReshape>(m.get_match_root());
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(dyn_reshape_match));
 
         std::shared_ptr<Node> replacement;
         auto type = dyn_reshape_match->get_element_type();
@@ -428,7 +447,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
     auto dyn_reshape_matcher =
         make_shared<pattern::Matcher>(dyn_reshape, "ConstantFolding.ConstantDynReshape");
     this->add_matcher(
-        dyn_reshape_matcher, constant_dyn_reshape_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        dyn_reshape_matcher, constant_dyn_reshape_callback, all_pass_property_off);
 }
 
 template <class T>
@@ -470,6 +489,8 @@ void pass::ConstantFolding::construct_constant_transpose()
         auto constant_perm_match =
             static_pointer_cast<op::Constant>(pattern_map[constant_perm_label]);
         auto transpose_match = static_pointer_cast<op::Transpose>(m.get_match_root());
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(transpose_match));
 
         std::shared_ptr<Node> replacement;
         auto type = transpose_match->get_element_type();
@@ -544,7 +565,7 @@ void pass::ConstantFolding::construct_constant_transpose()
     auto transpose_matcher =
         make_shared<pattern::Matcher>(transpose, "ConstantFolding.ConstantTranspose");
     this->add_matcher(
-        transpose_matcher, constant_transpose_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        transpose_matcher, constant_transpose_callback, all_pass_property_off);
 }
 
 template <class T>
@@ -591,6 +612,8 @@ void pass::ConstantFolding::construct_constant_broadcast()
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto broadcast_match = static_pointer_cast<op::Broadcast>(m.get_match_root());
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(broadcast_match));
 
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
@@ -640,7 +663,7 @@ void pass::ConstantFolding::construct_constant_broadcast()
     auto broadcast_matcher =
         make_shared<pattern::Matcher>(broadcast, "ConstantFolding.ConstantBroadcast");
     this->add_matcher(
-        broadcast_matcher, constant_broadcast_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        broadcast_matcher, constant_broadcast_callback, all_pass_property_off);
 }
 
 template <class Tin, class Tout>
@@ -894,6 +917,8 @@ void pass::ConstantFolding::construct_constant_binary()
             return false;
         }
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(binary_match));
+
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
         {
@@ -976,7 +1001,7 @@ void pass::ConstantFolding::construct_constant_binary()
 
     auto reshape_matcher = make_shared<pattern::Matcher>(be, "ConstantFolding.ConstantBinary");
     this->add_matcher(
-        reshape_matcher, constant_binary_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        reshape_matcher, constant_binary_callback, all_pass_property_off);
 }
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
@@ -1089,6 +1114,8 @@ void pass::ConstantFolding::construct_constant_unary()
             return false;
         }
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(unary_match));
+
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
         {
@@ -1156,7 +1183,7 @@ void pass::ConstantFolding::construct_constant_unary()
     };
 
     auto reshape_matcher = make_shared<pattern::Matcher>(ue, "ConstantFolding.ConstantUnary");
-    this->add_matcher(reshape_matcher, constant_unary_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+    this->add_matcher(reshape_matcher, constant_unary_callback, all_pass_property_off);
 }
 
 template <class QUANT, class REAL>
@@ -1198,6 +1225,9 @@ void pass::ConstantFolding::construct_constant_dequantize()
         auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto dequant_match = pattern_map[dequant];
         auto dequantize_op = dynamic_pointer_cast<op::Dequantize>(dequant_match);
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(dequantize_op));
+
         auto args = dequant_match->get_arguments();
         auto scale = dynamic_pointer_cast<op::Constant>(args[1]);
         auto offset = dynamic_pointer_cast<op::Constant>(args[2]);
@@ -1230,7 +1260,7 @@ void pass::ConstantFolding::construct_constant_dequantize()
     auto dequantize_matcher =
         make_shared<pattern::Matcher>(dequant, "ConstantFolding.ConstantDequantize");
     this->add_matcher(
-        dequantize_matcher, constant_dequantize_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        dequantize_matcher, constant_dequantize_callback, all_pass_property_off);
 }
 
 template <class REAL, class QUANT>
@@ -1274,6 +1304,9 @@ void pass::ConstantFolding::construct_constant_quantize()
         auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto quant_match = pattern_map[quant];
         auto quantize_op = dynamic_pointer_cast<op::Quantize>(quant_match);
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(quantize_op));
+
         auto args = quant_match->get_arguments();
         auto scale = static_pointer_cast<op::Constant>(args[1]);
         auto offset = static_pointer_cast<op::Constant>(args[2]);
@@ -1306,7 +1339,7 @@ void pass::ConstantFolding::construct_constant_quantize()
     auto quantize_matcher =
         make_shared<pattern::Matcher>(quant, "ConstantFolding.ConstantQuantize");
     this->add_matcher(
-        quantize_matcher, constant_quantize_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        quantize_matcher, constant_quantize_callback, all_pass_property_off);
 }
 
 // Helper for mapping element::Types to runtime::reference::convert, which is templated in C++
@@ -1453,6 +1486,8 @@ void pass::ConstantFolding::construct_constant_convert()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto convert_match = static_pointer_cast<op::Convert>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(convert_match));
+
         replace_node(
             m.get_match_root(),
             fold_constant_convert(constant_match, convert_match->get_output_element_type(0)));
@@ -1481,6 +1516,8 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
         if (arg_match->get_output_partial_shape(0).is_static())
         {
+            NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
+
             auto arg_shape = arg_match->get_output_shape(0);
             auto replacement =
                 make_shared<op::Constant>(element::i64, Shape{arg_shape.size()}, arg_shape.data());
@@ -1577,6 +1614,8 @@ void pass::ConstantFolding::construct_constant_reverse()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto reverse_match = static_pointer_cast<op::Reverse>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(reverse_match));
+
         replace_node(m.get_match_root(),
                      fold_constant_reverse(constant_match, reverse_match->get_reversed_axes()));
         return true;
@@ -1662,6 +1701,8 @@ void pass::ConstantFolding::construct_constant_product()
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto product_match = static_pointer_cast<op::Product>(m.get_match_root());
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(product_match));
 
         replace_node(m.get_match_root(),
                      fold_constant_product(constant_match,
@@ -1753,6 +1794,8 @@ void pass::ConstantFolding::construct_constant_sum()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto sum_match = static_pointer_cast<op::Sum>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(sum_match));
+
         replace_node(m.get_match_root(),
                      fold_constant_sum(constant_match,
                                        sum_match->get_reduction_axes(),
@@ -1808,6 +1851,8 @@ void pass::ConstantFolding::construct_constant_concat()
         {
             return false;
         }
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(concat_node));
 
         std::shared_ptr<op::Constant> replacement;
 
@@ -1948,6 +1993,8 @@ void pass::ConstantFolding::construct_constant_gather()
         auto indices = static_pointer_cast<op::Constant>(pattern_map[indices_label]);
         auto gather = static_pointer_cast<op::Gather>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(gather));
+
         std::shared_ptr<Node> replacement;
         auto data_type = data->get_output_element_type(0);
         auto indices_type = indices->get_output_element_type(0);
@@ -2006,7 +2053,7 @@ void pass::ConstantFolding::construct_constant_gather()
 
     auto gather_matcher =
         make_shared<pattern::Matcher>(gather_op, "ConstantFolding.ConstantGather");
-    this->add_matcher(gather_matcher, constant_gather_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+    this->add_matcher(gather_matcher, constant_gather_callback, all_pass_property_off);
 }
 
 template <class T>
@@ -2042,6 +2089,8 @@ void pass::ConstantFolding::construct_constant_slice()
 
         auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
         auto slice = static_pointer_cast<op::Slice>(m.get_match_root());
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(slice));
 
         std::shared_ptr<op::Constant> replacement;
 
@@ -2179,6 +2228,8 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
         auto strides_node = static_pointer_cast<op::Constant>(pattern_map[strides_label]);
         auto dyn_slice = static_pointer_cast<op::DynSlice>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(dyn_slice));
+
         std::shared_ptr<op::Constant> replacement;
 
         switch (dyn_slice->get_output_element_type(0).get_type_enum())
@@ -2287,6 +2338,8 @@ void pass::ConstantFolding::construct_constant_range()
         auto step_node = static_pointer_cast<op::Constant>(pattern_map[step_label]);
         auto range = static_pointer_cast<op::Range>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(range));
+
         std::shared_ptr<op::Constant> replacement;
 
         switch (range->get_output_element_type(0).get_type_enum())
@@ -2384,6 +2437,8 @@ void pass::ConstantFolding::construct_constant_select()
         auto t_node = static_pointer_cast<op::Constant>(pattern_map[t_label]);
         auto f_node = static_pointer_cast<op::Constant>(pattern_map[f_label]);
         auto select = static_pointer_cast<op::Select>(m.get_match_root());
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(select));
 
         std::shared_ptr<op::Constant> replacement;
 
