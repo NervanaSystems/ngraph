@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <onnx-ml.pb.h>
+#include <onnx/onnx_pb.h>
 
 #include "model.hpp"
 #include "ngraph/log.hpp"
