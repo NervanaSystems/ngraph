@@ -82,7 +82,7 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
 def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
     r"""Perform Global Response Normalization with L2 norm (across channels only).
 
-    Computes GRN operation on channels for input blob:
+    Computes GRN operation on channels for input tensor:
 
     .. math:: output_i = \dfrac{input_i}{\sqrt{\sum_{i}^{C} input_i}}
 
