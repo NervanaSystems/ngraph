@@ -110,9 +110,10 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto lstmcell_op = std::dynamic_pointer_cast<op::LSTMCell>(m.get_match_root());
         auto src_iter =
             std::make_shared<ngraph::op::Concat>(NodeVector{pattern_map[H_t], pattern_map[C_t]}, 0);
-        auto bias = op::Constant::create(pattern_map[X]->get_element_type(),
-                                         Shape{4 * lstmcell_op->get_hidden_size()},
-                                         std::vector<float>(4 * lstmcell_op->get_hidden_size(), 0.f));
+        auto bias =
+            op::Constant::create(pattern_map[X]->get_element_type(),
+                                 Shape{4 * lstmcell_op->get_hidden_size()},
+                                 std::vector<float>(4 * lstmcell_op->get_hidden_size(), 0.f));
 
         // we need to reorder W, R and bias from IOFC to IFCO gate order
         // Note: ONNX runtime provides W, R and bias in the gate order [IOFC] but
