@@ -97,8 +97,8 @@ TEST(constant_folding, constant_broadcast)
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
-    vector<int> values_permute{0, 0, 0, 0, 1, 1, 1, 1};
-    ASSERT_EQ(values_permute, values_out);
+    vector<int> values_expected{0, 0, 0, 0, 1, 1, 1, 1};
+    ASSERT_EQ(values_expected, values_out);
 }
 
 TEST(constant_folding, constant_dyn_broadcast)
@@ -124,8 +124,8 @@ TEST(constant_folding, constant_dyn_broadcast)
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int32_t>();
 
-    vector<int32_t> values_permute{0, 0, 0, 0, 1, 1, 1, 1};
-    ASSERT_EQ(values_permute, values_out);
+    vector<int32_t> values_expected{0, 0, 0, 0, 1, 1, 1, 1};
+    ASSERT_EQ(values_expected, values_out);
 }
 
 TEST(constant_folding, constant_pad_exterior)
