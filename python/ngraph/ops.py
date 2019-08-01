@@ -541,7 +541,8 @@ def depth_to_space(node, block_size, name=None):  # type: (Node, int, str) -> No
     [N, C * :code:`block_size` * :code:`block_size`, H / :code:`block_size`, W / :code:`block_size`]
 
     :param node: The node with input tensor data.
-    :param block_size: The size of the block of value to be moved.
+    :param block_size: The size of the spatial block of values describing
+                       how the tensor's data is to be rearranged.
     :param name: Optional output node name.
     :return: The new node performing an DepthToSpace operation on its input tensor.
     """
