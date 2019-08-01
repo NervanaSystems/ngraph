@@ -55,11 +55,11 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
+#include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_conv.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
@@ -75,6 +75,7 @@
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/fake_quantize.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -120,6 +121,7 @@
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/recv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -679,13 +681,7 @@ struct OutputHelper
     {
     }
 
-    operator shared_ptr<Node>() const
-    {
-        return m_output.get_index() == 0
-                   ? m_output.get_node_shared_ptr()
-                   : make_shared<op::GetOutputElement>(m_output.get_node_shared_ptr(),
-                                                       m_output.get_index());
-    }
+    operator shared_ptr<Node>() const { return get_output_element(m_output); }
     operator const Output<Node>&() const { return m_output; }
     Output<Node> m_output;
 };
@@ -1130,6 +1126,25 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::DynPad>(args[0], args[1], args[2], args[3]);
             break;
         }
+        case OP_TYPEID::DynReplaceSlice:
+        {
+            auto lower_bounds_mask = node_js.at("lower_bounds_mask").get<set<size_t>>();
+            auto upper_bounds_mask = node_js.at("upper_bounds_mask").get<set<size_t>>();
+            auto new_axis = node_js.at("new_axis").get<set<size_t>>();
+            auto shrink_axis = node_js.at("shrink_axis").get<set<size_t>>();
+            auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<size_t>>();
+            node = make_shared<op::DynReplaceSlice>(args[0],
+                                                    args[1],
+                                                    args[2],
+                                                    args[3],
+                                                    args[4],
+                                                    lower_bounds_mask,
+                                                    upper_bounds_mask,
+                                                    new_axis,
+                                                    shrink_axis,
+                                                    ellipsis_mask);
+            break;
+        }
         case OP_TYPEID::DynReshape:
         {
             node = make_shared<op::DynReshape>(args[0], args[1]);
@@ -1137,7 +1152,20 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::DynSlice:
         {
-            node = make_shared<op::DynSlice>(args[0], args[1], args[2], args[3]);
+            auto lower_bounds_mask = node_js.at("lower_bounds_mask").get<set<size_t>>();
+            auto upper_bounds_mask = node_js.at("upper_bounds_mask").get<set<size_t>>();
+            auto new_axis = node_js.at("new_axis").get<set<size_t>>();
+            auto shrink_axis = node_js.at("shrink_axis").get<set<size_t>>();
+            auto ellipsis_mask = node_js.at("ellipsis_mask").get<set<size_t>>();
+            node = make_shared<op::DynSlice>(args[0],
+                                             args[1],
+                                             args[2],
+                                             args[3],
+                                             lower_bounds_mask,
+                                             upper_bounds_mask,
+                                             new_axis,
+                                             shrink_axis,
+                                             ellipsis_mask);
             break;
         }
         case OP_TYPEID::Elu:
@@ -1188,6 +1216,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::GatherND>(args[0], args[1]);
             break;
         }
+        case OP_TYPEID::Gelu:
+        {
+            node = make_shared<op::Gelu>(args[0]);
+            break;
+        }
         case OP_TYPEID::Gemm:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -1211,7 +1244,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GetOutputElement:
         {
-            node = make_shared<op::GetOutputElement>(args[0], node_js.at("n").get<size_t>());
+            node = make_shared<op::GetOutputElement>(
+                static_cast<Output<Node>>(args[0]).get_node_shared_ptr(),
+                node_js.at("n").get<size_t>());
             break;
         }
         case OP_TYPEID::Greater:
@@ -1602,13 +1637,29 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto padding_below = node_js.at("padding_below").get<vector<std::ptrdiff_t>>();
             auto padding_above = node_js.at("padding_above").get<vector<std::ptrdiff_t>>();
             auto data_dilation_strides = node_js["data_dilation_strides"];
-            node = make_shared<op::Convolution>(args[0],
-                                                args[1],
-                                                window_movement_strides,
-                                                window_dilation_strides,
-                                                padding_below,
-                                                padding_above,
-                                                data_dilation_strides.get<std::vector<size_t>>());
+            auto output_type = read_element_type(node_js.at("output_type"));
+            auto input_axes = node_js.at("input_axes").get<set<size_t>>();
+            auto filter_axes = node_js.at("filter_axes").get<set<size_t>>();
+            auto output_axes = node_js.at("output_axes").get<set<size_t>>();
+            node = make_shared<op::QuantizedConvolution>(
+                args[0],
+                args[1],
+                window_movement_strides,
+                window_dilation_strides,
+                padding_below,
+                padding_above,
+                data_dilation_strides.get<std::vector<size_t>>(),
+                args[2],
+                args[3],
+                args[4],
+                args[5],
+                args[6],
+                args[7],
+                output_type,
+                input_axes,
+                filter_axes,
+                output_axes);
+
             break;
         }
         case OP_TYPEID::QuantizedDotBias: { break;
@@ -2297,9 +2348,27 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::DynPad: { break;
     }
+    case OP_TYPEID::DynReplaceSlice:
+    {
+        auto tmp = dynamic_cast<const op::DynReplaceSlice*>(&n);
+        node["lower_bounds_mask"] = tmp->get_lower_bounds_mask();
+        node["upper_bounds_mask"] = tmp->get_upper_bounds_mask();
+        node["new_axis"] = tmp->get_new_axis();
+        node["shrink_axis"] = tmp->get_shrink_axis();
+        node["ellipsis_mask"] = tmp->get_ellipsis_mask();
+        break;
+    }
     case OP_TYPEID::DynReshape: { break;
     }
-    case OP_TYPEID::DynSlice: { break;
+    case OP_TYPEID::DynSlice:
+    {
+        auto tmp = dynamic_cast<const op::DynSlice*>(&n);
+        node["lower_bounds_mask"] = tmp->get_lower_bounds_mask();
+        node["upper_bounds_mask"] = tmp->get_upper_bounds_mask();
+        node["new_axis"] = tmp->get_new_axis();
+        node["shrink_axis"] = tmp->get_shrink_axis();
+        node["ellipsis_mask"] = tmp->get_ellipsis_mask();
+        break;
     }
     case OP_TYPEID::Elu: { break;
     }
@@ -2339,6 +2408,8 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::GetOutputElement*>(&n);
         node["n"] = tmp->get_n();
         break;
+    }
+    case OP_TYPEID::Gelu: { break;
     }
     case OP_TYPEID::Gemm:
     {
@@ -2655,6 +2726,10 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
+        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["input_axes"] = tmp->get_input_axes();
+        node["filter_axes"] = tmp->get_filter_axes();
+        node["output_axes"] = tmp->get_output_axes();
         break;
     }
     case OP_TYPEID::QuantizedDotBias: { break;

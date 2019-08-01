@@ -309,12 +309,12 @@ set(NGRAPH_INSTALL_DOC "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DOCDIR}")
 set(NGRAPH_INSTALL_BIN "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}")
 if (LINUX)
     if (DEFINED NGRAPH_RPATH)
+        set(CMAKE_BUILD_RPATH "$ORIGIN:${NGRAPH_RPATH}")
         set(CMAKE_INSTALL_RPATH "$ORIGIN:${NGRAPH_RPATH}")
     else()
+        set(CMAKE_BUILD_RPATH "$ORIGIN")
         set(CMAKE_INSTALL_RPATH "$ORIGIN")
     endif()
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
 #-----------------------------------------------------------------------------------------------
@@ -418,17 +418,31 @@ if (NOT DEFINED NGRAPH_TBB_ENABLE)
     set(NGRAPH_TBB_ENABLE ${NGRAPH_CPU_ENABLE})
 endif()
 
-add_custom_target(style-check
-    COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    -P ${CMAKE_MODULE_PATH}style_check.cmake
-)
+# Since UNIX and APPLE support Bash we can use a Bash script to do the clang-format functions
+# This is much faster than the cmake method
+if (UNIX OR APPLE)
+    add_custom_target(style-check COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/check-code-format.sh)
+    add_custom_target(style-apply COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+    add_custom_target(style COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+else()
+    add_custom_target(style-check
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_check.cmake
+    )
 
-add_custom_target(style-apply
-    COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-    -P ${CMAKE_MODULE_PATH}style_apply.cmake
-)
+    add_custom_target(style-apply
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+    )
+
+    add_custom_target(style
+        COMMAND ${CMAKE_COMMAND}
+        -DNGRAPH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+        -P ${CMAKE_MODULE_PATH}style_apply.cmake
+    )
+endif()
 
 add_custom_target(fix-mode
     COMMAND ${CMAKE_COMMAND}
@@ -538,7 +552,7 @@ if(NGRAPH_CODEGEN_ENABLE)
     elseif (NOT MSVS)
         include(cmake/external_llvm.cmake)
     else()
-        message(FATAL_ERROR "CODEGEN not support on Windows!")
+        message(FATAL_ERROR "CODEGEN is not supported on Windows!")
     endif()
 endif()
 

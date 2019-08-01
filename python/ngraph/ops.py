@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
     Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
-    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Equal, Exp, Floor, \
+    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
+    Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
     GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
     Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
     Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
@@ -35,7 +35,7 @@ from ngraph.utils.decorators import nameable_op, binary_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput, ScalarData
+    NodeInput, ScalarData, as_node
 from ngraph.utils.types import get_element_type
 
 
@@ -58,6 +58,24 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
     :return: The Constant node initialized with provided data.
     """
     return make_constant_node(value, dtype)
+
+
+@nameable_op
+def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+    """Perform Exponential Linear Unit operation element-wise on data from input node.
+
+    Computes exponential linear: alpha * (exp(data) - 1) if < 0, data otherwise.
+
+    For more information refer to:
+    `Fast and Accurate Deep Network Learning by Exponential Linear Units (ELUs)
+    <http://arxiv.org/abs/1511.07289>`_
+
+    :param data: Input tensor. One of: input node, array or scalar.
+    :param alpha: Multiplier for negative values. One of: input node or scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing an ELU operation on its input data element-wise.
+    """
+    return Elu(as_node(data), as_node(alpha))
 
 
 # Unary ops
@@ -535,6 +553,36 @@ def tanh(node, name=None):  # type: (Node, str) -> Node
     :return: New node with tanh operation applied on it.
     """
     return Tanh(node)
+
+
+@nameable_op
+def clamp(data, min_value, max_value, name=None):
+    # type: (NodeInput, ScalarData, ScalarData, str) -> Node
+    """Perform clamp element-wise on data from input node.
+
+    Performs a clipping operation on an input value between a pair of boundary values.
+
+    For each element in :code:`data`, if the element's value is lower than :code:`min_value`,
+    it will be replaced with :code:`min_value`. If the value is higher than :code:`max_value`,
+    it will be replaced by :code:`max_value`.
+    Intermediate values of :code:`data` are returned without change.
+
+    Clamp uses the following logic:
+
+    .. code-block:: python
+
+        if data < min_value:
+            data=min_value
+        elif data > max_value:
+            data=max_value
+
+    :param data: Input tensor. One of: input node, array or scalar.
+    :param min_value: The lower bound of the <min_value;max_value> range. Scalar value.
+    :param max_value: The upper bound of the <min_value;max_value> range. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a clamp operation on its input data element-wise.
+    """
+    return Clamp(as_node(data), min_value, max_value)
 
 
 # matmul ops

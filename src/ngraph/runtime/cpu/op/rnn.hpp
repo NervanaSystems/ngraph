@@ -49,6 +49,9 @@ namespace ngraph
         class Rnn : public Op
         {
         public:
+            CPU_BACKEND_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
 #if MKLDNN_VERSION_MAJOR < 1
             CPU_BACKEND_API Rnn(std::shared_ptr<Node> src_layer,
                                 std::shared_ptr<Node> src_iter,

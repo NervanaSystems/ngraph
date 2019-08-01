@@ -23,6 +23,7 @@ ngraph.ops
       broadcast
       broadcast_to
       ceiling
+      clamp
       concat
       constant
       convert
@@ -32,6 +33,7 @@ ngraph.ops
       cosh
       divide
       dot
+      elu
       equal
       exp
       floor

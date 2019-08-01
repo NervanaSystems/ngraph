@@ -61,6 +61,7 @@ from _pyngraph.op import Constant
 """
 Constant.get_data = lambda self: np.array(self, copy=True)
 
+from _pyngraph.op import Clamp
 from _pyngraph.op import Convert
 from _pyngraph.op import Convolution
 from _pyngraph.op import ConvolutionBackpropData
@@ -69,6 +70,7 @@ from _pyngraph.op import Cos
 from _pyngraph.op import Cosh
 from _pyngraph.op import Divide
 from _pyngraph.op import Dot
+from _pyngraph.op import Elu
 from _pyngraph.op import Equal
 from _pyngraph.op import Exp
 from _pyngraph.op import Floor

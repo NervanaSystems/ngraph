@@ -6,34 +6,69 @@ Release Notes
 nGraph is provided as source code, APIs, build scripts, and some binary formats 
 for various Compiler stack configurations and use cases. 
 
+For downloads formatted as ``.zip`` and ``tar.gz``, see 
+https://github.com/NervanaSystems/ngraph/releases.
+
 This page includes additional documentation updates.
 
 We are pleased to announce the release of version |version|-doc.
 
 
-0.21-doc
---------
-
-Documentation updates
-~~~~~~~~~~~~~~~~~~~~~
-
-Summary of documentation-related changes:
-
-+ Update :doc:`doc-contributor-README` for new community-based contributions. 
-+ Added instructions on how to test or display the installed nGraph version.
-+ Added instructions on building nGraph bridge (ngraph-bridge).
-+ Updated Backend Developer Guides and ToC structure.
-+ Tested documentation build on Clear Linux OS; it works.
-+ Fixed a few links and redirs affected by filename changes.
-+ Some coding adjustments for options to render math symbols, so they can be 
-  documented more clearly and without excessive JS (see replacements.txt).
-+ Consistent filenaming on all BE indexes.
-+ Remove deprecated TensorAPI.
-+ 
-
-
 Core updates for |version|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++ More ONNX ops
++ Elementwise divide defaults to Python semantics
++ GenerateMask seed optional
++ Graph visualization improvements
++ Preserve control dependencies in more places
++ GetOutputElement has single input
+
+
+.. Latest doc updates
+.. ~~~~~~~~~~~~~~~~~~
+
+.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
+
+
+.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
+
+
+Changelog on Previous Releases
+==============================
+
+0.23
+----
+
++ More ONNX ops
++ Elementwise divide defaults to Python semantics
++ GenerateMask seed optional
++ Document new debug tool
++ Graph visualization improvements
++ Note deprecation of MXNet's ``ngraph-mxnet`` PyPI
++ Note default change to `svg` files for graphs and visualization
++ Add more prominent tips for contributors who find the doc-contributor-README
++ Better GSG / Install Guide structure.
++ Added group edits and new illustrations from PR 2994 to `introduction.rst`.
++ Ensure ngraph-bridge link in README goes to right place.
++ Make project `extras` their own subdirectory with index to help organize them.
++ **Known Issues**
+  
+  - When using TensorFlow\* v1.14.0 with ```ngraph-bridge`` v0.16.0rc0 and CPU
+    backend, we saw notable to severe decreases in throughput in many models.
+
+0.22
+----
+
++ More ONNX ops
++ Optimizations
++ Don't reseed RNG on each use
++ Initial doc and API for IntelGPU backend 
++ DynamicBackend API
+
+
+0.21
+----
 
 + The offset argument in tensor reads and writes has been removed
 + Save/load API
@@ -43,16 +78,18 @@ Core updates for |version|
 + Provenance improvements
 + offset arg for tensor creation is deprecated
 + static linking support
++ Initial test of 0.21-doc
++ Updated :doc:`doc-contributor-README` for new community-based contributions. 
++ Added instructions on how to test or display the installed nGraph version.
++ Added instructions on building nGraph bridge (ngraph-bridge).
++ Updated Backend Developer Guides and ToC structure.
++ Tested documentation build on Clear Linux OS; it works.
++ Fixed a few links and redirs affected by filename changes.
++ Some coding adjustments for options to render math symbols, so they can be 
+  documented more clearly and without excessive JS (see replacements.txt).
++ Consistent filenaming on all BE indexes.
++ Removed deprecated TensorAPI.
 
-
-.. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
-
-
-Changelog on Previous Releases
-==============================
-
-For downloads formatted as ``.zip`` and ``tar.gz``, see 
-https://github.com/NervanaSystems/ngraph/releases.
 
 0.20
 ----
@@ -66,8 +103,6 @@ https://github.com/NervanaSystems/ngraph/releases.
 
 0.19
 ----
-
-**Download** `0.19.0-rc.2`_
 
 + More dynamic shape preparation
 + Distributed interface factored out
@@ -88,9 +123,6 @@ https://github.com/NervanaSystems/ngraph/releases.
 0.18
 ----
 
-**Download** `0.18.1`_
-
-
 + Python formatting issue
 + mkl-dnn work-around
 + Event tracing improvements
@@ -103,8 +135,6 @@ https://github.com/NervanaSystems/ngraph/releases.
 0.17
 ----
 
-**Download** `0.17.0-rc.1`_
-
 + Allow negative padding in more places
 + Add code generation for some quantized ops
 + Preliminary dynamic shape support
@@ -116,11 +146,6 @@ https://github.com/NervanaSystems/ngraph/releases.
 0.16
 ----
 
-* **Download**: `0.16.0-rc.3`_
-* **Download** `0.16.0-rc.2`_
-* **Download** `0.16.0-rc.1`_
-
-
 + NodeInput and NodeOutput classes prepare for simplifications of Node
 + Test improvements
 + Additional quantization ops
@@ -128,11 +153,3 @@ https://github.com/NervanaSystems/ngraph/releases.
 + Fix memory leak
 + Concat optimization
 + Doc updates
-
-.. _0.20.0-rc.0: https://github.com/NervanaSystems/ngraph/releases/tag/v0.20.0-rc.0_
-.. _0.19.0-rc.2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.19.0-rc.2_
-.. _0.18.1: https://github.com/NervanaSystems/ngraph/releases/tag/v0.18.1_
-.. _0.17.0-rc.1: `https://github.com/NervanaSystems/ngraph/releases/tag/v0.17.0-rc.1
-.. _0.16.0-rc.3: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.3
-.. _0.16.0-rc.2: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.2
-.. _0.16.0-rc.1: https://github.com/NervanaSystems/ngraph/releases/tag/v0.16.0-rc.1

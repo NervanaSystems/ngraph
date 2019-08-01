@@ -85,7 +85,7 @@ struct CPURuntimeContextCG
     std::vector<mkldnn::memory::desc*> mkldnn_scratchpad_mds;
     AlignedBuffer* scratchpad_buffer;
     std::vector<char*> mkldnn_workspaces;
-	std::vector<mkldnn::memory::desc*> mkldnn_descriptors;
+    std::vector<mkldnn::memory::desc*> mkldnn_descriptors;
 
     mkldnn::engine global_cpu_engine = mkldnn::engine(mkldnn::engine::kind::cpu, 0);
 
@@ -310,25 +310,25 @@ private:
 		}
 		
 #ifndef _WIN32
-		//To avoid memory leak in mkldnn, release any buffers that are not free'd yet.
-		//https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
-		//mkl_free_buffers() is not exposed at this point, hence using mkl_serv_free_buffers()
-		ngraph::runtime::cpu::mkldnn_utils::mkl_serv_free_buffers();
+        //To avoid memory leak in mkldnn, release any buffers that are not free'd yet.
+        //https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
+        //mkl_free_buffers() is not exposed at this point, hence using mkl_serv_free_buffers()
+        ngraph::runtime::cpu::mkldnn_utils::mkl_serv_free_buffers();
 #endif
 
-		for (auto w : mkldnn_workspaces)
-		{
-			free(w);
-		}
-	}
+        for (auto w : mkldnn_workspaces)
+        {
+            free(w);
+        }
+    }
 
     inline void cleanup_mkldnn_descriptors()
-	{
-		for (auto d : mkldnn_descriptors)
-		{
-			free(d);
-		}
-	}
+    {
+        for (auto d : mkldnn_descriptors)
+        {
+            free(d);
+        }
+    }
 };
 
 extern "C" CPURuntimeContextCG* init_cg_ctx()
@@ -346,19 +346,20 @@ static void
 														 CPURuntimeContextCG* cg_ctx,
 														 size_t descs_count)
 {
-	cg_ctx->mkldnn_descriptors = std::vector<mkldnn::memory::desc*>(descs_count);
-	for (auto i = 0; i < descs_count; i++)
+    cg_ctx->mkldnn_descriptors = std::vector<mkldnn::memory::desc*>(descs_count);
+    for (auto i = 0; i < descs_count; i++)
     {
-		size_t index;
-		desc_file >> index;
+    		size_t index;
+		    desc_file >> index;
         auto desc = (mkldnn::memory::desc*)malloc(sizeof(mkldnn::memory::desc));
-		if (!desc)
-		{
-			throw std::bad_alloc();
-		}
+        if (!desc)
+        {
+            throw std::bad_alloc();
+        }
         desc_file.read(reinterpret_cast<char*>(desc), sizeof(mkldnn::memory::desc));
-		cg_ctx->mkldnn_descriptors[i] = desc;
-		cg_ctx->mkldnn_memories[index] = new mkldnn::memory(*cg_ctx->mkldnn_descriptors[i], cg_ctx->global_cpu_engine, nullptr);
+
+		    cg_ctx->mkldnn_descriptors[i] = desc;
+		    cg_ctx->mkldnn_memories[index] = new mkldnn::memory(*cg_ctx->mkldnn_descriptors[i], cg_ctx->global_cpu_engine, nullptr);
 	}
 };
 )"

@@ -724,7 +724,6 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md_helper
             return memory::desc(dim, dtype, memory::format::nc);
         }
     }
-
     if (dim.size() == 3)
     {
         if (is_perm_sorted(strides, {0, 1, 2}))
@@ -736,7 +735,6 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md_helper
             return memory::desc(dim, dtype, memory::format::ntc);
         }
     }
-
     if (dim.size() == 4)
     {
         if (is_perm_sorted(strides, {0, 1, 2, 3}))
@@ -748,7 +746,6 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md_helper
             return memory::desc(dim, dtype, memory::format::nhwc);
         }
     }
-
     if (dim.size() == 5)
     {
         if (is_perm_sorted(strides, {0, 1, 2, 3, 4}))

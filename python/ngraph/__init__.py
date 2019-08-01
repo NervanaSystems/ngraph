@@ -1,5 +1,5 @@
 # ******************************************************************************
-# Copyright 2018-2019 Intel Corporation
+# Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ from ngraph.ops import broadcast
 from ngraph.ops import broadcast_to
 from ngraph.ops import ceiling
 from ngraph.ops import ceiling as ceil
+from ngraph.ops import clamp
 from ngraph.ops import concat
 from ngraph.ops import constant
 from ngraph.ops import convert
@@ -45,6 +46,7 @@ from ngraph.ops import cos
 from ngraph.ops import cosh
 from ngraph.ops import divide
 from ngraph.ops import dot
+from ngraph.ops import elu
 from ngraph.ops import equal
 from ngraph.ops import exp
 from ngraph.ops import floor

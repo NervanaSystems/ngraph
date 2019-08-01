@@ -170,6 +170,7 @@ sources = [
     'pyngraph/ops/avg_pool.cpp',
     'pyngraph/ops/broadcast.cpp',
     'pyngraph/ops/broadcast_distributed.cpp',
+    'pyngraph/ops/fused/clamp.cpp',
     'pyngraph/ops/concat.cpp',
     'pyngraph/ops/constant.cpp',
     'pyngraph/ops/convert.cpp',
@@ -179,6 +180,7 @@ sources = [
     'pyngraph/ops/ceiling.cpp',
     'pyngraph/ops/divide.cpp',
     'pyngraph/ops/dot.cpp',
+    'pyngraph/ops/fused/elu.cpp',
     'pyngraph/ops/equal.cpp',
     'pyngraph/ops/exp.cpp',
     'pyngraph/ops/floor.cpp',
@@ -326,6 +328,7 @@ def add_platform_specific_link_args(link_args):
         link_args += ['-z', 'now']
     elif sys.platform == 'darwin':
         link_args += ['-Wl,-rpath,@loader_path/../..']
+        link_args += ['-stdlib=libc++']
 
 
 class BuildExt(build_ext):
@@ -360,11 +363,16 @@ class BuildExt(build_ext):
 
             ext.extra_compile_args += ['-Wformat', '-Wformat-security']
             ext.extra_compile_args += ['-O2', '-D_FORTIFY_SOURCE=2']
+            if sys.platform == 'darwin':
+                ext.extra_compile_args += ['-stdlib=libc++']
         build_ext.build_extensions(self)
 
 
 with open(os.path.join(PYNGRAPH_ROOT_DIR, 'requirements.txt')) as req:
     requirements = req.read().splitlines()
+    setup_requires = [
+        item for item in requirements if item.strip().startswith('numpy')
+    ]
 
 setup(
     name='ngraph-core',
@@ -381,10 +389,10 @@ setup(
     packages=packages,
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
-    setup_requires=['numpy'],
+    setup_requires=setup_requires,
     install_requires=requirements,
     zip_safe=False,
     extras_require={
-        'plaidml': ['plaidml>=0.5.0'],
+        'plaidml': ['plaidml>=0.6.3'],
     },
 )

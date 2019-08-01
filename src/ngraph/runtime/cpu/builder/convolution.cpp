@@ -133,7 +133,12 @@ namespace ngraph
                                padding_below,
                                padding_above,
                                data_dilation_strides,
-                               1.0f);
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr,
+                               nullptr);
                     };
                     functors.emplace_back(functor);
                 }

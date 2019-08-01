@@ -37,6 +37,10 @@ namespace ngraph
                  const ParameterVector& parameters,
                  const std::string& name = "");
 
+        Function(const OutputVector& results,
+                 const ParameterVector& parameters,
+                 const std::string& name = "");
+
         Function(const std::shared_ptr<Node>& result,
                  const ParameterVector& parameters,
                  const std::string& name = "");
@@ -54,6 +58,8 @@ namespace ngraph
 
         /// Return the op that generates output i
         std::shared_ptr<Node> get_output_op(size_t i) const;
+
+        Output<Node> output(size_t i) const;
 
         /// Return the element type of output i
         const element::Type& get_output_element_type(size_t i) const;
@@ -88,6 +94,8 @@ namespace ngraph
 
         std::list<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
         std::list<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;
+        void map_unordered_ops(std::function<void(Node*)> f) const;
+
         friend std::ostream& operator<<(std::ostream&, const Function&);
         size_t get_instance_id() { return m_instance_id; }
         size_t get_temporary_pool_size();
