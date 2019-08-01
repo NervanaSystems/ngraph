@@ -28,8 +28,8 @@ const string op::MatMul::type_name{"MatMul"};
 
 op::MatMul::MatMul(const shared_ptr<Node>& A,
                    const shared_ptr<Node>& B,
-                   const int& transpose_a,
-                   const int& transpose_b)
+                   const bool& transpose_a,
+                   const bool& transpose_b)
     : FusedOp(NodeVector{A, B})
     , m_transpose_a{transpose_a}
     , m_transpose_b{transpose_b}

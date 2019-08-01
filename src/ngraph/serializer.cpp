@@ -1397,8 +1397,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::MatMul:
         {
-            int transpose_a = node_js.at("transpose_a").get<int>();
-            int transpose_b = node_js.at("transpose_b").get<int>();
+            bool transpose_a = node_js.at("transpose_a").get<bool>();
+            bool transpose_b = node_js.at("transpose_b").get<bool>();
             node = make_shared<op::MatMul>(args[0], args[1], transpose_a, transpose_b);
             break;
         }

@@ -39,19 +39,19 @@ namespace ngraph
             /// \param transpose_b If matrix B should be transposed.
             MatMul(const std::shared_ptr<Node>& A,
                    const std::shared_ptr<Node>& B,
-                   const int& transpose_a = 0,
-                   const int& transpose_b = 0);
+                   const bool& transpose_a = 0,
+                   const bool& transpose_b = 0);
 
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            int get_transpose_a() const { return m_transpose_a; }
-            int get_transpose_b() const { return m_transpose_b; }
+            bool get_transpose_a() const { return m_transpose_a; }
+            bool get_transpose_b() const { return m_transpose_b; }
         private:
-            const int m_transpose_a;
-            const int m_transpose_b;
+            const bool m_transpose_a;
+            const bool m_transpose_b;
         };
     } // namespace op
 } // namespace ngraph
