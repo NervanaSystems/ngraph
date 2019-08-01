@@ -13,27 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/runtime/cpu/op/bounded_relu.hpp"
-#include "ngraph/util.hpp"
 
-using namespace std;
-using namespace ngraph;
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-const std::string op::BoundedRelu::type_name{"BoundedRelu"};
+#include "ngraph/op/fused/clamp.hpp"
+#include "pyngraph/ops/fused/clamp.hpp"
 
-op::BoundedRelu::BoundedRelu(const Output<Node>& arg, float alpha)
-    : UnaryElementwiseArithmetic(arg)
-    , m_alpha(alpha)
+namespace py = pybind11;
+
+void regclass_pyngraph_op_Clamp(py::module m)
 {
-    constructor_validate_and_infer_types();
-    set_output_type(0, arg.get_element_type(), arg.get_shape());
-}
-
-shared_ptr<Node> op::BoundedRelu::copy_with_new_args(const NodeVector& new_args) const
-{
-    if (new_args.size() != 1)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-    return make_shared<BoundedRelu>(new_args.at(0), m_alpha);
+    py::class_<ngraph::op::Clamp, std::shared_ptr<ngraph::op::Clamp>, ngraph::op::Op> clamp(
+        m, "Clamp");
+    clamp.doc() = "ngraph.impl.op.Clamp wraps ngraph::op::Clamp";
+    clamp.def(py::init<const std::shared_ptr<ngraph::Node>&, const double, const double>());
 }
