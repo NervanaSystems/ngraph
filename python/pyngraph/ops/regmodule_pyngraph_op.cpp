@@ -54,6 +54,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Equal(m_op);
     regclass_pyngraph_op_Exp(m_op);
     regclass_pyngraph_op_Floor(m_op);
+    regclass_pyngraph_op_Gelu(m_op);
     regclass_pyngraph_op_GetOutputElement(m_op);
     regclass_pyngraph_op_Greater(m_op);
     regclass_pyngraph_op_GreaterEq(m_op);

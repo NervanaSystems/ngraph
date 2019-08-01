@@ -43,8 +43,8 @@ public:
         CONVERT,
         SHAPE_OF,
         REVERSE,
-        PRODUCT,
-        SUM,
+        ARITHMETIC_REDUCTION,
+        LOGICAL_REDUCTION,
         CONCAT,
         GATHER,
         SLICE,
@@ -70,8 +70,8 @@ public:
         construct_constant_convert();
         construct_constant_shape_of();
         construct_constant_reverse();
-        construct_constant_product();
-        construct_constant_sum();
+        construct_constant_arithmetic_reduction();
+        construct_constant_logical_reduction();
         construct_constant_concat();
         construct_constant_gather();
         construct_constant_slice();
@@ -104,8 +104,12 @@ public:
             case CFTransformations::CONVERT: construct_constant_convert(); break;
             case CFTransformations::SHAPE_OF: construct_constant_shape_of(); break;
             case CFTransformations::REVERSE: construct_constant_reverse(); break;
-            case CFTransformations::PRODUCT: construct_constant_product(); break;
-            case CFTransformations::SUM: construct_constant_sum(); break;
+            case CFTransformations::ARITHMETIC_REDUCTION:
+                construct_constant_arithmetic_reduction();
+                break;
+            case CFTransformations::LOGICAL_REDUCTION:
+                construct_constant_logical_reduction();
+                break;
             case CFTransformations::CONCAT: construct_constant_concat(); break;
             case CFTransformations::GATHER: construct_constant_gather(); break;
             case CFTransformations::SLICE: construct_constant_slice(); break;
@@ -130,8 +134,8 @@ private:
     void construct_constant_convert();
     void construct_constant_shape_of();
     void construct_constant_reverse();
-    void construct_constant_product();
-    void construct_constant_sum();
+    void construct_constant_arithmetic_reduction();
+    void construct_constant_logical_reduction();
     void construct_constant_concat();
     void construct_constant_gather();
     void construct_constant_slice();

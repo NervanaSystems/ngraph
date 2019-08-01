@@ -23,7 +23,7 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
-    GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
+    Gelu, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
     Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
     Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
     Sqrt, Subtract, Sum, Tan, Tanh, TopK
@@ -525,6 +525,24 @@ def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Nod
     """Return node which casts input node values to specified type."""
     new_element_type = get_element_type(new_type)
     return Convert(node, new_element_type)
+
+
+@nameable_op
+def gelu(node, name=None):  # type: (NodeInput, str) -> Node
+    r"""Perform Gaussian Error Linear Unit operation element-wise on data from input node.
+
+    Computes GELU function:
+
+    .. math:: f(x) = 0.5\cdot x\cdot(1 + erf( \dfrac{x}{\sqrt{2}})
+
+    For more information refer to:
+    `Gaussian Error Linear Unit (GELU) <https://arxiv.org/pdf/1606.08415.pdf>`_
+
+    :param node: Input tensor. One of: input node, array or scalar.
+    :param name: Optional output node name.
+    :return: The new node performing a GELU operation on its input data element-wise.
+    """
+    return Gelu(as_node(node))
 
 
 @nameable_op
