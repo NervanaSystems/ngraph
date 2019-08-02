@@ -40,14 +40,17 @@ namespace ngraph
         class Select : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a selection operation.
+            Select() = default;
             /// \brief Constructs a selection operation.
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
             /// \param arg2 Node that produces the third input tensor.
-            Select(const std::shared_ptr<Node>& arg0,
-                   const std::shared_ptr<Node>& arg1,
-                   const std::shared_ptr<Node>& arg2);
+            Select(const Output<Node>& arg0, const Output<Node>& arg1, const Output<Node>& arg2);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

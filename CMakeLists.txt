@@ -548,7 +548,7 @@ if(NGRAPH_CODEGEN_ENABLE)
     elseif (NOT MSVS)
         include(cmake/external_llvm.cmake)
     else()
-        message(FATAL_ERROR "CODEGEN not support on Windows!")
+        message(FATAL_ERROR "CODEGEN is not supported on Windows!")
     endif()
 endif()
 

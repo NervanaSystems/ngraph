@@ -31,12 +31,12 @@ op::ScaleShift::ScaleShift(const std::shared_ptr<ngraph::Node>& data,
 
 NodeVector op::ScaleShift::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto scale = get_argument(1);
-    auto shift = get_argument(2);
+    auto data = input(0).get_source_output();
+    auto scale = input(1).get_source_output();
+    auto shift = input(2).get_source_output();
 
     // broadcast all data
-    auto broadcasted_nodes = numpy_style_broadcast({data, scale, shift});
+    auto broadcasted_nodes = numpy_style_broadcast_values({data, scale, shift});
     data = broadcasted_nodes[0];
     scale = broadcasted_nodes[1];
     shift = broadcasted_nodes[2];

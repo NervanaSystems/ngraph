@@ -30,6 +30,8 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/runtime/reference/range.hpp"
+#include "ngraph/slice_plan.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -138,242 +140,6 @@ void pass::DynElimination::construct_dyn_broadcast()
     add_matcher(dyn_broadcast_matcher, dyn_broadcast_callback, all_pass_property_off);
 }
 
-//
-// We eliminate DynSlice by converting it to a sequence of ops:
-//
-//      Slice    (to do the basic slicing)
-//        |
-//        v
-//     Reshape   (non-transposing, to handle shrinks)
-//        |
-//        v
-//     Reverse   (to emulate backwards stride)
-//
-// (The Reshape, Reverse, or both may be omitted if they would just be identities.)
-//
-// A SlicePlan is used to collect parameters for these ops.
-//
-struct SlicePlan
-{
-    // Parameters for the Slice
-    std::vector<int64_t> begins;
-    std::vector<int64_t> ends;
-    std::vector<int64_t> strides;
-
-    // Shapes coming into, and going out of, the Reshape.
-    Shape reshape_in_shape;
-    Shape reshape_out_shape;
-
-    // Parameters for the Reverse
-    std::set<size_t> reverse_axes;
-};
-
-static SlicePlan make_plan(const Shape& input_shape,
-                           const std::vector<int64_t>& begins,
-                           const std::vector<int64_t>& ends,
-                           const std::vector<int64_t>& strides,
-                           const AxisSet& lower_bounds_mask,
-                           const AxisSet& upper_bounds_mask,
-                           const AxisSet& new_axis_mask,
-                           const AxisSet& shrink_axis_mask,
-                           const AxisSet& ellipsis_mask)
-{
-    NGRAPH_CHECK(begins.size() == ends.size());
-    NGRAPH_CHECK(ends.size() == strides.size());
-    size_t num_slice_indices = begins.size();
-
-    size_t num_real_axes = 0;
-    size_t num_shrink_axes = 0;
-    size_t num_new_axes = 0;
-    bool ellipsis_found = false;
-
-    // Make a pass over the original slices to make sure there is at most one
-    // ellipsis, and to count up the number of shrink axes, the number of
-    // "newaxis"es, and the number of "real" axes (axes that are not newaxis
-    // and are not the ellipsis).
-    for (size_t i = 0; i < num_slice_indices; i++)
-    {
-        if (ellipsis_mask.count(i))
-        {
-            NGRAPH_CHECK(!ellipsis_found);
-            ellipsis_found = true;
-        }
-        else if (new_axis_mask.count(i))
-        {
-            num_new_axes++;
-        }
-        else
-        {
-            if (shrink_axis_mask.count(i))
-            {
-                num_shrink_axes++;
-            }
-            num_real_axes++;
-        }
-    }
-
-    NGRAPH_CHECK(num_real_axes <= input_shape.size(),
-                 "num_real_axes=",
-                 num_real_axes,
-                 ", input_shape=",
-                 input_shape);
-
-    // Figure out how many axes need to be inserted when the ellipsis (which
-    // may be an implicit ellipsis at the end) is expanded.
-    size_t ellipsis_size = input_shape.size() - num_real_axes;
-
-    // Initialize our slice plan.
-    SlicePlan p;
-    p.begins = std::vector<int64_t>(num_real_axes + ellipsis_size);
-    p.ends = std::vector<int64_t>(num_real_axes + ellipsis_size);
-    p.strides = std::vector<int64_t>(num_real_axes + ellipsis_size);
-    p.reshape_in_shape = Shape(num_real_axes + ellipsis_size);
-    p.reshape_out_shape = Shape(num_new_axes + num_real_axes + ellipsis_size - num_shrink_axes);
-    p.reverse_axes = AxisSet{};
-
-    // Begin a maddeningly delicate loop to desugar the original slice.
-    //
-    // * i_in is iterating over the axes of the input shape, which are also the axes of
-    //     p.reshape_in_shape.
-    // * i_out is iterating over the axes of p.reshape_out_shape
-    size_t i_in = 0;
-    size_t i_out = 0;
-
-    // If no actual ellipsis exists, there is an "implicit" one at the end,
-    // which we will handle after the loop. So the logic is wrapped up here,
-    // allowing it to be used both during and after the loop.
-    auto expand_ellipsis = [&]() {
-        for (size_t i = 0; i < ellipsis_size; i++)
-        {
-            p.begins[i_in] = 0;
-            p.ends[i_in] = int64_t(input_shape[i_in]);
-            p.strides[i_in] = 1;
-            p.reshape_in_shape[i_in] = input_shape[i_in];
-            p.reshape_out_shape[i_out] = input_shape[i_in];
-
-            i_in++;
-            i_out++;
-        }
-    };
-
-    for (size_t i = 0; i < num_slice_indices; i++)
-    {
-        // If this is a "newaxis", then reshape_out_shape will have a 1 here,
-        // but reshape_in_shape will not.
-        if (new_axis_mask.count(i))
-        {
-            p.reshape_out_shape[i_out] = 1;
-            i_out++;
-        }
-        // If this is a "shrunken" axis, then reshape_in_shape will have a 1
-        // here, but reshape_out_shape will not.
-        else if (shrink_axis_mask.count(i))
-        {
-            int64_t begin = begins[i];
-
-            // Note that clipping is not used for "shrunken" axes: an
-            // out-of-bounds index is an error.
-            NGRAPH_CHECK(begin >= -(int64_t(input_shape[i_in])) &&
-                         begin < int64_t(input_shape[i_in]));
-
-            if (begin < 0)
-            {
-                begin += int64_t(input_shape[i_in]);
-            }
-            p.begins[i_in] = begin;
-            p.ends[i_in] = begin + 1;
-            p.strides[i_in] = 1;
-            p.reshape_in_shape[i_in] = 1;
-            i_in++;
-        }
-        // If this is the ellipsis, expand it.
-        else if (ellipsis_mask.count(i))
-        {
-            expand_ellipsis();
-        }
-        // In other cases, we have a nice, ordinary (begin:end:stride) slice.
-        // We need to adjust for begin/end being masked, and begin/end/stride
-        // being negative or out of bounds.
-        else
-        {
-            bool is_reverse = strides[i] < 0;
-
-            // Adjust the beginning for from-the-right indexing, and clip.
-            int64_t real_begin = begins[i];
-            if (lower_bounds_mask.count(i))
-            {
-                real_begin = (is_reverse ? int64_t(input_shape[i_in] - 1) : 0);
-            }
-            else if (real_begin < 0)
-            {
-                real_begin += int64_t(input_shape[i_in]);
-            }
-            int64_t max_real_begin = int64_t(input_shape[i_in]) - (is_reverse ? 1 : 0);
-            real_begin = std::max(int64_t(0), std::min(max_real_begin, real_begin));
-
-            // Adjust the ending for from-the-right indexing, and clip.
-            int64_t real_end = ends[i];
-            if (upper_bounds_mask.count(i))
-            {
-                real_end = (is_reverse ? -1 : int64_t(input_shape[i_in]));
-            }
-            else if (real_end < 0)
-            {
-                real_end += int64_t(input_shape[i_in]);
-            }
-            int64_t min_real_end = (is_reverse ? -1 : 0);
-            real_end = std::max(min_real_end, std::min(int64_t(input_shape[i_in]), real_end));
-
-            // Ensure stride is not zero, and adjust it for backwards slicing.
-            NGRAPH_CHECK(strides[i] != 0);
-            int64_t real_stride = std::abs(strides[i]);
-
-            // Adjust for reversal if needed. This isn't quite as simple as swapping begin and
-            // end, due to striding; we have to adjust the end point to be the _actual_ leftmost
-            // element, in cases where the stride does not evenly divide the span between begin
-            // and end.
-            if (is_reverse)
-            {
-                real_end += std::max(int64_t(0), real_begin - real_end - 1) % real_stride;
-                std::swap(real_begin, real_end);
-                real_begin++;
-                real_end++;
-                p.reverse_axes.insert(i_out);
-            }
-
-            // nGraph's slice op does not like it when end < begin, so we truncate for that case
-            // here.
-            if (real_end < real_begin)
-            {
-                real_end = real_begin;
-            }
-
-            // Compute output dimension.
-            size_t dim = (real_end <= real_begin
-                              ? 0
-                              : size_t(real_end - real_begin - 1) / size_t(real_stride) + 1);
-            p.reshape_in_shape[i_in] = dim;
-            p.reshape_out_shape[i_out] = dim;
-
-            // Set up the begin/end/stride.
-            p.begins[i_in] = real_begin;
-            p.ends[i_in] = real_end;
-            p.strides[i_in] = real_stride;
-
-            i_in++;
-            i_out++;
-        }
-    }
-
-    // If there was no ellipsis explicitly given, there is an implicit one at
-    // the end (it might encompass zero axes, but that's fine).
-    if (!ellipsis_found)
-    {
-        expand_ellipsis();
-    }
-    return p;
-}
-
 void pass::DynElimination::construct_dyn_slice()
 {
     auto data_arg_label = make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 3});
@@ -411,15 +177,15 @@ void pass::DynElimination::construct_dyn_slice()
             return false;
         }
 
-        SlicePlan p = make_plan(data_arg->get_output_shape(0),
-                                begins_arg->get_vector<int64_t>(),
-                                ends_arg->get_vector<int64_t>(),
-                                strides_arg->get_vector<int64_t>(),
-                                dyn_slice->get_lower_bounds_mask(),
-                                dyn_slice->get_upper_bounds_mask(),
-                                dyn_slice->get_new_axis(),
-                                dyn_slice->get_shrink_axis(),
-                                dyn_slice->get_ellipsis_mask());
+        SlicePlan p = make_slice_plan(data_arg->get_output_shape(0),
+                                      begins_arg->get_vector<int64_t>(),
+                                      ends_arg->get_vector<int64_t>(),
+                                      strides_arg->get_vector<int64_t>(),
+                                      dyn_slice->get_lower_bounds_mask(),
+                                      dyn_slice->get_upper_bounds_mask(),
+                                      dyn_slice->get_new_axis(),
+                                      dyn_slice->get_shrink_axis(),
+                                      dyn_slice->get_ellipsis_mask());
 
         shared_ptr<Node> replacement =
             make_shared<op::Slice>(data_arg,
@@ -491,15 +257,15 @@ void pass::DynElimination::construct_dyn_replace_slice()
             return false;
         }
 
-        SlicePlan p = make_plan(data_arg->get_output_shape(0),
-                                begins_arg->get_vector<int64_t>(),
-                                ends_arg->get_vector<int64_t>(),
-                                strides_arg->get_vector<int64_t>(),
-                                dyn_replace_slice->get_lower_bounds_mask(),
-                                dyn_replace_slice->get_upper_bounds_mask(),
-                                dyn_replace_slice->get_new_axis(),
-                                dyn_replace_slice->get_shrink_axis(),
-                                dyn_replace_slice->get_ellipsis_mask());
+        SlicePlan p = make_slice_plan(data_arg->get_output_shape(0),
+                                      begins_arg->get_vector<int64_t>(),
+                                      ends_arg->get_vector<int64_t>(),
+                                      strides_arg->get_vector<int64_t>(),
+                                      dyn_replace_slice->get_lower_bounds_mask(),
+                                      dyn_replace_slice->get_upper_bounds_mask(),
+                                      dyn_replace_slice->get_new_axis(),
+                                      dyn_replace_slice->get_shrink_axis(),
+                                      dyn_replace_slice->get_ellipsis_mask());
 
         shared_ptr<Node> substitute_replacement_arg = replacement_arg;
 
@@ -577,11 +343,10 @@ void pass::DynElimination::construct_dyn_reshape()
 }
 
 template <typename T>
-std::shared_ptr<op::Constant>
-    make_range_replacement_integral(const element::Type& et,
-                                    const Shape& shape,
-                                    const std::shared_ptr<op::Constant>& start_arg,
-                                    const std::shared_ptr<op::Constant>& step_arg)
+std::shared_ptr<op::Constant> make_range_replacement(const element::Type& et,
+                                                     const Shape& shape,
+                                                     const std::shared_ptr<op::Constant>& start_arg,
+                                                     const std::shared_ptr<op::Constant>& step_arg)
 {
     std::vector<T> elements(shape_size(shape));
     std::vector<T> start_vec = start_arg->get_vector<T>();
@@ -589,40 +354,7 @@ std::shared_ptr<op::Constant>
 
     NGRAPH_CHECK(start_vec.size() == 1 && step_vec.size() == 1);
 
-    T start = start_vec[0];
-    T step = step_vec[0];
-
-    T val = start;
-
-    for (size_t i = 0; i < elements.size(); i++)
-    {
-        elements[i] = val;
-        val = val + step;
-    }
-
-    return make_shared<op::Constant>(et, shape, elements);
-}
-
-template <typename T>
-std::shared_ptr<op::Constant>
-    make_range_replacement_floating(const element::Type& et,
-                                    const Shape& shape,
-                                    const std::shared_ptr<op::Constant>& start_arg,
-                                    const std::shared_ptr<op::Constant>& step_arg)
-{
-    std::vector<T> elements(shape_size(shape));
-    std::vector<T> start_vec = start_arg->get_vector<T>();
-    std::vector<T> step_vec = step_arg->get_vector<T>();
-
-    NGRAPH_CHECK(start_vec.size() == 1 && step_vec.size() == 1);
-
-    T start = start_vec[0];
-    T step = step_vec[0];
-
-    for (size_t i = 0; i < elements.size(); i++)
-    {
-        elements[i] = start + (static_cast<T>(i) * step);
-    }
+    runtime::reference::range<T>(start_vec.data(), step_vec.data(), shape, elements.data());
 
     return make_shared<op::Constant>(et, shape, elements);
 }
@@ -661,40 +393,40 @@ void pass::DynElimination::construct_range()
         switch (et.get_type_enum())
         {
         case element::Type_t::bf16:
-            replacement = make_range_replacement_floating<bfloat16>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<bfloat16>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::f16:
-            replacement = make_range_replacement_floating<float16>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<float16>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::f32:
-            replacement = make_range_replacement_floating<float>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<float>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::f64:
-            replacement = make_range_replacement_floating<double>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<double>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::i8:
-            replacement = make_range_replacement_integral<int8_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<int8_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::i16:
-            replacement = make_range_replacement_integral<int16_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<int16_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::i32:
-            replacement = make_range_replacement_integral<int32_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<int32_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::i64:
-            replacement = make_range_replacement_integral<int64_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<int64_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::u8:
-            replacement = make_range_replacement_integral<uint8_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<uint8_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::u16:
-            replacement = make_range_replacement_integral<uint16_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<uint16_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::u32:
-            replacement = make_range_replacement_integral<uint32_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<uint32_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::u64:
-            replacement = make_range_replacement_integral<uint64_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<uint64_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::undefined:
         case element::Type_t::dynamic:
