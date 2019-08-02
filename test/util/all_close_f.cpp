@@ -60,8 +60,11 @@ uint32_t test::float_distance(float a, float b, float min_signal)
     FloatUnion b_fu{b};
     if (a_fu.i == 0 || b_fu.i == 0)
     {
-        a_fu.f += 1.0f;
-        b_fu.f += 1.0f;
+        // Comparing to zero breaks this algorithm. If one of the numbers is zero then
+        // add a bias value to both values to get it away from zero.
+        constexpr float bias = 1.0f;
+        a_fu.f = abs(a_fu.f) + bias;
+        b_fu.f = abs(b_fu.f) + bias;
     }
     FloatUnion min_signal_fu{min_signal};
     uint32_t a_uint = a_fu.i;
@@ -120,8 +123,11 @@ uint64_t test::float_distance(double a, double b, double min_signal)
     DoubleUnion b_du{b};
     if (a_du.i == 0 || b_du.i == 0)
     {
-        a_du.f += 1.0f;
-        b_du.f += 1.0f;
+        // Comparing to zero breaks this algorithm. If one of the numbers is zero then
+        // add a bias value to both values to get it away from zero.
+        constexpr float bias = 1.0f;
+        a_du.d = abs(a_du.d) + bias;
+        b_du.d = abs(b_du.d) + bias;
     }
     DoubleUnion min_signal_du{min_signal};
     uint64_t a_uint = a_du.i;
