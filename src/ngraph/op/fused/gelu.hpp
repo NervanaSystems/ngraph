@@ -32,6 +32,9 @@ namespace ngraph
         class Gelu : public ngraph::op::util::FusedOp
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs an Gelu operation.
             ///
             /// \param data Input tensor

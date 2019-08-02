@@ -97,8 +97,35 @@ TEST(constant_folding, constant_broadcast)
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
-    vector<int> values_permute{0, 0, 0, 0, 1, 1, 1, 1};
-    ASSERT_EQ(values_permute, values_out);
+    vector<int> values_expected{0, 0, 0, 0, 1, 1, 1, 1};
+    ASSERT_EQ(values_expected, values_out);
+}
+
+TEST(constant_folding, constant_dyn_broadcast)
+{
+    vector<int32_t> values_in{0, 1};
+    auto constant_in = make_shared<op::Constant>(element::i32, Shape{2}, values_in);
+    vector<int64_t> shape_in{2, 4};
+    auto constant_shape = make_shared<op::Constant>(element::i64, Shape{2}, shape_in);
+    vector<int64_t> axes_in{1};
+    auto constant_axes = make_shared<op::Constant>(element::i64, Shape{1}, axes_in);
+    auto dyn_broadcast = make_shared<op::DynBroadcast>(constant_in, constant_shape, constant_axes);
+    auto f = make_shared<Function>(dyn_broadcast, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::DynBroadcast>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<int32_t>();
+
+    vector<int32_t> values_expected{0, 0, 0, 0, 1, 1, 1, 1};
+    ASSERT_EQ(values_expected, values_out);
 }
 
 TEST(constant_folding, constant_pad_exterior)

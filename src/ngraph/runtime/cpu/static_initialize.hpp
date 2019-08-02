@@ -14,16 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstring>
-
-#include "ngraph/op/sum.hpp"
-#include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/reduce_sum.hpp"
-
-#include "reduction.hpp"
-
-using namespace std;
-using namespace ngraph;
+#pragma once
 
 namespace ngraph
 {
@@ -31,16 +22,7 @@ namespace ngraph
     {
         namespace cpu
         {
-            template <>
-            void Builder::BUILDER_DECL(ngraph::op::Sum)
-            {
-                BUILD_REDUCTION_FUNCTOR(Sum, sum);
-            }
-
-            REGISTER_OP_BUILDER(Sum);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_sum_cpp() {}
-#endif
+            void static_initialize();
         }
     }
 }
