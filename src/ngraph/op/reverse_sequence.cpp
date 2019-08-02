@@ -25,11 +25,13 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::ReverseSequence::type_name{"ReverseSequence"};
+
 op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
                                      const std::shared_ptr<Node> seq_indices,
                                      size_t batch_axis,
                                      size_t seq_axis)
-    : Op("ReverseSequence", check_single_output_args({arg, seq_indices}))
+    : Op(check_single_output_args({arg, seq_indices}))
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
 {

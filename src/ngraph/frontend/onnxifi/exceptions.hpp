@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <onnxifi.h>
+#include <onnx/onnxifi.h>
 
 namespace ngraph
 {

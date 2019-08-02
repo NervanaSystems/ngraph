@@ -189,6 +189,9 @@ namespace ngraph
             REGISTER_OP_BUILDER(SigmoidBackprop);
             REGISTER_OP_BUILDER(SigmoidMultiply);
             REGISTER_OP_BUILDER(SigmoidMultiplyBackprop);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_sigmoid_cpp() {}
+#endif
         }
     }
 }

@@ -21,10 +21,12 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Parameter::type_name{"Parameter"};
+
 op::Parameter::Parameter(const element::Type& element_type,
                          const PartialShape& pshape,
                          const bool cacheable)
-    : Op("Parameter", {})
+    : Op(NodeVector{})
     , m_cacheable(cacheable)
     , m_partial_shape(pshape)
     , m_element_type(element_type)

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <onnx-ml.pb.h>
+#include <onnx/onnx_pb.h>
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
