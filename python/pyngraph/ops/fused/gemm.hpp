@@ -14,31 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
+#pragma once
 
-#include "ngraph/op/fused/prelu.hpp"
-#include "prelu.hpp"
+#include <pybind11/pybind11.h>
 
-namespace ngraph
-{
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector prelu(const Node& node)
-                {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
-                    const auto& data = ng_inputs.at(0);
-                    const auto& slope = ng_inputs.at(1);
-                    return {std::make_shared<ngraph::op::PRelu>(data, slope)};
-                }
+namespace py = pybind11;
 
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+void regclass_pyngraph_op_Gemm(py::module m);

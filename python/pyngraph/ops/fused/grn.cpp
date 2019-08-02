@@ -14,31 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include "ngraph/op/fused/prelu.hpp"
-#include "prelu.hpp"
+#include "ngraph/op/fused/grn.hpp"
+#include "pyngraph/ops/fused/grn.hpp"
 
-namespace ngraph
+namespace py = pybind11;
+
+void regclass_pyngraph_op_GRN(py::module m)
 {
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector prelu(const Node& node)
-                {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
-                    const auto& data = ng_inputs.at(0);
-                    const auto& slope = ng_inputs.at(1);
-                    return {std::make_shared<ngraph::op::PRelu>(data, slope)};
-                }
-
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    py::class_<ngraph::op::GRN, std::shared_ptr<ngraph::op::GRN>, ngraph::op::Op> grn(m, "GRN");
+    grn.doc() = "ngraph.impl.op.GRN wraps ngraph::op::GRN";
+    grn.def(py::init<const std::shared_ptr<ngraph::Node>&, float&>());
+}

@@ -14,31 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
+#include "ngraph/op/xor.hpp"
 
-#include "ngraph/op/fused/prelu.hpp"
-#include "prelu.hpp"
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+const string op::Xor::type_name{"Xor"};
+
+op::Xor::Xor(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
+    : BinaryElementwiseLogical(arg0, arg1, autob)
 {
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector prelu(const Node& node)
-                {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
-                    const auto& data = ng_inputs.at(0);
-                    const auto& slope = ng_inputs.at(1);
-                    return {std::make_shared<ngraph::op::PRelu>(data, slope)};
-                }
+    constructor_validate_and_infer_types();
+}
 
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+shared_ptr<Node> op::Xor::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<Xor>(new_args.at(0), new_args.at(1), this->get_autob());
+}
