@@ -17,6 +17,11 @@
 // This collection contains one entry for each fused op.
 //
 
+#ifndef NGRAPH_OP
+#warning "NGRAPH_OP not defined"
+#define NGRAPH_OP(x, y)
+#endif
+
 NGRAPH_OP(Clamp, ngraph::op)
 NGRAPH_OP(ConvolutionBias, ngraph::op)
 NGRAPH_OP(ConvolutionBiasAdd, ngraph::op)
@@ -24,6 +29,7 @@ NGRAPH_OP(ConvolutionBiasBackpropFiltersBias, ngraph::op)
 NGRAPH_OP(DepthToSpace, ngraph::op)
 NGRAPH_OP(Elu, ngraph::op)
 NGRAPH_OP(FakeQuantize, ngraph::op)
+NGRAPH_OP(Gelu, ngraph::op)
 NGRAPH_OP(Gemm, ngraph::op)
 NGRAPH_OP(GRN, ngraph::op)
 NGRAPH_OP(GroupConvolution, ngraph::op)

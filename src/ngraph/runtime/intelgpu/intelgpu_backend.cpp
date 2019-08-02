@@ -464,7 +464,7 @@ shared_ptr<runtime::Executable>
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -2066,6 +2066,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::FakeQuantize:
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
+        case OP_TYPEID::Gelu:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::GRN:
         case OP_TYPEID::GroupConvolutionTranspose:
@@ -2105,12 +2106,13 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::Unsqueeze:
+        case OP_TYPEID::Xor:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
         }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
         }
@@ -2193,6 +2195,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::DepthToSpace:
     case OP_TYPEID::Elu:
     case OP_TYPEID::FakeQuantize:
+    case OP_TYPEID::Gelu:
     case OP_TYPEID::Gemm:
     case OP_TYPEID::GRN:
     case OP_TYPEID::GroupConvolutionTranspose:

@@ -14,8 +14,7 @@ workloads on CPU for inference, please refer to the links below.
 
 |  Framework (Version)       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
-| TensorFlow* 1.13.1         | [Pip install](https://github.com/NervanaSystems/ngraph-tf#option-1-use-a-pre-built-ngraph-tensorflow-bridge) or [Build from source](https://github.com/NervanaSystems/ngraph-tf#option-2-build-ngraph-bridge-from-source)   | 20 [Validated workloads]
-| MXNet* 1.3                 | [Pip install](https://github.com/NervanaSystems/ngraph-mxnet#Installation) or [Build from source](https://github.com/NervanaSystems/ngraph-mxnet#building-with-ngraph-support)| 18 [Validated workloads]   
+| TensorFlow*                | [Pip install](https://github.com/tensorflow/ngraph-bridge#use-pre-built-packages) or [Build from source](https://github.com/tensorflow/ngraph-bridge#build-ngraph-from-source) | 20 [Validated workloads]   
 | ONNX 1.4                   | [Pip install](https://github.com/NervanaSystems/ngraph-onnx#installation)                          | 17 [Validated workloads] 
 
 

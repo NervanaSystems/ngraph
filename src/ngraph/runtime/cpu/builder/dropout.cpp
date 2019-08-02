@@ -127,6 +127,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(Dropout);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_dropout_cpp() {}
+#endif
         }
     }
 }

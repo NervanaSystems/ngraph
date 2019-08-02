@@ -21,13 +21,15 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
+const string op::QuantizedAvgPool::type_name{"QuantizedAvgPool"};
+
+op::QuantizedAvgPool::QuantizedAvgPool(const Output<Node>& arg,
                                        const Shape& window_shape,
                                        const Strides& window_movement_strides,
                                        const Shape& padding_below,
                                        const Shape& padding_above,
                                        bool include_padding_in_avg_computation)
-    : Op("QuantizedAvgPool", check_single_output_args({arg}))
+    : Op({arg})
     , m_window_shape(window_shape)
     , m_window_movement_strides(window_movement_strides)
     , m_padding_below(padding_below)
@@ -35,15 +37,16 @@ op::QuantizedAvgPool::QuantizedAvgPool(const shared_ptr<Node>& arg,
     , m_include_padding_in_avg_computation(include_padding_in_avg_computation)
 {
     constructor_validate_and_infer_types();
-
-    if (arg->get_element_type() != element::u8 && arg->get_element_type() != element::i8)
-    {
-        throw ngraph_error("QuantizedAvgPool supported only for i8/u8!");
-    }
 }
 
 void op::QuantizedAvgPool::validate_and_infer_types()
 {
+    auto arg(input(0).get_source_output());
+    if (arg.get_element_type() != element::u8 && arg.get_element_type() != element::i8)
+    {
+        throw ngraph_error("QuantizedAvgPool supported only for i8/u8!");
+    }
+
     auto& arg_shape = get_input_shape(0);
 
     if (0 == m_window_movement_strides.size() && arg_shape.size() > 2)

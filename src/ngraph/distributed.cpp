@@ -24,7 +24,7 @@ using namespace ngraph;
 
 std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& obj)
 {
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -36,7 +36,7 @@ std::ostream& reduction::operator<<(std::ostream& out, const reduction::Type& ob
     case reduction::Type::MIN: out << "MIN"; break;
     case reduction::Type::MAX: out << "MAX"; break;
     }
-#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
     return out;
@@ -52,7 +52,7 @@ void ngraph::set_distributed_interface(std::unique_ptr<DistributedInterface> dis
 
 DistributedInterface* ngraph::get_distributed_interface()
 {
-    if (0 == s_distributed_interface)
+    if (nullptr == s_distributed_interface)
     {
 #ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
         set_distributed_interface(std::unique_ptr<DistributedInterface>(

@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
@@ -27,6 +25,9 @@ namespace ngraph
         class ReverseSequence : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs an arcsin operation.
             ///
             /// \param arg Node that produces the input tensor.

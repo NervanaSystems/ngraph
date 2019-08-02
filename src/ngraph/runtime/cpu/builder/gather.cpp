@@ -57,7 +57,7 @@ namespace ngraph
                              args[0].get_element_type() == element::f64 ||
                              args[0].get_element_type() == element::u8 ||
                              args[0].get_element_type() == element::i8) &&
-                            params_shape.size() <= 3 && out_shape.size() <= 3)
+                            params_shape.size() <= 3 && out_shape.size() <= 5)
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i64<float, 2, 2>)>
                                 kernel;
@@ -117,7 +117,7 @@ namespace ngraph
                              args[0].get_element_type() == element::f64 ||
                              args[0].get_element_type() == element::u8 ||
                              args[0].get_element_type() == element::i8) &&
-                            params_shape.size() <= 3 && out_shape.size() <= 3)
+                            params_shape.size() <= 3 && out_shape.size() <= 5)
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i32<float, 2, 2>)>
                                 kernel;
@@ -237,6 +237,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(Gather);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_gather_cpp() {}
+#endif
         } // namespace cpu
     }     // namespace runtime
 } // namespace ngraph

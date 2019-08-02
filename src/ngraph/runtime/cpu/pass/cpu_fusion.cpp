@@ -153,7 +153,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
     auto b = std::make_shared<pattern::op::Label>(element::f32, shape_b);
 
     auto pmmb = std::make_shared<ngraph::op::MatmulBias>(
-        W, x, nullptr, W->get_shape(), x->get_shape(), false, false);
+        W, x, Output<Node>(), W->get_shape(), x->get_shape(), false, false);
     auto pbroadcast = std::make_shared<ngraph::op::Broadcast>(b, pmmb->get_shape(), AxisSet{0});
     auto padd = pmmb + pbroadcast;
 
@@ -243,7 +243,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 
         auto cg = std::shared_ptr<Node>(new ngraph::op::MatmulBias(pattern_map[W],
                                                                    pattern_map[x],
-                                                                   nullptr,
+                                                                   Output<Node>(),
                                                                    shape_arg0,
                                                                    shape_arg1,
                                                                    transpose_w,
@@ -520,6 +520,70 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
     this->add_matcher(m, callback);
 }
 
+static bool switch_nodes(std::shared_ptr<ngraph::Node> node1,
+                         std::shared_ptr<ngraph::Node> node2,
+                         size_t source_input_index = 0)
+{
+    // check if node1 has only 1 argument, not sure how it will work with >1 args
+    if (node1->inputs().size() > 1)
+    {
+        NGRAPH_DEBUG << "Cannot switch. More than 1 inputs to this node\n";
+        return false;
+    }
+    if (node1->get_users().size() > 1)
+    {
+        NGRAPH_DEBUG << "Cannot switch. More than 1 user of this node\n";
+        return false;
+    }
+    if (node1->outputs().size() > 1)
+    {
+        NGRAPH_DEBUG << "Cannot switch. More than 1 output of this node\n";
+        return false;
+    }
+    if (node2->outputs().size() > 1)
+    {
+        NGRAPH_DEBUG << "Cannot switch. More than 1 output of this node\n";
+        return false;
+    }
+
+    auto target_inputs = node2->output(0).get_target_inputs();
+    // Remove the control_dependency, which shouldn't be there, but in case
+    // Other control_dependencies will work out fine even after switch.
+    node2->remove_control_dependency(node1);
+
+    // actual switch happening after this
+    auto arg = node1->get_argument(source_input_index);
+    node2->input(0).replace_source_output(arg);
+
+    node1->input(0).replace_source_output(node2->output(0));
+
+    // used implementation ref from replace_node
+    for (auto& input : target_inputs)
+    {
+        input.replace_source_output(node1->output(0));
+    }
+    return true;
+}
+
+void ngraph::runtime::cpu::pass::CPUPreFusion::construct_maxpool_relu_switch()
+{
+    auto input_shape = Shape{1, 2, 2, 2};
+    auto input = std::make_shared<pattern::op::Label>(element::f32, input_shape);
+    Shape window_shape{2, 2};
+    auto max_pool = std::make_shared<ngraph::op::MaxPool>(input, window_shape);
+    auto prelu = std::make_shared<ngraph::op::Relu>(max_pool);
+
+    auto callback = [input](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for construct_maxpool_relu_switch against node = "
+                     << m.get_match_root()->get_name();
+
+        return switch_nodes(m.get_match_root()->get_argument(0), m.get_match_root());
+    };
+
+    auto m = std::make_shared<ngraph::pattern::Matcher>(prelu, "CPUPreFusion.MaxpoolReluSwitch");
+    this->add_matcher(m, callback);
+}
+
 void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 {
     auto input_shape = Shape{1, 2, 2, 2};
@@ -551,14 +615,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         {
             return false;
         }
-        std::vector<std::shared_ptr<Node>> mgoes(m_bn->get_outputs().size());
-        for (auto bn_in : m_bn->get_output_inputs(0))
-        {
-            auto mgoe = std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(bn_in->get_node());
-            NGRAPH_CHECK(mgoe);
-            mgoes[mgoe->get_n()] = mgoe;
-        }
-
+        NodeVector mgoes(get_output_elements(m_bn));
         if (mgoes[0]->get_users().size() > 1)
         {
             NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
@@ -1291,14 +1348,18 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
         auto alpha_vec = alpha_const_op->get_vector<float>();
         for (auto val : alpha_vec)
         {
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
             if (val != alpha_vec[0])
             {
                 NGRAPH_DEBUG << "alpha is not a singular constant";
                 return false;
             }
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
         }
 
         if (alpha_vec[0] < 0)

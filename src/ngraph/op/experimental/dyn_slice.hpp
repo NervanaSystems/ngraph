@@ -27,6 +27,9 @@ namespace ngraph
         class DynSlice : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a dynamic tensor slice operation.
             ///
             /// \param arg The tensor to be sliced.
@@ -56,11 +59,11 @@ namespace ngraph
             const AxisSet& get_ellipsis_mask() const { return m_ellipsis_mask; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
-            void validate_and_infer_types() override;
 
         private:
             /// Helper method to compute output shape

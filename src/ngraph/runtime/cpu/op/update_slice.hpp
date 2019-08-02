@@ -50,6 +50,8 @@ namespace ngraph
         class UpdateSlice : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a tensor slice update operation.
             ///
             /// \param arg0 The tensor to overwrite into.
@@ -59,8 +61,8 @@ namespace ngraph
             /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
             ///                every nth row and every mth column of `arg0` as part of the
             ///                slice to be replaced.
-            UpdateSlice(const std::shared_ptr<Node>& arg0,
-                        const std::shared_ptr<Node>& arg1,
+            UpdateSlice(const Output<Node>& arg0,
+                        const Output<Node>& arg1,
                         const Coordinate& lower_bounds,
                         const Coordinate& upper_bounds,
                         const Strides& strides);
@@ -71,13 +73,14 @@ namespace ngraph
             /// \param arg1 The tensor to increment into `arg0`.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
-            UpdateSlice(const std::shared_ptr<Node>& arg0,
-                        const std::shared_ptr<Node>& arg1,
+            UpdateSlice(const Output<Node>& arg0,
+                        const Output<Node>& arg1,
                         const Coordinate& lower_bounds,
                         const Coordinate& upper_bounds);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+            void validate_and_infer_types() override;
 
             /// \return The inclusive lower-bound coordinates.
             const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
@@ -86,8 +89,6 @@ namespace ngraph
             /// \return The slicing strides.
             const Strides& get_strides() const { return m_strides; }
         protected:
-            void validate_and_infer_types() override;
-
             Coordinate m_lower_bounds;
             Coordinate m_upper_bounds;
             Strides m_strides;

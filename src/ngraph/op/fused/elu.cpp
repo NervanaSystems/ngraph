@@ -28,8 +28,10 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Elu::type_name{"Elu"};
+
 op::Elu::Elu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
-    : FusedOp("Elu", {data, alpha})
+    : FusedOp(check_single_output_args({data, alpha}))
 {
     constructor_validate_and_infer_types();
 }
@@ -39,7 +41,7 @@ NodeVector op::Elu::decompose_op() const
     auto data = get_argument(0);
     auto alpha_node = get_argument(1);
 
-    alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
+    alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data->get_shape());
 
     shared_ptr<ngraph::Node> zero_node =
         builder::make_constant(data->get_element_type(), data->get_shape(), 0);

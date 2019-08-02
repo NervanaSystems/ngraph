@@ -48,6 +48,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/scatter_add.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -63,7 +64,6 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 
 using namespace std;
@@ -216,7 +216,7 @@ namespace ngraph
                     auto goe = static_cast<ngraph::op::GetOutputElement*>(node);
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->add_in_place_oi_pair({0, goe->get_n(), false});
+                    op_annotations->add_in_place_oi_pair({0, 0, false});
                     goe->set_op_annotations(op_annotations);
                 }
 

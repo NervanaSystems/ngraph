@@ -21,31 +21,31 @@ using namespace ngraph;
 
 namespace
 {
-    inline std::size_t get_valid_array_index(std::size_t idx, std::size_t axis_size)
+    inline size_t get_valid_array_index(size_t idx, size_t axis_size)
     {
         return std::min(idx, axis_size);
     }
 
-    std::shared_ptr<op::Slice> make_ng_slice(const std::shared_ptr<ngraph::Node>& node,
-                                             const std::vector<std::size_t>& axes,
-                                             const std::vector<std::size_t>& starts,
-                                             const std::vector<std::size_t>& ends)
+    std::shared_ptr<op::Slice> make_ng_slice(const Output<Node>& output,
+                                             const std::vector<size_t>& axes,
+                                             const std::vector<size_t>& starts,
+                                             const std::vector<size_t>& ends)
     {
-        std::vector<std::size_t> upper_bounds{node->get_shape()};
-        std::vector<std::size_t> lower_bounds(upper_bounds.size());
-        for (std::size_t index{0}; index < axes.size(); ++index)
+        std::vector<size_t> upper_bounds{output.get_shape()};
+        std::vector<size_t> lower_bounds(upper_bounds.size());
+        for (size_t index{0}; index < axes.size(); ++index)
         {
-            std::size_t axis{axes.at(index)};
+            size_t axis{axes.at(index)};
             lower_bounds.at(axis) =
-                get_valid_array_index(starts.at(index), node->get_shape().at(axis));
+                get_valid_array_index(starts.at(index), output.get_shape().at(axis));
             upper_bounds.at(axis) =
-                get_valid_array_index(ends.at(index), node->get_shape().at(axis));
+                get_valid_array_index(ends.at(index), output.get_shape().at(axis));
         }
-        return std::make_shared<op::Slice>(node, lower_bounds, upper_bounds);
+        return std::make_shared<op::Slice>(output, lower_bounds, upper_bounds);
     }
 }
 
-NodeVector builder::split(const std::shared_ptr<ngraph::Node>& node,
+NodeVector builder::split(const Output<ngraph::Node>& value,
                           const std::vector<size_t>& length_parts,
                           size_t axis)
 {
@@ -54,21 +54,21 @@ NodeVector builder::split(const std::shared_ptr<ngraph::Node>& node,
     for (const auto& length_part : length_parts)
     {
         size_t end_index{start_index + length_part};
-        outputs.push_back(make_ng_slice(node, {axis}, {start_index}, {end_index}));
+        outputs.push_back(make_ng_slice(value, {axis}, {start_index}, {end_index}));
         start_index = end_index;
     }
     return outputs;
 }
 
-NodeVector builder::split(const std::shared_ptr<ngraph::Node>& node, size_t split_parts, int axis)
+NodeVector builder::split(const Output<Node>& value, size_t split_parts, int axis)
 {
     size_t axis_to_split{static_cast<size_t>(axis)};
     if (axis < 0)
     {
-        axis_to_split = node->get_shape().size() + axis;
+        axis_to_split = value.get_shape().size() + axis;
     }
 
-    size_t length_axis_to_split{node->get_shape().at(axis_to_split)};
+    size_t length_axis_to_split{value.get_shape().at(axis_to_split)};
     std::vector<size_t> length_parts(split_parts, length_axis_to_split / split_parts);
-    return split(node, length_parts, axis_to_split);
+    return split(value, length_parts, axis_to_split);
 }

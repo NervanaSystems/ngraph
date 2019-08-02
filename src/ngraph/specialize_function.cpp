@@ -58,14 +58,13 @@ std::shared_ptr<Function>
             continue;
         }
 
-        NodeVector new_args = old_node->get_arguments();
-
-        for (size_t i = 0; i < new_args.size(); i++)
+        OutputVector new_args;
+        for (auto input : old_node->inputs())
         {
-            new_args[i] = m[new_args[i].get()];
+            auto output = input.get_source_output();
+            new_args.push_back(output.for_node(m[output.get_node()]));
         }
-
-        m[old_node.get()] = old_node->copy_with_new_args(new_args);
+        m[old_node.get()] = old_node->copy_with_new_inputs(new_args);
     }
 
     ParameterVector new_parameters = f->get_parameters();

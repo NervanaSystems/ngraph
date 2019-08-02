@@ -16,9 +16,16 @@
 
 include(FindOpenMP)
 
+if (NGRAPH_CPU_STATIC_LIB_ENABLE)
+    set(LIBRARY_TYPE STATIC)
+else()
+    set(LIBRARY_TYPE SHARED)
+endif()
+
 set(SRC
     cpu_backend.cpp
     cpu_builder.cpp
+    cpu_builder_registry.cpp
     cpu_call_frame.cpp
     cpu_executor.cpp
     cpu_external_function.cpp
@@ -31,6 +38,7 @@ set(SRC
     cpu_visualize_tree.cpp
     cpu_cse.cpp
     cpu_debugger.cpp
+    cpu_debug_tracer.cpp
     builder/add.cpp
     builder/allreduce.cpp
     builder/avg_pool.cpp
@@ -113,7 +121,6 @@ set(SRC
     op/update_slice.cpp
     pass/cpu_assignment.cpp
     pass/cpu_collapse_dims.cpp
-    pass/cpu_compiled_kernel_fusion.cpp
     pass/cpu_fusion.cpp
     pass/cpu_horizontal_fusion.cpp
     pass/cpu_layout.cpp
@@ -124,7 +131,6 @@ set(SRC
     pass/cpu_post_layout_optimizations.cpp
     pass/cpu_rnn_fusion.cpp
     pass/cpu_workspace_insertion.cpp
-    ngraph_version.cpp
 )
 
 if (NOT NGRAPH_DEX_ONLY)
@@ -156,7 +162,10 @@ endif()
 if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_CPU_DEBUGINFO_ENABLE 0 CACHE STRING "Enable debuginfo in the CPU backend")
 
-    add_library(cpu_backend SHARED ${SRC})
+    add_library(cpu_backend ${LIBRARY_TYPE} ${SRC})
+    if (NGRAPH_CPU_STATIC_LIB_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_STATIC_LIB_ENABLE")
+    endif()
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(cpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

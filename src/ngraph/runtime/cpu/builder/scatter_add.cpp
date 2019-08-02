@@ -62,7 +62,7 @@ namespace ngraph
 
                 if (is_int64)
                 {
-                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 3)
+                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 5)
                     {
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i64<float, 2, 2>)>
                             kernel;
@@ -101,7 +101,7 @@ namespace ngraph
                 }
                 else
                 {
-                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 3)
+                    if (inputs_shape.size() <= 3 && updates_shape.size() <= 5)
                     {
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i32<float, 2, 2>)>
                             kernel;
@@ -140,6 +140,9 @@ namespace ngraph
                 }
             }
             REGISTER_OP_BUILDER(ScatterAdd);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_scatter_add_cpp() {}
+#endif
         }
     }
 }

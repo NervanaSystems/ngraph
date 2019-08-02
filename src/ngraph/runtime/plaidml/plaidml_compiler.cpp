@@ -35,7 +35,6 @@
 #include "ngraph/runtime/plaidml/plaidml_pass_explicit_logicals.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_implicit_broadcast.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_lower_convolutions.hpp"
-#include "ngraph/runtime/plaidml/plaidml_pass_prefix_reshape_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_replicate_combination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_replicate_elision.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_winograd.hpp"
@@ -85,6 +84,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     // compilation.
 
     ngraph::pass::Manager pass_manager;
+    pass_manager.set_per_pass_validation(false);
 
     // We apply the same general-purposes passes as the CPU backend.
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
@@ -103,7 +103,6 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateElision>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ReplicateCombination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::ImplicitBroadcast>();
-    pass_manager.register_pass<ngraph::runtime::plaidml::pass::PrefixReshapeElimination>();
     pass_manager.register_pass<ngraph::runtime::plaidml::pass::LowerConvolutions>();
     if (pass_manager.get_pass_config().get_pass_enable("Winograd"))
     {
@@ -125,7 +124,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     // before we rewrite, we make our own copy of the function.
     auto rewrite_func = clone_function(*func);
 
-    // Apply passes.
+    // Apply passes, with revalidation disabled.
     pass_manager.run_passes(rewrite_func);
 
     // Compile the resulting function.
