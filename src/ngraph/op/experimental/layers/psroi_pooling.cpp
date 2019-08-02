@@ -19,6 +19,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::PSROIPooling::type_name{"PSROIPooling"};
+
 op::PSROIPooling::PSROIPooling(const shared_ptr<Node>& input,
                                const shared_ptr<Node>& coords,
                                const size_t output_dim,
@@ -27,7 +29,7 @@ op::PSROIPooling::PSROIPooling(const shared_ptr<Node>& input,
                                int spatial_bins_x,
                                int spatial_bins_y,
                                const string& mode)
-    : Op("PSROIPooling", check_single_output_args({input, coords}))
+    : Op(check_single_output_args({input, coords}))
     , m_output_dim(output_dim)
     , m_group_size(group_size)
     , m_spatial_scale(spatial_scale)

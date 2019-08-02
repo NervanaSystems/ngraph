@@ -21,14 +21,16 @@ using namespace ngraph;
 
 shared_ptr<Node> runtime::cpu::op::HalideOp::copy_with_new_args(const NodeVector& new_args) const
 {
-    return make_shared<HalideOp>(new_args, m_ops, m_output_type, m_output_shape);
+    return make_shared<HalideOp>(as_output_vector(new_args), m_ops, m_output_type, m_output_shape);
 }
 
-runtime::cpu::op::HalideOp::HalideOp(const NodeVector& args,
-                                     const std::list<std::shared_ptr<Node>>& ops,
+const std::string runtime::cpu::op::HalideOp::type_name{"HalideOp"};
+
+runtime::cpu::op::HalideOp::HalideOp(const OutputVector& args,
+                                     const std::list<Output<Node>>& ops,
                                      const element::Type& out_type,
                                      const Shape& out_shape)
-    : Op("HalideOp", check_single_output_args(args))
+    : Op(args)
     , m_ops(ops)
     , m_output_type(out_type)
     , m_output_shape(out_shape)

@@ -28,6 +28,9 @@ namespace ngraph
         class Pad : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a generic padding operation.
             ///
             /// \param arg The node producing input tensor to be padded.
