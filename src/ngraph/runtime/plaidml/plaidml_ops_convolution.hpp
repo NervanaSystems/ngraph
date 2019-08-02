@@ -19,7 +19,7 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
-\
+
 namespace ngraph
 {
     namespace runtime
