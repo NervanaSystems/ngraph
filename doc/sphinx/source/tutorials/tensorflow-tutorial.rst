@@ -100,8 +100,8 @@ Add and source the ``bin`` path to your ``~/.bashrc`` file to call
 
 Install ``cmake``, ``virtualenv``, and ``gcc 4.8``.
 
-Build ngraph-bridge
-~~~~~~~~~~~~~~~~~~~
+Build ngraph-tensorflow-bridge
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once TensorFlow's dependencies are installed, clone the ``ngraph-bridge`` repo:
 
@@ -135,6 +135,17 @@ For more build options:
 ::
 
     python3 build_ngtf.py --help
+
+Install ngraph-tensorflow-bridge
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once the Python wheel ``ngraph-*.whl`` is built, install it
+using ``pip``. For example:
+
+::
+
+    (nGraph) $ pip install build_cmake/artifacts/ngraph_tensorflow_bridge-*-none-manylinux1_x86_64.whl
+    
 
 Test the installation:
 
@@ -302,11 +313,11 @@ Add the following Python code to measure the computation time:
 Observe that the ouput time runs faster than TensorFlow native (without
 nGraph).
 
-Add additional backends
------------------------
+Use a different a backend
+-------------------------
 
 You can substitute the default CPU backend with a different backend such as
-``PLAIDML`` or ``INTELGPU``. 
+``INTELGPU`` or ``PLAIDML`` (coming soon). 
 
 To determine what backends are available, use the following API:
 
@@ -322,13 +333,6 @@ To add the ``INTELGPU`` backend:
 
     ngraph_bridge.set_backend('INTELGPU')
 
-**PLaidML**
-
-To add the ``PLAIDML`` backend:
-
-::
-
-    ngraph_bridge.set_backend('PLAIDML')
 
 Detailed examples on how to use ``ngraph_bridge`` are located in the 
 `examples <examples_>`_ directory.
