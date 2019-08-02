@@ -58,6 +58,11 @@ uint32_t test::float_distance(float a, float b, float min_signal)
 
     FloatUnion a_fu{a};
     FloatUnion b_fu{b};
+    if (a_fu.i == 0 || b_fu.i == 0)
+    {
+        a_fu.f += 1.0f;
+        b_fu.f += 1.0f;
+    }
     FloatUnion min_signal_fu{min_signal};
     uint32_t a_uint = a_fu.i;
     uint32_t b_uint = b_fu.i;
@@ -113,6 +118,11 @@ uint64_t test::float_distance(double a, double b, double min_signal)
 
     DoubleUnion a_du{a};
     DoubleUnion b_du{b};
+    if (a_du.i == 0 || b_du.i == 0)
+    {
+        a_du.f += 1.0f;
+        b_du.f += 1.0f;
+    }
     DoubleUnion min_signal_du{min_signal};
     uint64_t a_uint = a_du.i;
     uint64_t b_uint = b_du.i;
