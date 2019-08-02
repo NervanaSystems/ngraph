@@ -26,9 +26,9 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Normalize::type_name{"Normalize"};
+const string op::NormalizeL2::type_name{"NormalizeL2"};
 
-op::Normalize::Normalize(const shared_ptr<ngraph::Node>& data,
+op::NormalizeL2::NormalizeL2(const shared_ptr<ngraph::Node>& data,
                          const shared_ptr<ngraph::Node>& scale,
                          bool across_spatial,
                          bool channel_shared,
@@ -41,7 +41,7 @@ op::Normalize::Normalize(const shared_ptr<ngraph::Node>& data,
     constructor_validate_and_infer_types();
 }
 
-void op::Normalize::pre_validate_and_infer_types()
+void op::NormalizeL2::pre_validate_and_infer_types()
 {
     const auto& data_pshape = get_input_partial_shape(0);
     const auto& scale_pshape = get_input_partial_shape(1);
@@ -86,7 +86,7 @@ void op::Normalize::pre_validate_and_infer_types()
     }
 }
 
-NodeVector op::Normalize::decompose_op() const
+NodeVector op::NormalizeL2::decompose_op() const
 {
     shared_ptr<Node> data{get_argument(0)};
     const Shape input_shape{data->get_shape()};
@@ -136,12 +136,12 @@ NodeVector op::Normalize::decompose_op() const
     return {data};
 }
 
-shared_ptr<Node> op::Normalize::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::NormalizeL2::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<Normalize>(
+    return make_shared<NormalizeL2>(
         new_args.at(0), new_args.at(1), m_across_spatial, m_channel_shared, m_eps);
 }

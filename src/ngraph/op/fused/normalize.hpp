@@ -27,7 +27,7 @@ namespace ngraph
     {
         /// \brief  Normalization input tensor with L2 norm.
         ///
-        class Normalize : public ngraph::op::util::FusedOp
+        class NormalizeL2 : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API
@@ -42,7 +42,7 @@ namespace ngraph
             /// \param      channel_shared  - Whether scale is shared across channels.
             /// \param      eps             - The epsilon added to L2 norm.
             ///
-            Normalize(const std::shared_ptr<ngraph::Node>& data,
+            NormalizeL2(const std::shared_ptr<ngraph::Node>& data,
                       const std::shared_ptr<ngraph::Node>& scale,
                       bool across_spatial,
                       bool channel_shared,
