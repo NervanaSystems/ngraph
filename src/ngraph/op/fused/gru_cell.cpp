@@ -31,6 +31,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::GRUCell::type_name{"GRUCell"};
+
 op::GRUCell::GRUCell(const shared_ptr<Node>& X,
                      const shared_ptr<Node>& W,
                      const shared_ptr<Node>& R,
@@ -59,7 +61,7 @@ op::GRUCell::GRUCell(const shared_ptr<Node>& X,
                      const vector<float>& activation_beta,
                      float clip,
                      bool linear_before_reset)
-    : FusedOp("GRUCell", {X, W, R, H_t})
+    : FusedOp(check_single_output_args({X, W, R, H_t}))
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -80,7 +82,7 @@ op::GRUCell::GRUCell(const shared_ptr<Node>& X,
                      const vector<float>& activation_beta,
                      float clip,
                      bool linear_before_reset)
-    : FusedOp("GRUCell", {X, W, R, H_t, B})
+    : FusedOp(check_single_output_args({X, W, R, H_t, B}))
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}

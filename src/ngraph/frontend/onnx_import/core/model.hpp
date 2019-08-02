@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <onnx-ml.pb.h>
+#include <onnx/onnx_pb.h>
 #include <ostream>
 #include <string>
 #include <unordered_map>

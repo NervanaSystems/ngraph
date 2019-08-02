@@ -16,7 +16,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <onnxifi.h>
+#include <onnx/onnxifi.h>
 #include <stdexcept>
 
 #include "backend_manager.hpp"
