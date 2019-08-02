@@ -235,7 +235,8 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
 {
     auto out_shape = pad->get_shape();
     vector<T> out_vec(shape_size(out_shape));
-    auto pad_value = std::static_pointer_cast<op::Constant>(pad->get_argument(1));
+    auto pad_value = std::static_pointer_cast<op::Constant>(
+        pad->input(1).get_source_output().get_node_shared_ptr());
 
     if (func != nullptr)
     {
@@ -1375,9 +1376,10 @@ void pass::ConstantFolding::construct_constant_dequantize()
         auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto dequant_match = pattern_map[dequant];
         auto dequantize_op = dynamic_pointer_cast<op::Dequantize>(dequant_match);
-        auto args = dequant_match->get_arguments();
-        auto scale = dynamic_pointer_cast<op::Constant>(args[1]);
-        auto offset = dynamic_pointer_cast<op::Constant>(args[2]);
+        auto scale = dynamic_pointer_cast<op::Constant>(
+            dequant_match->input(1).get_source_output().get_node_shared_ptr());
+        auto offset = dynamic_pointer_cast<op::Constant>(
+            dequant_match->input(2).get_source_output().get_node_shared_ptr());
 
         auto type = constant_match->get_element_type();
 
@@ -1452,8 +1454,10 @@ void pass::ConstantFolding::construct_constant_quantize()
         auto quant_match = pattern_map[quant];
         auto quantize_op = dynamic_pointer_cast<op::Quantize>(quant_match);
         auto args = quant_match->get_arguments();
-        auto scale = static_pointer_cast<op::Constant>(args[1]);
-        auto offset = static_pointer_cast<op::Constant>(args[2]);
+        auto scale = static_pointer_cast<op::Constant>(
+            quant_match->input(1).get_source_output().get_node_shared_ptr());
+        auto offset = static_pointer_cast<op::Constant>(
+            quant_match->input(2).get_source_output().get_node_shared_ptr());
 
         auto type = quant_match->get_element_type();
 
