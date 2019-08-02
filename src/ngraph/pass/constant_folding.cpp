@@ -170,6 +170,8 @@ void pass::ConstantFolding::construct_constant_reshape()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto reshape_match = static_pointer_cast<op::Reshape>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(reshape_match));
+
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
         {
@@ -238,7 +240,7 @@ void pass::ConstantFolding::construct_constant_reshape()
     auto reshape_matcher =
         make_shared<pattern::Matcher>(reshape, "ConstantFolding.ConstantReshape");
     this->add_matcher(
-        reshape_matcher, constant_reshape_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        reshape_matcher, constant_reshape_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -365,7 +367,7 @@ void pass::ConstantFolding::construct_constant_pad()
     };
 
     auto pad_matcher = make_shared<pattern::Matcher>(pad, "ConstantFolding.ConstantPad");
-    this->add_matcher(pad_matcher, constant_pad_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+    this->add_matcher(pad_matcher, constant_pad_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -765,6 +767,8 @@ void pass::ConstantFolding::construct_constant_dyn_broadcast()
             static_pointer_cast<op::Constant>(pattern_map[constant_axes_label]);
         auto dyn_broadcast_match = static_pointer_cast<op::DynBroadcast>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(dyn_broadcast_match));
+
         std::shared_ptr<Node> replacement;
         auto type = dyn_broadcast_match->get_output_element_type(0);
         switch (type.get_type_enum())
@@ -838,7 +842,7 @@ void pass::ConstantFolding::construct_constant_dyn_broadcast()
     auto dyn_broadcast_matcher =
         make_shared<pattern::Matcher>(dyn_broadcast, "ConstantFolding.ConstantDynBroadcast");
     this->add_matcher(
-        dyn_broadcast_matcher, constant_dyn_broadcast_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        dyn_broadcast_matcher, constant_dyn_broadcast_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class Tin, class Tout>
@@ -1911,7 +1915,7 @@ void pass::ConstantFolding::construct_constant_arithmetic_reduction()
         make_shared<pattern::Matcher>(reduction, "ConstantFolding.ConstantArithmeticReduction");
     this->add_matcher(arithmetic_reduction_matcher,
                       constant_arithmetic_reduction_callback,
-                      all_pass_property_off);
+                      PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
@@ -1981,8 +1985,9 @@ void pass::ConstantFolding::construct_constant_logical_reduction()
 
     auto logical_reduction_matcher =
         make_shared<pattern::Matcher>(reduction, "ConstantFolding.ConstantLogicalReduction");
-    this->add_matcher(
-        logical_reduction_matcher, constant_logical_reduction_callback, all_pass_property_off);
+    this->add_matcher(logical_reduction_matcher,
+                      constant_logical_reduction_callback,
+                      PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <typename T>
