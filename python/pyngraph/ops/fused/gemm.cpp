@@ -14,31 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <memory>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include "ngraph/op/fused/prelu.hpp"
-#include "prelu.hpp"
+#include "ngraph/op/fused/gemm.hpp"
+#include "pyngraph/ops/fused/gemm.hpp"
 
-namespace ngraph
+namespace py = pybind11;
+
+void regclass_pyngraph_op_Gemm(py::module m)
 {
-    namespace onnx_import
-    {
-        namespace op
-        {
-            namespace set_1
-            {
-                NodeVector prelu(const Node& node)
-                {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
-                    const auto& data = ng_inputs.at(0);
-                    const auto& slope = ng_inputs.at(1);
-                    return {std::make_shared<ngraph::op::PRelu>(data, slope)};
-                }
-
-            } // namespace set_1
-
-        } //namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    py::class_<ngraph::op::Gemm, std::shared_ptr<ngraph::op::Gemm>, ngraph::op::Op> gemm(m, "Gemm");
+    gemm.doc() = "ngraph.impl.op.Gemm wraps ngraph::op::Gemm";
+    gemm.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                      const std::shared_ptr<ngraph::Node>&,
+                      const std::shared_ptr<ngraph::Node>&,
+                      double&,
+                      double&,
+                      bool&,
+                      bool&>());
+}
