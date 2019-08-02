@@ -36,6 +36,7 @@ from ngraph.ops import broadcast
 from ngraph.ops import broadcast_to
 from ngraph.ops import ceiling
 from ngraph.ops import ceiling as ceil
+from ngraph.ops import clamp
 from ngraph.ops import concat
 from ngraph.ops import constant
 from ngraph.ops import convert
@@ -49,6 +50,7 @@ from ngraph.ops import elu
 from ngraph.ops import equal
 from ngraph.ops import exp
 from ngraph.ops import floor
+from ngraph.ops import gelu
 from ngraph.ops import gemm
 from ngraph.ops import get_output_element
 from ngraph.ops import greater

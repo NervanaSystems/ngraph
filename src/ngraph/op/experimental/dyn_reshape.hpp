@@ -31,6 +31,9 @@ namespace ngraph
         class DynReshape : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a dynamic reshape operation. This operation does not perform transpose.
             ///
             /// \param arg The tensor to be reshaped.

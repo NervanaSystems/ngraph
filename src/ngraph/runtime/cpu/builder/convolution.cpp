@@ -832,6 +832,10 @@ namespace ngraph
             REGISTER_OP_BUILDER(ConvolutionAdd);
             REGISTER_OP_BUILDER(GroupConvolutionBias);
             REGISTER_OP_BUILDER(DeconvolutionBias)
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_convolution_cpp() {}
+#endif
+
         } // namespace cpu
     }     // namespace runtime
 } // namespace ngraph

@@ -23,6 +23,7 @@ ngraph.ops
       broadcast
       broadcast_to
       ceiling
+      clamp
       concat
       constant
       convert
@@ -36,6 +37,7 @@ ngraph.ops
       equal
       exp
       floor
+      gelu
       gemm
       get_output_element
       greater

@@ -25,6 +25,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Gemm::type_name{"Gemm"};
+
 op::Gemm::Gemm(const std::shared_ptr<ngraph::Node>& A,
                const std::shared_ptr<ngraph::Node>& B,
                const std::shared_ptr<ngraph::Node>& C,
@@ -32,7 +34,7 @@ op::Gemm::Gemm(const std::shared_ptr<ngraph::Node>& A,
                double beta,
                bool transA,
                bool transB)
-    : FusedOp("Gemm", {A, B, C})
+    : FusedOp(check_single_output_args({A, B, C}))
     , m_alpha{alpha}
     , m_beta{beta}
     , m_transA{transA}
@@ -74,7 +76,8 @@ NodeVector op::Gemm::decompose_op() const
     C = std::make_shared<ngraph::op::Multiply>(beta_node, C);
 
     // alpha * A' * B' + beta * C
-    NodeVector broadcasted_nodes = ngraph::op::numpy_style_broadcast({a_dot_b, C});
+    OutputVector broadcasted_nodes =
+        ngraph::op::numpy_style_broadcast_values(OutputVector{a_dot_b, C});
     // The input tensor `C` should be "unidirectionally broadcastable" to the `a_dot_b` tensor.
     // Numpy style broadcast is bidirectional, so we only use the second output from broadcasting.
     return {std::make_shared<ngraph::op::Add>(a_dot_b, broadcasted_nodes.at(1))};

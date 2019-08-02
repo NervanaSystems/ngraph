@@ -32,6 +32,9 @@ namespace ngraph
         class BatchMatMul : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a batch of matmul product operation.
             ///
             /// \param arg0 The node producing the first argument.

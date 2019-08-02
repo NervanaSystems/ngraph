@@ -30,6 +30,8 @@ namespace ngraph
         class SigmoidMultiply : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// Defines valid function types
             enum class FunctionType
             {
@@ -40,8 +42,8 @@ namespace ngraph
             };
             /// Input nodes are expected to be actual inputs where the corresponding input
             /// FunctionType will be applied to those inputs in the fused operation.
-            CPU_BACKEND_API SigmoidMultiply(std::shared_ptr<Node> input_0,
-                                            std::shared_ptr<Node> input_1,
+            CPU_BACKEND_API SigmoidMultiply(const Output<Node>& input_0,
+                                            const Output<Node>& input_1,
                                             const FunctionType input_0_type,
                                             const FunctionType input_1_type);
             /// WARNING: copy_with_new_args() implicitly expects new args must match the original input function types.
@@ -55,7 +57,7 @@ namespace ngraph
             }
             /// Identifies the corresponding FunctionType for the input node.
             static CPU_BACKEND_API FunctionType
-                identify_node_type(const std::shared_ptr<ngraph::Node>& node);
+                identify_node_type(const Output<ngraph::Node>& node);
 
         private:
             std::array<FunctionType, 2> m_input_type;
@@ -66,6 +68,8 @@ namespace ngraph
         class SigmoidMultiplyBackprop : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             typedef SigmoidMultiply::FunctionType FunctionType;
             /// \brief Constructs a SigmoidMultiplyBackprop operation.
             ///
@@ -73,9 +77,9 @@ namespace ngraph
             /// \param input_1 Forward input node 1.
             /// \param delta Backprop delta node.
             /// \param input_type Function type for the input nodes.
-            SigmoidMultiplyBackprop(std::shared_ptr<Node> input_0,
-                                    std::shared_ptr<Node> input_1,
-                                    std::shared_ptr<ngraph::Node> delta,
+            SigmoidMultiplyBackprop(const Output<Node>& input_0,
+                                    const Output<Node>& input_1,
+                                    const Output<Node>& delta,
                                     const std::array<FunctionType, 2>& input_type);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

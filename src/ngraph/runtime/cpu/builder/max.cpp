@@ -38,6 +38,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(Max);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_max_cpp() {}
+#endif
         }
     }
 }

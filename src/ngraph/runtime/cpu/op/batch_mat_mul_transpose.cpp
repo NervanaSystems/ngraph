@@ -25,11 +25,13 @@
 using namespace std;
 using namespace ngraph;
 
-op::BatchMatMulTranspose::BatchMatMulTranspose(const shared_ptr<Node>& arg0,
-                                               const shared_ptr<Node>& arg1,
+const std::string op::BatchMatMulTranspose::type_name{"BatchMatMulTranspose"};
+
+op::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
+                                               const Output<Node>& arg1,
                                                bool transpose_arg0,
                                                bool transpose_arg1)
-    : Op("BatchMatMulTranspose", check_single_output_args({arg0, arg1}))
+    : Op({arg0, arg1})
     , m_transpose_arg0(transpose_arg0)
     , m_transpose_arg1(transpose_arg1)
 {

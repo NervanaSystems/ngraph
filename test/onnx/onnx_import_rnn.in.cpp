@@ -104,8 +104,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_with_clip)
 
     // We have to enlarge tolerance bits to 3 - it's only one bit more than default value.
     // The discrepancies may occur at most on 7th decimal position.
-    test_case.set_tolerance(3);
-    test_case.run();
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_mixed_seq)
@@ -144,8 +143,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_mixed_seq)
 
     // We have to enlarge tolerance bits to 3 - it's only one bit more than default value.
     // The discrepancies may occur at most on 7th decimal position.
-    test_case.set_tolerance(3);
-    test_case.run();
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_hardsigmoid_activation)
@@ -201,8 +199,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_hardsigmoid_activation)
     test_case.add_expected_output<float>(Shape{1, 1, 2}, {0.19017234f, 0.00356848f});
 
     // The discrepancies occur at most at 18th mantissa bit - 8th decimal position.
-    test_case.set_tolerance(6);
-    test_case.run();
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 4);
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_fwd_large_batch_no_clip)
@@ -307,8 +304,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_bdir_short_input_seq)
     test_case.add_expected_output<float>(Shape{2, 1, 2},
                                          {-0.0251062f, 0.0561262f, -0.0318928f, 0.0762679f});
 
-    test_case.set_tolerance(DEFAULT_FLOAT_TOLERANCE_BITS + 3);
-    test_case.run();
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 3);
 }
 
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_mixed_seq_reverse)
@@ -353,6 +349,5 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_lstm_mixed_seq_reverse)
         Shape{1, 2, 3},
         {0.52497941f, 0.54983425f, 0.5744428f, 1.34960834f, 1.54772296f, 1.65633056f});
 
-    test_case.set_tolerance(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
-    test_case.run();
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
