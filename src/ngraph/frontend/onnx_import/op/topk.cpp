@@ -16,11 +16,9 @@
 
 #include <cstdint>
 #include <memory>
-#include <vector>
 
 #include "exceptions.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/type/element_type.hpp"

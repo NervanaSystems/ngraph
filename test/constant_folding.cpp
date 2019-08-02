@@ -1019,6 +1019,43 @@ TEST(constant_folding, constant_dyn_reshape)
     ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
+TEST(constant_folding, constant_dyn_reshape_shape_not_originally_constant)
+{
+    Shape shape_in{2, 4};
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+
+    Shape shape_shape{3};
+    // We're going to add these two together elementwise to get {2, 4, 1}.
+    // This means that when ConstantFolding starts, DynReshape will not yet
+    // have static output shape. But by the time the Add op is folded, the
+    // DynReshape's shape should be inferrable.
+    vector<int64_t> values_shape_a{1, 3, 0};
+    vector<int64_t> values_shape_b{1, 1, 1};
+
+    auto constant_in = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    auto constant_shape_a = make_shared<op::Constant>(element::i64, shape_shape, values_shape_a);
+    auto constant_shape_b = make_shared<op::Constant>(element::i64, shape_shape, values_shape_b);
+    auto dyn_reshape =
+        make_shared<op::DynReshape>(constant_in, constant_shape_a + constant_shape_b);
+    auto f = make_shared<Function>(dyn_reshape, ParameterVector{});
+
+    ASSERT_TRUE(dyn_reshape->output(0).get_partial_shape().is_dynamic());
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::DynReshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<float>();
+
+    ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
 TEST(constant_folding, constant_transpose)
 {
     Shape shape_in{2, 4};
@@ -1140,5 +1177,5 @@ TEST(constant_folding, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::ConstantFolding>();
     ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
-    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }
