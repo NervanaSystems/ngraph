@@ -21,7 +21,9 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/all.hpp"
 #include "ngraph/op/and.hpp"
+#include "ngraph/op/any.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
@@ -30,6 +32,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/range.hpp"
@@ -41,7 +44,9 @@
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/max.hpp"
 #include "ngraph/op/maximum.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
@@ -64,7 +69,9 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/add.hpp"
+#include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/any.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
@@ -78,7 +85,9 @@
 #include "ngraph/runtime/reference/greater_eq.hpp"
 #include "ngraph/runtime/reference/less.hpp"
 #include "ngraph/runtime/reference/less_eq.hpp"
+#include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
+#include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
@@ -144,6 +153,92 @@ shared_ptr<op::Constant> fold_constant_reshape(shared_ptr<op::Constant> constant
     }
 
     return make_shared<op::Constant>(constant->get_element_type(), out_shape, out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_reshape()
+{
+    auto constant_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
+    auto reshape = make_shared<op::Reshape>(constant_label, AxisVector{0, 1}, Shape{2, 4, 1});
+
+    auto constant_reshape_callback = [&, constant_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_reshape_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
+        auto reshape_match = static_pointer_cast<op::Reshape>(m.get_match_root());
+
+        NodeExecutorTy func = nullptr;
+        if (!m_cfmap.empty())
+        {
+            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Reshape)));
+            NGRAPH_CHECK(handler != m_cfmap.end(),
+                         "constant folding map should have reshape entry");
+            func = handler->second(reshape_match.get());
+        }
+
+        std::shared_ptr<Node> replacement;
+        auto type = constant_match->get_element_type();
+        switch (type.get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false,
+                         "Encountered 'undefined' element type in constant_reshape_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_reshape_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_reshape<char>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_reshape<bfloat16>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_reshape<float16>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_reshape<float>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_reshape<double>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_reshape<int8_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_reshape<int16_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_reshape<int32_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_reshape<int64_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_reshape<uint8_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_reshape<uint16_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_reshape<uint32_t>(constant_match, reshape_match, func);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_reshape<uint64_t>(constant_match, reshape_match, func);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto reshape_matcher =
+        make_shared<pattern::Matcher>(reshape, "ConstantFolding.ConstantReshape");
+    this->add_matcher(
+        reshape_matcher, constant_reshape_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 template <class T>
@@ -214,125 +309,63 @@ void pass::ConstantFolding::construct_constant_pad()
             func = handler->second(pad_match.get());
         }
 
-        auto type = constant_match->get_element_type();
-        if (type == element::i32)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_pad<int>(constant_match, pad_match, func));
-            return true;
-        }
-        else if (type == element::i8)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_pad<int8_t>(constant_match, pad_match, func));
-            return true;
-        }
-        else if (type == element::f32)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_pad<float>(constant_match, pad_match, func));
-            return true;
-        }
-        else if (type == element::f64)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_pad<double>(constant_match, pad_match, func));
-            return true;
-        }
-
-        return false;
-    };
-
-    auto pad_matcher = make_shared<pattern::Matcher>(pad, "ConstantFolding.ConstantPad");
-    this->add_matcher(pad_matcher, constant_pad_callback, PassProperty::CHANGE_DYNAMIC_STATE);
-}
-
-void pass::ConstantFolding::construct_constant_reshape()
-{
-    auto constant_label = make_shared<pattern::op::Label>(
-        element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
-    auto reshape = make_shared<op::Reshape>(constant_label, AxisVector{0, 1}, Shape{2, 4, 1});
-
-    auto constant_reshape_callback = [&, constant_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_reshape_callback against node = "
-                     << m.get_match_root()->get_name();
-
-        auto pattern_map = m.get_pattern_map();
-
-        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto reshape_match = static_pointer_cast<op::Reshape>(m.get_match_root());
-
-        NGRAPH_CHECK(revalidate_and_ensure_static(reshape_match));
-
-        NodeExecutorTy func = nullptr;
-        if (!m_cfmap.empty())
-        {
-            auto handler = m_cfmap.find(type_index(typeid(ngraph::op::Reshape)));
-            NGRAPH_CHECK(handler != m_cfmap.end(),
-                         "constant folding map should have reshape entry");
-            func = handler->second(reshape_match.get());
-        }
-
         std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
         switch (type.get_type_enum())
         {
         case element::Type_t::undefined:
-            NGRAPH_CHECK(false,
-                         "Encountered 'undefined' element type in constant_reshape_callback");
+            NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_pad_callback");
             break;
         case element::Type_t::dynamic:
-            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_reshape_callback");
+            NGRAPH_CHECK(false, "Encountered 'dynamic' element type in constant_pad_callback");
             break;
         case element::Type_t::boolean:
-            replacement = fold_constant_reshape<char>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<char>(constant_match, pad_match, func);
             break;
         case element::Type_t::bf16:
-            replacement = fold_constant_reshape<bfloat16>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<bfloat16>(constant_match, pad_match, func);
             break;
         case element::Type_t::f16:
-            replacement = fold_constant_reshape<float16>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<float16>(constant_match, pad_match, func);
             break;
         case element::Type_t::f32:
-            replacement = fold_constant_reshape<float>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<float>(constant_match, pad_match, func);
             break;
         case element::Type_t::f64:
-            replacement = fold_constant_reshape<double>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<double>(constant_match, pad_match, func);
             break;
         case element::Type_t::i8:
-            replacement = fold_constant_reshape<int8_t>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<int8_t>(constant_match, pad_match, func);
             break;
         case element::Type_t::i16:
-            replacement = fold_constant_reshape<int16_t>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<int16_t>(constant_match, pad_match, func);
             break;
         case element::Type_t::i32:
-            replacement = fold_constant_reshape<int32_t>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<int32_t>(constant_match, pad_match, func);
             break;
         case element::Type_t::i64:
-            replacement = fold_constant_reshape<int64_t>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<int64_t>(constant_match, pad_match, func);
             break;
         case element::Type_t::u8:
-            replacement = fold_constant_reshape<uint8_t>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<uint8_t>(constant_match, pad_match, func);
             break;
         case element::Type_t::u16:
-            replacement = fold_constant_reshape<uint16_t>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<uint16_t>(constant_match, pad_match, func);
             break;
         case element::Type_t::u32:
-            replacement = fold_constant_reshape<uint32_t>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<uint32_t>(constant_match, pad_match, func);
             break;
         case element::Type_t::u64:
-            replacement = fold_constant_reshape<uint64_t>(constant_match, reshape_match, func);
+            replacement = fold_constant_pad<uint64_t>(constant_match, pad_match, func);
             break;
         }
 
         replace_node(m.get_match_root(), replacement);
-        return false;
+        return true;
     };
 
-    auto reshape_matcher =
-        make_shared<pattern::Matcher>(reshape, "ConstantFolding.ConstantReshape");
-    this->add_matcher(
-        reshape_matcher, constant_reshape_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+    auto pad_matcher = make_shared<pattern::Matcher>(pad, "ConstantFolding.ConstantPad");
+    this->add_matcher(pad_matcher, constant_pad_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 template <class T>
@@ -441,7 +474,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
         }
 
         replace_node(m.get_match_root(), replacement);
-        return false;
+        return true;
     };
 
     auto dyn_reshape_matcher =
@@ -559,7 +592,7 @@ void pass::ConstantFolding::construct_constant_transpose()
         }
 
         replace_node(m.get_match_root(), replacement);
-        return false;
+        return true;
     };
 
     auto transpose_matcher =
@@ -624,46 +657,188 @@ void pass::ConstantFolding::construct_constant_broadcast()
             func = handler->second(broadcast_match.get());
         }
 
-        auto type = constant_match->get_element_type();
-        if (type == element::i32)
+        std::shared_ptr<Node> replacement;
+        auto type = broadcast_match->get_element_type();
+        switch (type.get_type_enum())
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_broadcast<int>(constant_match, broadcast_match, func));
-            return true;
-        }
-        else if (type == element::i8)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_broadcast<int8_t>(constant_match, broadcast_match, func));
-            return true;
-        }
-        else if (type == element::f32)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_broadcast<float>(constant_match, broadcast_match, func));
-            return true;
-        }
-        else if (type == element::f64)
-        {
-            replace_node(m.get_match_root(),
-                         fold_constant_broadcast<double>(constant_match, broadcast_match, func));
-            return true;
-        }
-        else if (type == element::bf16)
-        {
-            replace_node(
-                m.get_match_root(),
-                fold_constant_broadcast<ngraph::bfloat16>(constant_match, broadcast_match, func));
-            return true;
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false,
+                         "Encountered 'undefined' element type in constant_broadcast_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false,
+                         "Encountered 'dynamic' element type in constant_broadcast_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_broadcast<char>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_broadcast<bfloat16>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_broadcast<float16>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_broadcast<float>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_broadcast<double>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_broadcast<int8_t>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_broadcast<int16_t>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_broadcast<int32_t>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_broadcast<int64_t>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_broadcast<uint8_t>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_broadcast<uint16_t>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_broadcast<uint32_t>(constant_match, broadcast_match, func);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_broadcast<uint64_t>(constant_match, broadcast_match, func);
+            break;
         }
 
-        return false;
+        replace_node(m.get_match_root(), replacement);
+        return true;
     };
 
     auto broadcast_matcher =
         make_shared<pattern::Matcher>(broadcast, "ConstantFolding.ConstantBroadcast");
     this->add_matcher(
         broadcast_matcher, constant_broadcast_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+}
+
+template <class T>
+shared_ptr<op::Constant> fold_constant_dyn_broadcast(shared_ptr<op::Constant> arg,
+                                                     shared_ptr<op::Constant> shape,
+                                                     shared_ptr<op::Constant> axes)
+{
+    auto out_shape = shape->get_shape_val();
+    vector<T> out_vec(shape_size(out_shape));
+
+    runtime::reference::broadcast<T>(arg->get_data_ptr<T>(),
+                                     out_vec.data(),
+                                     arg->get_shape(),
+                                     out_shape,
+                                     axes->get_axis_set_val());
+
+    return make_shared<op::Constant>(arg->get_element_type(), out_shape, out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_dyn_broadcast()
+{
+    auto constant_arg_label =
+        make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
+    auto constant_shape_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto constant_axes_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
+
+    auto dyn_broadcast = make_shared<op::DynBroadcast>(
+        constant_arg_label, constant_shape_label, constant_axes_label);
+
+    auto constant_dyn_broadcast_callback = [constant_arg_label,
+                                            constant_shape_label,
+                                            constant_axes_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_dyn_broadcast_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_arg_match =
+            static_pointer_cast<op::Constant>(pattern_map[constant_arg_label]);
+        auto constant_shape_match =
+            static_pointer_cast<op::Constant>(pattern_map[constant_shape_label]);
+        auto constant_axes_match =
+            static_pointer_cast<op::Constant>(pattern_map[constant_axes_label]);
+        auto dyn_broadcast_match = static_pointer_cast<op::DynBroadcast>(m.get_match_root());
+
+        std::shared_ptr<Node> replacement;
+        auto type = dyn_broadcast_match->get_output_element_type(0);
+        switch (type.get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false,
+                         "Encountered 'undefined' element type in constant_dyn_broadcast_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false,
+                         "Encountered 'dynamic' element type in constant_dyn_broadcast_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_dyn_broadcast<char>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_dyn_broadcast<bfloat16>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_dyn_broadcast<float16>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_dyn_broadcast<float>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_dyn_broadcast<double>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_dyn_broadcast<int8_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_dyn_broadcast<int16_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_dyn_broadcast<int32_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_dyn_broadcast<int64_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_dyn_broadcast<uint8_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_dyn_broadcast<uint16_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_dyn_broadcast<uint32_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_dyn_broadcast<uint64_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto dyn_broadcast_matcher =
+        make_shared<pattern::Matcher>(dyn_broadcast, "ConstantFolding.ConstantDynBroadcast");
+    this->add_matcher(
+        dyn_broadcast_matcher, constant_dyn_broadcast_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 template <class Tin, class Tout>
@@ -1365,11 +1540,6 @@ template <typename TI>
 shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
                                                        const element::Type& output_element_type)
 {
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
-#endif
     switch (output_element_type.get_type_enum())
     {
     case element::Type_t::undefined:
@@ -1407,10 +1577,6 @@ shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> 
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
-
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
-#pragma GCC diagnostic pop
-#endif
 }
 
 static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> constant,
@@ -1423,11 +1589,6 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
         return constant;
     }
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
-#endif
     switch (input_element_type.get_type_enum())
     {
     case element::Type_t::undefined:
@@ -1465,10 +1626,6 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
-
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
-#pragma GCC diagnostic pop
-#endif
 }
 
 void pass::ConstantFolding::construct_constant_convert()
@@ -1557,11 +1714,6 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic error "-Wswitch"
-#pragma GCC diagnostic error "-Wswitch-enum"
-#endif
     switch (input_element_type.get_type_enum())
     {
     case element::Type_t::undefined:
@@ -1595,10 +1747,6 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
-
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
-#pragma GCC diagnostic pop
-#endif
 }
 
 void pass::ConstantFolding::construct_constant_reverse()
@@ -1630,185 +1778,211 @@ void pass::ConstantFolding::construct_constant_reverse()
 }
 
 template <typename T>
-static shared_ptr<op::Constant> fold_constant_product_helper(shared_ptr<op::Constant> constant,
-                                                             const AxisSet& reduction_axes,
-                                                             const Shape& result_shape)
+static shared_ptr<op::Constant>
+    fold_constant_arithmetic_reduction_helper(shared_ptr<op::Constant> constant,
+                                              shared_ptr<Node> reduction_node)
 {
-    vector<T> out_vec(shape_size(result_shape));
+    vector<T> out_vec(shape_size(reduction_node->get_shape()));
 
-    runtime::reference::product<T>(constant->get_vector<T>().data(),
+    if (auto max = dynamic_pointer_cast<op::Max>(reduction_node))
+    {
+        runtime::reference::max<T>(constant->get_vector<T>().data(),
                                    out_vec.data(),
                                    constant->get_output_shape(0),
-                                   result_shape,
-                                   reduction_axes);
+                                   reduction_node->get_shape(),
+                                   max->get_reduction_axes());
+    }
+    else if (auto min = dynamic_pointer_cast<op::Min>(reduction_node))
+    {
+        runtime::reference::min<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_output_shape(0),
+                                   reduction_node->get_shape(),
+                                   min->get_reduction_axes());
+    }
+    else if (auto prod = dynamic_pointer_cast<op::Product>(reduction_node))
+    {
+        runtime::reference::product<T>(constant->get_vector<T>().data(),
+                                       out_vec.data(),
+                                       constant->get_output_shape(0),
+                                       reduction_node->get_shape(),
+                                       prod->get_reduction_axes());
+    }
+    else if (auto sum = dynamic_pointer_cast<op::Sum>(reduction_node))
+    {
+        runtime::reference::sum<T>(constant->get_vector<T>().data(),
+                                   out_vec.data(),
+                                   constant->get_output_shape(0),
+                                   reduction_node->get_shape(),
+                                   sum->get_reduction_axes());
+    }
+    else
+    {
+        NGRAPH_CHECK(false,
+                     "Internal nGraph error: Ops handled in "
+                     "fold_constant_arithmetic_reduction_helper must be consistent with those "
+                     "matched in construct_constant_arithmetic_reduction");
+    }
 
-    return make_shared<op::Constant>(constant->get_output_element_type(0), result_shape, out_vec);
+    return make_shared<op::Constant>(
+        reduction_node->get_output_element_type(0), reduction_node->get_shape(), out_vec);
 }
 
-static shared_ptr<op::Constant> fold_constant_product(shared_ptr<op::Constant> constant,
-                                                      const AxisSet& reduction_axes,
-                                                      const Shape& result_shape)
+static shared_ptr<op::Constant>
+    fold_constant_arithmetic_reduction(shared_ptr<op::Constant> constant,
+                                       shared_ptr<Node> reduction_node)
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
     switch (input_element_type.get_type_enum())
     {
     case element::Type_t::undefined:
-        NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_product");
+        NGRAPH_CHECK(false,
+                     "Encountered 'undefined' element type in fold_constant_arithmetic_reduction");
         break;
     case element::Type_t::dynamic:
-        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_product");
+        NGRAPH_CHECK(false,
+                     "Encountered 'dynamic' element type in fold_constant_arithmetic_reduction");
         break;
     case element::Type_t::boolean:
-        return fold_constant_product_helper<char>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<char>(constant, reduction_node);
     case element::Type_t::bf16:
-        return fold_constant_product_helper<bfloat16>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<bfloat16>(constant, reduction_node);
     case element::Type_t::f16:
-        return fold_constant_product_helper<float16>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<float16>(constant, reduction_node);
     case element::Type_t::f32:
-        return fold_constant_product_helper<float>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<float>(constant, reduction_node);
     case element::Type_t::f64:
-        return fold_constant_product_helper<double>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<double>(constant, reduction_node);
     case element::Type_t::i8:
-        return fold_constant_product_helper<int8_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<int8_t>(constant, reduction_node);
     case element::Type_t::i16:
-        return fold_constant_product_helper<int16_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<int16_t>(constant, reduction_node);
     case element::Type_t::i32:
-        return fold_constant_product_helper<int32_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<int32_t>(constant, reduction_node);
     case element::Type_t::i64:
-        return fold_constant_product_helper<int64_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<int64_t>(constant, reduction_node);
     case element::Type_t::u8:
-        return fold_constant_product_helper<uint8_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<uint8_t>(constant, reduction_node);
     case element::Type_t::u16:
-        return fold_constant_product_helper<uint16_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<uint16_t>(constant, reduction_node);
     case element::Type_t::u32:
-        return fold_constant_product_helper<uint32_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<uint32_t>(constant, reduction_node);
     case element::Type_t::u64:
-        return fold_constant_product_helper<uint64_t>(constant, reduction_axes, result_shape);
+        return fold_constant_arithmetic_reduction_helper<uint64_t>(constant, reduction_node);
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
 }
 
-void pass::ConstantFolding::construct_constant_product()
+void pass::ConstantFolding::construct_constant_arithmetic_reduction()
 {
-    auto constant_label = make_shared<pattern::op::Label>(
+    auto constant_data_label = make_shared<pattern::op::Label>(
         element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto convert_op = make_shared<op::Product>(constant_label, AxisSet{0, 1, 2});
+    auto constant_axes_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto is_supported_reduction = [](std::shared_ptr<Node> n) {
+        return (pattern::has_class<op::Max>()(n) || pattern::has_class<op::Min>()(n) ||
+                pattern::has_class<op::Product>()(n) || pattern::has_class<op::Sum>()(n));
+    };
+    auto reduction =
+        std::make_shared<pattern::op::Any>(element::i32,
+                                           Shape{2},
+                                           is_supported_reduction,
+                                           NodeVector{constant_data_label, constant_axes_label});
 
-    auto constant_product_callback = [constant_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_product_callback against node = "
+    auto constant_arithmetic_reduction_callback = [constant_data_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_arithmetic_reduction_callback against node = "
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto product_match = static_pointer_cast<op::Product>(m.get_match_root());
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
+        auto reduction_match = m.get_match_root();
 
-        NGRAPH_CHECK(revalidate_and_ensure_static(product_match));
+        NGRAPH_CHECK(revalidate_and_ensure_static(reduction_match));
 
-        replace_node(m.get_match_root(),
-                     fold_constant_product(constant_match,
-                                           product_match->get_reduction_axes(),
-                                           product_match->get_output_shape(0)));
+        replace_node(reduction_match,
+                     fold_constant_arithmetic_reduction(constant_match, reduction_match));
         return true;
     };
 
-    auto convert_matcher =
-        make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantProduct");
+    auto arithmetic_reduction_matcher =
+        make_shared<pattern::Matcher>(reduction, "ConstantFolding.ConstantArithmeticReduction");
+    this->add_matcher(arithmetic_reduction_matcher,
+                      constant_arithmetic_reduction_callback,
+                      all_pass_property_off);
+}
+
+static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
+                                                                shared_ptr<Node> reduction_node)
+{
+    vector<char> out_vec(shape_size(reduction_node->get_shape()));
+
+    if (auto all = dynamic_pointer_cast<::ngraph::op::All>(reduction_node))
+    {
+        runtime::reference::all(constant->get_vector<char>().data(),
+                                out_vec.data(),
+                                constant->get_output_shape(0),
+                                reduction_node->get_shape(),
+                                all->get_reduction_axes());
+    }
+    else if (auto any = dynamic_pointer_cast<::ngraph::op::Any>(reduction_node))
+    {
+        runtime::reference::any(constant->get_vector<char>().data(),
+                                out_vec.data(),
+                                constant->get_output_shape(0),
+                                reduction_node->get_shape(),
+                                any->get_reduction_axes());
+    }
+    else
+    {
+        NGRAPH_CHECK(false,
+                     "Internal nGraph error: Ops handled in "
+                     "fold_constant_logical_reduction must be consistent with those "
+                     "matched in construct_constant_logical_reduction");
+    }
+
+    return make_shared<op::Constant>(
+        reduction_node->get_output_element_type(0), reduction_node->get_shape(), out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_logical_reduction()
+{
+    auto constant_data_label = make_shared<pattern::op::Label>(
+        element::boolean, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
+    auto constant_axes_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto is_supported_reduction = [](std::shared_ptr<Node> n) {
+        return (pattern::has_class<::ngraph::op::All>()(n) ||
+                pattern::has_class<::ngraph::op::Any>()(n));
+    };
+    auto reduction =
+        std::make_shared<pattern::op::Any>(element::i32,
+                                           Shape{2},
+                                           is_supported_reduction,
+                                           NodeVector{constant_data_label, constant_axes_label});
+
+    auto constant_logical_reduction_callback = [constant_data_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_logical_reduction_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
+        auto reduction_match = m.get_match_root();
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(reduction_match));
+
+        replace_node(reduction_match,
+                     fold_constant_logical_reduction(constant_match, reduction_match));
+        return true;
+    };
+
+    auto logical_reduction_matcher =
+        make_shared<pattern::Matcher>(reduction, "ConstantFolding.ConstantLogicalReduction");
     this->add_matcher(
-        convert_matcher, constant_product_callback, PassProperty::CHANGE_DYNAMIC_STATE);
-}
-
-// TODO(amprocte): Find a way to reduce duplication with Product. (The fact
-// that we bottom out in a reference call makes it a bit tricky.)
-template <typename T>
-static shared_ptr<op::Constant> fold_constant_sum_helper(shared_ptr<op::Constant> constant,
-                                                         const AxisSet& reduction_axes,
-                                                         const Shape& result_shape)
-{
-    vector<T> out_vec(shape_size(result_shape));
-
-    runtime::reference::sum<T>(constant->get_vector<T>().data(),
-                               out_vec.data(),
-                               constant->get_output_shape(0),
-                               result_shape,
-                               reduction_axes);
-
-    return make_shared<op::Constant>(constant->get_output_element_type(0), result_shape, out_vec);
-}
-
-static shared_ptr<op::Constant> fold_constant_sum(shared_ptr<op::Constant> constant,
-                                                  const AxisSet& reduction_axes,
-                                                  const Shape& result_shape)
-{
-    auto& input_element_type = constant->get_output_element_type(0);
-
-    switch (input_element_type.get_type_enum())
-    {
-    case element::Type_t::undefined:
-        NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_sum");
-        break;
-    case element::Type_t::dynamic:
-        NGRAPH_CHECK(false, "Encountered 'dynamic' element type in fold_constant_sum");
-        break;
-    case element::Type_t::boolean:
-        return fold_constant_sum_helper<char>(constant, reduction_axes, result_shape);
-    case element::Type_t::bf16:
-        return fold_constant_sum_helper<bfloat16>(constant, reduction_axes, result_shape);
-    case element::Type_t::f16:
-        return fold_constant_sum_helper<float16>(constant, reduction_axes, result_shape);
-    case element::Type_t::f32:
-        return fold_constant_sum_helper<float>(constant, reduction_axes, result_shape);
-    case element::Type_t::f64:
-        return fold_constant_sum_helper<double>(constant, reduction_axes, result_shape);
-    case element::Type_t::i8:
-        return fold_constant_sum_helper<int8_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::i16:
-        return fold_constant_sum_helper<int16_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::i32:
-        return fold_constant_sum_helper<int32_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::i64:
-        return fold_constant_sum_helper<int64_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::u8:
-        return fold_constant_sum_helper<uint8_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::u16:
-        return fold_constant_sum_helper<uint16_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::u32:
-        return fold_constant_sum_helper<uint32_t>(constant, reduction_axes, result_shape);
-    case element::Type_t::u64:
-        return fold_constant_sum_helper<uint64_t>(constant, reduction_axes, result_shape);
-    }
-
-    NGRAPH_UNREACHABLE("Unexpected switch case");
-}
-
-void pass::ConstantFolding::construct_constant_sum()
-{
-    auto constant_label = make_shared<pattern::op::Label>(
-        element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto convert_op = make_shared<op::Sum>(constant_label, AxisSet{0, 1, 2});
-
-    auto constant_sum_callback = [constant_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_sum_callback against node = "
-                     << m.get_match_root()->get_name();
-
-        auto pattern_map = m.get_pattern_map();
-
-        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto sum_match = static_pointer_cast<op::Sum>(m.get_match_root());
-
-        NGRAPH_CHECK(revalidate_and_ensure_static(sum_match));
-
-        replace_node(m.get_match_root(),
-                     fold_constant_sum(constant_match,
-                                       sum_match->get_reduction_axes(),
-                                       sum_match->get_output_shape(0)));
-        return true;
-    };
-
-    auto convert_matcher = make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantSum");
-    this->add_matcher(convert_matcher, constant_sum_callback, PassProperty::CHANGE_DYNAMIC_STATE);
+        logical_reduction_matcher, constant_logical_reduction_callback, all_pass_property_off);
 }
 
 template <typename T>
