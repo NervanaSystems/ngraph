@@ -46,6 +46,7 @@
 #include "pyngraph/ops/fused/elu.hpp"
 #include "pyngraph/ops/fused/gelu.hpp"
 #include "pyngraph/ops/fused/gemm.hpp"
+#include "pyngraph/ops/fused/grn.hpp"
 #include "pyngraph/ops/get_output_element.hpp"
 #include "pyngraph/ops/greater.hpp"
 #include "pyngraph/ops/greater_eq.hpp"
