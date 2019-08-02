@@ -36,7 +36,7 @@ namespace ngraph
                      const AxisSet& reduction_axes)
             {
                 T minval = std::numeric_limits<T>::has_infinity
-                               ? -std::numeric_limits<T>::infinity()
+                               ? T(-std::numeric_limits<T>::infinity())
                                : std::numeric_limits<T>::min();
 
                 CoordinateTransform output_transform(out_shape);
