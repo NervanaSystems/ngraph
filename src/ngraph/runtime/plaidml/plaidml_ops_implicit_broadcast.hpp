@@ -19,7 +19,6 @@
 #include <memory>
 
 #include "ngraph/op/op.hpp"
-#include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
 
 namespace ngraph
 {
