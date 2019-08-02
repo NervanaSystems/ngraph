@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/lrn.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/multiply.hpp"
 
 using namespace std;
@@ -23,7 +24,17 @@ using namespace ngraph;
 const string op::LRN::type_name{"LRN"};
 
 op::LRN::LRN(const Output<Node>& arg, double alpha, double beta, double bias, size_t size)
-    : UnaryElementwiseArithmetic(arg)
+    : LRN(arg, op::Constant::create(element::i32, Shape{1}, {1}), alpha, beta, bias, size)
+{
+}
+
+op::LRN::LRN(const Output<Node>& arg,
+             const Output<Node>& axes,
+             double alpha,
+             double beta,
+             double bias,
+             size_t size)
+    : Op({arg, axes})
     , m_alpha(alpha)
     , m_beta(beta)
     , m_bias(bias)
@@ -34,7 +45,9 @@ op::LRN::LRN(const Output<Node>& arg, double alpha, double beta, double bias, si
 
 void op::LRN::validate_and_infer_types()
 {
-    UnaryElementwiseArithmetic::validate_and_infer_types();
+    element::Type arg_type = get_input_element_type(0);
+    PartialShape arg_shape = get_input_partial_shape(0);
+    set_output_type(0, arg_type, arg_shape);
 
     const PartialShape& input_shape = get_input_partial_shape(0);
 
