@@ -279,21 +279,21 @@ TEST(constant_folding, constant_unary_binary)
     ASSERT_EQ(get_result_constant<int>(func, 6), abs_neg_expected);
     ASSERT_EQ(get_result_constant<int>(func, 7), abs_neg_expected);
     ASSERT_EQ(get_result_constant<int>(func, 8), sqrt_expected);
-    EXPECT_EQ(get_result_constant<int>(func, 9), add_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<int>(func, 10), sub_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<int>(func, 11), mul_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<int>(func, 12), div_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<int>(func, 13), min_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<int>(func, 14), max_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<char>(func, 15), equal_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<char>(func, 16), not_equal_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<char>(func, 17), greater_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<char>(func, 18), greater_eq_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<char>(func, 19), less_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<char>(func, 20), less_eq_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<char>(func, 21), logical_and_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<char>(func, 22), logical_or_autob_numpy_expected);
-    EXPECT_EQ(get_result_constant<char>(func, 23), logical_xor_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 9), add_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 10), sub_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 11), mul_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 12), div_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 13), min_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 14), max_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 15), equal_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 16), not_equal_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 17), greater_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 18), greater_eq_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 19), less_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 20), less_eq_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 21), logical_and_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 22), logical_or_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 23), logical_xor_autob_numpy_expected);
     ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
 }
 
