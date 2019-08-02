@@ -1216,14 +1216,16 @@ TEST(cpu_test, constant_unary_binary)
     auto less_eq = make_shared<op::LessEq>(g, h);
     auto logical_and = make_shared<op::And>(i, j);
     auto logical_or = make_shared<op::Or>(i, j);
+    auto logical_xor = make_shared<op::Xor>(i, j);
     auto ceil = make_shared<op::Ceiling>(k);
     auto floor = make_shared<op::Floor>(k);
     auto logical_not = make_shared<op::Not>(j);
 
     auto func = make_shared<Function>(
-        NodeVector{add,     sub,         mul,        divn,  min,       max,        absn,       neg,
-                   sqrt,    relu,        sign,       equal, not_equal, greater,    greater_eq, less,
-                   less_eq, logical_and, logical_or, ceil,  floor,     logical_not},
+        NodeVector{add,        sub,         mul,        divn,  min,        max,
+                   absn,       neg,         sqrt,       relu,  sign,       equal,
+                   not_equal,  greater,     greater_eq, less,  less_eq,    logical_and,
+                   logical_or, logical_xor, ceil,       floor, logical_not},
         ParameterVector{});
 
     auto func_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
@@ -1252,6 +1254,7 @@ TEST(cpu_test, constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::LessEq>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::And>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Or>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Xor>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Ceiling>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Floor>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Not>(func), 0);
@@ -1275,6 +1278,7 @@ TEST(cpu_test, constant_unary_binary)
     vector<char> less_eq_expected{1, 1, 1, 0};
     vector<char> and_expected{0, 0, 0, 1};
     vector<char> or_expected{0, 1, 1, 1};
+    vector<char> xor_expected{0, 1, 1, 0};
     vector<float> ceil_expected{0.0f, 0.0f, -1.0f, 3.0f};
     vector<float> floor_expected{-1.0f, 0.0f, -2.0f, 2.0f};
     vector<char> not_expected{1, 0, 1, 0};
@@ -1298,11 +1302,12 @@ TEST(cpu_test, constant_unary_binary)
     ASSERT_EQ(get_result_constant<char>(func, 16), less_eq_expected);
     ASSERT_EQ(get_result_constant<char>(func, 17), and_expected);
     ASSERT_EQ(get_result_constant<char>(func, 18), or_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 19), xor_expected);
     ASSERT_TRUE(test::all_close_f(
-        get_result_constant<float>(func, 19), ceil_expected, MIN_FLOAT_TOLERANCE_BITS));
+        get_result_constant<float>(func, 20), ceil_expected, MIN_FLOAT_TOLERANCE_BITS));
     ASSERT_TRUE(test::all_close_f(
-        get_result_constant<float>(func, 20), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
-    ASSERT_EQ(get_result_constant<char>(func, 21), not_expected);
+        get_result_constant<float>(func, 21), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
+    ASSERT_EQ(get_result_constant<char>(func, 22), not_expected);
     ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
 }
 

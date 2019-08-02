@@ -65,6 +65,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
@@ -107,6 +108,7 @@
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
+#include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/util.hpp"
 
@@ -250,7 +252,8 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
 {
     auto out_shape = pad->get_shape();
     vector<T> out_vec(shape_size(out_shape));
-    auto pad_value = std::static_pointer_cast<op::Constant>(pad->get_argument(1));
+    auto pad_value = std::static_pointer_cast<op::Constant>(
+        pad->input(1).get_source_output().get_node_shared_ptr());
 
     if (func != nullptr)
     {
@@ -1046,6 +1049,17 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
                                               subtract_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
+        else if (std::dynamic_pointer_cast<op::Xor>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::logical_xor<Tin>(a->get_data_ptr<Tin>(),
+                                                 b->get_data_ptr<Tin>(),
+                                                 out_vec.data(),
+                                                 shape_size(out_shape));
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
         else
         {
             NGRAPH_CHECK(false,
@@ -1086,14 +1100,15 @@ shared_ptr<op::Constant> fold_constant_binary_helper(const element::Type& et_out
 }
 bool is_supported_binary_op(std::shared_ptr<Node> n)
 {
-    return (
-        std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::And>(n) ||
-        std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Equal>(n) ||
-        std::dynamic_pointer_cast<op::Greater>(n) || std::dynamic_pointer_cast<op::GreaterEq>(n) ||
-        std::dynamic_pointer_cast<op::Less>(n) || std::dynamic_pointer_cast<op::LessEq>(n) ||
-        std::dynamic_pointer_cast<op::Maximum>(n) || std::dynamic_pointer_cast<op::Minimum>(n) ||
-        std::dynamic_pointer_cast<op::Multiply>(n) || std::dynamic_pointer_cast<op::NotEqual>(n) ||
-        std::dynamic_pointer_cast<op::Or>(n) || std::dynamic_pointer_cast<op::Subtract>(n));
+    return (std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::And>(n) ||
+            std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Equal>(n) ||
+            std::dynamic_pointer_cast<op::Greater>(n) ||
+            std::dynamic_pointer_cast<op::GreaterEq>(n) || std::dynamic_pointer_cast<op::Less>(n) ||
+            std::dynamic_pointer_cast<op::LessEq>(n) || std::dynamic_pointer_cast<op::Maximum>(n) ||
+            std::dynamic_pointer_cast<op::Minimum>(n) ||
+            std::dynamic_pointer_cast<op::Multiply>(n) ||
+            std::dynamic_pointer_cast<op::NotEqual>(n) || std::dynamic_pointer_cast<op::Or>(n) ||
+            std::dynamic_pointer_cast<op::Subtract>(n) || std::dynamic_pointer_cast<op::Xor>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()
@@ -1436,8 +1451,10 @@ void pass::ConstantFolding::construct_constant_dequantize()
         NGRAPH_CHECK(revalidate_and_ensure_static(dequantize_op));
 
         auto args = dequant_match->get_arguments();
-        auto scale = dynamic_pointer_cast<op::Constant>(args[1]);
-        auto offset = dynamic_pointer_cast<op::Constant>(args[2]);
+        auto scale = dynamic_pointer_cast<op::Constant>(
+            dequant_match->input(1).get_source_output().get_node_shared_ptr());
+        auto offset = dynamic_pointer_cast<op::Constant>(
+            dequant_match->input(2).get_source_output().get_node_shared_ptr());
 
         auto type = constant_match->get_element_type();
 
@@ -1515,8 +1532,10 @@ void pass::ConstantFolding::construct_constant_quantize()
         NGRAPH_CHECK(revalidate_and_ensure_static(quantize_op));
 
         auto args = quant_match->get_arguments();
-        auto scale = static_pointer_cast<op::Constant>(args[1]);
-        auto offset = static_pointer_cast<op::Constant>(args[2]);
+        auto scale = static_pointer_cast<op::Constant>(
+            quant_match->input(1).get_source_output().get_node_shared_ptr());
+        auto offset = static_pointer_cast<op::Constant>(
+            quant_match->input(2).get_source_output().get_node_shared_ptr());
 
         auto type = quant_match->get_element_type();
 
