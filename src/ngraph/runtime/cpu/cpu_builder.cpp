@@ -546,6 +546,12 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::And)
             {
+                NGRAPH_CHECK(
+                    node->get_input_shape(0) == node->get_input_shape(1),
+                    "Constant folding via CPU functors is not yet supported with autobroadcast. "
+                    "Please run the ImplicitBroadcastElimination pass first, or run constant "
+                    "folding without the CPU functors.");
+
                 auto element_count = shape_size(node->get_shape());
 
                 auto functor = [&, element_count](const std::vector<void*>& inputs,
@@ -559,6 +565,12 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Or)
             {
+                NGRAPH_CHECK(
+                    node->get_input_shape(0) == node->get_input_shape(1),
+                    "Constant folding via CPU functors is not yet supported with autobroadcast. "
+                    "Please run the ImplicitBroadcastElimination pass first, or run constant "
+                    "folding without the CPU functors.");
+
                 auto element_count = shape_size(node->get_shape());
 
                 auto functor = [&, element_count](const std::vector<void*>& inputs,
@@ -572,6 +584,12 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Xor)
             {
+                NGRAPH_CHECK(
+                    node->get_input_shape(0) == node->get_input_shape(1),
+                    "Constant folding via CPU functors is not yet supported with autobroadcast. "
+                    "Please run the ImplicitBroadcastElimination pass first, or run constant "
+                    "folding without the CPU functors.");
+
                 auto element_count = shape_size(node->get_shape());
 
                 auto functor = [&, element_count](const std::vector<void*>& inputs,

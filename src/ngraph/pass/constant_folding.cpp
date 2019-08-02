@@ -1049,7 +1049,7 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
                                               subtract_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Xor>(binary))
+        else if (auto xor_node = std::dynamic_pointer_cast<op::Xor>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -1057,7 +1057,9 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
             runtime::reference::logical_xor<Tin>(a->get_data_ptr<Tin>(),
                                                  b->get_data_ptr<Tin>(),
                                                  out_vec.data(),
-                                                 shape_size(out_shape));
+                                                 a->get_shape(),
+                                                 b->get_shape(),
+                                                 xor_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else
