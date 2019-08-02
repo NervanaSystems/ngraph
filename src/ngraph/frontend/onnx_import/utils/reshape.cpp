@@ -15,15 +15,14 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <cstddef>
 #include <functional>
 #include <iterator>
 #include <numeric>
-#include <vector>
 
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "utils/common.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {

@@ -16,8 +16,8 @@
 
 #include <memory>
 
-#include "core/node.hpp"
 #include "ngraph/op/lrn.hpp"
+#include "lrn.hpp"
 
 namespace ngraph
 {
