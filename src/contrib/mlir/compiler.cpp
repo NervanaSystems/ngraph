@@ -50,6 +50,7 @@
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
+#include <mlir/Conversion/ControlFlowToCFG/ConvertControlFlowToCFG.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
@@ -108,11 +109,16 @@ void MLIRCompiler::run(std::vector<void*>& external_tensors)
     cleanup();
 }
 
+unsigned MLIRCompiler::get_mem_mgr_arg_id(mlir::FuncOp& func)
+{
+    return func.getNumArguments() - 1;
+}
+
 // Creates an MLIR module and function with nGraph dialect ops from the input CompiledKernel.
 void MLIRCompiler::build_ng_dialect_module()
 {
     // initialize an empty module
-    m_module = make_unique<mlir::Module>(&m_context);
+    m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
 
     TypeList args_type_list, result_type_list;
 
@@ -133,15 +139,14 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     auto func_type = mlir::FunctionType::get(args_type_list, result_type_list, &m_context);
-    auto function =
-        make_unique<mlir::Function>(mlir::UnknownLoc::get(&m_context), "main", func_type);
-    function->addEntryBlock();
+    auto function = mlir::FuncOp::create(mlir::UnknownLoc::get(&m_context), "main", func_type);
+    function.addEntryBlock();
 
     // populate Tensor->Value maps
     int i = 0;
     for (auto input : kernel_inputs)
     {
-        mlir::Value* arg = function->getArgument(i);
+        mlir::Value* arg = function.getArgument(i);
         TensorInfo tensor_info{arg};
         m_tensor_to_value_map.insert(
             TensorToInfo(input->get_output_tensor_ptr().get(), tensor_info));
@@ -149,9 +154,9 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     // create builder
-    m_builder = llvm::make_unique<mlir::OpBuilder>(function->getBody());
+    m_builder = llvm::make_unique<mlir::OpBuilder>(function.getBody());
     build_ng_dialect();
-    m_module->getFunctions().push_back(function.release());
+    m_module->push_back(function);
     if (failed(m_module->verify()))
     {
         NGRAPH_CHECK(false, "Invalid module after lowering to NG dialect");
@@ -182,7 +187,7 @@ mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
 // Converts an nGraph element type into an MLIR type.
 mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
 {
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -210,7 +215,7 @@ mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
     NGRAPH_CHECK(false, "Unreachable");
     return mlir::Type();
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 }
@@ -260,19 +265,21 @@ void MLIRCompiler::lower_ng_dialect()
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
     // Lower Standard dialect to LLVM dialect.
-    // TODO: Do this via PassManager
     mlir::LLVMTypeConverter llvm_converter(&m_context);
     OwningRewritePatternList patterns;
+    mlir::populateLoopToStdConversionPatterns(patterns, &m_context);
     mlir::populateStdToLLVMConversionPatterns(llvm_converter, patterns);
 
     mlir::ConversionTarget target(m_context);
     target.addLegalDialect<mlir::LLVM::LLVMDialect>();
-    auto result = applyConversionPatterns(*m_module, target, llvm_converter, std::move(patterns));
+    target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
+    target.addDynamicallyLegalOp<mlir::FuncOp>(
+        [&](mlir::FuncOp op) { return llvm_converter.isSignatureLegal(op.getType()); });
+    auto result = applyFullConversion(*m_module, target, std::move(patterns), &llvm_converter);
     NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
 
     dump_mlir_module("LLVM-IR Dialect Dump:");
 
-    // Lower to LLVM BC and optimize
     // Initialize LLVM targets.
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
@@ -509,8 +516,8 @@ void MLIRCompiler::bind_arguments(std::vector<void*>& external_tensors)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    mlir::Function* func = m_module->getNamedFunction("main");
-    NGRAPH_CHECK(func && !func->getBlocks().empty(), "Function not found");
+    mlir::FuncOp func = m_module->lookupSymbol<mlir::FuncOp>("main");
+    NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Set external arguments
     NGRAPH_CHECK(m_compiled_kernel, "No compiled kernel set for compiler");

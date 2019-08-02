@@ -478,6 +478,8 @@ set (SRC
     shape.hpp
     shape_util.cpp
     shape_util.hpp
+    slice_plan.cpp
+    slice_plan.hpp
     specialize_function.cpp
     specialize_function.hpp
     state/rng_state.cpp
