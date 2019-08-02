@@ -250,7 +250,8 @@ namespace std
             arg_ids.push_back(type_hash);
 
             std::vector<Output<Node>> cargs;
-            for(auto input : k.get_node()->inputs()){
+            for (auto input : k.get_node()->inputs())
+            {
                 cargs.push_back(input.get_source_output());
             }
 
