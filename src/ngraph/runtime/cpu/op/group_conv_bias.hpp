@@ -17,7 +17,6 @@
 #pragma once
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -28,7 +27,6 @@ namespace ngraph
         class GroupConvolutionBias : public Op
         {
         public:
-            CPU_BACKEND_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             GroupConvolutionBias(const std::shared_ptr<op::GroupConvolution>& conv,

@@ -708,6 +708,9 @@ namespace ngraph
             REGISTER_OP_BUILDER(QuantizedConvolutionBias);
             REGISTER_OP_BUILDER(QuantizedConvolutionBiasAdd);
             REGISTER_OP_BUILDER(QuantizedConvolutionBiasSignedAdd);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_quantized_conv_cpp() {}
+#endif
         }
     }
 }

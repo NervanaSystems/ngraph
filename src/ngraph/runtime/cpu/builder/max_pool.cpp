@@ -337,6 +337,9 @@ namespace ngraph
             REGISTER_OP_BUILDER(MaxPoolBackprop);
             REGISTER_OP_BUILDER(MaxPoolWithIndices);
             REGISTER_OP_BUILDER(MaxPoolWithIndicesBackprop);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_max_pool_cpp() {}
+#endif
         }
     }
 }

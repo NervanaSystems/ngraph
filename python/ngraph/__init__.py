@@ -50,6 +50,7 @@ from ngraph.ops import elu
 from ngraph.ops import equal
 from ngraph.ops import exp
 from ngraph.ops import floor
+from ngraph.ops import gelu
 from ngraph.ops import get_output_element
 from ngraph.ops import greater
 from ngraph.ops import greater_eq
