@@ -28,6 +28,23 @@ namespace ngraph
     {
         namespace reference
         {
+            /// \brief Helper function to implement autobroadcasting elementwise binop references.
+            ///
+            /// \tparam T Element type of the input tensors.
+            /// \tparam U Element type of the output tensor.
+            /// \tparam Functor Type of the functor for the elementwise operation. Must support
+            ///                 operator()(T,T), and operator()(T,T) must return a value of type
+            ///                 U.
+            ///
+            /// \param arg0 Pointer to the buffer for left operand input tensor.
+            /// \param arg1 Pointer to the buffer for right operand input tensor.
+            /// \param out Pointer to the buffer for output tensor. This must be pre-allocated by
+            ///            the caller, and must be large enough to hold a tensor of the correct
+            ///            shape.
+            /// \param broadcast_spec Specification of the auto-broadcasting scheme.
+            /// \param elementwise_functor Functor implementing the elementwise operation to be
+            ///                            applied across the input tensors. Must accept two
+            ///                            arguments of type T, and return a value of type U.
             template <typename T, typename U, typename Functor>
             void autobroadcast_binop(const T* arg0,
                                      const T* arg1,
@@ -46,17 +63,38 @@ namespace ngraph
                     }
                     break;
                 case op::AutoBroadcastType::NUMPY:
-                    Shape arg0_fake_shape = arg0_shape;
-                    Shape arg1_fake_shape = arg1_shape;
+                    // We'll be using CoordinateTransform to handle the broadcating. The general
+                    // procedure is as follows:
+                    //
+                    // (1) Left pad the shorter of the two shapes with ones.
+                    // (2) Squeeze (remove ones from) both shapes, and record the squeezed axis
+                    //     indices.
+                    // (3) Using CoordinateTransform, broadcast both args to the final output
+                    //     shape. The "broadcasted axes" will be those that were squeezed in step
+                    //     2.
+                    //
+                    // Example:
+                    //
+                    //    Input shape->Padded shape->Squeezed Shape/Squeezed Axes
+                    //    -----------  ------------  ----------------------------
+                    // a: [ 3, 2, 1]   [ 3, 2, 1]    [ 3, 2   ]     {2}
+                    // b: [    1, 6]   [ 1, 1, 6]    [       6]     {0,1}
+                    //                   |  |  |
+                    //                   v  v  v
+                    //                 Output shape
+                    //                 ------------
+                    //                 [ 3, 2, 6]
+                    Shape arg0_padded_shape = arg0_shape;
+                    Shape arg1_padded_shape = arg1_shape;
 
-                    while (arg0_fake_shape.size() < arg1_fake_shape.size())
+                    while (arg0_padded_shape.size() < arg1_padded_shape.size())
                     {
-                        arg0_fake_shape.insert(arg0_fake_shape.begin(), 1);
+                        arg0_padded_shape.insert(arg0_padded_shape.begin(), 1);
                     }
 
-                    while (arg1_fake_shape.size() < arg0_fake_shape.size())
+                    while (arg1_padded_shape.size() < arg0_padded_shape.size())
                     {
-                        arg1_fake_shape.insert(arg1_fake_shape.begin(), 1);
+                        arg1_padded_shape.insert(arg1_padded_shape.begin(), 1);
                     }
 
                     Shape arg0_squeezed_shape;
@@ -65,27 +103,28 @@ namespace ngraph
                     AxisSet arg1_squeezed_axes;
                     Shape output_shape;
 
-                    for (size_t i = 0; i < arg0_fake_shape.size(); i++)
+                    for (size_t i = 0; i < arg0_padded_shape.size(); i++)
                     {
-                        if (arg0_fake_shape[i] == 1)
+                        if (arg0_padded_shape[i] == 1)
                         {
                             arg0_squeezed_axes.insert(i);
                         }
                         else
                         {
-                            arg0_squeezed_shape.push_back(arg0_fake_shape[i]);
+                            arg0_squeezed_shape.push_back(arg0_padded_shape[i]);
                         }
 
-                        if (arg1_fake_shape[i] == 1)
+                        if (arg1_padded_shape[i] == 1)
                         {
                             arg1_squeezed_axes.insert(i);
                         }
                         else
                         {
-                            arg1_squeezed_shape.push_back(arg1_fake_shape[i]);
+                            arg1_squeezed_shape.push_back(arg1_padded_shape[i]);
                         }
 
-                        output_shape.push_back(std::max(arg0_fake_shape[i], arg1_fake_shape[i]));
+                        output_shape.push_back(arg0_padded_shape[i] == 1 ? arg1_padded_shape[i]
+                                                                         : arg0_padded_shape[i]);
                     }
 
                     CoordinateTransform arg0_transform(arg0_squeezed_shape);
