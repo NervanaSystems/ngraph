@@ -508,6 +508,10 @@ namespace ngraph
             REGISTER_OP_BUILDER(BatchNormTrainingRelu);
             REGISTER_OP_BUILDER(BatchNormInferenceRelu);
             REGISTER_OP_BUILDER(BatchNormTrainingBackprop);
+
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_batch_norm_cpp() {}
+#endif
         }
     }
 }
