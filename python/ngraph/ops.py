@@ -23,7 +23,7 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
-    Gelu, Gemm, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, \
+    Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, Less, LessEq, Log, LRN, Max, Maximum, \
     MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
     Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
     Sqrt, Subtract, Sum, Tan, Tanh, TopK
@@ -76,6 +76,22 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     :return: The new node performing an ELU operation on its input data element-wise.
     """
     return Elu(as_node(data), as_node(alpha))
+
+
+@nameable_op
+def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
+    r"""Perform Global Response Normalization with L2 norm (across channels only).
+
+    Computes GRN operation on channels for input tensor:
+
+    .. math:: output_i = \dfrac{input_i}{\sqrt{\sum_{i}^{C} input_i}}
+
+    :param data: The node with data tensor.
+    :param bias: The bias added to the variance. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a GRN operation on tensor's channels.
+    """
+    return GRN(data, bias)
 
 
 # Unary ops
