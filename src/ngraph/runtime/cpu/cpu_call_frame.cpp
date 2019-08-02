@@ -209,7 +209,6 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
         const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
         // Create scratchpad
         auto scratchpad_size = mkldnn_emitter->get_max_scratchpad_size();
-        std::cout << "max size is " << scratchpad_size << std::endl;
         if (m_external_function->is_direct_execution())
         {
             ctx->mkldnn_primitives =
