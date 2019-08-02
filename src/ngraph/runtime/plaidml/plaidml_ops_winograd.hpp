@@ -39,7 +39,6 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::Winograd final : public ngraph::op::Op
 {
 public:
-    PLAIDML_BACKEND_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
     Winograd(std::shared_ptr<Convolution> conv, const OutputVector& args);

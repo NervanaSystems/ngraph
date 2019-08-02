@@ -40,7 +40,6 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::Replicate final : public ngraph::op::Op
 {
 public:
-    PLAIDML_BACKEND_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
     Replicate(const Output<Node>& arg, std::size_t replication_axis, std::size_t replication_count);

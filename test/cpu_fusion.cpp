@@ -252,8 +252,8 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
     auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
 
-    auto cg =
-        make_shared<op::MatmulBias>(A, B, nullptr, A->get_shape(), B->get_shape(), true, true);
+    auto cg = make_shared<op::MatmulBias>(
+        A, B, Output<Node>(), A->get_shape(), B->get_shape(), true, true);
 
     auto f = make_shared<Function>(cg, ParameterVector{A, B});
 
@@ -326,7 +326,7 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
     auto b = make_shared<op::Parameter>(element::f32, shape_b);
 
     auto mmb = std::make_shared<op::MatmulBias>(
-        W, x, nullptr, W->get_shape(), x->get_shape(), false, false);
+        W, x, Output<Node>(), W->get_shape(), x->get_shape(), false, false);
     auto broadcast = std::make_shared<op::Broadcast>(b, mmb->get_shape(), AxisSet{0});
     auto add = mmb + broadcast;
 

@@ -41,7 +41,6 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::ImplicitBroadcast final : public ngraph::op::Op
 {
 public:
-    PLAIDML_BACKEND_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
     ImplicitBroadcast(const Output<Node>& input, const Shape& shape);

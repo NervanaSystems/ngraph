@@ -40,7 +40,6 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::Convolution final : public ngraph::op::Op
 {
 public:
-    PLAIDML_BACKEND_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
     Convolution(std::shared_ptr<ngraph::op::Convolution> src,
@@ -67,7 +66,6 @@ private:
 class ngraph::runtime::plaidml::op::ConvolutionBackpropData final : public ngraph::op::Op
 {
 public:
-    PLAIDML_BACKEND_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
     ConvolutionBackpropData(std::shared_ptr<ngraph::op::ConvolutionBackpropData> src,
@@ -94,7 +92,6 @@ private:
 class ngraph::runtime::plaidml::op::ConvolutionBackpropFilters final : public ngraph::op::Op
 {
 public:
-    PLAIDML_BACKEND_API
     static const std::string type_name;
     const std::string& description() const override { return type_name; }
     ConvolutionBackpropFilters(std::shared_ptr<ngraph::op::ConvolutionBackpropFilters> src,
