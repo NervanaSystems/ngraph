@@ -795,7 +795,7 @@ template <typename TI>
 shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
                                                        const element::Type& output_element_type)
 {
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -835,7 +835,7 @@ shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> 
     case element::Type_t::u64:
         return fold_constant_convert_helper1<TI, uint64_t>(constant, output_element_type);
     }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 }
@@ -850,7 +850,7 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
         return constant;
     }
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -890,7 +890,7 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
     case element::Type_t::u64:
         return fold_constant_convert_helper0<uint64_t>(constant, output_element_type);
     }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 }
