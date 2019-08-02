@@ -41,6 +41,9 @@ namespace ngraph
         class RNNCell : public util::FusedOp, public util::RNNCellBase
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             ///
             /// \brief      Constructs RNNCell node.
             ///
