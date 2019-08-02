@@ -1162,11 +1162,11 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         {
             // MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell has peephole.
             // LSTMCell with no peephole support is constant initialized to zero
-            if (typeid(ngraph::op::Constant) != typeid(node.get_argument(6)))
+            if (std::dynamic_pointer_cast<ngraph::op::Constant>(node.get_argument(6)) != nullptr)
             {
-                return false;
+                return true;
             }
-            return true;
+            return false;
         }
 
         if (dex)
