@@ -75,6 +75,7 @@ from _pyngraph.op import Equal
 from _pyngraph.op import Exp
 from _pyngraph.op import Floor
 from _pyngraph.op import Gelu
+from _pyngraph.op import Gemm
 from _pyngraph.op import GetOutputElement
 from _pyngraph.op import Greater
 from _pyngraph.op import GreaterEq

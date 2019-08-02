@@ -2106,6 +2106,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::Unsqueeze:
+        case OP_TYPEID::Xor:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +

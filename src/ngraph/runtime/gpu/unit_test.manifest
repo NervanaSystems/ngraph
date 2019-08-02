@@ -215,3 +215,4 @@ send_recv
 send_recv_ring
 gelu_f32
 gelu_f64
+logical_xor
