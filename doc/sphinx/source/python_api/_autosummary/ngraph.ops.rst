@@ -77,6 +77,7 @@ ngraph.ops
       tan
       tanh
       topk
+      unsqueeze
    
    
 

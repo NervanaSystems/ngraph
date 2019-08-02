@@ -133,3 +133,18 @@ def test_clamp_operator_with_array():
     expected = np.clip(data_value, min_value, max_value)
 
     assert np.allclose(result, expected)
+
+
+def test_unsqueeze():
+    runtime = get_runtime()
+
+    data_shape = [3, 4, 5]
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    data_value = np.arange(60., dtype=np.float32).reshape(3, 4, 5)
+    axes = [0, 4]
+    model = ng.unsqueeze(parameter_data, axes)
+    computation = runtime.computation(model, parameter_data)
+
+    result = computation(data_value)
+    expected = np.arange(60., dtype=np.float32).reshape(1, 3, 4, 5, 1)
+    assert np.allclose(result, expected)
