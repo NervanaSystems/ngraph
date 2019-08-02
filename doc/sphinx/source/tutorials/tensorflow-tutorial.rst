@@ -78,9 +78,10 @@ build nGraph bridge from source.
    review the `TensorFlow configuration <tensorflow_configuration_>`_ details. 
 
 
-**Prepare you build environment**
+Before you build
+~~~~~~~~~~~~~~~~
 
-Install the following requirements before building ``nGraph-bridge``. 
+Install the following requirements before building ``nGraph-bridge``: ``bazel``, ``cmake``, ``virtualenv``, and ``gcc 4.8``.
 
 Install ``bazel``:
 
@@ -90,7 +91,7 @@ Install ``bazel``:
     bash bazel-0.25.2-installer-linux-x86_64.sh --user
 
 Add and source the ``bin`` path to your ``~/.bashrc`` file to call
-bazel:
+``bazel``:
 
 ::
 
@@ -99,7 +100,8 @@ bazel:
 
 Install ``cmake``, ``virtualenv``, and ``gcc 4.8``.
 
-**Build an nGraph bridge**
+Build ngraph-tensorflow-bridge
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once TensorFlow's dependencies are installed, clone the ``ngraph-bridge`` repo:
 
@@ -134,6 +136,17 @@ For more build options:
 
     python3 build_ngtf.py --help
 
+Install ngraph-tensorflow-bridge
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once the Python wheel ``ngraph-*.whl`` is built, install it
+using ``pip``. For example:
+
+::
+
+    (nGraph) $ pip install build_cmake/artifacts/ngraph_tensorflow_bridge-*-none-manylinux1_x86_64.whl
+    
+
 Test the installation:
 
 ::
@@ -158,16 +171,15 @@ respectively.
 Select the help option of ``build_ngtf.py`` script to learn more about various
 build options and how to build other backends. 
 
-**Verify installation of** ``ngraph-bridge``
 
-To verify that ``ngraph-bridge`` installed correctly, use:
+Verify that ``ngraph-bridge`` installed correctly (optional):
 
 ::
 
     python -c "import tensorflow as tf; print('TensorFlow version: ',tf.__version__);\
         import ngraph_bridge; print(ngraph_bridge.__version__)"
 
-This will produce something like this:
+Running this code produces something like:
 
 ::
 
@@ -301,11 +313,11 @@ Add the following Python code to measure the computation time:
 Observe that the ouput time runs faster than TensorFlow native (without
 nGraph).
 
-Add additional backends
------------------------
+Use a different a backend
+-------------------------
 
 You can substitute the default CPU backend with a different backend such as
-``PLAIDML`` or ``INTELGPU``. 
+``INTELGPU`` or ``PLAIDML`` (coming soon). 
 
 To determine what backends are available, use the following API:
 
@@ -313,11 +325,14 @@ To determine what backends are available, use the following API:
 
     ngraph_bridge.list_backends()
 
-To add the ``PLAIDML`` backend:
+**Intel GPU**
+
+To add the ``INTELGPU`` backend:
 
 ::
 
-    ngraph_bridge.set_backend('PLAIDML')
+    ngraph_bridge.set_backend('INTELGPU')
+
 
 Detailed examples on how to use ``ngraph_bridge`` are located in the 
 `examples <examples_>`_ directory.
