@@ -27,8 +27,10 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Gelu::type_name{"Gelu"};
+
 op::Gelu::Gelu(const shared_ptr<Node>& data)
-    : FusedOp("Gelu", {data})
+    : FusedOp(check_single_output_args({data}))
 {
     constructor_validate_and_infer_types();
 }
