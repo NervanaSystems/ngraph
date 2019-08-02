@@ -206,6 +206,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(Softmax);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_softmax_cpp() {}
+#endif
         }
     }
 }

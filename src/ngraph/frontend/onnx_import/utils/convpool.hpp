@@ -16,13 +16,8 @@
 
 #pragma once
 
-#include <string>
-
-#include "core/attribute.hpp"
 #include "core/node.hpp"
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/op/avg_pool.hpp"
-#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 

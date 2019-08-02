@@ -77,6 +77,7 @@ Not currently a comprehensive list.
    * :doc:`tan`
    * :doc:`tanh`
    * :doc:`transpose`
+   * :doc:`xor`
 
 
 
@@ -149,6 +150,7 @@ Not currently a comprehensive list.
    tan.rst
    tanh.rst
    transpose.rst
+   xor.rst
 
 
 .. _more_about: 
