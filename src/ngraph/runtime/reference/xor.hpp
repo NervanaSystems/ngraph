@@ -16,39 +16,22 @@
 
 #pragma once
 
-#include <functional>
-
-#include "ngraph/node.hpp"
+#include <cstddef>
 
 namespace ngraph
 {
-    namespace pattern
+    namespace runtime
     {
-        namespace op
+        namespace reference
         {
-            using Predicate = std::function<bool(std::shared_ptr<Node>)>;
-
-            class Pattern : public Node
+            template <typename T>
+            void logical_xor(const T* arg0, const T* arg1, T* out, size_t count)
             {
-            public:
-                /// \brief \p a base class for \sa Skip and \sa Label
-                ///
-                Pattern(const NodeVector& nodes, Predicate pred)
-                    : Node(nodes)
-                    , m_predicate(pred)
+                for (size_t i = 0; i < count; i++)
                 {
+                    out[i] = static_cast<T>((arg0[i] || arg1[i]) && !(arg0[i] && arg1[i]));
                 }
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override
-                {
-                    throw ngraph_error("Uncopyable");
-                }
-
-                Predicate get_predicate() const { return m_predicate; }
-            protected:
-                std::function<bool(std::shared_ptr<Node>)> m_predicate;
-            };
+            }
         }
     }
 }

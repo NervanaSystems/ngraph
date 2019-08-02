@@ -27,6 +27,7 @@
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/passthrough.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/any_of.hpp"
@@ -46,7 +47,8 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
                 std::type_index{typeid(ngraph::op::LessEq)},
                 std::type_index{typeid(ngraph::op::Not)},
                 std::type_index{typeid(ngraph::op::NotEqual)},
-                std::type_index{typeid(ngraph::op::Or)}};
+                std::type_index{typeid(ngraph::op::Or)},
+                std::type_index{typeid(ngraph::op::Xor)}};
 
             const ngraph::Node* node_ptr = node.get();
 
@@ -62,7 +64,8 @@ void ngraph::runtime::plaidml::pass::ExplicitLogicals::construct_logical_to_data
                 std::type_index{typeid(ngraph::op::Equal)},
                 std::type_index{typeid(ngraph::op::Not)},
                 std::type_index{typeid(ngraph::op::NotEqual)},
-                std::type_index{typeid(ngraph::op::Or)}};
+                std::type_index{typeid(ngraph::op::Or)},
+                std::type_index{typeid(ngraph::op::Xor)}};
 
             const ngraph::Node* node_ptr = node.get();
 

@@ -34,7 +34,7 @@ namespace ngraph
                     const PartialShape& s,
                     Predicate pred,
                     const NodeVector& wrapped_nodes)
-                    : Pattern("Any", wrapped_nodes, pred)
+                    : Pattern(wrapped_nodes, pred)
                 {
                     if (!pred)
                     {
@@ -50,6 +50,12 @@ namespace ngraph
                           pred,
                           wrapped_nodes)
                 {
+                }
+
+                const std::string& description() const override
+                {
+                    static std::string desc = "Any";
+                    return desc;
                 }
             };
         }
