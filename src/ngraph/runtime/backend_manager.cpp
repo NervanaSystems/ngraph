@@ -53,6 +53,7 @@ void runtime::BackendManager::register_backend(const string& name, BackendConstr
 
 vector<string> runtime::BackendManager::get_registered_backends()
 {
+    initialize_backends();
     vector<string> rc;
     for (const auto& p : get_registry())
     {
@@ -67,8 +68,7 @@ vector<string> runtime::BackendManager::get_registered_backends()
     }
     return rc;
 }
-
-shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
+void runtime::BackendManager::initialize_backends()
 {
 #ifdef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
     runtime::interpreter::static_initialize();
@@ -77,7 +77,11 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 #ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
     runtime::cpu::static_initialize();
 #endif
+}
 
+shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::string& config)
+{
+    initialize_backends();
     shared_ptr<runtime::Backend> backend;
     string type = config;
 
