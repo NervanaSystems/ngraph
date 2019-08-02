@@ -822,6 +822,32 @@ TEST(constant_folding, const_or)
     ASSERT_EQ(values_expected, values_out);
 }
 
+TEST(constant_folding, const_xor)
+{
+    auto constant0 =
+        op::Constant::create(element::boolean, Shape{2, 3}, vector<int32_t>{0, 0, 1, 0, 1, 1});
+    auto constant1 =
+        op::Constant::create(element::boolean, Shape{2, 3}, vector<int32_t>{0, 1, 1, 1, 0, 1});
+    auto eq = make_shared<op::Xor>(constant0, constant1);
+    auto f = make_shared<Function>(eq, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::Xor>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<char>();
+
+    vector<char> values_expected{0, 1, 0, 1, 1, 0};
+
+    ASSERT_EQ(values_expected, values_out);
+}
+
 TEST(constant_folding, const_ceiling)
 {
     auto constant = op::Constant::create(

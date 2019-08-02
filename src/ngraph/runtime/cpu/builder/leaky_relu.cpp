@@ -86,6 +86,9 @@ namespace ngraph
                 }
             }
             REGISTER_OP_BUILDER(CPULeakyRelu);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_leaky_relu_cpp() {}
+#endif
         }
     }
 }

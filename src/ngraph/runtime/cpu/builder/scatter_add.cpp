@@ -140,6 +140,9 @@ namespace ngraph
                 }
             }
             REGISTER_OP_BUILDER(ScatterAdd);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_scatter_add_cpp() {}
+#endif
         }
     }
 }
