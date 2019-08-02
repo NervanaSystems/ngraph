@@ -25,6 +25,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Gemm::type_name{"Gemm"};
+
 op::Gemm::Gemm(const std::shared_ptr<ngraph::Node>& A,
                const std::shared_ptr<ngraph::Node>& B,
                const std::shared_ptr<ngraph::Node>& C,
@@ -32,7 +34,7 @@ op::Gemm::Gemm(const std::shared_ptr<ngraph::Node>& A,
                double beta,
                bool transA,
                bool transB)
-    : FusedOp("Gemm", {A, B, C})
+    : FusedOp(check_single_output_args({A, B, C}))
     , m_alpha{alpha}
     , m_beta{beta}
     , m_transA{transA}

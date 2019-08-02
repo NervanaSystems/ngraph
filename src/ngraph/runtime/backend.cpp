@@ -14,6 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
+#ifdef _WIN32
+#include <windows.h>
+#elif defined(__linux) || defined(__APPLE__)
+#include <dlfcn.h>
+#endif
+
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
@@ -24,6 +30,29 @@
 
 using namespace std;
 using namespace ngraph;
+
+std::mutex runtime::Backend::m_mtx;
+std::string runtime::Backend::s_backend_shared_library_search_directory;
+
+// This finds the full path of the containing shared library
+static string find_my_pathname()
+{
+#ifdef _WIN32
+    HMODULE hModule = GetModuleHandleW(L"ngraph.dll");
+    WCHAR wpath[MAX_PATH];
+    GetModuleFileNameW(hModule, wpath, MAX_PATH);
+    wstring ws(wpath);
+    string path(ws.begin(), ws.end());
+    replace(path.begin(), path.end(), '\\', '/');
+    path = file_util::get_directory(path);
+    path += "/";
+    return path;
+#elif defined(__linux) || defined(__APPLE__)
+    Dl_info dl_info;
+    dladdr(reinterpret_cast<void*>(find_my_pathname), &dl_info);
+    return dl_info.dli_fname;
+#endif
+}
 
 runtime::Backend::~Backend()
 {
@@ -86,6 +115,11 @@ void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> exec
 {
 }
 
+std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_stream)
+{
+    throw runtime_error("load operation unimplemented.");
+}
+
 bool runtime::Backend::is_device_memory(void* ptr)
 {
     // override this method for each supported backend to determine if the passed pointer is in
@@ -93,9 +127,19 @@ bool runtime::Backend::is_device_memory(void* ptr)
     return false;
 }
 
-std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& input_stream)
+void runtime::Backend::set_backend_shared_library_search_directory(const string& path)
 {
-    throw runtime_error("load opertion unimplemented.");
+    std::lock_guard<std::mutex> lock(runtime::Backend::m_mtx);
+    s_backend_shared_library_search_directory = path;
+}
+
+const string& runtime::Backend::get_backend_shared_library_search_directory()
+{
+    if (s_backend_shared_library_search_directory.empty())
+    {
+        s_backend_shared_library_search_directory = find_my_pathname();
+    }
+    return s_backend_shared_library_search_directory;
 }
 
 bool runtime::Backend::set_config(const map<string, string>& config, string& error)

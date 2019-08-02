@@ -32,6 +32,7 @@
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/equal.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/range.hpp"
@@ -697,6 +698,127 @@ void pass::ConstantFolding::construct_constant_broadcast()
         make_shared<pattern::Matcher>(broadcast, "ConstantFolding.ConstantBroadcast");
     this->add_matcher(
         broadcast_matcher, constant_broadcast_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+}
+
+template <class T>
+shared_ptr<op::Constant> fold_constant_dyn_broadcast(shared_ptr<op::Constant> arg,
+                                                     shared_ptr<op::Constant> shape,
+                                                     shared_ptr<op::Constant> axes)
+{
+    auto out_shape = shape->get_shape_val();
+    vector<T> out_vec(shape_size(out_shape));
+
+    runtime::reference::broadcast<T>(arg->get_data_ptr<T>(),
+                                     out_vec.data(),
+                                     arg->get_shape(),
+                                     out_shape,
+                                     axes->get_axis_set_val());
+
+    return make_shared<op::Constant>(arg->get_element_type(), out_shape, out_vec);
+}
+
+void pass::ConstantFolding::construct_constant_dyn_broadcast()
+{
+    auto constant_arg_label =
+        make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
+    auto constant_shape_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+    auto constant_axes_label =
+        make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
+
+    auto dyn_broadcast = make_shared<op::DynBroadcast>(
+        constant_arg_label, constant_shape_label, constant_axes_label);
+
+    auto constant_dyn_broadcast_callback = [constant_arg_label,
+                                            constant_shape_label,
+                                            constant_axes_label](pattern::Matcher& m) {
+        NGRAPH_DEBUG << "In callback for constant_dyn_broadcast_callback against node = "
+                     << m.get_match_root()->get_name();
+
+        auto pattern_map = m.get_pattern_map();
+
+        auto constant_arg_match =
+            static_pointer_cast<op::Constant>(pattern_map[constant_arg_label]);
+        auto constant_shape_match =
+            static_pointer_cast<op::Constant>(pattern_map[constant_shape_label]);
+        auto constant_axes_match =
+            static_pointer_cast<op::Constant>(pattern_map[constant_axes_label]);
+        auto dyn_broadcast_match = static_pointer_cast<op::DynBroadcast>(m.get_match_root());
+
+        std::shared_ptr<Node> replacement;
+        auto type = dyn_broadcast_match->get_output_element_type(0);
+        switch (type.get_type_enum())
+        {
+        case element::Type_t::undefined:
+            NGRAPH_CHECK(false,
+                         "Encountered 'undefined' element type in constant_dyn_broadcast_callback");
+            break;
+        case element::Type_t::dynamic:
+            NGRAPH_CHECK(false,
+                         "Encountered 'dynamic' element type in constant_dyn_broadcast_callback");
+            break;
+        case element::Type_t::boolean:
+            replacement = fold_constant_dyn_broadcast<char>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::bf16:
+            replacement = fold_constant_dyn_broadcast<bfloat16>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::f16:
+            replacement = fold_constant_dyn_broadcast<float16>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::f32:
+            replacement = fold_constant_dyn_broadcast<float>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::f64:
+            replacement = fold_constant_dyn_broadcast<double>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::i8:
+            replacement = fold_constant_dyn_broadcast<int8_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::i16:
+            replacement = fold_constant_dyn_broadcast<int16_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::i32:
+            replacement = fold_constant_dyn_broadcast<int32_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::i64:
+            replacement = fold_constant_dyn_broadcast<int64_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::u8:
+            replacement = fold_constant_dyn_broadcast<uint8_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::u16:
+            replacement = fold_constant_dyn_broadcast<uint16_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::u32:
+            replacement = fold_constant_dyn_broadcast<uint32_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        case element::Type_t::u64:
+            replacement = fold_constant_dyn_broadcast<uint64_t>(
+                constant_arg_match, constant_shape_match, constant_axes_match);
+            break;
+        }
+
+        replace_node(m.get_match_root(), replacement);
+        return true;
+    };
+
+    auto dyn_broadcast_matcher =
+        make_shared<pattern::Matcher>(dyn_broadcast, "ConstantFolding.ConstantDynBroadcast");
+    this->add_matcher(
+        dyn_broadcast_matcher, constant_dyn_broadcast_callback, PassProperty::REQUIRE_STATIC_SHAPE);
 }
 
 template <class Tin, class Tout>
@@ -1391,6 +1513,11 @@ template <typename TI>
 shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
                                                        const element::Type& output_element_type)
 {
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
     switch (output_element_type.get_type_enum())
     {
     case element::Type_t::undefined:
@@ -1428,6 +1555,9 @@ shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> 
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
 }
 
 static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> constant,
@@ -1440,6 +1570,11 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
         return constant;
     }
 
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
     switch (input_element_type.get_type_enum())
     {
     case element::Type_t::undefined:
@@ -1477,6 +1612,9 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
 }
 
 void pass::ConstantFolding::construct_constant_convert()
@@ -1559,6 +1697,11 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic error "-Wswitch"
+#pragma GCC diagnostic error "-Wswitch-enum"
+#endif
     switch (input_element_type.get_type_enum())
     {
     case element::Type_t::undefined:
@@ -1592,6 +1735,10 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
     }
 
     NGRAPH_UNREACHABLE("Unexpected switch case");
+
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#pragma GCC diagnostic pop
+#endif
 }
 
 void pass::ConstantFolding::construct_constant_reverse()

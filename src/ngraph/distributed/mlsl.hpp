@@ -87,7 +87,7 @@ namespace ngraph
                 }
 
                 decltype(MLSL::RT_SUM) mlsl_reduce_type;
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -101,7 +101,7 @@ namespace ngraph
                 case reduction::Type::MIN: mlsl_reduce_type = MLSL::RT_MIN; break;
                 case reduction::Type::MAX: mlsl_reduce_type = MLSL::RT_MAX; break;
                 }
-#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 

@@ -99,7 +99,7 @@ namespace ngraph
                 }
 
                 decltype(MPI_SUM) mpi_reduce_type;
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -111,7 +111,7 @@ namespace ngraph
                 case reduction::Type::MIN: mpi_reduce_type = MPI_MIN; break;
                 case reduction::Type::MAX: mpi_reduce_type = MPI_MAX; break;
                 }
-#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 
@@ -176,7 +176,7 @@ namespace ngraph
             MPI_Datatype ngraph_type_to_mpi_type(element::Type_t& n_type)
             {
                 MPI_Datatype m_type = MPI_FLOAT;
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -199,7 +199,7 @@ namespace ngraph
                 case element::Type_t::undefined:
                 case element::Type_t::dynamic: throw std::runtime_error("unsupported type");
                 }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
                 return m_type;

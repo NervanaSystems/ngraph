@@ -24,6 +24,7 @@
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/allocator.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 
 namespace ngraph
 {
@@ -33,7 +34,7 @@ namespace ngraph
         {
             class CPU_ExternalFunction;
             class CPU_CallFrame;
-
+            BackendConstructor* get_backend_constructor_pointer();
             class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:

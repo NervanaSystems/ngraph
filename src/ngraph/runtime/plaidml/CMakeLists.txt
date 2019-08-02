@@ -74,6 +74,8 @@ target_include_directories(plaidml_backend SYSTEM PUBLIC ${PLAIDML_INCLUDE_DIRS}
 target_link_libraries(plaidml_backend PUBLIC ngraph libplaidml)
 install(TARGETS plaidml_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
 
+target_compile_definitions(plaidml_backend PRIVATE PLAIDML_BACKEND_DLL_EXPORTS)
+
 set(CMAKE_MACOSX_RPATH 1)
 if(APPLE)
     set_property(TARGET plaidml_backend PROPERTY INSTALL_RPATH "@loader_path/;@loader_path/../../..")
