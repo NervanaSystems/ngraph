@@ -33,7 +33,7 @@ TEST(type_prop, normalize_invalid_input_tensor_rank)
     try
     {
         auto normalize =
-            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+            make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -52,7 +52,7 @@ TEST(type_prop, normalize_invalid_input_tensor_rank)
     try
     {
         auto normalize =
-            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+            make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -79,7 +79,7 @@ TEST(type_prop, normalize_invalid_scale_rank)
     try
     {
         auto normalize =
-            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+            make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -98,7 +98,7 @@ TEST(type_prop, normalize_invalid_scale_rank)
     try
     {
         auto normalize =
-            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+            make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -117,7 +117,7 @@ TEST(type_prop, normalize_invalid_scale_rank)
     try
     {
         auto normalize =
-            make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+            make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -141,7 +141,7 @@ TEST(type_prop, normalize)
     bool channel_shared{false};
     float eps{1e-6f};
 
-    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
     EXPECT_EQ(normalize->get_element_type(), element::f32);
     EXPECT_EQ(normalize->get_shape(), (Shape{2, 3, 4}));
 }

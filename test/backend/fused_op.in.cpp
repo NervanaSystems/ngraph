@@ -391,7 +391,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_4d)
     bool channel_shared{true};
     float eps{1e-6f};
 
-    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
     auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -420,7 +420,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_3d)
     bool channel_shared{true};
     float eps{1e-6f};
 
-    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
     auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -449,7 +449,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_2d)
     bool channel_shared{true};
     float eps{1e-6f};
 
-    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
     auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -486,7 +486,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_w_scale)
     bool channel_shared{false};
     float eps{1e-6f};
 
-    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
     auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -516,7 +516,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, normalize_across_hw_w_scale)
     bool channel_shared{false};
     float eps{0.25f};
 
-    auto normalize = make_shared<op::Normalize>(data, scale, across_spatial, channel_shared, eps);
+    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
     auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
