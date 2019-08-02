@@ -69,7 +69,6 @@ def test_elu_operator_with_scalar():
     assert np.allclose(result, expected)
 
 
-
 def test_gemm_operator():
     runtime = get_runtime()
 
@@ -103,6 +102,9 @@ def test_gemm_operator():
     aa_mul_b = np.dot(a_mul_a, value_b)
     b_mul_c = np.dot(beta_value, value_c)
     expected = np.add(aa_mul_b, b_mul_c)
+
+    assert np.allclose(result, expected)
+
 
 def test_gelu_operator_with_parameters():
     runtime = get_runtime()
