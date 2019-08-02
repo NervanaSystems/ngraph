@@ -69,6 +69,43 @@ def test_elu_operator_with_scalar():
     assert np.allclose(result, expected)
 
 
+def test_gemm_operator():
+    runtime = get_runtime()
+
+    shape_a = [3, 2]
+    shape_b = [3, 2]
+    shape_c = [2, 1]
+
+    value_a = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
+    value_b = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
+    value_c = np.array([[13], [14]], dtype=np.float32)
+
+    parameter_a = ng.parameter(shape_a, name='A', dtype=np.float32)
+    parameter_b = ng.parameter(shape_b, name='B', dtype=np.float32)
+    parameter_c = ng.parameter(shape_c, name='C', dtype=np.float32)
+
+    alpha_value = np.float32(3)
+    beta_value = np.float32(3)
+
+    transA = True
+    transB = False
+
+    model = ng.gemm(parameter_a, parameter_b, parameter_c, alpha_value, beta_value, transA, transB)
+    computation = runtime.computation(model, parameter_a, parameter_b, parameter_c)
+
+    result = computation(value_a, value_b, value_c)
+
+    # expected = value_alpha * value_a' * value_b + value_beta * value_c
+
+    value_a = value_a.transpose()
+    a_mul_a = np.multiply(alpha_value, value_a)
+    aa_mul_b = np.dot(a_mul_a, value_b)
+    b_mul_c = np.dot(beta_value, value_c)
+    expected = np.add(aa_mul_b, b_mul_c)
+
+    assert np.allclose(result, expected)
+
+
 def test_gelu_operator_with_parameters():
     runtime = get_runtime()
 

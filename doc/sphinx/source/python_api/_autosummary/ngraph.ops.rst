@@ -38,6 +38,7 @@ ngraph.ops
       exp
       floor
       gelu
+      gemm
       get_output_element
       greater
       greater_eq
