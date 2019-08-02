@@ -642,7 +642,7 @@ namespace ngraph
 
                     // query scratchpad size
                     auto concat_pd =
-                        mkldnn_emitter.get_concat_desc<ngraph::op::Concat>(node, nargs);
+                        mkldnn_emitter.get_concat_desc<OP>(node, nargs);
                     mkldnn_emitter.query_scratchpad_concat(concat_pd);
 
                     // Concat needs number of inputs plus 2 primitives; those two are for result and concat.
