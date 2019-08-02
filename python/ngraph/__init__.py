@@ -55,6 +55,7 @@ from ngraph.ops import gemm
 from ngraph.ops import get_output_element
 from ngraph.ops import greater
 from ngraph.ops import greater_eq
+from ngraph.ops import grn
 from ngraph.ops import less
 from ngraph.ops import less_eq
 from ngraph.ops import log
