@@ -19,8 +19,7 @@
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
-
+\
 namespace ngraph
 {
     namespace runtime
