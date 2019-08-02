@@ -1450,14 +1450,12 @@ void pass::ConstantFolding::construct_constant_dequantize()
         auto dequant_match = pattern_map[dequant];
         auto dequantize_op = dynamic_pointer_cast<op::Dequantize>(dequant_match);
 
-        NGRAPH_CHECK(revalidate_and_ensure_static(dequantize_op));
-
-        auto args = dequant_match->get_arguments();
         auto scale = dynamic_pointer_cast<op::Constant>(
             dequant_match->input(1).get_source_output().get_node_shared_ptr());
         auto offset = dynamic_pointer_cast<op::Constant>(
             dequant_match->input(2).get_source_output().get_node_shared_ptr());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(dequantize_op));
         auto type = constant_match->get_element_type();
 
         if (dequant_match->get_element_type() != element::f32)
