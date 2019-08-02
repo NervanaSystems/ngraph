@@ -129,39 +129,17 @@ TEST_P(all_close_f_param_test, test_boundaries)
     EXPECT_TRUE(
         test::all_close_f(vector<float>({expected}), vector<float>({lower_bound}), tolerance_bits))
         << ss.str();
-    // EXPECT_FALSE(test::close_f(expected, past_upper_bound, tolerance_bits)) << ss.str();
-    // EXPECT_FALSE(test::close_f(expected, past_upper_bound, tolerance_bits, min_signal_too_low))
-    //     << ss.str();
     EXPECT_TRUE(
         test::close_f(expected, past_upper_bound, tolerance_bits, min_signal_enables_passing))
         << ss.str();
-    // EXPECT_FALSE(test::all_close_f(
-    //     vector<float>({expected}), vector<float>({past_upper_bound}), tolerance_bits))
-    //     << ss.str();
-    // EXPECT_FALSE(test::all_close_f(vector<float>({expected}),
-    //                                vector<float>({past_upper_bound}),
-    //                                tolerance_bits,
-    //                                min_signal_too_low))
-    //     << ss.str();
     EXPECT_TRUE(test::all_close_f(vector<float>({expected}),
                                   vector<float>({past_upper_bound}),
                                   tolerance_bits,
                                   min_signal_enables_passing))
         << ss.str();
-    // EXPECT_FALSE(test::close_f(expected, past_lower_bound, tolerance_bits)) << ss.str();
-    // EXPECT_FALSE(test::close_f(expected, past_lower_bound, tolerance_bits, min_signal_too_low))
-    //     << ss.str();
     EXPECT_TRUE(
         test::close_f(expected, past_lower_bound, tolerance_bits, min_signal_enables_passing))
         << ss.str();
-    // EXPECT_FALSE(test::all_close_f(
-    //     vector<float>({expected}), vector<float>({past_lower_bound}), tolerance_bits))
-    //     << ss.str();
-    // EXPECT_FALSE(test::all_close_f(vector<float>({expected}),
-    //                                vector<float>({past_lower_bound}),
-    //                                tolerance_bits,
-    //                                min_signal_too_low))
-    //     << ss.str();
     EXPECT_TRUE(test::all_close_f(vector<float>({expected}),
                                   vector<float>({past_lower_bound}),
                                   tolerance_bits,
@@ -286,39 +264,17 @@ TEST_P(all_close_f_double_param_test, test_boundaries)
     EXPECT_TRUE(test::all_close_f(
         vector<double>({expected}), vector<double>({lower_bound}), tolerance_bits))
         << ss.str();
-    // EXPECT_FALSE(test::close_f(expected, past_upper_bound, tolerance_bits)) << ss.str();
-    // EXPECT_FALSE(test::close_f(expected, past_upper_bound, tolerance_bits, min_signal_too_low))
-    //     << ss.str();
     EXPECT_TRUE(
         test::close_f(expected, past_upper_bound, tolerance_bits, min_signal_enables_passing))
         << ss.str();
-    // EXPECT_FALSE(test::all_close_f(
-    //     vector<double>({expected}), vector<double>({past_upper_bound}), tolerance_bits))
-    //     << ss.str();
-    // EXPECT_FALSE(test::all_close_f(vector<double>({expected}),
-    //                                vector<double>({past_upper_bound}),
-    //                                tolerance_bits,
-    //                                min_signal_too_low))
-    //     << ss.str();
     EXPECT_TRUE(test::all_close_f(vector<double>({expected}),
                                   vector<double>({past_upper_bound}),
                                   tolerance_bits,
                                   min_signal_enables_passing))
         << ss.str();
-    // EXPECT_FALSE(test::close_f(expected, past_lower_bound, tolerance_bits)) << ss.str();
-    // EXPECT_FALSE(test::close_f(expected, past_lower_bound, tolerance_bits, min_signal_too_low))
-    //     << ss.str();
     EXPECT_TRUE(
         test::close_f(expected, past_lower_bound, tolerance_bits, min_signal_enables_passing))
         << ss.str();
-    // EXPECT_FALSE(test::all_close_f(
-    //     vector<double>({expected}), vector<double>({past_lower_bound}), tolerance_bits))
-    //     << ss.str();
-    // EXPECT_FALSE(test::all_close_f(vector<double>({expected}),
-    //                                vector<double>({past_lower_bound}),
-    //                                tolerance_bits,
-    //                                min_signal_too_low))
-    //     << ss.str();
     EXPECT_TRUE(test::all_close_f(vector<double>({expected}),
                                   vector<double>({past_lower_bound}),
                                   tolerance_bits,
@@ -390,13 +346,7 @@ TEST(all_close_f, mantissa_8_near_0)
 
     // ~3.67343E-40, the next representable number bigger than upper bound
     computed = test::bits_to_float("0  00000000  000 0100 0000 0000 0000 0001");
-    // EXPECT_FALSE(test::close_f(expected, computed, tolerance_bits));
-    // EXPECT_FALSE(test::close_f(expected, computed, tolerance_bits, min_signal_too_low));
     EXPECT_TRUE(test::close_f(expected, computed, tolerance_bits, min_signal_enables_passing));
-    // EXPECT_FALSE(
-    //     test::all_close_f(vector<float>({expected}), vector<float>({computed}), tolerance_bits));
-    // EXPECT_FALSE(test::all_close_f(
-    //     vector<float>({expected}), vector<float>({computed}), tolerance_bits, min_signal_too_low));
     EXPECT_TRUE(test::all_close_f(vector<float>({expected}),
                                   vector<float>({computed}),
                                   tolerance_bits,
@@ -410,13 +360,7 @@ TEST(all_close_f, mantissa_8_near_0)
 
     // ~-3.67343E-40, the next representable number smaller than lower bound
     computed = test::bits_to_float("1  00000000  000 0100 0000 0000 0000 0001");
-    // EXPECT_FALSE(test::close_f(expected, computed, tolerance_bits));
-    // EXPECT_FALSE(test::close_f(expected, computed, tolerance_bits, min_signal_too_low));
     EXPECT_TRUE(test::close_f(expected, computed, tolerance_bits, min_signal_enables_passing));
-    // EXPECT_FALSE(
-    //     test::all_close_f(vector<float>({expected}), vector<float>({computed}), tolerance_bits));
-    // EXPECT_FALSE(test::all_close_f(
-    //     vector<float>({expected}), vector<float>({computed}), tolerance_bits, min_signal_too_low));
     EXPECT_TRUE(test::all_close_f(vector<float>({expected}),
                                   vector<float>({computed}),
                                   tolerance_bits,
@@ -672,15 +616,9 @@ TEST(all_close_f, mantissa_8_near_0_1_10_100_1000)
     EXPECT_TRUE(test::close_f(expected, upper_bound, tolerance_bits));
     EXPECT_TRUE(
         test::all_close_f(vector<float>({expected}), vector<float>({upper_bound}), tolerance_bits));
-    // EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, tolerance_bits));
-    // EXPECT_FALSE(test::all_close_f(
-    //     vector<float>({expected}), vector<float>({bigger_than_upper_bound}), tolerance_bits));
     EXPECT_TRUE(test::close_f(expected, lower_bound, tolerance_bits));
     EXPECT_TRUE(
         test::all_close_f(vector<float>({expected}), vector<float>({lower_bound}), tolerance_bits));
-    // EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, tolerance_bits));
-    // EXPECT_FALSE(test::all_close_f(
-    //     vector<float>({expected}), vector<float>({smaller_than_lower_bound}), tolerance_bits));
 
     // Bounds around 1: 1 +- 0.03
     expected = 1.f;                           // 0  01111111  000 0000 0000 0000 0000 0000
@@ -789,15 +727,9 @@ TEST(all_close_f, mantissa_24_near_0_1_10_100_1000)
     EXPECT_TRUE(test::close_f(expected, upper_bound, tolerance_bits));
     EXPECT_TRUE(
         test::all_close_f(vector<float>({expected}), vector<float>({upper_bound}), tolerance_bits));
-    // EXPECT_FALSE(test::close_f(expected, bigger_than_upper_bound, tolerance_bits));
-    // EXPECT_FALSE(test::all_close_f(
-    //     vector<float>({expected}), vector<float>({bigger_than_upper_bound}), tolerance_bits));
     EXPECT_TRUE(test::close_f(expected, lower_bound, tolerance_bits));
     EXPECT_TRUE(
         test::all_close_f(vector<float>({expected}), vector<float>({lower_bound}), tolerance_bits));
-    // EXPECT_FALSE(test::close_f(expected, smaller_than_lower_bound, tolerance_bits));
-    // EXPECT_FALSE(test::all_close_f(
-    //     vector<float>({expected}), vector<float>({smaller_than_lower_bound}), tolerance_bits));
 
     // Bounds around 1: 1 +- 4.77e-7
     expected = 1.f;
