@@ -246,6 +246,7 @@ set(MULTI_TEST_SRC
     backend/generate_mask.in.cpp
     backend/logical_and.in.cpp
     backend/logical_or.in.cpp
+    backend/logical_xor.in.cpp
     backend/lrn.in.cpp
     backend/max.in.cpp
     backend/min.in.cpp

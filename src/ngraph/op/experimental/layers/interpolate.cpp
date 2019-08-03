@@ -21,10 +21,12 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Interpolate::type_name{"Interpolate"};
+
 op::Interpolate::Interpolate(const std::shared_ptr<Node>& image,
                              const std::shared_ptr<Node>& output_shape,
                              const InterpolateAttrs& attrs)
-    : Op("Interpolate", check_single_output_args({image, output_shape}))
+    : Op(check_single_output_args({image, output_shape}))
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
