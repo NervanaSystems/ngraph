@@ -33,26 +33,26 @@ using namespace ngraph;
 
 const string op::RNNCell::type_name{"RNNCell"};
 
-op::RNNCell::RNNCell(const shared_ptr<Node>& X,
-                     const shared_ptr<Node>& W,
-                     const shared_ptr<Node>& R,
-                     const shared_ptr<Node>& H_t,
+op::RNNCell::RNNCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& H_t,
                      size_t hidden_size)
     : RNNCell(
           X, W, R, H_t, hidden_size, vector<string>{"tanh"}, vector<float>{}, vector<float>{}, 0.f)
 {
 }
 
-op::RNNCell::RNNCell(const shared_ptr<Node>& X,
-                     const shared_ptr<Node>& W,
-                     const shared_ptr<Node>& R,
-                     const shared_ptr<Node>& H_t,
+op::RNNCell::RNNCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& H_t,
                      size_t hidden_size,
                      const vector<string>& activations,
                      const vector<float>& activation_alpha,
                      const vector<float>& activation_beta,
                      float clip)
-    : FusedOp(check_single_output_args({X, W, R, H_t}))
+    : FusedOp({X, W, R, H_t})
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
     , m_activation_f{get_activation_function(0)}
 {
@@ -60,17 +60,17 @@ op::RNNCell::RNNCell(const shared_ptr<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::RNNCell::RNNCell(const shared_ptr<Node>& X,
-                     const shared_ptr<Node>& W,
-                     const shared_ptr<Node>& R,
-                     const shared_ptr<Node>& H_t,
+op::RNNCell::RNNCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& H_t,
                      size_t hidden_size,
-                     const shared_ptr<Node>& B,
+                     const Output<Node>& B,
                      const vector<string>& activations,
                      const vector<float>& activation_alpha,
                      const vector<float>& activation_beta,
                      float clip)
-    : FusedOp(check_single_output_args({X, W, R, H_t, B}))
+    : FusedOp({X, W, R, H_t, B})
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
     , m_activation_f{get_activation_function(0)}
 {
@@ -169,11 +169,11 @@ NodeVector op::RNNCell::decompose_op() const
     // Ht = f(Xt*(Wi^T) + Ht-1*(Ri^T) + Wbi + Rbi)
     // --------------------
 
-    std::shared_ptr<Node> X = get_argument(0);
-    std::shared_ptr<Node> W = get_argument(1);
-    std::shared_ptr<Node> R = get_argument(2);
-    std::shared_ptr<Node> H_t = get_argument(3);
-    std::shared_ptr<Node> bias = get_bias();
+    Output<Node> X = input(0).get_source_output();
+    Output<Node> W = input(1).get_source_output();
+    Output<Node> R = input(2).get_source_output();
+    Output<Node> H_t = input(3).get_source_output();
+    Output<Node> bias = get_bias();
 
     // Xt*(W^T)
     auto Xt_W = std::make_shared<op::Dot>(X, builder::transpose(W));
@@ -188,22 +188,22 @@ NodeVector op::RNNCell::decompose_op() const
     return {i_t};
 }
 
-shared_ptr<Node> op::RNNCell::get_bias() const
+Output<Node> op::RNNCell::get_bias() const
 {
-    shared_ptr<Node> bias;
+    Output<Node> bias;
     // Split B onto Wb an Rb and add them.
-    NodeVector b_W_R = builder::split(get_argument(4), 2);
+    NodeVector b_W_R = builder::split(input(4).get_source_output(), 2);
     bias = b_W_R.at(0) + b_W_R.at(1);
     return bias;
 }
 
 void op::RNNCell::add_default_bias_input()
 {
-    shared_ptr<Node> B =
+    Output<Node> B =
         op::Constant::create(input(0).get_element_type(),
                              Shape{2 * s_gates_count * get_hidden_size()},
                              vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
-    set_argument(4, B->output(0));
+    set_argument(4, B);
 }
 
 shared_ptr<Node> op::RNNCell::copy_with_new_args(const NodeVector& new_args) const

@@ -33,11 +33,11 @@ using namespace ngraph;
 
 const string op::LSTMCell::type_name{"LSTMCell"};
 
-op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
-                       const shared_ptr<Node>& W,
-                       const shared_ptr<Node>& R,
-                       const shared_ptr<Node>& H_t,
-                       const shared_ptr<Node>& C_t,
+op::LSTMCell::LSTMCell(const Output<Node>& X,
+                       const Output<Node>& W,
+                       const Output<Node>& R,
+                       const Output<Node>& H_t,
+                       const Output<Node>& C_t,
                        size_t hidden_size)
     : LSTMCell(X,
                W,
@@ -53,18 +53,18 @@ op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
 {
 }
 
-op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
-                       const shared_ptr<Node>& W,
-                       const shared_ptr<Node>& R,
-                       const shared_ptr<Node>& H_t,
-                       const shared_ptr<Node>& C_t,
+op::LSTMCell::LSTMCell(const Output<Node>& X,
+                       const Output<Node>& W,
+                       const Output<Node>& R,
+                       const Output<Node>& H_t,
+                       const Output<Node>& C_t,
                        size_t hidden_size,
                        const vector<string>& activations,
                        const vector<float>& activation_alpha,
                        const vector<float>& activation_beta,
                        float clip,
                        bool input_forget)
-    : FusedOp(check_single_output_args({X, W, R, H_t, C_t}))
+    : FusedOp({X, W, R, H_t, C_t})
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -76,20 +76,20 @@ op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::LSTMCell::LSTMCell(const shared_ptr<Node>& X,
-                       const shared_ptr<Node>& W,
-                       const shared_ptr<Node>& R,
-                       const shared_ptr<Node>& H_t,
-                       const shared_ptr<Node>& C_t,
+op::LSTMCell::LSTMCell(const Output<Node>& X,
+                       const Output<Node>& W,
+                       const Output<Node>& R,
+                       const Output<Node>& H_t,
+                       const Output<Node>& C_t,
                        size_t hidden_size,
-                       const shared_ptr<Node>& B,
-                       const shared_ptr<Node>& P,
+                       const Output<Node>& B,
+                       const Output<Node>& P,
                        const vector<string>& activations,
                        const vector<float>& activation_alpha,
                        const vector<float>& activation_beta,
                        float clip,
                        bool input_forget)
-    : FusedOp(check_single_output_args({X, W, R, H_t, C_t, B, P}))
+    : FusedOp({X, W, R, H_t, C_t, B, P})
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -226,13 +226,13 @@ NodeVector op::LSTMCell::decompose_op() const
     // Ht = ot (.) h(Ct)
     // --------------------
 
-    shared_ptr<Node> X = get_argument(0);
-    shared_ptr<Node> W = get_argument(1);
-    shared_ptr<Node> R = get_argument(2);
-    shared_ptr<Node> H_t = get_argument(3);
-    shared_ptr<Node> C_t = get_argument(4);
-    shared_ptr<Node> bias = get_bias();
-    NodeVector p_iof = get_peephole_weigths();
+    Output<Node> X = input(0).get_source_output();
+    Output<Node> W = input(1).get_source_output();
+    Output<Node> R = input(2).get_source_output();
+    Output<Node> H_t = input(3).get_source_output();
+    Output<Node> C_t = input(4).get_source_output();
+    Output<Node> bias = get_bias();
+    NodeVector p_iof = get_peephole_weights();
 
     const auto& p_i = p_iof.at(0);
     const auto& p_o = p_iof.at(1);
@@ -276,38 +276,38 @@ NodeVector op::LSTMCell::decompose_op() const
     return {H, C};
 }
 
-shared_ptr<Node> op::LSTMCell::get_bias() const
+Output<Node> op::LSTMCell::get_bias() const
 {
-    shared_ptr<Node> bias;
+    Output<Node> bias;
     // Split B onto Wb an Rb and add them.
-    NodeVector b_W_R = builder::split(get_argument(5), 2);
+    NodeVector b_W_R = builder::split(input(5).get_source_output(), 2);
     bias = b_W_R.at(0) + b_W_R.at(1);
     return bias;
 }
 
-NodeVector op::LSTMCell::get_peephole_weigths() const
+NodeVector op::LSTMCell::get_peephole_weights() const
 {
-    shared_ptr<Node> P;
-    P = get_argument(6);
+    Output<Node> P;
+    P = input(6).get_source_output();
     return builder::split(P, s_peepholes_count);
 }
 
 void op::LSTMCell::add_default_bias_input()
 {
-    shared_ptr<Node> B =
+    Output<Node> B =
         op::Constant::create(input(0).get_element_type(),
                              Shape{2 * s_gates_count * get_hidden_size()},
                              vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
-    set_argument(5, B->output(0));
+    set_argument(5, B);
 }
 
 void op::LSTMCell::add_default_peepholes_input()
 {
-    shared_ptr<Node> P =
+    Output<Node> P =
         op::Constant::create(input(0).get_element_type(),
                              Shape{s_peepholes_count * get_hidden_size()},
                              vector<float>(s_peepholes_count * get_hidden_size(), 0.f));
-    set_argument(6, P->output(0));
+    set_argument(6, P);
 }
 
 shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) const
