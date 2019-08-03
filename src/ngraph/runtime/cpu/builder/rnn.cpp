@@ -52,7 +52,7 @@ namespace ngraph
                 auto rnn_desc =
                     mkldnn_emitter->get_rnn_forward_desc<ngraph::op::Rnn>(node, args, out);
 
-#if not defined(NGRAPH_USE_MKLDNN_V1)
+#if MKLDNN_VERSION_MAJOR < 1
                 auto weights_layer_buffer_index =
                     external_function->get_buffer_index(args[2].get_name());
                 auto weights_iter_buffer_index =

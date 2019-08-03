@@ -183,7 +183,7 @@ endif()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
 set(MKLDNN_GIT_TAG ${NGRAPH_MKLDNN_GIT_TAG})
-set(MKLDNN_PATCH_FILE mkldnn.patch)
+set(MKLDNN_PATCH_FILE mkldnn_v1.patch)
 set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB})
 
 # Revert prior changes to make incremental build work.
@@ -199,7 +199,7 @@ if (WIN32)
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
         PATCH_COMMAND ${MKLDNN_PATCH_REVERT_COMMAND}
-        #COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE}
+        COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
@@ -232,7 +232,7 @@ else()
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
         PATCH_COMMAND ${MKLDNN_PATCH_REVERT_COMMAND}
-        #COMMAND git apply ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE}
+        COMMAND git apply ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
@@ -260,7 +260,7 @@ if(WIN32)
     ExternalProject_Add_Step(
         ext_mkldnn
         CopyMKLDNN
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/bin/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.0
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/bin/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
         COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
         DEPENDEES install
         )
@@ -268,7 +268,7 @@ if(WIN32)
     ExternalProject_Add_Step(
         ext_mkldnn
         CopyMKLDNNIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}.0
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
         COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
         DEPENDEES install
         )
@@ -276,7 +276,7 @@ else()
     ExternalProject_Add_Step(
         ext_mkldnn
         CopyMKLDNN
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.0
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
         COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
         DEPENDEES install
         )
@@ -305,12 +305,12 @@ add_dependencies(libmkldnn ext_mkldnn)
 target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
 if (WIN32)
     target_link_libraries(libmkldnn INTERFACE
-        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}.0
+        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
         libmkl
     )
 else()
     target_link_libraries(libmkldnn INTERFACE
-        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}.0
+        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
         libmkl
     )
 endif()
