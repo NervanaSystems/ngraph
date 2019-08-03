@@ -63,7 +63,7 @@ namespace ngraph
                     }
                     break;
                 case op::AutoBroadcastType::NUMPY:
-                    // We'll be using CoordinateTransform to handle the broadcating. The general
+                    // We'll be using CoordinateTransform to handle the broadcasting. The general
                     // procedure is as follows:
                     //
                     // (1) Left pad the shorter of the two shapes with ones.

@@ -856,7 +856,9 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
 {
     auto out_shape = binary->get_shape();
 
-    if (func != nullptr)
+    // NOTE: We will skip the executor if the shapes do not match, because that means
+    // auto-broadcast is in use, and the CPU functors don't yet support that.
+    if (func != nullptr && a->get_shape() == b->get_shape())
     {
         vector<Tout> out_vec(shape_size(out_shape));
         vector<void*> inputs;
