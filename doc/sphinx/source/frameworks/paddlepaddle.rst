@@ -1,5 +1,8 @@
 .. frameworks/paddle_integ.rst:
 
+.. _frameworks_paddlepaddle:
+
+
 PaddlePaddle
 ============
 
@@ -161,4 +164,3 @@ nGraph compilation control and trigger method
 .. _link to ngraph_bridge header code: https://github.com/PaddlePaddle/Paddle/blob/develop/paddle/fluid/operators/ngraph/ngraph_bridge.h
 .. _link to ngraph_bridge cpp code: https://github.com/PaddlePaddle/Paddle/blob/develop/paddle/fluid/operators/ngraph/ngraph_bridge.cc
 .. _Examples are provided: https://github.com/PaddlePaddle/Paddle/tree/develop/benchmark/fluid
-

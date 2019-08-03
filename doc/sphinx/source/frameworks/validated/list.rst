@@ -1,17 +1,16 @@
 .. frameworks/validated/list.rst: 
 
-.. _validated_workloads:
+.. _validated:
+
 
 Validated Workloads
 ===================
 
-We validated performance [#f1]_ for the following TensorFlow\* and MXNet\* 
+We validated performance [#f1]_ for the following TensorFlow\* and ONNX\* 
 workloads:
 
-* :ref:`tensorflow_valid`
-* :ref:`onnx_valid`
-
-.. _tensorflow_valid:
+.. contents::
+   :local:
 
 TensorFlow 
 ==========
@@ -42,8 +41,6 @@ TensorFlow
    DRAW, Image generation
    A3C, Reinforcement learning
 
-
-.. _onnx_valid:
 
 ONNX
 ====
@@ -102,4 +99,3 @@ Additionally, we validated the following workloads are functional through
    to Intel microarchitecture are reserved for Intel microprocessors. Please refer to the 
    applicable product User and Reference Guides for more information regarding the specific 
    instruction sets covered by this notice.
-

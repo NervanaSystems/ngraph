@@ -1,6 +1,6 @@
 .. frameworks/overview.rst
 
-.. _framework_support:
+.. _frameworks:
 
 Framework Support
 =================

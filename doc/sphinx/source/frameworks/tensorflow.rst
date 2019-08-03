@@ -1,5 +1,7 @@
 .. frameworks/tensorflow_connect.rst:
 
+.. _frameworks_tensorflow:
+
 Connect TensorFlow\*
 ====================
 

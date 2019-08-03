@@ -2,9 +2,10 @@
 
 .. _contribution_guide:
 
-##################
 Contribution guide
 ##################
+
+.. contents::
 
 License
 =======
