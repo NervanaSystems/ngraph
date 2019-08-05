@@ -225,10 +225,10 @@ set(MULTI_TEST_SRC
     backend/arg_reduce.in.cpp
     backend/asin.in.cpp
     backend/atan.in.cpp
+    backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
     backend/batch_norm.in.cpp
-    backend/binary_elementwise.in.cpp
     backend/broadcast.in.cpp
     backend/ceiling.in.cpp
     backend/comparison.in.cpp
