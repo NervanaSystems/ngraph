@@ -185,7 +185,7 @@ void pass::ConstantFolding::construct_constant_reshape()
 
         std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false,
@@ -316,7 +316,7 @@ void pass::ConstantFolding::construct_constant_pad()
 
         std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_pad_callback");
@@ -418,7 +418,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
 
         std::shared_ptr<Node> replacement;
         auto type = dyn_reshape_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false,
@@ -532,7 +532,7 @@ void pass::ConstantFolding::construct_constant_transpose()
 
         std::shared_ptr<Node> replacement;
         auto type = transpose_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false,
@@ -664,7 +664,7 @@ void pass::ConstantFolding::construct_constant_broadcast()
 
         std::shared_ptr<Node> replacement;
         auto type = broadcast_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false,
@@ -774,7 +774,7 @@ void pass::ConstantFolding::construct_constant_dyn_broadcast()
 
         std::shared_ptr<Node> replacement;
         auto type = dyn_broadcast_match->get_output_element_type(0);
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false,
@@ -1047,7 +1047,7 @@ shared_ptr<op::Constant> fold_constant_binary_helper(const element::Type& et_out
                                                      shared_ptr<Node> binary,
                                                      NodeExecutorTy func)
 {
-    switch (et_out.get_type_enum())
+    switch (et_out)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_binary_callback");
@@ -1127,7 +1127,7 @@ void pass::ConstantFolding::construct_constant_binary()
         std::shared_ptr<Node> replacement;
         auto in_type = a_match->get_output_element_type(0);
         auto out_type = binary_match->get_output_element_type(0);
-        switch (in_type.get_type_enum())
+        switch (in_type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_binary_callback");
@@ -1323,7 +1323,7 @@ void pass::ConstantFolding::construct_constant_unary()
 
         std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_unary_callback");
@@ -1566,7 +1566,7 @@ shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> 
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (output_element_type.get_type_enum())
+    switch (output_element_type)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_convert");
@@ -1623,7 +1623,7 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (input_element_type.get_type_enum())
+    switch (input_element_type)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_convert");
@@ -1756,7 +1756,7 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (input_element_type.get_type_enum())
+    switch (input_element_type)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_convert");
@@ -1880,7 +1880,7 @@ static shared_ptr<op::Constant>
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
-    switch (input_element_type.get_type_enum())
+    switch (input_element_type)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false,
@@ -2081,7 +2081,7 @@ void pass::ConstantFolding::construct_constant_concat()
 
         std::shared_ptr<op::Constant> replacement;
 
-        switch (concat_node->get_output_element_type(0).get_type_enum())
+        switch (concat_node->get_output_element_type(0))
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_concat");
@@ -2167,7 +2167,7 @@ static shared_ptr<op::Constant> fold_constant_gather(const shared_ptr<op::Consta
 {
     auto indices_type = indices->get_output_element_type(0);
 
-    switch (indices_type.get_type_enum())
+    switch (indices_type)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_gather_callback");
@@ -2223,7 +2223,7 @@ void pass::ConstantFolding::construct_constant_gather()
         std::shared_ptr<Node> replacement;
         auto data_type = data->get_output_element_type(0);
         auto indices_type = indices->get_output_element_type(0);
-        switch (data_type.get_type_enum())
+        switch (data_type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_gather_callback");
@@ -2319,7 +2319,7 @@ void pass::ConstantFolding::construct_constant_slice()
 
         std::shared_ptr<op::Constant> replacement;
 
-        switch (slice->get_output_element_type(0).get_type_enum())
+        switch (slice->get_output_element_type(0))
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_slice");
@@ -2457,7 +2457,7 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
 
         std::shared_ptr<op::Constant> replacement;
 
-        switch (dyn_slice->get_output_element_type(0).get_type_enum())
+        switch (dyn_slice->get_output_element_type(0))
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_dyn_slice");
@@ -2568,7 +2568,7 @@ void pass::ConstantFolding::construct_constant_range()
 
         std::shared_ptr<op::Constant> replacement;
 
-        switch (range->get_output_element_type(0).get_type_enum())
+        switch (range->get_output_element_type(0))
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_range_callback");
@@ -2668,7 +2668,7 @@ void pass::ConstantFolding::construct_constant_select()
 
         std::shared_ptr<op::Constant> replacement;
 
-        switch (select->get_output_element_type(0).get_type_enum())
+        switch (select->get_output_element_type(0))
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_select_callback");
