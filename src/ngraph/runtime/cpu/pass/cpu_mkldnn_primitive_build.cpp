@@ -2379,7 +2379,8 @@ namespace ngraph
                     writer << "*cg_ctx->mkldnn_descriptors[" << desc_index + 2 << "]);\n";
 
                     writer << "\nmkldnn::post_ops ops;\n";
-                    if (false)
+                    if (std::is_same<OP, ngraph::op::QuantizedDotBias>() &&
+                        has_relu<ngraph::op::QuantizedDotBias>(node))
                     {
                         writer << "const float ops_scale = 1.f;\n";
                         writer << "const float ops_alpha = -0.f; // relu negative slope\n";
