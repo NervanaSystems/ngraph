@@ -28,11 +28,12 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            ReverseSequence() = default;
             /// \brief Constructs an arcsin operation.
             ///
             /// \param arg Node that produces the input tensor.
-            ReverseSequence(const std::shared_ptr<Node> arg,
-                            const std::shared_ptr<Node> seq_lengths,
+            ReverseSequence(const Output<Node>& arg,
+                            const Output<Node>& seq_lengths,
                             size_t batch_axis,
                             size_t seq_axis);
 
@@ -42,7 +43,9 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             size_t get_batch_axis() const { return m_batch_axis; }
+            void set_batch_axis(size_t batch_axis) { m_batch_axis = batch_axis; }
             size_t get_sequence_axis() const { return m_seq_axis; }
+            void set_sequence_axis(size_t sequence_axis) { m_seq_axis = sequence_axis; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

@@ -27,11 +27,11 @@ using namespace ngraph;
 
 const string op::ReverseSequence::type_name{"ReverseSequence"};
 
-op::ReverseSequence::ReverseSequence(const std::shared_ptr<Node> arg,
-                                     const std::shared_ptr<Node> seq_indices,
+op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
+                                     const Output<Node>& seq_indices,
                                      size_t batch_axis,
                                      size_t seq_axis)
-    : Op(check_single_output_args({arg, seq_indices}))
+    : Op({arg, seq_indices})
     , m_batch_axis(batch_axis)
     , m_seq_axis(seq_axis)
 {
@@ -104,8 +104,8 @@ shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_a
 
 void op::ReverseSequence::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    auto x = get_argument(0);
-    auto rs_delta =
-        make_shared<ReverseSequence>(deltas.at(0), get_argument(1), m_batch_axis, m_seq_axis);
+    auto x = input(0).get_source_output();
+    auto rs_delta = make_shared<ReverseSequence>(
+        deltas.at(0), input(1).get_source_output(), m_batch_axis, m_seq_axis);
     adjoints.add_delta(x, rs_delta);
 }
