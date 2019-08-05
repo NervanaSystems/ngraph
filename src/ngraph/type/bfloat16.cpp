@@ -75,10 +75,14 @@ size_t bfloat16::size() const
 
 bool bfloat16::operator==(const bfloat16& other) const
 {
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
     return (static_cast<float>(*this) == static_cast<float>(other));
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
 }
 
 bool bfloat16::operator<(const bfloat16& other) const

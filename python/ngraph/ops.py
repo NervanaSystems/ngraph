@@ -21,12 +21,12 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
     Shape, Strides
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
-    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, Equal, \
-    Exp, Floor, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, \
-    MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, \
-    Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, \
-    Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
+    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
+    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, Equal, Exp, \
+    Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, Less, LessEq, Log, LRN, Max, Maximum, \
+    MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
+    Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
+    Sqrt, Subtract, Sum, Tan, Tanh, TopK
 
 from typing import Callable, Iterable, List, Union
 
@@ -76,6 +76,22 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     :return: The new node performing an ELU operation on its input data element-wise.
     """
     return Elu(as_node(data), as_node(alpha))
+
+
+@nameable_op
+def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
+    r"""Perform Global Response Normalization with L2 norm (across channels only).
+
+    Computes GRN operation on channels for input tensor:
+
+    .. math:: output_i = \dfrac{input_i}{\sqrt{\sum_{i}^{C} input_i}}
+
+    :param data: The node with data tensor.
+    :param bias: The bias added to the variance. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a GRN operation on tensor's channels.
+    """
+    return GRN(data, bias)
 
 
 # Unary ops
@@ -521,6 +537,46 @@ def broadcast_to(node, new_shape, axis=None, name=None):
 
 
 @nameable_op
+def gemm(A,                      # type: Node
+         B,                      # type: Node
+         C,                      # type: Node
+         alpha,                  # type: ScalarData
+         beta,                   # type: ScalarData
+         transA,                 # type: bool
+         transB,                 # type: bool
+         name=None,              # type: str
+         ):
+    # type: (...) -> Node
+    r"""Perform General matrix-matrix multiplication on input tensors A, B and C.
+
+    Computes:
+
+    .. math:: Y = alpha\cdot A'\cdot B' +  beta\cdot C
+
+    :code:`A'` is the transpose of matrix :code:`A` with shape (M, K),
+    if :code:`transA` is :code:`True`, otherwise :code:`A` with shape (K, N).
+
+    :code:`B'` is the transpose of matrix :code:`B` with shape (K, N),
+    if :code:`transB` is :code:`True`, otherwise :code:`B` with shape (N, K).
+
+    :code:`C`: Matrix broadcastable to shape (M, N).
+
+    :code:`Y`: Matrix with shape (M, N).
+
+    :param A: The node with input tensor A.
+    :param B: The node with input tensor B.
+    :param C: The node with input tensor C.
+    :param alpha: Scalar multiplier for the product of input tensors A * B.
+    :param beta: Scalar multiplier for input tensor C.
+    :param transA: Whether A should be transposed. Boolean value.
+    :param transB: Whether B should be transposed. Boolean value.
+    :param name: Optional name for the output node.
+    :return: Return node with tensor of shape (M, N).
+    """
+    return Gemm(A, B, C, alpha, beta, transA, transB)
+
+
+@nameable_op
 def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Node
     """Return node which casts input node values to specified type."""
     new_element_type = get_element_type(new_type)
@@ -548,6 +604,23 @@ def depth_to_space(node, block_size, name=None):  # type: (Node, int, str) -> No
     """
     return DepthToSpace(node, block_size)
 
+  
+def gelu(node, name=None):  # type: (NodeInput, str) -> Node
+    r"""Perform Gaussian Error Linear Unit operation element-wise on data from input node.
+
+    Computes GELU function:
+
+    .. math:: f(x) = 0.5\cdot x\cdot(1 + erf( \dfrac{x}{\sqrt{2}})
+
+    For more information refer to:
+    `Gaussian Error Linear Unit (GELU) <https://arxiv.org/pdf/1606.08415.pdf>`_
+
+    :param node: Input tensor. One of: input node, array or scalar.
+    :param name: Optional output node name.
+    :return: The new node performing a GELU operation on its input data element-wise.
+    """
+    return Gelu(as_node(node))
+ 
 
 @nameable_op
 def select(selection_node, input_node1, input_node2, name=None):
@@ -575,6 +648,36 @@ def tanh(node, name=None):  # type: (Node, str) -> Node
     :return: New node with tanh operation applied on it.
     """
     return Tanh(node)
+
+
+@nameable_op
+def clamp(data, min_value, max_value, name=None):
+    # type: (NodeInput, ScalarData, ScalarData, str) -> Node
+    """Perform clamp element-wise on data from input node.
+
+    Performs a clipping operation on an input value between a pair of boundary values.
+
+    For each element in :code:`data`, if the element's value is lower than :code:`min_value`,
+    it will be replaced with :code:`min_value`. If the value is higher than :code:`max_value`,
+    it will be replaced by :code:`max_value`.
+    Intermediate values of :code:`data` are returned without change.
+
+    Clamp uses the following logic:
+
+    .. code-block:: python
+
+        if data < min_value:
+            data=min_value
+        elif data > max_value:
+            data=max_value
+
+    :param data: Input tensor. One of: input node, array or scalar.
+    :param min_value: The lower bound of the <min_value;max_value> range. Scalar value.
+    :param max_value: The upper bound of the <min_value;max_value> range. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a clamp operation on its input data element-wise.
+    """
+    return Clamp(as_node(data), min_value, max_value)
 
 
 # matmul ops

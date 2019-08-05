@@ -304,6 +304,8 @@ set (SRC
     op/tanh.hpp
     op/topk.cpp
     op/topk.hpp
+    op/xor.cpp
+    op/xor.hpp
     op/fused/clamp.cpp
     op/fused/clamp.hpp
     op/fused/conv_fused.cpp
@@ -478,6 +480,8 @@ set (SRC
     shape.hpp
     shape_util.cpp
     shape_util.hpp
+    slice_plan.cpp
+    slice_plan.hpp
     specialize_function.cpp
     specialize_function.hpp
     state/rng_state.cpp

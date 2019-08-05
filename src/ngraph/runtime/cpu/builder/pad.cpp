@@ -171,6 +171,9 @@ namespace ngraph
                 }
             }
             REGISTER_CF_BUILDER(Pad);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_pad_cpp() {}
+#endif
         }
     }
 }
