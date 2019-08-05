@@ -1,9 +1,15 @@
 :orphan:
 
-.. toctree::
-   :caption: Tutorials
-   :maxdepth: 1
+* :ref:`get_started_onnx`
 
-   onnx-tutorial.rst
-   onnx-models.rst
-   tensorflow-tutorial.rst
+  .. toctree::
+
+     onnx-tutorial.rst
+     onnx-models.rst
+
+
+* :ref:`get_started_tensorflow`
+
+  .. toctree::
+
+     tensorflow-tutorial.rst
