@@ -23,8 +23,10 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
+#include "ngraph/op/and.hpp"
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
@@ -39,6 +41,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/embedding_lookup.hpp"
+#include "ngraph/op/equal.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_pad.hpp"
@@ -46,13 +49,23 @@
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/maximum.hpp"
 #include "ngraph/op/min.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/passthrough.hpp"
+#include "ngraph/op/power.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
@@ -65,8 +78,10 @@
 #include "ngraph/op/send.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
@@ -254,11 +269,13 @@ private:
         }
         case OP_TYPEID::Add:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            const op::Add* add = static_cast<const op::Add*>(&node);
             reference::add<T>(args[0]->get_data_ptr<const T>(),
                               args[1]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
-                              element_count);
+                              node.get_input_shape(0),
+                              node.get_input_shape(1),
+                              add->get_autob());
             break;
         }
         case OP_TYPEID::All:
@@ -284,11 +301,13 @@ private:
         }
         case OP_TYPEID::And:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto logical_and = static_cast<const op::And*>(&node);
             reference::logical_and(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   element_count);
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_and->get_autob());
             break;
         }
         case OP_TYPEID::Any:
@@ -734,11 +753,12 @@ private:
         case OP_TYPEID::Divide:
         {
             const op::Divide* divop = static_cast<const op::Divide*>(&node);
-            size_t element_count = shape_size(node.get_output_shape(0));
             reference::divide<T>(args[0]->get_data_ptr<const T>(),
                                  args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
-                                 element_count,
+                                 node.get_input_shape(0),
+                                 node.get_input_shape(1),
+                                 divop->get_autob(),
                                  divop->is_pythondiv());
             break;
         }
@@ -812,11 +832,13 @@ private:
         }
         case OP_TYPEID::Equal:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto equal = static_cast<const op::Equal*>(&node);
             reference::equal<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
-                                element_count);
+                                node.get_input_shape(0),
+                                node.get_input_shape(1),
+                                equal->get_autob());
             break;
         }
         case OP_TYPEID::Erf:
@@ -922,38 +944,46 @@ private:
         }
         case OP_TYPEID::Greater:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto greater = static_cast<const op::Greater*>(&node);
             reference::greater<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
-                                  element_count);
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  greater->get_autob());
             break;
         }
         case OP_TYPEID::GreaterEq:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto greater_eq = static_cast<const op::GreaterEq*>(&node);
             reference::greater_eq<T>(args[0]->get_data_ptr<const T>(),
                                      args[1]->get_data_ptr<const T>(),
                                      out[0]->get_data_ptr<char>(),
-                                     element_count);
+                                     node.get_input_shape(0),
+                                     node.get_input_shape(1),
+                                     greater_eq->get_autob());
             break;
         }
         case OP_TYPEID::Less:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto less = static_cast<const op::Less*>(&node);
             reference::less<T>(args[0]->get_data_ptr<const T>(),
                                args[1]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<char>(),
-                               element_count);
+                               node.get_input_shape(0),
+                               node.get_input_shape(1),
+                               less->get_autob());
             break;
         }
         case OP_TYPEID::LessEq:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto less_eq = static_cast<const op::LessEq*>(&node);
             reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
-                                  element_count);
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  less_eq->get_autob());
             break;
         }
         case OP_TYPEID::Log:
@@ -987,11 +1017,13 @@ private:
         }
         case OP_TYPEID::Maximum:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto maximum = static_cast<const op::Maximum*>(&node);
             reference::maximum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  element_count);
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  maximum->get_autob());
             break;
         }
         case OP_TYPEID::MaxPool:
@@ -1036,20 +1068,24 @@ private:
         }
         case OP_TYPEID::Minimum:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto minimum = static_cast<const op::Minimum*>(&node);
             reference::minimum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  element_count);
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  minimum->get_autob());
             break;
         }
         case OP_TYPEID::Multiply:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto multiply = static_cast<const op::Multiply*>(&node);
             reference::multiply<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   element_count);
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   multiply->get_autob());
             break;
         }
         case OP_TYPEID::Negative:
@@ -1068,11 +1104,13 @@ private:
         }
         case OP_TYPEID::NotEqual:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto not_equal = static_cast<const op::NotEqual*>(&node);
             reference::not_equal<T>(args[0]->get_data_ptr<const T>(),
                                     args[1]->get_data_ptr<const T>(),
                                     out[0]->get_data_ptr<char>(),
-                                    element_count);
+                                    node.get_input_shape(0),
+                                    node.get_input_shape(1),
+                                    not_equal->get_autob());
             break;
         }
         case OP_TYPEID::OneHot:
@@ -1087,11 +1125,13 @@ private:
         }
         case OP_TYPEID::Or:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto logical_or = static_cast<const op::Or*>(&node);
             reference::logical_or(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  element_count);
+                                  node.get_input_shape(0),
+                                  node.get_input_shape(1),
+                                  logical_or->get_autob());
             break;
         }
         case OP_TYPEID::Parameter: break;
@@ -1116,11 +1156,13 @@ private:
         }
         case OP_TYPEID::Power:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto power = static_cast<const op::Power*>(&node);
             reference::power<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
-                                element_count);
+                                node.get_input_shape(0),
+                                node.get_input_shape(1),
+                                power->get_autob());
             break;
         }
         case OP_TYPEID::Product:
@@ -1555,11 +1597,13 @@ private:
         }
         case OP_TYPEID::Subtract:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto subtract = static_cast<const op::Subtract*>(&node);
             reference::subtract<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   element_count);
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   subtract->get_autob());
             break;
         }
         case OP_TYPEID::Sum:
@@ -1619,11 +1663,13 @@ private:
         }
         case OP_TYPEID::Xor:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            auto logical_xor = static_cast<const op::Or*>(&node);
             reference::logical_xor(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   element_count);
+                                   node.get_input_shape(0),
+                                   node.get_input_shape(1),
+                                   logical_xor->get_autob());
             break;
         }
         case OP_TYPEID::DynBroadcast:
