@@ -5,7 +5,7 @@
 nGraph Core
 ===========
 
-.. figure:: ../graphics/2019_06_11_WholeStack.png
+.. figure:: ../graphics/WholeStack.png
    :width: 960px
    :alt: The whole stack
 
