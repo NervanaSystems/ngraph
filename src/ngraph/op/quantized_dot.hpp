@@ -26,6 +26,9 @@ namespace ngraph
         class QuantizedDot : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a quantized convolution operation.
             ///
             /// \param input0 The node producing the input data batch tensor.
@@ -40,14 +43,14 @@ namespace ngraph
             /// \param input0_axes Input0 axes set for channel wise quantization
             /// \param input1_axes Input1 axes set for channel wise quantization
             /// \param output_axes Output axes set for channel wise quantization
-            QuantizedDot(const std::shared_ptr<Node>& input0,
-                         const std::shared_ptr<Node>& input1,
-                         const std::shared_ptr<Node>& input0_scale,
-                         const std::shared_ptr<Node>& input0_zero_point,
-                         const std::shared_ptr<Node>& input1_scale,
-                         const std::shared_ptr<Node>& input1_zero_point,
-                         const std::shared_ptr<Node>& output_scale,
-                         const std::shared_ptr<Node>& output_zero_point,
+            QuantizedDot(const Output<Node>& input0,
+                         const Output<Node>& input1,
+                         const Output<Node>& input0_scale,
+                         const Output<Node>& input0_zero_point,
+                         const Output<Node>& input1_scale,
+                         const Output<Node>& input1_zero_point,
+                         const Output<Node>& output_scale,
+                         const Output<Node>& output_zero_point,
                          const element::Type& output_type,
                          const AxisSet& input0_axes = ngraph::AxisSet{},
                          const AxisSet& input1_axes = ngraph::AxisSet{},

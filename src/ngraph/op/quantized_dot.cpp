@@ -23,27 +23,28 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& input0,
-                               const shared_ptr<Node>& input1,
-                               const shared_ptr<Node>& input0_scale,
-                               const shared_ptr<Node>& input0_zero_point,
-                               const shared_ptr<Node>& input1_scale,
-                               const shared_ptr<Node>& input1_zero_point,
-                               const shared_ptr<Node>& output_scale,
-                               const shared_ptr<Node>& output_zero_point,
+const string op::QuantizedDot::type_name{"QuantizedDot"};
+
+op::QuantizedDot::QuantizedDot(const Output<Node>& input0,
+                               const Output<Node>& input1,
+                               const Output<Node>& input0_scale,
+                               const Output<Node>& input0_zero_point,
+                               const Output<Node>& input1_scale,
+                               const Output<Node>& input1_zero_point,
+                               const Output<Node>& output_scale,
+                               const Output<Node>& output_zero_point,
                                const element::Type& output_type,
                                const AxisSet& input0_axes,
                                const AxisSet& input1_axes,
                                const AxisSet& output_axes)
-    : Op("QuantizedDot",
-         check_single_output_args({input0,
-                                   input1,
-                                   input0_scale,
-                                   input0_zero_point,
-                                   input1_scale,
-                                   input1_zero_point,
-                                   output_scale,
-                                   output_zero_point}))
+    : Op({input0,
+          input1,
+          input0_scale,
+          input0_zero_point,
+          input1_scale,
+          input1_zero_point,
+          output_scale,
+          output_zero_point})
     , m_output_type(output_type)
     , m_input0_axes(input0_axes)
     , m_input1_axes(input1_axes)
