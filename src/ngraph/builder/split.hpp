@@ -23,22 +23,22 @@ namespace ngraph
 {
     namespace builder
     {
-        /// \brief      Split node on specified axis into multiple parts.
+        /// \brief      Split value on specified axis into multiple parts.
         ///
-        /// \param[in]  node          The input node.
+        /// \param[in]  value         The value to be split.
         /// \param[in]  length_parts  The vector defining the lengths of each split part.
         /// \param[in]  axis          The axis we split input node on. Default value is zero axis.
         ///
         /// \return     The vector containing multiple nodes we split input node into.
         ///
-        NodeVector split(const std::shared_ptr<ngraph::Node>& node,
-                         const std::vector<std::size_t>& length_parts,
-                         std::size_t axis = 0);
+        NodeVector split(const Output<Node>& value,
+                         const std::vector<size_t>& length_parts,
+                         size_t axis = 0);
 
         /// \brief      Split node on specified axis into multiple parts.
         ///
-        /// \param[in]  node          The input node.
-        /// \param[in]  split_parts   The number of parts we want to split input node at given
+        /// \param[in]  value         The value to split.
+        /// \param[in]  split_parts   The number of parts we want to split output at given
         ///                           axis. The length of the axis to split must be divisible by
         ///                           this value.
         /// \param[in]  axis          The axis we split input node on. Default value is zero axis.
@@ -49,7 +49,6 @@ namespace ngraph
         ///
         /// \return     The vector containing multiple nodes we split input node into.
         ///
-        NodeVector
-            split(const std::shared_ptr<ngraph::Node>& node, std::size_t split_parts, int axis = 0);
+        NodeVector split(const Output<Node>& value, size_t split_parts, int axis = 0);
     } // namespace builder
 } // namespace ngraph

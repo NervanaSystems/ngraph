@@ -23,8 +23,10 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::QuantizedConcat::type_name{"QuantizedConcat"};
+
 op::QuantizedConcat::QuantizedConcat(const NodeVector& args, size_t concatenation_axis)
-    : Op("QuantizedConcat", check_single_output_args(args))
+    : Op(check_single_output_args(args))
     , m_concatenation_axis(concatenation_axis)
 {
     constructor_validate_and_infer_types();

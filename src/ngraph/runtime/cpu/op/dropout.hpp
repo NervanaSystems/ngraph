@@ -26,11 +26,13 @@ namespace ngraph
         class Dropout : public Op
         {
         public:
-            Dropout(const std::shared_ptr<Node>& input,
-                    const std::shared_ptr<Node>& gm_const,
-                    const std::shared_ptr<Node>& use_seed,
-                    const std::shared_ptr<Node>& seed,
-                    const std::shared_ptr<Node>& keep_prob); // keep_prob = 1 - dropout_prob
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            Dropout(const Output<Node>& input,
+                    const Output<Node>& gm_const,
+                    const Output<Node>& use_seed,
+                    const Output<Node>& seed,
+                    const Output<Node>& keep_prob); // keep_prob = 1 - dropout_prob
 
             bool get_use_seed() const;
             uint64_t get_seed() const;

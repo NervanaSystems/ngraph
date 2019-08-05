@@ -14,17 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "null_node.hpp"
+#include <string>
+
 #include "ngraph/node.hpp"
+#include "null_node.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        NullNode::NullNode()
-            : ngraph::Node("NullNode", {}, 0)
-        {
-        }
+        const std::string NullNode::type_name{"NullNode"};
 
         std::shared_ptr<Node> NullNode::copy_with_new_args(const NodeVector& new_args) const
         {

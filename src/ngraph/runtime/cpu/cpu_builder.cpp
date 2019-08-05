@@ -65,6 +65,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
 #include "ngraph/runtime/cpu/kernel/abs.hpp"
@@ -550,6 +551,12 @@ namespace ngraph
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sign);
             }
 
+            template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Not)
+            {
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::logical_not);
+            }
+
 #define TI(x) type_index(typeid(x))
 
             BuildOpMap& GetGlobalBuildDispatcher()
@@ -627,6 +634,7 @@ namespace ngraph
             REGISTER_CF_BUILDER(And);
             REGISTER_CF_BUILDER(Or);
             REGISTER_CF_BUILDER(Sign);
+            REGISTER_CF_BUILDER(Not);
         }
     }
 }
