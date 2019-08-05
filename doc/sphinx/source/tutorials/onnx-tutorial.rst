@@ -10,8 +10,8 @@ Learn how to use nGraph to accelerate inference on ONNX\* workloads.
 Overview
 ========
 
-This Get Started tutorial is divided into two parts: a) installation and b)
-an example of how to use nGraph to accelerate inference on an ONNX model.
+This Get Started tutorial is divided into two parts: a) building and
+installing nGraph for ONNX and b) an example of how to use nGraph to accelerate inference on an ONNX model.
 
 Build and install nGraph
 ========================

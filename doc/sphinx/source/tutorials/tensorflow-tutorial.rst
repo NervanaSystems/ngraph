@@ -3,15 +3,16 @@
 Get Started with nGraph for TensorFlow\*
 ########################################
 
-Use nGraph to speed up training and inference on TensorFlow\* workloads. 
+Learn how to use nGraph to speed up training and inference on TensorFlow\* workloads. 
 
 .. contents::
 
 Overview
 ========
 
-This Get Started tutorial is divided into two parts: a) installation and b)
-an example of how to use nGraph with TensorFlow.
+This Get Started tutorial is divided into two parts: a) building and 
+installing nGraph for TensorFlow and b) an example of how to use nGraph
+with TensorFlow.
 
 Build and install nGraph
 ========================
@@ -139,7 +140,7 @@ For more build options:
 Install ngraph-tensorflow-bridge
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Install the ``graph-tensorflow-bridge`` using ``pip``:
+Install the ``ngraph-tensorflow-bridge`` using ``pip``:
 
 ::
 
