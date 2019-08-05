@@ -23,10 +23,10 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, Equal, Exp, \
-    Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, Less, LessEq, Log, LRN, Max, Maximum, \
-    MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
-    Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
-    Sqrt, Subtract, Sum, Tan, Tanh, TopK
+    Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, Less, LessEq, Log, LRN, Max, \
+    Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
+    Parameter, Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, \
+    Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
 
 from typing import Callable, Iterable, List, Union
 
@@ -604,7 +604,7 @@ def depth_to_space(node, block_size, name=None):  # type: (Node, int, str) -> No
     """
     return DepthToSpace(node, block_size)
 
-  
+
 def gelu(node, name=None):  # type: (NodeInput, str) -> Node
     r"""Perform Gaussian Error Linear Unit operation element-wise on data from input node.
 
@@ -620,7 +620,7 @@ def gelu(node, name=None):  # type: (NodeInput, str) -> Node
     :return: The new node performing a GELU operation on its input data element-wise.
     """
     return Gelu(as_node(node))
- 
+
 
 @nameable_op
 def select(selection_node, input_node1, input_node2, name=None):

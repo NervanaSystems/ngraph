@@ -93,6 +93,7 @@ def test_depth_to_space():
                         [12, 18, 13, 19, 14, 20],
                         [3, 9, 4, 10, 5, 11],
                         [15, 21, 16, 22, 17, 23]]]], dtype=np.float32)
+    assert np.allclose(result, expected)
 
 
 def test_gemm_operator():
