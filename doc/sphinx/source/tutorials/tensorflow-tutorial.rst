@@ -103,7 +103,7 @@ Install ``cmake``, ``virtualenv``, and ``gcc 4.8``.
 Build ngraph-tensorflow-bridge
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Once TensorFlow's dependencies are installed, clone the ``ngraph-bridge`` repo:
+Clone the ``ngraph-bridge`` repo:
 
 ::
 
@@ -139,8 +139,7 @@ For more build options:
 Install ngraph-tensorflow-bridge
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Once the Python wheel ``ngraph-*.whl`` is built, install it
-using ``pip``. For example:
+Install the ``graph-tensorflow-bridge`` using ``pip``:
 
 ::
 
