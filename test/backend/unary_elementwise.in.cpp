@@ -554,3 +554,23 @@ NGRAPH_TEST(${BACKEND_NAME}, tanh)
     handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(input, read_vector<float>(result)));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, negative_i32)
+{
+    auto shape_a = Shape{2, 5};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto relu = make_shared<op::Negative>(A);
+    auto shape_rt = Shape{2, 5};
+    auto f = make_shared<Function>(relu, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::i32, shape_a);
+    copy_data(a, vector<int32_t>{1, 8, -8, 17, -2, 1, 8, -8, 17, -1});
+    auto result = backend->create_tensor(element::i32, shape_rt);
+    vector<int32_t> expected{-1, -8, 8, -17, 2, -1, -8, 8, -17, 1};
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ(expected, read_vector<int32_t>(result));
+}
