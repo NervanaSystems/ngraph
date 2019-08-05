@@ -23,7 +23,7 @@ using namespace ngraph;
 const string op::Relu::type_name{"Relu"};
 const string op::ReluBackprop::type_name{"ReluBackprop"};
 
-op::Relu::Relu(shared_ptr<Node> arg)
+op::Relu::Relu(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
