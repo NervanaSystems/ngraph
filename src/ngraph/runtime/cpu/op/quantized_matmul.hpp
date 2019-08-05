@@ -27,13 +27,12 @@ namespace ngraph
         class QuantizedMatmul : public Op
         {
         public:
-            QuantizedMatmul(const std::shared_ptr<Node>& data,
-                            const std::shared_ptr<Node>& weights,
-                            const std::shared_ptr<Node>& scale,
+            QuantizedMatmul(const Output<Node>& data,
+                            const Output<Node>& weights,
+                            const Output<Node>& scale,
                             const element::Type& output_type);
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override
             {

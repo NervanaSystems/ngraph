@@ -25,11 +25,12 @@ using namespace std;
 using namespace ngraph;
 
 const string op::QuantizedMatmul::type_name{"QuantizedMatmul"};
-op::QuantizedMatmul::QuantizedMatmul(const shared_ptr<Node>& data,
-                                     const shared_ptr<Node>& weights,
-                                     const shared_ptr<Node>& scale,
+
+op::QuantizedMatmul::QuantizedMatmul(const Output<Node>& data,
+                                     const Output<Node>& weights,
+                                     const Output<Node>& scale,
                                      const element::Type& output_type)
-    : Op("QuantizedMatmul", check_single_output_args({data, weights, scale}))
+    : Op({data, weights, scale})
     , m_output_type(output_type)
 {
     constructor_validate_and_infer_types();
