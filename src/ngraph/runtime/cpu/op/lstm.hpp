@@ -27,6 +27,8 @@ namespace ngraph
         class Lstm : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             // INPUTS:
             // [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size, feature_size}
             // [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size, feature_size}
@@ -40,11 +42,11 @@ namespace ngraph
 
             // This version of the LSTM op supports MKLDNN emitter code, this can be used standalone for computing RNN
             // without fusing RNN cell (LSTM)'s across time steps.
-            Lstm(std::shared_ptr<Node> src_layer,
-                 std::shared_ptr<Node> src_iter,
-                 std::shared_ptr<Node> weights_layer,
-                 std::shared_ptr<Node> weights_iter,
-                 std::shared_ptr<Node> bias,
+            Lstm(const Output<Node>& src_layer,
+                 const Output<Node>& src_iter,
+                 const Output<Node>& weights_layer,
+                 const Output<Node>& weights_iter,
+                 const Output<Node>& bias,
                  ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
             Shape get_output_tensor_shape() const { return m_output_tensor_shape; }
             Shape get_output_cell_shape() const { return m_output_cell_shape; }

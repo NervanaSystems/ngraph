@@ -74,6 +74,7 @@
 #include "ngraph/op/fused/depth_to_space.hpp"
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/fake_quantize.hpp"
+#include "ngraph/op/fused/gelu.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -145,6 +146,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -680,13 +682,7 @@ struct OutputHelper
     {
     }
 
-    operator shared_ptr<Node>() const
-    {
-        return m_output.get_index() == 0
-                   ? m_output.get_node_shared_ptr()
-                   : make_shared<op::GetOutputElement>(m_output.get_node_shared_ptr(),
-                                                       m_output.get_index());
-    }
+    operator shared_ptr<Node>() const { return get_output_element(m_output); }
     operator const Output<Node>&() const { return m_output; }
     Output<Node> m_output;
 };
@@ -728,7 +724,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
-#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -1221,6 +1217,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::GatherND>(args[0], args[1]);
             break;
         }
+        case OP_TYPEID::Gelu:
+        {
+            node = make_shared<op::Gelu>(args[0]);
+            break;
+        }
         case OP_TYPEID::Gemm:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -1244,7 +1245,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GetOutputElement:
         {
-            node = make_shared<op::GetOutputElement>(args[0], node_js.at("n").get<size_t>());
+            node = make_shared<op::GetOutputElement>(
+                static_cast<Output<Node>>(args[0]).get_node_shared_ptr(),
+                node_js.at("n").get<size_t>());
             break;
         }
         case OP_TYPEID::Greater:
@@ -1937,6 +1940,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Unsqueeze>(args[0], args[1]);
             break;
         }
+        case OP_TYPEID::Xor:
+        {
+            node = make_shared<op::Xor>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            break;
+        }
         case OP_TYPEID::UnknownOp:
         {
             stringstream ss;
@@ -1944,7 +1952,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             throw runtime_error(ss.str());
         }
         }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 
@@ -2425,6 +2433,8 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::GetOutputElement*>(&n);
         node["n"] = tmp->get_n();
         break;
+    }
+    case OP_TYPEID::Gelu: { break;
     }
     case OP_TYPEID::Gemm:
     {
@@ -2933,6 +2943,15 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Transpose: { break;
     }
     case OP_TYPEID::Unsqueeze: { break;
+    }
+    case OP_TYPEID::Xor:
+    {
+        auto tmp = dynamic_cast<const op::Xor*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }

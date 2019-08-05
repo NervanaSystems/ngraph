@@ -14,6 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+// NOTE: This file follows nGraph format style and naming convention since it
+// exposes a public API to the rest of nGraph codebase.
+
 #include "compiler.hpp"
 
 #include "dialect/dialect.hpp"
@@ -24,8 +27,21 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/argmax.hpp"
+#include "ngraph/op/argmin.hpp"
+#include "ngraph/op/concat.hpp"
+#include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/relu.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>
@@ -34,6 +50,7 @@
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
+#include <mlir/Conversion/ControlFlowToCFG/ConvertControlFlowToCFG.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
@@ -51,21 +68,16 @@
 using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::make_unique;
-
+using llvm::ArrayRef;
 using namespace ngraph::runtime::ngmlir;
+
+static llvm::cl::opt<bool>
+    clEnableAffineLoopFusion("enable-affine-loop-fusion",
+                             llvm::cl::init(false),
+                             llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
     create_op<op_name>(MLIRCompiler & compiler, const ngraph::Node* ng_node)
-
-MLIRCompiler::MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
-                           const std::vector<void*>& external_tensors)
-    : m_compiled_kernel(compiled_kernel)
-    , m_external_tensors(external_tensors)
-{
-    NGRAPH_CHECK((m_compiled_kernel->get_arguments().size() +
-                  m_compiled_kernel->get_kernel_outputs().size()) == external_tensors.size(),
-                 "Number of arguments and outputs doesn't match number of tensors");
-}
 
 void MLIRCompiler::init_mlir()
 {
@@ -79,26 +91,34 @@ void MLIRCompiler::init_mlir()
     {
         mlir::registerDialect<mlir::NGraphOpsDialect>();
         // Register any LLVM command line options
-        llvm::cl::ParseEnvironmentOptions("ngraph", "MLIR_LLVM_OPTIONS", "");
+        llvm::cl::ParseEnvironmentOptions("ngraph", "NGRAPH_MLIR_OPTIONS", "");
         initialized = true;
     }
 }
 
-void MLIRCompiler::compile_and_run()
+void MLIRCompiler::compile()
 {
     build_ng_dialect_module();
     lower_ng_dialect();
-    optimize();
-    bind_arguments();
+}
+
+void MLIRCompiler::run(std::vector<void*>& external_tensors)
+{
+    bind_arguments(external_tensors);
     execute();
     cleanup();
+}
+
+unsigned MLIRCompiler::get_mem_mgr_arg_id(mlir::FuncOp& func)
+{
+    return func.getNumArguments() - 1;
 }
 
 // Creates an MLIR module and function with nGraph dialect ops from the input CompiledKernel.
 void MLIRCompiler::build_ng_dialect_module()
 {
     // initialize an empty module
-    m_module = make_unique<mlir::Module>(&m_context);
+    m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
 
     TypeList args_type_list, result_type_list;
 
@@ -110,24 +130,23 @@ void MLIRCompiler::build_ng_dialect_module()
 
     for (auto input : kernel_inputs)
     {
-        args_type_list.push_back(get_mlir_type(input->get_output_tensor_ptr().get()));
+        args_type_list.push_back(get_mlir_type(input.get()));
     }
 
     for (auto output : kernel_outputs)
     {
-        result_type_list.push_back(get_mlir_type(output->get_output_tensor_ptr().get()));
+        result_type_list.push_back(get_mlir_type(output.get()));
     }
 
     auto func_type = mlir::FunctionType::get(args_type_list, result_type_list, &m_context);
-    auto function =
-        make_unique<mlir::Function>(mlir::UnknownLoc::get(&m_context), "main", func_type);
-    function->addEntryBlock();
+    auto function = mlir::FuncOp::create(mlir::UnknownLoc::get(&m_context), "main", func_type);
+    function.addEntryBlock();
 
     // populate Tensor->Value maps
     int i = 0;
     for (auto input : kernel_inputs)
     {
-        mlir::Value* arg = function->getArgument(i);
+        mlir::Value* arg = function.getArgument(i);
         TensorInfo tensor_info{arg};
         m_tensor_to_value_map.insert(
             TensorToInfo(input->get_output_tensor_ptr().get(), tensor_info));
@@ -135,9 +154,9 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     // create builder
-    m_builder = llvm::make_unique<mlir::OpBuilder>(function->getBody());
+    m_builder = llvm::make_unique<mlir::OpBuilder>(function.getBody());
     build_ng_dialect();
-    m_module->getFunctions().push_back(function.release());
+    m_module->push_back(function);
     if (failed(m_module->verify()))
     {
         NGRAPH_CHECK(false, "Invalid module after lowering to NG dialect");
@@ -146,23 +165,29 @@ void MLIRCompiler::build_ng_dialect_module()
     dump_mlir_module("nGraph Dialect Dump:");
 }
 
+// Converts nGraph shape \p ng_shape to MLIR shape \p mlir_shape.
+static void get_mlir_shape(ngraph::Shape ng_shape, llvm::SmallVectorImpl<int64_t>& mlir_shape)
+{
+    for (auto dim : ng_shape)
+    {
+        mlir_shape.push_back(dim);
+    }
+}
+
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
 // element type.
 mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
 {
-    SmallVector<int64_t, 4> shape;
-    for (auto d : tensor->get_shape())
-    {
-        shape.push_back(d);
-    }
-
-    return mlir::NGTensorType::get(&m_context, get_mlir_type(tensor->get_element_type()), shape);
+    SmallVector<int64_t, 4> mlir_shape;
+    get_mlir_shape(tensor->get_shape(), mlir_shape);
+    return mlir::NGTensorType::get(
+        &m_context, get_mlir_type(tensor->get_element_type()), mlir_shape);
 }
 
 // Converts an nGraph element type into an MLIR type.
 mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
 {
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -190,9 +215,15 @@ mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
     NGRAPH_CHECK(false, "Unreachable");
     return mlir::Type();
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
+}
+
+mlir::Type MLIRCompiler::get_mlir_type(const ngraph::Node* node)
+{
+    descriptor::Tensor* out_tensor = node->get_output_tensor_ptr().get();
+    return get_mlir_type(out_tensor);
 }
 
 void MLIRCompiler::update_tensor_value(descriptor::Tensor* tensor, mlir::Value* value)
@@ -212,9 +243,10 @@ MLIRCompiler::TensorInfo MLIRCompiler::get_tensor_value(descriptor::Tensor* tens
     return it->second;
 }
 
-// Lowers nGraph dialect to affine dialect.
+// Lowers nGraph dialect all the way to LLVM module.
 void MLIRCompiler::lower_ng_dialect()
 {
+    // Lower NG dialect to Affine
     mlir::PassManager pm;
     pm.addPass(mlir::createDialectLoweringPass(this));
     pm.addPass(mlir::createCanonicalizerPass());
@@ -226,21 +258,70 @@ void MLIRCompiler::lower_ng_dialect()
         NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
 
-    dump_mlir_module("Affine Dialect Dump:");
+    dump_mlir_module("Affine Dialect Dump (Pre-Optimizations):");
+
+    optimize();
+
+    NGRAPH_CHECK(m_module, "MLIR module is not ready.");
+
+    // Lower Standard dialect to LLVM dialect.
+    mlir::LLVMTypeConverter llvm_converter(&m_context);
+    OwningRewritePatternList patterns;
+    mlir::populateLoopToStdConversionPatterns(patterns, &m_context);
+    mlir::populateStdToLLVMConversionPatterns(llvm_converter, patterns);
+
+    mlir::ConversionTarget target(m_context);
+    target.addLegalDialect<mlir::LLVM::LLVMDialect>();
+    target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
+    target.addDynamicallyLegalOp<mlir::FuncOp>(
+        [&](mlir::FuncOp op) { return llvm_converter.isSignatureLegal(op.getType()); });
+    auto result = applyFullConversion(*m_module, target, std::move(patterns), &llvm_converter);
+    NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
+
+    dump_mlir_module("LLVM-IR Dialect Dump:");
+
+    // Initialize LLVM targets.
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
+
+    unsigned opt_level = 3;
+    if (char* opt_level_str = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
+    {
+        opt_level = std::stoi(opt_level_str);
+        NGRAPH_CHECK(opt_level >= 0 && opt_level <= 3, "Invalid optimization level");
+    }
+    // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
+    // don't run MLIR passes that were already run. We also pass a default transformer to run
+    // LLVM optimizations at level 3.
+    auto llvm_transformer =
+        mlir::makeOptimizingTransformer(opt_level /*optLevel*/, 0 /*sizeLevel*/);
+    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
+    NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
+    m_engine = std::move(maybeEngine.get());
 }
 
-// Receives affine dialect as input and applies affine and standard dialect based optimizations.
-// Lowering from affine dialect to standard dialect happens along the way. Output consists of
-// standard dialect only ops.
 void MLIRCompiler::optimize()
 {
-    mlir::PassManager pm;
-    // Lower affine ops
-    pm.addPass(mlir::createLowerAffinePass());
-    auto rr = pm.run(m_module.get());
-    NGRAPH_CHECK(succeeded(rr), "Affine loop lowering failed");
+    // Run Affine dialect optimizations.
+    mlir::PassManager pm_opts;
+    if (clEnableAffineLoopFusion)
+    {
+        pm_opts.addPass(mlir::createLoopFusionPass());
+    }
 
+    auto opt_res = pm_opts.run(m_module.get());
+    NGRAPH_CHECK(succeeded(opt_res), "Affine optimizations failed");
+    dump_mlir_module("Affine Dialect Dump (Post-Optimizations):");
+
+    // Run Affine dialect to Std dialect conversion.
+    mlir::PassManager pm_lowering;
+    pm_lowering.addPass(mlir::createLowerAffinePass());
+    auto lowering_res = pm_lowering.run(m_module.get());
+    NGRAPH_CHECK(succeeded(lowering_res), "Affine convertion to Std dialect failed");
     dump_mlir_module("Standard Dialect Dump:");
+
+    // Run Std dialect optimizations.
+    // TODO
 }
 
 // MLIR builders
@@ -258,11 +339,20 @@ void MLIRCompiler::build_ng_dialect()
             throw unsupported_op{std::string{"The MLIR backend doesn't currently implement the '"} +
                                  np->description() + "' operation"};
         }
-        mlir::Value* mlir_value = it->second(*this, np.get());
-        // builders that have multiple result values will update the value map, and set their ret values to null
-        if (mlir_value)
+        mlir::Operation* op = it->second(*this, np.get());
+        // This assumes simple 1:1 mapping between output edges and generated MLIR op results
+        // If the mapping is more complex, the create_op helper can return null operation
+        // and handles populating the value map itself
+        if (op)
         {
-            update_tensor_value(np->get_output_tensor_ptr().get(), mlir_value);
+            for (auto i = 0; i < op->getNumResults(); i++)
+            {
+                mlir::Value* result = op->getResult(i);
+                if (result)
+                {
+                    update_tensor_value(np->get_output_tensor_ptr(i).get(), result);
+                }
+            }
         }
     }
     create_return();
@@ -275,36 +365,130 @@ namespace ngraph
         namespace ngmlir
         {
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Add)
             {
-                return compiler.create_binary_op<mlir::NGAddOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGAddOp>(ng_node);
             }
 
             template <>
-            mlir::Value* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Subtract)
             {
-                return compiler.create_binary_op<mlir::NGDotOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGSubOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Multiply)
+            {
+                return compiler.create_generic_op<mlir::NGMulOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Divide)
+            {
+                return compiler.create_generic_op<mlir::NGDivOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Greater)
+            {
+                return compiler.create_generic_op<mlir::NGGreaterOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Less)
+            {
+                return compiler.create_generic_op<mlir::NGLessOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Maximum)
+            {
+                return compiler.create_generic_op<mlir::NGMaxOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Minimum)
+            {
+                return compiler.create_generic_op<mlir::NGMinOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMax)
+            {
+                return compiler.create_index_reduction<mlir::NGArgMaxRedOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::ArgMin)
+            {
+                return compiler.create_index_reduction<mlir::NGArgMinRedOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Dot)
+            {
+                return compiler.create_generic_op<mlir::NGDotOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Concat)
+            {
+                auto ng_node_concat = static_cast<const ngraph::op::Concat*>(ng_node);
+                auto op = compiler.create_generic_op<mlir::NGConcatOp>(ng_node);
+                op->setAttr("concatenation_axis",
+                            compiler.m_builder->getI64IntegerAttr(
+                                ng_node_concat->get_concatenation_axis()));
+                return op;
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Gather)
+            {
+                auto ng_node_gather = static_cast<const ngraph::op::Gather*>(ng_node);
+                auto op = compiler.create_generic_op<mlir::NGGatherOp>(ng_node);
+                op->setAttr("axis",
+                            compiler.m_builder->getI64IntegerAttr(ng_node_gather->get_axis()));
+                return op;
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Relu)
+            {
+                return compiler.create_generic_op<mlir::NGReluOp>(ng_node);
             }
         }
     }
+}
+
+template <typename Op>
+mlir::Operation* MLIRCompiler::create_generic_op(const ngraph::Node* ng_node)
+{
+    std::vector<mlir::Value*> arg_values;
+    std::vector<mlir::Type> res_types;
+    for (auto& arg : ng_node->get_arguments())
+    {
+        auto arg_tensor = arg->get_output_tensor_ptr();
+        auto arg_v = get_tensor_value(arg_tensor.get()).m_value;
+        arg_values.push_back(arg_v);
+    }
+
+    for (auto& output : ng_node->outputs())
+    {
+        res_types.push_back(get_mlir_type(output.get_tensor_ptr().get()));
+    }
+
+    return (m_builder->create<Op,
+                              ArrayRef<mlir::Type>,
+                              ArrayRef<mlir::Value*>,
+                              ArrayRef<mlir::NamedAttribute>>(
+                mlir::UnknownLoc::get(&m_context), res_types, arg_values, {/* no attrs */}))
+        .getOperation();
 }
 
 const MLIRCompiler::MLIRCompOpMap MLIRCompiler::op_dispatcher{
 #define MLIR_OP(OP) {TI(ngraph::op::OP), &MLIRCompiler::create_op<ngraph::op::OP>},
 #include "ops_supported.inc"
 };
-
-template <typename BinOp>
-mlir::Value* MLIRCompiler::create_binary_op(const ngraph::Node* ng_node)
-{
-    auto lhs = ng_node->get_argument(0)->get_output_tensor_ptr();
-    auto rhs = ng_node->get_argument(1)->get_output_tensor_ptr();
-    auto lhs_v = get_tensor_value(lhs.get()).m_value;
-    auto rhs_v = get_tensor_value(rhs.get()).m_value;
-    auto res_type = get_mlir_type(ng_node->get_output_tensor_ptr().get());
-    return m_builder->create<BinOp>(mlir::UnknownLoc::get(&m_context), res_type, lhs_v, rhs_v)
-        .getResult();
-}
 
 void MLIRCompiler::create_return()
 {
@@ -316,14 +500,31 @@ void MLIRCompiler::create_return()
     m_builder->create<mlir::NGReturnOp>(mlir::UnknownLoc::get(&m_context), value_list);
 }
 
+template <typename RedOp>
+mlir::Operation* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_node)
+{
+    auto* idx_red = static_cast<const ngraph::op::util::IndexReduction*>(ng_node);
+    auto op = create_generic_op<RedOp>(ng_node);
+    mlir::ArrayAttr red_axes_attr =
+        m_builder->getI64ArrayAttr({(int64_t)idx_red->get_reduction_axis()});
+    op->setAttr("axes", red_axes_attr);
+    return op;
+}
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
 // helpers to be used inside the function.
-void MLIRCompiler::bind_arguments()
+void MLIRCompiler::bind_arguments(std::vector<void*>& external_tensors)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    mlir::Function* func = m_module->getNamedFunction("main");
-    NGRAPH_CHECK(func && !func->getBlocks().empty(), "Function not found");
+    mlir::FuncOp func = m_module->lookupSymbol<mlir::FuncOp>("main");
+    NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
+
+    // Set external arguments
+    NGRAPH_CHECK(m_compiled_kernel, "No compiled kernel set for compiler");
+    NGRAPH_CHECK((m_compiled_kernel->get_arguments().size() +
+                  m_compiled_kernel->get_kernel_outputs().size()) == external_tensors.size(),
+                 "Number of arguments and outputs doesn't match number of tensors");
+    m_external_tensors = &external_tensors;
 
     // Create list with a type-erased double pointer for each invocation arguments.
     // We currently use 'allocateMemRefArguments', which creates a
@@ -331,17 +532,17 @@ void MLIRCompiler::bind_arguments()
     // actual pointer to the data.
 
     // create MemRef args
-    auto expected_arguments = allocate_memref_args(func);
+    auto expected_arguments = allocate_memref_args();
     NGRAPH_CHECK(expected_arguments.size(), "Arguments can't be created");
     m_invoke_args = std::move(expected_arguments);
 
-    NGRAPH_CHECK(m_invoke_args.size() == m_external_tensors.size(),
+    NGRAPH_CHECK(m_invoke_args.size() == m_external_tensors->size(),
                  "Number of external tensors doesn't match number of function arguments");
 
     // Assign external tensor pointers to invocation arguments.
     for (size_t i = 0, num_args = m_invoke_args.size(); i < num_args; ++i)
     {
-        ((mlir::StaticFloatMemRef*)m_invoke_args[i])->data = (float*)m_external_tensors[i];
+        ((mlir::StaticFloatMemRef*)m_invoke_args[i])->data = (float*)(*m_external_tensors)[i];
     }
 
     // Add pointer to memory manager
@@ -358,32 +559,6 @@ void MLIRCompiler::bind_arguments()
 // Lowers standard dialect to LLVM dialect and uses the MLIR execution engine to execute the code.
 void MLIRCompiler::execute()
 {
-    NGRAPH_CHECK(m_module, "MLIR module is not ready.");
-
-    // Lower Standard dialect to LLVM dialect.
-    mlir::LLVMTypeConverter llvm_converter(&m_context);
-    OwningRewritePatternList patterns;
-    mlir::populateStdToLLVMConversionPatterns(llvm_converter, patterns);
-
-    mlir::ConversionTarget target(m_context);
-    target.addLegalDialect<mlir::LLVM::LLVMDialect>();
-    auto result = applyConversionPatterns(*m_module, target, llvm_converter, std::move(patterns));
-    NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
-
-    dump_mlir_module("LLVM-IR Dialect Dump:");
-
-    // Initialize LLVM targets.
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-
-    // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
-    // don't run MLIR passes that were already run. We also pass a default transformer to run
-    // LLVM optimizations at level 3.
-    auto llvm_transformer = mlir::makeOptimizingTransformer(3 /*optLevel*/, 0 /*sizeLevel*/);
-    auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
-    NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
-    m_engine = std::move(maybeEngine.get());
-
     // Invoke the JIT-compiled function with the arguments. Note that, for API
     // uniformity reasons, it takes a list of type-erased pointers to arguments.
     // Please, note that 'invoke' method is overloaded with a parameter pack version.
@@ -410,32 +585,19 @@ void MLIRCompiler::cleanup()
     m_mem_mgr.freeAll();
 }
 
-SmallVector<void*, 8> MLIRCompiler::allocate_memref_args(mlir::Function* func)
+SmallVector<void*, 8> MLIRCompiler::allocate_memref_args()
 {
     SmallVector<void*, 8> args;
-    args.reserve(func->getNumArguments());
-    for (const auto& arg : func->getArguments())
+    for (auto i = 0; i < m_external_tensors->size(); i++)
     {
-        auto descriptor = allocate_memref_descriptor(arg->getType());
-
-        if (!descriptor)
-        {
-            continue;
-        }
+        auto descriptor = allocate_memref_descriptor();
         args.push_back(descriptor);
     }
     return args;
 }
 
-mlir::StaticFloatMemRef* MLIRCompiler::allocate_memref_descriptor(mlir::Type type)
+mlir::StaticFloatMemRef* MLIRCompiler::allocate_memref_descriptor()
 {
-    auto memRefType = type.dyn_cast<mlir::MemRefType>();
-    if (!memRefType)
-    {
-        return nullptr;
-    }
-    NGRAPH_CHECK(memRefType.getNumDynamicDims() == 0, "No support for dynamic shapes");
-
     // We only use StaticFloatMemRef because that's what MLIR currently offers.
     // We should expand this with different types and dynamic MemRefs
     auto* descriptor =

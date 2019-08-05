@@ -31,6 +31,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::RNNCell::type_name{"RNNCell"};
+
 op::RNNCell::RNNCell(const shared_ptr<Node>& X,
                      const shared_ptr<Node>& W,
                      const shared_ptr<Node>& R,
@@ -50,7 +52,7 @@ op::RNNCell::RNNCell(const shared_ptr<Node>& X,
                      const vector<float>& activation_alpha,
                      const vector<float>& activation_beta,
                      float clip)
-    : FusedOp("RNNCell", {X, W, R, H_t})
+    : FusedOp(check_single_output_args({X, W, R, H_t}))
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
     , m_activation_f{get_activation_function(0)}
 {
@@ -68,7 +70,7 @@ op::RNNCell::RNNCell(const shared_ptr<Node>& X,
                      const vector<float>& activation_alpha,
                      const vector<float>& activation_beta,
                      float clip)
-    : FusedOp("RNNCell", {X, W, R, H_t, B})
+    : FusedOp(check_single_output_args({X, W, R, H_t, B}))
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
     , m_activation_f{get_activation_function(0)}
 {

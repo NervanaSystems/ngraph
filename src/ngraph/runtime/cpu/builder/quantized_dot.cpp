@@ -260,6 +260,9 @@ namespace ngraph
             }
             REGISTER_OP_BUILDER(QuantizedDotBias);
             REGISTER_OP_BUILDER(QuantizedDot);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_quantized_dot_cpp() {}
+#endif
         }
     }
 }

@@ -18,6 +18,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+// NOTE: This file follows nGraph format style and MLIR naming convention since it does
+// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+
 include "mlir/IR/OpBase.td"
 
 // nGraph Dialect operations definitions
@@ -149,6 +152,7 @@ def NGSinhOp     : NG_Unary_Arith_Op<"sinh">;
 def NGTanOp      : NG_Unary_Arith_Op<"tan">;
 def NGTanhOp     : NG_Unary_Arith_Op<"tanh">;
 def NGSqrtOp     : NG_Unary_Arith_Op<"sqrt">;
+def NGReluOp     : NG_Unary_Arith_Op<"relu">;
 
 // Binary Operations
 def NGAddOp      : NG_Binary_Arith_Op<"add", [Commutative]>;
@@ -181,13 +185,25 @@ def NGDotOp : NG_Binary_Op<"dot">
   let verifier = [{ return verifyOp(this); }];
 }
 
+// TODO(amprocte): Might be nice to rebase this on some sort of NG_Variadic_Op
+// class, but I'm not sure how to add concatenation_axis into the args if we
+// do that.
+def NGConcatOp :
+    NG_OneResult_Op<"concat", [NoSideEffect]>,
+    Arguments<(ins Variadic<NG_TensorType>:$args, I64Attr:$concatenation_axis)>
+{
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+
+  let verifier = [{ return verifyOp(this); }];
+}
+
 class NG_Axis_Reduction_Op<string mnemonic, list<OpTrait> traits = []> :
       NG_OneResult_Op<mnemonic, !listconcat([NoSideEffect], traits)>,
       Arguments<(ins NG_TensorType:$operand, I64ArrayAttr:$axes)>
 {
   let summary = "Base class for reduction operations that perform a reduction "
                 "across the axes of a  single tensor.";
-  let description = "Axes are represented as an array of I64 attributes.";
+  let description = [{Axes are represented as an array of I64 attributes.}];
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
 
@@ -242,6 +258,24 @@ def NGAnyRedOp : NG_Axis_Reduction_Op<"any.red">
 {
   let summary = "Axis logical OR reduction of a boolean tensor.";
   let verifier = [{ return verifyLogicalReductionOp(this); }];
+}
+
+// Gather
+def NGGatherOp : 
+    NG_OneResult_Op<"gather", [NoSideEffect]>,
+    Arguments<(ins NG_TensorType:$params, NG_TensorType:$indices, I64Attr:$axis)>
+{
+  let summary = "Gather slices from params along the specified axis according to indices";
+  let description = [{
+    Gather slices from axis of params according to indices
+    params The tensor from which slices are gathered
+    indices Index tensor. Data type must be `element::i32` or `element::i64`
+    axis Axis in params to gather
+  }];
+
+  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
+
+  let verifier = [{ return verifyOp(this); }];
 }
 
 // Terminator Ops

@@ -23,9 +23,11 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::CompiledKernel::type_name{"CompiledKernel"};
+
 shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector& new_args) const
 {
-    auto args = get_arguments();
+    auto args = inputs();
     if (new_args.size() != args.size())
     {
         throw ngraph_error("number of arguments don't match");
@@ -35,18 +37,19 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     NodeMap nm;
     for (size_t i = 0; i < args.size(); i++)
     {
-        nm[args.at(i).get()] = new_args.at(i);
+        nm[args.at(i).get_source_output().get_node()] = new_args.at(i);
     }
 
     NodeVector new_node_list;
     for (auto n : m_node_list)
     {
-        NodeVector cur_args;
-        for (auto a : n->get_arguments())
+        OutputVector cur_args;
+        for (auto a : n->inputs())
         {
-            cur_args.push_back(nm.at(a.get()));
+            auto o = a.get_source_output();
+            cur_args.push_back(o.for_node(nm.at(o.get_node())));
         }
-        auto new_n = n->copy_with_new_args(cur_args);
+        auto new_n = n->copy_with_new_inputs(cur_args);
         nm[n.get()] = new_n;
         new_node_list.push_back(new_n);
     }
@@ -63,21 +66,12 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
 ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
                                            const NodeVector& outputs,
                                            const NodeVector& args)
-    : Op("CompiledKernel", check_single_output_args({args}))
+    : Op(check_single_output_args({args}))
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {
     constructor_validate_and_infer_types();
     set_output_size(m_output_nodes.size());
-
-    auto ref = node_list.at(0);
-    for (auto n : node_list)
-    {
-        if (n->get_shape() != ref->get_shape() || n->get_element_type() != ref->get_element_type())
-        {
-            throw ngraph_error("types and shapes of the nodes in node_list are different");
-        }
-    }
 
     for (size_t i = 0; i < outputs.size(); ++i)
     {

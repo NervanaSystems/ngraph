@@ -137,6 +137,7 @@ pad_reflect_2d_with_neg
 pad_negative_exterior_2d
 pad_negative_exterior_2d_all_negative
 pad_negative_exterior_4d
+pad_symmetric
 max_trivial_int8
 max_trivial_5d_int32
 max_3d_to_scalar_double
@@ -171,6 +172,7 @@ prelu
 hardsigmoid
 prelu_shared_slope
 prelu_negative_slope
+relu_2Dfprop_i32
 conv_bias_1d
 conv_bias_2d
 conv_bias_3d
@@ -229,6 +231,29 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
+gelu_f32
+gelu_f64
+# From onnx tests
+model_quant_conv_linear_2d
+model_quant_conv_linear_3d
+model_conv_integer
+model_conv_integer_zero_point_zero
+model_conv_integer_pads
+model_lstm_fwd_large_batch_no_clip
+model_global_lp_pool_p3
+model_argmin_no_keepdims
+model_elu
+model_selu
+model_sigmoid
+model_softplus
+model_argmax_int32
+model_argmin_int32
+model_lp_norm_default
+model_instance_normalization
+
+# failings on plaidml_nGPU
+argmin_4D_i64
+argmax_4D_i64
 
 # dgkutnic ww24.5: these tests are to be triaged by the PlaidML team
 # ww25.2: re-scrubbed this list of tests after fixing check_inputs
@@ -240,6 +265,10 @@ batch_norm_training_0eps_f32
 argmin_trivial
 argmax_trivial
 argmin_trivial_in_i32
+argmin_3D_i32
+argmin_3D_i64
+argmax_3D_i32
+argmax_3D_i64
 sum_large_1d_to_scalar
 sum_stable_acc
 one_hot_scalar_2_in_3
@@ -267,6 +296,12 @@ quantized_convolution
 quantized_conv_int32_output
 quantized_dot_u8u8
 quantized_dot_int32_output
+
+# unsupported op: `ReverseSequence`
+model_lstm_bdir_short_input_seq
+model_lstm_mixed_seq_reverse
+model_reverse_sequence_0_batch_1
+model_reverse_sequence_1_batch_0
 
 # node validation error: "Argument shapes are inconsistent."
 model_lstm_fwd_with_clip

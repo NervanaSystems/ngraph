@@ -161,6 +161,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(TopK);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_topk_cpp() {}
+#endif
         }
     }
 }

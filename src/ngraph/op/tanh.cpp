@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::Tanh::type_name{"Tanh"};
+
 op::Tanh::Tanh(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Tanh", arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }

@@ -16,7 +16,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <onnxifi.h>
+#include <onnx/onnxifi.h>
 #include <stdexcept>
 
 #include "backend_manager.hpp"
@@ -131,4 +131,4 @@ ONNXIFI_PUBLIC ONNXIFI_CHECK_RESULT onnxStatus ONNXIFI_ABI onnxReleaseGraph(onnx
     return ONNXIFI_STATUS_INTERNAL_ERROR;
 }
 
-} /* extern "C" */
+} // extern "C"

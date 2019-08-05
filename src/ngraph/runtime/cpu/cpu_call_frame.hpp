@@ -97,7 +97,7 @@ namespace ngraph
                 std::unordered_map<size_t, bool> m_id_pool;
                 std::vector<CPURuntimeContext*> m_ctx_vec;
 
-                /* Codegen specific */
+                // Codegen specific
 
                 /// Function that initializes the context used in codegen mode.
                 InitContextFuncCG m_compiled_init_ctx_func;

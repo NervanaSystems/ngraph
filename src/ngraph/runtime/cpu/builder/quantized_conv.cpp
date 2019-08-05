@@ -70,7 +70,6 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&,
-                                    scales_size,
                                     conv_desc,
                                     conv_attr,
                                     deps,
@@ -709,6 +708,9 @@ namespace ngraph
             REGISTER_OP_BUILDER(QuantizedConvolutionBias);
             REGISTER_OP_BUILDER(QuantizedConvolutionBiasAdd);
             REGISTER_OP_BUILDER(QuantizedConvolutionBiasSignedAdd);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_quantized_conv_cpp() {}
+#endif
         }
     }
 }

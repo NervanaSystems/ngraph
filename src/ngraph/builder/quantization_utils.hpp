@@ -1,5 +1,5 @@
 //*****************************************************************************
-// Copyright 2018-2019 Intel Corporation
+// Copyright 2017-2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,10 +37,10 @@ namespace ngraph
     {
         namespace quantization_utils
         {
-            std::shared_ptr<Node> max_abs(std::shared_ptr<Node> a, std::shared_ptr<Node> b);
+            std::shared_ptr<Node> max_abs(const Output<Node>& a, const Output<Node>& b);
 
-            std::shared_ptr<Node> get_scale(std::shared_ptr<Node> input_min_range,
-                                            std::shared_ptr<Node> input_max_range,
+            std::shared_ptr<Node> get_scale(const Output<Node>& input_min_range,
+                                            const Output<Node>& input_max_range,
                                             const ngraph::element::Type& quant_type,
                                             bool bump_by_eps = false);
         }
