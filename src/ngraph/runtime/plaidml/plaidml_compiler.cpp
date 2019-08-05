@@ -38,6 +38,7 @@
 #include "ngraph/runtime/plaidml/plaidml_pass_replicate_combination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_replicate_elision.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_winograd.hpp"
+#include "ngraph/runtime/plaidml/plaidml_ops_group_convolution.hpp"
 
 namespace
 {
@@ -87,7 +88,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     pass_manager.set_per_pass_validation(false);
 
     // We apply the same general-purposes passes as the CPU backend.
-    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
+    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>([] (const Node& node) -> bool {if (node.description() == "GroupConvolution") return true; return false;});
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
