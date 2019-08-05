@@ -31,7 +31,7 @@ using namespace ngraph;
 
 const string op::Softmax::type_name{"Softmax"};
 
-op::Softmax::Softmax(const shared_ptr<Node>& arg, const AxisSet& axes)
+op::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     : UnaryElementwiseArithmetic(arg)
     , m_axes(axes)
 {
@@ -88,6 +88,6 @@ void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 
     auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
 
-    auto x = get_argument(0);
+    auto x = input(0).get_source_output();
     adjoints.add_delta(x, adjoint);
 }
