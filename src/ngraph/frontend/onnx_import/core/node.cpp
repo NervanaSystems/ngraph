@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <onnx-ml.pb.h>
+#include <onnx/onnx_pb.h>
 
 #include "attribute.hpp"
 #include "graph.hpp"

@@ -28,6 +28,11 @@ namespace ngraph
         class QuantizedAvgPool : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a batched average pooling operation.
+            QuantizedAvgPool() = default;
             /// \brief Constructs a batched average pooling operation.
             ///
             /// \param arg The node producing the input data batch tensor.<br>
@@ -43,7 +48,7 @@ namespace ngraph
             /// \param include_padding_in_avg_computation If true then averages include padding
             ///  elements, each treated as the number zero.  If false, padding elements are entirely
             ///  ignored when computing averages.
-            QuantizedAvgPool(const std::shared_ptr<Node>& arg,
+            QuantizedAvgPool(const Output<Node>& arg,
                              const Shape& window_shape,
                              const Strides& window_movement_strides,
                              const Shape& padding_below,

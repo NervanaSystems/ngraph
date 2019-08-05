@@ -51,11 +51,6 @@ OutputVector make_zeros(std::shared_ptr<Node> x)
     return zeros;
 }
 
-autodiff::Adjoints::Adjoints(const NodeVector& ys, const NodeVector& cs)
-    : Adjoints(OutputVector(ys.begin(), ys.end()), OutputVector(cs.begin(), cs.end()))
-{
-}
-
 autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
 {
     if (ys.size() != cs.size())
@@ -123,13 +118,14 @@ autodiff::Adjoints::Adjoints(const OutputVector& ys, const OutputVector& cs)
         auto node = nodes_to_check.front();
         nodes_to_check.pop_front();
         // Look for nodes that will be available when this node is done
-        for (auto arg : node->get_arguments())
+        for (auto input : node->inputs())
         {
-            auto count_it = parent_counts.find(arg);
+            auto input_source_node = input.get_source_output().get_node_shared_ptr();
+            auto count_it = parent_counts.find(input_source_node);
             count_it->second--;
             if (0 == count_it->second)
             {
-                nodes_to_check.push_front(arg);
+                nodes_to_check.push_front(input_source_node);
             }
         }
         OutputVector deltas = get(node);

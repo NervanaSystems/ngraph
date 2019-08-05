@@ -24,6 +24,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::DynReplaceSlice::type_name{"DynReplaceSlice"};
+
 op::DynReplaceSlice::DynReplaceSlice(const shared_ptr<Node>& arg,
                                      const shared_ptr<Node>& replacement,
                                      const shared_ptr<Node>& lower_bounds,
@@ -34,8 +36,7 @@ op::DynReplaceSlice::DynReplaceSlice(const shared_ptr<Node>& arg,
                                      const AxisSet& new_axis,
                                      const AxisSet& shrink_axis,
                                      const AxisSet& ellipsis_mask)
-    : Op("DynReplaceSlice",
-         check_single_output_args({arg, replacement, lower_bounds, upper_bounds, strides}))
+    : Op(check_single_output_args({arg, replacement, lower_bounds, upper_bounds, strides}))
     , m_lower_bounds_mask(lower_bounds_mask)
     , m_upper_bounds_mask(upper_bounds_mask)
     , m_new_axis(new_axis)

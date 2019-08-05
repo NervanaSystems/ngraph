@@ -27,8 +27,10 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::GRN::type_name{"GRN"};
+
 op::GRN::GRN(const shared_ptr<Node>& data, float bias)
-    : FusedOp("GRN", {data})
+    : FusedOp(check_single_output_args({data}))
     , m_bias(bias)
 {
     constructor_validate_and_infer_types();

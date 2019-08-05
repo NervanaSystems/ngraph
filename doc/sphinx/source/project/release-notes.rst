@@ -22,9 +22,10 @@ Core updates for |version|
 + Support for static linking
 + Additional ops
 
-
 .. Latest doc updates
 .. ~~~~~~~~~~~~~~~~~~
+
+.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
@@ -43,13 +44,12 @@ Changelog on Previous Releases
 + Graph visualization improvements
 + Preserve control dependencies in more places
 + GetOutputElement has single input
-+ Add instructions how to build ``NGRAPH_PLAIDML`` backend.
+.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
 
 
 0.23
 ----
 
-+ PlaidML support
 + More ONNX ops
 + Elementwise divide defaults to Python semantics
 + GenerateMask seed optional

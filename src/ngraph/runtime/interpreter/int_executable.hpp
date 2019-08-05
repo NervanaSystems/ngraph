@@ -154,6 +154,7 @@
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
+#include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
 
@@ -186,9 +187,21 @@ public:
 
     std::vector<PerformanceCounter> get_performance_data() const override;
 
+    std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index) override;
+
+    std::shared_ptr<runtime::Tensor> create_output_tensor(size_t output_index) override;
+
+    std::vector<std::shared_ptr<runtime::Tensor>>
+        create_input_tensor(size_t input_index, size_t pipeline_depth) override;
+
+    std::vector<std::shared_ptr<runtime::Tensor>>
+        create_output_tensor(size_t output_index, size_t pipeline_depth) override;
+
 private:
     INTExecutable(const std::string& model_string);
 
+    std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
+    std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
     int get_alignment() const { return 64; }
     bool m_is_compiled = false;
     bool m_nan_check_enabled = false;
@@ -217,7 +230,7 @@ private:
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -1604,13 +1617,22 @@ private:
             }
             break;
         }
+        case OP_TYPEID::Xor:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   element_count);
+            break;
+        }
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
         }

@@ -24,6 +24,7 @@
 #include "ngraph/pass/manager_state.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/pass_config.hpp"
+#include "ngraph/pass/validate.hpp"
 
 namespace ngraph
 {
@@ -39,8 +40,6 @@ class ngraph::pass::Manager
 public:
     Manager();
     ~Manager();
-
-    void initialize_default_passes();
 
     template <typename T, class... Args>
     void register_pass(Args&&... args)
@@ -62,15 +61,22 @@ public:
             m_pass_names.push_back(typeid(T).name());
 #endif
         }
+        if (m_per_pass_validation)
+        {
+            auto validate = std::make_shared<Validate>();
+            auto validate_base = std::static_pointer_cast<PassBase>(validate);
+            m_pass_list.push_back(validate_base);
+        }
     }
 
-    void run_passes(std::shared_ptr<Function>, bool transitive = true, bool revalidate = true);
+    void run_passes(std::shared_ptr<Function>, bool transitive = true);
 
     ManagerState& get_state();
     PassConfig& get_pass_config() { return m_pass_config; }
     void set_pass_config(const PassConfig& pass_config) { m_pass_config = pass_config; }
     void set_pass_visualization(bool new_state) { m_visualize = new_state; }
     void set_pass_serialization(bool new_state) { m_serialize = new_state; }
+    void set_per_pass_validation(bool new_state) { m_per_pass_validation = new_state; }
 private:
     std::vector<std::string> m_pass_names;
     std::vector<std::shared_ptr<PassBase>> m_pass_list;
@@ -78,4 +84,5 @@ private:
     PassConfig m_pass_config;
     bool m_visualize = false;
     bool m_serialize = false;
+    bool m_per_pass_validation = true;
 };

@@ -28,13 +28,16 @@ namespace ngraph
         class Pad : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a generic padding operation.
             ///
             /// \param arg The node producing input tensor to be padded.
             /// \param arg_pad_value The node producing the scalar value to be inserted for padding.
             /// \param padding_below The padding-below widths.
             /// \param padding_above The padding-above widths.
-            /// \param pad_mode The padding mode: CONSTANT(default), EDGE or REFLECT.
+            /// \param pad_mode The padding mode: CONSTANT(default), EDGE, REFLECT or SYMMETRIC.
             Pad(const std::shared_ptr<Node>& arg,
                 const std::shared_ptr<Node>& arg_pad_value,
                 const CoordinateDiff& padding_below,
