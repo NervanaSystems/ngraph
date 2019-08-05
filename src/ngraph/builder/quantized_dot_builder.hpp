@@ -21,9 +21,6 @@
 #include "ngraph/op/quantized_dot.hpp"
 #include "quantization_utils.hpp"
 
-using namespace std;
-using namespace ngraph;
-
 namespace ngraph
 {
     namespace builder
