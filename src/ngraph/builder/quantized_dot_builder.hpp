@@ -28,14 +28,14 @@ namespace ngraph
 {
     namespace builder
     {
-        shared_ptr<Node> QuantizedDotBuilder(const shared_ptr<Node>& input0,
-                                             const shared_ptr<Node>& input1,
-                                             const shared_ptr<Node>& min_input0,
-                                             const shared_ptr<Node>& max_input0,
-                                             const shared_ptr<Node>& min_input1,
-                                             const shared_ptr<Node>& max_input1,
-                                             const shared_ptr<Node>& min_output,
-                                             const shared_ptr<Node>& max_output,
+        shared_ptr<Node> QuantizedDotBuilder(const Output<Node>& input0,
+                                             const Output<Node>& input1,
+                                             const Output<Node>& min_input0,
+                                             const Output<Node>& max_input0,
+                                             const Output<Node>& min_input1,
+                                             const Output<Node>& max_input1,
+                                             const Output<Node>& min_output,
+                                             const Output<Node>& max_output,
                                              const ngraph::element::Type& output_type,
                                              const ngraph::AxisSet& input0_axes,
                                              const ngraph::AxisSet& input1_axes,
