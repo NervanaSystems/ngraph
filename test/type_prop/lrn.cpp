@@ -41,7 +41,7 @@ TEST(type_prop, lrn_invalid_arg_rank)
 TEST(type_prop, lrn_invalid_axes_rank)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto axes = op::Constant::create(element::i32, Shape{1, 2}, {1, 2});
+    auto axes = make_shared<op::Parameter>(element::f32, Shape{1, 2});
     double alpha = 0.1f, beta = 0.2f, bias = 0.3f;
     size_t size = 3;
     try
@@ -59,7 +59,7 @@ TEST(type_prop, lrn_invalid_axes_rank)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 
-    axes = op::Constant::create(element::i32, Shape{5}, {1, 2, 3, 4, 5});
+    axes = make_shared<op::Parameter>(element::f32, Shape{5});
     try
     {
         auto lrn = make_shared<op::LRN>(data, axes, alpha, beta, bias, size);
