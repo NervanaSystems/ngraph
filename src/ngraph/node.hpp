@@ -74,6 +74,7 @@ namespace ngraph
     const NodeVector& check_single_output_args(const NodeVector& args);
 
     OutputVector as_output_vector(const NodeVector& args);
+    NodeVector as_node_vector(const OutputVector& values);
 
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;

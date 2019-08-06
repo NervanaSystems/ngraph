@@ -29,8 +29,8 @@ using namespace ngraph;
 
 const string op::Gelu::type_name{"Gelu"};
 
-op::Gelu::Gelu(const shared_ptr<Node>& data)
-    : FusedOp(check_single_output_args({data}))
+op::Gelu::Gelu(const Output<Node>& data)
+    : FusedOp({data})
 {
     constructor_validate_and_infer_types();
 }
@@ -38,16 +38,16 @@ op::Gelu::Gelu(const shared_ptr<Node>& data)
 // f(x) = 0.5 * x * (1.0 + erf( x / sqrt(2.0) )
 NodeVector op::Gelu::decompose_op() const
 {
-    auto data = get_argument(0);
+    auto data = input(0).get_source_output();
 
     shared_ptr<ngraph::Node> half =
-        builder::make_constant(data->get_element_type(), data->get_shape(), 0.5);
+        builder::make_constant(data.get_element_type(), data.get_shape(), 0.5);
 
     shared_ptr<ngraph::Node> one =
-        builder::make_constant(data->get_element_type(), data->get_shape(), 1.0);
+        builder::make_constant(data.get_element_type(), data.get_shape(), 1.0);
 
     shared_ptr<ngraph::Node> sqrt_two =
-        builder::make_constant(data->get_element_type(), data->get_shape(), std::sqrt(2.0));
+        builder::make_constant(data.get_element_type(), data.get_shape(), std::sqrt(2.0));
 
     return {half * data * (one + make_shared<ngraph::op::Erf>(data / sqrt_two))};
 }
