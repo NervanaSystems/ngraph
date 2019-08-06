@@ -18,6 +18,8 @@
 
 #include <cstddef>
 
+#include "ngraph/tensor_value.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -33,6 +35,8 @@ namespace ngraph
                     out[i] = (arg[i] < T(0) ? T(-arg[i]) : arg[i]);
                 }
             }
+
+            void abs(const TensorBase& arg, TensorBase& out);
         }
     }
 }

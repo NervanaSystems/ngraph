@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstring>
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -77,6 +78,24 @@ namespace ngraph
         element::Type m_element_type;
     };
 
+    static std::ostream& operator<<(std::ostream& str, const TensorBase& t)
+    {
+        str << "et=" << t.element_type() << "; shape=" << t.shape() << "; values: {";
+        WITH_ET(t.element_type(), T, {
+            bool first = true;
+            for (size_t i = 0; i < shape_size(t.shape()); i++)
+            {
+                if (!first)
+                {
+                    str << ", ";
+                }
+                str << t.buffer<T>()[i];
+                first = false;
+            }
+        });
+        str << "}";
+    }
+
     class TensorMap : public TensorBase
     {
     public:
@@ -110,13 +129,12 @@ namespace ngraph
     public:
         TensorValue(const element::Type& element_type,
                     const Shape& shape,
-                    void* raw_buffer,
+                    void* raw_buffer = nullptr,
                     runtime::Allocator* allocator = nullptr)
             : TensorBase(element_type, shape)
             , m_aligned_buffer(
                   shape_size(shape) * element_type.size(), element_type.size(), allocator)
         {
-            NGRAPH_CHECK(raw_buffer != nullptr || shape_size(shape) == 0);
             if (raw_buffer != nullptr)
             {
                 std::memcpy(m_aligned_buffer.get_ptr(),
@@ -139,7 +157,9 @@ namespace ngraph
             other.m_shape = Shape{0};
         }
         template <typename T>
-        TensorValue(const Shape& shape, T* raw_buffer, runtime::Allocator* allocator = nullptr)
+        TensorValue(const Shape& shape,
+                    T* raw_buffer = nullptr,
+                    runtime::Allocator* allocator = nullptr)
             : TensorValue(element::from<T>(), shape, raw_buffer, allocator)
         {
         }

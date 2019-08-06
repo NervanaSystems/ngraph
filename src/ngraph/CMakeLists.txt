@@ -474,10 +474,14 @@ set (SRC
     runtime/host_tensor.cpp
     runtime/host_tensor.hpp
     runtime/performance_counter.hpp
+    runtime/reference/abs.hpp
+    runtime/reference/abs.cpp
     runtime/reference/add.hpp
     runtime/reference/add.cpp
     runtime/reference/convert.hpp
     runtime/reference/convert.cpp
+    runtime/reference/result.hpp
+    runtime/reference/result.cpp
     runtime/tensor.cpp
     runtime/tensor.hpp
     shape.cpp

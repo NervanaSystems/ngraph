@@ -18,8 +18,8 @@
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/runtime/interpreter/int_tensor.hpp"
 #include "ngraph/runtime/interpreter/static_initialize.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -73,13 +73,13 @@ runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_o
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
-    return make_shared<runtime::HostTensor>(type, shape);
+    return make_shared<runtime::interpreter::INTTensor>(type, shape);
 }
 
 shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
-    return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
+    NGRAPH_CHECK(false, "Haven't reimplemented this thing yet");
 }
 
 shared_ptr<runtime::Executable>

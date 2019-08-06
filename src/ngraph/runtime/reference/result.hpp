@@ -21,6 +21,7 @@
 #include <numeric>
 #include <vector>
 #include "ngraph/shape.hpp"
+#include "ngraph/tensor_value.hpp"
 
 namespace ngraph
 {
@@ -33,6 +34,8 @@ namespace ngraph
             {
                 memcpy(out, arg, sizeof(T) * count);
             }
+
+            void result(const TensorBase& arg, TensorBase& out);
         }
     }
 }
