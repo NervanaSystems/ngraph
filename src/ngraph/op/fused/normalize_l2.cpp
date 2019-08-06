@@ -29,9 +29,9 @@ using namespace ngraph;
 const string op::NormalizeL2::type_name{"NormalizeL2"};
 
 op::NormalizeL2::NormalizeL2(const shared_ptr<ngraph::Node>& data,
-                         const shared_ptr<ngraph::Node>& scale,
+                         const shared_ptr<ngraph::Node>& axes,
                          float eps)
-    : FusedOp(check_single_output_args({data, scale}))
+    : FusedOp(check_single_output_args({data, axes}))
     , m_eps{eps}
 {
     constructor_validate_and_infer_types();
@@ -40,12 +40,12 @@ op::NormalizeL2::NormalizeL2(const shared_ptr<ngraph::Node>& data,
 void op::NormalizeL2::pre_validate_and_infer_types()
 {
     const auto& data_pshape = get_input_partial_shape(0);
-    const auto& scale_pshape = get_input_partial_shape(1);
+    const auto& axes_pshape = get_input_partial_shape(1);
 
-    if (data_pshape.is_static() && scale_pshape.is_static())
+    if (data_pshape.is_static() && axes_pshape.is_static())
     {
         const Shape data_shape{data_pshape.to_shape()};
-        const Shape scale_shape{scale_pshape.to_shape()};
+        const Shape scale_shape{axes_pshape.to_shape()};
 
         // Input data must be 2, 3 or 4D tensor.
         NODE_VALIDATION_CHECK(this,
@@ -70,6 +70,7 @@ void op::NormalizeL2::pre_validate_and_infer_types()
                 "Scale must be a vector of size of input tensor channels if input tensor is "
                 "of rank greater equal 3.");
         }
+        // TODO ADD CHECKING AS IN LRN CASE
     }
 }
 
@@ -86,17 +87,14 @@ NodeVector op::NormalizeL2::decompose_op() const
         data = builder::reshape(data, data_shape);
     }
 
-    // Calculate norm over CHW axes.
-    AxisSet reduction_axes{1, 2, 3}; //TODO from input parameter
+    // Calculate norm over axes indicated by axes input param
+    AxisSet reduction_axes = get_argument(1)->outputs;
 
     // Calculate l2 norm across channels.
     shared_ptr<Node> norm = builder::l2_norm(data, reduction_axes, m_eps);
     norm = make_broadcast_node(norm, data->get_shape(), 0);
 
-    shared_ptr<Node> scale_node{get_argument(1)};
-
-
-    data = data / norm * scale_node; // TODO REMOVE SCALE
+    data = data / norm;
 
     // get back original input tensor rank
     if (input_shape.size() != 4)

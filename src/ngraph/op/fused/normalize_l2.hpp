@@ -37,13 +37,11 @@ namespace ngraph
             /// \brief      Constructs a Normalize operation.
             ///
             /// \param      data            - Node producing the input tensor
-            /// \param      scale           - Node producing the scale tensor
-            /// \param      across_spatial  - Whether calculate norm across all channels.
-            /// \param      channel_shared  - Whether scale is shared across channels.
+            /// \param      axes            - Node indicating axes along which reduction is calculated
             /// \param      eps             - The epsilon added to L2 norm.
             ///
             NormalizeL2(const std::shared_ptr<ngraph::Node>& data,
-                      const std::shared_ptr<ngraph::Node>& scale,
+                      const std::shared_ptr<ngraph::Node>& axes,
                       float eps);
 
             float get_eps() const { return m_eps; }
