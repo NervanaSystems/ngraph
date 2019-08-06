@@ -293,6 +293,53 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_reverse_shape)
                         Shape{2, 3, 4, 5, 2}});
 }
 
+NGRAPH_TEST(dynamic_${BACKEND_NAME}, replace_dynamic_node)
+{
+    auto dyn_node =
+        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+
+    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto d = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto e = make_shared<op::Parameter>(element::f32, Shape{2, 3, 3});
+    auto a_plus_d_mul_e = (a + dyn_node) * e;
+
+    auto f = make_shared<Function>(NodeVector{a_plus_d_mul_e}, ParameterVector{a, d, e, dyn_node});
+
+    // replace dynamic_node with node with static shape
+    ASSERT_EQ(1, f->get_dynamic_nodes().size());
+    f->replace_subgraph(dyn_node, d);
+    ASSERT_EQ(0, f->get_dynamic_nodes().size());
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+    auto ex = backend->compile(f);
+
+    //
+    // Create a dynamic output tensor with shape {2,?,3}.
+    //
+    auto t_r1 =
+        backend->create_dynamic_tensor(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    size_t middle_dim = 3;
+    vector<float> inputs(2 * middle_dim * 3);
+    for (size_t i = 0; i < 2 * middle_dim * 3; i++)
+    {
+        inputs[i] = i;
+    }
+
+    // Create static tensors for the inputs and copy data.
+    auto t_a = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+    auto t_b = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+    auto t_c = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+    auto t_d = backend->create_tensor(element::f32, Shape{2, 3, 3});
+
+    copy_data(t_a, inputs);
+    copy_data(t_b, inputs);
+    copy_data(t_c, inputs);
+    copy_data(t_d, inputs);
+
+    // Call ex, writing result into t_r (note we're using the same t_r from outside the loop.)
+    ex->call_with_validate({t_r1}, {t_a, t_b, t_c, t_d});
+}
+/*
 NGRAPH_TEST(dynamic_${BACKEND_NAME}, replace_subgraph)
 {
     //
@@ -364,4 +411,4 @@ NGRAPH_TEST(dynamic_${BACKEND_NAME}, replace_subgraph)
     {
         std::cout << node->get_name() << std::endl;
     }
-}
+}*/
