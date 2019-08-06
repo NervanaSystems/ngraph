@@ -3841,25 +3841,30 @@ TEST(cpu_fusion, lstm_cell)
         const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
         const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        auto ht = make_shared<op::GetOutputElement>(lstm_cell, 0);
+        auto ct = make_shared<op::GetOutputElement>(lstm_cell, 1);
 
-        auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
-                                                 ParameterVector{X, W, R, H_t, C_t});
-        return ht_function;
+        auto lstm_function =
+            make_shared<Function>(NodeVector{ht, ct}, ParameterVector{X, W, R, H_t, C_t});
+        return lstm_function;
     };
-    auto ht_function_cpu = make_function();
-    auto ht_function_inter = make_function();
+    auto lstm_function_cpu = make_function();
+    auto lstm_function_inter = make_function();
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
-    for (shared_ptr<op::Parameter> param : ht_function_cpu->get_parameters())
+    for (shared_ptr<op::Parameter> param : lstm_function_cpu->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_shape()));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
 
-    auto int_results = execute(ht_function_inter, args, "INTERPRETER");
-    auto cpu_results = execute(ht_function_cpu, args, "CPU");
+    auto int_results = execute(lstm_function_inter, args, "INTERPRETER");
+    auto cpu_results = execute(lstm_function_cpu, args, "CPU");
+    size_t lstm_op_count = count_ops_of_type<op::LSTMCell>(lstm_function_cpu);
+
+    EXPECT_EQ(lstm_op_count, 0);
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));

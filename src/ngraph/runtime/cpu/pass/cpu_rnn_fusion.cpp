@@ -122,16 +122,21 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 
         auto get_bias_ifco_gate_order =
             [&](std::shared_ptr<Node> bias_graph_node) -> std::shared_ptr<Node> {
+
+            size_t hidden_size = lstmcell_op->get_hidden_size();
+            auto Wb_bias = std::make_shared<ngraph::op::Slice>(
+                bias_graph_node, Coordinate{0}, Coordinate{4 * hidden_size});
+            auto Rb_bias = std::make_shared<ngraph::op::Slice>(
+                bias_graph_node, Coordinate{4 * hidden_size}, Coordinate{2 * 4 * hidden_size});
+            auto bias_iofc = std::make_shared<op::Add>(Wb_bias, Rb_bias);
+
             // slices will be in ICFO order
             std::vector<std::shared_ptr<Node>> gate_slices;
 
-            size_t hidden_size = lstmcell_op->get_hidden_size();
             for (size_t i = 0; i < 4; i++)
             {
-                auto slice =
-                    std::make_shared<ngraph::op::Slice>(bias_graph_node,
-                                                        Coordinate{2 * i * hidden_size},
-                                                        Coordinate{(2 * i + 1) * hidden_size});
+                auto slice = std::make_shared<ngraph::op::Slice>(
+                    bias_iofc, Coordinate{i * hidden_size}, Coordinate{(i + 1) * hidden_size});
                 gate_slices.push_back(slice);
             }
 
@@ -144,6 +149,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto R_iofc = pattern_map[R];
         auto W_ifco = get_weights_ifco_gate_order(W_iofc);
         auto R_ifco = get_weights_ifco_gate_order(R_iofc);
+        // here onnx bias will be of shape (2 * gates_count * hidden_size) bias of Wb and Rb are concatenated, we will split the bias, add and rearrange in order IFCO
         auto bias_ifco = get_bias_ifco_gate_order(bias_iofc);
 
         auto W_reshape = std::make_shared<op::Reshape>(
@@ -153,6 +159,11 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             pattern_map[X], src_iter, W_reshape, R_reshape, bias_ifco, rnn_type);
+
+        if (lstm_node->get_outputs().size() != 2)
+        {
+            throw ngraph_error("Lstm node doesnt have two outputs");
+        }
 
         auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 0);
         auto lstm_ht_ct_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
@@ -170,15 +181,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto dst_iter = goe_nodes[1];
         // dst_iter of lstm mkldnn output holds the results of both recurrent state
         // tensor outputs. we need to slice the ct.
-        auto ht_slice = std::make_shared<ngraph::op::Slice>(
-            lstm_ht_output, Coordinate{0, 0}, Coordinate{batch_size, dlc});
         auto ct_slice = std::make_shared<ngraph::op::Slice>(
             lstm_ht_ct_output, Coordinate{batch_size, 0}, Coordinate{(2 * batch_size), dic});
-
-        if (lstm_node->get_outputs().size() != 2)
-        {
-            throw ngraph_error("Lstm node doesnt have two outputs");
-        }
 
         // find the user's for {ht} and replace them with lstm_goe_0
         if (std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(dst_iter) != nullptr)
