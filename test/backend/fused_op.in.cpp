@@ -1557,6 +1557,115 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_activaction_functions)
     ct_test_case.run();
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_fused_weights_fico)
+{
+    const size_t batch_size = 1;
+    const size_t input_size = 10;
+    const size_t hidden_size = 5;
+    const size_t gates_count = 4;
+
+    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto WR = make_shared<op::Parameter>(
+        element::f32, Shape{gates_count * hidden_size, input_size + hidden_size});
+    const auto H_i = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_i = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
+
+    const auto lstm_cell = make_shared<op::LSTMCell>(X, H_i, C_i, WR, hidden_size, B);
+
+    auto ht_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 0),
+                                             ParameterVector{X, H_i, C_i, WR, B});
+    auto ht_test_case = ngraph::test::NgraphTestCase(ht_function, "${BACKEND_NAME}");
+
+    // X
+    vector<float> in_X(batch_size * input_size, 1);
+    // build W
+    float Wf = 0.01f;
+    float Wi = 0.02f;
+    float Wc = 0.05f;
+    float Wo = 0.07f;
+    float Wrf = 0.02f;
+    float Wri = 0.04f;
+    float Wrc = 0.1f;
+    float Wro = 0.14f;
+
+    vector<float> Wfvec(input_size, Wf);
+    vector<float> Wivec(input_size, Wi);
+    vector<float> Wcvec(input_size, Wc);
+    vector<float> Wovec(input_size, Wo);
+    vector<float> Wrfvec(hidden_size, Wrf);
+    vector<float> Wrivec(hidden_size, Wri);
+    vector<float> Wrcvec(hidden_size, Wrc);
+    vector<float> Wrovec(hidden_size, Wro);
+
+    vector<float> WRfvec;
+    WRfvec.insert(WRfvec.end(), Wfvec.begin(), Wfvec.end());
+    WRfvec.insert(WRfvec.end(), Wrfvec.begin(), Wrfvec.end());
+    vector<float> WRivec;
+    WRivec.insert(WRivec.end(), Wivec.begin(), Wivec.end());
+    WRivec.insert(WRivec.end(), Wrivec.begin(), Wrivec.end());
+    vector<float> WRcvec;
+    WRcvec.insert(WRcvec.end(), Wcvec.begin(), Wcvec.end());
+    WRcvec.insert(WRcvec.end(), Wrcvec.begin(), Wrcvec.end());
+    vector<float> WRovec;
+    WRovec.insert(WRovec.end(), Wovec.begin(), Wovec.end());
+    WRovec.insert(WRovec.end(), Wrovec.begin(), Wrovec.end());
+
+    vector<float> WRfvec_full;
+    vector<float> WRivec_full;
+    vector<float> WRcvec_full;
+    vector<float> WRovec_full;
+
+    for (int i = 0; i < hidden_size; ++i)
+    {
+        WRfvec_full.insert(WRfvec_full.end(), WRfvec.begin(), WRfvec.end());
+        WRivec_full.insert(WRivec_full.end(), WRivec.begin(), WRivec.end());
+        WRcvec_full.insert(WRcvec_full.end(), WRcvec.begin(), WRcvec.end());
+        WRovec_full.insert(WRovec_full.end(), WRovec.begin(), WRovec.end());
+    }
+
+    vector<float> in_WR;
+    in_WR.insert(in_WR.end(), WRfvec_full.begin(), WRfvec_full.end());
+    in_WR.insert(in_WR.end(), WRivec_full.begin(), WRivec_full.end());
+    in_WR.insert(in_WR.end(), WRcvec_full.begin(), WRcvec_full.end());
+    in_WR.insert(in_WR.end(), WRovec_full.begin(), WRovec_full.end());
+
+    // Hi
+    vector<float> in_Hi(batch_size * hidden_size, 0.3f);
+    // Ct
+    vector<float> in_Ci(batch_size * hidden_size, 0.77f);
+    // build B
+    float Bf = 0.35f;
+    float Bi = 0.25f;
+    float Bc = 0.15f;
+    float Bo = 0.05f;
+
+    vector<float> Bfvec(hidden_size, Bf);
+    vector<float> Bivec(hidden_size, Bi);
+    vector<float> Bcvec(hidden_size, Bc);
+    vector<float> Bovec(hidden_size, Bo);
+
+    vector<float> in_B;
+    in_B.insert(in_B.end(), Bfvec.begin(), Bfvec.end());
+    in_B.insert(in_B.end(), Bivec.begin(), Bivec.end());
+    in_B.insert(in_B.end(), Bcvec.begin(), Bcvec.end());
+    in_B.insert(in_B.end(), Bovec.begin(), Bovec.end());
+
+    ht_test_case.add_multiple_inputs(vector<vector<float>>{in_X, in_Hi, in_Ci, in_WR, in_B});
+    ht_test_case.add_expected_output<float>(Shape{batch_size, hidden_size},
+                                            vector<float>(batch_size * hidden_size, 0.514624357f));
+    ht_test_case.dump_results();
+    ht_test_case.run();
+
+    auto ct_function = make_shared<Function>(make_shared<op::GetOutputElement>(lstm_cell, 1),
+                                             ParameterVector{X, H_i, C_i, WR, B});
+    auto ct_test_case = ngraph::test::NgraphTestCase(ct_function, "${BACKEND_NAME}");
+    ct_test_case.add_multiple_inputs(vector<vector<float>>{in_X, in_Hi, in_Ci, in_WR, in_B});
+    ct_test_case.add_expected_output<float>(Shape{batch_size, hidden_size},
+                                            vector<float>(batch_size * hidden_size, 0.890560269f));
+    ct_test_case.run();
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, fake_quantize)
 {
     const Shape data_shape{1, 2, 3, 4};
