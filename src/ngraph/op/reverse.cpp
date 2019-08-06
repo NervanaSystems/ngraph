@@ -25,8 +25,8 @@ using namespace ngraph;
 
 const string op::Reverse::type_name{"Reverse"};
 
-op::Reverse::Reverse(const shared_ptr<Node>& arg, const AxisSet& reversed_axes)
-    : Op(check_single_output_args({arg}))
+op::Reverse::Reverse(const Output<Node>& arg, const AxisSet& reversed_axes)
+    : Op({arg})
     , m_reversed_axes(reversed_axes)
 {
     constructor_validate_and_infer_types();
@@ -65,7 +65,7 @@ void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input(0).get_source_output();
 
     adjoints.add_delta(x, make_shared<op::Reverse>(delta, m_reversed_axes));
 }
