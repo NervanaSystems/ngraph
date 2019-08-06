@@ -30,6 +30,7 @@
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 #include "ngraph/runtime/plaidml/plaidml_logger.hpp"
+#include "ngraph/runtime/plaidml/plaidml_ops_group_convolution.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_concat_elision.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_concat_split.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_explicit_logicals.hpp"
@@ -38,7 +39,6 @@
 #include "ngraph/runtime/plaidml/plaidml_pass_replicate_combination.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_replicate_elision.hpp"
 #include "ngraph/runtime/plaidml/plaidml_pass_winograd.hpp"
-#include "ngraph/runtime/plaidml/plaidml_ops_group_convolution.hpp"
 
 namespace
 {
@@ -67,7 +67,7 @@ namespace
             PLAIDML_DEBUG << "Retire tensor: " << t;
         }
     }
-}
+} // namespace
 
 ngraph::runtime::plaidml::Compiler::Compiler(Config* config)
     : m_config{config}
@@ -88,7 +88,11 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     pass_manager.set_per_pass_validation(false);
 
     // We apply the same general-purposes passes as the CPU backend.
-    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>([] (const Node& node) -> bool {if (node.description() == "GroupConvolution") return true; return false;});
+    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>([](const Node& node) -> bool {
+        if (node.description() == "GroupConvolution")
+            return true;
+        return false;
+    });
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();

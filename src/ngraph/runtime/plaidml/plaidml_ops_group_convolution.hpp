@@ -31,18 +31,18 @@ namespace ngraph
             {
                 class GroupConvolution;
             }
-        }
-    }
-}
+        } // namespace plaidml
+    }     // namespace runtime
+} // namespace ngraph
 
 class ngraph::runtime::plaidml::op::GroupConvolution final : public ngraph::op::Op
 {
 public:
     GroupConvolution(std::shared_ptr<::ngraph::op::GroupConvolution> src,
-                    const NodeVector& args,
-                    AxisVector data_axes,
-                    AxisVector filters_axes,
-                    AxisVector output_axes);
+                     const NodeVector& args,
+                     AxisVector data_axes,
+                     AxisVector filters_axes,
+                     AxisVector output_axes);
 
     void validate_and_infer_types() final;
 
@@ -52,6 +52,7 @@ public:
     const AxisVector& get_data_axes() const { return m_data_axes; }
     const AxisVector& get_filters_axes() const { return m_filters_axes; }
     const AxisVector& get_output_axes() const { return m_output_axes; }
+
 private:
     std::shared_ptr<::ngraph::op::GroupConvolution> m_src;
     AxisVector m_data_axes;
