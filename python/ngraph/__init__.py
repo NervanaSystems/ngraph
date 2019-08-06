@@ -79,12 +79,15 @@ from ngraph.ops import replace_slice
 from ngraph.ops import reshape
 from ngraph.ops import reverse
 from ngraph.ops import select
+from ngraph.ops import shuffle_channels
 from ngraph.ops import sign
 from ngraph.ops import sin
 from ngraph.ops import sinh
 from ngraph.ops import slice
 from ngraph.ops import softmax
 from ngraph.ops import sqrt
+from ngraph.ops import squared_difference
+from ngraph.ops import squeeze
 from ngraph.ops import subtract
 from ngraph.ops import sum
 from ngraph.ops import tan

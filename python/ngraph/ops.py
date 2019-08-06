@@ -23,10 +23,10 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
-    Gelu, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
-    Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
-    Sqrt, Subtract, Sum, Tan, Tanh, TopK
+    Gelu, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, \
+    MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
+    Power, Relu, ReplaceSlice, Reshape, Reverse, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, \
+    Softmax, Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK
 
 from typing import Callable, Iterable, List, Union
 
@@ -76,6 +76,60 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     :return: The new node performing an ELU operation on its input data element-wise.
     """
     return Elu(as_node(data), as_node(alpha))
+
+
+@nameable_op
+def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, str) -> Node
+    """Perform permutation on data in the channel dimension of the input tensor.
+
+    :param data: The node with input tensor.
+    :param axis: Channel dimension index in the data tensor.
+                 A negative value means that the index should be calculated
+                 from the back of the input data shape.
+    :param group: Number of groups the channel dimension specified by axis should be split into.
+    :param name: Optional output node name.
+    :return: The new node performing an ELU operation on its input data element-wise.
+    """
+    return ShuffleChannels(data, axis, groups)
+
+
+@nameable_op
+def squared_difference(x1, x2, name=None):  # type: (Node, Node, str) -> Node
+    """Perform an element-wise squared difference between two tensors.
+
+    .. math:: y[i] = (x_1[i] - x_2[i])^2
+
+    :param x1: The node with first input tensor.
+    :param x2: The node with second input tensor.
+    :param name: Optional new name for output node.
+    :return: The new node performing a squared difference between two tensors.
+    """
+    return SquaredDifference(x1, x2)
+
+
+@nameable_op
+def squeeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
+    """Perform squeeze operation on input tensor.
+
+    Remove single-dimensional entries from the shape of a tensor.
+    Takes a parameter axes with a list of axes to squeeze.
+    If axes is not provided, all the single dimensions will be removed from the shape.
+    If an axis is selected with shape entry not equal to one, an error is raised.
+
+
+    For example:
+
+       Inputs: tensor with shape [1, 2, 1, 3, 1, 1], axes=[2, 4]
+
+       Result: tensor with shape [1, 2, 3, 1]
+
+    :param data: The node with data tensor.
+    :param axes: List of non-negative integers, indicate the dimensions to squeeze.
+                  One of: input node or array.
+    :param name: Optional new name for output node.
+    :return: The new node performing a squeeze operation on input tensor.
+    """
+    return Squeeze(data, as_node(axes))
 
 
 # Unary ops

@@ -66,12 +66,15 @@ ngraph.ops
       reshape
       reverse
       select
+      shuffle_channels
       sign
       sin
       sinh
       slice
       softmax
       sqrt
+      squared_difference
+      squeeze
       subtract
       sum
       tan
