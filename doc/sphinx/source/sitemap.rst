@@ -53,7 +53,7 @@
 
   .. toctree::
 
-     validated_workloads/list.rst
+     frameworks/validated/list.rst
 
 
 * :ref:`inspection`
