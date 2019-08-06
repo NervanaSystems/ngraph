@@ -49,7 +49,7 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/runtime/                @rkimballn1
 /src/ngraph/runtime/cpu/            @nmostafa
 /src/contrib/mlir/                  @nmostafa @dcaballe
-/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @nmostafa @avijit-nervana
+/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @nmostafa
 /src/ngraph/runtime/dynamic/        @aprocter
 /src/ngraph/runtime/gpu/            @rkimballn1
 /src/ngraph/runtime/hybrid/         @rkimballn1
