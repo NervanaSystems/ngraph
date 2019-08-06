@@ -38,11 +38,11 @@ using namespace ngraph;
 #ifdef _WIN32
 #define CLOSE_LIBRARY(a) FreeLibrary(a)
 #define DLSYM(a, b) GetProcAddress(a, b)
-#define DLERROR() dlerror()
+#define DLERROR() ""
 #else
 #define CLOSE_LIBRARY(a) dlclose(a)
 #define DLSYM(a, b) dlsym(a, b)
-#define DLERROR() ""
+#define DLERROR() dlerror()
 #endif
 #endif
 
