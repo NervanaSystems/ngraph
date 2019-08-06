@@ -49,11 +49,12 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            Reverse() = default;
             /// \brief Constructs a reverse operation.
             ///
             /// \param arg The input tensor, some of whose axes are to be reversed.
             /// \param reversed_axes The axes to reverse.
-            Reverse(const std::shared_ptr<Node>& arg, const AxisSet& reversed_axes);
+            Reverse(const Output<Node>& arg, const AxisSet& reversed_axes);
 
             void validate_and_infer_types() override;
 
@@ -62,11 +63,16 @@ namespace ngraph
 
             /// \return The set of axes to reverse.
             const AxisSet& get_reversed_axes() const { return m_reversed_axes; }
+            void set_reversed_axes(const AxisSet& reversed_axes)
+            {
+                m_reversed_axes = reversed_axes;
+            }
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
 
-            const AxisSet m_reversed_axes;
+            AxisSet m_reversed_axes;
         };
     }
 }
