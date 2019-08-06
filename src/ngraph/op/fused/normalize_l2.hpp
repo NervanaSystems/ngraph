@@ -44,12 +44,8 @@ namespace ngraph
             ///
             NormalizeL2(const std::shared_ptr<ngraph::Node>& data,
                       const std::shared_ptr<ngraph::Node>& scale,
-                      bool across_spatial,
-                      bool channel_shared,
                       float eps);
 
-            float get_across_spatial() const { return m_across_spatial; }
-            float get_channel_shared() const { return m_channel_shared; }
             float get_eps() const { return m_eps; }
             virtual NodeVector decompose_op() const override;
             virtual void pre_validate_and_infer_types() override;
@@ -58,8 +54,6 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            bool m_across_spatial{false};
-            bool m_channel_shared{false};
             float m_eps{1.f};
         };
     }
