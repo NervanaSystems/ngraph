@@ -82,6 +82,40 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
 def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, str) -> Node
     """Perform permutation on data in the channel dimension of the input tensor.
 
+    The operation is the equivalent with the following transformation of the input tensor
+    :code:`data` of shape [N, C, H, W]:
+
+    :code:`data'` = reshape(:code:`data`, [N, group, C / group, H * W])
+
+    :code:`data''` = transpose(:code:`data'`, [0, 2, 1, 3])
+
+    :code:`output` = reshape(:code:`data''`, [N, C, H, W])
+
+    For example:
+
+    .. code-block:: python
+
+        Inputs: tensor of shape [1, 6, 2, 2]
+
+                data = [[[[ 0.,  1.], [ 2.,  3.]],
+                         [[ 4.,  5.], [ 6.,  7.]],
+                         [[ 8.,  9.], [10., 11.]],
+                         [[12., 13.], [14., 15.]],
+                         [[16., 17.], [18., 19.]],
+                         [[20., 21.], [22., 23.]]]]
+
+                axis = 1
+                groups = 3
+
+        Output: tensor of shape [1, 6, 2, 2]
+
+                output = [[[[ 0.,  1.], [ 2.,  3.]],
+                           [[ 8.,  9.], [10., 11.]],
+                           [[16., 17.], [18., 19.]],
+                           [[ 4.,  5.], [ 6.,  7.]],
+                           [[12., 13.], [14., 15.]],
+                           [[20., 21.], [22., 23.]]]]
+
     :param data: The node with input tensor.
     :param axis: Channel dimension index in the data tensor.
                  A negative value means that the index should be calculated
