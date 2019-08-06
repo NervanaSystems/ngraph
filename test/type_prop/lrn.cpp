@@ -28,52 +28,48 @@ TEST(type_prop, lrn_invalid_arg_rank)
     size_t size = 3;
     try
     {
-        auto lrn =
-            make_shared<op::LRN>(data, alpha, beta, bias, size);
+        auto lrn = make_shared<op::LRN>(data, alpha, beta, bias, size);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-            std::string("Argument must have rank >= 3"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument must have rank >= 3"));
     }
 }
 
 TEST(type_prop, lrn_invalid_axes_rank)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3, 4 });
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
     auto axes = op::Constant::create(element::i32, Shape{1, 2}, {1, 2});
     double alpha = 0.1f, beta = 0.2f, bias = 0.3f;
     size_t size = 3;
     try
     {
-        auto lrn =
-            make_shared<op::LRN>(data, axes, alpha, beta, bias, size);
+        auto lrn = make_shared<op::LRN>(data, axes, alpha, beta, bias, size);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-            std::string("Input axes must have rank equals 1"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input axes must have rank equals 1"));
     }
     catch (...)
     {
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 
-    axes = op::Constant::create(element::i32, Shape{5}, { 1, 2, 3, 4, 5});
+    axes = op::Constant::create(element::i32, Shape{5}, {1, 2, 3, 4, 5});
     try
     {
-        auto lrn =
-            make_shared<op::LRN>(data, axes, alpha, beta, bias, size);
+        auto lrn = make_shared<op::LRN>(data, axes, alpha, beta, bias, size);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank not detected";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
             std::string("Number of elements of axes must be >= 1 and <= argument rank"));
     }
     catch (...)

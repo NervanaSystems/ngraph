@@ -59,22 +59,21 @@ void op::LRN::validate_and_infer_types()
                           input_shape,
                           ").");
 
-    NODE_VALIDATION_CHECK(this,
-        axes_shape.is_static(),
-        "Input axes must be static.");
+    NODE_VALIDATION_CHECK(this, axes_shape.is_static(), "Input axes must be static.");
 
     NODE_VALIDATION_CHECK(this,
-        static_cast<size_t>(axes_shape.rank()) == 1,
-        "Input axes must have rank equals 1 (axes shape: ",
-        axes_shape,
-        ").");
+                          static_cast<size_t>(axes_shape.rank()) == 1,
+                          "Input axes must have rank equals 1 (axes shape: ",
+                          axes_shape,
+                          ").");
 
     NODE_VALIDATION_CHECK(this,
-        static_cast<size_t>(axes_shape[0]) >= 1 &&
-        static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape.rank()),
-        "Number of elements of axes must be >= 1 and <= argument rank (axes[0]: ",
-        axes_shape,
-        ").");
+                          static_cast<size_t>(axes_shape[0]) >= 1 &&
+                              static_cast<size_t>(axes_shape[0]) <=
+                                  static_cast<size_t>(input_shape.rank()),
+                          "Number of elements of axes must be >= 1 and <= argument rank (axes[0]: ",
+                          axes_shape,
+                          ").");
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
