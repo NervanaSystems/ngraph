@@ -21,10 +21,12 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::ShuffleChannels::type_name{"ShuffleChannels"};
+
 op::ShuffleChannels::ShuffleChannels(const shared_ptr<Node>& data,
                                      const int axis,
                                      const size_t groups)
-    : FusedOp("ShuffleChannels", {data})
+    : FusedOp(check_single_output_args({data}))
     , m_axis(axis)
     , m_groups{groups}
 {

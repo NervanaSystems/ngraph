@@ -25,8 +25,10 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::DepthToSpace::type_name{"DepthToSpace"};
+
 op::DepthToSpace::DepthToSpace(const shared_ptr<Node>& data, const size_t block_size)
-    : FusedOp("DepthToSpace", {data})
+    : FusedOp(check_single_output_args({data}))
     , m_blocksize(block_size)
 {
     constructor_validate_and_infer_types();

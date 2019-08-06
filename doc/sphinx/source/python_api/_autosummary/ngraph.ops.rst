@@ -37,9 +37,12 @@ ngraph.ops
       equal
       exp
       floor
+      gelu
+      gemm
       get_output_element
       greater
       greater_eq
+      grn
       less
       less_eq
       log

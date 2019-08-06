@@ -23,8 +23,8 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
-    GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
+    Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, Less, LessEq, Log, LRN, Max, Maximum, \
+    MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
     Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
     Sqrt, Subtract, Sum, Tan, Tanh, TopK
 
@@ -76,6 +76,22 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     :return: The new node performing an ELU operation on its input data element-wise.
     """
     return Elu(as_node(data), as_node(alpha))
+
+
+@nameable_op
+def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
+    r"""Perform Global Response Normalization with L2 norm (across channels only).
+
+    Computes GRN operation on channels for input tensor:
+
+    .. math:: output_i = \dfrac{input_i}{\sqrt{\sum_{i}^{C} input_i}}
+
+    :param data: The node with data tensor.
+    :param bias: The bias added to the variance. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a GRN operation on tensor's channels.
+    """
+    return GRN(data, bias)
 
 
 # Unary ops
@@ -521,10 +537,68 @@ def broadcast_to(node, new_shape, axis=None, name=None):
 
 
 @nameable_op
+def gemm(A,                      # type: Node
+         B,                      # type: Node
+         C,                      # type: Node
+         alpha,                  # type: ScalarData
+         beta,                   # type: ScalarData
+         transA,                 # type: bool
+         transB,                 # type: bool
+         name=None,              # type: str
+         ):
+    # type: (...) -> Node
+    r"""Perform General matrix-matrix multiplication on input tensors A, B and C.
+
+    Computes:
+
+    .. math:: Y = alpha\cdot A'\cdot B' +  beta\cdot C
+
+    :code:`A'` is the transpose of matrix :code:`A` with shape (M, K),
+    if :code:`transA` is :code:`True`, otherwise :code:`A` with shape (K, N).
+
+    :code:`B'` is the transpose of matrix :code:`B` with shape (K, N),
+    if :code:`transB` is :code:`True`, otherwise :code:`B` with shape (N, K).
+
+    :code:`C`: Matrix broadcastable to shape (M, N).
+
+    :code:`Y`: Matrix with shape (M, N).
+
+    :param A: The node with input tensor A.
+    :param B: The node with input tensor B.
+    :param C: The node with input tensor C.
+    :param alpha: Scalar multiplier for the product of input tensors A * B.
+    :param beta: Scalar multiplier for input tensor C.
+    :param transA: Whether A should be transposed. Boolean value.
+    :param transB: Whether B should be transposed. Boolean value.
+    :param name: Optional name for the output node.
+    :return: Return node with tensor of shape (M, N).
+    """
+    return Gemm(A, B, C, alpha, beta, transA, transB)
+
+
+@nameable_op
 def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Node
     """Return node which casts input node values to specified type."""
     new_element_type = get_element_type(new_type)
     return Convert(node, new_element_type)
+
+
+@nameable_op
+def gelu(node, name=None):  # type: (NodeInput, str) -> Node
+    r"""Perform Gaussian Error Linear Unit operation element-wise on data from input node.
+
+    Computes GELU function:
+
+    .. math:: f(x) = 0.5\cdot x\cdot(1 + erf( \dfrac{x}{\sqrt{2}})
+
+    For more information refer to:
+    `Gaussian Error Linear Unit (GELU) <https://arxiv.org/pdf/1606.08415.pdf>`_
+
+    :param node: Input tensor. One of: input node, array or scalar.
+    :param name: Optional output node name.
+    :return: The new node performing a GELU operation on its input data element-wise.
+    """
+    return Gelu(as_node(node))
 
 
 @nameable_op

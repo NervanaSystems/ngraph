@@ -30,13 +30,13 @@ shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) con
     return make_shared<Sigmoid>(new_args.at(0));
 }
 
-op::Sigmoid::Sigmoid(shared_ptr<Node> arg)
+op::Sigmoid::Sigmoid(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
 
-op::SigmoidBackprop::SigmoidBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
+op::SigmoidBackprop::SigmoidBackprop(const Output<Node>& arg, const Output<Node>& delta)
     : BinaryElementwiseArithmetic(arg, delta)
 {
     constructor_validate_and_infer_types();
@@ -52,6 +52,6 @@ void op::Sigmoid::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 {
     auto delta = deltas.at(0);
 
-    auto backprop = make_shared<op::SigmoidBackprop>(get_argument(0), delta);
-    adjoints.add_delta(get_argument(0), backprop);
+    auto backprop = make_shared<op::SigmoidBackprop>(input(0).get_source_output(), delta);
+    adjoints.add_delta(input(0).get_source_output(), backprop);
 }

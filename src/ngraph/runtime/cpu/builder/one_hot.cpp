@@ -109,6 +109,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(OneHot);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_one_hot_cpp() {}
+#endif
         }
     }
 }
