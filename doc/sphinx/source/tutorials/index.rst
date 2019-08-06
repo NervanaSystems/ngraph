@@ -18,7 +18,6 @@ ONNX
    :maxdepth: 1
 
    onnx-tutorial.rst
-   onnx-models.rst
 
 .. _get_started_tensorflow:
 

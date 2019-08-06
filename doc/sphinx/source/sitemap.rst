@@ -49,7 +49,7 @@
 
 
 
-* :ref:`validated_workloads`
+* :ref:`validated`
 
   .. toctree::
 
