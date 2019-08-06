@@ -18,11 +18,9 @@
 #include <cmath>
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/subtract.hpp"
 
 using namespace std;
 using namespace ngraph;

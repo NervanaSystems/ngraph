@@ -14,8 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <numeric>
-
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/convolution.hpp"

@@ -18,7 +18,6 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;

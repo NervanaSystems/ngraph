@@ -17,9 +17,7 @@
 #include "batch_mat_mul.hpp"
 #include "ngraph/dimension.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;

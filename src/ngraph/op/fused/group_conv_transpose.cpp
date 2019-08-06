@@ -21,7 +21,6 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;

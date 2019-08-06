@@ -22,9 +22,7 @@
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;

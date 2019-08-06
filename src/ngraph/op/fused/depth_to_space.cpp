@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 
 #include "depth_to_space.hpp"

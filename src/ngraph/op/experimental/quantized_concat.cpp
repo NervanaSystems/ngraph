@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "ngraph/op/concat.hpp"
-#include "ngraph/op/slice.hpp"
 #include "quantized_concat.hpp"
 
 using namespace std;
