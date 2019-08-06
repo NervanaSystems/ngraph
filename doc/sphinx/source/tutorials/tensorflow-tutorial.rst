@@ -313,8 +313,8 @@ Add the following Python code to measure the computation time:
 Observe that the ouput time runs faster than TensorFlow native (without
 nGraph).
 
-Use a different a backend
--------------------------
+Use a different backend
+-----------------------
 
 You can substitute the default CPU backend with a different backend such as
 ``INTELGPU`` or ``PLAIDML`` (coming soon). 
