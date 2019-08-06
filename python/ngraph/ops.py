@@ -122,7 +122,7 @@ def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, s
                  from the back of the input data shape.
     :param group: Number of groups the channel dimension specified by axis should be split into.
     :param name: Optional output node name.
-    :return: The new node performing an ELU operation on its input data element-wise.
+    :return: The new node performing a permutation on data in the channel dimension of the input tensor.
     """
     return ShuffleChannels(data, axis, groups)
 
