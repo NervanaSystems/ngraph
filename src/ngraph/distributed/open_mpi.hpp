@@ -19,7 +19,9 @@
 #include <cstdio>
 #include <iostream>
 
+#include "ngraph/assertion.hpp"
 #include "ngraph/distributed.hpp"
+#include "ngraph/log.hpp"
 
 #ifdef NGRAPH_DISTRIBUTED_OMPI_ENABLE
 #include <string>
@@ -33,36 +35,55 @@ namespace ngraph
         class OpenMPIDistributedInterface : public DistributedInterface
         {
         public:
-            OpenMPIDistributedInterface(const std::string& name = "OpenMPI")
-                : m_name(name)
+            OpenMPIDistributedInterface(
+                    const std::string& name = "OpenMPI", 
+                    const bool manage_communicator = true)
+                : m_name(name), m_manage_communicator(manage_communicator)
             {
-                int flag = 0;
-                MPI_Initialized(&flag);
-                if (!flag && !m_initialized_mpi)
+                // NGRAPH_ASSERT(m_manage_communicator == false) << "init list works before code body";
+                NGRAPH_DEBUG << "mpi ctor";
+                if (manage_communicator == true)
                 {
+                    int is_mpi_initialized = 0;
+                    MPI_Initialized(&is_mpi_initialized);
+                    NGRAPH_ASSERT(is_mpi_initialized == false) << "Expect to initial MPI comunicator, but MPI had been initialized.";
+                    NGRAPH_DEBUG << "MPI_Initialzied returns " << is_mpi_initialized;
                     create_context();
                     m_initialized_mpi = true;
+                }
+                else
+                {
+                    int is_mpi_initialized = 0;
+                    MPI_Initialized(&is_mpi_initialized);
+                    NGRAPH_ASSERT(is_mpi_initialized == false) << "Expect to reuse existing MPI comunicator, but MPI has not been initialized.";
+                    MPI_Comm dup_comm;
+
                 }
             }
 
             ~OpenMPIDistributedInterface() override
             {
-                int is_mpi_finalized = 0;
-                MPI_Finalized(&is_mpi_finalized);
-                if (!is_mpi_finalized && m_initialized_mpi)
+                if (m_manage_communicator == true)
                 {
-                    free_context();
-                    m_initialized_mpi = false;
+                    int is_mpi_finalized = 0;
+                    MPI_Finalized(&is_mpi_finalized);
+                    if (!is_mpi_finalized && m_initialized_mpi)
+                    {
+                        free_context();
+                        m_initialized_mpi = false;
+                    }
                 }
             }
 
             void create_context()
             {
+                NGRAPH_DEBUG << "create_context";
                 MPI_Init(NULL, NULL);
             }
 
             void free_context()
             {
+                NGRAPH_DEBUG << "free_context";
                 MPI_Finalize();
             }
 
@@ -217,6 +238,9 @@ namespace ngraph
 
             std::string m_name;
             bool m_initialized_mpi = false;
+            bool m_manage_communicator = false;
+            int m_rank = 0;
+            int m_size = 0;
         };
     }
 }

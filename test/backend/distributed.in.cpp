@@ -21,6 +21,7 @@
 
 #include "ngraph/distributed.hpp"
 #include "ngraph/file_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close_f.hpp"
@@ -34,6 +35,7 @@ static string s_manifest = "${MANIFEST}";
 
 static void test_allreduce_common(reduction::Type reduce_type)
 {
+    NGRAPH_DEBUG << "test_allreduce_comm before get_distributed_interface";
     auto comm_size = get_distributed_interface()->get_size();
     if (comm_size > 1)
     {
@@ -94,8 +96,9 @@ static void test_allreduce_common(reduction::Type reduce_type)
     }
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, allreduce_sum)
+NGRAPH_TEST(distributed_${BACKEND_NAME}, allreduce_sum)
 {
+    NGRAPH_DEBUG << "in test";
     test_allreduce_common(reduction::Type::SUM);
 }
 
