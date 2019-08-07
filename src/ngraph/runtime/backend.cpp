@@ -37,6 +37,9 @@ std::string runtime::Backend::s_backend_shared_library_search_directory;
 // This finds the full path of the containing shared library
 static string find_my_pathname()
 {
+#ifdef NGRAPH_STATIC_LIB_ENABLE
+    return "";
+#else
 #ifdef _WIN32
     HMODULE hModule = GetModuleHandleW(L"ngraph.dll");
     WCHAR wpath[MAX_PATH];
@@ -51,6 +54,7 @@ static string find_my_pathname()
     Dl_info dl_info;
     dladdr(reinterpret_cast<void*>(find_my_pathname), &dl_info);
     return dl_info.dli_fname;
+#endif
 #endif
 }
 
