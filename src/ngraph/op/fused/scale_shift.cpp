@@ -23,10 +23,10 @@ using namespace ngraph;
 
 const string op::ScaleShift::type_name{"ScaleShift"};
 
-op::ScaleShift::ScaleShift(const std::shared_ptr<ngraph::Node>& data,
-                           const std::shared_ptr<ngraph::Node>& scale,
-                           const std::shared_ptr<ngraph::Node>& shift)
-    : FusedOp(check_single_output_args({data, scale, shift}))
+op::ScaleShift::ScaleShift(const Output<Node>& data,
+                           const Output<Node>& scale,
+                           const Output<Node>& shift)
+    : FusedOp({data, scale, shift})
 {
     constructor_validate_and_infer_types();
 }

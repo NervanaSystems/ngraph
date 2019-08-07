@@ -33,8 +33,8 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            Unsqueeze(const std::shared_ptr<ngraph::Node>& data,
-                      const std::shared_ptr<ngraph::Node>& axes);
+            Unsqueeze() = default;
+            Unsqueeze(const Output<Node>& data, const Output<Node>& axes);
 
             virtual void pre_validate_and_infer_types() override;
             virtual NodeVector decompose_op() const override;

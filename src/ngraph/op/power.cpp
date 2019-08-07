@@ -24,9 +24,7 @@ using namespace ngraph;
 
 const string op::Power::type_name{"Power"};
 
-op::Power::Power(const shared_ptr<Node>& arg0,
-                 const shared_ptr<Node>& arg1,
-                 const AutoBroadcastSpec& autob)
+op::Power::Power(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
     : BinaryElementwiseArithmetic(arg0, arg1, autob)
 {
     constructor_validate_and_infer_types();

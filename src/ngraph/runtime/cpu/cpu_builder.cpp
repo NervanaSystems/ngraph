@@ -65,6 +65,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -104,6 +105,7 @@
 #include "ngraph/runtime/cpu/kernel/subtract.hpp"
 #include "ngraph/runtime/cpu/kernel/tan.hpp"
 #include "ngraph/runtime/cpu/kernel/tanh.hpp"
+#include "ngraph/runtime/cpu/kernel/xor.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/halide_op.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -239,6 +241,28 @@ namespace ngraph
                                                          ctx->buffer_data[out0_buffer_index],
                                                          element_count,
                                                          ectx->arena);
+                    };
+                functors.emplace_back(functor);
+            }
+
+            template <>
+            void Builder::BUILDER_DECL(ngraph::op::Xor)
+            {
+                auto& functors = external_function->get_functors();
+
+                auto element_count = out[0].get_size();
+                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
+                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
+
+                auto functor =
+                    [&, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](
+                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        runtime::cpu::kernel::logical_xor(ctx->buffer_data[arg0_buffer_index],
+                                                          ctx->buffer_data[arg1_buffer_index],
+                                                          ctx->buffer_data[out0_buffer_index],
+                                                          element_count,
+                                                          ectx->arena);
                     };
                 functors.emplace_back(functor);
             }
@@ -546,6 +570,19 @@ namespace ngraph
             }
 
             template <>
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Xor)
+            {
+                auto element_count = shape_size(node->get_shape());
+
+                auto functor = [&, element_count](const std::vector<void*>& inputs,
+                                                  std::vector<void*>& outputs) {
+                    runtime::cpu::kernel::logical_xor(
+                        inputs[0], inputs[1], outputs[0], element_count, 0);
+                };
+                return functor;
+            }
+
+            template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sign)
             {
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sign);
@@ -612,6 +649,7 @@ namespace ngraph
             REGISTER_OP_BUILDER(Minimum);
             REGISTER_OP_BUILDER(And);
             REGISTER_OP_BUILDER(Or);
+            REGISTER_OP_BUILDER(Xor);
 
             REGISTER_CF_BUILDER(Add);
             REGISTER_CF_BUILDER(Subtract);
@@ -633,6 +671,7 @@ namespace ngraph
             REGISTER_CF_BUILDER(LessEq);
             REGISTER_CF_BUILDER(And);
             REGISTER_CF_BUILDER(Or);
+            REGISTER_CF_BUILDER(Xor);
             REGISTER_CF_BUILDER(Sign);
             REGISTER_CF_BUILDER(Not);
         }
