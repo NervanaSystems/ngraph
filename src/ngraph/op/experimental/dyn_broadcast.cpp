@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/sum.hpp"
 
 using namespace std;
@@ -62,9 +63,67 @@ void op::DynBroadcast::validate_and_infer_types()
                           "DynBroadcast axes rank must be 1, but has ",
                           axes_shape_rank);
 
+    PartialShape result_shape{PartialShape::dynamic()};
+    if (input(1).get_source_output().get_node_shared_ptr()->is_constant())
+    {
+        result_shape =
+            static_pointer_cast<op::Constant>(input(1).get_source_output().get_node_shared_ptr())
+                ->get_shape_val();
+    }
+
+    bool axes_known = false;
+    AxisSet broadcast_axes;
+    if (input(2).get_source_output().get_node_shared_ptr()->is_constant())
+    {
+        axes_known = true;
+        broadcast_axes =
+            static_pointer_cast<op::Constant>(input(2).get_source_output().get_node_shared_ptr())
+                ->get_axis_set_val();
+    }
+
+    PartialShape arg_shape = input(0).get_partial_shape();
+    if (result_shape.is_static() && axes_known && arg_shape.is_static())
+    {
+        for (auto axis : broadcast_axes)
+        {
+            NODE_VALIDATION_CHECK(this,
+                                  axis < size_t(result_shape.rank()),
+                                  "Broadcast axis index (",
+                                  axis,
+                                  ") exceeds specified output shape rank ",
+                                  "(broadcast axes: ",
+                                  broadcast_axes,
+                                  ", output shape: ",
+                                  result_shape,
+                                  ").");
+        }
+
+        Shape required_input_shape = result_shape.to_shape();
+        for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
+        {
+            required_input_shape.erase(required_input_shape.begin() + *i);
+        }
+
+        // TODO(amprocte): We can probably have a more helpful error message here.
+        // There are two things that can go wrong, which are being picked up in
+        // one fell swoop by this check: either the number of broadcast axes is not
+        // enough, or there is a mismatch with one of the pre-broadcast axis lengths.
+        NODE_VALIDATION_CHECK(
+            this,
+            arg_shape.compatible(required_input_shape),
+            "Broadcast argument shape, specified output shape, and axes are incompatible ",
+            "(argument shape: ",
+            arg_shape,
+            ", output shape: ",
+            result_shape,
+            ", broadcast axes: ",
+            broadcast_axes,
+            ").");
+    }
+
     set_input_is_relevant_to_shape(1);
     set_input_is_relevant_to_shape(2);
-    set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    set_output_type(0, get_input_element_type(0), result_shape);
 }
 
 shared_ptr<Node> op::DynBroadcast::copy_with_new_args(const NodeVector& new_args) const

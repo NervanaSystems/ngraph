@@ -27,8 +27,8 @@ using namespace ngraph;
 
 const string op::DepthToSpace::type_name{"DepthToSpace"};
 
-op::DepthToSpace::DepthToSpace(const shared_ptr<Node>& data, const size_t block_size)
-    : FusedOp(check_single_output_args({data}))
+op::DepthToSpace::DepthToSpace(const Output<Node>& data, const size_t block_size)
+    : FusedOp({data})
     , m_blocksize(block_size)
 {
     constructor_validate_and_infer_types();
@@ -36,8 +36,8 @@ op::DepthToSpace::DepthToSpace(const shared_ptr<Node>& data, const size_t block_
 
 NodeVector op::DepthToSpace::decompose_op() const
 {
-    auto data = get_argument(0);
-    const Shape& data_shape = data->get_shape();
+    auto data = input(0).get_source_output();
+    const Shape& data_shape = data.get_shape();
 
     // Set default values to each dimension to be able to work with both 3D or 4D data.
     size_t n{1}, c{1}, h{1}, w{1};

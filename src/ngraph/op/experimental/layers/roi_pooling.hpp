@@ -34,12 +34,12 @@ namespace ngraph
             /// \param coords         Coordinates of bounding boxes
             /// \param output_size    Height/Width of ROI output features
             /// \param spatial_scale  Ratio of input feature map over input image size
-            /// \param kind           Kind of pooling - Max or Bilinear
+            /// \param method         Method of pooling - Max or Bilinear
             ROIPooling(const std::shared_ptr<Node>& input,
                        const std::shared_ptr<Node>& coords,
                        const Shape& output_size,
                        const float spatial_scale,
-                       const std::string& kind);
+                       const std::string& method);
 
             void validate_and_infer_types() override;
 
@@ -48,11 +48,11 @@ namespace ngraph
 
             const Shape& get_output_size() const { return m_output_size; }
             float get_spatial_scale() const { return m_spatial_scale; }
-            const std::string& get_kind() const { return m_kind; }
+            const std::string& get_method() const { return m_method; }
         private:
             Shape m_output_size;
             float m_spatial_scale;
-            std::string m_kind;
+            std::string m_method;
         };
     }
 }

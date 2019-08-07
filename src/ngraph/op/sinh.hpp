@@ -32,7 +32,8 @@ namespace ngraph
             /// \brief Constructs a hyperbolic sine operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Sinh(const std::shared_ptr<Node>& arg);
+            Sinh(const Output<Node>& arg);
+            Sinh() = default;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

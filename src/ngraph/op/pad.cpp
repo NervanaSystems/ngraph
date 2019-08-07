@@ -23,12 +23,12 @@ using namespace ngraph;
 
 const string op::Pad::type_name{"Pad"};
 
-op::Pad::Pad(const shared_ptr<Node>& arg,
-             const shared_ptr<Node>& arg_pad_value,
+op::Pad::Pad(const Output<Node>& arg,
+             const Output<Node>& arg_pad_value,
              const CoordinateDiff& padding_below,
              const CoordinateDiff& padding_above,
              PadMode pad_mode)
-    : Op(check_single_output_args({arg, arg_pad_value}))
+    : Op({arg, arg_pad_value})
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_padding_interior_fake(padding_below.size())

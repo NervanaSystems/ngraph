@@ -16,12 +16,18 @@
 
 #include <memory>
 
-#include "core/node.hpp"
 #include "exceptions.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/multiply.hpp"
 #include "ngraph/shape.hpp"
+
+#include "core/node.hpp"
+#include "leaky_relu.hpp"
+#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -42,8 +48,8 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> alpha_node =
                         std::make_shared<ngraph::op::Constant>(
                             data->get_element_type(), Shape{}, std::vector<double>{alpha});
-
-                    return {std::make_shared<ngraph::op::LeakyRelu>(data, alpha_node)};
+                    alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
+                    return {std::make_shared<ngraph::op::Maximum>(data * alpha_node, data)};
                 }
 
             } // namespace set_1

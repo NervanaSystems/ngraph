@@ -27,14 +27,14 @@ using namespace ngraph;
 
 const string op::Gemm::type_name{"Gemm"};
 
-op::Gemm::Gemm(const std::shared_ptr<ngraph::Node>& A,
-               const std::shared_ptr<ngraph::Node>& B,
-               const std::shared_ptr<ngraph::Node>& C,
+op::Gemm::Gemm(const Output<Node>& A,
+               const Output<Node>& B,
+               const Output<Node>& C,
                double alpha,
                double beta,
                bool transA,
                bool transB)
-    : FusedOp(check_single_output_args({A, B, C}))
+    : FusedOp({A, B, C})
     , m_alpha{alpha}
     , m_beta{beta}
     , m_transA{transA}
@@ -45,9 +45,9 @@ op::Gemm::Gemm(const std::shared_ptr<ngraph::Node>& A,
 
 NodeVector op::Gemm::decompose_op() const
 {
-    auto A = get_argument(0);
-    auto B = get_argument(1);
-    auto C = get_argument(2);
+    auto A = input(0).get_source_output();
+    auto B = input(1).get_source_output();
+    auto C = input(2).get_source_output();
 
     if (m_transA)
     {
@@ -72,7 +72,7 @@ NodeVector op::Gemm::decompose_op() const
 
     // beta * C
     std::shared_ptr<ngraph::Node> beta_node = std::make_shared<ngraph::op::Constant>(
-        C->get_element_type(), C->get_shape(), std::vector<double>{m_beta});
+        C.get_element_type(), C.get_shape(), std::vector<double>{m_beta});
     C = std::make_shared<ngraph::op::Multiply>(beta_node, C);
 
     // alpha * A' * B' + beta * C
