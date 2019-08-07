@@ -33,10 +33,10 @@ using namespace ngraph;
 
 const string op::GRUCell::type_name{"GRUCell"};
 
-op::GRUCell::GRUCell(const shared_ptr<Node>& X,
-                     const shared_ptr<Node>& W,
-                     const shared_ptr<Node>& R,
-                     const shared_ptr<Node>& H_t,
+op::GRUCell::GRUCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& H_t,
                      size_t hidden_size)
     : GRUCell(X,
               W,
@@ -51,17 +51,17 @@ op::GRUCell::GRUCell(const shared_ptr<Node>& X,
 {
 }
 
-op::GRUCell::GRUCell(const shared_ptr<Node>& X,
-                     const shared_ptr<Node>& W,
-                     const shared_ptr<Node>& R,
-                     const shared_ptr<Node>& H_t,
+op::GRUCell::GRUCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& H_t,
                      size_t hidden_size,
                      const vector<string>& activations,
                      const vector<float>& activation_alpha,
                      const vector<float>& activation_beta,
                      float clip,
                      bool linear_before_reset)
-    : FusedOp(check_single_output_args({X, W, R, H_t}))
+    : FusedOp({X, W, R, H_t})
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -71,18 +71,18 @@ op::GRUCell::GRUCell(const shared_ptr<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::GRUCell::GRUCell(const shared_ptr<Node>& X,
-                     const shared_ptr<Node>& W,
-                     const shared_ptr<Node>& R,
-                     const shared_ptr<Node>& H_t,
+op::GRUCell::GRUCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& H_t,
                      size_t hidden_size,
-                     const shared_ptr<Node>& B,
+                     const Output<Node>& B,
                      const vector<string>& activations,
                      const vector<float>& activation_alpha,
                      const vector<float>& activation_beta,
                      float clip,
                      bool linear_before_reset)
-    : FusedOp(check_single_output_args({X, W, R, H_t, B}))
+    : FusedOp({X, W, R, H_t, B})
     , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
@@ -189,11 +189,11 @@ NodeVector op::GRUCell::decompose_op() const
     // Ht = (1 - zt) (.) ht + zt (.) Ht-1
     // -------------------
 
-    std::shared_ptr<Node> X = get_argument(0);
-    std::shared_ptr<Node> W = get_argument(1);
-    std::shared_ptr<Node> R = get_argument(2);
-    std::shared_ptr<Node> H_t = get_argument(3);
-    std::shared_ptr<Node> B = get_argument(4);
+    Output<Node> X = input(0).get_source_output();
+    Output<Node> W = input(1).get_source_output();
+    Output<Node> R = input(2).get_source_output();
+    Output<Node> H_t = input(3).get_source_output();
+    Output<Node> B = input(4).get_source_output();
 
     // Get W and R biases separately.
     NodeVector b_W_R = builder::split(B, 2);
@@ -245,7 +245,7 @@ NodeVector op::GRUCell::decompose_op() const
     const auto& z_t = zr_t_gates.at(0);
     const auto& r_t = zr_t_gates.at(1);
 
-    shared_ptr<Node> h_t;
+    Output<Node> h_t;
 
     if (m_linear_before_reset)
     {
@@ -269,16 +269,16 @@ NodeVector op::GRUCell::decompose_op() const
     // Ht = (1 - zt) (.) ht + zt (.) Ht-1
     H_t = add(mul(sub(one, z_t), h_t), mul(z_t, H_t));
 
-    return {H_t};
+    return {H_t.get_node_shared_ptr()};
 }
 
 void op::GRUCell::add_default_bias_input()
 {
-    shared_ptr<Node> B =
+    Output<Node> B =
         op::Constant::create(input(0).get_element_type(),
                              Shape{2 * s_gates_count * get_hidden_size()},
                              vector<float>(2 * s_gates_count * get_hidden_size(), 0.f));
-    set_argument(4, B->output(0));
+    set_argument(4, B);
 }
 
 shared_ptr<Node> op::GRUCell::copy_with_new_args(const NodeVector& new_args) const
