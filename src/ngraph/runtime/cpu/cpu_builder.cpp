@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/cpu_builder_optimized.hpp"
 
 #include <algorithm>
 #include <cmath>

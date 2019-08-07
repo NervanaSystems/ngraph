@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
-#include "ngraph/runtime/cpu/cpu_builder_optimized.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_size_optimized.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
