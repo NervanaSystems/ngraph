@@ -190,6 +190,7 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
 map<string, string> runtime::BackendManager::get_registered_device_map()
 {
     map<string, string> rc;
+#ifndef NGRAPH_STATIC_LIB_ENABLE
     string my_directory =
         file_util::get_directory(Backend::get_backend_shared_library_search_directory());
     vector<string> backend_list;
@@ -206,6 +207,7 @@ map<string, string> runtime::BackendManager::get_registered_device_map()
         }
     };
     file_util::iterate_files(my_directory, f, false, true);
+#endif
     return rc;
 }
 
