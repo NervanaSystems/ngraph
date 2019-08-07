@@ -52,7 +52,6 @@ namespace ngraph
             } // namespace error
         }     // namespace detail
 
-        // TODO CONSIDER CHANGE ONNNX IMPORTER INTERFACE TO OOP
         static void update_external_data_paths(onnx::ModelProto& model_proto,
                                                const std::string& model_path)
         {
