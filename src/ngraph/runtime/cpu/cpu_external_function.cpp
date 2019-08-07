@@ -1261,7 +1261,7 @@ static void dump_one_kernel_with_type(runtime::cpu::CPU_DebugTracer& debug_trace
                                       const std::string& tensor_name,
                                       const std::string& in_out)
 {
-    switch (t_attrs.m_type_of_element.get_type_enum())
+    switch (t_attrs.m_type_of_element)
     {
     case element::Type_t::f32:
         debug_tracer.dump_one_tensor<float>(kernel_name,
