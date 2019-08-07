@@ -773,43 +773,6 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_2d_with_bias)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, leaky_relu)
-{
-    auto data_node = make_shared<op::Parameter>(element::f64, Shape{3, 4});
-    auto alpha_node = make_shared<op::Constant>(element::f64, Shape{}, vector<double>{0.1});
-    auto leaky_relu = make_shared<op::LeakyRelu>(data_node, alpha_node);
-
-    auto function = make_shared<Function>(NodeVector{leaky_relu}, ParameterVector{data_node});
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
-
-    test_case.add_input<double>({numeric_limits<double>::max(),
-                                 -numeric_limits<double>::infinity(),
-                                 numeric_limits<double>::infinity(),
-                                 -8.0,
-                                 -6.66667,
-                                 -5.5,
-                                 -0.0000001,
-                                 0,
-                                 0.0000001,
-                                 4.25,
-                                 6.66667,
-                                 1000});
-
-    test_case.add_expected_output<double>(Shape{3, 4},
-                                          {numeric_limits<double>::max(),
-                                           -numeric_limits<double>::infinity(),
-                                           numeric_limits<double>::infinity(),
-                                           -0.8,
-                                           -0.666667,
-                                           -0.55,
-                                           -0.00000001,
-                                           0,
-                                           0.0000001,
-                                           4.25,
-                                           6.66667,
-                                           1000});
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, unsqueeze)
 {
     auto data_node = make_shared<op::Parameter>(element::f32, Shape{4, 2});
