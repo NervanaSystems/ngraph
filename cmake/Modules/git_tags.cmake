@@ -42,10 +42,15 @@ function(NGRAPH_GET_TAG_OF_CURRENT_HASH)
     NGRAPH_GET_CURRENT_HASH()
 
     if (NOT ${TAG_LIST} STREQUAL "")
-        string(REGEX MATCH "${NGRAPH_CURRENT_HASH}\t[^\r\n]*" TAG ${TAG_LIST})
-        set(FINAL_TAG ${TAG})
+        # first look for vX.Y.Z release tag
+        string(REGEX MATCH "${NGRAPH_CURRENT_HASH}[\t ]+refs/tags/v([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)" TAG ${TAG_LIST})
+        if ("${TAG}" STREQUAL "")
+            # release tag not found so now look for vX.Y.Z-rc.N tag
+            string(REGEX MATCH "${NGRAPH_CURRENT_HASH}[\t ]+refs/tags/v([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)-(rc\\.[0-9?]+)" TAG ${TAG_LIST})
+        endif()
+        set(STATUS ${TAG})
         if (NOT "${TAG}" STREQUAL "")
-            string(REGEX REPLACE "${NGRAPH_CURRENT_HASH}\trefs/tags/(.*)" "\\1" FINAL_TAG ${TAG})
+            string(REGEX REPLACE "${NGRAPH_CURRENT_HASH}[\t ]+refs/tags/(.*)" "\\1" FINAL_TAG ${TAG})
         endif()
     else()
         set(FINAL_TAG "")
