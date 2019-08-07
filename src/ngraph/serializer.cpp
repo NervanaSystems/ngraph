@@ -1576,7 +1576,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Passthrough>(node_js.at("logical_type"),
                                                 node_js.at("language"),
                                                 node_js.at("function"),
-                                                args,
+                                                static_cast<OutputVector>(args),
                                                 std::move(outputs));
             break;
         }

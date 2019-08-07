@@ -29,10 +29,6 @@ using namespace ngraph;
 
 const string op::GroupConvolution::type_name{"GroupConvolution"};
 
-op::GroupConvolution::GroupConvolution()
-{
-}
-
 op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
                                        const Output<Node>& filters,
                                        const Strides& window_movement_strides,
