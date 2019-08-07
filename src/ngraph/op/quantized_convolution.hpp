@@ -66,6 +66,8 @@ namespace ngraph
                                  const ngraph::AxisSet& filter_axes = ngraph::AxisSet{},
                                  const ngraph::AxisSet& output_axes = ngraph::AxisSet{});
 
+            QuantizedConvolution() = default;
+
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }

@@ -15,14 +15,10 @@
 //*****************************************************************************
 
 #include <algorithm>
-#include <cmath>
-#include <cstddef>
 #include <functional>
 #include <iterator>
 #include <numeric>
-#include <vector>
 
-#include "exceptions.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "utils/common.hpp"

@@ -19,12 +19,14 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::DynPad::type_name{"DynPad"};
+
 op::DynPad::DynPad(const std::shared_ptr<Node>& arg,
                    const std::shared_ptr<Node>& padding_below,
                    const std::shared_ptr<Node>& padding_above,
                    const std::shared_ptr<Node>& padding_value,
                    op::PadMode pad_mode)
-    : Op("DynPad", check_single_output_args({arg, padding_below, padding_above, padding_value}))
+    : Op(check_single_output_args({arg, padding_below, padding_above, padding_value}))
 {
     constructor_validate_and_infer_types();
 }
