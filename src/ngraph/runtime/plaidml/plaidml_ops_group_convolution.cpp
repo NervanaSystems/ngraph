@@ -14,13 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/plaidml/plaidml_ops_group_convolution.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/runtime/plaidml/plaidml_convpool_formatter.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 
 namespace ngraph
@@ -33,43 +30,6 @@ namespace ngraph
         }
     } // namespace runtime
 } // namespace ngraph
-
-ngraph::runtime::plaidml::op::GroupConvolution::GroupConvolution(
-    std::shared_ptr<::ngraph::op::GroupConvolution> src,
-    const NodeVector& args,
-    AxisVector data_axes,
-    AxisVector filters_axes,
-    AxisVector output_axes)
-    : Op{"GroupConvolution", args}
-    , m_src{std::move(src)}
-    , m_data_axes{std::move(data_axes)}
-    , m_filters_axes{std::move(filters_axes)}
-    , m_output_axes{std::move(output_axes)}
-{
-    constructor_validate_and_infer_types();
-}
-
-void ngraph::runtime::plaidml::op::GroupConvolution::validate_and_infer_types()
-{
-    auto src_shape = m_src->get_output_shape(0);
-    Shape out_shape(src_shape.size());
-    for (std::size_t idx = 0; idx < src_shape.size(); ++idx)
-    {
-        out_shape[idx] = src_shape.at(m_output_axes.at(idx));
-    }
-    set_output_type(0, m_src->get_element_type(), out_shape);
-}
-
-std::shared_ptr<ngraph::Node> ngraph::runtime::plaidml::op::GroupConvolution::copy_with_new_args(
-    const NodeVector& new_args) const
-{
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error{"PlaidMLGroupConvolution requires two inputs (data and filters)"};
-    }
-    return std::make_shared<GroupConvolution>(
-        m_src, new_args, m_data_axes, m_filters_axes, m_output_axes);
-}
 
 // GroupConvolution implements a grouped convolution, with optional striding, padding, and dilation.
 void ngraph::runtime::plaidml::ImplGroupConvolution::Apply()
