@@ -43,6 +43,7 @@
 #include "pyngraph/ops/exp.hpp"
 #include "pyngraph/ops/floor.hpp"
 #include "pyngraph/ops/fused/clamp.hpp"
+#include "pyngraph/ops/fused/depth_to_space.hpp"
 #include "pyngraph/ops/fused/elu.hpp"
 #include "pyngraph/ops/fused/gelu.hpp"
 #include "pyngraph/ops/fused/gemm.hpp"
