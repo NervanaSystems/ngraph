@@ -23,6 +23,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
@@ -32,7 +33,7 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+runtime::BackendConstructor* runtime::cpu::get_backend_constructor_pointer()
 {
     class CPU_BackendConstructor : public runtime::BackendConstructor
     {
@@ -50,6 +51,23 @@ extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
     return s_backend_constructor.get();
 }
 
+#if !defined(NGRAPH_CPU_STATIC_LIB_ENABLE)
+extern "C" CPU_BACKEND_API runtime::BackendConstructor* get_backend_constructor_pointer()
+{
+    return runtime::cpu::get_backend_constructor_pointer();
+}
+#endif
+
+void runtime::cpu::static_initialize()
+{
+    static bool s_is_initialized = false;
+    if (!s_is_initialized)
+    {
+        s_is_initialized = true;
+        BackendManager::register_backend("CPU", runtime::cpu::get_backend_constructor_pointer());
+    }
+}
+
 namespace
 {
     static class CPUStaticInit
@@ -57,7 +75,8 @@ namespace
     public:
         CPUStaticInit()
         {
-            runtime::BackendManager::register_backend("CPU", get_backend_constructor_pointer());
+            runtime::BackendManager::register_backend(
+                "CPU", runtime::cpu::get_backend_constructor_pointer());
         }
         ~CPUStaticInit() {}
     } s_cpu_static_init;
@@ -187,11 +206,10 @@ runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
     {
         return runtime::get_default_allocator();
     }
-    return m_allocator.get();
+    return m_allocator;
 }
 
-void runtime::cpu::CPU_Backend::set_host_memory_allocator(
-    std::unique_ptr<runtime::Allocator> allocator)
+void runtime::cpu::CPU_Backend::set_host_memory_allocator(Allocator* allocator)
 {
     if (m_allocator)
     {
@@ -200,7 +218,7 @@ void runtime::cpu::CPU_Backend::set_host_memory_allocator(
         throw ngraph_error(
             "Allocator already exists. Changing allocators mid-execution is not permitted.");
     }
-    m_allocator = std::move(allocator);
+    m_allocator = allocator;
 }
 
 vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const

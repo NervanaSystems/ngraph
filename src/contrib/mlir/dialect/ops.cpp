@@ -13,6 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+
+// NOTE: This file follows nGraph format style and MLIR naming convention since it does
+// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+
 #include "ops.hpp"
 #include "assertion.hpp"
 #include "llvm/Support/ErrorHandling.h"
@@ -164,6 +168,39 @@ static mlir::LogicalResult verifyCmpOp(T* op)
     // result of same shape as input and has bool type
     if (!resType.isCompatibleShape(opType0) || !resType.getElementType().isa<NGBoolType>())
         return op->emitOpError("Incompatible result shape or type for comparison op");
+
+    return mlir::success();
+}
+
+template <>
+mlir::LogicalResult verifyOp(NGGatherOp* op)
+{
+    Type ty = op->params()->getType();
+    NGTensorType inputType = ty.cast<NGTensorType>();
+
+    ty = op->indices()->getType();
+    NGTensorType indicesType = ty.cast<NGTensorType>();
+
+    // ensure axis < params rank
+    if (op->axis().getSExtValue() >= inputType.getRank())
+        return op->emitOpError("Gather axis is larger than input rank");
+
+    ty = indicesType.getElementType();
+
+    // ensure indices are I32 or I64
+    if (!ty.isa<NGIntegerType>())
+        return op->emitOpError("Indices tensor is not of Integer type");
+
+    NGIntegerType indicesEltType = ty.cast<NGIntegerType>();
+    if (!indicesEltType.isInt32() && !indicesEltType.isInt64())
+        return op->emitOpError("Indices tensor is not of I32 or I64 type");
+
+    mlir::Type r0 = op->res()->getType();
+    NGTensorType resType = r0.cast<NGTensorType>();
+
+    // ensure result is compatible with input
+    if (!resType.getRank() == inputType.getRank() + indicesType.getRank() - 1)
+        return op->emitOpError("Incompatible result shape and/or type");
 
     return mlir::success();
 }

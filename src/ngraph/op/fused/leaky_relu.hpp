@@ -30,8 +30,11 @@ namespace ngraph
         class LeakyRelu : public ngraph::op::util::FusedOp
         {
         public:
-            LeakyRelu(const std::shared_ptr<ngraph::Node>& data,
-                      const std::shared_ptr<ngraph::Node>& alpha);
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            LeakyRelu() = default;
+            LeakyRelu(const Output<Node>& data, const Output<Node>& alpha);
 
             virtual NodeVector decompose_op() const override;
 

@@ -24,10 +24,6 @@
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 
-/// performance test utilities
-std::multimap<size_t, std::string>
-    aggregate_timing(const std::vector<ngraph::runtime::PerformanceCounter>& perf_data);
-
 std::vector<ngraph::runtime::PerformanceCounter> run_benchmark(std::shared_ptr<ngraph::Function> f,
                                                                const std::string& backend_name,
                                                                size_t iterations,

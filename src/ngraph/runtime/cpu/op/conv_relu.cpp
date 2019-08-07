@@ -24,9 +24,10 @@
 using namespace std;
 using namespace ngraph;
 
+const std::string op::ConvolutionRelu::type_name{"ConvolutionRelu"};
+
 op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv)
-    : Op("ConvolutionRelu",
-         check_single_output_args({conv->get_argument(0), conv->get_argument(1)}))
+    : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output()})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -37,14 +38,14 @@ op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<op::Convolution>& con
     set_output_type(0, conv->get_element_type(), conv->get_shape());
 }
 
-op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<Node>& data_batch,
-                                     const std::shared_ptr<Node>& filters,
+op::ConvolutionRelu::ConvolutionRelu(const Output<Node>& data_batch,
+                                     const Output<Node>& filters,
                                      const Strides& window_movement_strides,
                                      const Strides& window_dilation_strides,
                                      const CoordinateDiff& padding_below,
                                      const CoordinateDiff& padding_above,
                                      const Strides& data_dilation_strides)
-    : Op("ConvolutionRelu", check_single_output_args({data_batch, filters}))
+    : Op({data_batch, filters})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -53,10 +54,10 @@ op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<Node>& data_batch,
 {
     constructor_validate_and_infer_types();
 
-    auto& data_batch_shape = data_batch->get_shape();
-    auto& data_batch_et = data_batch->get_element_type();
-    auto& filters_shape = filters->get_shape();
-    auto& filters_et = filters->get_element_type();
+    auto& data_batch_shape = data_batch.get_shape();
+    auto& data_batch_et = data_batch.get_element_type();
+    auto& filters_shape = filters.get_shape();
+    auto& filters_et = filters.get_element_type();
 
     //
     // Make sure data batch and filter element types match.

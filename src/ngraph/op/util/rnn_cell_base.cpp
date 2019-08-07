@@ -69,32 +69,29 @@ op::util::ActivationFunction op::util::RNNCellBase::get_activation_function(size
     return afunc;
 }
 
-shared_ptr<Node> op::util::RNNCellBase::add(const shared_ptr<Node>& lhs,
-                                            const shared_ptr<Node>& rhs)
+shared_ptr<Node> op::util::RNNCellBase::add(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast({lhs, rhs});
+    auto args = op::numpy_style_broadcast_values({lhs, rhs});
     return {make_shared<op::Add>(args.at(0), args.at(1))};
 }
 
-shared_ptr<Node> op::util::RNNCellBase::sub(const shared_ptr<Node>& lhs,
-                                            const shared_ptr<Node>& rhs)
+shared_ptr<Node> op::util::RNNCellBase::sub(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast({lhs, rhs});
+    auto args = op::numpy_style_broadcast_values({lhs, rhs});
     return {make_shared<op::Subtract>(args.at(0), args.at(1))};
 }
 
-shared_ptr<Node> op::util::RNNCellBase::mul(const shared_ptr<Node>& lhs,
-                                            const shared_ptr<Node>& rhs)
+shared_ptr<Node> op::util::RNNCellBase::mul(const Output<Node>& lhs, const Output<Node>& rhs)
 {
-    auto args = op::numpy_style_broadcast({lhs, rhs});
+    auto args = op::numpy_style_broadcast_values({lhs, rhs});
     return {make_shared<op::Multiply>(args.at(0), args.at(1))};
 }
 
-shared_ptr<Node> op::util::RNNCellBase::clip(const shared_ptr<Node>& data) const
+shared_ptr<Node> op::util::RNNCellBase::clip(const Output<Node>& data) const
 {
     if (m_clip == 0.f)
     {
-        return data;
+        return data.as_single_output_node();
     }
 
     return make_shared<op::Clamp>(data, -m_clip, m_clip);
