@@ -1,6 +1,6 @@
 .. distributed/overview.rst
 
-.. _distr: 
+.. _distributed: 
 
 Distributed Training
 ====================

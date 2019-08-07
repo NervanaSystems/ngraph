@@ -1,6 +1,6 @@
 .. core/overview.rst:
 
-.. _core:
+.. _ngraph_core:
 
 nGraph Core
 ===========

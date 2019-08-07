@@ -1,6 +1,6 @@
 .. backends/overview.rst
 
-.. _backends:
+.. _backend_support:
 
 Backend Support
 ===============
