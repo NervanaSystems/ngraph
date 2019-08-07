@@ -50,7 +50,8 @@ namespace ngraph
                 auto padding_above = pad->get_padding_above();
                 auto pad_mode = pad->get_pad_mode();
 
-                if (pad_mode == ngraph::op::PadMode::CONSTANT)
+                if (pad_mode == ngraph::op::PadMode::CONSTANT &&
+                    is_fp_i64(args[0].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
@@ -84,7 +85,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_ref<float>)> kernel;
 
-                    SELECT_KERNEL_FOR_LIMITED_ET(
+                    SELECT_KERNEL(
                         kernel, args[0].get_element_type(), runtime::cpu::kernel::pad_ref);
 
                     auto functor = [&,
@@ -125,7 +126,8 @@ namespace ngraph
                 auto padding_above = pad->get_padding_above();
                 auto pad_mode = pad->get_pad_mode();
 
-                if (pad_mode == ngraph::op::PadMode::CONSTANT)
+                if (pad_mode == ngraph::op::PadMode::CONSTANT &&
+                    is_fp_i64(pad->get_input_element_type(0)))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
@@ -151,7 +153,7 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_ref<float>)> kernel;
 
-                    SELECT_KERNEL_FOR_LIMITED_ET(
+                    SELECT_KERNEL(
                         kernel, pad->get_input_element_type(0), runtime::cpu::kernel::pad_ref);
 
                     auto functor =
