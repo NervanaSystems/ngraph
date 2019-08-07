@@ -107,6 +107,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     }
     else
     {
+#ifndef NGRAPH_STATIC_LIB_ENABLE
         DL_HANDLE handle = open_shared_library(type);
         if (!handle)
         {
@@ -117,7 +118,6 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
 #endif
             throw runtime_error(ss.str());
         }
-#ifndef NGRAPH_STATIC_LIB_ENABLE
 #ifndef _WIN32
         DLERROR(); // Clear any pending errors
 #endif
