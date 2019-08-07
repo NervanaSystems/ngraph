@@ -33,8 +33,8 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            LeakyRelu(const std::shared_ptr<ngraph::Node>& data,
-                      const std::shared_ptr<ngraph::Node>& alpha);
+            LeakyRelu() = default;
+            LeakyRelu(const Output<Node>& data, const Output<Node>& alpha);
 
             virtual NodeVector decompose_op() const override;
 
