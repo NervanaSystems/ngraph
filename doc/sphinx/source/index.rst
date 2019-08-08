@@ -73,12 +73,13 @@ nGraph Core
 .. toctree::
    :maxdepth: 1
 
-   buildlb.rst
    core/overview.rst
+   buildlb.rst
    core/fusion/index.rst
-   nGraph Core Ops <ops/index.rst>
    core/constructing-graphs/index.rst
    core/passes/passes.rst
+   nGraph Core Ops <ops/index.rst>
+
 
 
 Backend Support
@@ -88,8 +89,7 @@ Backend Support
    :maxdepth: 1
 
    backends/overview.rst
-   backends/backend-api/index.rst
-   backends/cpp-api.rst
+   backends/plaidml-ng-api/index.rst
 
 
 Distributed Training
@@ -125,4 +125,3 @@ Contribution
    :maxdepth: 1
 
    contributing/guide.rst
-
