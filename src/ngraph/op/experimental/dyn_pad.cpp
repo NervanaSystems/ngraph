@@ -27,6 +27,7 @@ op::DynPad::DynPad(const Output<Node>& arg,
                    const Output<Node>& padding_value,
                    op::PadMode pad_mode)
     : Op({arg, padding_below, padding_above, padding_value})
+    , m_pad_mode(pad_mode)
 {
     constructor_validate_and_infer_types();
 }
