@@ -20,12 +20,17 @@
 
 #pragma once
 
+#include <string>
+
 #ifdef IN_NGRAPH_LIBRARY
 #error("ngraph.hpp is for external use only")
 #endif
 
 extern "C" const char* get_ngraph_version_string();
-extern "C" void get_ngraph_version(size_t& major, size_t& minor, size_t& patch, const char** extra);
+namespace ngraph
+{
+    void get_version(size_t& major, size_t& minor, size_t& patch, std::string& extra);
+}
 
 /// \namespace ngraph
 /// \brief The Intel Nervana Graph C++ API.

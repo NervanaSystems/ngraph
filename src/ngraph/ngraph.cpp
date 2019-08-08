@@ -25,10 +25,13 @@ extern "C" const char* get_ngraph_version_string()
     return NGRAPH_VERSION;
 }
 
-extern "C" void get_ngraph_version(size_t& major, size_t& minor, size_t& patch, const char** extra)
+namespace ngraph
+{
+void get_version(size_t& major, size_t& minor, size_t& patch, std::string& extra)
 {
     major = 1;
     minor = 2;
     patch = 3;
-    *extra = NGRAPH_VERSION;
+    extra = NGRAPH_VERSION;
+}
 }

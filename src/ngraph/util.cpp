@@ -559,9 +559,10 @@ AxisVector ngraph::get_permutation_to_default_order(const AxisVector& axis_order
 }
 
 void ngraph::parse_version_string(const std::string& version,
+                                  size_t& major,
                                   size_t& minor,
                                   size_t& patch,
-                                  const char** extra)
+                                  string& extra)
 {
     // Since regex is broken in gcc 4.8 I will just manually parse the version string
     // Version strings look like `0.25.0-rc.0+7c32240`
@@ -576,15 +577,16 @@ void ngraph::parse_version_string(const std::string& version,
     end = version.find_first_of('.', start);
     string minor_str = version.substr(start, end - start);
     NGRAPH_INFO << minor_str;
-    start = end;
+    start = end + 1;
 
-    end = version.find_first_of('.', start);
+    end = version.find_first_of("-+", start);
     string patch_str = version.substr(start, end - start);
     NGRAPH_INFO << patch_str;
     start = end;
 
-    size_t* end;
-    major = stoi(major_str, &end);
-    minor = stoi(minor_str, &end);
-    patch = stoi(patch_str, &end);
+    extra = version.substr(start);
+
+    major = stoi(major_str);
+    minor = stoi(minor_str);
+    patch = stoi(patch_str);
 }
