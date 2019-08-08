@@ -8,10 +8,10 @@ Introduction
 ############
 
 Future developments in :abbr:`Artificial Intelligence (AI)` will increasingly 
-rely on better methods to accelerate the performance of deep learning workloads. 
-As :abbr:`Deep Learning (DL)` models become more complex, and as the volume of 
-data those models are expected to handle increases rapidly, the deployment of 
-scalable AI solutions becomes a greater challenge. 
+rely on better methods to accelerate the performance of deep learning
+workloads. As :abbr:`Deep Learning (DL)` models become more complex, and as
+the volume of data those models are expected to handle increases rapidly, the
+deployment of scalable AI solutions becomes a greater challenge. 
 
 Today, two standard approaches to accelerate deep learning performance are:
 
