@@ -10,3 +10,6 @@ max_3d_to_scalar_int32
 # Not implemented
 send_recv
 send_recv_ring
+
+# param not supported in CPU backend
+group_conv_data_dilation

@@ -24,8 +24,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::BatchMatMul::BatchMatMul(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : Op("BatchMatMul", check_single_output_args({arg0, arg1}))
+const string op::BatchMatMul::type_name{"BatchMatMul"};
+
+op::BatchMatMul::BatchMatMul(const Output<Node>& arg0, const Output<Node>& arg1)
+    : Op({arg0, arg1})
 {
     constructor_validate_and_infer_types();
 }

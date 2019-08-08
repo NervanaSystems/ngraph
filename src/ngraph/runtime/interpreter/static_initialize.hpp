@@ -16,27 +16,13 @@
 
 #pragma once
 
-#include <memory>
-
-#include "ngraph/axis_vector.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/op.hpp"
-#include "ngraph/op/util/fused_op.hpp"
-
 namespace ngraph
 {
-    namespace op
+    namespace runtime
     {
-        class LeakyRelu : public ngraph::op::util::FusedOp
+        namespace interpreter
         {
-        public:
-            LeakyRelu(const std::shared_ptr<ngraph::Node>& data,
-                      const std::shared_ptr<ngraph::Node>& alpha);
-
-            virtual NodeVector decompose_op() const override;
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-        };
+            void static_initialize();
+        }
     }
 }

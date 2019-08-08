@@ -13,9 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "cpu_backend_visibility.h"
 
-extern "C" CPU_BACKEND_API const char* get_ngraph_version_string()
-{
-    return NGRAPH_VERSION;
-}
+#pragma once
+
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+
+void regclass_pyngraph_op_FakeQuantize(py::module m);

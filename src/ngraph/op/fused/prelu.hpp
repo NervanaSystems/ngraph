@@ -31,12 +31,15 @@ namespace ngraph
         class PRelu : public ngraph::op::util::FusedOp
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            PRelu() = default;
             /// \brief Constructs a PRelu operation.
             ///
             /// \param data Input tensor
             /// \param slope Multipliers for negative values
-            PRelu(const std::shared_ptr<ngraph::Node>& data,
-                  const std::shared_ptr<ngraph::Node>& slope);
+            PRelu(const Output<Node>& data, const Output<Node>& slope);
 
             virtual NodeVector decompose_op() const override;
 

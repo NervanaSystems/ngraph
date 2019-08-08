@@ -23,6 +23,8 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::CompiledKernel::type_name{"CompiledKernel"};
+
 shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector& new_args) const
 {
     auto args = inputs();
@@ -61,10 +63,17 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     return std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
 }
 
+ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
+                                           const OutputVector& outputs,
+                                           const OutputVector& args)
+    : CompiledKernel(as_node_vector(node_list), as_node_vector(outputs), as_node_vector(args))
+{
+}
+
 ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
                                            const NodeVector& outputs,
                                            const NodeVector& args)
-    : Op("CompiledKernel", check_single_output_args({args}))
+    : Op(check_single_output_args({args}))
     , m_node_list(node_list)
     , m_output_nodes(outputs)
 {

@@ -20,8 +20,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::ShapeOf::ShapeOf(const shared_ptr<Node>& arg)
-    : Op("ShapeOf", check_single_output_args({arg}))
+const string op::ShapeOf::type_name{"ShapeOf"};
+
+op::ShapeOf::ShapeOf(const Output<Node>& arg)
+    : Op({arg})
 {
     constructor_validate_and_infer_types();
 }
