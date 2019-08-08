@@ -294,7 +294,7 @@ private:
                 static_cast<const ngraph::op::AllReduce*>(&node);
             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
-                                    node.get_input_element_type(0).get_type_enum(),
+                                    node.get_input_element_type(0),
                                     allreduce->get_reduce_type(),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
             break;
@@ -530,7 +530,7 @@ private:
             {
                 reference::broadcastdistributed<T>(
                     args[0]->get_data_ptr<T>(),
-                    node.get_input_element_type(0).get_type_enum(),
+                    node.get_input_element_type(0),
                     static_cast<int>(shape_size(node.get_input_shape(0))),
                     root_id);
                 auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) * sizeof(T);
@@ -540,7 +540,7 @@ private:
             {
                 reference::broadcastdistributed<T>(
                     out[0]->get_data_ptr<T>(),
-                    node.get_input_element_type(0).get_type_enum(),
+                    node.get_input_element_type(0),
                     static_cast<int>(shape_size(node.get_input_shape(0))),
                     root_id);
             }
@@ -585,7 +585,7 @@ private:
             element::Type type = node.get_element_type();
             std::stringstream ss;
             size_t element_count = shape_size(node.get_output_shape(0));
-            switch (type.get_type_enum())
+            switch (type)
             {
             case element::Type_t::boolean:
                 reference::convert_to_bool<T>(
@@ -1349,10 +1349,8 @@ private:
             const auto* op = static_cast<const ngraph::op::Recv*>(&node);
             int src_id = op->get_src_id();
 
-            reference::recv<T>(args[0]->get_data_ptr<T>(),
-                               node.get_input_element_type(0).get_type_enum(),
-                               element_count,
-                               src_id);
+            reference::recv<T>(
+                args[0]->get_data_ptr<T>(), node.get_input_element_type(0), element_count, src_id);
 
             memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             break;
@@ -1516,7 +1514,7 @@ private:
             int dest_id = op->get_dest_id();
 
             reference::send<T>(args[0]->get_data_ptr<const T>(),
-                               node.get_input_element_type(0).get_type_enum(),
+                               node.get_input_element_type(0),
                                element_count,
                                dest_id);
 

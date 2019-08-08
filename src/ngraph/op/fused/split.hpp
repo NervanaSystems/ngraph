@@ -33,23 +33,20 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            Split() = default;
             /// \brief Constructs a Split op that evenly divides the input tensor.
             ///
             /// \param data - Node producing the input tensor
             /// \param axis - indicates an axis along which the input tensor should be split. Negative values mean counting from the back of the input tensor's shape.
             /// \param num_split - a number of "pieces" the input tensor will be split to
-            Split(const std::shared_ptr<ngraph::Node>& data,
-                  const int axis,
-                  const size_t num_split);
+            Split(const Output<Node>& data, const int axis, const size_t num_split);
 
             /// \brief Constructs a Split op that splits the input tensor into variable length "pieces"
             ///
             /// \param data - Node producing the input tensor
             /// \param axis - indicates an axis along which the input tensor should be split. Negative values mean counting from the back of the input tensor's shape.
             /// \param splits - a list of lengths that the input tensor should be split to. Use this constructor to split the input tensor to variable length chunks.
-            Split(const std::shared_ptr<ngraph::Node>& data,
-                  const int axis,
-                  const std::vector<size_t>& splits);
+            Split(const Output<Node>& data, const int axis, const std::vector<size_t>& splits);
 
             void pre_validate_and_infer_types() override;
 

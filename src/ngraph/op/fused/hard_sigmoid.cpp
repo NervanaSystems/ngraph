@@ -29,8 +29,8 @@ using namespace ngraph;
 
 const string op::HardSigmoid::type_name{"HardSigmoid"};
 
-op::HardSigmoid::HardSigmoid(const shared_ptr<Node>& data, float alpha, float beta)
-    : FusedOp(check_single_output_args({data}))
+op::HardSigmoid::HardSigmoid(const Output<Node>& data, float alpha, float beta)
+    : FusedOp({data})
     , m_alpha(alpha)
     , m_beta(beta)
 {
@@ -39,21 +39,21 @@ op::HardSigmoid::HardSigmoid(const shared_ptr<Node>& data, float alpha, float be
 
 NodeVector op::HardSigmoid::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto data_shape = data->get_shape();
+    auto data = input(0).get_source_output();
+    auto data_shape = data.get_shape();
     size_t elem_count = shape_size(data_shape);
 
     std::shared_ptr<ngraph::Node> alpha_node = ngraph::op::Constant::create<float>(
-        data->get_element_type(), data_shape, std::vector<float>(elem_count, m_alpha));
+        data.get_element_type(), data_shape, std::vector<float>(elem_count, m_alpha));
 
     std::shared_ptr<ngraph::Node> beta_node = ngraph::op::Constant::create<float>(
-        data->get_element_type(), data_shape, std::vector<float>(elem_count, m_beta));
+        data.get_element_type(), data_shape, std::vector<float>(elem_count, m_beta));
 
     std::shared_ptr<ngraph::Node> one_node = ngraph::op::Constant::create<float>(
-        data->get_element_type(), data_shape, std::vector<float>(elem_count, 1.0));
+        data.get_element_type(), data_shape, std::vector<float>(elem_count, 1.0));
 
     std::shared_ptr<ngraph::Node> zero_node = ngraph::op::Constant::create<float>(
-        data->get_element_type(), data_shape, std::vector<float>(elem_count, 0.0));
+        data.get_element_type(), data_shape, std::vector<float>(elem_count, 0.0));
 
     return {std::make_shared<op::Minimum>(
         std::make_shared<op::Maximum>(alpha_node * data + beta_node, zero_node), one_node)};

@@ -48,6 +48,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_ConvolutionBackpropFilters(m_op);
     regclass_pyngraph_op_Cos(m_op);
     regclass_pyngraph_op_Cosh(m_op);
+    regclass_pyngraph_op_DepthToSpace(m_op);
     regclass_pyngraph_op_Divide(m_op);
     regclass_pyngraph_op_Dot(m_op);
     regclass_pyngraph_op_Elu(m_op);

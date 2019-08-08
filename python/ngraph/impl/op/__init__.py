@@ -68,6 +68,7 @@ from _pyngraph.op import ConvolutionBackpropData
 from _pyngraph.op import ConvolutionBackpropFilters
 from _pyngraph.op import Cos
 from _pyngraph.op import Cosh
+from _pyngraph.op import DepthToSpace
 from _pyngraph.op import Divide
 from _pyngraph.op import Dot
 from _pyngraph.op import Elu
