@@ -15,11 +15,11 @@ deployment of scalable AI solutions becomes a greater challenge.
 
 Today, two standard approaches to accelerate deep learning performance are:
 
-#. **Design hardware solutions dedicated to deep learning computation** -- 
-   Many companies, ranging from startups to established manufacturers such as
-   Intel, are actively developing :abbr:`Application Specific Integrated
-   Circuits (ASICs)`to accelerate the performance of deep learning for both
-   training and inference.
+#. **Design hardware solutions dedicated to deep learning computation** -- Many
+   companies, ranging from startups to established manufacturers such as Intel, 
+   are actively developing :abbr:`Application Specific Integrated Circuits (ASICs)` 
+   to accelerate the performance of deep learning for both training and 
+   inference.
 
 #. **Optimize software to accelerate performance** -- nGraph Compiler, an 
    open-source deep learning compiler, is Intel's solution to deliver
@@ -29,6 +29,7 @@ Today, two standard approaches to accelerate deep learning performance are:
    GPUs. For deploying scalable AI solutions, nGraph uses kernel libraries, a
    popular and effective method to improve deep learning performance. Where
    kernel libraries are available and perform well, we use them.
+
 
 Motivations 
 ===========
@@ -146,6 +147,7 @@ description of the hardware target. It then automatically generates kernels
 that are iteratively optimized through an IR known as `Stripe`_. Integration of
 PlaidML with nGraph allows users to choose the hardware and framework that
 suits their needs, resulting in freedom from kernel libraries. 
+
 
 Solution: nGraph and PlaidML
 ============================

@@ -53,4 +53,4 @@ See the `full code`_ in the ``examples`` folder ``/doc/examples/mnist_mlp/dist_m
 
 .. _Intel MLSL: https://github.com/intel/MLSL/releases
 .. _OpenMPI: https://www.open-mpi.org/software/ompi/v2.1/  
-.. _full code: https://github.com/NervanaSystems/ngraph/blob/master/doc/examples/mnist_mlp/dist_mnist_mlp.cpp 
+.. _full code: https://github.com/NervanaSystems/ngraph/blob/master/doc/examples/mnist_mlp/dist_mnist_mlp.cpp

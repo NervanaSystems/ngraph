@@ -193,7 +193,7 @@ mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
 
-    switch (type.get_type_enum())
+    switch (type)
     {
     case ngraph::element::Type_t::undefined:
     case ngraph::element::Type_t::dynamic:

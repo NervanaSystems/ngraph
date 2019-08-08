@@ -38,13 +38,13 @@ using namespace ngraph;
 
 const string op::FakeQuantize::type_name{"FakeQuantize"};
 
-op::FakeQuantize::FakeQuantize(const shared_ptr<Node>& data,
-                               const shared_ptr<Node>& input_low,
-                               const shared_ptr<Node>& input_high,
-                               const shared_ptr<Node>& output_low,
-                               const shared_ptr<Node>& output_high,
+op::FakeQuantize::FakeQuantize(const Output<Node>& data,
+                               const Output<Node>& input_low,
+                               const Output<Node>& input_high,
+                               const Output<Node>& output_low,
+                               const Output<Node>& output_high,
                                size_t levels)
-    : FusedOp(check_single_output_args({data, input_low, input_high, output_low, output_high}))
+    : FusedOp({data, input_low, input_high, output_low, output_high})
     , m_levels(levels)
 {
     constructor_validate_and_infer_types();
@@ -100,16 +100,16 @@ void op::FakeQuantize::pre_validate_and_infer_types()
 
 NodeVector op::FakeQuantize::decompose_op() const
 {
-    shared_ptr<Node> data{get_argument(0)};
-    shared_ptr<Node> input_low{get_argument(1)};
-    shared_ptr<Node> input_high{get_argument(2)};
-    shared_ptr<Node> output_low{get_argument(3)};
-    shared_ptr<Node> output_high{get_argument(4)};
+    Output<Node> data{input(0).get_source_output()};
+    Output<Node> input_low{input(1).get_source_output()};
+    Output<Node> input_high{input(2).get_source_output()};
+    Output<Node> output_low{input(3).get_source_output()};
+    Output<Node> output_high{input(4).get_source_output()};
 
-    if (input_low->get_shape().size() == 0)
+    if (input_low.get_shape().size() == 0)
     {
-        NodeVector broadcasted_nodes =
-            numpy_style_broadcast(NodeVector{data, input_low, input_high, output_low, output_high});
+        OutputVector broadcasted_nodes = numpy_style_broadcast_values(
+            OutputVector{data, input_low, input_high, output_low, output_high});
 
         data = broadcasted_nodes.at(0);
         input_low = broadcasted_nodes.at(1);
@@ -119,14 +119,15 @@ NodeVector op::FakeQuantize::decompose_op() const
     }
     else
     {
-        input_low = legacy_style_broadcast_for_binary_operation(data, input_low, 1).at(1);
-        input_high = legacy_style_broadcast_for_binary_operation(data, input_high, 1).at(1);
-        output_low = legacy_style_broadcast_for_binary_operation(data, output_low, 1).at(1);
-        output_high = legacy_style_broadcast_for_binary_operation(data, output_high, 1).at(1);
+        input_low = legacy_style_broadcast_values_for_binary_operation(data, input_low, 1).at(1);
+        input_high = legacy_style_broadcast_values_for_binary_operation(data, input_high, 1).at(1);
+        output_low = legacy_style_broadcast_values_for_binary_operation(data, output_low, 1).at(1);
+        output_high =
+            legacy_style_broadcast_values_for_binary_operation(data, output_high, 1).at(1);
     }
 
-    const auto input_data_shape = data->get_shape();
-    const auto input_data_type = data->get_element_type();
+    const auto input_data_shape = data.get_shape();
+    const auto input_data_type = data.get_element_type();
 
     const auto levels_minus_one =
         Constant::create(input_data_type,
@@ -138,7 +139,7 @@ NodeVector op::FakeQuantize::decompose_op() const
     const auto dequant_scale = (output_high - output_low) / levels_minus_one;
 
     // zero_point type needs to match the quantization output type
-    const auto zero_point = Constant::create(element::i32, data->get_shape(), {0.0});
+    const auto zero_point = Constant::create(element::i32, data.get_shape(), {0.0});
     const auto axes = get_default_order(input_data_shape);
 
     // clip the input data to the range <input_low;input_high>
