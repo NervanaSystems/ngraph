@@ -554,7 +554,7 @@ namespace
         auto steps = vLHS.getSteps();
 
         NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
-        Type elemTy = lhs->getType().dyn_cast<MemRefType>().getElementType();
+        Type elemTy = lhs->getType().cast<MemRefType>().getElementType();
 
         LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
