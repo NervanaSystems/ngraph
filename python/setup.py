@@ -184,6 +184,7 @@ sources = [
     'pyngraph/ops/fused/elu.cpp',
     'pyngraph/ops/equal.cpp',
     'pyngraph/ops/exp.cpp',
+    'pyngraph/ops/fused/fake_quantize.cpp',
     'pyngraph/ops/floor.cpp',
     'pyngraph/ops/fused/gelu.cpp',
     'pyngraph/ops/fused/gemm.cpp',
