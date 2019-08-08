@@ -37,6 +37,7 @@ ngraph.ops
       elu
       equal
       exp
+      fake_quantize
       floor
       gelu
       gemm
