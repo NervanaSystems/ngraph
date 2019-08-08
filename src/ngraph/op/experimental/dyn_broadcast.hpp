@@ -31,15 +31,16 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            DynBroadcast() = default;
             /// \brief Constructs a dynamic broadcast operation.
             ///
             /// \param arg            Node that produces the input tensor to be broadcast.
             /// \param shape          Node that produces shape of the output tensor.
             /// \param broadcast_axes Node that produces the axis positions (0-based) in the result that are being broadcast. The
             ///                        remaining axes in shape must be the same as the shape of arg.
-            DynBroadcast(const std::shared_ptr<Node>& arg,
-                         const std::shared_ptr<Node>& shape,
-                         const std::shared_ptr<Node>& broadcast_axes);
+            DynBroadcast(const Output<Node>& arg,
+                         const Output<Node>& shape,
+                         const Output<Node>& broadcast_axes);
 
             void validate_and_infer_types() override;
 
