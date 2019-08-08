@@ -1,6 +1,6 @@
 :orphan:
 
-* :ref:`getting_started <Getting Started>`
+* :ref:`Getting Started <getting_started>`
 
   .. toctree::
      :maxdepth: 1
@@ -9,7 +9,7 @@
      tutorials/index.rst
 
 
-* :ref:`framework_support <Framework Support>`
+* :ref:`Framework Support <framework_support>`
 
   .. toctree::
      :maxdepth: 1
@@ -21,20 +21,20 @@
      frameworks/new-frameworks.rst
 
 
-* :ref:`ngraph_core <nGraph Core>`
+* :ref:`nGraph Core <ngraph_core>`
 
   .. toctree::
      :maxdepth: 1
 
-     buildlb.rst
      core/overview.rst
+     buildlb.rst
      core/fusion/index.rst
-     nGraph Core Ops <ops/index.rst>
      core/constructing-graphs/index.rst
      core/passes/passes.rst
+     nGraph Core Ops <ops/index.rst>
 
 
-* :ref:`backend_support`
+* :ref:`Backend Support <backend_support>`
 
   .. toctree::
      :maxdepth: 1
@@ -43,7 +43,7 @@
      backends/plaidml-ng-api/index.rst
 
 
-* :ref:`distributed`
+* :ref:`Distributed Training <distributed>`
 
   .. toctree::
      :maxdepth: 1
@@ -51,7 +51,7 @@
      distributed/overview.rst
 
 
-* :ref:`validated`
+* :ref:`Validated Workloads <validated>`
 
   .. toctree::
      :maxdepth: 1
@@ -59,7 +59,7 @@
      frameworks/validated/list.rst
 
 
-* :ref:`inspection`
+* :ref:`Visualization Tools <inspection>`
 
   .. toctree::
      :maxdepth: 1
@@ -67,11 +67,9 @@
      inspection/index.rst
 
 
-
-* :ref:`contribution_guide`
+* :ref:`Contribution <contribution_guide>`
 
   .. toctree::
      :maxdepth: 1
 
      contributing/guide.rst
-

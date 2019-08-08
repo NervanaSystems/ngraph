@@ -3,17 +3,17 @@
 .. _frameworks_paddlepaddle:
 
 
-PaddlePaddle
-============
+PaddlePaddle\*
+==============
 
 nGraph PaddlePaddle integration overview
 ----------------------------------------
 
-PaddlePaddle is an open source deep learning framework developed by Baidu. It 
-aims to enable performant large-scale distributed computation for deep learning. 
-The nGraph Compiler stack's integration to PaddlePaddle respects PaddlePaddle’s
-design philosophy to minimize switching cost for users. To access nGraph from
-PaddlePaddle, we've added three modules to PaddlePaddle:
+PaddlePaddle\* is an open source deep learning framework developed by Baidu.
+It aims to enable performant large-scale distributed computation for deep
+learning. The nGraph Compiler stack's integration to PaddlePaddle respects
+PaddlePaddle’s design philosophy to minimize switching cost for users. To
+access nGraph from PaddlePaddle, we've added three modules to PaddlePaddle:
 
 * nGraph engine operator (op), 
 * nGraph engine, and 

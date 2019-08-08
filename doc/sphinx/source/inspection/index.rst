@@ -2,7 +2,7 @@
 
 .. _inspection:
 
-Visualization Tools
+Visualization tools
 ===================
 
 nGraph provides serialization and deserialization facilities, along with the 

@@ -2,7 +2,5 @@
 
 .. _distributed: 
 
-Overview
-========
 
 .. include:: ../core/constructing-graphs/distribute-train.rst

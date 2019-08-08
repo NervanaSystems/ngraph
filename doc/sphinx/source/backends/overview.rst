@@ -3,14 +3,14 @@
 .. _backend_support:
 
 Overview
-========
+########
 
 .. contents::
 
 .. _what_is_backend:
 
 What is a backend?
-------------------
+==================
 
 In the nGraph Compiler stack, what we call a *backend* is responsible for 
 function execution and value allocation. A backend can be used to 
@@ -36,7 +36,7 @@ program, or to help a framework developer customize targeted solutions.
 .. _how_to_use:
 
 How to use?
------------
+===========
 
 #. Create a ``Backend``; think of it as a compiler. 
 #. A ``Backend`` can then produce an ``Executable`` by calling ``compile``. 

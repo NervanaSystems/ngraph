@@ -1,8 +1,11 @@
 .. core/constructing-graphs/distribute-train.rst 
 
+Overview
+########
 
-Distribute training across multiple nGraph backends 
-===================================================
+
+Distributed training across multiple nGraph backends 
+====================================================
 
 .. important:: Distributed training is not officially supported in version |version|;
     however, the following configuration options have worked for nGraph devices 
