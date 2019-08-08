@@ -14,7 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <cstddef>
+
+#include "ngraph/log.hpp"
+
+using namespace std;
+
 extern "C" const char* get_ngraph_version_string()
 {
     return NGRAPH_VERSION;
+}
+
+extern "C" void get_ngraph_version(size_t& major, size_t& minor, size_t& patch, const char** extra)
+{
+    major = 1;
+    minor = 2;
+    patch = 3;
+    *extra = NGRAPH_VERSION;
 }

@@ -60,6 +60,7 @@ set(SRC
     input_output_assign.cpp
     main.cpp
     misc.cpp
+    ngraph_api.cpp
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp

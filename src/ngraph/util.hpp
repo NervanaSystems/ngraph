@@ -345,6 +345,11 @@ namespace ngraph
 
         value_type m_value;
     };
+
+    void parse_version_string(const std::string& version,
+                              size_t& minor,
+                              size_t& patch,
+                              const char** extra);
 } // end namespace ngraph
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);
