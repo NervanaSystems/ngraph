@@ -346,7 +346,7 @@ namespace ngraph
         value_type m_value;
     };
 
-    void parse_version_string(const std::string& version,
+    void parse_version_string(std::string version,
                               size_t& major,
                               size_t& minor,
                               size_t& patch,
