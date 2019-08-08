@@ -1,6 +1,6 @@
 :orphan:
 
-* :ref:`getting_started`
+* :ref:`getting_started <Getting Started>`
 
   .. toctree::
      :maxdepth: 1
@@ -9,7 +9,7 @@
      tutorials/index.rst
 
 
-* :ref:`framework_support`
+* :ref:`framework_support <Framework Support>`
 
   .. toctree::
      :maxdepth: 1
@@ -21,7 +21,7 @@
      frameworks/new-frameworks.rst
 
 
-* :ref:`ngraph_core`
+* :ref:`ngraph_core <nGraph Core>`
 
   .. toctree::
      :maxdepth: 1
