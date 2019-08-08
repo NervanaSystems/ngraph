@@ -3,20 +3,33 @@
 .. _validated:
 
 
-Validated workloads by framework
-################################
+Validated workloads
+###################
 
-We validated performance [#f1]_ for the following TensorFlow\* and ONNX\* 
-workloads:
+We validated performance [#f1]_ for the following workloads:
 
 .. contents::
    :local:
+
+GPU
+===
+
+.. csv-table::
+   :header: "GPU Workload", "Genre of Deep learning"
+
+   Inception V1, Image recognition
+   Inception V2, Image recognition
+   Resnet50, Image recognition
+   Squeezenet, Image recognition
+   Squeezenet 1.1, Image recognition
+   VGG-19, Image recognition
+
 
 TensorFlow 
 ==========
 
 .. csv-table::
-   :header: "TensorFlow Workload", "Genre of Deep Learning"
+   :header: "TensorFlow Workload", "Genre of Deep learning"
    :widths: 27, 53
    :escape: ~
 
