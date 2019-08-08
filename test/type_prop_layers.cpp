@@ -133,7 +133,7 @@ TEST(type_prop_layers, proposal)
 
     auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 12, 34, 62});
     auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 24, 34, 62});
-    auto image_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 6});
+    auto image_shape = op::Constant::create<int64_t>(element::f32, Shape{2}, {1, 6});
     auto op = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
     ASSERT_EQ(op->get_shape(), (Shape{200, 5}));
 }

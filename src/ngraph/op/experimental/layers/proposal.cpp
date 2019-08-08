@@ -35,25 +35,23 @@ op::Proposal::Proposal(const std::shared_ptr<Node>& class_probs,
 
 void op::Proposal::validate_and_infer_types()
 {
-    // shape node should have integer data type. For now we only allow i64
     auto image_shape_et = get_input_element_type(2);
     NODE_VALIDATION_CHECK(this,
-                          image_shape_et.compatible(element::Type_t::i64),
-                          "image shape input must have element type i64, but has ",
+                          image_shape_et.compatible(element::Type_t::f32),
+                          "image shape input must have element type f32, but has ",
                           image_shape_et);
 
     set_input_is_relevant_to_shape(2);
 
-    if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(2)))
+    if (auto image_const_shape = dynamic_pointer_cast<op::Constant>(get_argument(2)))
     {
         NODE_VALIDATION_CHECK(this,
-                              shape_size(const_shape->get_shape()) >= 1,
+                              shape_size(image_const_shape->get_shape()) >= 1,
                               "Layer shape must have rank greater than 1",
-                              const_shape->get_shape());
+                              image_const_shape->get_shape());
 
-        auto image_shape = const_shape->get_shape_val();
-
-        set_output_type(0, element::f32, Shape{image_shape[0] * m_attrs.post_nms_topn, 5});
+        auto image_date = image_const_shape->get_vector<float>();
+        set_output_type(0, element::f32, Shape{static_cast<size_t>(image_date[0]) * m_attrs.post_nms_topn, 5});
     }
     else
     {
