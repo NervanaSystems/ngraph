@@ -1505,8 +1505,9 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::NormalizeL2:
         {
             float eps = node_js.at("eps").get<float>();
+            auto eps_mode = node_js.at("eps_mode").get<op::NormalizeL2::EpsMode>();
             node =
-                make_shared<op::NormalizeL2>(args[0], args[1], eps);
+                make_shared<op::NormalizeL2>(args[0], args[1], eps, eps_mode);
             break;
         }
         case OP_TYPEID::NotEqual:
@@ -2609,6 +2610,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = dynamic_cast<const op::NormalizeL2*>(&n);
         node["eps"] = tmp->get_eps();
+        node["eps_mode"] = tmp->get_eps_mode();
         break;
     }
     case OP_TYPEID::NotEqual:

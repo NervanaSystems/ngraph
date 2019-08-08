@@ -123,7 +123,8 @@ namespace ngraph
                     auto l2_norm_reduction = std::bind(ngraph::builder::l2_norm,
                                                        std::placeholders::_1,
                                                        std::placeholders::_2,
-                                                       0.f);
+                                                       0.f,
+                                                       ngraph::builder::BiasMode::ADD);
                     return {reduction::make_ng_reduction_op(
                         node, node.get_ng_inputs().at(0), l2_norm_reduction)};
                 }

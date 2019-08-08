@@ -31,9 +31,11 @@ const string op::NormalizeL2::type_name{"NormalizeL2"};
 
 op::NormalizeL2::NormalizeL2(const shared_ptr<ngraph::Node>& data,
                          const shared_ptr<ngraph::Node>& axes,
-                         float eps)
+                         float eps,
+                         EpsMode eps_mode)
     : FusedOp(check_single_output_args({data, axes}))
     , m_eps{eps}
+    , m_eps_mode{eps_mode}
 {
     constructor_validate_and_infer_types();
 }
@@ -86,7 +88,8 @@ NodeVector op::NormalizeL2::decompose_op() const
     AxisSet reduction_axes{ axes_vector };
 
     // Calculate l2 norm across axes determined by axes input
-    shared_ptr<Node> norm = builder::l2_norm(data, reduction_axes, m_eps);
+    auto builder_bias_mode = (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
+    shared_ptr<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode);
     norm = make_broadcast_node(norm, data->get_shape(), 0);
 
     data = data / norm;
@@ -107,5 +110,5 @@ shared_ptr<Node> op::NormalizeL2::copy_with_new_args(const NodeVector& new_args)
         throw ngraph_error("Incorrect number of new arguments");
     }
     return make_shared<NormalizeL2>(
-        new_args.at(0), new_args.at(1), m_eps);
+        new_args.at(0), new_args.at(1), m_eps, m_eps_mode);
 }

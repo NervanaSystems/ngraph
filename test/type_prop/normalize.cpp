@@ -26,11 +26,12 @@ TEST(type_prop, normalize_invalid_input_tensor_rank)
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     auto axes = make_shared<op::Parameter>(element::u64, Shape{ 1, 2 });
     float eps{1e-6f};
+    auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 
     try
     {
         auto normalize =
-            make_shared<op::NormalizeL2>(data, axes, eps);
+            make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -49,7 +50,7 @@ TEST(type_prop, normalize_invalid_input_tensor_rank)
     try
     {
         auto normalize =
-            make_shared<op::NormalizeL2>(data, axes, eps);
+            make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -70,11 +71,12 @@ TEST(type_prop, normalize_invalid_axes_rank)
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     auto axes = make_shared<op::Parameter>(element::u64, Shape{ 1, 2 });
     float eps{1e-6f};
+    auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 
     try
     {
         auto normalize =
-            make_shared<op::NormalizeL2>(data, axes, eps);
+            make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -96,8 +98,9 @@ TEST(type_prop, normalize_output_shape_across_chw)
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     const auto axes = make_shared<op::Constant>(element::u64, Shape{ 3 }, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
+    auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps);
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
     EXPECT_EQ(normalize->get_element_type(), element::f32);
     EXPECT_EQ(normalize->get_shape(), (Shape{2, 3, 4}));
 }

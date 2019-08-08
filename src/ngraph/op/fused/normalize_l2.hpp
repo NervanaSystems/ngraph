@@ -31,6 +31,14 @@ namespace ngraph
         {
         public:
             NGRAPH_API
+            /// \brief Specifies how eps is combined with L2 value
+            enum class EpsMode
+            {
+                // Add bias to norm
+                ADD,
+                // Calculate max of norm and bias
+                MAX
+            };
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             ///
@@ -39,12 +47,15 @@ namespace ngraph
             /// \param      data            - Node producing the input tensor
             /// \param      axes            - Node indicating axes along which reduction is calculated
             /// \param      eps             - The epsilon added to L2 norm.
+            /// \param      eps_mode        - Specifies how eps is combined with L2 value calculated before division
             ///
             NormalizeL2(const std::shared_ptr<ngraph::Node>& data,
                       const std::shared_ptr<ngraph::Node>& axes,
-                      float eps);
+                      float eps,
+                      EpsMode eps_mode);
 
             float get_eps() const { return m_eps; }
+            EpsMode get_eps_mode() const { return m_eps_mode; }
             virtual NodeVector decompose_op() const override;
             virtual void pre_validate_and_infer_types() override;
 
@@ -53,6 +64,7 @@ namespace ngraph
 
         protected:
             float m_eps{1.f};
+            EpsMode m_eps_mode;
         };
     }
 }
