@@ -54,7 +54,7 @@ bool runtime::intelgpu::IntelGPULayout::
 cldnn::data_types
     runtime::intelgpu::IntelGPULayout::get_cldnn_type(const element::Type& element_type)
 {
-    switch (element_type.get_type_enum())
+    switch (element_type)
     {
     case element::Type_t::i8:
     case element::Type_t::boolean: return cldnn::data_types::i8;
@@ -118,7 +118,7 @@ cldnn::layout runtime::intelgpu::IntelGPULayout::create_cldnn_layout(
     const cldnn::tensor tensor = create_cldnn_tensor(element_shape);
     cldnn::data_types data_type;
 
-    switch (element_type.get_type_enum())
+    switch (element_type)
     {
     case element::Type_t::i16:
     case element::Type_t::u16:

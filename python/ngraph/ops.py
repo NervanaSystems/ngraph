@@ -22,11 +22,11 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
-    Gelu, GetOutputElement, Greater, GreaterEq, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, \
-    Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
-    Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
-    Sqrt, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
+    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, FakeQuantize, \
+    Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, Less, LessEq, Log, \
+    LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
+    Parameter, Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, \
+    Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
 
 from typing import Callable, Iterable, List, Union
 
@@ -95,6 +95,21 @@ def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
     :return: The new node performing an unsqueeze operation on input tensor.
     """
     return Unsqueeze(data, as_node(axes))
+
+
+def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
+    r"""Perform Global Response Normalization with L2 norm (across channels only).
+
+    Computes GRN operation on channels for input tensor:
+
+    .. math:: output_i = \dfrac{input_i}{\sqrt{\sum_{i}^{C} input_i}}
+
+    :param data: The node with data tensor.
+    :param bias: The bias added to the variance. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a GRN operation on tensor's channels.
+    """
+    return GRN(data, bias)
 
 
 # Unary ops
@@ -540,6 +555,78 @@ def broadcast_to(node, new_shape, axis=None, name=None):
 
 
 @nameable_op
+def fake_quantize(data, input_low, input_high, output_low, output_high, levels, name=None):
+    # type: (Node, Node, Node, Node, Node, int, str) -> Node
+    r"""Perform an element-wise linear quantization on input data.
+
+    Input floating point values are quantized into a discrete set of floating point values.
+
+    .. code-block:: python
+
+        if x <= input_low:
+            output = output_low
+        if x > input_high:
+            output = output_high
+        else:
+            output = fake_quantize(output)
+
+    Fake quantize uses the following logic:
+
+    .. math:: output =
+            \dfrac{round( \dfrac{data - input\_low}{(input\_high - input\_low)\cdot (levels-1)})}
+            {(levels-1)\cdot (output\_high - output\_low)} + output\_low
+
+    :param data:         The node with data tensor.
+    :param input_low:    The node with the minimum for input values.
+    :param input_high:   The node with the maximum for input values.
+    :param output_low:   The node with the minimum quantized value.
+    :param output_high:  The node with the maximum quantized value.
+    :param levels:       The number of quantization levels. Integer value.
+    :return: New node with quantized value.
+    """
+    return FakeQuantize(data, input_low, input_high, output_low, output_high, levels)
+
+
+def gemm(A,                      # type: Node
+         B,                      # type: Node
+         C,                      # type: Node
+         alpha,                  # type: ScalarData
+         beta,                   # type: ScalarData
+         transA,                 # type: bool
+         transB,                 # type: bool
+         name=None,              # type: str
+         ):
+    # type: (...) -> Node
+    r"""Perform General matrix-matrix multiplication on input tensors A, B and C.
+
+    Computes:
+
+    .. math:: Y = alpha\cdot A'\cdot B' +  beta\cdot C
+
+    :code:`A'` is the transpose of matrix :code:`A` with shape (M, K),
+    if :code:`transA` is :code:`True`, otherwise :code:`A` with shape (K, N).
+
+    :code:`B'` is the transpose of matrix :code:`B` with shape (K, N),
+    if :code:`transB` is :code:`True`, otherwise :code:`B` with shape (N, K).
+
+    :code:`C`: Matrix broadcastable to shape (M, N).
+
+    :code:`Y`: Matrix with shape (M, N).
+
+    :param A: The node with input tensor A.
+    :param B: The node with input tensor B.
+    :param C: The node with input tensor C.
+    :param alpha: Scalar multiplier for the product of input tensors A * B.
+    :param beta: Scalar multiplier for input tensor C.
+    :param transA: Whether A should be transposed. Boolean value.
+    :param transB: Whether B should be transposed. Boolean value.
+    :param name: Optional name for the output node.
+    :return: Return node with tensor of shape (M, N).
+    """
+    return Gemm(A, B, C, alpha, beta, transA, transB)
+
+
+@nameable_op
 def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Node
     """Return node which casts input node values to specified type."""
     new_element_type = get_element_type(new_type)
@@ -547,6 +634,27 @@ def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Nod
 
 
 @nameable_op
+def depth_to_space(node, block_size, name=None):  # type: (Node, int, str) -> Node
+    """Rearranges input tensor from depth into blocks of spatial data.
+
+    Values from the height and width dimensions are moved to the depth dimension.
+
+    Input tensor has shape [N,C,H,W], where N is the batch axis, C is the channel or depth,
+    H is the height and W is the width.
+
+    Output node produces a tensor with shape:
+
+    [N, C * :code:`block_size` * :code:`block_size`, H / :code:`block_size`, W / :code:`block_size`]
+
+    :param node: The node with input tensor data.
+    :param block_size: The size of the spatial block of values describing
+                       how the tensor's data is to be rearranged.
+    :param name: Optional output node name.
+    :return: The new node performing an DepthToSpace operation on its input tensor.
+    """
+    return DepthToSpace(node, block_size)
+
+
 def gelu(node, name=None):  # type: (NodeInput, str) -> Node
     r"""Perform Gaussian Error Linear Unit operation element-wise on data from input node.
 

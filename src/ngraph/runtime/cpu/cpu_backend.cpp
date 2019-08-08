@@ -52,7 +52,7 @@ runtime::BackendConstructor* runtime::cpu::get_backend_constructor_pointer()
 }
 
 #if !defined(NGRAPH_CPU_STATIC_LIB_ENABLE)
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+extern "C" CPU_BACKEND_API runtime::BackendConstructor* get_backend_constructor_pointer()
 {
     return runtime::cpu::get_backend_constructor_pointer();
 }

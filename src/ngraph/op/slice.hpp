@@ -32,7 +32,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a tensor slice operation
-            Slice();
+            Slice() = default;
             /// \brief Constructs a tensor slice operation.
             ///
             /// \param arg The tensor to be sliced.
