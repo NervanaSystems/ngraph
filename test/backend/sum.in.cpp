@@ -740,3 +740,91 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_dynamic)
         ASSERT_TRUE(test::all_close_f(results, expected_results[i], MIN_FLOAT_TOLERANCE_BITS));
     }
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_neg_inf_neg_inf)
+{
+    Shape shape{2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a,
+              vector<float>{-std::numeric_limits<float>::infinity(),
+                            -std::numeric_limits<float>::infinity()});
+    auto result = backend->create_tensor(element::f32, Shape{});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    auto r = read_vector<float>(result);
+    ASSERT_EQ(r.size(), 1);
+    EXPECT_TRUE(r[0] < 0 && isinf(r[0])) << "Expected -inf, actual value for r[0]: " << r[0];
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_pos_inf_pos_inf)
+{
+    Shape shape{2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a,
+              vector<float>{std::numeric_limits<float>::infinity(),
+                            std::numeric_limits<float>::infinity()});
+    auto result = backend->create_tensor(element::f32, Shape{});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    auto r = read_vector<float>(result);
+    ASSERT_EQ(r.size(), 1);
+    EXPECT_TRUE(r[0] > 0 && isinf(r[0])) << "Expected inf, actual value for r[0]: " << r[0];
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_pos_inf_neg_inf)
+{
+    Shape shape{2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a,
+              vector<float>{std::numeric_limits<float>::infinity(),
+                            -std::numeric_limits<float>::infinity()});
+    auto result = backend->create_tensor(element::f32, Shape{});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    auto r = read_vector<float>(result);
+    ASSERT_EQ(r.size(), 1);
+    EXPECT_TRUE(isnan(r[0])) << "Expected nan, actual value for r[0]: " << r[0];
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_neg_inf_pos_inf)
+{
+    Shape shape{2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{0}), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a,
+              vector<float>{-std::numeric_limits<float>::infinity(),
+                            std::numeric_limits<float>::infinity()});
+    auto result = backend->create_tensor(element::f32, Shape{});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    auto r = read_vector<float>(result);
+    ASSERT_EQ(r.size(), 1);
+    EXPECT_TRUE(isnan(r[0])) << "Expected nan, actual value for r[0]: " << r[0];
+}
