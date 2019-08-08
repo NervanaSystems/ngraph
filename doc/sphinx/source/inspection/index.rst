@@ -38,8 +38,8 @@ listed below may be useful.
 
 
 .. _CMakeLists.txt: https:github.com/NervanaSystems/ngraph/blob/master/CMakeLists.txt
-.. _most common default output: https:github.com/NervanaSystems/ngraph/contrib/tools/graphml/ngraph_json_to_graphml.py
+.. .. _most common default output: https://github.com/NervanaSystems/ngraph/contrib/tools/graphml/ngraph_json_to_graphml.py
 .. _visualize_tree.cpp: https://github.com/NervanaSystems/ngraph/blob/master/src/ngraph/pass/visualize_tree.cpp
-.. _Netron: https:github.com/lutzroeder/netron/blob/master/README.md
-.. _Gephi: https:gephi.org
-.. _Cytoscape: https:cytoscape.org
+.. .. _Netron: https://github.com/lutzroeder/netron/blob/master/README.md
+.. _Gephi: https://gephi.org
+.. _Cytoscape: https://cytoscape.org
