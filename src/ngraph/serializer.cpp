@@ -1506,8 +1506,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             float eps = node_js.at("eps").get<float>();
             auto eps_mode = node_js.at("eps_mode").get<op::NormalizeL2::EpsMode>();
-            node =
-                make_shared<op::NormalizeL2>(args[0], args[1], eps, eps_mode);
+            node = make_shared<op::NormalizeL2>(args[0], args[1], eps, eps_mode);
             break;
         }
         case OP_TYPEID::NotEqual:

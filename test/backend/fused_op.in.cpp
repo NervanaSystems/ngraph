@@ -386,12 +386,12 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{ 3 }, vector<int64_t>{1, 2, 3});
+    const auto axes = make_shared<op::Constant>(element::u64, Shape{3}, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
     auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 
     auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
-    auto function = make_shared<Function>(NodeVector{ normalize }, ParameterVector{ data });
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -401,12 +401,10 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d)
     test_case.add_input<float>(input_data);
 
     test_case.add_expected_output<float>(
-        data_shape, { 0.01428571f, 0.02857143f, 0.04285714f, 0.05714286f,
-                      0.07142857f, 0.08571429f, 0.1f,        0.11428571f,
-                      0.12857144f, 0.14285715f, 0.15714286f, 0.17142858f,
-                      0.18571429f, 0.2f,        0.21428572f, 0.22857143f,
-                      0.24285714f, 0.25714287f, 0.27142859f, 0.2857143f,
-                      0.30000001f, 0.31428573f, 0.32857144f, 0.34285715f });
+        data_shape, {0.01428571f, 0.02857143f, 0.04285714f, 0.05714286f, 0.07142857f, 0.08571429f,
+                     0.1f,        0.11428571f, 0.12857144f, 0.14285715f, 0.15714286f, 0.17142858f,
+                     0.18571429f, 0.2f,        0.21428572f, 0.22857143f, 0.24285714f, 0.25714287f,
+                     0.27142859f, 0.2857143f,  0.30000001f, 0.31428573f, 0.32857144f, 0.34285715f});
 
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
@@ -415,7 +413,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_3d)
 {
     Shape data_shape{2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{ 3 }, vector<int64_t>{1, 2, 3});
+    const auto axes = make_shared<op::Constant>(element::u64, Shape{3}, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
     auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 
@@ -430,12 +428,10 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_3d)
     test_case.add_input<float>(input_data);
 
     test_case.add_expected_output<float>(
-        data_shape, { 0.01428571f, 0.02857143f, 0.04285714f, 0.05714286f,
-                      0.07142857f, 0.08571429f, 0.1f,        0.11428571f,
-                      0.12857144f, 0.14285715f, 0.15714286f, 0.17142858f,
-                      0.18571429f, 0.2f,        0.21428572f, 0.22857143f,
-                      0.24285714f, 0.25714287f, 0.27142859f, 0.2857143f,
-                      0.30000001f, 0.31428573f, 0.32857144f, 0.34285715f });
+        data_shape, {0.01428571f, 0.02857143f, 0.04285714f, 0.05714286f, 0.07142857f, 0.08571429f,
+                     0.1f,        0.11428571f, 0.12857144f, 0.14285715f, 0.15714286f, 0.17142858f,
+                     0.18571429f, 0.2f,        0.21428572f, 0.22857143f, 0.24285714f, 0.25714287f,
+                     0.27142859f, 0.2857143f,  0.30000001f, 0.31428573f, 0.32857144f, 0.34285715f});
 
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
@@ -444,7 +440,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_2d)
 {
     Shape data_shape{3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{ 3 }, vector<int64_t>{1, 2, 3});
+    const auto axes = make_shared<op::Constant>(element::u64, Shape{3}, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
     auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 
@@ -458,24 +454,33 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_2d)
 
     test_case.add_input<float>(input_data);
 
-    test_case.add_expected_output<float>(
-        data_shape, { 0.03922323f, 0.07844646f, 0.11766968f, 0.15689291f,
-                      0.19611613f, 0.23533936f, 0.2745626f,  0.31378582f,
-                      0.35300905f, 0.39223227f, 0.43145549f, 0.47067872f });
+    test_case.add_expected_output<float>(data_shape,
+                                         {0.03922323f,
+                                          0.07844646f,
+                                          0.11766968f,
+                                          0.15689291f,
+                                          0.19611613f,
+                                          0.23533936f,
+                                          0.2745626f,
+                                          0.31378582f,
+                                          0.35300905f,
+                                          0.39223227f,
+                                          0.43145549f,
+                                          0.47067872f});
 
     test_case.run();
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_empty_axes_input)
 {
-    Shape data_shape{ 1, 2, 3, 4 };
+    Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     const auto axes = make_shared<op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
-    float eps{ 1e-6f };
+    float eps{1e-6f};
     auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 
     auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
-    auto function = make_shared<Function>(NodeVector{ normalize }, ParameterVector{ data});
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -485,8 +490,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_empty_axes_input)
     test_case.add_input<float>(input_data);
 
     // output should be filled with 1f values
-    test_case.add_expected_output<float>(
-        data_shape, vector<float>(shape_size(data_shape), 1));
+    test_case.add_expected_output<float>(data_shape, vector<float>(shape_size(data_shape), 1));
 
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
@@ -496,7 +500,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_hw_4d)
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     const auto axes = make_shared<op::Constant>(element::u64, Shape{2}, vector<int64_t>{2, 3});
-    float eps{ 1e-6f };
+    float eps{1e-6f};
     auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 
     auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
@@ -510,12 +514,10 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_hw_4d)
     test_case.add_input<float>(input_data);
 
     test_case.add_expected_output<float>(
-        data_shape, { 0.03922323f, 0.07844646f, 0.11766968f, 0.15689291f,
-                      0.19611613f, 0.23533936f, 0.2745626f,  0.31378582f,
-                      0.35300905f, 0.39223227f, 0.43145549f, 0.47067872f,
-                      0.1994109f,  0.2147502f,  0.2300895f,  0.2454288f,
-                      0.26076809f, 0.2761074f,  0.29144669f, 0.306786f,
-                      0.32212529f, 0.3374646f,  0.35280389f, 0.3681432f});
+        data_shape, {0.03922323f, 0.07844646f, 0.11766968f, 0.15689291f, 0.19611613f, 0.23533936f,
+                     0.2745626f,  0.31378582f, 0.35300905f, 0.39223227f, 0.43145549f, 0.47067872f,
+                     0.1994109f,  0.2147502f,  0.2300895f,  0.2454288f,  0.26076809f, 0.2761074f,
+                     0.29144669f, 0.306786f,   0.32212529f, 0.3374646f,  0.35280389f, 0.3681432f});
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
@@ -538,12 +540,10 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d_max_bias)
     test_case.add_input<float>(input_data);
 
     test_case.add_expected_output<float>(
-        data_shape, { 0.01414214f, 0.02828427f, 0.04242641f, 0.05656854f,
-                      0.07071068f, 0.08485281f, 0.09899495f, 0.11313709f,
-                      0.12727922f, 0.14142136f, 0.15556349f, 0.16970563f,
-                      0.18384777f, 0.1979899f,  0.21213204f, 0.22627418f,
-                      0.2404163f,  0.25455844f, 0.26870057f, 0.28284273f,
-                      0.29698485f, 0.31112698f, 0.32526913f, 0.33941126f });
+        data_shape, {0.01414214f, 0.02828427f, 0.04242641f, 0.05656854f, 0.07071068f, 0.08485281f,
+                     0.09899495f, 0.11313709f, 0.12727922f, 0.14142136f, 0.15556349f, 0.16970563f,
+                     0.18384777f, 0.1979899f,  0.21213204f, 0.22627418f, 0.2404163f,  0.25455844f,
+                     0.26870057f, 0.28284273f, 0.29698485f, 0.31112698f, 0.32526913f, 0.33941126f});
 
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }

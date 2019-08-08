@@ -50,9 +50,9 @@ namespace ngraph
             /// \param      eps_mode        - Specifies how eps is combined with L2 value calculated before division
             ///
             NormalizeL2(const std::shared_ptr<ngraph::Node>& data,
-                      const std::shared_ptr<ngraph::Node>& axes,
-                      float eps,
-                      EpsMode eps_mode);
+                        const std::shared_ptr<ngraph::Node>& axes,
+                        float eps,
+                        EpsMode eps_mode);
 
             float get_eps() const { return m_eps; }
             EpsMode get_eps_mode() const { return m_eps_mode; }

@@ -24,14 +24,13 @@ TEST(type_prop, normalize_invalid_input_tensor_rank)
 {
     Shape data_shape{1, 2, 3, 4, 5};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto axes = make_shared<op::Parameter>(element::u64, Shape{ 1, 2 });
+    auto axes = make_shared<op::Parameter>(element::u64, Shape{1, 2});
     float eps{1e-6f};
     auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 
     try
     {
-        auto normalize =
-            make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+        auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -49,8 +48,7 @@ TEST(type_prop, normalize_invalid_input_tensor_rank)
 
     try
     {
-        auto normalize =
-            make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+        auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -69,21 +67,19 @@ TEST(type_prop, normalize_invalid_axes_rank)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto axes = make_shared<op::Parameter>(element::u64, Shape{ 1, 2 });
+    auto axes = make_shared<op::Parameter>(element::u64, Shape{1, 2});
     float eps{1e-6f};
     auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 
     try
     {
-        auto normalize =
-            make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+        auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Input axes must have rank equals 1"));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input axes must have rank equals 1"));
     }
     catch (...)
     {
@@ -91,12 +87,11 @@ TEST(type_prop, normalize_invalid_axes_rank)
     }
 }
 
-
 TEST(type_prop, normalize_output_shape_across_chw)
 {
     Shape data_shape{2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{ 3 }, vector<int64_t>{1, 2, 3});
+    const auto axes = make_shared<op::Constant>(element::u64, Shape{3}, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
     auto eps_mode = op::NormalizeL2::EpsMode::ADD;
 

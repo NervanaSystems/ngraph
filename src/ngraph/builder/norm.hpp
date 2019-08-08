@@ -71,8 +71,10 @@ namespace ngraph
         ///
         /// \return     L-2 norm of value.
         ///
-        std::shared_ptr<Node>
-            l2_norm(const Output<Node>& value, const AxisSet& reduction_axes, float bias = 0.f, BiasMode bias_mode = BiasMode::ADD);
+        std::shared_ptr<Node> l2_norm(const Output<Node>& value,
+                                      const AxisSet& reduction_axes,
+                                      float bias = 0.f,
+                                      BiasMode bias_mode = BiasMode::ADD);
 
         /// \brief      Creates node which calculates L-p norm on input tensor.
         ///

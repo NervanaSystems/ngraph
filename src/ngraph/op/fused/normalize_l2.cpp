@@ -18,10 +18,10 @@
 
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/builder/reshape.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/op/constant.hpp"
 #include "normalize_l2.hpp"
 
 using namespace std;
@@ -30,9 +30,9 @@ using namespace ngraph;
 const string op::NormalizeL2::type_name{"NormalizeL2"};
 
 op::NormalizeL2::NormalizeL2(const shared_ptr<ngraph::Node>& data,
-                         const shared_ptr<ngraph::Node>& axes,
-                         float eps,
-                         EpsMode eps_mode)
+                             const shared_ptr<ngraph::Node>& axes,
+                             float eps,
+                             EpsMode eps_mode)
     : FusedOp(check_single_output_args({data, axes}))
     , m_eps{eps}
     , m_eps_mode{eps_mode}
@@ -49,19 +49,19 @@ void op::NormalizeL2::pre_validate_and_infer_types()
 
     // Input data must be 2, 3 or 4D tensor.
     NODE_VALIDATION_CHECK(this,
-                            (data_shape.size() >= 2 && data_shape.size() <= 4),
-                            "Input tensor rank must be 2, 3 or 4 dimensional (actual input "
-                            "shape: ",
-                            data_shape,
-                            ").");
+                          (data_shape.size() >= 2 && data_shape.size() <= 4),
+                          "Input tensor rank must be 2, 3 or 4 dimensional (actual input "
+                          "shape: ",
+                          data_shape,
+                          ").");
 
     NODE_VALIDATION_CHECK(this, axes_pshape.is_static(), "Input axes must be static.");
 
     NODE_VALIDATION_CHECK(this,
-        static_cast<size_t>(axes_pshape.rank()) == 1,
-        "Input axes must have rank equals 1 (axes shape: ",
-        axes_pshape,
-        ").");
+                          static_cast<size_t>(axes_pshape.rank()) == 1,
+                          "Input axes must have rank equals 1 (axes shape: ",
+                          axes_pshape,
+                          ").");
 }
 
 NodeVector op::NormalizeL2::decompose_op() const
@@ -79,16 +79,17 @@ NodeVector op::NormalizeL2::decompose_op() const
 
     auto axes_node = get_argument(1);
     NODE_VALIDATION_CHECK(this,
-        axes_node->is_constant(),
-        "doesn't support 'axes' input of other type than a Constant.");
+                          axes_node->is_constant(),
+                          "doesn't support 'axes' input of other type than a Constant.");
 
     // Calculate norm over axes indicated by axes input param
     auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
     auto axes_vector = axes_constant->get_vector<size_t>();
-    AxisSet reduction_axes{ axes_vector };
+    AxisSet reduction_axes{axes_vector};
 
     // Calculate l2 norm across axes determined by axes input
-    auto builder_bias_mode = (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
+    auto builder_bias_mode =
+        (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
     shared_ptr<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode);
     norm = make_broadcast_node(norm, data->get_shape(), 0);
 
@@ -109,6 +110,5 @@ shared_ptr<Node> op::NormalizeL2::copy_with_new_args(const NodeVector& new_args)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
-    return make_shared<NormalizeL2>(
-        new_args.at(0), new_args.at(1), m_eps, m_eps_mode);
+    return make_shared<NormalizeL2>(new_args.at(0), new_args.at(1), m_eps, m_eps_mode);
 }

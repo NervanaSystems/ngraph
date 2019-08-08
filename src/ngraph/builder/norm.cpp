@@ -98,8 +98,10 @@ namespace ngraph
             return values + bias_node;
         }
 
-        shared_ptr<Node>
-            l2_norm(const Output<Node>& value, const AxisSet& reduction_axes, float bias, BiasMode bias_mode)
+        shared_ptr<Node> l2_norm(const Output<Node>& value,
+                                 const AxisSet& reduction_axes,
+                                 float bias,
+                                 BiasMode bias_mode)
         {
             shared_ptr<Node> values{make_shared<op::Sum>(value * value, reduction_axes)};
 
@@ -110,10 +112,9 @@ namespace ngraph
             switch (bias_mode)
             {
             case BiasMode::MAX:
-                return { make_shared<op::Sqrt>(make_shared<op::Maximum>(values, bias_node)) };
+                return {make_shared<op::Sqrt>(make_shared<op::Maximum>(values, bias_node))};
             case BiasMode::ADD:
-            default:
-                return { make_shared<op::Sqrt>(values + bias_node) };
+            default: return {make_shared<op::Sqrt>(values + bias_node)};
             }
         }
 
