@@ -23,10 +23,8 @@ using namespace ngraph;
 
 const string op::ShuffleChannels::type_name{"ShuffleChannels"};
 
-op::ShuffleChannels::ShuffleChannels(const shared_ptr<Node>& data,
-                                     const int axis,
-                                     const size_t groups)
-    : FusedOp(check_single_output_args({data}))
+op::ShuffleChannels::ShuffleChannels(const Output<Node>& data, const int axis, const size_t groups)
+    : FusedOp({data})
     , m_axis(axis)
     , m_groups{groups}
 {
@@ -56,7 +54,7 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 {
     if (get_input_partial_shape(0).is_static())
     {
-        const auto shape = get_argument(0)->get_shape();
+        const auto shape = input(0).get_shape();
 
         NODE_VALIDATION_CHECK(
             this, shape.size() >= 1, "The input tensor's shape is expected to be at least 1D.");
@@ -77,8 +75,8 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 
 NodeVector op::ShuffleChannels::decompose_op() const
 {
-    const auto data = get_argument(0);
-    const auto& data_shape = data->get_shape();
+    const auto data = input(0).get_source_output();
+    const auto& data_shape = data.get_shape();
 
     const auto reshaped = builder::reshape(data, get_pre_shuffle_shape(data_shape));
     const auto shuffled = builder::reorder_axes(reshaped, {0, 2, 1, 3});

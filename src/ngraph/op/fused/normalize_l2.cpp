@@ -29,11 +29,11 @@ using namespace ngraph;
 
 const string op::NormalizeL2::type_name{"NormalizeL2"};
 
-op::NormalizeL2::NormalizeL2(const shared_ptr<ngraph::Node>& data,
-                             const shared_ptr<ngraph::Node>& axes,
+op::NormalizeL2::NormalizeL2(const Output<Node>& data,
+                             const Output<Node>& axes,
                              float eps,
                              EpsMode eps_mode)
-    : FusedOp(check_single_output_args({data, axes}))
+    : FusedOp({data, axes})
     , m_eps{eps}
     , m_eps_mode{eps_mode}
 {
@@ -66,8 +66,8 @@ void op::NormalizeL2::pre_validate_and_infer_types()
 
 NodeVector op::NormalizeL2::decompose_op() const
 {
-    shared_ptr<Node> data{get_argument(0)};
-    const Shape input_shape{data->get_shape()};
+    Output<Node> data{input(0).get_source_output()};
+    const Shape input_shape{data.get_shape()};
 
     // Reshape to 4D tensor.
     if (input_shape.size() != 4)
@@ -77,7 +77,7 @@ NodeVector op::NormalizeL2::decompose_op() const
         data = builder::reshape(data, data_shape);
     }
 
-    auto axes_node = get_argument(1);
+    auto axes_node = input(1).get_source_output().get_node_shared_ptr();
     NODE_VALIDATION_CHECK(this,
                           axes_node->is_constant(),
                           "doesn't support 'axes' input of other type than a Constant.");
@@ -90,8 +90,8 @@ NodeVector op::NormalizeL2::decompose_op() const
     // Calculate l2 norm across axes determined by axes input
     auto builder_bias_mode =
         (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
-    shared_ptr<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode);
-    norm = make_broadcast_node(norm, data->get_shape(), 0);
+    Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode);
+    norm = make_broadcast_node(norm, data.get_shape(), 0);
 
     data = data / norm;
 
@@ -101,7 +101,7 @@ NodeVector op::NormalizeL2::decompose_op() const
         data = builder::reshape(data, input_shape);
     }
 
-    return {data};
+    return as_node_vector({data});
 }
 
 shared_ptr<Node> op::NormalizeL2::copy_with_new_args(const NodeVector& new_args) const

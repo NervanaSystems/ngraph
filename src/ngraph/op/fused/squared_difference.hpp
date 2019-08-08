@@ -33,12 +33,12 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            SquaredDifference() = default;
             /// \brief Constructs the squared difference operation.
             ///
             /// \param x1 First input tensor
             /// \param x2 Second input tensor
-            SquaredDifference(const std::shared_ptr<ngraph::Node>& x1,
-                              const std::shared_ptr<ngraph::Node>& x2);
+            SquaredDifference(const Output<Node>& x1, const Output<Node>& x2);
 
             virtual NodeVector decompose_op() const override;
 

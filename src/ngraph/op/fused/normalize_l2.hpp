@@ -30,7 +30,6 @@ namespace ngraph
         class NormalizeL2 : public ngraph::op::util::FusedOp
         {
         public:
-            NGRAPH_API
             /// \brief Specifies how eps is combined with L2 value
             enum class EpsMode
             {
@@ -39,8 +38,10 @@ namespace ngraph
                 // Calculate max of norm and bias
                 MAX
             };
+            NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            NormalizeL2() = default;
             ///
             /// \brief      Constructs a Normalize operation.
             ///
@@ -49,8 +50,8 @@ namespace ngraph
             /// \param      eps             - The epsilon added to L2 norm.
             /// \param      eps_mode        - Specifies how eps is combined with L2 value calculated before division
             ///
-            NormalizeL2(const std::shared_ptr<ngraph::Node>& data,
-                        const std::shared_ptr<ngraph::Node>& axes,
+            NormalizeL2(const Output<Node>& data,
+                        const Output<Node>& axes,
                         float eps,
                         EpsMode eps_mode);
 
