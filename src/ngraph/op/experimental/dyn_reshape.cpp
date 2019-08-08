@@ -25,10 +25,8 @@ using namespace ngraph;
 
 const string op::DynReshape::type_name{"DynReshape"};
 
-op::DynReshape::DynReshape(const shared_ptr<Node>& arg,
-                           const shared_ptr<Node>& pattern,
-                           bool zero_flag)
-    : Op(check_single_output_args({arg, pattern}))
+op::DynReshape::DynReshape(const Output<Node>& arg, const Output<Node>& pattern, bool zero_flag)
+    : Op({arg, pattern})
     , m_zero_flag(zero_flag)
 {
     constructor_validate_and_infer_types();

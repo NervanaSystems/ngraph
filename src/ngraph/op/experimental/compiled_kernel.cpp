@@ -62,6 +62,13 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     return std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
 }
 
+ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
+                                           const OutputVector& outputs,
+                                           const OutputVector& args)
+    : CompiledKernel(as_node_vector(node_list), as_node_vector(outputs), as_node_vector(args))
+{
+}
+
 ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
                                            const NodeVector& outputs,
                                            const NodeVector& args)

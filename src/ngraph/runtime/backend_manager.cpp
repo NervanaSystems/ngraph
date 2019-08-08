@@ -32,12 +32,18 @@
 using namespace std;
 using namespace ngraph;
 
+#ifdef NGRAPH_STATIC_LIB_ENABLE
+#define DLERROR() ""
+#else
 #ifdef _WIN32
 #define CLOSE_LIBRARY(a) FreeLibrary(a)
 #define DLSYM(a, b) GetProcAddress(a, b)
+#define DLERROR() ""
 #else
 #define CLOSE_LIBRARY(a) dlclose(a)
 #define DLSYM(a, b) dlsym(a, b)
+#define DLERROR() dlerror()
+#endif
 #endif
 
 unordered_map<string, runtime::BackendConstructor*>& runtime::BackendManager::get_registry()
@@ -101,19 +107,19 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     }
     else
     {
+#ifndef NGRAPH_STATIC_LIB_ENABLE
         DL_HANDLE handle = open_shared_library(type);
         if (!handle)
         {
             stringstream ss;
             ss << "Backend '" << type << "' not registered. Error:";
 #ifndef _WIN32
-            ss << dlerror();
+            ss << DLERROR();
 #endif
             throw runtime_error(ss.str());
         }
-
 #ifndef _WIN32
-        dlerror(); // Clear any pending errors
+        DLERROR(); // Clear any pending errors
 #endif
         function<runtime::BackendConstructor*()> get_backend_constructor_pointer =
             reinterpret_cast<runtime::BackendConstructor* (*)()>(
@@ -127,7 +133,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
         {
             string error;
 #ifndef _WIN32
-            const char* err = dlerror();
+            const char* err = DLERROR();
             error = (err ? err : "");
 #endif
             CLOSE_LIBRARY(handle);
@@ -136,6 +142,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
                 "library.\nError='" +
                 error + "'");
         }
+#endif
     }
     return backend;
 }
@@ -146,6 +153,7 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     string lib_suffix = SHARED_LIB_SUFFIX;
 
     DL_HANDLE handle = nullptr;
+#ifndef NGRAPH_STATIC_LIB_ENABLE
 
     // strip off attributes, IE:CPU becomes IE
     auto colon = type.find(":");
@@ -163,9 +171,9 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     SetDllDirectory((LPCSTR)my_directory.c_str());
     handle = LoadLibrary(library_path.c_str());
 #else
-    dlerror(); // Clear any pending errors
+    DLERROR(); // Clear any pending errors
     handle = dlopen(library_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
-    const char* err = dlerror();
+    const char* err = DLERROR();
     error = (err ? err : "");
 #endif
     if (!handle)
@@ -175,12 +183,14 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
         ss << "\nOpen error message '" << error << "'";
         throw runtime_error(ss.str());
     }
+#endif
     return handle;
 }
 
 map<string, string> runtime::BackendManager::get_registered_device_map()
 {
     map<string, string> rc;
+#ifndef NGRAPH_STATIC_LIB_ENABLE
     string my_directory =
         file_util::get_directory(Backend::get_backend_shared_library_search_directory());
     vector<string> backend_list;
@@ -197,6 +207,7 @@ map<string, string> runtime::BackendManager::get_registered_device_map()
         }
     };
     file_util::iterate_files(my_directory, f, false, true);
+#endif
     return rc;
 }
 

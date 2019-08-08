@@ -29,6 +29,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            QuantizedMaxPool() = default;
             /// \brief Constructs a batched max pooling operation.
             ///
             /// \param arg The node producing the input data batch tensor.
