@@ -23,11 +23,12 @@ Core updates for |version|
 + Constant folding
 + Support for static linking
 + Additional ops
++ Preliminary static linking support
++ Add instructions how to build ``NGRAPH_PLAIDML`` backend
+
 
 .. Latest doc updates
 .. ~~~~~~~~~~~~~~~~~~
-
-.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
@@ -46,7 +47,6 @@ Changelog on Previous Releases
 + Graph visualization improvements
 + Preserve control dependencies in more places
 + GetOutputElement has single input
-.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
 
 
 0.23

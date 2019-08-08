@@ -114,7 +114,7 @@ depending on the parameters specified.
 
 
 
-.. include:: backends/cpp-api.rst
+.. include:: ../backends/cpp-api.rst
 
 
 .. _axpy.py example: https://github.com/tensorflow/ngraph-bridge/blob/master/examples/axpy.py
