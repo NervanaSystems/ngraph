@@ -37,7 +37,7 @@ project/doc-contributor-README.rst  @indie
 /src/resource/                      @rkimballn1
 /src/tools/                         @rkimballn1
 /src/ngraph/autodiff/               @diyessi
-/src/ngraph/builder/                @sfvaroglu
+/src/ngraph/builder/                @mbrookhart
 /src/ngraph/codegen/                @rkimballn1
 /src/ngraph/distributed.*           @wenzhe-nrv @diyessi
 /src/ngraph/frontend/               @postrational
