@@ -3,8 +3,8 @@
 .. _validated:
 
 
-Validated Workloads
-===================
+Validated workloads by framework
+################################
 
 We validated performance [#f1]_ for the following TensorFlow\* and ONNX\* 
 workloads:

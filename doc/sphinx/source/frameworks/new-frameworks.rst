@@ -3,7 +3,7 @@
 .. _new_frameworks:
 
 Integrating new frameworks
-==========================
+##########################
 
 This section details some of the *configuration options* and some of the 
 *environment variables* that can be used to tune for optimal performance when 

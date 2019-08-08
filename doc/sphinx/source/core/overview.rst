@@ -2,8 +2,8 @@
 
 .. _ngraph_core:
 
-nGraph Core
-===========
+Overview
+========
 
 .. figure:: ../graphics/WholeStack.png
    :width: 960px

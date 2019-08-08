@@ -2,8 +2,8 @@
 
 .. _frameworks_tensorflow:
 
-Connect TensorFlow\*
-====================
+TensorFlow\*
+============
 
 
 See the `README`_ on the `ngraph_bridge repo`_ for the many ways to connect 

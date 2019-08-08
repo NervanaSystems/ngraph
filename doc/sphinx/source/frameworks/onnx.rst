@@ -3,8 +3,8 @@
 .. _frameworks_onnx:
 
 
-ONNX Support
-============
+ONNX
+====
 
 nGraph is able to import and execute ONNX models. Models are converted to 
 nGraph's :abbr:`Intermediate Representation (IR)` and converted to ``Function`` 

@@ -3,8 +3,8 @@
 .. _tutorials: 
 
 
-nGraph Tutorials
-################
+Tutorials
+#########
 
 To learn how to use nGraph, begin with our Get Started Tutorials. 
 

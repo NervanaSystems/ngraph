@@ -2,8 +2,8 @@
 
 .. _framework_support:
 
-Framework Support
-=================
+Overview
+========
 
 A framework is "supported" when there is a framework :term:`bridge` that can be
 cloned from one of our GitHub repos and built to connect to nGraph device

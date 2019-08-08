@@ -2,7 +2,7 @@
 
 .. _distributed: 
 
-Distributed Training
-====================
+Overview
+========
 
 .. include:: ../core/constructing-graphs/distribute-train.rst

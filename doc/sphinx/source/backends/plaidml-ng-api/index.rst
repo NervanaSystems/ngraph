@@ -1,8 +1,8 @@
 .. backends/plaidml-ng-api/index.rst:
 
 
-PlaidML from nGraph
-===================
+PlaidML
+=======
 
 .. doxygenclass:: ngraph::runtime::plaidml::PlaidML_Backend
    :project: ngraph
