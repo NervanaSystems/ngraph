@@ -16,6 +16,7 @@
 
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/plaidml/plaidml_backend.hpp"
+#include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
 
 namespace ngraph
 {
@@ -42,7 +43,8 @@ std::shared_ptr<ngraph::runtime::Backend>
     return std::make_shared<PlaidML_Backend>(config);
 }
 
-extern "C" ngraph::runtime::BackendConstructor* get_backend_constructor_pointer()
+extern "C" PLAIDML_BACKEND_API ngraph::runtime::BackendConstructor*
+    get_backend_constructor_pointer()
 {
     static ngraph::runtime::plaidml::PlaidML_BackendConstructor backend_constructor;
     return &backend_constructor;

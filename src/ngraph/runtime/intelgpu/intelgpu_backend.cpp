@@ -88,8 +88,6 @@
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
-#include "ngraph/op/fused/hard_sigmoid.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
@@ -464,7 +462,7 @@ shared_ptr<runtime::Executable>
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -2072,7 +2070,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::GroupConvolutionTranspose:
         case OP_TYPEID::GRUCell:
         case OP_TYPEID::HardSigmoid:
-        case OP_TYPEID::LeakyRelu:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::MVN:
         case OP_TYPEID::Normalize:
@@ -2106,12 +2103,13 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::Unsqueeze:
+        case OP_TYPEID::Xor:
         default:
         {
             throw unsupported_op("Unsupported op '" + op->description() +
                                  "' in IntelGPU back end.");
         }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
         }
@@ -2199,7 +2197,6 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::GRN:
     case OP_TYPEID::GroupConvolutionTranspose:
     case OP_TYPEID::GRUCell:
-    case OP_TYPEID::LeakyRelu:
     case OP_TYPEID::LSTMCell:
     case OP_TYPEID::MVN:
     case OP_TYPEID::Normalize:

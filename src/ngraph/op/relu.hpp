@@ -33,10 +33,14 @@ namespace ngraph
         class Relu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            Relu() = default;
             /// \brief Constructs a Relu operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Relu(std::shared_ptr<ngraph::Node> arg);
+            Relu(const Output<ngraph::Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -50,6 +54,9 @@ namespace ngraph
         class ReluBackprop : public ngraph::op::util::BinaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a ReluBackprop operation.
             ///
             /// \param arg Node that produces the relu forward input tensor.

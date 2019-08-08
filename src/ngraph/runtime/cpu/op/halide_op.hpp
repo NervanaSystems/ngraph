@@ -32,8 +32,10 @@ namespace ngraph
                 class HalideOp : public ngraph::op::Op
                 {
                 public:
-                    HalideOp(const NodeVector& args,
-                             const std::list<std::shared_ptr<Node>>& ops,
+                    static const std::string type_name;
+                    const std::string& description() const override { return type_name; }
+                    HalideOp(const OutputVector& args,
+                             const std::list<Output<Node>>& ops,
                              const element::Type& out_type,
                              const Shape& out_shape);
 
@@ -42,9 +44,9 @@ namespace ngraph
                     virtual std::shared_ptr<Node>
                         copy_with_new_args(const NodeVector& new_args) const override;
 
-                    const std::list<std::shared_ptr<Node>>& get_ops() const { return m_ops; }
+                    const std::list<Output<Node>>& get_ops() const { return m_ops; }
                 private:
-                    std::list<std::shared_ptr<Node>> m_ops;
+                    std::list<Output<Node>> m_ops;
                     element::Type m_output_type;
                     Shape m_output_shape;
                 };

@@ -29,8 +29,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::PRelu::PRelu(const shared_ptr<Node>& data, const shared_ptr<Node>& slope)
-    : FusedOp("PRelu", {data, slope})
+const string op::PRelu::type_name{"PRelu"};
+
+op::PRelu::PRelu(const Output<Node>& data, const Output<Node>& slope)
+    : FusedOp({data, slope})
 {
     constructor_validate_and_infer_types();
 }
