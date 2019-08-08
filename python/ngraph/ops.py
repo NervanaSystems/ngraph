@@ -537,7 +537,7 @@ def broadcast_to(node, new_shape, axis=None, name=None):
 
 
 @nameable_op
-def fake_quantize(data, input_low, input_high, output_low, output_hight, levels, name=None):
+def fake_quantize(data, input_low, input_high, output_low, output_high, levels, name=None):
     # type: (Node, Node, Node, Node, Node, int, str) -> Node
     r"""Perform an element-wise linear quantization on input data.
 
@@ -566,9 +566,9 @@ def fake_quantize(data, input_low, input_high, output_low, output_hight, levels,
     :param levels:       The number of quantization levels. Integer value.
     :return: New node with quantized value.
     """
-    return FakeQuantize(data, input_low, input_high, output_low, output_hight, levels)
+    return FakeQuantize(data, input_low, input_high, output_low, output_high, levels)
 
- 
+
 def gemm(A,                      # type: Node
          B,                      # type: Node
          C,                      # type: Node

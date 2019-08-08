@@ -112,6 +112,7 @@ def test_fake_quantize():
                         [[11.33333301, 11.33333301, 11.33333301, 11.33333301],
                             [11.33333301, 11.33333301, 11.33333301, 11.33333301],
                             [16., 16., 16., 16.]]]]], dtype=np.float32)
+    assert np.allclose(result, expected)
 
 
 def test_depth_to_space():
