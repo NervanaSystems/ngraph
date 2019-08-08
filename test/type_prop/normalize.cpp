@@ -20,20 +20,17 @@
 
 using namespace std;
 using namespace ngraph;
-
 TEST(type_prop, normalize_invalid_input_tensor_rank)
 {
     Shape data_shape{1, 2, 3, 4, 5};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{});
-    bool across_spatial{false};
-    bool channel_shared{true};
+    auto axes = make_shared<op::Parameter>(element::u64, Shape{ 1, 2 });
     float eps{1e-6f};
 
     try
     {
         auto normalize =
-            make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
+            make_shared<op::NormalizeL2>(data, axes, eps);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -52,7 +49,7 @@ TEST(type_prop, normalize_invalid_input_tensor_rank)
     try
     {
         auto normalize =
-            make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
+            make_shared<op::NormalizeL2>(data, axes, eps);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -67,64 +64,24 @@ TEST(type_prop, normalize_invalid_input_tensor_rank)
     }
 }
 
-TEST(type_prop, normalize_invalid_scale_rank)
+TEST(type_prop, normalize_invalid_axes_rank)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{3});
-    bool across_spatial{false};
-    bool channel_shared{true};
+    auto axes = make_shared<op::Parameter>(element::u64, Shape{ 1, 2 });
     float eps{1e-6f};
 
     try
     {
         auto normalize =
-            make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
+            make_shared<op::NormalizeL2>(data, axes, eps);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Scale must be a scalar if 'channels_shared' "
-                                         "parameter is true"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-
-    channel_shared = false;
-    try
-    {
-        auto normalize =
-            make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input tensor rank.";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Scale must be a vector of size of input tensor "
-                                         "channels"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-
-    data = make_shared<op::Parameter>(element::f32, Shape{4, 3});
-    try
-    {
-        auto normalize =
-            make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input tensor rank.";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Scale must be a scalar if input tensor is of rank 2"));
+                             std::string("Input axes must have rank equals 1"));
     }
     catch (...)
     {
@@ -132,16 +89,15 @@ TEST(type_prop, normalize_invalid_scale_rank)
     }
 }
 
-TEST(type_prop, normalize)
+
+TEST(type_prop, normalize_output_shape_across_chw)
 {
     Shape data_shape{2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{2});
-    bool across_spatial{false};
-    bool channel_shared{false};
+    const auto axes = make_shared<op::Constant>(element::u64, Shape{ 3 }, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
 
-    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps);
     EXPECT_EQ(normalize->get_element_type(), element::f32);
     EXPECT_EQ(normalize->get_shape(), (Shape{2, 3, 4}));
 }

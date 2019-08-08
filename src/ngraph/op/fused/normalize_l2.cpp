@@ -21,6 +21,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/op/constant.hpp"
 #include "normalize_l2.hpp"
 
 using namespace std;
@@ -42,36 +43,23 @@ void op::NormalizeL2::pre_validate_and_infer_types()
     const auto& data_pshape = get_input_partial_shape(0);
     const auto& axes_pshape = get_input_partial_shape(1);
 
-    if (data_pshape.is_static() && axes_pshape.is_static())
-    {
-        const Shape data_shape{data_pshape.to_shape()};
-        const Shape scale_shape{axes_pshape.to_shape()};
+    const Shape data_shape{data_pshape.to_shape()};
 
-        // Input data must be 2, 3 or 4D tensor.
-        NODE_VALIDATION_CHECK(this,
-                              (data_shape.size() >= 2 && data_shape.size() <= 4),
-                              "Input tensor rank must be 2, 3 or 4 dimensional (actual input "
-                              "shape: ",
-                              data_shape,
-                              ").");
-        // only HW
-        if (data_shape.size() == 2)
-        {
-            NODE_VALIDATION_CHECK(this,
-                                    scale_shape.size() == 0,
-                                    "Scale must be a scalar if input tensor is of rank 2.");
-        }
-        else
-        {
-            size_t n_channels = data_shape.size() == 3 ? data_shape.at(0) : data_shape.at(1);
-            NODE_VALIDATION_CHECK(
-                this,
-                (scale_shape.size() == 1 && scale_shape.at(0) == n_channels),
-                "Scale must be a vector of size of input tensor channels if input tensor is "
-                "of rank greater equal 3.");
-        }
-        // TODO ADD CHECKING AS IN LRN CASE
-    }
+    // Input data must be 2, 3 or 4D tensor.
+    NODE_VALIDATION_CHECK(this,
+                            (data_shape.size() >= 2 && data_shape.size() <= 4),
+                            "Input tensor rank must be 2, 3 or 4 dimensional (actual input "
+                            "shape: ",
+                            data_shape,
+                            ").");
+
+    NODE_VALIDATION_CHECK(this, axes_pshape.is_static(), "Input axes must be static.");
+
+    NODE_VALIDATION_CHECK(this,
+        static_cast<size_t>(axes_pshape.rank()) == 1,
+        "Input axes must have rank equals 1 (axes shape: ",
+        axes_pshape,
+        ").");
 }
 
 NodeVector op::NormalizeL2::decompose_op() const
@@ -87,10 +75,17 @@ NodeVector op::NormalizeL2::decompose_op() const
         data = builder::reshape(data, data_shape);
     }
 
-    // Calculate norm over axes indicated by axes input param
-    AxisSet reduction_axes = get_argument(1)->outputs;
+    auto axes_node = get_argument(1);
+    NODE_VALIDATION_CHECK(this,
+        axes_node->is_constant(),
+        "doesn't support 'axes' input of other type than a Constant.");
 
-    // Calculate l2 norm across channels.
+    // Calculate norm over axes indicated by axes input param
+    auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
+    auto axes_vector = axes_constant->get_vector<size_t>();
+    AxisSet reduction_axes{ axes_vector };
+
+    // Calculate l2 norm across axes determined by axes input
     shared_ptr<Node> norm = builder::l2_norm(data, reduction_axes, m_eps);
     norm = make_broadcast_node(norm, data->get_shape(), 0);
 

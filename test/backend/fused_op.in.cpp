@@ -382,17 +382,15 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_4d)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{});
-    bool across_spatial{false};
-    bool channel_shared{true};
+    const auto axes = make_shared<op::Constant>(element::u64, Shape{3}, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
 
-    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
-    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -400,28 +398,27 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_4d)
     iota(begin(input_data), end(input_data), 1);
 
     test_case.add_input<float>(input_data);
-    test_case.add_input<float>({2.f});
 
     test_case.add_expected_output<float>(
-        data_shape, {0.02857143f, 0.05714286f, 0.08571429f, 0.11428571f, 0.14285714f, 0.17142857f,
-                     0.2f,        0.22857143f, 0.25714286f, 0.28571429f, 0.31428571f, 0.34285714f,
-                     0.37142857f, 0.4f,        0.42857143f, 0.45714286f, 0.48571429f, 0.51428571f,
-                     0.54285714f, 0.57142857f, 0.6f,        0.62857143f, 0.65714286f, 0.68571429f});
+        data_shape, { 0.01428571f, 0.02857143f, 0.04285714f, 0.05714286f,
+                      0.07142857f, 0.08571429f, 0.1f,        0.11428571f,
+                      0.12857144f, 0.14285715f, 0.15714286f, 0.17142858f,
+                      0.18571429f, 0.2f,        0.21428572f, 0.22857143f,
+                      0.24285714f, 0.25714287f, 0.27142859f, 0.2857143f,
+                      0.30000001f, 0.31428573f, 0.32857144f, 0.34285715f });
 
-    test_case.run();
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_3d)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_3d)
 {
     Shape data_shape{2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{});
-    bool across_spatial{false};
-    bool channel_shared{true};
+    const auto axes = make_shared<op::Constant>(element::u64, Shape{ 3 }, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
 
-    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
-    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -429,28 +426,27 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_3d)
     iota(begin(input_data), end(input_data), 1);
 
     test_case.add_input<float>(input_data);
-    test_case.add_input<float>({2.f});
 
     test_case.add_expected_output<float>(
-        data_shape, {0.02857143f, 0.05714286f, 0.08571429f, 0.11428571f, 0.14285714f, 0.17142857f,
-                     0.2f,        0.22857143f, 0.25714286f, 0.28571429f, 0.31428571f, 0.34285714f,
-                     0.37142857f, 0.4f,        0.42857143f, 0.45714286f, 0.48571429f, 0.51428571f,
-                     0.54285714f, 0.57142857f, 0.6f,        0.62857143f, 0.65714286f, 0.68571429f});
+        data_shape, { 0.01428571f, 0.02857143f, 0.04285714f, 0.05714286f,
+                      0.07142857f, 0.08571429f, 0.1f,        0.11428571f,
+                      0.12857144f, 0.14285715f, 0.15714286f, 0.17142858f,
+                      0.18571429f, 0.2f,        0.21428572f, 0.22857143f,
+                      0.24285714f, 0.25714287f, 0.27142859f, 0.2857143f,
+                      0.30000001f, 0.31428573f, 0.32857144f, 0.34285715f });
 
-    test_case.run();
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_2d)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_2d)
 {
     Shape data_shape{3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{});
-    bool across_spatial{false};
-    bool channel_shared{true};
+    const auto axes = make_shared<op::Constant>(element::u64, Shape{ 3 }, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
 
-    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
-    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -458,36 +454,24 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_scalar_scale_2d)
     iota(begin(input_data), end(input_data), 1);
 
     test_case.add_input<float>(input_data);
-    test_case.add_input<float>({2.f});
 
-    test_case.add_expected_output<float>(data_shape,
-                                         {0.07844645f,
-                                          0.15689291f,
-                                          0.23533936f,
-                                          0.31378582f,
-                                          0.39223227f,
-                                          0.47067872f,
-                                          0.54912518f,
-                                          0.62757163f,
-                                          0.70601809f,
-                                          0.78446454f,
-                                          0.86291099f,
-                                          0.94135745f});
+    test_case.add_expected_output<float>(
+        data_shape, { 0.03922323f, 0.07844646f, 0.11766968f, 0.15689291f,
+                      0.19611613f, 0.23533936f, 0.2745626f,  0.31378582f,
+                      0.35300905f, 0.39223227f, 0.43145549f, 0.47067872f });
 
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_w_scale)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_empty_axes_input)
 {
-    Shape data_shape{1, 2, 3, 4};
+    Shape data_shape{ 1, 2, 3, 4 };
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{2});
-    bool across_spatial{false};
-    bool channel_shared{false};
-    float eps{1e-6f};
+    const auto axes = make_shared<op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
+    float eps{ 1e-6f };
 
-    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
-    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps);
+    auto function = make_shared<Function>(NodeVector{ normalize }, ParameterVector{ data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -495,29 +479,23 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_w_scale)
     iota(begin(input_data), end(input_data), 1);
 
     test_case.add_input<float>(input_data);
-    test_case.add_input<float>({2.f, 3.f});
 
+    // output should be filled with 1f values
     test_case.add_expected_output<float>(
-        data_shape, {0.02857143f, 0.05714286f, 0.08571429f, 0.11428571f, 0.14285714f, 0.17142857f,
-                     0.2f,        0.22857143f, 0.25714286f, 0.28571429f, 0.31428571f, 0.34285714f,
-                     0.55714286f, 0.6f,        0.64285714f, 0.68571429f, 0.72857143f, 0.77142857f,
-                     0.81428571f, 0.85714286f, 0.9f,        0.94285714f, 0.98571429f, 1.02857143f});
+        data_shape, vector<float>(shape_size(data_shape), 1));
 
-    test_case.run();
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-// TODO lower tolerance; mismatch at 4th decimal positions
-NGRAPH_TEST(DISABLED_${BACKEND_NAME}, normalize_across_hw_w_scale)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_hw_4d)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{2});
-    bool across_spatial{true};
-    bool channel_shared{false};
-    float eps{0.25f};
+    const auto axes = make_shared<op::Constant>(element::u64, Shape{2}, vector<int64_t>{2, 3});
+    float eps{ 1e-6f };
 
-    auto normalize = make_shared<op::NormalizeL2>(data, scale, across_spatial, channel_shared, eps);
-    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data, scale});
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -525,14 +503,15 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, normalize_across_hw_w_scale)
     iota(begin(input_data), end(input_data), 1);
 
     test_case.add_input<float>(input_data);
-    test_case.add_input<float>({2.f, 3.f});
 
     test_case.add_expected_output<float>(
-        data_shape, {0.07844646f, 0.15689291f, 0.23533936f, 0.31378582f, 0.39223227f, 0.47067872f,
-                     0.5491252f,  0.62757164f, 0.7060181f,  0.78446454f, 0.862911f,   0.94135743f,
-                     0.5982327f,  0.64425063f, 0.6902685f,  0.7362864f,  0.7823043f,  0.8283222f,
-                     0.87434006f, 0.920358f,   0.9663758f,  1.0123938f,  1.0584116f,  1.1044296f});
-    test_case.run();
+        data_shape, { 0.03922323f, 0.07844646f, 0.11766968f, 0.15689291f,
+                      0.19611613f, 0.23533936f, 0.2745626f,  0.31378582f,
+                      0.35300905f, 0.39223227f, 0.43145549f, 0.47067872f,
+                      0.1994109f,  0.2147502f,  0.2300895f,  0.2454288f,
+                      0.26076809f, 0.2761074f,  0.29144669f, 0.306786f,
+                      0.32212529f, 0.3374646f,  0.35280389f, 0.3681432f});
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gemm)
