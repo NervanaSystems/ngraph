@@ -19,8 +19,6 @@
      frameworks/new-frameworks.rst
 
 
-
-
 * :ref:`ngraph_core`
 
   .. toctree::
