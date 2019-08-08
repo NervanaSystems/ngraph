@@ -560,13 +560,13 @@ namespace
             ValueHandle val = iLHS(ivs);
             if (auto floatTy = elemTy.dyn_cast<FloatType>())
             {
-                ValueHandle two = intrinsics::constant_float(llvm::APFloat(2.0f), floatTy);
-                iRes(ivs) = val - val * two;
+                ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+                iRes(ivs) = zero - val;
             }
             else if (auto intTy = elemTy.dyn_cast<IntegerType>())
             {
-                ValueHandle two = intrinsics::constant_int(2, intTy.getWidth());
-                iRes(ivs) = val - val * two;
+                ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
+                iRes(ivs) = zero - val;
             }
             else
             {
