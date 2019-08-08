@@ -28,16 +28,16 @@ using namespace ngraph;
 
 const string op::Squeeze::type_name{"Squeeze"};
 
-op::Squeeze::Squeeze(const shared_ptr<Node>& data, const shared_ptr<Node>& axes)
-    : FusedOp(check_single_output_args({data, axes}))
+op::Squeeze::Squeeze(const Output<Node>& data, const Output<Node>& axes)
+    : FusedOp({data, axes})
 {
     constructor_validate_and_infer_types();
 }
 
 NodeVector op::Squeeze::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto axes_node = get_argument(1);
+    auto data = input(0).get_source_output();
+    auto axes_node = input(1).get_source_output().get_node_shared_ptr();
 
     // Currently only support Constant node for axes.
     NODE_VALIDATION_CHECK(this,
@@ -48,7 +48,7 @@ NodeVector op::Squeeze::decompose_op() const
     auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
     auto axes = axes_constant->get_vector<size_t>();
 
-    auto data_shape = data->get_shape();
+    auto data_shape = data.get_shape();
 
     // Prepare set of unique axes marked to be removed from input data.
     if (axes.empty())

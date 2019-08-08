@@ -44,11 +44,13 @@ from ngraph.ops import convolution
 from ngraph.ops import convolution_backprop_data
 from ngraph.ops import cos
 from ngraph.ops import cosh
+from ngraph.ops import depth_to_space
 from ngraph.ops import divide
 from ngraph.ops import dot
 from ngraph.ops import elu
 from ngraph.ops import equal
 from ngraph.ops import exp
+from ngraph.ops import fake_quantize
 from ngraph.ops import floor
 from ngraph.ops import gelu
 from ngraph.ops import gemm

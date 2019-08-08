@@ -32,6 +32,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            MVN() = default;
             /// \brief Constructs an MVN operation.
             ///
             /// \param data Input tensor with data
@@ -39,7 +40,7 @@ namespace ngraph
             /// \param across_channels flag that denotes if mean values are shared across channels.
             /// \param eps the number to be added to the variance to avoid division by zero when normalizing the value
             ///
-            MVN(const std::shared_ptr<ngraph::Node>& data,
+            MVN(const Output<Node>& data,
                 bool across_channels = true,
                 bool normalize_variance = true,
                 double eps = 1e-9);
@@ -51,7 +52,7 @@ namespace ngraph
             /// \param normalize_variance flag that denotes whether to perform variance normalization.
             /// \param eps the number to be added to the variance to avoid division by zero when normalizing the value
             ///
-            MVN(const std::shared_ptr<ngraph::Node>& data,
+            MVN(const Output<Node>& data,
                 AxisSet reduction_axes,
                 bool normalize_variance = true,
                 double eps = 1e-9);
