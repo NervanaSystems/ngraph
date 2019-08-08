@@ -562,7 +562,7 @@ void ngraph::parse_version_string(
     std::string version, size_t& major, size_t& minor, size_t& patch, string& extra)
 {
     // Since regex is broken in gcc 4.8 I will just manually parse the version string
-    // Version strings look like `0.25.0-rc.0+7c32240`
+    // Version strings look like `0.25.0-rc.0+7c32240` or `v0.25.0-rc.0+7c32240`
     size_t start;
     size_t end;
     extra = "";
