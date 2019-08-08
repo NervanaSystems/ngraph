@@ -102,7 +102,8 @@ TEST(ngraph_api, version)
     size_t expected_minor;
     size_t expected_patch;
     string expected_extra;
-    parse_version_string(version_label, expected_major, expected_minor, expected_patch, expected_extra);
+    parse_version_string(
+        version_label, expected_major, expected_minor, expected_patch, expected_extra);
 
     size_t actual_major;
     size_t actual_minor;

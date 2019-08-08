@@ -357,11 +357,8 @@ namespace ngraph
     /// the patch version number.
     ///
     /// \note Throws a runtime_error if there is an error during parsing
-    void parse_version_string(std::string version,
-                              size_t& major,
-                              size_t& minor,
-                              size_t& patch,
-                              std::string& extra);
+    void parse_version_string(
+        std::string version, size_t& major, size_t& minor, size_t& patch, std::string& extra);
 } // end namespace ngraph
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

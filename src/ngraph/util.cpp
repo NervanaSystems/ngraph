@@ -604,7 +604,7 @@ void ngraph::parse_version_string(
             error = true;
         }
     }
-    catch(...)
+    catch (...)
     {
         error = true;
     }
