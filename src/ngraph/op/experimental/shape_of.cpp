@@ -22,8 +22,8 @@ using namespace ngraph;
 
 const string op::ShapeOf::type_name{"ShapeOf"};
 
-op::ShapeOf::ShapeOf(const shared_ptr<Node>& arg)
-    : Op(check_single_output_args({arg}))
+op::ShapeOf::ShapeOf(const Output<Node>& arg)
+    : Op({arg})
 {
     constructor_validate_and_infer_types();
 }

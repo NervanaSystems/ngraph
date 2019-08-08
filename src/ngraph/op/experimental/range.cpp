@@ -24,10 +24,6 @@ using namespace ngraph;
 
 const string op::Range::type_name = "Range";
 
-op::Range::Range()
-{
-}
-
 op::Range::Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step)
     : Op({start, stop, step})
 {
