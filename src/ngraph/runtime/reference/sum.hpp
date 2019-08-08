@@ -27,6 +27,24 @@ namespace ngraph
     {
         namespace reference
         {
+            // Windows doesn't seem to like it if we directly use std::isfinite on integer types,
+            // so we will roll our own thing here.
+            template <typename T>
+            typename std::enable_if<std::is_floating_point<T>::value ||
+                                        std::is_same<T, bfloat16>::value ||
+                                        std::is_same<T, float16>::value,
+                                    bool>::type
+                is_finite(T x)
+            {
+                return std::isfinite(x);
+            }
+
+            template <typename T>
+            typename std::enable_if<std::is_integral<T>::value, bool>::type is_finite(T x)
+            {
+                return true;
+            }
+
             template <typename T>
             void sum(const T* arg,
                      T* out,
@@ -52,7 +70,7 @@ namespace ngraph
                     T x = arg[input_transform.index(input_coord)];
                     T& z = out[output_transform.index(output_coord)];
 
-                    if (std::isfinite(x) && std::isfinite(z))
+                    if (is_finite(x) && is_finite(z))
                     {
                         T& c = cs[output_transform.index(output_coord)];
                         T t = z + (x - c);
