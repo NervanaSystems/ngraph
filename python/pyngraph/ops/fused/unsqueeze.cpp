@@ -14,27 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/experimental/shape_of.hpp"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/op/fused/unsqueeze.hpp"
+#include "pyngraph/ops/fused/unsqueeze.hpp"
 
-const string op::ShapeOf::type_name{"ShapeOf"};
+namespace py = pybind11;
 
-op::ShapeOf::ShapeOf(const Output<Node>& arg)
-    : Op({arg})
+void regclass_pyngraph_op_Unsqueeze(py::module m)
 {
-    constructor_validate_and_infer_types();
-}
-
-void op::ShapeOf::validate_and_infer_types()
-{
-    set_input_is_relevant_to_value(0, false);
-    set_output_type(0, element::i64, PartialShape{get_input_partial_shape(0).rank()});
-}
-
-shared_ptr<Node> op::ShapeOf::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<ShapeOf>(new_args.at(0));
+    py::class_<ngraph::op::Unsqueeze, std::shared_ptr<ngraph::op::Unsqueeze>, ngraph::op::Op>
+        unsqueeze(m, "Unsqueeze");
+    unsqueeze.doc() = "ngraph.impl.op.Unsqueeze wraps ngraph::op::Unsqueeze";
+    unsqueeze.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

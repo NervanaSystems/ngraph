@@ -17,7 +17,6 @@
 #include "ngraph/op/softmax.hpp"
 
 #include <algorithm>
-#include <numeric>
 
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/multiply.hpp"

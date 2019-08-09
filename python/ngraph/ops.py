@@ -26,7 +26,7 @@ from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgP
     Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, Less, LessEq, Log, \
     LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
     Parameter, Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, \
-    Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
+    Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
 
 from typing import Callable, Iterable, List, Union
 
@@ -79,6 +79,24 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
 
 
 @nameable_op
+def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
+    """Perform unsqueeze operation on input tensor.
+
+    Insert single-dimensional entries to the shape of a tensor. Takes one required argument axes,
+    a list of dimensions that will be inserted.
+    Dimension indices in axes are as seen in the output tensor.
+
+    For example: Inputs: tensor with shape [3, 4, 5], axes=[0, 4]
+                 Result: tensor with shape [1, 3, 4, 5, 1]
+
+    :param data: The node with data tensor.
+    :param axes: List of non-negative integers, indicate the dimensions to be inserted.
+                  One of: input node or array.
+    :return: The new node performing an unsqueeze operation on input tensor.
+    """
+    return Unsqueeze(data, as_node(axes))
+
+
 def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
     r"""Perform Global Response Normalization with L2 norm (across channels only).
 

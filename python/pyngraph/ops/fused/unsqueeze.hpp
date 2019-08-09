@@ -14,27 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/experimental/shape_of.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <pybind11/pybind11.h>
 
-const string op::ShapeOf::type_name{"ShapeOf"};
+namespace py = pybind11;
 
-op::ShapeOf::ShapeOf(const Output<Node>& arg)
-    : Op({arg})
-{
-    constructor_validate_and_infer_types();
-}
-
-void op::ShapeOf::validate_and_infer_types()
-{
-    set_input_is_relevant_to_value(0, false);
-    set_output_type(0, element::i64, PartialShape{get_input_partial_shape(0).rank()});
-}
-
-shared_ptr<Node> op::ShapeOf::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<ShapeOf>(new_args.at(0));
-}
+void regclass_pyngraph_op_Unsqueeze(py::module m);
