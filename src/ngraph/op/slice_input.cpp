@@ -24,17 +24,18 @@ using namespace ngraph;
 const string op::SliceInput::type_name("SliceInput");
 
 op::SliceInput::SliceInput(const Output<Node>& value,
-                           std::ptrdiff_t axis,
                            std::ptrdiff_t start,
                            std::ptrdiff_t stride,
                            std::ptrdiff_t part_size,
-                           std::ptrdiff_t end)
+                           std::ptrdiff_t end,
+                           std::ptrdiff_t axis)
     : Op({value})
-    , m_axis(axis)
     , m_start(start)
     , m_stride(stride)
     , m_part_size(part_size)
     , m_end(end)
+    , m_axis(axis)
+
 {
     constructor_validate_and_infer_types();
 }

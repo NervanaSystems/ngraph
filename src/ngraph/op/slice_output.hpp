@@ -32,19 +32,22 @@ namespace ngraph
             /// \brief Constructs an empty SliceOutput operation
             SliceOutput() = default;
 
+            // start, stride, part_size, and end could be inputs rather than attributes
+            // axis could be a vector of axes for a multi-dimensional slice walk
+
             /// \brief Describes how to combine iteration outputs as slices
             /// \param value The value to be combined
-            /// \param axis The axis to slice along
             /// \param start First index on axis of the slicing
             /// \param stride Stepping of the slice
             /// \param part_size Size of the slice on axis
             /// \param end The last index on axis of the slicing
+            /// \param axis The axis to slice along
             SliceOutput(const Output<Node>& value,
-                        std::ptrdiff_t axis,
                         std::ptrdiff_t start,
                         std::ptrdiff_t stride,
                         std::ptrdiff_t part_size,
-                        std::ptrdiff_t end);
+                        std::ptrdiff_t end,
+                        std::ptrdiff_t axis);
 
             void validate_and_infer_types() override;
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
@@ -65,11 +68,11 @@ namespace ngraph
             void set_end(std::ptrdiff_t end);
 
         protected:
-            std::ptrdiff_t m_axis;
             std::ptrdiff_t m_start;
             std::ptrdiff_t m_stride;
             std::ptrdiff_t m_part_size;
             std::ptrdiff_t m_end;
+            std::ptrdiff_t m_axis;
         };
     }
 }

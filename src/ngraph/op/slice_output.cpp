@@ -22,17 +22,17 @@ using namespace ngraph;
 const string op::SliceOutput::type_name("SliceOutput");
 
 op::SliceOutput::SliceOutput(const Output<Node>& value,
-                             std::ptrdiff_t axis,
                              std::ptrdiff_t start,
                              std::ptrdiff_t stride,
                              std::ptrdiff_t part_size,
-                             std::ptrdiff_t end)
+                             std::ptrdiff_t end,
+                             std::ptrdiff_t axis)
     : Op({value})
-    , m_axis(axis)
     , m_start(start)
     , m_stride(stride)
     , m_part_size(part_size)
     , m_end(end)
+    , m_axis(axis)
 {
     constructor_validate_and_infer_types();
 }
@@ -40,6 +40,7 @@ op::SliceOutput::SliceOutput(const Output<Node>& value,
 void op::SliceOutput::validate_and_infer_types()
 {
     // For now, keep things simple; no padding, forwards stepping, etc.
+    // Later, use negative values for positioning from the end and working backwards.
     NODE_VALIDATION_CHECK(this, 0 <= m_axis, "Negative axis is not supported.");
     NODE_VALIDATION_CHECK(this, 0 <= m_start, "Negative start is not supported.");
     NODE_VALIDATION_CHECK(this, 0 <= m_end, "Negative end is not supported.");

@@ -1852,7 +1852,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto stride = node_js.at("stride").get<ptrdiff_t>();
             auto part_size = node_js.at("part_size").get<ptrdiff_t>();
             auto end = node_js.at("end").get<ptrdiff_t>();
-            node = make_shared<op::SliceInput>(args[0], axis, start, stride, part_size, end);
+            node = make_shared<op::SliceInput>(args[0], start, stride, part_size, end, axis);
             break;
         }
         case OP_TYPEID::SliceOutput:
@@ -1862,7 +1862,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto stride = node_js.at("stride").get<ptrdiff_t>();
             auto part_size = node_js.at("part_size").get<ptrdiff_t>();
             auto end = node_js.at("end").get<ptrdiff_t>();
-            node = make_shared<op::SliceOutput>(args[0], axis, start, stride, part_size, end);
+            node = make_shared<op::SliceOutput>(args[0], start, stride, part_size, end, axis);
             break;
         }
 
