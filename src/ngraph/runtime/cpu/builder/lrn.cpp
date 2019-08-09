@@ -38,6 +38,7 @@ namespace ngraph
                 CPUKernelFunctor functor;
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
+                auto axes_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
@@ -69,6 +70,7 @@ namespace ngraph
                     double bias = lrn->get_bias();
                     double nsize = lrn->get_nsize();
                     Shape arg_shape = args[0].get_shape();
+                    Shape axes_shape = args[1].get_shape();
 
                     auto element_type = lrn->get_element_type();
                     if (element_type == element::f32)
@@ -78,12 +80,14 @@ namespace ngraph
                                    beta,
                                    bias,
                                    arg_shape,
+                                   axes_shape,
                                    nsize,
                                    arg_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<float>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
+                                static_cast<float*>(ctx->buffer_data[axes_buffer_index]),
                                 static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 arg_shape,
                                 alpha,
@@ -99,12 +103,14 @@ namespace ngraph
                                    beta,
                                    bias,
                                    arg_shape,
+                                   axes_shape,
                                    nsize,
                                    arg_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<double>(
                                 static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
+                                static_cast<double*>(ctx->buffer_data[axes_buffer_index]),
                                 static_cast<double*>(ctx->buffer_data[out_buffer_index]),
                                 arg_shape,
                                 alpha,

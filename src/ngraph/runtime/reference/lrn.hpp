@@ -30,6 +30,7 @@ namespace ngraph
         {
             template <typename T>
             void lrn(const T* arg,
+                     const T* axes,
                      T* out,
                      const Shape& arg_shape,
                      double dalpha,
