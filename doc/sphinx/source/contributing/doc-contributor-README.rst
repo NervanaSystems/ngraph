@@ -51,19 +51,19 @@ For updates within the nGraph Library ``/doc`` repo, please submit a PR with
 any changes or ideas you'd like integrated. This helps us maintain trackability 
 with respect to changes made, additions, deletions, and feature requests.
 
-If you prefer to use a containerized application, like Jupyter\* notebooks, 
+If you prefer to use a containerized application, like Jupyter notebooks, 
 Google Docs\*, the GitHub* GUI, or MS Word\* to explain, write, or share 
 documentation contributions, you can convert the ``doc/sphinx/source/*.rst`` 
 files to another format with a tool like ``pypandoc`` and share a link   
 to your efforts on our `wiki`_. 
 
 Another option is to fork the `ngraph repo`_, essentially snapshotting it at 
-that point in time, and to build a Jupyter\* notebook or other set of docs around 
+that point in time, and to build a Jupyter notebook or other set of docs around 
 it for a specific use case. Add a note on our wiki to show us what you 
 did; new and novel applications may have their projects highlighted on an 
 upcoming `ngraph.ai`_ release.   
 
-.. note:: Please do not submit Jupyter* notebook code to the nGraph Library 
+.. note:: Please do not submit Jupyter notebook code to the nGraph Library 
    or core repos; best practice is to maintain any project-specific examples, 
    tests, or walk-throughs in a separate repository.
 

@@ -27,8 +27,8 @@ You can download models from the `ONNX Model Zoo`_. For example, ResNet-50:
 
 ::
 
-    $ wget https://s3.amazonaws.com/download.onnx/models/opset_9/resnet50.tar.gz
-    $ tar -xzvf resnet50.tar.gz
+    wget https://s3.amazonaws.com/download.onnx/models/opset_9/resnet50.tar.gz
+    tar -xzvf resnet50.tar.gz
 
 
 Use the following Python commands to convert the downloaded model to an nGraph 

@@ -1,3 +1,5 @@
+.. tutorials/onnx-tutorial.rst:
+
 .. _onnx_tutorial:
 
 Get Started with nGraph for ONNX\*
@@ -74,9 +76,9 @@ Prepare your system:
 
 ::
 
-    # apt update
-    # apt install -y python3 python3-pip python3-dev python-virtualenv
-    # apt install -y build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool
+    apt update
+    apt install -y python3 python3-pip python3-dev python-virtualenv
+    apt install -y build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev unzip autoconf automake libtool
 
 
 Choose which backends to enable: 
@@ -89,7 +91,7 @@ to the cmake command. For example:
 
 ::
 
-    $ cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_INTELGPU_ENABLE=TRUE
+    cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_INTELGPU_ENABLE=TRUE
 
 **PlaidML backend** 
 
@@ -97,13 +99,13 @@ To build nGraph with a PlaidML backend, add ``-DNGRAPH_PLAIDML_ENABLE=TRUE`` to 
 
 ::
 
-    $ cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_PLAIDML_ENABLE=TRUE
+    cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_PLAIDML_ENABLE=TRUE
 
 To build nGraph with more than one backend, pass multiple flags to ``cmake``. For example:
 
 :: 
 
-    $ cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_PLAIDML_ENABLE=TRUE DNGRAPH_INTELGPU_ENABLE=TRUE
+    cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_PLAIDML_ENABLE=TRUE DNGRAPH_INTELGPU_ENABLE=TRUE
 
 Build the nGraph wheel
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -113,19 +115,19 @@ Clone nGraph's ``master`` branch and then build nGraph:
 
 ::
 
-    $ cd # Change directory to where you would like to clone nGraph sources
-    $ git clone -b master --single-branch --depth 1 https://github.com/NervanaSystems/ngraph.git
-    $ mkdir ngraph/build && cd ngraph/build
-    $ cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE 
-    $ make install
+    cd # Change directory to where you would like to clone nGraph sources
+    git clone -b master --single-branch --depth 1 https://github.com/NervanaSystems/ngraph.git
+    mkdir ngraph/build && cd ngraph/build
+    cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE 
+    make install
 
 Prepare a Python virtual environment for nGraph (recommended):
  
 ::
 
-    $ mkdir -p ~/.virtualenvs && cd ~/.virtualenvs
-    $ virtualenv -p $(which python3) nGraph
-    $ source nGraph/bin/activate
+    mkdir -p ~/.virtualenvs && cd ~/.virtualenvs
+    virtualenv -p $(which python3) nGraph
+    source nGraph/bin/activate
     (nGraph) $ 
 
 ``(nGraph)`` indicates that you have created and activated a Python virtual 
@@ -228,8 +230,8 @@ ResNet-50:
 
 ::
 
-    $ wget https://s3.amazonaws.com/download.onnx/models/opset_8/resnet50.tar.gz
-    $ tar -xzvf resnet50.tar.gz
+    wget https://s3.amazonaws.com/download.onnx/models/opset_8/resnet50.tar.gz
+    tar -xzvf resnet50.tar.gz
 
 Use the following Python commands to convert the downloaded model to an
 nGraph model:
