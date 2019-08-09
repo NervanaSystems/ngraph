@@ -178,7 +178,6 @@ conv_bias_2d
 conv_bias_3d
 conv_bias_bprop_2d
 conv_bias_add_2d
-group_conv
 space_to_depth
 depth_to_space
 normalize_across_chw_scalar_scale_4d
@@ -278,10 +277,11 @@ lstm_cell_no_bias_no_peepholes
 lstm_cell_bias_peepholes
 lstm_cell_bias_peepholes_clip_input_forget
 lstm_cell_activaction_functions
-group_conv_transpose
-group_conv_transpose_output_shape
 divide_python_rounding_int32
 backwards_batchmatmul_tensor2_tensor2
+
+# unsupported ops: `BroadcastDistributed`
+broadcastdistributed
 
 # unsupported ops: 'QuantizedConvolution', 'QuantizedDot', 'TopK', 'Erf', 'EmbeddingLookup'
 model_quant_conv_linear

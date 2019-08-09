@@ -31,11 +31,18 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            QuantizedConcat() = default;
             /// \brief Constructs a concatenation operation.
             ///
             /// \param args               The nodes producing the input tensors.
             /// \param concatenation_axis The axis along which to concatenate the input tensors.
             QuantizedConcat(const NodeVector& args, size_t concatenation_axis);
+
+            /// \brief Constructs a concatenation operation.
+            ///
+            /// \param args               The nodes producing the input tensors.
+            /// \param concatenation_axis The axis along which to concatenate the input tensors.
+            QuantizedConcat(const OutputVector& args, size_t concatenation_axis);
 
             void validate_and_infer_types() override;
 

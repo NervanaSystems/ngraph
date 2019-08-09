@@ -39,6 +39,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            Gemm() = default;
             /// \brief Constructs an Gemm operation.
             ///
             /// \param A Input tensor A
@@ -48,9 +49,9 @@ namespace ngraph
             /// \param beta Scalar multiplier for input tensor C
             /// \param transA Whether A should be transposed
             /// \param transB Whether B should be transposed
-            Gemm(const std::shared_ptr<ngraph::Node>& A,
-                 const std::shared_ptr<ngraph::Node>& B,
-                 const std::shared_ptr<ngraph::Node>& C,
+            Gemm(const Output<Node>& A,
+                 const Output<Node>& B,
+                 const Output<Node>& C,
                  double alpha = 1.0,
                  double beta = 1.0,
                  bool transA = false,

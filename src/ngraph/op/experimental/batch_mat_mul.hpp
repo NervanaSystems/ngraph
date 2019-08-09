@@ -35,11 +35,12 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            BatchMatMul() = default;
             /// \brief Constructs a batch of matmul product operation.
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
-            BatchMatMul(const std::shared_ptr<Node>& arg0, const std::shared_ptr<Node>& arg1);
+            BatchMatMul(const Output<Node>& arg0, const Output<Node>& arg1);
 
             virtual void validate_and_infer_types() override;
 

@@ -31,11 +31,13 @@ ngraph.ops
       convolution_backprop_data
       cos
       cosh
+      depth_to_space
       divide
       dot
       elu
       equal
       exp
+      fake_quantize
       floor
       gelu
       gemm
@@ -84,6 +86,7 @@ ngraph.ops
       tan
       tanh
       topk
+      unsqueeze
    
    
 

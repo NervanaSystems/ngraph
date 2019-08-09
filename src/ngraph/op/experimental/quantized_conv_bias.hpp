@@ -30,6 +30,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            QuantizedConvolutionBias() = default;
             QuantizedConvolutionBias(const Output<Node>& data_batch,
                                      const Output<Node>& filters,
                                      const Output<Node>& bias,

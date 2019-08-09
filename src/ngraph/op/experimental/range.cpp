@@ -24,10 +24,6 @@ using namespace ngraph;
 
 const string op::Range::type_name = "Range";
 
-op::Range::Range()
-{
-}
-
 op::Range::Range(const Output<Node>& start, const Output<Node>& stop, const Output<Node>& step)
     : Op({start, stop, step})
 {
@@ -219,7 +215,7 @@ void op::Range::validate_and_infer_types()
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (result_et.get_type_enum())
+    switch (result_et)
     {
     case element::Type_t::bf16: result_shape = infer_output_shape<bfloat16>(this, result_et); break;
     case element::Type_t::f16: result_shape = infer_output_shape<float16>(this, result_et); break;
