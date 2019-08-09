@@ -69,10 +69,10 @@ file to change or customize the default CMake procedure.
 Ubuntu LTS build steps
 ----------------------
 
-The process documented here will work on Ubuntu\* 16.04 (LTS) or on Ubuntu 
+The process documented here will work on Ubuntu 16.04 (LTS) or on Ubuntu 
 18.04 (LTS).
 
-#. Ensure you have installed the :ref:`prerequisites` for Ubuntu\*.
+#. Ensure you have installed the :ref:`prerequisites` for Ubuntu.
 
 #. Clone the `NervanaSystems` ``ngraph`` repo:
 
@@ -131,7 +131,7 @@ CentOS 7.4 build steps
 
 The process documented here will work on CentOS 7.4.
 
-#. Ensure you have installed the :ref:`prerequisites` for CentOS\*, 
+#. Ensure you have installed the :ref:`prerequisites` for CentOS, 
    and update the system with :command:`yum`.
 
    .. code-block:: console

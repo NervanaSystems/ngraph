@@ -1,4 +1,4 @@
-.. import.rst:
+.. core/constructing-graphs/import.rst:
 
 Import a model
 ##############
@@ -48,13 +48,13 @@ skip ahead to the next section, :ref:`install_ngonnx`.
   
    .. code-block:: console
 
-      $ apt update
-      $ apt install python3 python3-pip python3-dev python3-venv
-      $ apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
-      $ git clone https://github.com/NervanaSystems/ngraph.git
-      $ cd ngraph && mkdir build
-      $ cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist
-      $ make install
+      apt update
+      apt install python3 python3-pip python3-dev python3-venv
+      apt install build-essential cmake curl clang-3.9 git zlib1g zlib1g-dev libtinfo-dev
+      git clone https://github.com/NervanaSystems/ngraph.git
+      cd ngraph && mkdir build
+      cd build && cmake ../ -DCMAKE_INSTALL_PREFIX=~/ngraph_dist
+      make install
 
 #. Build the Python package (binary wheel) for ngraph and set up an env for ONNX;
    be sure to export the ``NGRAPH_CPP_BUILD_PATH`` where the ``ngraph_dist`` was 
@@ -62,21 +62,21 @@ skip ahead to the next section, :ref:`install_ngonnx`.
 
    .. code-block:: console
 
-      $ cd ngraph/python
-      $ git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
-      $ export PYBIND_HEADERS_PATH=$PWD/pybind11
-      $ export NGRAPH_CPP_BUILD_PATH=~/ngraph_dist
-      $ python3 setup.py bdist_wheel
-      $ cd .. python3 -m venv onnx
-      $ cd onnx/
-      $ . bin/activate
+      cd ngraph/python
+      git clone --recursive -b allow-nonconstructible-holders https://github.com/jagerman/pybind11.git
+      export PYBIND_HEADERS_PATH=$PWD/pybind11
+      export NGRAPH_CPP_BUILD_PATH=~/ngraph_dist
+      python3 setup.py bdist_wheel
+      cd .. python3 -m venv onnx
+      cd onnx/
+      . bin/activate
 
 #. Check for the binary wheel file under ``ngraph/python/dist`` and install it 
    with pip.
 
    .. code-block:: console
 
-      (onnx)$ pip install -U python/dist/ngraph-[version]-cp36-cp36m-linux_x86_64.whl
+      (onnx)pip install -U python/dist/ngraph-[version]-cp36-cp36m-linux_x86_64.whl
 
    Where ``[version]`` is the version number of the nGraph Python module 
    you see in that directory.  
@@ -85,7 +85,7 @@ skip ahead to the next section, :ref:`install_ngonnx`.
 
    .. code-block:: console
 
-      (onnx)$ python3
+      (onnx)python3
 
    .. code-block:: python
       
@@ -105,14 +105,14 @@ Add the dependencies for ONNX:
 
 .. code-block:: console
 
-   $ apt install protobuf-compiler libprotobuf-dev
+   apt install protobuf-compiler libprotobuf-dev
 
 
 Install the ``ngraph-onnx`` companion tool using pip:
 
 .. code-block:: console
 
-   (onnx) $ pip install git+https://github.com/NervanaSystems/ngraph-onnx/
+   (onnx) pip install git+https://github.com/NervanaSystems/ngraph-onnx/
  
 
 
@@ -146,8 +146,8 @@ specify the relative path to the location of the ``.onnx`` file.
 
 .. code-block:: console 
 
-   (onnx) $ cd ~/onnx_conversions 
-   (onnx) $ python3 
+   (onnx) cd ~/onnx_conversions 
+   (onnx) python3 
 
 
 Enable ONNX and load an ONNX file from disk

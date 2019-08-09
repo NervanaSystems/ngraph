@@ -1,18 +1,20 @@
 .. _tensorflow_tutorial:
 
-Get Started with nGraph for TensorFlow\*
-########################################
+Get Started with nGraph for TensorFlow
+######################################
 
-Learn how to use nGraph to speed up training and inference on TensorFlow\* workloads. 
+Learn how to use nGraph to speed up training and inference on TensorFlow workloads. 
 
 .. contents::
 
 Overview
 ========
 
-This Get Started tutorial is divided into two parts: a) building and 
-installing nGraph for TensorFlow and b) an example of how to use nGraph
-with TensorFlow.
+This tutorial is divided into two parts: 
+
+#. building and installing nGraph for TensorFlow, and 
+#. an example of how to use nGraph with TensorFlow.
+
 
 Build and install nGraph
 ========================
@@ -23,13 +25,13 @@ Software requirements
 +--------------------------+-----------------------------------------+
 | Using pre-built packages | Building from source                    |
 +==========================+=========================================+
-| Python\* 3               | Python 3                                |
+| Python   3               | Python 3                                |
 +--------------------------+-----------------------------------------+
-| OpenCL\* runtime         | OpenCL runtime                          |
+| OpenCL runtime           | OpenCL runtime                          |
 +--------------------------+-----------------------------------------+
 | TensorFlow   v1.14       |`Bazel <bazel_>`_ 0.25.2                 |
 +--------------------------+-----------------------------------------+
-|                          | GCC 4.8 (Ubuntu\*), Clang/LLVM (macOS\*)|
+|                          | GCC 4.8 (Ubuntu),   Clang/LLVM (macOS)  |
 +--------------------------+-----------------------------------------+
 |                          | ``cmake`` 3.4 or higher                 |
 +--------------------------+-----------------------------------------+
@@ -181,15 +183,9 @@ Verify that ``ngraph-bridge`` installed correctly (optional):
 
 Running this code produces something like:
 
-::
+.. literalinclude:: ../frameworks/getting_started.rst
+   :lines: 42-46
 
-    TensorFlow version:  1.13.1
-    nGraph bridge version: b'0.14.0'
-    nGraph version used for this build: b'0.18.0+c5d52f1'
-    TensorFlow version used for this build: v1.13.1-0-g6612da8951
-    CXX11_ABI flag used for this build: 0
-    nGraph bridge built with Grappler: False
-    nGraph bridge built with Variables and Optimizers Enablement: False
 
 .. note:: The pre-built version of the ``ngraph-tensorflow-bridge`` may differ
    from the version built from source. This is due to the delay in the source
@@ -344,7 +340,7 @@ During the build, there may be missing configuration steps for building
 TensorFlow. If you run into build issues, first ensure that you can build
 TensorFlow. 
 
-For debugging run time issues, see the instructions provided in the
+For debugging runtime issues, see the instructions provided in the
 `diagnostics <diagnostics_>`_ directory.
 
 .. _nGraph_bridge: https://github.com/tensorflow/ngraph-bridge.git

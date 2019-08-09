@@ -3,8 +3,8 @@
 .. _frameworks_paddlepaddle:
 
 
-PaddlePaddle\*
-==============
+PaddlePaddle
+============
 
 nGraph PaddlePaddle integration overview
 ----------------------------------------

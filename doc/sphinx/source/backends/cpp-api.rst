@@ -1,5 +1,7 @@
 .. backends/cpp-api.rst:
 
+:orphan:
+
 Backend APIs 
 ############
 
@@ -20,4 +22,4 @@ more direct methods to actions such as ``validate``, ``call``, ``get_performance
 and so on. This new API permits any executable to be saved or loaded *into* or 
 *out of* storage and makes it easier to distinguish when a Function is compiled,
 thus making the internals of the ``Backend`` and ``Executable`` easier to 
-implement.  
+implement.

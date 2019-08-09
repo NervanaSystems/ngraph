@@ -62,7 +62,7 @@ for nGraph, ONNX and NumPy:
 
 ::
 
-    $ pip install ngraph-core onnx numpy
+    pip install ngraph-core onnx numpy
 
 Now you can start exploring some of the :doc:`onnx` examples.
 
