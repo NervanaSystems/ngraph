@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/op/experimental/shape_of.hpp"
-#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;

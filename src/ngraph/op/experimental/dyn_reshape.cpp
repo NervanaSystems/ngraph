@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <iostream>
 
-#include "ngraph/function.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 
