@@ -294,7 +294,7 @@ void MLIRCompiler::lower_ng_dialect()
 
     // Lower Standard dialect to LLVM dialect.
     mlir::LLVMTypeConverter llvm_converter(&m_context);
-    OwningRewritePatternList patterns;
+    mlir::OwningRewritePatternList patterns;
     mlir::populateLoopToStdConversionPatterns(patterns, &m_context);
     mlir::populateStdToLLVMConversionPatterns(llvm_converter, patterns);
 
@@ -322,7 +322,7 @@ void MLIRCompiler::lower_ng_dialect()
     // don't run MLIR passes that were already run. We also pass a default transformer to run
     // LLVM optimizations at level 3.
     auto llvm_transformer =
-        mlir::makeOptimizingTransformer(opt_level /*optLevel*/, 0 /*sizeLevel*/);
+        mlir::makeOptimizingTransformer(opt_level, /*sizeLevel=*/0, /*targetMachine*/ nullptr);
     auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());

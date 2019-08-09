@@ -195,9 +195,9 @@ namespace
     {
 #define MLIR_OP(OP) OP##Conversion,
 #define MLIR_LAST_OP(OP) OP##Conversion
-        RewriteListBuilder<
+        patterns.insert<
 #include "op_lowerers.inc"
-            >::build(patterns, &getContext(), *this);
+            >(&getContext(), *this);
     }
 
     void DialectLoweringPass::findOutputValues()
@@ -499,8 +499,8 @@ namespace
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
         // Loop induction vars
-        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
-        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        auto ivs = makeIndexHandles(vLHS.rank());
+        auto pivs = makeIndexHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -719,15 +719,15 @@ namespace
                          paramsSteps.size() == paramsLbs.size(),
                      "Incorrect loop nest bounds size for gather params");
 
-        paramsIVs = IndexHandle::makeIndexHandles(vParams.rank() - 1);
-        paramsIVPtrs = IndexHandle::makeIndexHandlePointers(paramsIVs);
+        paramsIVs = makeIndexHandles(vParams.rank() - 1);
+        paramsIVPtrs = makeIndexHandlePointers(paramsIVs);
 
         auto indicesLbs = vIndices.getLbs();
         auto indicesUbs = vIndices.getUbs();
         auto indicesSteps = vIndices.getSteps();
 
-        auto indicesIVs = IndexHandle::makeIndexHandles(vIndices.rank());
-        auto indicesIVPtrs = IndexHandle::makeIndexHandlePointers(indicesIVs);
+        auto indicesIVs = makeIndexHandles(vIndices.rank());
+        auto indicesIVPtrs = makeIndexHandlePointers(indicesIVs);
 
         SmallVector<IndexHandle, 8> paramsIndices, resIndices;
 
@@ -831,8 +831,8 @@ namespace
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
         // Loop induction vars
-        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
-        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        auto ivs = makeIndexHandles(vLHS.rank());
+        auto pivs = makeIndexHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -889,8 +889,8 @@ namespace
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
         // Loop induction vars
-        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
-        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        auto ivs = makeIndexHandles(vLHS.rank());
+        auto pivs = makeIndexHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
         LoopNestBuilder(pivs, lbs, ubs, steps)(
@@ -982,8 +982,8 @@ namespace
         Type resTy = result->getType().cast<MemRefType>().getElementType();
         // Generate loop nest that initializes result to lower bound of the axis to be reduced.
         {
-            auto ivs = IndexHandle::makeIndexHandles(vRes.rank());
-            auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+            auto ivs = makeIndexHandles(vRes.rank());
+            auto pivs = makeIndexHandlePointers(ivs);
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
             LoopNestBuilder(pivs, resLbs, resUbs, steps)(
@@ -992,8 +992,8 @@ namespace
 
         // Generate loop nest that computes the actual index reduction.
         {
-            auto allIVs = IndexHandle::makeIndexHandles(vArg.rank());
-            auto pAllIVs = IndexHandle::makeIndexHandlePointers(allIVs);
+            auto allIVs = makeIndexHandles(vArg.rank());
+            auto pAllIVs = makeIndexHandlePointers(allIVs);
             auto steps = vArg.getSteps();
             SmallVector<IndexHandle, 8> nonRedIVs;
 
