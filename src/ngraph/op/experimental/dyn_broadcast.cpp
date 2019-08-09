@@ -16,7 +16,6 @@
 
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/sum.hpp"
 
 using namespace std;
 using namespace ngraph;
