@@ -15,6 +15,12 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
+#include "ngraph/type/element_type.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
+#include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/runtime/reference/slice.hpp"
+#include "ngraph/runtime/reference/reverse.hpp"
+#include "ngraph/slice_plan.hpp"
 
 using namespace std;
 using namespace ngraph;

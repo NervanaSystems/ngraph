@@ -15,6 +15,25 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
+#include "ngraph/runtime/reference/any.hpp"
+#include "ngraph/runtime/reference/not.hpp"
+#include "ngraph/op/any.hpp"
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/relu.hpp"
+#include "ngraph/op/sign.hpp"
+#include "ngraph/op/sqrt.hpp"
+#include "ngraph/runtime/reference/relu.hpp"
+#include "ngraph/runtime/reference/sign.hpp"
+#include "ngraph/runtime/reference/sqrt.hpp"
+#include "ngraph/runtime/reference/negate.hpp"
+#include "ngraph/op/negative.hpp"
+#include "ngraph/op/floor.hpp"
+#include "ngraph/op/ceiling.hpp"
+#include "ngraph/runtime/reference/ceiling.hpp"
+#include "ngraph/runtime/reference/floor.hpp"
+#include "ngraph/runtime/reference/abs.hpp"
+#include "ngraph/op/abs.hpp"
 
 using namespace std;
 using namespace ngraph;

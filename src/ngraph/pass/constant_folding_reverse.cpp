@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
+#include "ngraph/op/reverse.hpp"
+#include "ngraph/runtime/reference/reverse.hpp"
 
 using namespace std;
 using namespace ngraph;

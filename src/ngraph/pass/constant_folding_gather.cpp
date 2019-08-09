@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/runtime/reference/gather.hpp"
 
 using namespace std;
 using namespace ngraph;

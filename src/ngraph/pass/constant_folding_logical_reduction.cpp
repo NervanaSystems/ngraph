@@ -15,6 +15,10 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
+#include "ngraph/op/all.hpp"
+#include "ngraph/op/any.hpp"
+#include "ngraph/runtime/reference/all.hpp"
+#include "ngraph/runtime/reference/any.hpp"
 
 using namespace std;
 using namespace ngraph;

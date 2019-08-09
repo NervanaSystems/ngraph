@@ -14,7 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <numeric>
+
 #include "constant_folding.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/runtime/reference/reshape.hpp"
+#include "ngraph/type/element_type.hpp"
 
 using namespace std;
 using namespace ngraph;

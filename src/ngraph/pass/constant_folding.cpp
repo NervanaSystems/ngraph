@@ -40,18 +40,18 @@
 #include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/gather.hpp"
-#include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
-#include "ngraph/op/less.hpp"
+#include "ngraph/op/greater.hpp"
 #include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/less.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
-#include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/not.hpp"
 #include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/product.hpp"
@@ -82,18 +82,18 @@
 #include "ngraph/runtime/reference/equal.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
 #include "ngraph/runtime/reference/gather.hpp"
-#include "ngraph/runtime/reference/greater.hpp"
 #include "ngraph/runtime/reference/greater_eq.hpp"
-#include "ngraph/runtime/reference/less.hpp"
+#include "ngraph/runtime/reference/greater.hpp"
 #include "ngraph/runtime/reference/less_eq.hpp"
+#include "ngraph/runtime/reference/less.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
 #include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
-#include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/not_equal.hpp"
+#include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/or.hpp"
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
@@ -115,7 +115,7 @@
 using namespace std;
 using namespace ngraph;
 
-static bool revalidate_and_ensure_static(shared_ptr<Node> n)
+bool ngraph::pass::revalidate_and_ensure_static(shared_ptr<Node> n)
 {
     n->revalidate_and_infer_types();
     for (auto& o : n->outputs())

@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/runtime/reference/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;

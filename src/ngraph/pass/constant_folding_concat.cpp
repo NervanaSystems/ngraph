@@ -15,6 +15,9 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
+#include "ngraph/type/element_type.hpp"
+#include "ngraph/op/concat.hpp"
+#include "ngraph/runtime/reference/concat.hpp"
 
 using namespace std;
 using namespace ngraph;
