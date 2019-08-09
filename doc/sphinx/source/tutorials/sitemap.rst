@@ -1,12 +1,5 @@
 :orphan:
 
-* :ref:`get_started_onnx`
-
-  .. toctree::
-     :maxdepth: 1
-
-     onnx-tutorial.rst
-
 
 * :ref:`get_started_tensorflow`
 
@@ -14,3 +7,11 @@
      :maxdepth: 1
 
      tensorflow-tutorial.rst
+
+
+* :ref:`get_started_onnx`
+
+  .. toctree::
+     :maxdepth: 1
+
+     onnx-tutorial.rst
