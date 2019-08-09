@@ -78,7 +78,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         element::f32, Shape{ref_gates_count * ref_hidden_size, ref_input_size});
     auto R = std::make_shared<pattern::op::Label>(
         element::f32, Shape{ref_gates_count * ref_hidden_size, ref_hidden_size});
-    auto bias = std::make_shared<pattern::op::Label>(element::f32,
+    auto bias_ref = std::make_shared<pattern::op::Label>(element::f32,
                                                      Shape{2 * ref_gates_count * ref_hidden_size});
     auto peep_hole = std::make_shared<pattern::op::Label>(element::f32, Shape{3 * ref_hidden_size});
     auto H_t =
@@ -93,7 +93,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
                                        H_t,
                                        C_t,
                                        ref_hidden_size,
-                                       bias,
+                                       bias_ref,
                                        peep_hole,
                                        std::vector<std::string>{"sigmoid", "tanh", "tanh"},
                                        std::vector<float>{},
@@ -144,7 +144,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
                 bias_graph_node, Coordinate{0}, Coordinate{4 * hidden_size});
             auto Rb_bias = std::make_shared<ngraph::op::Slice>(
                 bias_graph_node, Coordinate{4 * hidden_size}, Coordinate{2 * 4 * hidden_size});
-            auto bias_iofc = std::make_shared<op::Add>(Wb_bias, Rb_bias);
+            auto bias = std::make_shared<op::Add>(Wb_bias, Rb_bias);
 
             // slices will be in ICFO order
             std::vector<std::shared_ptr<Node>> gate_slices;
@@ -152,13 +152,13 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             for (size_t i = 0; i < 4; i++)
             {
                 auto slice = std::make_shared<ngraph::op::Slice>(
-                    bias_iofc, Coordinate{i * hidden_size}, Coordinate{(i + 1) * hidden_size});
+                    bias, Coordinate{i * hidden_size}, Coordinate{(i + 1) * hidden_size});
                 gate_slices.push_back(slice);
             }
 
-            auto bias_ifco = std::make_shared<ngraph::op::Concat>(
+            auto new_bias = std::make_shared<ngraph::op::Concat>(
                 NodeVector{gate_slices[0], gate_slices[2], gate_slices[3], gate_slices[1]}, 0);
-            return bias_ifco;
+            return new_bias;
         };
 
         auto W_iofc = pattern_map[W];
@@ -189,7 +189,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         const size_t batch_size = pattern_map[X]->get_shape()[0];
         const size_t direction = 1;
         const size_t layers = 1;
-        auto dlc = pattern_map[W]->get_shape()[0] / (lstm_n_gates * direction * layers);
         auto dic = pattern_map[R]->get_shape()[0] / (lstm_n_gates * direction * layers);
 
         auto goe_nodes = ngraph::op::get_output_elements(m.get_match_root());
