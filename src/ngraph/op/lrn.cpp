@@ -71,8 +71,8 @@ void op::LRN::validate_and_infer_types()
                           static_cast<size_t>(axes_shape[0]) >= 1 &&
                               static_cast<size_t>(axes_shape[0]) <=
                                   static_cast<size_t>(input_shape.rank()),
-                          "Number of elements of axes must be >= 1 and <= argument rank (axes[0]: ",
-                          axes_shape,
+                          "Number of elements of axes must be >= 1 and <= argument rank (axes_shape[0]: ",
+                          axes_shape[0],
                           ").");
 }
 
