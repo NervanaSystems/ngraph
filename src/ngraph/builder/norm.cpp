@@ -112,9 +112,12 @@ namespace ngraph
             switch (bias_mode)
             {
             case BiasMode::MAX:
+            {
                 return {make_shared<op::Sqrt>(make_shared<op::Maximum>(values, bias_node))};
+            }
             case BiasMode::ADD:
-            default: return {make_shared<op::Sqrt>(values + bias_node)};
+            default: { return {make_shared<op::Sqrt>(values + bias_node)};
+            }
             }
         }
 

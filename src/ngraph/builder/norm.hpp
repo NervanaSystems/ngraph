@@ -28,9 +28,9 @@ namespace ngraph
         /// \brief      Specyfies method of bias application to avoid numerical problems
         enum class BiasMode
         {
-            // Add bias to intermidiate result
+            // Add bias to intermediate result
             ADD,
-            // Calculate max of intermidiate result and bias
+            // Calculate max of intermediate result and bias
             MAX
         };
 
