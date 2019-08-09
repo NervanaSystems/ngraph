@@ -22,11 +22,11 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, Divide, Dot, Elu, Equal, Exp, Floor, \
-    Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, Less, LessEq, Log, LRN, Max, Maximum, \
-    MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, \
-    Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, Slice, Softmax, \
-    Sqrt, Subtract, Sum, Tan, Tanh, TopK
+    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, FakeQuantize, \
+    Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, Less, LessEq, Log, \
+    LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
+    Parameter, Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, \
+    Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
 
 from typing import Callable, Iterable, List, Union
 
@@ -79,6 +79,24 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
 
 
 @nameable_op
+def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
+    """Perform unsqueeze operation on input tensor.
+
+    Insert single-dimensional entries to the shape of a tensor. Takes one required argument axes,
+    a list of dimensions that will be inserted.
+    Dimension indices in axes are as seen in the output tensor.
+
+    For example: Inputs: tensor with shape [3, 4, 5], axes=[0, 4]
+                 Result: tensor with shape [1, 3, 4, 5, 1]
+
+    :param data: The node with data tensor.
+    :param axes: List of non-negative integers, indicate the dimensions to be inserted.
+                  One of: input node or array.
+    :return: The new node performing an unsqueeze operation on input tensor.
+    """
+    return Unsqueeze(data, as_node(axes))
+
+
 def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
     r"""Perform Global Response Normalization with L2 norm (across channels only).
 
@@ -537,6 +555,38 @@ def broadcast_to(node, new_shape, axis=None, name=None):
 
 
 @nameable_op
+def fake_quantize(data, input_low, input_high, output_low, output_high, levels, name=None):
+    # type: (Node, Node, Node, Node, Node, int, str) -> Node
+    r"""Perform an element-wise linear quantization on input data.
+
+    Input floating point values are quantized into a discrete set of floating point values.
+
+    .. code-block:: python
+
+        if x <= input_low:
+            output = output_low
+        if x > input_high:
+            output = output_high
+        else:
+            output = fake_quantize(output)
+
+    Fake quantize uses the following logic:
+
+    .. math:: output =
+            \dfrac{round( \dfrac{data - input\_low}{(input\_high - input\_low)\cdot (levels-1)})}
+            {(levels-1)\cdot (output\_high - output\_low)} + output\_low
+
+    :param data:         The node with data tensor.
+    :param input_low:    The node with the minimum for input values.
+    :param input_high:   The node with the maximum for input values.
+    :param output_low:   The node with the minimum quantized value.
+    :param output_high:  The node with the maximum quantized value.
+    :param levels:       The number of quantization levels. Integer value.
+    :return: New node with quantized value.
+    """
+    return FakeQuantize(data, input_low, input_high, output_low, output_high, levels)
+
+
 def gemm(A,                      # type: Node
          B,                      # type: Node
          C,                      # type: Node
@@ -584,6 +634,27 @@ def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Nod
 
 
 @nameable_op
+def depth_to_space(node, block_size, name=None):  # type: (Node, int, str) -> Node
+    """Rearranges input tensor from depth into blocks of spatial data.
+
+    Values from the height and width dimensions are moved to the depth dimension.
+
+    Input tensor has shape [N,C,H,W], where N is the batch axis, C is the channel or depth,
+    H is the height and W is the width.
+
+    Output node produces a tensor with shape:
+
+    [N, C * :code:`block_size` * :code:`block_size`, H / :code:`block_size`, W / :code:`block_size`]
+
+    :param node: The node with input tensor data.
+    :param block_size: The size of the spatial block of values describing
+                       how the tensor's data is to be rearranged.
+    :param name: Optional output node name.
+    :return: The new node performing an DepthToSpace operation on its input tensor.
+    """
+    return DepthToSpace(node, block_size)
+
+
 def gelu(node, name=None):  # type: (NodeInput, str) -> Node
     r"""Perform Gaussian Error Linear Unit operation element-wise on data from input node.
 

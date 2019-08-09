@@ -41,3 +41,29 @@ TEST(pass_manager, add)
     EXPECT_EQ(node_count, sorted.size());
     EXPECT_TRUE(validate_list(sorted));
 }
+
+namespace
+{
+    class DummyPass : public pass::FunctionPass
+    {
+    public:
+        DummyPass()
+            : FunctionPass()
+        {
+        }
+        bool run_on_function(std::shared_ptr<ngraph::Function> f) override { return false; }
+    };
+}
+
+// Regression test: We've had an issue in the past where enabling per-pass validation and
+// per-pass serialization at the same time causes a crash.
+TEST(pass_manager, serialize_with_revalidate_does_not_crash)
+{
+    pass::Manager pass_manager;
+    pass_manager.set_per_pass_validation(true);
+    pass_manager.set_pass_serialization(true);
+    pass_manager.register_pass<DummyPass>();
+
+    auto graph = make_test_graph();
+    pass_manager.run_passes(graph);
+}

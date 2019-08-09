@@ -330,8 +330,6 @@ set (SRC
     op/fused/group_conv_transpose.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
-    op/fused/leaky_relu.cpp
-    op/fused/leaky_relu.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
     op/fused/mvn.cpp
@@ -519,6 +517,14 @@ endif()
 
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
+endif()
+
+if(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+endif()
+
+if(NGRAPH_CPU_STATIC_LIB_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_CPU_STATIC_LIB_ENABLE)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
