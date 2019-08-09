@@ -76,6 +76,8 @@ namespace ngraph
             void register_builders_tile_cpp();
             void register_builders_topk_cpp();
             void register_builders_update_slice_cpp();
+            void register_builders_quantized_concat_cpp();
+            void register_builders_quantized_max_pool_cpp();
         }
     }
 }
