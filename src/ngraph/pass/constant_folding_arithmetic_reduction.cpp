@@ -15,11 +15,11 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/runtime/reference/product.hpp"

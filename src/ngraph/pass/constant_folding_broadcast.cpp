@@ -16,8 +16,8 @@
 
 #include "constant_folding.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/type/element_type.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/type/element_type.hpp"
 
 using namespace std;
 using namespace ngraph;

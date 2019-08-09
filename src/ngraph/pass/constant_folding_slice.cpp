@@ -15,8 +15,8 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
-#include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/runtime/reference/slice.hpp"
 
 using namespace std;
 using namespace ngraph;

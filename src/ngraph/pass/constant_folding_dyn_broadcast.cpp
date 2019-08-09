@@ -15,9 +15,9 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/op/experimental/dyn_broadcast.hpp"
 
 using namespace std;
 using namespace ngraph;

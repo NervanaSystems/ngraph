@@ -15,8 +15,8 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
-#include "ngraph/runtime/reference/select.hpp"
 #include "ngraph/op/select.hpp"
+#include "ngraph/runtime/reference/select.hpp"
 
 using namespace std;
 using namespace ngraph;
