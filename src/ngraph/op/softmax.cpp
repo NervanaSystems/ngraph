@@ -28,6 +28,7 @@
 using namespace std;
 using namespace ngraph;
 
+// *** SOFTMAX OP SET 0 ***
 const string op::Softmax::type_name{"Softmax"};
 
 op::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
@@ -88,5 +89,63 @@ void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
     auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
 
     auto x = input_value(0);
+    adjoints.add_delta(x, adjoint);
+}
+
+// *** SOFTMAX OP SET 1 ***
+const string op::set1::Softmax::type_name{"Softmax"};
+
+op::set1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
+    : UnaryElementwiseArithmetic(arg)
+    , m_axis(axis)
+{
+    set_opset_version(1);
+    constructor_validate_and_infer_types();
+
+    NODE_VALIDATION_CHECK(this,
+                          axis >= 0 && axis < get_shape().size(),
+                          "Reduction axis (",
+                          axis,
+                          ") is out of bounds (argument shape: ",
+                          get_shape(),
+                          ").");
+}
+
+shared_ptr<Node> op::set1::Softmax::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<op::set1::Softmax>(new_args.at(0), m_axis);
+}
+
+void op::set1::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    auto delta = deltas.at(0);
+
+    auto z = delta * shared_from_this();
+
+    std::vector<size_t> axes(get_shape().size() - m_axis);
+    std::iota(std::begin(axes), std::end(axes), m_axis);
+    AxisSet axes_set{axes};
+
+    auto zsum = make_shared<op::Sum>(z, axes_set);
+
+    Shape shape;
+    for (size_t i = 0; i < get_shape().size(); ++i)
+    {
+        if (axes_set.find(i) == axes_set.end())
+        {
+            shape.push_back(get_shape()[i]);
+        }
+        else
+        {
+            shape.push_back(1);
+        }
+    }
+    auto order = ngraph::get_default_order(zsum->get_shape());
+    auto zreshape = make_shared<op::Reshape>(zsum, order, shape);
+
+    auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
+
+    auto x = input(0).get_source_output();
     adjoints.add_delta(x, adjoint);
 }
