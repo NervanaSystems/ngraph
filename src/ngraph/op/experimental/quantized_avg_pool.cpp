@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "quantized_avg_pool.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

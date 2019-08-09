@@ -16,8 +16,6 @@
 
 #include "reorg_yolo.hpp"
 
-#include "ngraph/op/constant.hpp"
-
 using namespace std;
 using namespace ngraph;
 
