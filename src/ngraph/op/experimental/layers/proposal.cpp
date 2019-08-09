@@ -35,23 +35,63 @@ op::Proposal::Proposal(const std::shared_ptr<Node>& class_probs,
 
 void op::Proposal::validate_and_infer_types()
 {
-    auto image_shape_et = get_input_element_type(2);
+    const auto& class_prob_et = get_input_element_type(0);
+    const auto& class_logits_et = get_input_element_type(1);
+    const auto& image_shape_et = get_input_element_type(2);
+
     NODE_VALIDATION_CHECK(this,
-                          image_shape_et.compatible(element::Type_t::f32),
-                          "image shape input must have element type f32, but has ",
-                          image_shape_et);
+        class_prob_et.compatible(element::Type_t::f32),
+        "Class input input must have element type f32, but has ",
+        class_prob_et);
+
+    NODE_VALIDATION_CHECK(this,
+        class_logits_et.compatible(element::Type_t::f32),
+        "Class logits input must have element type f32, but has ",
+        class_logits_et);
+
+    NODE_VALIDATION_CHECK(this,
+        image_shape_et.compatible(element::Type_t::f32),
+        "Image shape input must have element type f32, but has ",
+        image_shape_et);
 
     set_input_is_relevant_to_shape(2);
 
-    if (auto image_const_shape = dynamic_pointer_cast<op::Constant>(get_argument(2)))
+    const auto& class_probs_pshape = get_input_partial_shape(0);
+    const auto& class_logits_pshape = get_input_partial_shape(1);
+    const auto& image_shape_pshape = get_input_partial_shape(2);
+    if (class_probs_pshape.is_static() && class_logits_pshape.is_static() && image_shape_pshape.is_static())
     {
-        NODE_VALIDATION_CHECK(this,
-                              shape_size(image_const_shape->get_shape()) >= 1,
-                              "Layer shape must have rank greater than 1",
-                              image_const_shape->get_shape());
+        const Shape class_probs_shape{ class_probs_pshape.to_shape() };
+        const Shape class_logits_shape{ class_logits_pshape.to_shape() };
+        const Shape image_shape_shape{ image_shape_pshape.to_shape() };
 
-        auto image_date = image_const_shape->get_vector<float>();
-        set_output_type(0, element::f32, Shape{static_cast<size_t>(image_date[0]) * m_attrs.post_nms_topn, 5});
+        NODE_VALIDATION_CHECK(this,
+            class_probs_shape.size() == 4,
+            "Proposal layer shape class_probs input must have rank 4 (class_probs_shape: ",
+            class_probs_shape,
+            ").");
+
+        NODE_VALIDATION_CHECK(this,
+            class_logits_shape.size() == 4,
+            "Proposal layer shape class_logits_shape input must have rank 4 (class_logits_shape: ",
+            class_logits_shape,
+            ").");
+
+        NODE_VALIDATION_CHECK(this,
+            image_shape_shape.size() == 1,
+            "Proposal layer image_shape input must have rank 1 (image_shape_shape: ",
+            image_shape_shape,
+            ").");
+
+        NODE_VALIDATION_CHECK(this,
+            image_shape_shape[0] >= 3 &&
+            image_shape_shape[0] <=4,
+            "Image_shape 1D tensor must have =>3 and <= 4 elements (image_shape_shape[0]",
+            image_shape_shape[0],
+            ").");
+
+        auto batch_size = class_probs_shape[0];
+        set_output_type(0, element::f32, Shape{batch_size * m_attrs.post_nms_topn, 5});
     }
     else
     {
