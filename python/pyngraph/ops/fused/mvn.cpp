@@ -26,7 +26,6 @@ void regclass_pyngraph_op_MVN(py::module m)
 {
     py::class_<ngraph::op::MVN, std::shared_ptr<ngraph::op::MVN>, ngraph::op::Op> mvn(m, "MVN");
     mvn.doc() = "ngraph.impl.op.MVN wraps ngraph::op::MVN";
-    //mvn.def(py::init<const std::shared_ptr<ngraph::Node>&, bool&, bool&, double&>());
     mvn.def(
         py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&, bool&, double&>());
 }
