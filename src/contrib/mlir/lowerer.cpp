@@ -94,6 +94,12 @@ namespace
                                   PatternRewriter& rewriter,
                                   DialectLoweringPass& pass);
 
+    template <typename OP>
+    void lower_unary_elementwise(Operation* op,
+                                 ArrayRef<Value*> operands,
+                                 PatternRewriter& rewriter,
+                                 DialectLoweringPass& pass);
+
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
     {
@@ -526,6 +532,13 @@ namespace
         return matchSuccess();
     }
 
+    // Negative
+    REWRITER(NGNegOp)
+    {
+        lower_unary_elementwise<mlir::NGNegOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
     REWRITER(NGDotOp)
     {
         auto dot = cast<NGDotOp>(op);
@@ -793,6 +806,67 @@ namespace
 
 #undef REWRITER
     /// End of pattern matchers
+    template <typename OP>
+    void lower_unary_elementwise(Operation* op,
+                                 ArrayRef<Value*> operands,
+                                 PatternRewriter& rewriter,
+                                 DialectLoweringPass& pass)
+    {
+        auto loc = cast<OP>(op).getLoc();
+
+        auto result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        // Note that builder's current function is still the original function body.
+        // use getBlock to get the new block instead.
+
+        // get new operands
+        Value* lhs = operands[0];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
+        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        // Steps
+        auto steps = vLHS.getSteps();
+
+        NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
+        Type elemTy = lhs->getType().cast<MemRefType>().getElementType();
+
+        LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+            ValueHandle val = iLHS(ivs);
+            if (isa<NGNegOp>(op))
+            {
+                if (auto floatTy = elemTy.dyn_cast<FloatType>())
+                {
+                    ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+                    iRes(ivs) = zero - val;
+                }
+                else if (auto intTy = elemTy.dyn_cast<IntegerType>())
+                {
+                    ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
+                    iRes(ivs) = zero - val;
+                }
+                else
+                {
+                    NGRAPH_CHECK(false, "Unsupported type for Negative");
+                }
+            }
+            else
+            {
+                NGRAPH_CHECK(false, "Unsupported op");
+            }
+        });
+
+        rewriter.replaceOp(op, {result});
+    }
+
     template <typename OP>
     void lower_binary_elementwise(Operation* op,
                                   ArrayRef<Value*> operands,
