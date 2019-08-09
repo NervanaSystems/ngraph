@@ -38,10 +38,14 @@ namespace ngraph
         class Sqrt : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a square operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Sqrt(const std::shared_ptr<Node>& arg);
+            Sqrt(const Output<Node>& arg);
+            Sqrt() = default;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

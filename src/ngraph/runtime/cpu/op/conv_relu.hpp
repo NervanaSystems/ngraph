@@ -28,10 +28,12 @@ namespace ngraph
         class ConvolutionRelu : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             CPU_BACKEND_API ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv);
 
-            CPU_BACKEND_API ConvolutionRelu(const std::shared_ptr<Node>& data_batch,
-                                            const std::shared_ptr<Node>& filters,
+            CPU_BACKEND_API ConvolutionRelu(const Output<Node>& data_batch,
+                                            const Output<Node>& filters,
                                             const Strides& window_movement_strides,
                                             const Strides& window_dilation_strides,
                                             const CoordinateDiff& padding_below,
@@ -43,8 +45,8 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            std::shared_ptr<Node> get_filters() { return get_argument(1); }
-            std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
+            Output<Node> get_filters() { return input(1).get_source_output(); }
+            Output<Node> get_data_batch() { return input(0).get_source_output(); }
             bool with_relu() const { return true; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

@@ -31,15 +31,19 @@ ngraph.ops
       convolution_backprop_data
       cos
       cosh
+      depth_to_space
       divide
       dot
       elu
       equal
       exp
       floor
+      gelu
+      gemm
       get_output_element
       greater
       greater_eq
+      grn
       less
       less_eq
       log

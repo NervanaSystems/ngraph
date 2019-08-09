@@ -585,6 +585,9 @@ namespace ngraph
 
             REGISTER_OP_BUILDER(Dequantize);
             REGISTER_OP_BUILDER(Quantize);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_quantization_cpp() {}
+#endif
         }
     }
 }

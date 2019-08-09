@@ -101,6 +101,7 @@
 #include "ngraph/op/scatter_add.hpp"
 #include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -112,6 +113,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_kernel_emitters.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -130,7 +132,6 @@
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -3820,6 +3821,15 @@ namespace ngraph
                        << "                      " << args[1].get_name() << ",\n"
                        << "                      " << out[0].get_name() << ",\n"
                        << "                      " << out[0].get_size() << ");\n";
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Xor)
+            {
+                writer << "reference::logical_xor(" << args[0].get_name() << ",\n"
+                       << "                       " << args[1].get_name() << ",\n"
+                       << "                       " << out[0].get_name() << ",\n"
+                       << "                       " << out[0].get_size() << ");\n";
             }
 
 #define TI(x) std::type_index(typeid(x))
