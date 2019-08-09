@@ -24,6 +24,7 @@ namespace ngraph
     namespace pass
     {
         class ConstantFolding;
+        bool revalidate_and_ensure_static(std::shared_ptr<ngraph::Node> n);
     }
 }
 
