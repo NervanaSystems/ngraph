@@ -113,9 +113,5 @@ depending on the parameters specified.
   in dot format.
 
 
-
-.. include:: ../backends/cpp-api.rst
-
-
 .. _axpy.py example: https://github.com/tensorflow/ngraph-bridge/blob/master/examples/axpy.py
 .. _OpenCL SDK: https://software.intel.com/en-us/opencl-sdk
