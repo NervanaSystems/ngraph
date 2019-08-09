@@ -14,11 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <numeric>
-
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/util.hpp"

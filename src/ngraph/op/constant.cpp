@@ -59,7 +59,7 @@ string op::Constant::convert_value_to_string(size_t index) const
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (get_element_type().get_type_enum())
+    switch (get_element_type())
     {
     case element::Type_t::boolean: rc = to_string(get_vector<char>()[index]); break;
     case element::Type_t::bf16:
@@ -96,7 +96,7 @@ vector<string> op::Constant::get_value_strings() const
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (get_element_type().get_type_enum())
+    switch (get_element_type())
     {
     case element::Type_t::boolean:
         for (int value : get_vector<char>())
@@ -292,7 +292,7 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (get_element_type().get_type_enum())
+    switch (get_element_type())
     {
     case element::Type_t::boolean:
     case element::Type_t::i8:

@@ -39,14 +39,14 @@ void ngraph::test::NgraphTestCase::run(size_t tolerance_bits)
         auto result_shape = result_tensor->get_shape();
         EXPECT_EQ(expected_shape, result_shape);
 
-        if (m_value_comparators.count(element_type.get_type_enum()) == 0)
+        if (m_value_comparators.count(element_type) == 0)
         {
             NGRAPH_FAIL() << "Please add support for " << element_type
                           << " to ngraph::test::NgraphTestCase::run()";
         }
         else
         {
-            auto values_match = m_value_comparators.at(element_type.get_type_enum());
+            auto values_match = m_value_comparators.at(element_type);
 
             EXPECT_TRUE(values_match(expected_result_constant, result_tensor));
         }

@@ -21,7 +21,7 @@ using namespace ngraph;
 
 const string op::Sign::type_name{"Sign"};
 
-op::Sign::Sign(const shared_ptr<Node>& arg)
+op::Sign::Sign(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();

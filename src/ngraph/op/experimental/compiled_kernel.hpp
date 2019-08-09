@@ -35,9 +35,13 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            CompiledKernel() = default;
             CompiledKernel(const NodeVector& node_list,
                            const NodeVector& outputs,
                            const NodeVector& args);
+            CompiledKernel(const OutputVector& node_list,
+                           const OutputVector& outputs,
+                           const OutputVector& args);
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

@@ -65,6 +65,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
@@ -107,11 +108,25 @@
 #include "ngraph/runtime/reference/sqrt.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
+#include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+static bool revalidate_and_ensure_static(shared_ptr<Node> n)
+{
+    n->revalidate_and_infer_types();
+    for (auto& o : n->outputs())
+    {
+        if (o.get_partial_shape().is_dynamic() || o.get_element_type().is_dynamic())
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
 template <class T>
 shared_ptr<op::Constant> fold_constant_reshape(shared_ptr<op::Constant> constant,
@@ -157,6 +172,8 @@ void pass::ConstantFolding::construct_constant_reshape()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto reshape_match = static_pointer_cast<op::Reshape>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(reshape_match));
+
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
         {
@@ -168,7 +185,7 @@ void pass::ConstantFolding::construct_constant_reshape()
 
         std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false,
@@ -225,7 +242,7 @@ void pass::ConstantFolding::construct_constant_reshape()
     auto reshape_matcher =
         make_shared<pattern::Matcher>(reshape, "ConstantFolding.ConstantReshape");
     this->add_matcher(
-        reshape_matcher, constant_reshape_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        reshape_matcher, constant_reshape_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -287,6 +304,8 @@ void pass::ConstantFolding::construct_constant_pad()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto pad_match = static_pointer_cast<op::Pad>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(pad_match));
+
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
         {
@@ -297,7 +316,7 @@ void pass::ConstantFolding::construct_constant_pad()
 
         std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_pad_callback");
@@ -351,7 +370,7 @@ void pass::ConstantFolding::construct_constant_pad()
     };
 
     auto pad_matcher = make_shared<pattern::Matcher>(pad, "ConstantFolding.ConstantPad");
-    this->add_matcher(pad_matcher, constant_pad_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+    this->add_matcher(pad_matcher, constant_pad_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -395,9 +414,11 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
             static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
         auto dyn_reshape_match = static_pointer_cast<op::DynReshape>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(dyn_reshape_match));
+
         std::shared_ptr<Node> replacement;
         auto type = dyn_reshape_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false,
@@ -464,7 +485,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
     auto dyn_reshape_matcher =
         make_shared<pattern::Matcher>(dyn_reshape, "ConstantFolding.ConstantDynReshape");
     this->add_matcher(
-        dyn_reshape_matcher, constant_dyn_reshape_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        dyn_reshape_matcher, constant_dyn_reshape_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -507,9 +528,11 @@ void pass::ConstantFolding::construct_constant_transpose()
             static_pointer_cast<op::Constant>(pattern_map[constant_perm_label]);
         auto transpose_match = static_pointer_cast<op::Transpose>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(transpose_match));
+
         std::shared_ptr<Node> replacement;
         auto type = transpose_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false,
@@ -580,7 +603,7 @@ void pass::ConstantFolding::construct_constant_transpose()
     auto transpose_matcher =
         make_shared<pattern::Matcher>(transpose, "ConstantFolding.ConstantTranspose");
     this->add_matcher(
-        transpose_matcher, constant_transpose_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        transpose_matcher, constant_transpose_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -628,6 +651,8 @@ void pass::ConstantFolding::construct_constant_broadcast()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto broadcast_match = static_pointer_cast<op::Broadcast>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(broadcast_match));
+
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
         {
@@ -639,7 +664,7 @@ void pass::ConstantFolding::construct_constant_broadcast()
 
         std::shared_ptr<Node> replacement;
         auto type = broadcast_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false,
@@ -697,7 +722,7 @@ void pass::ConstantFolding::construct_constant_broadcast()
     auto broadcast_matcher =
         make_shared<pattern::Matcher>(broadcast, "ConstantFolding.ConstantBroadcast");
     this->add_matcher(
-        broadcast_matcher, constant_broadcast_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        broadcast_matcher, constant_broadcast_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -745,9 +770,11 @@ void pass::ConstantFolding::construct_constant_dyn_broadcast()
             static_pointer_cast<op::Constant>(pattern_map[constant_axes_label]);
         auto dyn_broadcast_match = static_pointer_cast<op::DynBroadcast>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(dyn_broadcast_match));
+
         std::shared_ptr<Node> replacement;
         auto type = dyn_broadcast_match->get_output_element_type(0);
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false,
@@ -818,7 +845,7 @@ void pass::ConstantFolding::construct_constant_dyn_broadcast()
     auto dyn_broadcast_matcher =
         make_shared<pattern::Matcher>(dyn_broadcast, "ConstantFolding.ConstantDynBroadcast");
     this->add_matcher(
-        dyn_broadcast_matcher, constant_dyn_broadcast_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        dyn_broadcast_matcher, constant_dyn_broadcast_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class Tin, class Tout>
@@ -829,7 +856,9 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
 {
     auto out_shape = binary->get_shape();
 
-    if (func != nullptr)
+    // NOTE: We will skip the executor if the shapes do not match, because that means
+    // auto-broadcast is in use, and the CPU functors don't yet support that.
+    if (func != nullptr && a->get_shape() == b->get_shape())
     {
         vector<Tout> out_vec(shape_size(out_shape));
         vector<void*> inputs;
@@ -843,7 +872,7 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
     }
     else
     {
-        if (std::dynamic_pointer_cast<op::Add>(binary))
+        if (auto add_node = std::dynamic_pointer_cast<op::Add>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -851,10 +880,12 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
             runtime::reference::add<Tin>(a->get_data_ptr<Tin>(),
                                          b->get_data_ptr<Tin>(),
                                          out_vec.data(),
-                                         shape_size(out_shape));
+                                         a->get_shape(),
+                                         b->get_shape(),
+                                         add_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::And>(binary))
+        else if (auto and_node = std::dynamic_pointer_cast<op::And>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -862,10 +893,12 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
             runtime::reference::logical_and<Tin>(a->get_data_ptr<Tin>(),
                                                  b->get_data_ptr<Tin>(),
                                                  out_vec.data(),
-                                                 shape_size(out_shape));
+                                                 a->get_shape(),
+                                                 b->get_shape(),
+                                                 and_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Divide>(binary))
+        else if (auto divide_node = std::dynamic_pointer_cast<op::Divide>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -875,61 +908,73 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
             runtime::reference::divide<Tin>(a->get_data_ptr<Tin>(),
                                             b->get_data_ptr<Tin>(),
                                             out_vec.data(),
-                                            shape_size(out_shape),
+                                            a->get_shape(),
+                                            b->get_shape(),
+                                            divide_node->get_autob(),
                                             pythondiv);
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Equal>(binary))
+        else if (auto equal_node = std::dynamic_pointer_cast<op::Equal>(binary))
         {
             NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
             vector<char> out_vec(shape_size(out_shape));
             runtime::reference::equal<Tin>(a->get_data_ptr<Tin>(),
                                            b->get_data_ptr<Tin>(),
                                            out_vec.data(),
-                                           shape_size(out_shape));
+                                           a->get_shape(),
+                                           b->get_shape(),
+                                           equal_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Greater>(binary))
+        else if (auto greater_node = std::dynamic_pointer_cast<op::Greater>(binary))
         {
             NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
             vector<char> out_vec(shape_size(out_shape));
             runtime::reference::greater<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
                                              out_vec.data(),
-                                             shape_size(out_shape));
+                                             a->get_shape(),
+                                             b->get_shape(),
+                                             greater_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::GreaterEq>(binary))
+        else if (auto greater_eq_node = std::dynamic_pointer_cast<op::GreaterEq>(binary))
         {
             NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
             vector<char> out_vec(shape_size(out_shape));
             runtime::reference::greater_eq<Tin>(a->get_data_ptr<Tin>(),
                                                 b->get_data_ptr<Tin>(),
                                                 out_vec.data(),
-                                                shape_size(out_shape));
+                                                a->get_shape(),
+                                                b->get_shape(),
+                                                greater_eq_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Less>(binary))
+        else if (auto less_node = std::dynamic_pointer_cast<op::Less>(binary))
         {
             NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
             vector<char> out_vec(shape_size(out_shape));
             runtime::reference::less<Tin>(a->get_data_ptr<Tin>(),
                                           b->get_data_ptr<Tin>(),
                                           out_vec.data(),
-                                          shape_size(out_shape));
+                                          a->get_shape(),
+                                          b->get_shape(),
+                                          less_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::LessEq>(binary))
+        else if (auto less_eq_node = std::dynamic_pointer_cast<op::LessEq>(binary))
         {
             NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
             vector<char> out_vec(shape_size(out_shape));
             runtime::reference::less_eq<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
                                              out_vec.data(),
-                                             shape_size(out_shape));
+                                             a->get_shape(),
+                                             b->get_shape(),
+                                             less_eq_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Maximum>(binary))
+        else if (auto maximum_node = std::dynamic_pointer_cast<op::Maximum>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -937,10 +982,12 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
             runtime::reference::maximum<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
                                              out_vec.data(),
-                                             shape_size(out_shape));
+                                             a->get_shape(),
+                                             b->get_shape(),
+                                             maximum_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Minimum>(binary))
+        else if (auto minimum_node = std::dynamic_pointer_cast<op::Minimum>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -948,10 +995,12 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
             runtime::reference::minimum<Tin>(a->get_data_ptr<Tin>(),
                                              b->get_data_ptr<Tin>(),
                                              out_vec.data(),
-                                             shape_size(out_shape));
+                                             a->get_shape(),
+                                             b->get_shape(),
+                                             minimum_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Multiply>(binary))
+        else if (auto multiply_node = std::dynamic_pointer_cast<op::Multiply>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -959,20 +1008,24 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
             runtime::reference::multiply<Tin>(a->get_data_ptr<Tin>(),
                                               b->get_data_ptr<Tin>(),
                                               out_vec.data(),
-                                              shape_size(out_shape));
+                                              a->get_shape(),
+                                              b->get_shape(),
+                                              multiply_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::NotEqual>(binary))
+        else if (auto not_equal_node = std::dynamic_pointer_cast<op::NotEqual>(binary))
         {
             NGRAPH_CHECK(element::from<Tout>() == element::boolean, "Output type is not boolean");
             vector<char> out_vec(shape_size(out_shape));
             runtime::reference::not_equal<Tin>(a->get_data_ptr<Tin>(),
                                                b->get_data_ptr<Tin>(),
                                                out_vec.data(),
-                                               shape_size(out_shape));
+                                               a->get_shape(),
+                                               b->get_shape(),
+                                               not_equal_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Or>(binary))
+        else if (auto or_node = std::dynamic_pointer_cast<op::Or>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -980,10 +1033,12 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
             runtime::reference::logical_or<Tin>(a->get_data_ptr<Tin>(),
                                                 b->get_data_ptr<Tin>(),
                                                 out_vec.data(),
-                                                shape_size(out_shape));
+                                                a->get_shape(),
+                                                b->get_shape(),
+                                                or_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
-        else if (std::dynamic_pointer_cast<op::Subtract>(binary))
+        else if (auto subtract_node = std::dynamic_pointer_cast<op::Subtract>(binary))
         {
             NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
                          "Input/output types do not match");
@@ -991,7 +1046,22 @@ shared_ptr<op::Constant> fold_constant_binary(shared_ptr<op::Constant> a,
             runtime::reference::subtract<Tin>(a->get_data_ptr<Tin>(),
                                               b->get_data_ptr<Tin>(),
                                               out_vec.data(),
-                                              shape_size(out_shape));
+                                              a->get_shape(),
+                                              b->get_shape(),
+                                              subtract_node->get_autob());
+            return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
+        }
+        else if (auto xor_node = std::dynamic_pointer_cast<op::Xor>(binary))
+        {
+            NGRAPH_CHECK(element::from<Tin>() == element::from<Tout>(),
+                         "Input/output types do not match");
+            vector<Tin> out_vec(shape_size(out_shape));
+            runtime::reference::logical_xor<Tin>(a->get_data_ptr<Tin>(),
+                                                 b->get_data_ptr<Tin>(),
+                                                 out_vec.data(),
+                                                 a->get_shape(),
+                                                 b->get_shape(),
+                                                 xor_node->get_autob());
             return make_shared<op::Constant>(binary->get_element_type(), out_shape, out_vec);
         }
         else
@@ -1009,7 +1079,7 @@ shared_ptr<op::Constant> fold_constant_binary_helper(const element::Type& et_out
                                                      shared_ptr<Node> binary,
                                                      NodeExecutorTy func)
 {
-    switch (et_out.get_type_enum())
+    switch (et_out)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_binary_callback");
@@ -1034,14 +1104,15 @@ shared_ptr<op::Constant> fold_constant_binary_helper(const element::Type& et_out
 }
 bool is_supported_binary_op(std::shared_ptr<Node> n)
 {
-    return (
-        std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::And>(n) ||
-        std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Equal>(n) ||
-        std::dynamic_pointer_cast<op::Greater>(n) || std::dynamic_pointer_cast<op::GreaterEq>(n) ||
-        std::dynamic_pointer_cast<op::Less>(n) || std::dynamic_pointer_cast<op::LessEq>(n) ||
-        std::dynamic_pointer_cast<op::Maximum>(n) || std::dynamic_pointer_cast<op::Minimum>(n) ||
-        std::dynamic_pointer_cast<op::Multiply>(n) || std::dynamic_pointer_cast<op::NotEqual>(n) ||
-        std::dynamic_pointer_cast<op::Or>(n) || std::dynamic_pointer_cast<op::Subtract>(n));
+    return (std::dynamic_pointer_cast<op::Add>(n) || std::dynamic_pointer_cast<op::And>(n) ||
+            std::dynamic_pointer_cast<op::Divide>(n) || std::dynamic_pointer_cast<op::Equal>(n) ||
+            std::dynamic_pointer_cast<op::Greater>(n) ||
+            std::dynamic_pointer_cast<op::GreaterEq>(n) || std::dynamic_pointer_cast<op::Less>(n) ||
+            std::dynamic_pointer_cast<op::LessEq>(n) || std::dynamic_pointer_cast<op::Maximum>(n) ||
+            std::dynamic_pointer_cast<op::Minimum>(n) ||
+            std::dynamic_pointer_cast<op::Multiply>(n) ||
+            std::dynamic_pointer_cast<op::NotEqual>(n) || std::dynamic_pointer_cast<op::Or>(n) ||
+            std::dynamic_pointer_cast<op::Subtract>(n) || std::dynamic_pointer_cast<op::Xor>(n));
 }
 
 void pass::ConstantFolding::construct_constant_binary()
@@ -1072,6 +1143,8 @@ void pass::ConstantFolding::construct_constant_binary()
             return false;
         }
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(binary_match));
+
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
         {
@@ -1086,7 +1159,7 @@ void pass::ConstantFolding::construct_constant_binary()
         std::shared_ptr<Node> replacement;
         auto in_type = a_match->get_output_element_type(0);
         auto out_type = binary_match->get_output_element_type(0);
-        switch (in_type.get_type_enum())
+        switch (in_type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_binary_callback");
@@ -1154,7 +1227,7 @@ void pass::ConstantFolding::construct_constant_binary()
 
     auto reshape_matcher = make_shared<pattern::Matcher>(be, "ConstantFolding.ConstantBinary");
     this->add_matcher(
-        reshape_matcher, constant_binary_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        reshape_matcher, constant_binary_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 bool is_supported_unary_op(std::shared_ptr<Node> n)
@@ -1267,6 +1340,8 @@ void pass::ConstantFolding::construct_constant_unary()
             return false;
         }
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(unary_match));
+
         NodeExecutorTy func = nullptr;
         if (!m_cfmap.empty())
         {
@@ -1280,7 +1355,7 @@ void pass::ConstantFolding::construct_constant_unary()
 
         std::shared_ptr<Node> replacement;
         auto type = constant_match->get_element_type();
-        switch (type.get_type_enum())
+        switch (type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_unary_callback");
@@ -1334,7 +1409,7 @@ void pass::ConstantFolding::construct_constant_unary()
     };
 
     auto reshape_matcher = make_shared<pattern::Matcher>(ue, "ConstantFolding.ConstantUnary");
-    this->add_matcher(reshape_matcher, constant_unary_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+    this->add_matcher(reshape_matcher, constant_unary_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class QUANT, class REAL>
@@ -1376,11 +1451,13 @@ void pass::ConstantFolding::construct_constant_dequantize()
         auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto dequant_match = pattern_map[dequant];
         auto dequantize_op = dynamic_pointer_cast<op::Dequantize>(dequant_match);
+
         auto scale = dynamic_pointer_cast<op::Constant>(
             dequant_match->input(1).get_source_output().get_node_shared_ptr());
         auto offset = dynamic_pointer_cast<op::Constant>(
             dequant_match->input(2).get_source_output().get_node_shared_ptr());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(dequantize_op));
         auto type = constant_match->get_element_type();
 
         if (dequant_match->get_element_type() != element::f32)
@@ -1409,7 +1486,7 @@ void pass::ConstantFolding::construct_constant_dequantize()
     auto dequantize_matcher =
         make_shared<pattern::Matcher>(dequant, "ConstantFolding.ConstantDequantize");
     this->add_matcher(
-        dequantize_matcher, constant_dequantize_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        dequantize_matcher, constant_dequantize_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class REAL, class QUANT>
@@ -1453,6 +1530,9 @@ void pass::ConstantFolding::construct_constant_quantize()
         auto constant_match = dynamic_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto quant_match = pattern_map[quant];
         auto quantize_op = dynamic_pointer_cast<op::Quantize>(quant_match);
+
+        NGRAPH_CHECK(revalidate_and_ensure_static(quantize_op));
+
         auto args = quant_match->get_arguments();
         auto scale = static_pointer_cast<op::Constant>(
             quant_match->input(1).get_source_output().get_node_shared_ptr());
@@ -1487,7 +1567,7 @@ void pass::ConstantFolding::construct_constant_quantize()
     auto quantize_matcher =
         make_shared<pattern::Matcher>(quant, "ConstantFolding.ConstantQuantize");
     this->add_matcher(
-        quantize_matcher, constant_quantize_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+        quantize_matcher, constant_quantize_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 // Helper for mapping element::Types to runtime::reference::convert, which is templated in C++
@@ -1518,7 +1598,7 @@ shared_ptr<op::Constant> fold_constant_convert_helper0(shared_ptr<op::Constant> 
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (output_element_type.get_type_enum())
+    switch (output_element_type)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_convert");
@@ -1575,7 +1655,7 @@ static shared_ptr<op::Constant> fold_constant_convert(shared_ptr<op::Constant> c
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (input_element_type.get_type_enum())
+    switch (input_element_type)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_convert");
@@ -1632,6 +1712,8 @@ void pass::ConstantFolding::construct_constant_convert()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto convert_match = static_pointer_cast<op::Convert>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(convert_match));
+
         replace_node(
             m.get_match_root(),
             fold_constant_convert(constant_match, convert_match->get_output_element_type(0)));
@@ -1640,7 +1722,8 @@ void pass::ConstantFolding::construct_constant_convert()
 
     auto convert_matcher =
         make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantConvert");
-    this->add_matcher(convert_matcher, constant_convert_callback, all_pass_property_off);
+    this->add_matcher(
+        convert_matcher, constant_convert_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 // ShapeOf is a bit of an odd duck: it doesn't matter if the input's value is
@@ -1660,6 +1743,8 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
         if (arg_match->get_output_partial_shape(0).is_static())
         {
+            NGRAPH_CHECK(revalidate_and_ensure_static(m.get_match_root()));
+
             auto arg_shape = arg_match->get_output_shape(0);
             auto replacement =
                 make_shared<op::Constant>(element::i64, Shape{arg_shape.size()}, arg_shape.data());
@@ -1676,7 +1761,8 @@ void pass::ConstantFolding::construct_constant_shape_of()
 
     auto shape_of_matcher =
         make_shared<pattern::Matcher>(shape_of_op, "ConstantFolding.ConstantShapeOf");
-    this->add_matcher(shape_of_matcher, constant_shape_of_callback, all_pass_property_off);
+    this->add_matcher(
+        shape_of_matcher, constant_shape_of_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <typename T>
@@ -1702,7 +1788,7 @@ static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> c
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (input_element_type.get_type_enum())
+    switch (input_element_type)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_convert");
@@ -1756,6 +1842,8 @@ void pass::ConstantFolding::construct_constant_reverse()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto reverse_match = static_pointer_cast<op::Reverse>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(reverse_match));
+
         replace_node(m.get_match_root(),
                      fold_constant_reverse(constant_match, reverse_match->get_reversed_axes()));
         return true;
@@ -1763,7 +1851,8 @@ void pass::ConstantFolding::construct_constant_reverse()
 
     auto convert_matcher =
         make_shared<pattern::Matcher>(convert_op, "ConstantFolding.ConstantReverse");
-    this->add_matcher(convert_matcher, constant_reverse_callback, all_pass_property_off);
+    this->add_matcher(
+        convert_matcher, constant_reverse_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <typename T>
@@ -1823,7 +1912,7 @@ static shared_ptr<op::Constant>
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
-    switch (input_element_type.get_type_enum())
+    switch (input_element_type)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false,
@@ -1889,6 +1978,8 @@ void pass::ConstantFolding::construct_constant_arithmetic_reduction()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
         auto reduction_match = m.get_match_root();
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(reduction_match));
+
         replace_node(reduction_match,
                      fold_constant_arithmetic_reduction(constant_match, reduction_match));
         return true;
@@ -1898,7 +1989,7 @@ void pass::ConstantFolding::construct_constant_arithmetic_reduction()
         make_shared<pattern::Matcher>(reduction, "ConstantFolding.ConstantArithmeticReduction");
     this->add_matcher(arithmetic_reduction_matcher,
                       constant_arithmetic_reduction_callback,
-                      all_pass_property_off);
+                      PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
@@ -1959,6 +2050,8 @@ void pass::ConstantFolding::construct_constant_logical_reduction()
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
         auto reduction_match = m.get_match_root();
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(reduction_match));
+
         replace_node(reduction_match,
                      fold_constant_logical_reduction(constant_match, reduction_match));
         return true;
@@ -1966,8 +2059,9 @@ void pass::ConstantFolding::construct_constant_logical_reduction()
 
     auto logical_reduction_matcher =
         make_shared<pattern::Matcher>(reduction, "ConstantFolding.ConstantLogicalReduction");
-    this->add_matcher(
-        logical_reduction_matcher, constant_logical_reduction_callback, all_pass_property_off);
+    this->add_matcher(logical_reduction_matcher,
+                      constant_logical_reduction_callback,
+                      PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <typename T>
@@ -2015,9 +2109,11 @@ void pass::ConstantFolding::construct_constant_concat()
             return false;
         }
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(concat_node));
+
         std::shared_ptr<op::Constant> replacement;
 
-        switch (concat_node->get_output_element_type(0).get_type_enum())
+        switch (concat_node->get_output_element_type(0))
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_concat");
@@ -2072,7 +2168,7 @@ void pass::ConstantFolding::construct_constant_concat()
 
     auto concat_matcher =
         make_shared<pattern::Matcher>(concat_op, "ConstantFolding.ConstantConcat");
-    this->add_matcher(concat_matcher, constant_concat_callback, all_pass_property_off);
+    this->add_matcher(concat_matcher, constant_concat_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 // "Inner" helper for fold_constant_gather, which has to switch on the indices
@@ -2103,7 +2199,7 @@ static shared_ptr<op::Constant> fold_constant_gather(const shared_ptr<op::Consta
 {
     auto indices_type = indices->get_output_element_type(0);
 
-    switch (indices_type.get_type_enum())
+    switch (indices_type)
     {
     case element::Type_t::undefined:
         NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_gather_callback");
@@ -2154,10 +2250,12 @@ void pass::ConstantFolding::construct_constant_gather()
         auto indices = static_pointer_cast<op::Constant>(pattern_map[indices_label]);
         auto gather = static_pointer_cast<op::Gather>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(gather));
+
         std::shared_ptr<Node> replacement;
         auto data_type = data->get_output_element_type(0);
         auto indices_type = indices->get_output_element_type(0);
-        switch (data_type.get_type_enum())
+        switch (data_type)
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_gather_callback");
@@ -2212,7 +2310,7 @@ void pass::ConstantFolding::construct_constant_gather()
 
     auto gather_matcher =
         make_shared<pattern::Matcher>(gather_op, "ConstantFolding.ConstantGather");
-    this->add_matcher(gather_matcher, constant_gather_callback, PassProperty::REQUIRE_STATIC_SHAPE);
+    this->add_matcher(gather_matcher, constant_gather_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -2249,9 +2347,11 @@ void pass::ConstantFolding::construct_constant_slice()
         auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
         auto slice = static_pointer_cast<op::Slice>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(slice));
+
         std::shared_ptr<op::Constant> replacement;
 
-        switch (slice->get_output_element_type(0).get_type_enum())
+        switch (slice->get_output_element_type(0))
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_slice");
@@ -2305,7 +2405,7 @@ void pass::ConstantFolding::construct_constant_slice()
     };
 
     auto slice_matcher = make_shared<pattern::Matcher>(slice_op, "ConstantFolding.ConstantSlice");
-    this->add_matcher(slice_matcher, constant_slice_callback, all_pass_property_off);
+    this->add_matcher(slice_matcher, constant_slice_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -2385,9 +2485,11 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
         auto strides_node = static_pointer_cast<op::Constant>(pattern_map[strides_label]);
         auto dyn_slice = static_pointer_cast<op::DynSlice>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(dyn_slice));
+
         std::shared_ptr<op::Constant> replacement;
 
-        switch (dyn_slice->get_output_element_type(0).get_type_enum())
+        switch (dyn_slice->get_output_element_type(0))
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in fold_constant_dyn_slice");
@@ -2455,7 +2557,8 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
 
     auto dyn_slice_matcher =
         make_shared<pattern::Matcher>(dyn_slice_op, "ConstantFolding.ConstantDynSlice");
-    this->add_matcher(dyn_slice_matcher, constant_dyn_slice_callback, all_pass_property_off);
+    this->add_matcher(
+        dyn_slice_matcher, constant_dyn_slice_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -2493,9 +2596,11 @@ void pass::ConstantFolding::construct_constant_range()
         auto step_node = static_pointer_cast<op::Constant>(pattern_map[step_label]);
         auto range = static_pointer_cast<op::Range>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(range));
+
         std::shared_ptr<op::Constant> replacement;
 
-        switch (range->get_output_element_type(0).get_type_enum())
+        switch (range->get_output_element_type(0))
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_range_callback");
@@ -2549,7 +2654,7 @@ void pass::ConstantFolding::construct_constant_range()
     };
 
     auto range_matcher = make_shared<pattern::Matcher>(range_op, "ConstantFolding.ConstantRange");
-    this->add_matcher(range_matcher, constant_range_callback, all_pass_property_off);
+    this->add_matcher(range_matcher, constant_range_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }
 
 template <class T>
@@ -2591,9 +2696,11 @@ void pass::ConstantFolding::construct_constant_select()
         auto f_node = static_pointer_cast<op::Constant>(pattern_map[f_label]);
         auto select = static_pointer_cast<op::Select>(m.get_match_root());
 
+        NGRAPH_CHECK(revalidate_and_ensure_static(select));
+
         std::shared_ptr<op::Constant> replacement;
 
-        switch (select->get_output_element_type(0).get_type_enum())
+        switch (select->get_output_element_type(0))
         {
         case element::Type_t::undefined:
             NGRAPH_CHECK(false, "Encountered 'undefined' element type in constant_select_callback");
@@ -2648,5 +2755,5 @@ void pass::ConstantFolding::construct_constant_select()
 
     auto select_matcher =
         make_shared<pattern::Matcher>(select_op, "ConstantFolding.ConstantSelect");
-    this->add_matcher(select_matcher, constant_select_callback, all_pass_property_off);
+    this->add_matcher(select_matcher, constant_select_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }

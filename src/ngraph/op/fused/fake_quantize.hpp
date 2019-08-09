@@ -41,6 +41,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            FakeQuantize() = default;
             ///
             /// \brief      Constructs a FakeQuantize operation node.
             ///
@@ -51,11 +52,11 @@ namespace ngraph
             /// \param[in]  output_high  The maximum quantized value.
             /// \param[in]  levels       The number of quantization levels.
             ///
-            FakeQuantize(const std::shared_ptr<ngraph::Node>& data,
-                         const std::shared_ptr<ngraph::Node>& input_low,
-                         const std::shared_ptr<ngraph::Node>& input_high,
-                         const std::shared_ptr<ngraph::Node>& output_low,
-                         const std::shared_ptr<ngraph::Node>& output_high,
+            FakeQuantize(const Output<Node>& data,
+                         const Output<Node>& input_low,
+                         const Output<Node>& input_high,
+                         const Output<Node>& output_low,
+                         const Output<Node>& output_high,
                          std::size_t levels);
 
             virtual NodeVector decompose_op() const override;

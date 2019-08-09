@@ -14,16 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cmath>
-#include <string>
 #include <unordered_map>
 
 #include "convpool.hpp"
-#include "core/attribute.hpp"
-#include "core/node.hpp"
 #include "exceptions.hpp"
-#include "ngraph/coordinate_diff.hpp"
-#include "ngraph/shape.hpp"
+#include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/strides.hpp"
 #include "ngraph/validation_util.hpp"
 
 namespace ngraph

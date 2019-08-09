@@ -68,16 +68,20 @@ from _pyngraph.op import ConvolutionBackpropData
 from _pyngraph.op import ConvolutionBackpropFilters
 from _pyngraph.op import Cos
 from _pyngraph.op import Cosh
+from _pyngraph.op import DepthToSpace
 from _pyngraph.op import Divide
 from _pyngraph.op import Dot
 from _pyngraph.op import Elu
 from _pyngraph.op import Equal
 from _pyngraph.op import Exp
+from _pyngraph.op import FakeQuantize
 from _pyngraph.op import Floor
 from _pyngraph.op import Gelu
+from _pyngraph.op import Gemm
 from _pyngraph.op import GetOutputElement
 from _pyngraph.op import Greater
 from _pyngraph.op import GreaterEq
+from _pyngraph.op import GRN
 from _pyngraph.op import Less
 from _pyngraph.op import LessEq
 from _pyngraph.op import Log
@@ -119,3 +123,4 @@ from _pyngraph.op import Sum
 from _pyngraph.op import Tan
 from _pyngraph.op import Tanh
 from _pyngraph.op import TopK
+from _pyngraph.op import Unsqueeze
