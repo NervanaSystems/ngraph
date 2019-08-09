@@ -394,7 +394,6 @@ def test_space_to_depth_operator():
     computation = runtime.computation(model, parameter_data)
 
     result = computation(data_value)
-    print(np.shape(result))
     expected = np.array([0, 2, 8, 10, 16, 18, 24, 26,
                         1, 3, 9, 11, 17, 19, 25, 27,
                         4, 6, 12, 14, 20, 22, 28, 30,
