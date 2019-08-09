@@ -78,12 +78,28 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         element::f32, Shape{ref_gates_count * ref_hidden_size, ref_input_size});
     auto R = std::make_shared<pattern::op::Label>(
         element::f32, Shape{ref_gates_count * ref_hidden_size, ref_hidden_size});
+    auto bias = std::make_shared<pattern::op::Label>(element::f32,
+                                                     Shape{2 * ref_gates_count * ref_hidden_size});
+    auto peep_hole = std::make_shared<pattern::op::Label>(element::f32, Shape{3 * ref_hidden_size});
     auto H_t =
         std::make_shared<pattern::op::Label>(element::f32, Shape{ref_batch_size, ref_hidden_size});
     auto C_t =
         std::make_shared<pattern::op::Label>(element::f32, Shape{ref_batch_size, ref_hidden_size});
 
-    auto ref_lstm_cell = std::make_shared<op::LSTMCell>(X, W, R, H_t, C_t, ref_hidden_size);
+    auto ref_lstm_cell =
+        std::make_shared<op::LSTMCell>(X,
+                                       W,
+                                       R,
+                                       H_t,
+                                       C_t,
+                                       ref_hidden_size,
+                                       bias,
+                                       peep_hole,
+                                       std::vector<std::string>{"sigmoid", "tanh", "tanh"},
+                                       std::vector<float>{},
+                                       std::vector<float>{},
+                                       0.f,
+                                       false);
 
     auto callback = [X, W, R, H_t, C_t](pattern::Matcher& m) {
 
