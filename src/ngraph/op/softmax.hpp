@@ -54,7 +54,6 @@ namespace ngraph
             AxisSet m_axes;
         };
 
-
         namespace set0
         {
             using ngraph::op::Softmax;
@@ -62,8 +61,39 @@ namespace ngraph
 
         namespace set1
         {
-            using ngraph::op::set0::Softmax;
-        }
+            class Softmax : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                NGRAPH_API
+                static const std::string type_name;
+                const std::string& description() const override { return type_name; }
+                Softmax()
+                    : m_axis(0)
+                {
+                    set_opset_version(1);
+                }
+                /// \brief Constructs a softmax operation.
+                ///
+                /// \param arg Node that produces the first input tensor.<br>
+                /// `[d0, ...]`
+                /// \param axis The axis positions (0-based) on which to calculate the softmax.
+                ///
+                /// Output `[d0, ...]`
+                ///
+                Softmax(const Output<Node>& arg, const size_t axis);
 
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                size_t get_axis() const { return m_axis; }
+                void set_axis(const size_t axis) { m_axis = axis; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+
+            private:
+                size_t m_axis;
+            };
+        }
     }
 }
