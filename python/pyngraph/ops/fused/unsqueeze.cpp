@@ -14,20 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "constant_folding.hpp"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/op/fused/unsqueeze.hpp"
+#include "pyngraph/ops/fused/unsqueeze.hpp"
 
-bool ngraph::pass::revalidate_and_ensure_static(shared_ptr<Node> n)
+namespace py = pybind11;
+
+void regclass_pyngraph_op_Unsqueeze(py::module m)
 {
-    n->revalidate_and_infer_types();
-    for (auto& o : n->outputs())
-    {
-        if (o.get_partial_shape().is_dynamic() || o.get_element_type().is_dynamic())
-        {
-            return false;
-        }
-    }
-    return true;
+    py::class_<ngraph::op::Unsqueeze, std::shared_ptr<ngraph::op::Unsqueeze>, ngraph::op::Op>
+        unsqueeze(m, "Unsqueeze");
+    unsqueeze.doc() = "ngraph.impl.op.Unsqueeze wraps ngraph::op::Unsqueeze";
+    unsqueeze.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }

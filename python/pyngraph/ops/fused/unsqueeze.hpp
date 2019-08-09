@@ -14,20 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "constant_folding.hpp"
+#pragma once
 
-using namespace std;
-using namespace ngraph;
+#include <pybind11/pybind11.h>
 
-bool ngraph::pass::revalidate_and_ensure_static(shared_ptr<Node> n)
-{
-    n->revalidate_and_infer_types();
-    for (auto& o : n->outputs())
-    {
-        if (o.get_partial_shape().is_dynamic() || o.get_element_type().is_dynamic())
-        {
-            return false;
-        }
-    }
-    return true;
-}
+namespace py = pybind11;
+
+void regclass_pyngraph_op_Unsqueeze(py::module m);
