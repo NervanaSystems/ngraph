@@ -26,10 +26,14 @@ namespace ngraph
         class Tanh : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a hyperbolic tangent operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Tanh(const std::shared_ptr<Node>& arg);
+            Tanh(const Output<Node>& arg);
+            Tanh() = default;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

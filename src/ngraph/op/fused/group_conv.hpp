@@ -32,7 +32,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            GroupConvolution();
+            GroupConvolution() = default;
             GroupConvolution(const Output<Node>& data_batch,
                              const Output<Node>& filters,
                              const Strides& window_movement_strides,
@@ -49,8 +49,8 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            std::shared_ptr<Node> get_filters() { return get_argument(1); }
-            std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
+            Output<Node> get_filters() { return input(1).get_source_output(); }
+            Output<Node> get_data_batch() { return input(0).get_source_output(); }
             size_t get_groups() const { return m_groups; }
             const PadType& get_pad_type() const { return m_pad_type; }
             virtual std::shared_ptr<Node>

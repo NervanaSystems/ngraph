@@ -24,19 +24,21 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedMatmul::QuantizedMatmul(const shared_ptr<Node>& data,
-                                     const shared_ptr<Node>& weights,
-                                     const shared_ptr<Node>& scale,
+const string op::QuantizedMatmul::type_name{"QuantizedMatmul"};
+
+op::QuantizedMatmul::QuantizedMatmul(const Output<Node>& data,
+                                     const Output<Node>& weights,
+                                     const Output<Node>& scale,
                                      bool requantize,
                                      bool with_relu)
-    : Op("QuantizedMatmul", check_single_output_args({data, weights, scale}))
+    : Op({data, weights, scale})
     , m_requantize(requantize)
     , m_with_relu(with_relu)
 {
     constructor_validate_and_infer_types();
 
-    auto& data_shape = data->get_shape();
-    auto& weights_shape = weights->get_shape();
+    auto& data_shape = data.get_shape();
+    auto& weights_shape = weights.get_shape();
     // QuantizedMatmul does [n, ic] * [oc, ic] = [n, oc]
     NODE_VALIDATION_CHECK(this,
                           data_shape.size() == 2 && weights_shape.size() == 2 &&

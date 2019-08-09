@@ -17,14 +17,20 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/fused/elu.hpp"
-#include "pyngraph/ops/elu.hpp"
+#include "ngraph/op/fused/fake_quantize.hpp"
+#include "pyngraph/ops/fused/fake_quantize.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Elu(py::module m)
+void regclass_pyngraph_op_FakeQuantize(py::module m)
 {
-    py::class_<ngraph::op::Elu, std::shared_ptr<ngraph::op::Elu>, ngraph::op::Op> elu(m, "Elu");
-    elu.doc() = "ngraph.impl.op.Elu wraps ngraph::op::Elu";
-    elu.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
+    py::class_<ngraph::op::FakeQuantize, std::shared_ptr<ngraph::op::FakeQuantize>, ngraph::op::Op>
+        fakequantize(m, "FakeQuantize");
+    fakequantize.doc() = "ngraph.impl.op.FakeQuantize wraps ngraph::op::FakeQuantize";
+    fakequantize.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                              const std::shared_ptr<ngraph::Node>&,
+                              const std::shared_ptr<ngraph::Node>&,
+                              const std::shared_ptr<ngraph::Node>&,
+                              const std::shared_ptr<ngraph::Node>&,
+                              int&>());
 }

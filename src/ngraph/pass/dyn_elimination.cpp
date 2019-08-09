@@ -30,6 +30,7 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
+#include "ngraph/runtime/reference/range.hpp"
 #include "ngraph/slice_plan.hpp"
 
 using namespace std;
@@ -342,11 +343,10 @@ void pass::DynElimination::construct_dyn_reshape()
 }
 
 template <typename T>
-std::shared_ptr<op::Constant>
-    make_range_replacement_integral(const element::Type& et,
-                                    const Shape& shape,
-                                    const std::shared_ptr<op::Constant>& start_arg,
-                                    const std::shared_ptr<op::Constant>& step_arg)
+std::shared_ptr<op::Constant> make_range_replacement(const element::Type& et,
+                                                     const Shape& shape,
+                                                     const std::shared_ptr<op::Constant>& start_arg,
+                                                     const std::shared_ptr<op::Constant>& step_arg)
 {
     std::vector<T> elements(shape_size(shape));
     std::vector<T> start_vec = start_arg->get_vector<T>();
@@ -354,40 +354,7 @@ std::shared_ptr<op::Constant>
 
     NGRAPH_CHECK(start_vec.size() == 1 && step_vec.size() == 1);
 
-    T start = start_vec[0];
-    T step = step_vec[0];
-
-    T val = start;
-
-    for (size_t i = 0; i < elements.size(); i++)
-    {
-        elements[i] = val;
-        val = val + step;
-    }
-
-    return make_shared<op::Constant>(et, shape, elements);
-}
-
-template <typename T>
-std::shared_ptr<op::Constant>
-    make_range_replacement_floating(const element::Type& et,
-                                    const Shape& shape,
-                                    const std::shared_ptr<op::Constant>& start_arg,
-                                    const std::shared_ptr<op::Constant>& step_arg)
-{
-    std::vector<T> elements(shape_size(shape));
-    std::vector<T> start_vec = start_arg->get_vector<T>();
-    std::vector<T> step_vec = step_arg->get_vector<T>();
-
-    NGRAPH_CHECK(start_vec.size() == 1 && step_vec.size() == 1);
-
-    T start = start_vec[0];
-    T step = step_vec[0];
-
-    for (size_t i = 0; i < elements.size(); i++)
-    {
-        elements[i] = start + (static_cast<T>(i) * step);
-    }
+    runtime::reference::range<T>(start_vec.data(), step_vec.data(), shape, elements.data());
 
     return make_shared<op::Constant>(et, shape, elements);
 }
@@ -418,48 +385,48 @@ void pass::DynElimination::construct_range()
 
         std::shared_ptr<op::Constant> replacement;
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-        switch (et.get_type_enum())
+        switch (et)
         {
         case element::Type_t::bf16:
-            replacement = make_range_replacement_floating<bfloat16>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<bfloat16>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::f16:
-            replacement = make_range_replacement_floating<float16>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<float16>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::f32:
-            replacement = make_range_replacement_floating<float>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<float>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::f64:
-            replacement = make_range_replacement_floating<double>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<double>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::i8:
-            replacement = make_range_replacement_integral<int8_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<int8_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::i16:
-            replacement = make_range_replacement_integral<int16_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<int16_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::i32:
-            replacement = make_range_replacement_integral<int32_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<int32_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::i64:
-            replacement = make_range_replacement_integral<int64_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<int64_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::u8:
-            replacement = make_range_replacement_integral<uint8_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<uint8_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::u16:
-            replacement = make_range_replacement_integral<uint16_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<uint16_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::u32:
-            replacement = make_range_replacement_integral<uint32_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<uint32_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::u64:
-            replacement = make_range_replacement_integral<uint64_t>(et, shape, start_arg, step_arg);
+            replacement = make_range_replacement<uint64_t>(et, shape, start_arg, step_arg);
             break;
         case element::Type_t::undefined:
         case element::Type_t::dynamic:
@@ -467,7 +434,7 @@ void pass::DynElimination::construct_range()
             NGRAPH_CHECK(false, "Internal nGraph error: unsupported element type: ", et);
             break;
         }
-#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 

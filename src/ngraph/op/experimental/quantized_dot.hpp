@@ -30,6 +30,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            QuantizedDot() = default;
             QuantizedDot(const Output<Node>& data,
                          const Output<Node>& weights,
                          const Output<Node>& scale,

@@ -78,7 +78,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a summation operation.
-            Sum();
+            Sum() = default;
             /// \brief Constructs a summation operation.
             ///
             /// \param arg The tensor to be summed.

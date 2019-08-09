@@ -104,6 +104,9 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
             REGISTER_CPU_OP_BUILDER(ConvertLayout);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_convert_layout_cpp() {}
+#endif
         }
     }
 }
