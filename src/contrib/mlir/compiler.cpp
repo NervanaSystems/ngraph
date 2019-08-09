@@ -91,16 +91,17 @@ static llvm::cl::opt<bool>
                              llvm::cl::desc("Enable loop tiling optimization in Affine dialect"));
 
 static llvm::cl::opt<unsigned>
-    clLoopTilingCacheLevel("loop-tile-cache-level",
+    clLoopTilingCacheLevel("affine-loop-tile-cache-level",
                            llvm::cl::init(2),
-                           llvm::cl::desc("Cache level to which to apply loop tiling."));
+                           llvm::cl::desc("Cache level to which to apply affine loop tiling."));
 
 static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
-    "loop-tile-cache-size",
+    "affine-loop-tile-cache-size",
     llvm::cl::init(0),
-    llvm::cl::desc("Cache size to use in loop tiling. If not zero, it overrides the cache-size "
-                   "inferred from the host CPU using for the cache level specified by "
-                   "-loop-tile-cache-level."));
+    llvm::cl::desc(
+        "Cache size to use in affine loop tiling. If not zero, it overrides the cache-size "
+        "inferred from the host CPU using for the cache level specified by "
+        "-loop-tile-cache-level."));
 
 #define COMPILE_OP_DECL(op_name)                                                                   \
     create_op<op_name>(MLIRCompiler & compiler, const ngraph::Node* ng_node)
