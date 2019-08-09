@@ -461,7 +461,7 @@ namespace ngraph
             template <>
             mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Negative)
             {
-                return compiler.create_generic_op<mlir::NGNegativeOp>(ng_node);
+                return compiler.create_generic_op<mlir::NGNegOp>(ng_node);
             }
         }
     }

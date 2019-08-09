@@ -533,9 +533,9 @@ namespace
     }
 
     // Negative
-    REWRITER(NGNegativeOp)
+    REWRITER(NGNegOp)
     {
-        lower_unary_elementwise<mlir::NGNegativeOp>(op, operands, rewriter, pass);
+        lower_unary_elementwise<mlir::NGNegOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -841,7 +841,7 @@ namespace
 
         LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
-            if (isa<NGNegativeOp>(op))
+            if (isa<NGNegOp>(op))
             {
                 if (auto floatTy = elemTy.dyn_cast<FloatType>())
                 {
