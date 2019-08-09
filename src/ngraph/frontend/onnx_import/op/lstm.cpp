@@ -28,6 +28,7 @@
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
+#include "ngraph/op/add.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
@@ -93,17 +94,20 @@ namespace ngraph
                             m_map[LSTMInput::LSTM_INPUT_W]->get_shape().front();
 
                         // ------ Optional inputs ------
-                        // The bias tensor for input gate. Shape [num_directions, 8*hidden_size]
+                        // The bias tensor for input gate. Shape [num_directions, 4*hidden_size]
                         if (ng_inputs.size() > 3 && !ng_inputs.at(3)->is_null())
                         {
-                            m_map[LSTMInput::LSTM_INPUT_B] = ng_inputs.at(3);
+                            auto bias = ng_inputs.at(3);
+                            auto splitted_bias = builder::split(bias, 2, 1);
+                            m_map[LSTMInput::LSTM_INPUT_B] =
+                                splitted_bias.at(0) + splitted_bias.at(1);
                         }
                         else
                         {
                             m_map[LSTMInput::LSTM_INPUT_B] = ngraph::op::Constant::create(
                                 element::f32,
-                                Shape{num_directions, 2 * gates_count * hidden_size},
-                                std::vector<float>(num_directions * 2 * gates_count * hidden_size,
+                                Shape{num_directions, gates_count * hidden_size},
+                                std::vector<float>(num_directions * gates_count * hidden_size,
                                                    0.f));
                         }
                         // The lengths of the sequences in a batch. Shape [batch_size]

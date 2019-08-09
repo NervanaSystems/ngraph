@@ -78,7 +78,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
     auto R = std::make_shared<pattern::op::Label>(
         element::f32, Shape{ref_gates_count * ref_hidden_size, ref_hidden_size});
     auto bias_ref = std::make_shared<pattern::op::Label>(
-        element::f32, Shape{2 * ref_gates_count * ref_hidden_size});
+        element::f32, Shape{ref_gates_count * ref_hidden_size});
     auto peep_hole = std::make_shared<pattern::op::Label>(element::f32, Shape{3 * ref_hidden_size});
     auto H_t =
         std::make_shared<pattern::op::Label>(element::f32, Shape{ref_batch_size, ref_hidden_size});
@@ -139,19 +139,15 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             [&](std::shared_ptr<Node> bias_graph_node) -> std::shared_ptr<Node> {
 
             size_t hidden_size = lstmcell_op->get_hidden_size();
-            auto Wb_bias = std::make_shared<ngraph::op::Slice>(
-                bias_graph_node, Coordinate{0}, Coordinate{4 * hidden_size});
-            auto Rb_bias = std::make_shared<ngraph::op::Slice>(
-                bias_graph_node, Coordinate{4 * hidden_size}, Coordinate{2 * 4 * hidden_size});
-            auto bias = std::make_shared<op::Add>(Wb_bias, Rb_bias);
 
             // slices will be in ICFO order
             std::vector<std::shared_ptr<Node>> gate_slices;
 
             for (size_t i = 0; i < 4; i++)
             {
-                auto slice = std::make_shared<ngraph::op::Slice>(
-                    bias, Coordinate{i * hidden_size}, Coordinate{(i + 1) * hidden_size});
+                auto slice = std::make_shared<ngraph::op::Slice>(bias_graph_node,
+                                                                 Coordinate{i * hidden_size},
+                                                                 Coordinate{(i + 1) * hidden_size});
                 gate_slices.push_back(slice);
             }
 

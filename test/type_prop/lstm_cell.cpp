@@ -109,7 +109,7 @@ TEST(type_prop, lstm_cell_invalid_input)
 
     // Invalid B tensor shape.
     C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
     auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
     try
     {
@@ -122,7 +122,7 @@ TEST(type_prop, lstm_cell_invalid_input)
     }
 
     // Invalid P tensor shape.
-    B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
     P = make_shared<op::Parameter>(element::f32, Shape{hidden_size});
     try
     {

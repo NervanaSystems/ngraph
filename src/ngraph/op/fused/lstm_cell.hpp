@@ -146,7 +146,7 @@ namespace ngraph
             /// \param[in]  C_t               The cell state tensor at current time step with
             ///                               shape: [batch_size, hidden_size].
             /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
-            /// \param[in]  B                 The bias tensor for input gate with shape:
+            /// \param[in]  B                 The bias tensor for input gate with shape: [8*hidden_size].
             ///                               [8*hidden_size].
             /// \param[in]  P                 The weight tensor for peepholes with shape:
             ///                               [3*hidden_size] - 3 equals to only iof gates.
@@ -182,15 +182,12 @@ namespace ngraph
 
             bool get_input_forget() const { return m_input_forget; }
         private:
-            Output<Node> get_bias() const;
             NodeVector get_peephole_weights() const;
 
             /// brief Add and initialize bias input to all zeros.
             void add_default_bias_input();
             /// brief Add and initialize peepholes weights input to all zeros.
             void add_default_peepholes_input();
-            /// brief Add bias converted from fico to iofc format at given position
-            void add_converted_bias(const std::shared_ptr<Node>& bias, size_t position);
             /// brief Add splitted and converted weights from fico to iofc format at given position
             void add_converted_weights(const std::shared_ptr<Node>& WR,
                                        int w_position,

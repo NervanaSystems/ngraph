@@ -1296,7 +1296,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes)
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
     const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
 
     const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size, B, P);
@@ -1330,11 +1330,18 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes)
     // Ct
     vector<float> in_Ct{0.8488452f, 0.18851636f, 0.5020695f, 0.29716516f, 0.06740791f, 0.45384037f};
     // B
-    vector<float> in_B{0.81130236f, 0.31332242f, 0.6423671f,  0.09981899f, 0.7847627f,
-                       0.8405669f,  0.0330242f,  0.45014873f, 0.5599519f,  0.31807426f,
-                       0.7356558f,  0.6298691f,  0.26263478f, 0.8391581f,  0.52434635f,
-                       0.11468413f, 0.4533051f,  0.67632145f, 0.43415946f, 0.46795473f,
-                       0.5674715f,  0.19214648f, 0.37824264f, 0.11187395f};
+    vector<float> in_B{1.07393714f,
+                       1.15248052f,
+                       1.16671345f,
+                       0.21450312f,
+                       1.2380678f,
+                       1.51688835f,
+                       0.46718366f,
+                       0.91810346f,
+                       1.1274234f,
+                       0.51022074f,
+                       1.11389844f,
+                       0.74174305f};
     // P
     vector<float> in_P{0.38557124f,
                        0.9482306f,
@@ -1380,7 +1387,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes_clip_input_forget)
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
     const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
 
     const auto lstm_cell = make_shared<op::LSTMCell>(X,
@@ -1425,11 +1432,18 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes_clip_input_forget)
     // Ct
     vector<float> in_Ct{0.8488452f, 0.18851636f, 0.5020695f, 0.29716516f, 0.06740791f, 0.45384037f};
     // B
-    vector<float> in_B{0.81130236f, 0.31332242f, 0.6423671f,  0.09981899f, 0.7847627f,
-                       0.8405669f,  0.0330242f,  0.45014873f, 0.5599519f,  0.31807426f,
-                       0.7356558f,  0.6298691f,  0.26263478f, 0.8391581f,  0.52434635f,
-                       0.11468413f, 0.4533051f,  0.67632145f, 0.43415946f, 0.46795473f,
-                       0.5674715f,  0.19214648f, 0.37824264f, 0.11187395f};
+    vector<float> in_B{1.07393714f,
+                       1.15248052f,
+                       1.16671345f,
+                       0.21450312f,
+                       1.2380678f,
+                       1.51688835f,
+                       0.46718366f,
+                       0.91810346f,
+                       1.1274234f,
+                       0.51022074f,
+                       1.11389844f,
+                       0.74174305f};
     // P
     vector<float> in_P{0.38557124f,
                        0.9482306f,
@@ -1478,7 +1492,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_activaction_functions)
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
     const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
 
     const auto lstm_cell = make_shared<op::LSTMCell>(X,
@@ -1523,11 +1537,18 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_activaction_functions)
     // Ct
     vector<float> in_Ct{0.8488452f, 0.18851636f, 0.5020695f, 0.29716516f, 0.06740791f, 0.45384037f};
     // B
-    vector<float> in_B{0.81130236f, 0.31332242f, 0.6423671f,  0.09981899f, 0.7847627f,
-                       0.8405669f,  0.0330242f,  0.45014873f, 0.5599519f,  0.31807426f,
-                       0.7356558f,  0.6298691f,  0.26263478f, 0.8391581f,  0.52434635f,
-                       0.11468413f, 0.4533051f,  0.67632145f, 0.43415946f, 0.46795473f,
-                       0.5674715f,  0.19214648f, 0.37824264f, 0.11187395f};
+    vector<float> in_B{1.07393714f,
+                       1.15248052f,
+                       1.16671345f,
+                       0.21450312f,
+                       1.2380678f,
+                       1.51688835f,
+                       0.46718366f,
+                       0.91810346f,
+                       1.1274234f,
+                       0.51022074f,
+                       1.11389844f,
+                       0.74174305f};
     // P
     vector<float> in_P{0.38557124f,
                        0.9482306f,
