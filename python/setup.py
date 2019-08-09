@@ -233,6 +233,7 @@ sources = [
     'pyngraph/ops/batch_norm.cpp',
     'pyngraph/ops/softmax.cpp',
     'pyngraph/ops/result.cpp',
+    'pyngraph/ops/fused/unsqueeze.cpp',
     'pyngraph/runtime/backend.cpp',
     'pyngraph/runtime/executable.cpp',
     'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
