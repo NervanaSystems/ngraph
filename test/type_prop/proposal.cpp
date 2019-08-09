@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/experimental/layers/proposal.hpp"
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/experimental/layers/proposal.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -25,21 +25,20 @@ using namespace ngraph;
 TEST(type_prop, proposal_invalid_class_probs_rank)
 {
     op::ProposalAttrs attrs;
-    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3 });
-    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3, 4 });
-    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{ 3 });
+    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{3});
 
     try
     {
-        auto proposal =
-            make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
+        auto proposal = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-            std::string("Proposal layer shape class_probs input must have rank 4"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(), std::string("Proposal layer shape class_probs input must have rank 4"));
     }
     catch (...)
     {
@@ -50,20 +49,20 @@ TEST(type_prop, proposal_invalid_class_probs_rank)
 TEST(type_prop, proposal_invalid_class_logits_rank)
 {
     op::ProposalAttrs attrs;
-    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3, 4 });
-    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3 });
-    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{ 3 });
+    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{3});
 
     try
     {
-        auto proposal =
-            make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
+        auto proposal = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
             std::string("Proposal layer shape class_logits_shape input must have rank 4"));
     }
     catch (...)
@@ -75,21 +74,20 @@ TEST(type_prop, proposal_invalid_class_logits_rank)
 TEST(type_prop, proposal_invalid_image_shape_rank)
 {
     op::ProposalAttrs attrs;
-    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3, 4 });
-    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3, 4 });
-    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{ 2, 1 });
+    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{2, 1});
 
     try
     {
-        auto proposal =
-            make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
+        auto proposal = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-            std::string("Proposal layer image_shape input must have rank 1"));
+                             std::string("Proposal layer image_shape input must have rank 1"));
     }
     catch (...)
     {
@@ -100,21 +98,22 @@ TEST(type_prop, proposal_invalid_image_shape_rank)
 TEST(type_prop, proposal_invalid_image_shape_size)
 {
     op::ProposalAttrs attrs;
-    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3, 4 });
-    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3, 4 });
-    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{ 5 });
+    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{5});
 
     try
     {
-        auto proposal =
-            make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
+        auto proposal = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-            std::string("Image_shape 1D tensor must have =>3 and <= 4 elements (image_shape_shape[0]"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Image_shape 1D tensor must have =>3 and <= 4 elements (image_shape_shape[0]"));
     }
     catch (...)
     {

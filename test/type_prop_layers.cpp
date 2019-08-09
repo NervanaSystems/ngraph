@@ -136,7 +136,7 @@ TEST(type_prop_layers, proposal)
     auto class_logits = make_shared<op::Parameter>(element::f32, Shape{batch_size, 24, 34, 62});
     auto image_shape = make_shared<op::Parameter>(element::f32, Shape{3});
     auto op = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
-    ASSERT_EQ(op->get_shape(), (Shape{ batch_size * attrs.post_nms_topn, 5}));
+    ASSERT_EQ(op->get_shape(), (Shape{batch_size * attrs.post_nms_topn, 5}));
 }
 
 TEST(type_prop_layers, region_yolo1)

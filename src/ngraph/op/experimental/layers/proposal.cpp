@@ -40,52 +40,56 @@ void op::Proposal::validate_and_infer_types()
     const auto& image_shape_et = get_input_element_type(2);
 
     NODE_VALIDATION_CHECK(this,
-        class_prob_et.compatible(element::Type_t::f32),
-        "Class input input must have element type f32, but has ",
-        class_prob_et);
+                          class_prob_et.compatible(element::Type_t::f32),
+                          "Class input input must have element type f32, but has ",
+                          class_prob_et);
 
     NODE_VALIDATION_CHECK(this,
-        class_logits_et.compatible(element::Type_t::f32),
-        "Class logits input must have element type f32, but has ",
-        class_logits_et);
+                          class_logits_et.compatible(element::Type_t::f32),
+                          "Class logits input must have element type f32, but has ",
+                          class_logits_et);
 
     NODE_VALIDATION_CHECK(this,
-        image_shape_et.compatible(element::Type_t::f32),
-        "Image shape input must have element type f32, but has ",
-        image_shape_et);
+                          image_shape_et.compatible(element::Type_t::f32),
+                          "Image shape input must have element type f32, but has ",
+                          image_shape_et);
 
     set_input_is_relevant_to_shape(2);
 
     const auto& class_probs_pshape = get_input_partial_shape(0);
     const auto& class_logits_pshape = get_input_partial_shape(1);
     const auto& image_shape_pshape = get_input_partial_shape(2);
-    if (class_probs_pshape.is_static() && class_logits_pshape.is_static() && image_shape_pshape.is_static())
+    if (class_probs_pshape.is_static() && class_logits_pshape.is_static() &&
+        image_shape_pshape.is_static())
     {
-        const Shape class_probs_shape{ class_probs_pshape.to_shape() };
-        const Shape class_logits_shape{ class_logits_pshape.to_shape() };
-        const Shape image_shape_shape{ image_shape_pshape.to_shape() };
+        const Shape class_probs_shape{class_probs_pshape.to_shape()};
+        const Shape class_logits_shape{class_logits_pshape.to_shape()};
+        const Shape image_shape_shape{image_shape_pshape.to_shape()};
 
-        NODE_VALIDATION_CHECK(this,
+        NODE_VALIDATION_CHECK(
+            this,
             class_probs_shape.size() == 4,
             "Proposal layer shape class_probs input must have rank 4 (class_probs_shape: ",
             class_probs_shape,
             ").");
 
-        NODE_VALIDATION_CHECK(this,
+        NODE_VALIDATION_CHECK(
+            this,
             class_logits_shape.size() == 4,
             "Proposal layer shape class_logits_shape input must have rank 4 (class_logits_shape: ",
             class_logits_shape,
             ").");
 
-        NODE_VALIDATION_CHECK(this,
+        NODE_VALIDATION_CHECK(
+            this,
             image_shape_shape.size() == 1,
             "Proposal layer image_shape input must have rank 1 (image_shape_shape: ",
             image_shape_shape,
             ").");
 
-        NODE_VALIDATION_CHECK(this,
-            image_shape_shape[0] >= 3 &&
-            image_shape_shape[0] <=4,
+        NODE_VALIDATION_CHECK(
+            this,
+            image_shape_shape[0] >= 3 && image_shape_shape[0] <= 4,
             "Image_shape 1D tensor must have =>3 and <= 4 elements (image_shape_shape[0]",
             image_shape_shape[0],
             ").");
