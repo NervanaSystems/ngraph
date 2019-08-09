@@ -2,18 +2,20 @@
 
 .. _onnx_tutorial:
 
-Get Started with nGraph for ONNX\*
-##################################
+Get Started with nGraph for ONNX
+################################
 
-Learn how to use nGraph to accelerate inference on ONNX\* workloads.
+Learn how to use nGraph to accelerate inference on ONNX workloads.
 
 .. contents::
 
 Overview
 ========
 
-This Get Started tutorial is divided into two parts: a) building and
-installing nGraph for ONNX and b) an example of how to use nGraph to accelerate inference on an ONNX model.
+This tutorial is divided into two parts: a) building and installing 
+nGraph for ONNX, and b) an example of how to use nGraph to accelerate 
+inference on an ONNX model.
+
 
 Build and install nGraph
 ========================
@@ -21,10 +23,12 @@ Build and install nGraph
 Software requirements
 ---------------------
 
-- Python 3.4 or higher
-- Protocol Buffers (protobuf) ``v2.6.1`` or higher
-- `OpenCL runtime <opencl_drivers_>`_, required if you plan to use nGraph with an Intel GPU backend
-- `PlaidML <plaidml_pypi_>`_  ``v0.6.3`` or higher, required if you plan to use nGraph’s PlaidML backend
+* Python 3.4 or higher
+* Protocol Buffers (``protobuf``) ``v2.6.1`` or higher
+* `OpenCL runtime <opencl_drivers_>`_, required if you plan to use nGraph 
+  with an Intel GPU backend.  See also: `opencl`_
+* `PlaidML <plaidml_pypi_>`_  ``v0.6.3`` or higher, required if you plan 
+   to use nGraph’s :ref:`ngraph_plaidml_backend`.
 
 Install protobuf for Ubuntu:
 
@@ -38,7 +42,7 @@ Use pre-built packages
 
 The easiest way to install ``ngraph`` and ``ngraph-onnx`` is to use pre-built
 packages from PyPI. Pre-built packages include the CPU backend and Intel GPU
-backend. 
+backend.
 
 .. note:: Pre-built packages (binaries) are currently not available for macOS.
 
@@ -46,13 +50,13 @@ Install ``ngraph-core``:
 
 ::
 
-    pip install ngraph-core 
+    pip install ngraph-core
 
 Install ``ngraph-onnx``:
 
 ::
 
-    pip install ngraph-onnx 
+    pip install ngraph-onnx
 
 
 Install ``plaidml`` (optional):
@@ -87,7 +91,7 @@ Choose which backends to enable:
 
 
 To build nGraph with an Intel GPU backend, add ``-DNGRAPH_INTELGPU_ENABLE=TRUE``
-to the cmake command. For example: 
+to the cmake command. For example:
 
 ::
 
@@ -95,13 +99,15 @@ to the cmake command. For example:
 
 **PlaidML backend** 
 
-To build nGraph with a PlaidML backend, add ``-DNGRAPH_PLAIDML_ENABLE=TRUE`` to the cmake command. For example:
+To build nGraph with a PlaidML backend, add ``-DNGRAPH_PLAIDML_ENABLE=TRUE`` to 
+the cmake command. For example:
 
 ::
 
     cmake ../ -DCMAKE_INSTALL_PREFIX=$PWD/ngraph_dist -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE -DNGRAPH_USE_PREBUILT_LLVM=TRUE -DNGRAPH_PLAIDML_ENABLE=TRUE
 
-To build nGraph with more than one backend, pass multiple flags to ``cmake``. For example:
+To build nGraph with more than one backend, pass multiple flags to ``cmake``. 
+For example:
 
 :: 
 
@@ -225,6 +231,8 @@ mathematical formula (for example, a function such as y = f(x)).
 
 **Import a model**
 
+See also: :ref:`import_serialized_onnx`
+
 Download a model from the `ONNX model zoo <onnx_model_zoo_>`_. For example,
 ResNet-50:
 
@@ -287,17 +295,17 @@ Use a different backend
 A backend is a layer between nGraph and the device on your machine that executes the model.
 
 You can substitute the default CPU backend with a different backend such as 
-``INTELGPU`` or ``PLAIDML`` (coming soon). 
+``INTELGPU`` or ``PLAIDML``.
 
 For running the computation on an Intel GPU, use the following line to create
-the runtime:  
+the runtime:
 
 .. code-block:: python
 
     runtime = ng.runtime(backend_name='INTELGPU')
 
-Debugging
-=========
+Feedback
+========
 
 If you encounter any problems with this tutorial, please submit a ticket to our
 `issues <issues_>`_ page on GitHub.
