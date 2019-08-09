@@ -53,5 +53,17 @@ namespace ngraph
         private:
             AxisSet m_axes;
         };
+
+
+        namespace set0
+        {
+            using ngraph::op::Softmax;
+        }
+
+        namespace set1
+        {
+            using ngraph::op::set0::Softmax;
+        }
+
     }
 }

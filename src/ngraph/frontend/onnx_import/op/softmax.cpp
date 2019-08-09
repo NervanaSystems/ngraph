@@ -48,7 +48,7 @@ namespace ngraph
                     // create vector of capacity data_dimensions - axis_divider position
                     std::vector<size_t> axes(data_shape.size() - axis);
                     std::iota(std::begin(axes), std::end(axes), axis);
-                    return {std::make_shared<ngraph::op::Softmax>(data, axes)};
+                    return {std::make_shared<ngraph::op::set1::Softmax>(data, axes)};
                 }
 
             } // namespace set_1
