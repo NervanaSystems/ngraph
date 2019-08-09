@@ -25,8 +25,8 @@ GPU
    VGG-19, Image recognition
 
 
-TensorFlow 
-==========
+TensorFlow CPU 
+==============
 
 .. csv-table::
    :header: "TensorFlow Workload", "Genre of Deep learning"
@@ -55,8 +55,8 @@ TensorFlow
    A3C, Reinforcement learning
 
 
-ONNX
-====
+ONNX CPU
+========
 
 Additionally, we validated the following workloads are functional through 
 `nGraph ONNX importer`_. ONNX models can be downloaded from the `ONNX Model Zoo`_.

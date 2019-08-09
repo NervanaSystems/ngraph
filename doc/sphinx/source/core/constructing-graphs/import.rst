@@ -7,7 +7,7 @@ Import a model
 
 nGraph APIs can be used to run inference on a model that has been *exported* 
 from a Deep Learning framework. An export produces a file with a serialized 
-model that can be loaded and passed to one of the nGraph backends.  
+model that can be loaded and passed to one of the nGraph backends.
 
 
 .. _from_onnx:
@@ -24,7 +24,7 @@ usually named ``<some_model>.onnx`` or ``<some_model>.onnx.pb``. These
 .. important:: If you landed on this page and you already have an ``.onnx`` or 
    an ``.onnx.pb`` formatted file, you should be able to run the inference without
    needing to dig into anything from the "Frameworks" sections. You will, however, 
-   need to have completed the steps outlined in our :doc:`../../buildlb` guide.  
+   need to have completed the steps outlined in our :doc:`../../buildlb` guide.
 
 
 To demonstrate functionality, we'll use an already-serialized CIFAR10 model 
@@ -37,12 +37,13 @@ outputs.
 Installing ``ngraph_onnx`` with nGraph from scratch
 ====================================================
 
+
+
 To use ONNX models with nGraph, you will also need the companion tool 
 ``ngraph_onnx``, which requires Python 3.4 or higher. If nGraph has not 
 yet been installed to your system, you can follow these steps to install 
 everything at once; if an `ngraph_dist` is already installed on your system, 
 skip ahead to the next section, :ref:`install_ngonnx`.
-   
 
 #. Install prerequisites for the system and install nGraph as ``ngraph_dist``. 
   
@@ -58,7 +59,7 @@ skip ahead to the next section, :ref:`install_ngonnx`.
 
 #. Build the Python package (binary wheel) for ngraph and set up an env for ONNX;
    be sure to export the ``NGRAPH_CPP_BUILD_PATH`` where the ``ngraph_dist`` was 
-   installed. 
+   installed.
 
    .. code-block:: console
 
@@ -101,7 +102,7 @@ skip ahead to the next section, :ref:`install_ngonnx`.
 Installing ngraph-onnx
 -----------------------
 
-Add the dependencies for ONNX:  
+Add the dependencies for ONNX:
 
 .. code-block:: console
 
@@ -116,18 +117,20 @@ Install the ``ngraph-onnx`` companion tool using pip:
  
 
 
+.. _import_serialized_onnx:
+
 Importing a serialized model
-=============================
+============================
 
 With the dependencies added, we can now import a model that has 
-been serialized by ONNX, interact locally with the model by running 
-Python code, create and load objects, and run inference. 
+been serialized, interact locally with the model by running 
+Python code, create and load objects, and run inference.
 
 This section assumes that you have your own ONNX model. With this 
 example model from Microsoft\*'s Deep Learning framework, `CNTK`_,
 we can outline the procedure to show how to run ResNet on model 
 that has been trained on the CIFAR10 data set and serialized with 
-ONNX. 
+ONNX.
 
 
 (Optional) Localize your export to the virtual environment 
@@ -158,8 +161,8 @@ Enable ONNX and load an ONNX file from disk
    :lines: 17-19
 
  
-Convert an ONNX model to an ngraph model 
--------------------------------------------
+Convert an ONNX model to an ngraph model
+----------------------------------------
 
 .. literalinclude:: ../../../../examples/onnx/onnx_example.py
    :language: python
@@ -218,7 +221,7 @@ Put it all together
 
 
 Outputs will vary greatly, depending on your model; for
-demonstration purposes, the code will look something like: 
+demonstration purposes, the code will look something like:
 
 
 .. code-block:: python 
