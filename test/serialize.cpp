@@ -366,7 +366,7 @@ TEST(serialize, tensor_iterator)
 
     // TensorIterator
     // axis=1, start=0, stride=1, part_size=1, end=40
-    auto Xseq = make_shared<op::SliceInput>(X, 1, 0, 1, 1, 40);
+    auto Xseq = make_shared<op::SliceInput>(X, 0, 1, 1, 40, 1);
     auto Hseq = make_shared<op::SequenceRepeat>(Ho);
     auto Yseq = make_shared<op::SequenceRepeat>(Yo);
     auto tensor_iterator = make_shared<op::TensorIterator>(
@@ -380,7 +380,7 @@ TEST(serialize, tensor_iterator)
         OutputVector{Hseq, Yseq},
         // TensorIterator outputs
         OutputVector{// axis=1, start=0, stride=1, part_size=1, end=40
-                     make_shared<op::SliceOutput>(Yseq, 1, 0, 1, 1, 40)});
+                     make_shared<op::SliceOutput>(Yseq, 0, 1, 1, 40, 1)});
 
     auto result = make_shared<op::Result>(Output<Node>(tensor_iterator, 0));
     auto f =
