@@ -22,7 +22,7 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, FakeQuantize, \
+    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, \
     Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, GroupConvolution, \
     Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, \
     NotEqual, OneHot, Or, Pad, Parameter, Product, Power, Relu, ReplaceSlice, Reshape, Reverse, \
@@ -618,39 +618,6 @@ def broadcast_to(node, new_shape, axis=None, name=None):
     :return: New node with broadcast shape.
     """
     return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
-
-
-@nameable_op
-def fake_quantize(data, input_low, input_high, output_low, output_high, levels, name=None):
-    # type: (Node, Node, Node, Node, Node, int, str) -> Node
-    r"""Perform an element-wise linear quantization on input data.
-
-    Input floating point values are quantized into a discrete set of floating point values.
-
-    .. code-block:: python
-
-        if x <= input_low:
-            output = output_low
-        if x > input_high:
-            output = output_high
-        else:
-            output = fake_quantize(output)
-
-    Fake quantize uses the following logic:
-
-    .. math:: output =
-            \dfrac{round( \dfrac{data - input\_low}{(input\_high - input\_low)\cdot (levels-1)})}
-            {(levels-1)\cdot (output\_high - output\_low)} + output\_low
-
-    :param data:         The node with data tensor.
-    :param input_low:    The node with the minimum for input values.
-    :param input_high:   The node with the maximum for input values.
-    :param output_low:   The node with the minimum quantized value.
-    :param output_high:  The node with the maximum quantized value.
-    :param levels:       The number of quantization levels. Integer value.
-    :return: New node with quantized value.
-    """
-    return FakeQuantize(data, input_low, input_high, output_low, output_high, levels)
 
 
 def gemm(A,                      # type: Node
