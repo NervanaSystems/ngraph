@@ -50,6 +50,7 @@ from ngraph.ops import dot
 from ngraph.ops import elu
 from ngraph.ops import equal
 from ngraph.ops import exp
+from ngraph.ops import fake_quantize
 from ngraph.ops import floor
 from ngraph.ops import gelu
 from ngraph.ops import gemm
@@ -57,6 +58,7 @@ from ngraph.ops import get_output_element
 from ngraph.ops import greater
 from ngraph.ops import greater_eq
 from ngraph.ops import grn
+from ngraph.ops import group_convolution
 from ngraph.ops import less
 from ngraph.ops import less_eq
 from ngraph.ops import log
@@ -81,6 +83,7 @@ from ngraph.ops import relu
 from ngraph.ops import replace_slice
 from ngraph.ops import reshape
 from ngraph.ops import reverse
+from ngraph.ops import rnn_cell
 from ngraph.ops import select
 from ngraph.ops import sign
 from ngraph.ops import sin
