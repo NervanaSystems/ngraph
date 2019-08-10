@@ -32,6 +32,11 @@
 #include <unordered_map>
 #include <vector>
 
+namespace llvm
+{
+    class TargetMachine;
+}
+
 namespace ngraph
 {
     namespace descriptor
@@ -164,6 +169,16 @@ namespace ngraph
 
                 // Optimization level used by MLIR and LLVM compilers.
                 static unsigned mlir_opt_level;
+
+                // LLVM target machine to be used by this MLIR compiler instance to retrieve
+                // information about target features.
+                // TODO: Note that, unfortunatelly, MLIR/OrcJIT execution engine creates its own
+                // target machine for compilation internally. This target machine is for non-JIT
+                // related stuff. We should change OrcJIT API so that we can pass an external target
+                // machine or configuration flags.
+                // TODO: Move target machine to external nGraph backend when multiple backends start
+                // to use MLIR.
+                static std::unique_ptr<llvm::TargetMachine> target_machine;
             };
         }
     }
