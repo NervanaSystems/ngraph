@@ -967,6 +967,7 @@ def broadcast_to(node, new_shape, axis=None, name=None):
     return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
 
 
+@nameable_op
 def gemm(A,                      # type: Node
          B,                      # type: Node
          C,                      # type: Node
