@@ -365,7 +365,7 @@ TEST(serialize, tensor_iterator)
                                     make_shared<op::Broadcast>(bY, Shape{32, 5}, AxisSet{0}));
 
     // TensorIterator
-    // axis=1, start=0, stride=1, part_size=1, end=40
+    // start=0, stride=1, part_size=1, end=40, axis=1
     auto Xseq = make_shared<op::SliceInput>(X, 0, 1, 1, 40, 1);
     auto Hseq = make_shared<op::SequenceRepeat>(Ho);
     auto Yseq = make_shared<op::SequenceRepeat>(Yo);
@@ -379,7 +379,7 @@ TEST(serialize, tensor_iterator)
         // Body outputs
         OutputVector{Hseq, Yseq},
         // TensorIterator outputs
-        OutputVector{// axis=1, start=0, stride=1, part_size=1, end=40
+        OutputVector{// start=0, stride=1, part_size=1, end=40, axis=1
                      make_shared<op::SliceOutput>(Yseq, 0, 1, 1, 40, 1)});
 
     auto result = make_shared<op::Result>(Output<Node>(tensor_iterator, 0));

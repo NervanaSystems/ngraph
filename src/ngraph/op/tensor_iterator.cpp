@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/tensor_iterator.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -93,6 +94,43 @@ void op::TensorIterator::validate_and_infer_types()
     }
     // The body may depend on the body parameters as well as values from outside the body
     // Body parameters depend on the loop initialization
+    NodeVector body_result_nodes;
+    for (auto& body_output : m_body_outputs)
+    {
+        body_result_nodes.push_back(body_output.get_node_shared_ptr());
+    }
+    std::list<std::shared_ptr<Node>> body_node_closure(topological_sort(body_result_nodes, true));
+    std::set<Node*> bound_nodes;
+    std::vector<Node*> free_nodes;
+    for (auto& parameter : m_body_parameters)
+    {
+        std::cerr << *this << " Bound: " << *parameter << std::endl;
+        bound_nodes.insert(parameter.get());
+    }
+    for (auto& node : body_node_closure)
+    {
+        if (bound_nodes.find(node.get()) == bound_nodes.end())
+        {
+            bool is_free = true;
+            for (auto input : node->inputs())
+            {
+                auto input_node = input.get_source_output().get_node();
+                if (bound_nodes.find(input_node) != bound_nodes.end())
+                {
+                    bound_nodes.insert(node.get());
+                    is_free = false;
+                    std::cerr << *this << " Bound: "
+                              << " : " << *node << std::endl;
+                    break;
+                }
+            }
+            if (is_free)
+            {
+                free_nodes.push_back(node.get());
+                std::cout << *this << " Free: " << *node << std::endl;
+            }
+        }
+    }
 }
 
 const ParameterVector& op::TensorIterator::get_body_parameters() const
