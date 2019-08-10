@@ -24,9 +24,9 @@ from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgP
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
     Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
     FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
-    HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, MVN, \
+    GroupConvolution, HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, MVN, \
     Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, Quantize, \
-    QuantizedConvolution, QuantizedDot, PRelu, Relu, ReplaceSlice, Reshape, Reverse, \
+    QuantizedConvolution, QuantizedDot, PRelu, Relu, ReplaceSlice, Reshape, Reverse, RNNCell \
     ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, Softmax, SpaceToDepth, Sqrt, \
     SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
 
@@ -427,6 +427,89 @@ def quantized_dot(input0,                      # type: Node
                         AxisSet(input1_axes),
                         AxisSet(output_axes))
 
+
+def group_convolution(data_batch,                      # type: Node
+                      filters,                         # type: Node
+                      window_movement_strides,         # type: List[int]
+                      window_dilation_strides,         # type: List[int]
+                      padding_below,                   # type: List[int]
+                      padding_above,                   # type: List[int]
+                      data_dilation_strides,           # type: List[int]
+                      groups,                          # type: int
+                      name=None,                       # type: str
+                      ):
+    # type: (...) -> Node
+    """Perform Group Convolution operation on data from input node.
+
+    :param  data: The node producing input data.
+    :param filters: The node producing filters data.
+    :param window_movement_strides: The strides along each feature axis.
+    :param window_dilation_strides: The dilations along each feature axis.
+    :param padding_below: The padding added below each feature axis.
+    :param padding_above: The padding added above each feature axis.
+    :data_dilation_strides: The dilations along data.
+    :param groups: The number of groups the input channels and output channels
+                   are divided into.
+    """
+    return GroupConvolution(data_batch,
+                            filters,
+                            Strides(window_movement_strides),
+                            Strides(window_dilation_strides),
+                            CoordinateDiff(padding_below),
+                            CoordinateDiff(padding_above),
+                            Strides(data_dilation_strides),
+                            groups)
+
+
+@nameable_op
+def rnn_cell(X,                      # type: Node
+             W,                      # type: Node
+             R,                      # type: Node
+             H_t,                    # type: Node
+             hidden_size,            # type: int
+             B,                      # type: Node
+             activations,            # type: List[str]
+             activation_alpha,       # type: List[float]
+             activation_beta,        # type: List[float]
+             clip,                   # type: float
+             name=None,              # type: str
+             ):
+    # type: (...) -> Node
+    """Perform RNNCell operation on tensor from input node.
+
+    It follows notation and equations defined as in ONNX standard:
+    https://github.com/onnx/onnx/blob/master/docs/Operators.md#RNN
+
+    Note this class represents only single *cell* and not whole RNN *layer*.
+
+    :param X: The input tensor with shape: [batch_size, input_size].
+    :param W: The weight tensor with shape: [hidden_size, input_size].
+    :param R: The recurrence weight tensor with shape: [hidden_size, hidden_size].
+    :param H_t: The hidden state tensor at current time step with
+                shape: [batch_size, hidden_size].
+    :param hidden_size: The number of hidden units for recurrent cell.
+    :param B: The bias tensor for input gate with shape: [2*hidden_size].
+    :param activations: The vector of activation functions used inside recurrent cell.
+    :param activation_alpha: The vector of alpha parameters for activation
+                            functions in order respective to activation list.
+    :param activation_beta: The vector of beta parameters for activation functions
+                            in order respective to activation list.
+    :param clip: The value defining clipping range [-clip, clip] on
+                 input of activation functions.
+
+
+    :return: The new node performing a RNNCell operation on tensor from input node.
+    """
+    return RNNCell(X,
+                   W,
+                   R,
+                   H_t,
+                   hidden_size,
+                   B,
+                   activations,
+                   activation_alpha,
+                   activation_beta,
+                   cli
 
 # Unary ops
 @unary_op
