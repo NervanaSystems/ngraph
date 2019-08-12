@@ -28,7 +28,7 @@ from source in our documentation: :ref:`ngraph_plaidml_backend`.
    :widths: 35, 10, 10
 
    Intel® Architecture Processors (CPUs), Yes, Yes
-   Intel® Nervana™ Neural Network Processor™ (NNPs), Yes, Yes
+   Intel® Nervana™ Neural Network Processor (NNPs), Yes, Yes
    NVIDIA CUDA (GPUs), Yes, Some 
    AMD GPUs, Yes, Some
 

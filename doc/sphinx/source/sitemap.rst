@@ -1,6 +1,6 @@
 :orphan:
 
-* :ref:`Getting Started <getting_started>`
+* :ref:`Getting Started <introduction>`
 
   .. toctree::
      :maxdepth: 1

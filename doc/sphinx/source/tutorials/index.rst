@@ -6,8 +6,6 @@
 Tutorials
 #########
 
-To learn how to use nGraph, begin with our Get Started Tutorials. 
-
 
 .. _get_started_tensorflow:
 
@@ -20,7 +18,7 @@ TensorFlow
    tensorflow-tutorial.rst
    
 
-   .. _get_started_onnx:
+.. _get_started_onnx:
 
 ONNX 
 ====

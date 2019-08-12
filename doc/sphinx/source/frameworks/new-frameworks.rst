@@ -12,7 +12,7 @@ supported backends discussed on our doc page: :doc:`../backends/overview`.
 
 Regardless of the framework, after the :doc:`../buildlb` step, a good place 
 to start usually involves making the libraries available to the framework. On 
-Linux\* systems built on Intel® Architecture, that command tends to looks 
+Linux systems built on Intel® Architecture, that command tends to looks 
 something like: 
 
 .. code-block:: console

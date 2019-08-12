@@ -2,6 +2,8 @@
 
 :orphan:
 
+.. _getting_started:
+
 Getting Started
 ###############
 
@@ -14,9 +16,9 @@ with the easiest and most straightforward options.
    :alt: Translation flow to nGraph function graph
 
 The easiest way to get started is to use the latest PyPI `ngraph-tensorflow-bridge`_,
-which has instructions for Linux* systems, and tips for users of Mac OS X. 
+which has instructions for Linux systems, and tips for users of Mac OS X. 
 
-You can install TensorFlow\* and nGraph to a virtual environment; otherwise, the code 
+You can install TensorFlow and nGraph to a virtual environment; otherwise, the code 
 will install to a system location.
 
 .. code-block:: console
@@ -45,7 +47,7 @@ Output will look something like:
     TensorFlow version used for this build: v[version-hash]
     CXX11_ABI flag used for this build: boolean
 
-More detail in the `ngraph_bridge examples`_ directory. 
+More detail in the `ngraph_bridge examples`_ directory.
 
 
 ONNX
@@ -71,7 +73,7 @@ See also nGraph's :doc:`../python_api/index`.
 PlaidML
 =======
 
-See :ref:`ngraph_plaidml_backend` section on how to build the 
+See :ref:`ngraph_plaidml_backend` section on how to build the backend for 
 nGraph-PlaidML.
 
 
