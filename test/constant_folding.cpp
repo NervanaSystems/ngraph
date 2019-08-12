@@ -168,15 +168,24 @@ static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t po
 
 TEST(constant_folding, constant_unary_binary)
 {
-    Shape shape_in{4};
     vector<int> values_a{1, 2, 3, 4};
     vector<int> values_b{1, 2, 3, 4};
     vector<int> values_c{-1, -1, -1, -1};
     vector<int> values_d{1, 4, 9, 16};
-    auto a = make_shared<op::Constant>(element::i32, shape_in, values_a);
-    auto b = make_shared<op::Constant>(element::i32, shape_in, values_b);
-    auto c = make_shared<op::Constant>(element::i32, shape_in, values_c);
-    auto d = make_shared<op::Constant>(element::i32, shape_in, values_d);
+    vector<int> values_e{5, 6};
+    vector<int> values_f{0, 10};
+    vector<int> values_g{1, 4};
+    vector<char> values_h{0, 0, 1, 1};
+    vector<char> values_i{0, 1};
+    auto a = make_shared<op::Constant>(element::i32, Shape{2, 2}, values_a);
+    auto b = make_shared<op::Constant>(element::i32, Shape{2, 2}, values_b);
+    auto c = make_shared<op::Constant>(element::i32, Shape{2, 2}, values_c);
+    auto d = make_shared<op::Constant>(element::i32, Shape{2, 2}, values_d);
+    auto e = make_shared<op::Constant>(element::i32, Shape{2}, values_e);
+    auto f = make_shared<op::Constant>(element::i32, Shape{2}, values_f);
+    auto g = make_shared<op::Constant>(element::i32, Shape{2}, values_g);
+    auto h = make_shared<op::Constant>(element::boolean, Shape{2, 2}, values_h);
+    auto i = make_shared<op::Constant>(element::boolean, Shape{2}, values_i);
 
     auto add = a + b;
     auto sub = a - b;
@@ -187,15 +196,54 @@ TEST(constant_folding, constant_unary_binary)
     auto absn = make_shared<op::Abs>(c);
     auto neg = make_shared<op::Negative>(c);
     auto sqrt = make_shared<op::Sqrt>(d);
+    auto add_autob_numpy = make_shared<op::Add>(a, e, op::AutoBroadcastType::NUMPY);
+    auto sub_autob_numpy = make_shared<op::Subtract>(a, e, op::AutoBroadcastType::NUMPY);
+    auto mul_autob_numpy = make_shared<op::Multiply>(a, e, op::AutoBroadcastType::NUMPY);
+    auto div_autob_numpy = make_shared<op::Divide>(a, g, op::AutoBroadcastType::NUMPY);
+    auto min_autob_numpy = make_shared<op::Minimum>(a, f, op::AutoBroadcastType::NUMPY);
+    auto max_autob_numpy = make_shared<op::Maximum>(a, f, op::AutoBroadcastType::NUMPY);
+    auto equal_autob_numpy = make_shared<op::Equal>(a, g, op::AutoBroadcastType::NUMPY);
+    auto not_equal_autob_numpy = make_shared<op::NotEqual>(a, g, op::AutoBroadcastType::NUMPY);
+    auto greater_autob_numpy = make_shared<op::Greater>(a, g, op::AutoBroadcastType::NUMPY);
+    auto greater_eq_autob_numpy = make_shared<op::GreaterEq>(a, g, op::AutoBroadcastType::NUMPY);
+    auto less_autob_numpy = make_shared<op::Less>(a, g, op::AutoBroadcastType::NUMPY);
+    auto less_eq_autob_numpy = make_shared<op::LessEq>(a, g, op::AutoBroadcastType::NUMPY);
+    auto logical_and_autob_numpy = make_shared<op::And>(h, i, op::AutoBroadcastType::NUMPY);
+    auto logical_or_autob_numpy = make_shared<op::Or>(h, i, op::AutoBroadcastType::NUMPY);
+    auto logical_xor_autob_numpy = make_shared<op::Xor>(h, i, op::AutoBroadcastType::NUMPY);
+
     auto neg_sqrt = make_shared<op::Sqrt>(c);
 
-    auto f = make_shared<Function>(NodeVector{add, sub, mul, divn, min, max, absn, neg, sqrt},
-                                   ParameterVector{});
-    auto f_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
+    auto func = make_shared<Function>(NodeVector{add,
+                                                 sub,
+                                                 mul,
+                                                 divn,
+                                                 min,
+                                                 max,
+                                                 absn,
+                                                 neg,
+                                                 sqrt,
+                                                 add_autob_numpy,
+                                                 sub_autob_numpy,
+                                                 mul_autob_numpy,
+                                                 div_autob_numpy,
+                                                 min_autob_numpy,
+                                                 max_autob_numpy,
+                                                 equal_autob_numpy,
+                                                 not_equal_autob_numpy,
+                                                 greater_autob_numpy,
+                                                 greater_eq_autob_numpy,
+                                                 less_autob_numpy,
+                                                 less_eq_autob_numpy,
+                                                 logical_and_autob_numpy,
+                                                 logical_or_autob_numpy,
+                                                 logical_xor_autob_numpy},
+                                      ParameterVector{});
+    auto func_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
-    pass_manager.run_passes(f);
+    pass_manager.run_passes(func);
 
     //expected values
     vector<int> add_expected{2, 4, 6, 8};
@@ -206,17 +254,47 @@ TEST(constant_folding, constant_unary_binary)
     vector<int> max_expected{1, 2, 3, 4};
     vector<int> abs_neg_expected{1, 1, 1, 1};
     vector<int> sqrt_expected{1, 2, 3, 4};
+    vector<int> add_autob_numpy_expected{6, 8, 8, 10};
+    vector<int> sub_autob_numpy_expected{-4, -4, -2, -2};
+    vector<int> mul_autob_numpy_expected{5, 12, 15, 24};
+    vector<int> div_autob_numpy_expected{1, 0, 3, 1};
+    vector<int> min_autob_numpy_expected{0, 2, 0, 4};
+    vector<int> max_autob_numpy_expected{1, 10, 3, 10};
+    vector<char> equal_autob_numpy_expected{1, 0, 0, 1};
+    vector<char> not_equal_autob_numpy_expected{0, 1, 1, 0};
+    vector<char> greater_autob_numpy_expected{0, 0, 1, 0};
+    vector<char> greater_eq_autob_numpy_expected{1, 0, 1, 1};
+    vector<char> less_autob_numpy_expected{0, 1, 0, 0};
+    vector<char> less_eq_autob_numpy_expected{1, 1, 0, 1};
+    vector<char> logical_and_autob_numpy_expected{0, 0, 0, 1};
+    vector<char> logical_or_autob_numpy_expected{0, 1, 1, 1};
+    vector<char> logical_xor_autob_numpy_expected{0, 1, 1, 0};
 
-    ASSERT_EQ(get_result_constant<int>(f, 0), add_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 1), sub_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 2), mul_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 3), div_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 4), min_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 5), max_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 6), abs_neg_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 7), abs_neg_expected);
-    ASSERT_EQ(get_result_constant<int>(f, 8), sqrt_expected);
-    ASSERT_ANY_THROW(pass_manager.run_passes(f_error));
+    ASSERT_EQ(get_result_constant<int>(func, 0), add_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 1), sub_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 2), mul_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 3), div_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 4), min_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 5), max_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 6), abs_neg_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 7), abs_neg_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 8), sqrt_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 9), add_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 10), sub_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 11), mul_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 12), div_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 13), min_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 14), max_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 15), equal_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 16), not_equal_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 17), greater_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 18), greater_eq_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 19), less_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 20), less_eq_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 21), logical_and_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 22), logical_or_autob_numpy_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 23), logical_xor_autob_numpy_expected);
+    ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
 }
 
 TEST(constant_folding, const_dequantize)
@@ -1019,6 +1097,43 @@ TEST(constant_folding, constant_dyn_reshape)
     ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
+TEST(constant_folding, constant_dyn_reshape_shape_not_originally_constant)
+{
+    Shape shape_in{2, 4};
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+
+    Shape shape_shape{3};
+    // We're going to add these two together elementwise to get {2, 4, 1}.
+    // This means that when ConstantFolding starts, DynReshape will not yet
+    // have static output shape. But by the time the Add op is folded, the
+    // DynReshape's shape should be inferrable.
+    vector<int64_t> values_shape_a{1, 3, 0};
+    vector<int64_t> values_shape_b{1, 1, 1};
+
+    auto constant_in = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    auto constant_shape_a = make_shared<op::Constant>(element::i64, shape_shape, values_shape_a);
+    auto constant_shape_b = make_shared<op::Constant>(element::i64, shape_shape, values_shape_b);
+    auto dyn_reshape =
+        make_shared<op::DynReshape>(constant_in, constant_shape_a + constant_shape_b);
+    auto f = make_shared<Function>(dyn_reshape, ParameterVector{});
+
+    ASSERT_TRUE(dyn_reshape->output(0).get_partial_shape().is_dynamic());
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::DynReshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const =
+        std::dynamic_pointer_cast<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<float>();
+
+    ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
 TEST(constant_folding, constant_transpose)
 {
     Shape shape_in{2, 4};
@@ -1140,5 +1255,5 @@ TEST(constant_folding, pass_property)
 {
     auto pass = std::make_shared<ngraph::pass::ConstantFolding>();
     ASSERT_EQ(false, pass->get_property(pass::PassProperty::REQUIRE_STATIC_SHAPE));
-    ASSERT_EQ(false, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
+    ASSERT_EQ(true, pass->get_property(pass::PassProperty::CHANGE_DYNAMIC_STATE));
 }

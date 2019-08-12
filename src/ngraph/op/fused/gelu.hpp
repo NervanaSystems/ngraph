@@ -35,10 +35,11 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            Gelu() = default;
             /// \brief Constructs an Gelu operation.
             ///
             /// \param data Input tensor
-            Gelu(const std::shared_ptr<ngraph::Node>& data);
+            Gelu(const Output<Node>& data);
 
             virtual NodeVector decompose_op() const override;
 

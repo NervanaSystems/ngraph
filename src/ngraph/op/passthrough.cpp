@@ -38,6 +38,21 @@ ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
     constructor_validate_and_infer_types();
 }
 
+ngraph::op::Passthrough::Passthrough(const std::string& logical_type,
+                                     const std::string& language,
+                                     const std::string& function,
+                                     const OutputVector& args,
+                                     std::vector<std::tuple<element::Type, PartialShape>> outputs)
+    : Op{args}
+    , m_logical_type{logical_type}
+    , m_language{language}
+    , m_function{function}
+    , m_output_shapes{std::move(outputs)}
+{
+    set_output_size(m_output_shapes.size());
+    constructor_validate_and_infer_types();
+}
+
 void ngraph::op::Passthrough::validate_and_infer_types()
 {
     // N.B. It would be useful to have the backend deduce the output

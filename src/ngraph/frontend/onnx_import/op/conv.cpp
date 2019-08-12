@@ -28,7 +28,6 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "op/conv.hpp"
 
 namespace ngraph
 {
