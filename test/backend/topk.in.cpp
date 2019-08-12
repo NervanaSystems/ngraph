@@ -83,9 +83,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_i32_max_all)
     EXPECT_EQ((vector<int32_t>{5, 4, 3, 2, 1, 0}), read_vector<int32_t>(result0));
     auto h1 = backend->compile(f1);
     h1->call_with_validate({result1}, {a});
-    EXPECT_TRUE(test::all_close_f(
-        (vector<int32_t>{6, 5, 4, 3, 2, 1}), read_vector<int32_t>(result1),
-        MIN_FLOAT_TOLERANCE_BITS));
+    EXPECT_EQ((vector<int32_t>{6, 5, 4, 3, 2, 1}), read_vector<int32_t>(result1));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_partial)
