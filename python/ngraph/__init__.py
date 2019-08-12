@@ -94,5 +94,7 @@ from ngraph.ops import sum
 from ngraph.ops import tan
 from ngraph.ops import tanh
 from ngraph.ops import topk
+from ngraph.ops import unsqueeze
+
 
 from ngraph.runtime import runtime
