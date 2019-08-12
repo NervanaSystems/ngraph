@@ -1,7 +1,12 @@
 {
     "name": "Add",
     "dialect": "core",
-    "dialect_versions": [2, 3, 4, 5],
+    "dialect_versions": [
+        2,
+        3,
+        4,
+        5
+    ],
     "description": "Elementwise addition operation",
     "commutative": true,
     "has_state": false,
