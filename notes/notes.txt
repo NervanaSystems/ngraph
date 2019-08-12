@@ -1,0 +1,57 @@
+New backend design goals:
+- Fast compilation - limit template usage per file.
+- Small code base
+
+Representing Computation:
+- Operation
+-- Math operation, no fixed shape, has input, output and attributes that does not need to be specified when creating an operation. They can be binded later.
+-- Operations will behave depending on input shape and will figure out correct output shape.
+- Memory
+-- Abtraction for holders for value
+-- can be named or automatic
+-- has shape or view
+-- can be tied to a device
+--- Layout and buffer
+
+Functional style:
+- Operations can feed to operations directly
+- Automatic Memory will be created.
+
+Imperative style:
+- Operations are connected through Named Memory.
+
+Device:
+
+
+In place operation/update:
+- Streaming op: simple elementwise op
+- same shape output as input
+- no other reader for (overwritten) input
+
+Type of operations:
+- By scope of input in terms of single output point
+-- Global
+-- Windowed
+-- Elementwise
+- By number of inputs
+-- Unary
+-- Binary
+-- Ternary
+- By reduction type for non elementwise
+-- N : 1
+-- N : M
+- Other memory type
+-- bcast
+-- concat
+-- slice
+-- squeeze
+-- unsqueeze
+-- transpose
+-- flatten
+-- reshape
+-- space to depth
+-- depth to space
+-- ShuffleChannels
+- Normalization
+-- softmax
+-- various other normalizations
