@@ -539,6 +539,18 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGNotOp)
+    {
+        lower_unary_elementwise<mlir::NGNotOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
+    REWRITER(NGAbsOp)
+    {
+        lower_unary_elementwise<mlir::NGAbsOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
     REWRITER(NGDotOp)
     {
         auto dot = cast<NGDotOp>(op);
@@ -856,6 +868,27 @@ namespace
                 else
                 {
                     NGRAPH_CHECK(false, "Unsupported type for Negative");
+                }
+            }
+            else if (isa<NGNotOp>(op))
+            {
+                iRes(ivs) = !val;
+            }
+            else if (isa<NGAbsOp>(op))
+            {
+                if (auto floatTy = elemTy.dyn_cast<FloatType>())
+                {
+                    ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+                    iRes(ivs) = edsc::intrinsics::select((val < zero), zero - val, val);
+                }
+                else if (auto intTy = elemTy.dyn_cast<IntegerType>())
+                {
+                    ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
+                    iRes(ivs) = edsc::intrinsics::select((val < zero), zero - val, val);
+                }
+                else
+                {
+                    NGRAPH_CHECK(false, "Unsupported type for Abs");
                 }
             }
             else

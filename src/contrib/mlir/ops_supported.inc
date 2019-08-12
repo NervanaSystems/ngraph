@@ -3,6 +3,7 @@
 #define MLIR_OP
 #endif
 
+MLIR_OP(Abs)
 MLIR_OP(Add)
 MLIR_OP(ArgMin)
 MLIR_OP(ArgMax)
@@ -16,6 +17,7 @@ MLIR_OP(Maximum)
 MLIR_OP(Minimum)
 MLIR_OP(Multiply)
 MLIR_OP(Negative)
+MLIR_OP(Not)
 MLIR_OP(Subtract)
 MLIR_OP(Relu)
 // Add new supported ops here

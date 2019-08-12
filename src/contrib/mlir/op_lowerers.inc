@@ -23,6 +23,7 @@
 #define MLIR_LAST_OP(OP) MLIR_OP(OP)
 #endif
 
+MLIR_OP(NGAbsOp)
 MLIR_OP(NGAddOp)
 MLIR_OP(NGArgMaxRedOp)
 MLIR_OP(NGArgMinRedOp)
@@ -36,6 +37,7 @@ MLIR_OP(NGMulOp)
 MLIR_OP(NGMaxOp)
 MLIR_OP(NGMinOp)
 MLIR_OP(NGNegOp)
+MLIR_OP(NGNotOp)
 MLIR_OP(NGReluOp)
 MLIR_OP(NGSubOp)
 MLIR_LAST_OP(NGReturnOp)

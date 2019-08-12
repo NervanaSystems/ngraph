@@ -21,6 +21,7 @@
 #include "ngraph/assertion.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/abs.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
@@ -36,6 +37,7 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/not.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 
@@ -344,7 +346,12 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         }
     }
 
-    if (TI(ngraph::op::Negative) == TI(*node))
+    if (TI(ngraph::op::Negative) == TI(*node) || TI(ngraph::op::Not) == TI(*node))
+    {
+        return true;
+    }
+
+    if (TI(ngraph::op::Abs) == TI(*node))
     {
         return true;
     }
