@@ -31,14 +31,15 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            MatMul() = default;
             /// \brief Constructs an ScaleShift operation.
             ///
             /// \param A Matrix A
             /// \param B Matrix B
             /// \param transpose_a If matrix A should be transposed.
             /// \param transpose_b If matrix B should be transposed.
-            MatMul(const std::shared_ptr<Node>& A,
-                   const std::shared_ptr<Node>& B,
+            MatMul(const Output<Node>& A,
+                   const Output<Node>& B,
                    const bool& transpose_a = 0,
                    const bool& transpose_b = 0);
 

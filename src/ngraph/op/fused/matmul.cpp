@@ -26,11 +26,11 @@ using namespace ngraph;
 
 const string op::MatMul::type_name{"MatMul"};
 
-op::MatMul::MatMul(const shared_ptr<Node>& A,
-                   const shared_ptr<Node>& B,
+op::MatMul::MatMul(const Output<Node>& A,
+                   const Output<Node>& B,
                    const bool& transpose_a,
                    const bool& transpose_b)
-    : FusedOp(NodeVector{A, B})
+    : FusedOp(OutputVector{A, B})
     , m_transpose_a{transpose_a}
     , m_transpose_b{transpose_b}
 {
@@ -39,22 +39,24 @@ op::MatMul::MatMul(const shared_ptr<Node>& A,
 
 NodeVector op::MatMul::decompose_op() const
 {
-    auto A = get_argument(0);
-    auto B = get_argument(1);
+    auto A = input(0).get_source_output();
+    auto B = input(1).get_source_output();
 
-    int a_rank = A->get_shape().size();
+    // Specification is expecting that A & B have at least 2 dimenstions.
+    // Missing dimensions are padded with 1.
+    int a_rank = A.get_shape().size();
     if (a_rank < 2)
     {
         A = a_rank == 0 ? make_shared<op::Reshape>(A, AxisVector{}, Shape{1, 1})
-                        : make_shared<op::Reshape>(A, AxisVector{1}, Shape{1, A->get_shape()[0]});
+                        : make_shared<op::Reshape>(A, AxisVector{1}, Shape{1, A.get_shape()[0]});
         a_rank = 2;
     }
 
-    int b_rank = B->get_shape().size();
+    int b_rank = B.get_shape().size();
     if (b_rank < 2)
     {
         B = b_rank == 0 ? make_shared<op::Reshape>(B, AxisVector{}, Shape{1, 1})
-                        : make_shared<op::Reshape>(B, AxisVector{1}, Shape{1, B->get_shape()[0]});
+                        : make_shared<op::Reshape>(B, AxisVector{1}, Shape{1, B.get_shape()[0]});
         b_rank = 2;
     }
 
@@ -76,15 +78,12 @@ NodeVector op::MatMul::decompose_op() const
         B = builder::reorder_axes(B, axes_order);
     }
 
-    builder::MatmulFactory factory({A, B});
+    builder::MatmulFactory factory({A.get_node_shared_ptr(), B.get_node_shared_ptr()});
     return factory.make_matmul_op();
 }
 
 shared_ptr<Node> op::MatMul::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
+    check_new_args_count(this, new_args);
     return make_shared<MatMul>(new_args.at(0), new_args.at(1), m_transpose_a, m_transpose_b);
 }
