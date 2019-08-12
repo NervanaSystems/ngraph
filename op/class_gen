@@ -52,6 +52,14 @@ class OpArgumentWriter():
         s += ' }'
         return s
 
+    def get_argument_case(self):
+        s = ''
+        if self._idx != 0:
+            s += 'else '
+        s += ('if (name == "%s") { return input(%d); }' %
+              (self._name, self._idx))
+        return s
+
     def name(self):
         return self._name
 
@@ -72,6 +80,14 @@ class OpResultWriter():
         s += ' }'
         return s
 
+    def get_result_case(self):
+        s = ''
+        if self._idx != 0:
+            s += 'else '
+        s += ('if (name == "%s") { return output(%d); }' %
+              (self._name, self._idx))
+        return s
+
     def name(self):
         return self._name
 
@@ -87,15 +103,23 @@ class OpAttributeWriter():
         return('const %s& %s' % (self._type, self._name))
 
     def getter_proto(self):
-        return ('const %s& get_%s() const { return %s; }'
+        return ('const %s& get_%s() const { return %s.get(); }'
                 % (self._type, self._name, self.member_var_name()))
 
     def setter_proto(self):
-        return ('void set_%s (const %s& %s) { %s = %s; }'
+        return ('void set_%s (const %s& %s) { %s.set(%s); }'
                 % (self._name, self._type, self._name, self.member_var_name(), self._name))
 
+    def get_attribute_case(self):
+        s = ''
+        if self._idx != 0:
+            s += 'else '
+        s += ('if (name == "%s") { return %s; }' %
+              (self._name, self.member_var_name()))
+        return s
+
     def member_var_proto(self):
-        return ('%s %s;' % (self._type, self.member_var_name()))
+        return ('::ngraph::Attribute<%s> %s;' % (self._type, self.member_var_name()))
 
     def member_var_name(self):
         return 'm_' + self._name
@@ -276,6 +300,93 @@ class ClassWriter():
                           for attribute in self._attributes))
         f.write('}; }\n')
 
+        f.write('    ::ngraph::Input<const ::ngraph::Node> get_argument(const ::std::string& name) const final override\n')
+        f.write('    {\n')
+        for argument in self._arguments:
+            f.write('        %s\n' % argument.get_argument_case())
+        if len(self._arguments) > 0:
+            f.write('        else\n')
+            f.write('        {\n')
+            f.write('    ')
+        f.write(
+            '        NGRAPH_CHECK(false, "get_argument: Invalid argument name ", name);\n')
+        if len(self._arguments) > 0:
+            f.write('        }\n')
+            f.write('    }\n')
+
+        f.write(
+            '    ::ngraph::Input<::ngraph::Node> get_argument(const ::std::string& name) final override\n')
+        f.write('    {\n')
+        for argument in self._arguments:
+            f.write('        %s\n' % argument.get_argument_case())
+        if len(self._arguments) > 0:
+            f.write('        else\n')
+            f.write('        {\n')
+            f.write('    ')
+        f.write(
+            '        NGRAPH_CHECK(false, "get_argument: Invalid argument name ", name);\n')
+        if len(self._arguments) > 0:
+            f.write('        }\n')
+            f.write('    }\n')
+
+        f.write('    ::ngraph::Output<const ::ngraph::Node> get_result(const ::std::string& name) const final override\n')
+        f.write('    {\n')
+        for result in self._results:
+            f.write('        %s\n' % result.get_result_case())
+        if len(self._results) > 0:
+            f.write('        else\n')
+            f.write('        {\n')
+            f.write('    ')
+        f.write(
+            '        NGRAPH_CHECK(false, "get_result: Invalid result name ", name);\n')
+        if len(self._results) > 0:
+            f.write('        }\n')
+            f.write('    }\n')
+
+        f.write(
+            '    ::ngraph::Output<::ngraph::Node> get_result(const ::std::string& name) final override\n')
+        f.write('    {\n')
+        for result in self._results:
+            f.write('        %s\n' % result.get_result_case())
+        if len(self._results) > 0:
+            f.write('        else\n')
+            f.write('        {\n')
+            f.write('    ')
+        f.write(
+            '        NGRAPH_CHECK(false, "get_result: Invalid result name ", name);\n')
+        if len(self._results) > 0:
+            f.write('        }\n')
+            f.write('    }\n')
+
+        f.write('    const ::ngraph::AttributeBase& get_attribute(const ::std::string& name) const final override\n')
+        f.write('    {\n')
+        for attribute in self._attributes:
+            f.write('        %s\n' % attribute.get_attribute_case())
+        if len(self._attributes) > 0:
+            f.write('        else\n')
+            f.write('        {\n')
+            f.write('    ')
+        f.write(
+            '        NGRAPH_CHECK(false, "get_attribute: Invalid attribute name ", name);\n')
+        if len(self._attributes) > 0:
+            f.write('        }\n')
+            f.write('    }\n')
+
+        f.write(
+            '    ::ngraph::AttributeBase& get_attribute(const ::std::string& name) final override\n')
+        f.write('    {\n')
+        for attribute in self._attributes:
+            f.write('        %s\n' % attribute.get_attribute_case())
+        if len(self._attributes) > 0:
+            f.write('        else\n')
+            f.write('        {\n')
+            f.write('    ')
+        f.write(
+            '        NGRAPH_CHECK(false, "get_attribute: Invalid attribute name ", name);\n')
+        if len(self._attributes) > 0:
+            f.write('        }\n')
+            f.write('    }\n')
+
         f.write('    bool is_commutative() const final override { return %s; }\n' % (
             'true' if self._commutative else 'false'))
         f.write('    bool has_state() const final override { return %s; }\n' % (
@@ -292,7 +403,7 @@ class ClassWriter():
                           for (idx, _) in enumerate(self._arguments)))
         if len(self._arguments) > 0 and len(self._attributes) > 0:
             f.write(', ')
-        f.write(', '.join(attribute.member_var_name()
+        f.write(', '.join(attribute.member_var_name() + ".get()"
                           for attribute in self._attributes))
         f.write(');\n')
         f.write('        // TODO: control deps\n')

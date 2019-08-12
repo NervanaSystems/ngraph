@@ -18,6 +18,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/type/element_type.hpp"
 
 namespace ngraph
@@ -33,50 +34,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            enum class RoundMode
-            {
-                // round to nearest integer
-                // in case of two equidistant integers round away from zero e.g.
-                // 2.5 -> 3
-                // -3.5 -> -4
-                ROUND_NEAREST_TOWARD_INFINITY,
-
-                // round to nearest integer
-                // in case of two equidistant integers round toward zero e.g.
-                // 2.5 -> 2
-                // -3.5 -> -3
-                ROUND_NEAREST_TOWARD_ZERO,
-
-                // round to nearest integer
-                // in case of two equidistant integers round up e.g.
-                // 2.5 -> 3
-                // -3.5 -> -3
-                ROUND_NEAREST_UPWARD,
-
-                // round to nearest integer
-                // in case of two equidistant integers round down e.g.
-                // 2.5 -> 2
-                // -3.5 -> -4
-                ROUND_NEAREST_DOWNWARD,
-
-                // round to nearest integer
-                // in case of two equidistant integers round to even e.g.
-                // 2.5 -> 2
-                // -3.5 -> -4
-                ROUND_NEAREST_TOWARD_EVEN,
-
-                // round to nearest integer away from zero
-                ROUND_TOWARD_INFINITY,
-
-                // round to nearest integer toward zero
-                ROUND_TOWARD_ZERO,
-
-                // round to nearest integer toward infinity (ceiling)
-                ROUND_UP,
-
-                // round to nearest integer toward negative infinity (floor)
-                ROUND_DOWN,
-            };
+            using RoundMode = op::RoundMode;
 
             /// \brief Constructs a Quantize operation
             /// \param input real input

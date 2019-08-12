@@ -41,6 +41,7 @@ set(SRC
     aligned_buffer.cpp
     all_close_f.cpp
     assertion.cpp
+    attribute.cpp
     bfloat16.cpp
     build_graph.cpp
     builder_autobroadcast.cpp

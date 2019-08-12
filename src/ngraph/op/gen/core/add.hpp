@@ -52,10 +52,10 @@ public:
     ::ngraph::Input<const ::ngraph::Node> get_y() const { return input(1); }
     ::ngraph::Output<::ngraph::Node> get_z() { return output(0); }
     ::ngraph::Output<const ::ngraph::Node> get_z() const { return output(0); }
-    const AutoBroadcastSpec& get_autobroadcast() const { return m_autobroadcast; }
+    const AutoBroadcastSpec& get_autobroadcast() const { return m_autobroadcast.get(); }
     void set_autobroadcast(const AutoBroadcastSpec& autobroadcast)
     {
-        m_autobroadcast = autobroadcast;
+        m_autobroadcast.set(autobroadcast);
     }
     ::std::vector<::std::string> get_argument_keys() const final override
     {
@@ -69,6 +69,82 @@ public:
     {
         return ::std::vector<::std::string>{"autobroadcast"};
     }
+    ::ngraph::Input<const ::ngraph::Node>
+        get_argument(const ::std::string& name) const final override
+    {
+        if (name == "x")
+        {
+            return input(0);
+        }
+        else if (name == "y")
+        {
+            return input(1);
+        }
+        else
+        {
+            NGRAPH_CHECK(false, "get_argument: Invalid argument name ", name);
+        }
+    }
+    ::ngraph::Input<::ngraph::Node> get_argument(const ::std::string& name) final override
+    {
+        if (name == "x")
+        {
+            return input(0);
+        }
+        else if (name == "y")
+        {
+            return input(1);
+        }
+        else
+        {
+            NGRAPH_CHECK(false, "get_argument: Invalid argument name ", name);
+        }
+    }
+    ::ngraph::Output<const ::ngraph::Node>
+        get_result(const ::std::string& name) const final override
+    {
+        if (name == "z")
+        {
+            return output(0);
+        }
+        else
+        {
+            NGRAPH_CHECK(false, "get_result: Invalid result name ", name);
+        }
+    }
+    ::ngraph::Output<::ngraph::Node> get_result(const ::std::string& name) final override
+    {
+        if (name == "z")
+        {
+            return output(0);
+        }
+        else
+        {
+            NGRAPH_CHECK(false, "get_result: Invalid result name ", name);
+        }
+    }
+    const ::ngraph::AttributeBase& get_attribute(const ::std::string& name) const final override
+    {
+        if (name == "autobroadcast")
+        {
+            return m_autobroadcast;
+        }
+        else
+        {
+            NGRAPH_CHECK(false, "get_attribute: Invalid attribute name ", name);
+        }
+    }
+    ::ngraph::AttributeBase& get_attribute(const ::std::string& name) final override
+    {
+        if (name == "autobroadcast")
+        {
+            return m_autobroadcast;
+        }
+        else
+        {
+            NGRAPH_CHECK(false, "get_attribute: Invalid attribute name ", name);
+        }
+    }
     bool is_commutative() const final override { return true; }
     bool has_state() const final override { return false; }
     ::std::shared_ptr<::ngraph::Node>
@@ -76,11 +152,11 @@ public:
     {
         // TODO: check input count
         ::std::shared_ptr<::ngraph::Node> new_node =
-            ::std::make_shared<Add>(inputs[0], inputs[1], m_autobroadcast);
+            ::std::make_shared<Add>(inputs[0], inputs[1], m_autobroadcast.get());
         // TODO: control deps
         return new_node;
     }
 
 private:
-    AutoBroadcastSpec m_autobroadcast;
+    ::ngraph::Attribute<AutoBroadcastSpec> m_autobroadcast;
 };
