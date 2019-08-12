@@ -25,6 +25,9 @@ namespace ngraph
         class CTCGreedyDecoder : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a CTCGreedyDecoder operation
             ///
             /// \param input              Logits on which greedy decoding is performed

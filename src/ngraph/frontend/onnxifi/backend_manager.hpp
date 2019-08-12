@@ -19,7 +19,7 @@
 #include <cstddef> // std::size_t, std::uintptr_t
 #include <map>     // std::map
 #include <mutex>   // std::mutex
-#include <onnxifi.h>
+#include <onnx/onnxifi.h>
 
 #include "backend.hpp"
 #include "ngraph/runtime/backend.hpp"

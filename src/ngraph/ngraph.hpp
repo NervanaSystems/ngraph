@@ -20,9 +20,27 @@
 
 #pragma once
 
+#include <string>
+
 #ifdef IN_NGRAPH_LIBRARY
 #error("ngraph.hpp is for external use only")
 #endif
+
+extern "C" const char* get_ngraph_version_string();
+namespace ngraph
+{
+    /// \brief Function to query parsed version information of the version of ngraph which
+    /// contains this function. Version information strictly follows Semantic Versioning
+    /// http://semver.org
+    /// \param major Returns the major part of the version
+    /// \param minor Returns the minor part of the version
+    /// \param patch Returns the patch part of the version
+    /// \param extra Returns the extra part of the version. This includes everything following
+    /// the patch version number.
+    ///
+    /// \note Throws a runtime_error if there is an error during parsing
+    void get_version(size_t& major, size_t& minor, size_t& patch, std::string& extra);
+}
 
 /// \namespace ngraph
 /// \brief The Intel Nervana Graph C++ API.
@@ -111,7 +129,6 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
@@ -175,6 +192,7 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/tensor.hpp"
