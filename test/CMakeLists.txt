@@ -113,6 +113,7 @@ set(SRC
     type_prop/index_reduction.cpp
     type_prop/lstm_cell.cpp
     type_prop/max_pool.cpp
+    type_prop/merge.cpp
     type_prop/mvn.cpp
     type_prop/normalize.cpp
     type_prop/one_hot.cpp
@@ -263,6 +264,7 @@ set(MULTI_TEST_SRC
     backend/lrn.in.cpp
     backend/max.in.cpp
     backend/maximum.in.cpp
+    backend/merge.in.cpp
     backend/min.in.cpp
     backend/minimum.in.cpp
     backend/multiple_backends.in.cpp

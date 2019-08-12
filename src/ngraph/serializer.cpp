@@ -106,6 +106,7 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
+#include "ngraph/op/merge.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -1466,6 +1467,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 make_shared<op::Maximum>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
             break;
         }
+        case OP_TYPEID::Merge:
+        {
+            node = make_shared<op::Merge>(args[0], args[1], args[2]);
+            break;
+        }
         case OP_TYPEID::Min:
         {
             auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
@@ -2570,6 +2576,8 @@ json JSONSerializer::serialize_node(const Node& n)
             node["autob"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
+    }
+    case OP_TYPEID::Merge: { break;
     }
     case OP_TYPEID::Min:
     {

@@ -224,6 +224,8 @@ set (SRC
     op/max_pool.hpp
     op/maximum.cpp
     op/maximum.hpp
+    op/merge.cpp
+    op/merge.hpp
     op/min.cpp
     op/min.hpp
     op/minimum.cpp

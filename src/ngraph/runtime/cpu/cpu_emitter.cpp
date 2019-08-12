@@ -78,6 +78,7 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
+#include "ngraph/op/merge.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -3223,6 +3224,19 @@ namespace ngraph
                            << args[0].get_name() << ", " << out[0].get_name() << ", "
                            << element_count << ");\n";
                 }
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Merge)
+            {
+                writer.block_begin();
+                writer << "reference::merge<" << out[0].get_element_type().c_type_string() << ">("
+                       << args[0].get_name() << ",\n";
+                writer << "                         " << args[1].get_name() << ",\n";
+                writer << "                         " << args[2].get_name() << ",\n";
+                writer << "                         " << out[0].get_name() << ",\n";
+                writer << "                         " << shape_size(node->get_shape()) << ");\n";
                 writer.block_end();
             }
 

@@ -232,6 +232,8 @@ batch_mat_mul_forward
 dot_matrix_2x0_0x2
 gelu_f32
 gelu_f64
+merge_output_true
+merge_output_false
 # From onnx tests
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d

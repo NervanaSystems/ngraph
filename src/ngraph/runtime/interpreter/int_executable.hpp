@@ -57,6 +57,7 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
+#include "ngraph/op/merge.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -133,6 +134,7 @@
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
+#include "ngraph/runtime/reference/merge.hpp"
 #include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
@@ -1054,6 +1056,15 @@ private:
                                             max_pool_backprop->get_window_movement_strides(),
                                             max_pool_backprop->get_padding_below(),
                                             max_pool_backprop->get_padding_above());
+            break;
+        }
+        case OP_TYPEID::Merge:
+        {
+            reference::merge<T>(args[0]->get_data_ptr<const char>(),
+                                args[1]->get_data_ptr<const T>(),
+                                args[2]->get_data_ptr<const T>(),
+                                out[0]->get_data_ptr<T>(),
+                                shape_size(node.get_output_shape(0)));
             break;
         }
         case OP_TYPEID::Min:

@@ -64,6 +64,7 @@ set(SRC
     builder/matmul_bias.cpp
     builder/max.cpp
     builder/max_pool.cpp
+    builder/merge.cpp
     builder/min.cpp
     builder/one_hot.cpp
     builder/relu.cpp

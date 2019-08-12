@@ -49,6 +49,7 @@ namespace ngraph
             void register_builders_matmul_bias_cpp();
             void register_builders_max_cpp();
             void register_builders_max_pool_cpp();
+            void register_builders_merge_cpp();
             void register_builders_min_cpp();
             void register_builders_one_hot_cpp();
             void register_builders_pad_cpp();

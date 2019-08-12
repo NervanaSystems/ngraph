@@ -113,6 +113,8 @@ send_recv_ring
 gelu_f32
 gelu_f64
 logical_xor
+merge_output_true
+merge_output_false
 
 # Not supported quant ops
 model_dequantize_linear_1d_zero_scale_int8

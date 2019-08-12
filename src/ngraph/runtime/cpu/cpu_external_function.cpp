@@ -98,6 +98,7 @@
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
+#include "ngraph/op/merge.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -334,6 +335,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::LessEq), &runtime::cpu::CPU_Emitter::emit<op::LessEq>},
     {TI(ngraph::op::Log), &runtime::cpu::CPU_Emitter::emit<op::Log>},
     {TI(ngraph::op::Maximum), &runtime::cpu::CPU_Emitter::emit<op::Maximum>},
+    {TI(ngraph::op::Merge), &runtime::cpu::CPU_Emitter::emit<op::Merge>},
     {TI(ngraph::op::Minimum), &runtime::cpu::CPU_Emitter::emit<op::Minimum>},
     {TI(ngraph::op::Negative), &runtime::cpu::CPU_Emitter::emit<op::Negative>},
     {TI(ngraph::op::NotEqual), &runtime::cpu::CPU_Emitter::emit<op::NotEqual>},
@@ -551,6 +553,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
+#include "ngraph/runtime/reference/merge.hpp"
 #include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
