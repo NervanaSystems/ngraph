@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantization.hpp"
 #include "ngraph/op/concat.hpp"
@@ -132,6 +133,53 @@ namespace ngraph
                                               out_scale,
                                               zero,
                                               q_type,
+                                              AxisSet{},
+                                              op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
+            }
+
+            return make_shared<op::QuantizedConcat>(rescaled_args, concatenation_axis);
+        }
+
+        shared_ptr<Node> ScaledQuantizedConcatV1(const NodeVector& args,
+                                                 size_t concatenation_axis,
+                                                 const NodeVector& mins,
+                                                 const NodeVector& maxs)
+        {
+            quantization_util::check_concat(args, mins, maxs);
+            auto quant_type = args[0]->get_element_type();
+
+            // output scale
+            std::shared_ptr<Node> min =
+                make_shared<op::Min>(make_shared<op::Concat>(mins, 0), ngraph::AxisSet{0});
+            std::shared_ptr<Node> max =
+                make_shared<op::Max>(make_shared<op::Concat>(maxs, 0), ngraph::AxisSet{0});
+            auto zero = make_constant(min->get_element_type(), min->get_shape(), 0);
+            // ensure min is no more than zero.
+            min = std::make_shared<op::Minimum>(zero, min);
+            if (quant_type.is_signed())
+            {
+                // ensure symmetrical distribution including zero
+                max = quantization_util::max_abs(min, max);
+                min = std::make_shared<op::Negative>(max);
+            }
+            auto out_scale = quantization_util::get_scale(min, max, quant_type);
+
+            NodeVector rescaled_args(args.size());
+            for (size_t i = 0; i < args.size(); ++i)
+            {
+                auto steps = make_constant(element::f32, mins[i]->get_shape(), 255.0);
+                auto in_scale = (maxs[i] - mins[i]) / steps;
+
+                auto arg = make_shared<op::Convert>(args[i], element::f32);
+                rescaled_args[i] = builder::make_with_numpy_broadcast<op::Add>(
+                    mins[i], builder::make_with_numpy_broadcast<op::Multiply>(arg, in_scale));
+
+                auto zero = make_constant(quant_type, out_scale->get_shape(), 0);
+                rescaled_args[i] =
+                    make_shared<op::Quantize>(rescaled_args[i],
+                                              out_scale,
+                                              zero,
+                                              quant_type,
                                               AxisSet{},
                                               op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
             }

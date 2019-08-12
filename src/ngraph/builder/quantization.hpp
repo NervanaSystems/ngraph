@@ -49,6 +49,11 @@ namespace ngraph
                                                     size_t concatenation_axis,
                                                     const NodeVector& mins,
                                                     const NodeVector& maxes);
+        // uses older Dequantize v1
+        std::shared_ptr<Node> ScaledQuantizedConcatV1(const NodeVector& args,
+                                                      size_t concatenation_axis,
+                                                      const NodeVector& mins,
+                                                      const NodeVector& maxes);
 
         std::shared_ptr<Node> ScaledQuantizedAvgPool(const Output<Node>& input,
                                                      const Shape& window_shape,
