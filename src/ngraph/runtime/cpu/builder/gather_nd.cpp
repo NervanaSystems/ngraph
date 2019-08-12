@@ -139,6 +139,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(GatherND);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_gather_nd_cpp() {}
+#endif
         }
     }
 }

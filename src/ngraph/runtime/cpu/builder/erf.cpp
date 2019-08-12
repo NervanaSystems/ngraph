@@ -72,6 +72,9 @@ namespace ngraph
                 }
             }
             REGISTER_OP_BUILDER(Erf);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_erf_cpp() {}
+#endif
         }
     }
 }

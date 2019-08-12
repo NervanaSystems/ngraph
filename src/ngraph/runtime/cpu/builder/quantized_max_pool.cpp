@@ -69,6 +69,9 @@ namespace ngraph
                 }
             }
             REGISTER_OP_BUILDER(QuantizedMaxPool);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_quantized_max_pool_cpp() {}
+#endif
         }
     }
 }

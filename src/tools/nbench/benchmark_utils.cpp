@@ -80,12 +80,12 @@ void set_denormals_flush_to_zero()
 void random_init(shared_ptr<runtime::Tensor> tensor)
 {
     element::Type et = tensor->get_element_type();
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (et.get_type_enum())
+    switch (et)
     {
     case element::Type_t::boolean: init_int_tensor<char>(tensor, 0, 1); break;
     case element::Type_t::f32: init_real_tensor<float>(tensor, -1, 1); break;
@@ -104,7 +104,7 @@ void random_init(shared_ptr<runtime::Tensor> tensor)
     case element::Type_t::f16:
     default: throw runtime_error("unsupported type");
     }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 }

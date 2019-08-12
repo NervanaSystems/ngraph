@@ -13,9 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "cpu_backend_visibility.h"
 
-extern "C" CPU_BACKEND_API const char* get_ngraph_version_string()
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+#include "ngraph/op/fused/depth_to_space.hpp"
+#include "pyngraph/ops/fused/depth_to_space.hpp"
+
+namespace py = pybind11;
+
+void regclass_pyngraph_op_DepthToSpace(py::module m)
 {
-    return NGRAPH_VERSION;
+    py::class_<ngraph::op::DepthToSpace, std::shared_ptr<ngraph::op::DepthToSpace>, ngraph::op::Op>
+        depthtospace(m, "DepthToSpace");
+    depthtospace.doc() = "ngraph.impl.op.DepthToSpace wraps ngraph::op::DepthToSpace";
+    depthtospace.def(py::init<const std::shared_ptr<ngraph::Node>&, std::size_t&>());
 }

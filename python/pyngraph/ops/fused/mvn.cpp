@@ -14,18 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
-#include "util/type_prop.hpp"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-using namespace std;
-using namespace ngraph;
+#include "ngraph/op/fused/mvn.hpp"
+#include "pyngraph/ops/fused/mvn.hpp"
 
-TEST(type_prop, leaky_relu)
+namespace py = pybind11;
+
+void regclass_pyngraph_op_MVN(py::module m)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto alpha = make_shared<op::Parameter>(element::f32, Shape{});
-    auto leaky_relu_func = make_shared<op::LeakyRelu>(data, alpha);
-    EXPECT_EQ(leaky_relu_func->get_element_type(), element::f32);
-    EXPECT_EQ(leaky_relu_func->get_shape(), (Shape{3, 6}));
+    py::class_<ngraph::op::MVN, std::shared_ptr<ngraph::op::MVN>, ngraph::op::Op> mvn(m, "MVN");
+    mvn.doc() = "ngraph.impl.op.MVN wraps ngraph::op::MVN";
+    mvn.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&, bool&, double&>());
 }

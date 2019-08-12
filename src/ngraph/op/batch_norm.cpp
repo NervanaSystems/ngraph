@@ -14,11 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <set>
 #include <sstream>
 
 #include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/validation_util.hpp"
 

@@ -43,6 +43,8 @@ namespace
     using namespace mlir::edsc::op;
     using namespace ngraph::runtime;
     using namespace ngraph::runtime::ngmlir;
+    // Index notation to generate standard (i.e., non-affine) loads and stores.
+    using StdIndexedValue = TemplatedIndexedValue<intrinsics::std_load, intrinsics::std_store>;
 
     class DialectLoweringPass;
 
@@ -91,6 +93,12 @@ namespace
                                   ArrayRef<Value*> operands,
                                   PatternRewriter& rewriter,
                                   DialectLoweringPass& pass);
+
+    template <typename OP>
+    void lower_unary_elementwise(Operation* op,
+                                 ArrayRef<Value*> operands,
+                                 PatternRewriter& rewriter,
+                                 DialectLoweringPass& pass);
 
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
@@ -187,9 +195,9 @@ namespace
     {
 #define MLIR_OP(OP) OP##Conversion,
 #define MLIR_LAST_OP(OP) OP##Conversion
-        RewriteListBuilder<
+        patterns.insert<
 #include "op_lowerers.inc"
-            >::build(patterns, &getContext(), *this);
+            >(&getContext(), *this);
     }
 
     void DialectLoweringPass::findOutputValues()
@@ -491,8 +499,8 @@ namespace
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
         // Loop induction vars
-        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
-        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        auto ivs = makeIndexHandles(vLHS.rank());
+        auto pivs = makeIndexHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -521,6 +529,13 @@ namespace
         });
 
         rewriter.replaceOp(op, {result});
+        return matchSuccess();
+    }
+
+    // Negative
+    REWRITER(NGNegOp)
+    {
+        lower_unary_elementwise<mlir::NGNegOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -682,7 +697,8 @@ namespace
         // Create view to write into result.
         MemRefView vRes(result), vParams(params), vIndices(indices);
         // Indexed Values
-        IndexedValue iRes(result), iParams(params), iIndices(indices);
+        IndexedValue iRes(result), iIndices(indices);
+        StdIndexedValue iParams(params);
 
         // Construct outer loop for params dims. Exclude the axis dim.
         SmallVector<ValueHandle, 4> paramsLbs, paramsUbs;
@@ -703,15 +719,15 @@ namespace
                          paramsSteps.size() == paramsLbs.size(),
                      "Incorrect loop nest bounds size for gather params");
 
-        paramsIVs = IndexHandle::makeIndexHandles(vParams.rank() - 1);
-        paramsIVPtrs = IndexHandle::makeIndexHandlePointers(paramsIVs);
+        paramsIVs = makeIndexHandles(vParams.rank() - 1);
+        paramsIVPtrs = makeIndexHandlePointers(paramsIVs);
 
         auto indicesLbs = vIndices.getLbs();
         auto indicesUbs = vIndices.getUbs();
         auto indicesSteps = vIndices.getSteps();
 
-        auto indicesIVs = IndexHandle::makeIndexHandles(vIndices.rank());
-        auto indicesIVPtrs = IndexHandle::makeIndexHandlePointers(indicesIVs);
+        auto indicesIVs = makeIndexHandles(vIndices.rank());
+        auto indicesIVPtrs = makeIndexHandlePointers(indicesIVs);
 
         SmallVector<IndexHandle, 8> paramsIndices, resIndices;
 
@@ -791,6 +807,67 @@ namespace
 #undef REWRITER
     /// End of pattern matchers
     template <typename OP>
+    void lower_unary_elementwise(Operation* op,
+                                 ArrayRef<Value*> operands,
+                                 PatternRewriter& rewriter,
+                                 DialectLoweringPass& pass)
+    {
+        auto loc = cast<OP>(op).getLoc();
+
+        auto result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result->getType().isa<MemRefType>());
+        // Note that builder's current function is still the original function body.
+        // use getBlock to get the new block instead.
+
+        // get new operands
+        Value* lhs = operands[0];
+
+        ScopedContext scope(rewriter, loc);
+        // Views
+        MemRefView vRes(result), vLHS(lhs);
+        // Index Values
+        IndexedValue iRes(result), iLHS(lhs);
+        // Bounds Index Handles
+        auto lbs = vLHS.getLbs();
+        auto ubs = vLHS.getUbs();
+        // Loop induction vars
+        auto ivs = makeIndexHandles(vLHS.rank());
+        auto pivs = makeIndexHandlePointers(ivs);
+        // Steps
+        auto steps = vLHS.getSteps();
+
+        NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
+        Type elemTy = lhs->getType().cast<MemRefType>().getElementType();
+
+        LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
+            ValueHandle val = iLHS(ivs);
+            if (isa<NGNegOp>(op))
+            {
+                if (auto floatTy = elemTy.dyn_cast<FloatType>())
+                {
+                    ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+                    iRes(ivs) = zero - val;
+                }
+                else if (auto intTy = elemTy.dyn_cast<IntegerType>())
+                {
+                    ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
+                    iRes(ivs) = zero - val;
+                }
+                else
+                {
+                    NGRAPH_CHECK(false, "Unsupported type for Negative");
+                }
+            }
+            else
+            {
+                NGRAPH_CHECK(false, "Unsupported op");
+            }
+        });
+
+        rewriter.replaceOp(op, {result});
+    }
+
+    template <typename OP>
     void lower_binary_elementwise(Operation* op,
                                   ArrayRef<Value*> operands,
                                   PatternRewriter& rewriter,
@@ -812,8 +889,8 @@ namespace
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
         // Loop induction vars
-        auto ivs = IndexHandle::makeIndexHandles(vLHS.rank());
-        auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+        auto ivs = makeIndexHandles(vLHS.rank());
+        auto pivs = makeIndexHandlePointers(ivs);
         // Steps
         auto steps = vLHS.getSteps();
         LoopNestBuilder(pivs, lbs, ubs, steps)(
@@ -894,7 +971,8 @@ namespace
         // Views
         MemRefView vRes(result), vArg(arg);
         // Index Values
-        IndexedValue iRes(result), iArg(arg);
+        StdIndexedValue iRes(result), stdArg(arg);
+        IndexedValue affineArg(arg);
         // Bounds Index Handles
         auto resLbs = vRes.getLbs();
         auto resUbs = vRes.getUbs();
@@ -904,8 +982,8 @@ namespace
         Type resTy = result->getType().cast<MemRefType>().getElementType();
         // Generate loop nest that initializes result to lower bound of the axis to be reduced.
         {
-            auto ivs = IndexHandle::makeIndexHandles(vRes.rank());
-            auto pivs = IndexHandle::makeIndexHandlePointers(ivs);
+            auto ivs = makeIndexHandles(vRes.rank());
+            auto pivs = makeIndexHandlePointers(ivs);
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
             LoopNestBuilder(pivs, resLbs, resUbs, steps)(
@@ -914,8 +992,8 @@ namespace
 
         // Generate loop nest that computes the actual index reduction.
         {
-            auto allIVs = IndexHandle::makeIndexHandles(vArg.rank());
-            auto pAllIVs = IndexHandle::makeIndexHandlePointers(allIVs);
+            auto allIVs = makeIndexHandles(vArg.rank());
+            auto pAllIVs = makeIndexHandlePointers(allIVs);
             auto steps = vArg.getSteps();
             SmallVector<IndexHandle, 8> nonRedIVs;
 
@@ -944,9 +1022,9 @@ namespace
                 ValueHandle newRedIdx =
                     std::is_same<RedOp, NGArgMinRedOp>()
                         ? edsc::intrinsics::select(
-                              iArg(allIVs) < iArg(tempIVs), allIVs[axis], currRedIdx)
+                              affineArg(allIVs) < stdArg(tempIVs), allIVs[axis], currRedIdx)
                         : edsc::intrinsics::select(
-                              iArg(tempIVs) < iArg(allIVs), allIVs[axis], currRedIdx);
+                              stdArg(tempIVs) < affineArg(allIVs), allIVs[axis], currRedIdx);
 
                 iRes(nonRedIVs) = ValueHandle::create<IndexCastOp>(newRedIdx, resTy);
             });
