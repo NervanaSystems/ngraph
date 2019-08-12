@@ -69,12 +69,13 @@ Miscellaneous resources
 
 Additional resources for device or framework-specific configurations:
 
+.. _opencl:
+
 OpenCL
 ------
 
-
-OpenCL is needed for the :doc:`plaidml-ng-api/index`; this is not needed if 
-you have only a CPU backend.  
+OpenCL is only needed for the :doc:`plaidml-ng-api/index`; it is not needed 
+when using CPU backend.
 
 #. Install the latest Linux driver for your system. You can find a list 
    of drivers at https://software.intel.com/en-us/articles/opencl-drivers;
@@ -89,8 +90,8 @@ you have only a CPU backend.
    may, for example, be able to find details at the ``/sys/module/[system]/parameters/`` location. 
 
 
-nGraph Bridge from TensorFlow\*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+nGraph Bridge from TensorFlow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When specified as the generic backend -- either manually or automatically 
 from a framework --  ``NGRAPH`` defaults to CPU, and it also allows for 

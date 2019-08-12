@@ -26,7 +26,7 @@ Software requirements
 * Python 3.4 or higher
 * Protocol Buffers (``protobuf``) ``v2.6.1`` or higher
 * `OpenCL runtime <opencl_drivers_>`_, required if you plan to use nGraph 
-  with an Intel GPU backend.  See also: :ref:`opencl`.
+  with an Intel GPU backend. See also: :ref:`opencl`.
 * `PlaidML <plaidml_pypi_>`_  ``v0.6.3`` or higher, required if you plan 
    to use nGraph’s :ref:`ngraph_plaidml_backend`.
 
