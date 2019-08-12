@@ -69,31 +69,37 @@ uint32_t test::float_distance(float a, float b, float min_signal)
     FloatUnion min_signal_fu{min_signal};
     uint32_t a_uint = a_fu.i;
     uint32_t b_uint = b_fu.i;
-
-    // A trick to handle both positive and negative numbers, see https://goo.gl/YbdnFQ
-    // - If negative: convert to two's complement
-    // - If positive: mask with sign bit
-    uint32_t sign_mask = static_cast<uint32_t>(1U) << 31;
-    uint32_t abs_value_bits_mask = ~sign_mask;
-    a_uint = (sign_mask & a_uint) ? (~a_uint + 1) : (sign_mask | a_uint);
-    b_uint = (sign_mask & b_uint) ? (~b_uint + 1) : (sign_mask | b_uint);
-
     uint32_t distance;
-    uint32_t a_uint_abs = (abs_value_bits_mask & a_fu.i);
-    uint32_t b_uint_abs = (abs_value_bits_mask & b_fu.i);
-    uint32_t min_signal_uint_abs = (abs_value_bits_mask & min_signal_fu.i);
-    if ((a_uint_abs < min_signal_uint_abs) && (b_uint_abs < min_signal_uint_abs))
+    if (a_uint == 0 || b_uint == 0)
     {
-        // Both a & b below minimum signal
-        distance = FLOAT_BELOW_MIN_SIGNAL;
+        distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
     }
     else
     {
-        distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
-        // We've reserved UINT_MAX to mean FLOAT_BELOW_MIN_SIGNAL
-        if (distance == UINT_MAX)
+        // A trick to handle both positive and negative numbers, see https://goo.gl/YbdnFQ
+        // - If negative: convert to two's complement
+        // - If positive: mask with sign bit
+        uint32_t sign_mask = static_cast<uint32_t>(1U) << 31;
+        uint32_t abs_value_bits_mask = ~sign_mask;
+        a_uint = (sign_mask & a_uint) ? (~a_uint + 1) : (sign_mask | a_uint);
+        b_uint = (sign_mask & b_uint) ? (~b_uint + 1) : (sign_mask | b_uint);
+
+        uint32_t a_uint_abs = (abs_value_bits_mask & a_fu.i);
+        uint32_t b_uint_abs = (abs_value_bits_mask & b_fu.i);
+        uint32_t min_signal_uint_abs = (abs_value_bits_mask & min_signal_fu.i);
+        if ((a_uint_abs < min_signal_uint_abs) && (b_uint_abs < min_signal_uint_abs))
         {
-            distance = FLOAT_MAX_DIFF;
+            // Both a & b below minimum signal
+            distance = FLOAT_BELOW_MIN_SIGNAL;
+        }
+        else
+        {
+            distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
+            // We've reserved UINT_MAX to mean FLOAT_BELOW_MIN_SIGNAL
+            if (distance == UINT_MAX)
+            {
+                distance = FLOAT_MAX_DIFF;
+            }
         }
     }
 
@@ -132,31 +138,37 @@ uint64_t test::float_distance(double a, double b, double min_signal)
     DoubleUnion min_signal_du{min_signal};
     uint64_t a_uint = a_du.i;
     uint64_t b_uint = b_du.i;
-
-    // A trick to handle both positive and negative numbers, see https://goo.gl/YbdnFQ
-    // - If negative: convert to two's complement
-    // - If positive: mask with sign bit
-    uint64_t sign_mask = static_cast<uint64_t>(1U) << 63;
-    uint64_t abs_value_bits_mask = ~sign_mask;
-    a_uint = (sign_mask & a_uint) ? (~a_uint + 1) : (sign_mask | a_uint);
-    b_uint = (sign_mask & b_uint) ? (~b_uint + 1) : (sign_mask | b_uint);
-
     uint64_t distance;
-    uint64_t a_uint_abs = (abs_value_bits_mask & a_du.i);
-    uint64_t b_uint_abs = (abs_value_bits_mask & b_du.i);
-    uint64_t min_signal_uint_abs = (abs_value_bits_mask & min_signal_du.i);
-    if ((a_uint_abs < min_signal_uint_abs) && (b_uint_abs < min_signal_uint_abs))
+    if (a_uint == 0 || b_uint == 0)
     {
-        // Both a & b below minimum signal
-        distance = DOUBLE_BELOW_MIN_SIGNAL;
+        distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
     }
     else
     {
-        distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
-        // We've reserved ULLONG_MAX to mean DOUBLE_BELOW_MIN_SIGNAL
-        if (distance == ULLONG_MAX)
+        // A trick to handle both positive and negative numbers, see https://goo.gl/YbdnFQ
+        // - If negative: convert to two's complement
+        // - If positive: mask with sign bit
+        uint64_t sign_mask = static_cast<uint64_t>(1U) << 63;
+        uint64_t abs_value_bits_mask = ~sign_mask;
+        a_uint = (sign_mask & a_uint) ? (~a_uint + 1) : (sign_mask | a_uint);
+        b_uint = (sign_mask & b_uint) ? (~b_uint + 1) : (sign_mask | b_uint);
+
+        uint64_t a_uint_abs = (abs_value_bits_mask & a_du.i);
+        uint64_t b_uint_abs = (abs_value_bits_mask & b_du.i);
+        uint64_t min_signal_uint_abs = (abs_value_bits_mask & min_signal_du.i);
+        if ((a_uint_abs < min_signal_uint_abs) && (b_uint_abs < min_signal_uint_abs))
         {
-            distance = DOUBLE_MAX_DIFF;
+            // Both a & b below minimum signal
+            distance = DOUBLE_BELOW_MIN_SIGNAL;
+        }
+        else
+        {
+            distance = (a_uint >= b_uint) ? (a_uint - b_uint) : (b_uint - a_uint);
+            // We've reserved ULLONG_MAX to mean DOUBLE_BELOW_MIN_SIGNAL
+            if (distance == ULLONG_MAX)
+            {
+                distance = DOUBLE_MAX_DIFF;
+            }
         }
     }
 
