@@ -22,10 +22,6 @@ using namespace ngraph;
 
 const string op::Sum::type_name{"Sum"};
 
-op::Sum::Sum()
-{
-}
-
 op::Sum::Sum(const Output<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {

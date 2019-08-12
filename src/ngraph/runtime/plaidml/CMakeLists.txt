@@ -33,6 +33,7 @@ set(SRC
     plaidml_ops_convolution.cpp
     plaidml_ops_dot.cpp
     plaidml_ops_general.cpp
+    plaidml_ops_group_convolution.cpp
     plaidml_ops_implicit_broadcast.cpp
     plaidml_ops_index_reduction.cpp
     plaidml_ops_io.cpp
@@ -73,6 +74,8 @@ endif()
 target_include_directories(plaidml_backend SYSTEM PUBLIC ${PLAIDML_INCLUDE_DIRS})
 target_link_libraries(plaidml_backend PUBLIC ngraph libplaidml)
 install(TARGETS plaidml_backend LIBRARY DESTINATION ${NGRAPH_INSTALL_LIB})
+
+target_compile_definitions(plaidml_backend PRIVATE PLAIDML_BACKEND_DLL_EXPORTS)
 
 set(CMAKE_MACOSX_RPATH 1)
 if(APPLE)

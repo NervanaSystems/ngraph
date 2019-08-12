@@ -27,7 +27,6 @@ namespace ngraph
         class MatmulBias : public Op
         {
         public:
-            CPU_BACKEND_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             CPU_BACKEND_API MatmulBias(const Output<Node>& W,

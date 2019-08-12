@@ -17,17 +17,16 @@
 #include <algorithm>
 #include <iostream>
 
-#include "ngraph/function.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-op::DynReshape::DynReshape(const shared_ptr<Node>& arg,
-                           const shared_ptr<Node>& pattern,
-                           bool zero_flag)
-    : Op("DynReshape", check_single_output_args({arg, pattern}))
+const string op::DynReshape::type_name{"DynReshape"};
+
+op::DynReshape::DynReshape(const Output<Node>& arg, const Output<Node>& pattern, bool zero_flag)
+    : Op({arg, pattern})
     , m_zero_flag(zero_flag)
 {
     constructor_validate_and_infer_types();

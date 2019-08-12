@@ -17,7 +17,6 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
-#include <vector>
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/matmul_factory.hpp"

@@ -51,6 +51,7 @@
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/one_hot.hpp"
+#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/passthrough.hpp"
 #include "ngraph/op/product.hpp"
@@ -67,6 +68,7 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/generic_cpu/kernel/broadcast.hpp"
@@ -154,6 +156,7 @@
 #include "ngraph/runtime/reference/tan.hpp"
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
+#include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/rng_state.hpp"
 
@@ -217,7 +220,7 @@ private:
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -264,7 +267,7 @@ private:
                 static_cast<const ngraph::op::AllReduce*>(&node);
             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
-                                    node.get_input_element_type(0).get_type_enum(),
+                                    node.get_input_element_type(0),
                                     allreduce->get_reduce_type(),
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
             break;
@@ -501,7 +504,7 @@ private:
             {
                 reference::broadcastdistributed<T>(
                     args[0]->get_data_ptr<T>(),
-                    node.get_input_element_type(0).get_type_enum(),
+                    node.get_input_element_type(0),
                     static_cast<int>(shape_size(node.get_input_shape(0))),
                     root_id);
                 auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) * sizeof(T);
@@ -511,7 +514,7 @@ private:
             {
                 reference::broadcastdistributed<T>(
                     out[0]->get_data_ptr<T>(),
-                    node.get_input_element_type(0).get_type_enum(),
+                    node.get_input_element_type(0),
                     static_cast<int>(shape_size(node.get_input_shape(0))),
                     root_id);
             }
@@ -556,7 +559,7 @@ private:
             element::Type type = node.get_element_type();
             std::stringstream ss;
             size_t element_count = shape_size(node.get_output_shape(0));
-            switch (type.get_type_enum())
+            switch (type)
             {
             case element::Type_t::boolean:
                 reference::convert_to_bool<T>(
@@ -1297,10 +1300,8 @@ private:
             const auto* op = static_cast<const ngraph::op::Recv*>(&node);
             int src_id = op->get_src_id();
 
-            reference::recv<T>(args[0]->get_data_ptr<T>(),
-                               node.get_input_element_type(0).get_type_enum(),
-                               element_count,
-                               src_id);
+            reference::recv<T>(
+                args[0]->get_data_ptr<T>(), node.get_input_element_type(0), element_count, src_id);
 
             memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             break;
@@ -1464,7 +1465,7 @@ private:
             int dest_id = op->get_dest_id();
 
             reference::send<T>(args[0]->get_data_ptr<const T>(),
-                               node.get_input_element_type(0).get_type_enum(),
+                               node.get_input_element_type(0),
                                element_count,
                                dest_id);
 
@@ -1607,13 +1608,22 @@ private:
             }
             break;
         }
+        case OP_TYPEID::Xor:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::logical_xor(args[0]->get_data_ptr<const T>(),
+                                   args[1]->get_data_ptr<const T>(),
+                                   out[0]->get_data_ptr<T>(),
+                                   element_count);
+            break;
+        }
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::Tile:
         case OP_TYPEID::DynReplaceSlice:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
         }

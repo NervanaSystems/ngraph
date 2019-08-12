@@ -33,7 +33,7 @@ namespace ngraph
         ///
         /// \return Numpy-style broadcasted list of nodes.
         NodeVector numpy_style_broadcast(const NodeVector& inputs)
-            NGRAPH_DEPRECATED("Replace with numpy_style_value_broadcast");
+            NGRAPH_DEPRECATED("Replace with numpy_style_broadcast_values");
 
         /// \brief Cast shape of all input nodes for an element-wise operation that requires shape-compatibility
         ///
@@ -68,7 +68,7 @@ namespace ngraph
         NodeVector legacy_style_broadcast_for_binary_operation(const std::shared_ptr<Node>& left,
                                                                const std::shared_ptr<Node>& right,
                                                                size_t start_match_axis)
-            NGRAPH_DEPRECATED("Replace with legacy_style_value_broadcast_for_binary_operation");
+            NGRAPH_DEPRECATED("Replace with legacy_style_broadcast_values_for_binary_operation");
 
         /// \brief Cast shape of two outputs to make them compatible for an element-wise binary operation.
         ///
@@ -103,7 +103,7 @@ namespace ngraph
         ///
         NodeVector numpy_style_broadcast_for_matmul_operation(const std::shared_ptr<Node>& left,
                                                               const std::shared_ptr<Node>& right)
-            NGRAPH_DEPRECATED("Replace with numpy_style_broadcast_value_for_matmul_operation.");
+            NGRAPH_DEPRECATED("Replace with numpy_style_broadcast_values_for_matmul_operation.");
 
         /// \brief      Broadcast shape of two nodes to make them compatible for a matrix multiplication.
         ///

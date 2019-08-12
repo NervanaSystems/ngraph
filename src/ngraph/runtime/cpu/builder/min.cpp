@@ -38,6 +38,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(Min);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_min_cpp() {}
+#endif
         }
     }
 }

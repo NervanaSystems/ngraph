@@ -82,7 +82,6 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
@@ -147,6 +146,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -724,7 +724,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
-#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
@@ -1343,11 +1343,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             break;
         }
 
-        case OP_TYPEID::LeakyRelu:
-        {
-            node = make_shared<op::LeakyRelu>(args[0], args[1]);
-            break;
-        }
         case OP_TYPEID::Less:
         {
             node = make_shared<op::Less>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
@@ -1583,7 +1578,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Passthrough>(node_js.at("logical_type"),
                                                 node_js.at("language"),
                                                 node_js.at("function"),
-                                                args,
+                                                static_cast<OutputVector>(args),
                                                 std::move(outputs));
             break;
         }
@@ -1928,6 +1923,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Unsqueeze>(args[0], args[1]);
             break;
         }
+        case OP_TYPEID::Xor:
+        {
+            node = make_shared<op::Xor>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            break;
+        }
         case OP_TYPEID::UnknownOp:
         {
             stringstream ss;
@@ -1935,7 +1935,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             throw runtime_error(ss.str());
         }
         }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 
@@ -2505,8 +2505,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["beta"] = tmp->get_beta();
         break;
     }
-    case OP_TYPEID::LeakyRelu: { break;
-    }
     case OP_TYPEID::Less:
     {
         auto tmp = dynamic_cast<const op::Less*>(&n);
@@ -2926,6 +2924,15 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Transpose: { break;
     }
     case OP_TYPEID::Unsqueeze: { break;
+    }
+    case OP_TYPEID::Xor:
+    {
+        auto tmp = dynamic_cast<const op::Xor*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["autob"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }

@@ -16,14 +16,11 @@
 
 #include <functional>
 #include <memory>
-#include <utility>
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/op/sum.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;

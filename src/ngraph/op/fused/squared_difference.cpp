@@ -24,8 +24,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::SquaredDifference::SquaredDifference(const shared_ptr<Node>& x1, const shared_ptr<Node>& x2)
-    : FusedOp("SquaredDifference", {x1, x2})
+const string op::SquaredDifference::type_name{"SquaredDifference"};
+
+op::SquaredDifference::SquaredDifference(const Output<Node>& x1, const Output<Node>& x2)
+    : FusedOp({x1, x2})
 {
     constructor_validate_and_infer_types();
 }
