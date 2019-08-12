@@ -16,7 +16,6 @@
 
 #include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
