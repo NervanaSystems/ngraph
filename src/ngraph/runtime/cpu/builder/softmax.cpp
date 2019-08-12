@@ -48,9 +48,7 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto softmax_desc = mkldnn_emitter->get_softmax_forward_desc(node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_softmax_forward(softmax_desc);
-#endif
+                    QUERY_SCRATCHPAD(softmax_forward, softmax_desc);
 
                     // Softmax needs 3 primitives: input, result, and softmax_forward.
                     size_t softmax_index = mkldnn_emitter->reserve_primitive_space(3);

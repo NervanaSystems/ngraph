@@ -44,18 +44,14 @@
 
 #define BN_FLAG_CLASS batch_normalization_flag
 
-#define PADDING                                                                                    \
-    , mkldnn::padding_kind::zero)
+#define PADDING , mkldnn::padding_kind::zero
 
 #define SET_ROUND_MODE attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
 
-#define QUERY_SCRATCHPAD_SUM(X)                                                                    \
-    {                                                                                              \
-    }
-
-#define QUERY_SCRATCHPAD_CONCAT(X)                                                                 \
-    {                                                                                              \
-    }
+#define QUERY_SCRATCHPAD(op_name, x)
+#define QUERY_SCRATCHPAD_2ARGS(op_name, x, y)
+#define QUERY_SCRATCHPAD_3ARGS(op_name, x, y, z)
+#define QUERY_SCRATCHPAD_4ARGS(op_name, x, y, z, u)
 
 #else
 #define TENSOR_MAX_DIMS MKLDNN_MAX_NDIMS
@@ -66,22 +62,19 @@
 #define FORMAT_UNDEF format_tag::undef
 #define DATA_UNDEF undef
 
-#define CHANGE_FORMAT                                                                              \
-    {                                                                                              \
-    }
+#define CHANGE_FORMAT
 
 #define BN_FLAG_CLASS normalization_flags
 
-#define PADDING                                                                                    \
-        )
+#define PADDING
 
-#define SET_ROUND_MODE                                                                             \
-    {                                                                                              \
-    }
+#define SET_ROUND_MODE
 
-#define QUERY_SCRATCHPAD_SUM(X) mkldnn_emitter->query_scratchpad_sum(X);
-
-#define QUERY_SCRATCHPAD_CONCAT(X) mkldnn_emitter->query_scratchpad_concat(X);
+#define QUERY_SCRATCHPAD(op_name, x) mkldnn_emitter->query_scratchpad_##op_name(x)
+#define QUERY_SCRATCHPAD_2ARGS(op_name, x, y) mkldnn_emitter->query_scratchpad_##op_name(x, y)
+#define QUERY_SCRATCHPAD_3ARGS(op_name, x, y, z) mkldnn_emitter->query_scratchpad_##op_name(x, y, z)
+#define QUERY_SCRATCHPAD_4ARGS(op_name, x, y, z, u)                                                \
+    mkldnn_emitter->query_scratchpad_##op_name(x, y, z, u)
 
 #define ATTR_S                                                                                     \
     mkldnn::primitive_attr attr;                                                                   \

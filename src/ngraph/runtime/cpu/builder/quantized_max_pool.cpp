@@ -43,9 +43,7 @@ namespace ngraph
                     auto qmax_pool_desc =
                         mkldnn_emitter->get_max_pooling_forward_desc<ngraph::op::QuantizedMaxPool>(
                             node, false);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_pooling_forward(qmax_pool_desc);
-#endif
+                    QUERY_SCRATCHPAD(pooling_forward, qmax_pool_desc);
 
                     // QuantizedMaxPool needs 3 primitives: input, result, and pooling_forward.
                     size_t qmax_pool_index = mkldnn_emitter->reserve_primitive_space(3);

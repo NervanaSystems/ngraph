@@ -41,9 +41,7 @@ namespace ngraph
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto relu_desc = mkldnn_emitter->get_relu_forward_desc(node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_eltwise_forward(relu_desc);
-#endif
+                    QUERY_SCRATCHPAD(eltwise_forward, relu_desc);
 
                     // Relu needs 3 primitives: input, result, and eltwise_forward.
                     size_t relu_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -91,9 +89,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bwd_desc = mkldnn_emitter->get_relu_backward_desc(node);
                     auto fwd_desc = mkldnn_emitter->get_relu_forward_desc(node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
-#endif
+                    QUERY_SCRATCHPAD_2ARGS(eltwise_backward, fwd_desc, bwd_desc);
 
                     // ReluBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
                     size_t relu_index = mkldnn_emitter->reserve_primitive_space(4);

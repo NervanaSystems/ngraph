@@ -44,9 +44,7 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bounded_relu_desc = mkldnn_emitter->get_bounded_relu_desc(node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_eltwise_forward(bounded_relu_desc);
-#endif
+                    QUERY_SCRATCHPAD(eltwise_forward, bounded_relu_desc);
 
                     // BoundedRelu needs 3 primitives: input, result, and eltwise_forward.
                     auto bounded_relu_index = mkldnn_emitter->reserve_primitive_space(3);

@@ -40,7 +40,7 @@ namespace ngraph
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto sum_pd = mkldnn_emitter->get_elementwise_add_desc(node);
-                    QUERY_SCRATCHPAD_SUM(sum_pd)
+                    QUERY_SCRATCHPAD(sum, sum_pd);
 
                     // Add needs 4 primitives: input0, input1, result, and sum.
                     size_t add_index = mkldnn_emitter->reserve_primitive_space(4);

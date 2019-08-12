@@ -54,9 +54,7 @@ namespace ngraph
                     auto max_pool_desc =
                         mkldnn_emitter->get_max_pooling_forward_desc<ngraph::op::MaxPool>(node,
                                                                                           false);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_pooling_forward(max_pool_desc);
-#endif
+                    QUERY_SCRATCHPAD(pooling_forward, max_pool_desc);
 
                     // MaxPool needs 3 primitives: input, result, and pooling_forward.
                     size_t max_pool_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -144,10 +142,7 @@ namespace ngraph
                         mkldnn_emitter->get_max_pooling_backward_desc<ngraph::op::MaxPoolBackprop>(
                             node);
                     auto fprop_src_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_max_pooling_backward(fwd_pool_desc,
-                                                                          bwd_pool_desc);
-#endif
+                    QUERY_SCRATCHPAD_2ARGS(max_pooling_backward, fwd_pool_desc, bwd_pool_desc);
 
                     // MaxPoolBackprop forward needs 4 primitives: fprop_src, diff_src, workspace,
                     // and pooling_forward.
@@ -273,9 +268,7 @@ namespace ngraph
                     mkldnn_emitter
                         ->get_max_pooling_with_indices_forward_desc<ngraph::op::MaxPoolWithIndices>(
                             node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                mkldnn_emitter->query_scratchpad_pooling_forward(max_pool_desc);
-#endif
+                QUERY_SCRATCHPAD(pooling_forward, max_pool_desc);
 
                 // MaxPoolWithIndices needs 4 primitives: src, dst, workspace, and pooling_forward.
                 size_t max_pool_index = mkldnn_emitter->reserve_primitive_space(4);
@@ -334,10 +327,8 @@ namespace ngraph
                     mkldnn_emitter
                         ->get_max_pooling_backward_desc<ngraph::op::MaxPoolWithIndicesBackprop>(
                             node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                mkldnn_emitter->query_scratchpad_max_pooling_with_indices_backward(fwd_pool_desc,
-                                                                                   bwd_pool_desc);
-#endif
+                QUERY_SCRATCHPAD_2ARGS(
+                    max_pooling_with_indices_backward, fwd_pool_desc, bwd_pool_desc);
 
                 // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace,
                 // diff_src, and pooling_backward.

@@ -93,10 +93,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_slice(
-                        input_desc, result_desc, lower_bounds, out_shape);
-#endif
+                    QUERY_SCRATCHPAD_4ARGS(slice, input_desc, result_desc, lower_bounds, out_shape);
 
                     // Slice needs 3 primitives: input, result, and reorder.
                     auto slice_index = mkldnn_emitter->reserve_primitive_space(3);

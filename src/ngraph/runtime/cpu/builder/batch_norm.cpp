@@ -84,10 +84,7 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto batchnorm_desc =
                         mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, true);
-
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_batchnorm_forward(batchnorm_desc, ops);
-#endif
+                    QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
 
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
@@ -158,9 +155,7 @@ namespace ngraph
                     auto batchnorm_desc =
                         mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, false);
 
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_batchnorm_forward(batchnorm_desc, ops);
-#endif
+                    QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
 
                     auto weights_shape = Shape{2, args[0].get_size()};
                     auto weights_desc = mkldnn_emitter->build_memory_descriptor(
@@ -448,11 +443,7 @@ namespace ngraph
                 const ngraph::op::BatchNormTrainingBackprop* batchnorm =
                     static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
                 auto eps = batchnorm->get_eps_value();
-
-#if MKLDNN_VERSION_MAJOR >= 1
-                mkldnn_emitter->query_scratchpad_batchnorm_backward(
-                    batchnorm_desc, input_desc, eps);
-#endif
+                QUERY_SCRATCHPAD_3ARGS(batchnorm_backward, batchnorm_desc, input_desc, eps);
 
                 auto functor = [&,
                                 batchnorm_desc,

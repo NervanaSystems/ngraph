@@ -152,7 +152,7 @@ namespace ngraph
                 void reserve_descriptor_space(size_t count);
                 size_t get_mkldnn_descriptors_size();
                 std::vector<size_t>& get_primitive_deps(size_t index);
-                const size_t get_max_scratchpad_size() const;
+                size_t get_max_scratchpad_size() const;
 
                 size_t build_quantized_inner_product_forward(
                     const mkldnn::memory::desc& input_data_desc,
@@ -304,9 +304,9 @@ namespace ngraph
                             input_desc,
                             mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
                             mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
-	                        mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
+                            mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
                             mkldnn::memory::dims(padding_above.begin(), padding_above.end())
-                            PADDING;
+                                PADDING);
                     }
                     else
                     {
@@ -320,8 +320,8 @@ namespace ngraph
                             mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
                             mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
                             mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-							mkldnn::memory::dims(padding_above.begin(), padding_above.end())
-							PADDING;
+                            mkldnn::memory::dims(padding_above.begin(), padding_above.end())
+                                PADDING);
                     }
                 }
 
@@ -349,8 +349,8 @@ namespace ngraph
                             mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
                             mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
                             mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-							mkldnn::memory::dims(padding_above.begin(), padding_above.end())
-							PADDING;
+                            mkldnn::memory::dims(padding_above.begin(), padding_above.end())
+                                PADDING);
                     }
                     else
                     {
@@ -365,8 +365,8 @@ namespace ngraph
                             mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
                             mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
                             mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-							mkldnn::memory::dims(padding_above.begin(), padding_above.end())
-							PADDING;
+                            mkldnn::memory::dims(padding_above.begin(), padding_above.end())
+                                PADDING);
                     }
                 }
 
@@ -395,8 +395,7 @@ namespace ngraph
                         mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
                         mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
                         mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-						mkldnn::memory::dims(padding_above.begin(), padding_above.end())
-						PADDING;
+                        mkldnn::memory::dims(padding_above.begin(), padding_above.end()) PADDING);
                 }
 
                 template <typename OP>
@@ -421,8 +420,7 @@ namespace ngraph
                         mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
                         mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
                         mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-						mkldnn::memory::dims(padding_above.begin(), padding_above.end())
-						PADDING;
+                        mkldnn::memory::dims(padding_above.begin(), padding_above.end()) PADDING);
                 }
 
                 template <typename OP>
@@ -446,8 +444,7 @@ namespace ngraph
                         mkldnn::memory::dims(window_strides.begin(), window_strides.end()),
                         mkldnn::memory::dims(window_shape.begin(), window_shape.end()),
                         mkldnn::memory::dims(padding_below.begin(), padding_below.end()),
-						mkldnn::memory::dims(padding_above.begin(), padding_above.end())
-						PADDING;
+                        mkldnn::memory::dims(padding_above.begin(), padding_above.end()) PADDING);
                 }
 
                 size_t build_reorder(const mkldnn::memory::desc& input_desc,
@@ -648,8 +645,7 @@ namespace ngraph
                             MKLDNN_DIMS(convolution->get_window_movement_strides()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below()),
-                            MKLDNN_DIMS(convolution->get_padding_above())
-							PADDING;
+                            MKLDNN_DIMS(convolution->get_padding_above()) PADDING);
                     }
                     else
                     {
@@ -662,8 +658,7 @@ namespace ngraph
                             MKLDNN_DIMS(convolution->get_window_movement_strides()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below()),
-                            MKLDNN_DIMS(convolution->get_padding_above())
-							PADDING;
+                            MKLDNN_DIMS(convolution->get_padding_above()) PADDING);
                     }
                 }
 
@@ -803,8 +798,7 @@ namespace ngraph
                         MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                         MKLDNN_DIMS(window_dilation_strides_adjusted),
                         MKLDNN_DIMS(convolution->get_padding_below_forward()),
-                        MKLDNN_DIMS(convolution->get_padding_above_forward())
-						PADDING;
+                        MKLDNN_DIMS(convolution->get_padding_above_forward()) PADDING);
                 }
 
                 template <typename OP>
@@ -836,8 +830,7 @@ namespace ngraph
                         MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                         MKLDNN_DIMS(window_dilation_strides_adjusted),
                         MKLDNN_DIMS(convolution->get_padding_below_forward()),
-						MKLDNN_DIMS(convolution->get_padding_above_forward())
-						PADDING;
+                        MKLDNN_DIMS(convolution->get_padding_above_forward()) PADDING);
                 }
 
                 template <typename OP>
@@ -871,8 +864,7 @@ namespace ngraph
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
-							MKLDNN_DIMS(convolution->get_padding_above_forward())
-							PADDING;
+                            MKLDNN_DIMS(convolution->get_padding_above_forward()) PADDING);
                     }
                     else
                     {
@@ -884,8 +876,7 @@ namespace ngraph
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
-							MKLDNN_DIMS(convolution->get_padding_above_forward())
-													PADDING;
+                            MKLDNN_DIMS(convolution->get_padding_above_forward()) PADDING);
                     }
                 }
 
@@ -921,8 +912,7 @@ namespace ngraph
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
-							MKLDNN_DIMS(convolution->get_padding_above_forward())
-													PADDING;
+                            MKLDNN_DIMS(convolution->get_padding_above_forward()) PADDING);
                     }
                     else if (std::is_same<OP, ngraph::op::ConvolutionBackpropFilters>())
                     {
@@ -938,8 +928,7 @@ namespace ngraph
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
-							MKLDNN_DIMS(convolution->get_padding_above_forward())
-													PADDING;
+                            MKLDNN_DIMS(convolution->get_padding_above_forward()) PADDING);
                     }
                     else
                     {
@@ -958,8 +947,7 @@ namespace ngraph
                             MKLDNN_DIMS(convolution->get_window_movement_strides_forward()),
                             MKLDNN_DIMS(window_dilation_strides_adjusted),
                             MKLDNN_DIMS(convolution->get_padding_below_forward()),
-							MKLDNN_DIMS(convolution->get_padding_above_forward())
-													PADDING;
+                            MKLDNN_DIMS(convolution->get_padding_above_forward()) PADDING);
                     }
                 }
 

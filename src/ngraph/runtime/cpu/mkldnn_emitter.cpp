@@ -151,7 +151,7 @@ std::vector<size_t>& MKLDNNEmitter::get_primitive_deps(size_t index)
     return m_primitive_deps.at(index);
 }
 
-const size_t MKLDNNEmitter::get_max_scratchpad_size() const
+size_t MKLDNNEmitter::get_max_scratchpad_size() const
 {
     return m_max_scratchpad_size;
 }

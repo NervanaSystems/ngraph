@@ -43,9 +43,7 @@ namespace ngraph
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto sigmoid_desc = mkldnn_emitter->get_sigmoid_forward_desc(node, false);
-#if MKLDNN_VERSION_MAJOR >= 1
-                mkldnn_emitter->query_scratchpad_eltwise_forward(sigmoid_desc);
-#endif
+                QUERY_SCRATCHPAD(eltwise_forward, sigmoid_desc);
 
                 // Sigmoid needs 3 primitives: input, result, and eltwise_forward.
                 auto sigmoid_index = mkldnn_emitter->reserve_primitive_space(3);
@@ -90,9 +88,7 @@ namespace ngraph
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto fwd_desc = mkldnn_emitter->get_sigmoid_forward_desc(node, true);
                 auto bwd_desc = mkldnn_emitter->get_sigmoid_backward_desc(node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                mkldnn_emitter->query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
-#endif
+                QUERY_SCRATCHPAD_2ARGS(eltwise_backward, fwd_desc, bwd_desc);
 
                 // SigmoidBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
                 size_t sigmoid_index = mkldnn_emitter->reserve_primitive_space(4);

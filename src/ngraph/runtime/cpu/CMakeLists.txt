@@ -44,7 +44,7 @@ set(SRC
     builder/avg_pool.cpp
     builder/argmin.cpp
     builder/argmax.cpp
- 	builder/batch_norm.cpp
+    builder/batch_norm.cpp
     builder/broadcast.cpp
     builder/broadcast_distributed.cpp
     builder/bounded_relu.cpp

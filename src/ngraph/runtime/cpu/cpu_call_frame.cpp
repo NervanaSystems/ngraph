@@ -218,7 +218,6 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
             ctx->mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>(
                 mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
             ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);
-            //ctx->scratchpad_buffer = new AlignedBuffer(1048576, alignment);
         }
         else
         {
@@ -264,6 +263,15 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         {
             delete buffer;
         }
+        for (auto s : ctx->mkldnn_scratchpad_mds)
+        {
+            delete s;
+        }
+        if (m_external_function->is_direct_execution())
+        {
+            delete ctx->scratchpad_buffer;
+        }
+
         if (m_external_function->is_direct_execution() &&
             std::getenv("NGRAPH_CPU_USE_TBB") != nullptr)
         {

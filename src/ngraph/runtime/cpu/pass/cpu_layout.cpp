@@ -451,17 +451,17 @@ namespace ngraph
                             mkldnn_arg2_shape, et_bias, memory::FORMAT::any);
                         try
                         {
-                            fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
-                                                                         convolution_algo,
-                                                                         input_data_desc,
-                                                                         weights_desc,
-                                                                         bias_desc, // with bias
-                                                                         result_desc,
-                                                                         mkldnn_filter_strides,
-                                                                         mkldnn_dilated_strides,
-                                                                         mkldnn_padding_below,
-                                                                         mkldnn_padding_above
-																		 PADDING);
+                            fwd_desc.reset(
+                                new convolution_forward::desc(prop_kind::forward,
+                                                              convolution_algo,
+                                                              input_data_desc,
+                                                              weights_desc,
+                                                              bias_desc, // with bias
+                                                              result_desc,
+                                                              mkldnn_filter_strides,
+                                                              mkldnn_dilated_strides,
+                                                              mkldnn_padding_below,
+                                                              mkldnn_padding_above PADDING));
                         }
                         catch (const mkldnn::error& e)
                         {
@@ -474,16 +474,16 @@ namespace ngraph
                     {
                         try
                         {
-                            fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
-                                                                         convolution_algo,
-                                                                         input_data_desc,
-                                                                         weights_desc,
-                                                                         result_desc,
-                                                                         mkldnn_filter_strides,
-                                                                         mkldnn_dilated_strides,
-                                                                         mkldnn_padding_below,
-                                                                         mkldnn_padding_above
-																		 PADDING);
+                            fwd_desc.reset(
+                                new convolution_forward::desc(prop_kind::forward,
+                                                              convolution_algo,
+                                                              input_data_desc,
+                                                              weights_desc,
+                                                              result_desc,
+                                                              mkldnn_filter_strides,
+                                                              mkldnn_dilated_strides,
+                                                              mkldnn_padding_below,
+                                                              mkldnn_padding_above PADDING));
                         }
                         catch (const mkldnn::error& e)
                         {
@@ -974,11 +974,10 @@ namespace ngraph
                                                                 mkldnn_filter_strides,
                                                                 mkldnn_dilated_strides,
                                                                 mkldnn_padding_below,
-                                                                mkldnn_padding_above
-                                                                PADDING;
+                                                                mkldnn_padding_above PADDING);
 
-                        deconvolution_forward::primitive_desc deconv_prim_desc(deconv_desc,
-                        		executor::global_cpu_engine);
+                        deconvolution_forward::primitive_desc deconv_prim_desc(
+                            deconv_desc, executor::global_cpu_engine);
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
@@ -989,7 +988,8 @@ namespace ngraph
                         i_mds.push_back(deconv_prim_desc.bias_primitive_desc().desc());
                         o_mds.push_back(deconv_prim_desc.dst_primitive_desc().desc());
 #else
-                        i_mds.push_back(deconv_prim_desc.weights_desc()); //TODO: Find what format this is?
+                        i_mds.push_back(
+                            deconv_prim_desc.weights_desc()); //TODO: Find what format this is?
                         i_mds.push_back(deconv_prim_desc.src_desc());
                         i_mds.push_back(deconv_prim_desc.bias_desc());
                         o_mds.push_back(deconv_prim_desc.dst_desc());
@@ -1054,8 +1054,7 @@ namespace ngraph
                                                                  mkldnn_filter_strides,
                                                                  mkldnn_dilated_strides,
                                                                  mkldnn_padding_below,
-                                                                 mkldnn_padding_above
-                                                                 PADDING;
+                                                                 mkldnn_padding_above PADDING);
 
                         convolution_forward::desc fwd_desc(prop_kind::forward,
                                                            algorithm::convolution_direct,
@@ -1065,9 +1064,9 @@ namespace ngraph
                                                            mkldnn_filter_strides,
                                                            mkldnn_dilated_strides,
                                                            mkldnn_padding_below,
-                                                           mkldnn_padding_above
-                                                           PADDING;
-                        convolution_forward::primitive_desc fwd_prim_desc(fwd_desc, executor::global_cpu_engine);
+                                                           mkldnn_padding_above PADDING);
+                        convolution_forward::primitive_desc fwd_prim_desc(
+                            fwd_desc, executor::global_cpu_engine);
 
                         convolution_backward_data::primitive_desc prim_desc(
                             bwd_desc, executor::global_cpu_engine, fwd_prim_desc);
@@ -1146,8 +1145,7 @@ namespace ngraph
                                                                    mkldnn_filter_strides,
                                                                    mkldnn_dilated_strides,
                                                                    mkldnn_padding_below,
-                                                                   mkldnn_padding_above
-                                                                   PADDING);
+                                                                   mkldnn_padding_above PADDING));
 
                         fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
                                                                      algorithm::convolution_direct,
@@ -1158,8 +1156,7 @@ namespace ngraph
                                                                      mkldnn_filter_strides,
                                                                      mkldnn_dilated_strides,
                                                                      mkldnn_padding_below,
-                                                                     mkldnn_padding_above
-                                                                     PADDING);
+                                                                     mkldnn_padding_above PADDING));
                     }
                     else
                     {
@@ -1171,8 +1168,7 @@ namespace ngraph
                                                                    mkldnn_filter_strides,
                                                                    mkldnn_dilated_strides,
                                                                    mkldnn_padding_below,
-                                                                   mkldnn_padding_above
-                                                                   PADDING);
+                                                                   mkldnn_padding_above PADDING));
 
                         fwd_desc.reset(new convolution_forward::desc(prop_kind::forward,
                                                                      algorithm::convolution_direct,
@@ -1182,8 +1178,7 @@ namespace ngraph
                                                                      mkldnn_filter_strides,
                                                                      mkldnn_dilated_strides,
                                                                      mkldnn_padding_below,
-                                                                     mkldnn_padding_above
-																	 PADDING);
+                                                                     mkldnn_padding_above PADDING));
                     }
                     convolution_forward::primitive_desc fwd_prim_desc(*fwd_desc,
                                                                       executor::global_cpu_engine);
@@ -1283,17 +1278,15 @@ namespace ngraph
                     try
                     {
                         auto desc = pooling_forward::desc(prop_kind::forward_inference,
-                            algorithm_enumerator,
-                            input_desc,
-                            result_desc,
-                            mkldnn_filter_strides,
-                            mkldnn_filter_shape,
-                            mkldnn_padding_below,
-                            mkldnn_padding_above
-                            PADDING;
+                                                          algorithm_enumerator,
+                                                          input_desc,
+                                                          result_desc,
+                                                          mkldnn_filter_strides,
+                                                          mkldnn_filter_shape,
+                                                          mkldnn_padding_below,
+                                                          mkldnn_padding_above PADDING);
                         auto prim_desc =
-                            pooling_forward::primitive_desc(desc,
-                                                            executor::global_cpu_engine);
+                            pooling_forward::primitive_desc(desc, executor::global_cpu_engine);
                         i_mds.push_back(input_desc);
 #if MKLDNN_VERSION_MAJOR < 1
                         o_mds.push_back(prim_desc.dst_primitive_desc().desc());
@@ -1382,30 +1375,25 @@ namespace ngraph
                         vector<memory::desc> o_mds;
                         try
                         {
-                                auto fwd_desc = pooling_forward::desc(prop_kind::forward_inference,
-                                algorithm_enumerator,
-                                result_desc,
-                                input_desc,
-                                mkldnn_filter_strides,
-                                mkldnn_filter_shape,
-                                mkldnn_padding_below,
-                                mkldnn_padding_above
-                                PADDING;
-                            auto fwd_prim_desc =
-                                pooling_forward::primitive_desc(fwd_desc,
-                                                                executor::global_cpu_engine);
+                            auto fwd_desc = pooling_forward::desc(prop_kind::forward_inference,
+                                                                  algorithm_enumerator,
+                                                                  result_desc,
+                                                                  input_desc,
+                                                                  mkldnn_filter_strides,
+                                                                  mkldnn_filter_shape,
+                                                                  mkldnn_padding_below,
+                                                                  mkldnn_padding_above PADDING);
+                            auto fwd_prim_desc = pooling_forward::primitive_desc(
+                                fwd_desc, executor::global_cpu_engine);
                             auto bwd_desc = pooling_backward::desc(algorithm_enumerator,
-                                result_desc,
-                                input_desc,
-                                mkldnn_filter_strides,
-                                mkldnn_filter_shape,
-                                mkldnn_padding_below,
-                                mkldnn_padding_above
-                                PADDING;
-                            auto prim_desc =
-                                pooling_backward::primitive_desc(bwd_desc,
-                                                                 executor::global_cpu_engine,
-                                                                 fwd_prim_desc);
+                                                                   result_desc,
+                                                                   input_desc,
+                                                                   mkldnn_filter_strides,
+                                                                   mkldnn_filter_shape,
+                                                                   mkldnn_padding_below,
+                                                                   mkldnn_padding_above PADDING);
+                            auto prim_desc = pooling_backward::primitive_desc(
+                                bwd_desc, executor::global_cpu_engine, fwd_prim_desc);
                             i_mds.push_back(input_desc);
 #if MKLDNN_VERSION_MAJOR < 1
                             o_mds.push_back(prim_desc.diff_src_primitive_desc().desc());
@@ -1461,17 +1449,15 @@ namespace ngraph
                     try
                     {
                         auto desc = pooling_forward::desc(pk,
-                            algorithm_enumerator,
-                            input_desc,
-                            result_desc,
-                            mkldnn_filter_strides,
-                            mkldnn_filter_shape,
-                            mkldnn_padding_below,
-                            mkldnn_padding_above
-                            PADDING;
+                                                          algorithm_enumerator,
+                                                          input_desc,
+                                                          result_desc,
+                                                          mkldnn_filter_strides,
+                                                          mkldnn_filter_shape,
+                                                          mkldnn_padding_below,
+                                                          mkldnn_padding_above PADDING);
                         auto prim_desc =
-                            pooling_forward::primitive_desc(desc,
-                                                            executor::global_cpu_engine);
+                            pooling_forward::primitive_desc(desc, executor::global_cpu_engine);
                         i_mds.push_back(input_desc);
 #if MKLDNN_VERSION_MAJOR < 1
                         o_mds.push_back(prim_desc.dst_primitive_desc().desc());
@@ -1504,18 +1490,17 @@ namespace ngraph
                             if (pk == prop_kind::forward_training)
                             {
                                 auto desc = pooling_forward::desc(pk,
-                                    algorithm_enumerator,
-                                    default_desc_i,
-                                    result_desc,
-                                    mkldnn_filter_strides,
-                                    mkldnn_filter_shape,
-                                    mkldnn_padding_below,
-                                    mkldnn_padding_above
-                                    PADDING;
-                            	auto prim_desc = pooling_forward::primitive_desc(desc,
-                                   executor::global_cpu_engine);
+                                                                  algorithm_enumerator,
+                                                                  default_desc_i,
+                                                                  result_desc,
+                                                                  mkldnn_filter_strides,
+                                                                  mkldnn_filter_shape,
+                                                                  mkldnn_padding_below,
+                                                                  mkldnn_padding_above PADDING);
+                                auto prim_desc = pooling_forward::primitive_desc(
+                                    desc, executor::global_cpu_engine);
 #if MKLDNN_VERSION_MAJOR < 1
-                            	o_mds.push_back(prim_desc.workspace_primitive_desc().desc());
+                                o_mds.push_back(prim_desc.workspace_primitive_desc().desc());
 #else
                                 o_mds.push_back(prim_desc.workspace_desc());
 #endif
@@ -1800,32 +1785,27 @@ namespace ngraph
                     try
                     {
                         auto fwd_desc = pooling_forward::desc(prop_kind::forward_training,
-                            algorithm_enumerator,
-                            diff_src_desc,
-                            diff_dst_desc,
-                            mkldnn_filter_strides,
-                            mkldnn_filter_shape,
-                            mkldnn_padding_below,
-                            mkldnn_padding_above
-							PADDING;
+                                                              algorithm_enumerator,
+                                                              diff_src_desc,
+                                                              diff_dst_desc,
+                                                              mkldnn_filter_strides,
+                                                              mkldnn_filter_shape,
+                                                              mkldnn_padding_below,
+                                                              mkldnn_padding_above PADDING);
 
-                    	auto fwd_prim_desc =
-                            pooling_forward::primitive_desc(fwd_desc,
-                                                            executor::global_cpu_engine);
+                        auto fwd_prim_desc =
+                            pooling_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
 
-                    	auto bwd_desc = pooling_backward::desc(algorithm_enumerator,
-                            diff_src_desc,
-                            diff_dst_desc,
-                            mkldnn_filter_strides,
-                            mkldnn_filter_shape,
-                            mkldnn_padding_below,
-                            mkldnn_padding_above
-							PADDING;
+                        auto bwd_desc = pooling_backward::desc(algorithm_enumerator,
+                                                               diff_src_desc,
+                                                               diff_dst_desc,
+                                                               mkldnn_filter_strides,
+                                                               mkldnn_filter_shape,
+                                                               mkldnn_padding_below,
+                                                               mkldnn_padding_above PADDING);
 
-                        auto prim_desc =
-                            pooling_backward::primitive_desc(bwd_desc,
-                                            executor::global_cpu_engine,
-                                                             fwd_prim_desc);
+                        auto prim_desc = pooling_backward::primitive_desc(
+                            bwd_desc, executor::global_cpu_engine, fwd_prim_desc);
                         i_mds.push_back(fprop_input_md);
                         i_mds.push_back(diff_dst_desc);
 

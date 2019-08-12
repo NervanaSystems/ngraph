@@ -66,9 +66,7 @@ namespace ngraph
                     auto conv_attr =
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolution>(node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
-#endif
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -347,9 +345,7 @@ namespace ngraph
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionRelu>(
                                 node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
-#endif
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init();
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -434,9 +430,7 @@ namespace ngraph
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBias>(
                                 node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
-#endif
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -531,9 +525,7 @@ namespace ngraph
                         mkldnn_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBiasAdd>(
                                 node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
-#endif
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
@@ -658,9 +650,7 @@ namespace ngraph
                         ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
                     auto conv_attr = mkldnn_emitter->get_convolution_forward_attr<
                         ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
-#if MKLDNN_VERSION_MAJOR >= 1
-                    mkldnn_emitter->query_scratchpad_convolution_forward(conv_desc, conv_attr);
-#endif
+                    QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
                     size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
