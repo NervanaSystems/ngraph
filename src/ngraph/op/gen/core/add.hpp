@@ -1,0 +1,86 @@
+//*****************************************************************************
+// Copyright 2017-2019 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
+
+#pragma once
+
+#include "ngraph/op/util/gen_op.hpp"
+
+namespace ngraph
+{
+    namespace op
+    {
+        namespace gen
+        {
+            namespace core
+            {
+                class Add;
+            } // namespace core
+        }     // namespace gen
+    }         // namespace op
+} // namespace ngraph
+
+// Elementwise addition operation
+class ::ngraph::op::gen::core::Add : public ::ngraph::op::util::GenOp
+{
+public:
+    NGRAPH_API static const ::std::string type_name;
+    const std::string& description() const final override { return type_name; }
+    Add() = default;
+    Add(const ::ngraph::Output<::ngraph::Node>& x,
+        const ::ngraph::Output<::ngraph::Node>& y,
+        const AutoBroadcastSpec& autobroadcast)
+        : ::ngraph::op::util::GenOp(::ngraph::OutputVector{x, y})
+        , m_autobroadcast(autobroadcast)
+    {
+    }
+    ::ngraph::Input<::ngraph::Node> get_x() { return input(0); }
+    ::ngraph::Input<::ngraph::Node> get_y() { return input(1); }
+    ::ngraph::Input<const ::ngraph::Node> get_x() const { return input(0); }
+    ::ngraph::Input<const ::ngraph::Node> get_y() const { return input(1); }
+    ::ngraph::Output<::ngraph::Node> get_z() { return output(0); }
+    ::ngraph::Output<const ::ngraph::Node> get_z() const { return output(0); }
+    const AutoBroadcastSpec& get_autobroadcast() const { return m_autobroadcast; }
+    void set_autobroadcast(const AutoBroadcastSpec& autobroadcast)
+    {
+        m_autobroadcast = autobroadcast;
+    }
+    ::std::vector<::std::string> get_argument_keys() const final override
+    {
+        return ::std::vector<::std::string>{"x", "y"};
+    }
+    ::std::vector<::std::string> get_result_keys() const final override
+    {
+        return ::std::vector<::std::string>{"z"};
+    }
+    ::std::vector<::std::string> get_attribute_keys() const final override
+    {
+        return ::std::vector<::std::string>{"autobroadcast"};
+    }
+    bool is_commutative() const final override { return true; }
+    bool has_state() const final override { return false; }
+    ::std::shared_ptr<::ngraph::Node>
+        copy_with_new_args(const ::ngraph::NodeVector& inputs) const final override
+    {
+        // TODO: check input count
+        ::std::shared_ptr<::ngraph::Node> new_node =
+            ::std::make_shared<Add>(inputs[0], inputs[1], m_autobroadcast);
+        // TODO: control deps
+        return new_node;
+    }
+
+private:
+    AutoBroadcastSpec m_autobroadcast;
+};
