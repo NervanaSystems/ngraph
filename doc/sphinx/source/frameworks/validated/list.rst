@@ -25,7 +25,7 @@ GPU
    VGG-19, Image recognition
 
 
-TensorFlow CPU 
+CPU Tensorflow
 ==============
 
 .. csv-table::
@@ -55,7 +55,7 @@ TensorFlow CPU
    A3C, Reinforcement learning
 
 
-ONNX CPU
+CPU ONNX
 ========
 
 Additionally, we validated the following workloads are functional through 
