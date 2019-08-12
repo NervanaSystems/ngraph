@@ -20,8 +20,8 @@ set(MLIR_LLVM_REPO_URL https://github.com/llvm/llvm-project.git)
 set(MLIR_REPO_URL https://github.com/tensorflow/mlir.git)
 
 # Change these commit IDs to move to latest stable versions
-set(MLIR_LLVM_COMMIT_ID a2a6f85)
-set(MLIR_COMMIT_ID 26c683c)
+set(MLIR_LLVM_COMMIT_ID 3caf9af)
+set(MLIR_COMMIT_ID c636f12)
 set(MLIR_PROJECT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/mlir_project)
 set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-projects)
 set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm/projects/mlir)
