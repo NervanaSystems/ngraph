@@ -178,37 +178,6 @@ public:
             NGRAPH_CHECK(false, "get_attribute: Invalid attribute name ", name);
         }
     }
-    ::ngraph::AttributeBase& get_attribute(const ::std::string& name) final override
-    {
-        if (name == "strides")
-        {
-            return m_strides;
-        }
-        else if (name == "dilation")
-        {
-            return m_dilation;
-        }
-        else if (name == "data_dilation")
-        {
-            return m_data_dilation;
-        }
-        else if (name == "padding_before")
-        {
-            return m_padding_before;
-        }
-        else if (name == "padding_after")
-        {
-            return m_padding_after;
-        }
-        else if (name == "pad_type")
-        {
-            return m_pad_type;
-        }
-        else
-        {
-            NGRAPH_CHECK(false, "get_attribute: Invalid attribute name ", name);
-        }
-    }
     bool is_commutative() const final override { return false; }
     bool has_state() const final override { return false; }
     ::std::shared_ptr<::ngraph::Node>

@@ -134,17 +134,6 @@ public:
             NGRAPH_CHECK(false, "get_attribute: Invalid attribute name ", name);
         }
     }
-    ::ngraph::AttributeBase& get_attribute(const ::std::string& name) final override
-    {
-        if (name == "autobroadcast")
-        {
-            return m_autobroadcast;
-        }
-        else
-        {
-            NGRAPH_CHECK(false, "get_attribute: Invalid attribute name ", name);
-        }
-    }
     bool is_commutative() const final override { return true; }
     bool has_state() const final override { return false; }
     ::std::shared_ptr<::ngraph::Node>

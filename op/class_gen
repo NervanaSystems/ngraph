@@ -372,21 +372,6 @@ class ClassWriter():
             f.write('        }\n')
             f.write('    }\n')
 
-        f.write(
-            '    ::ngraph::AttributeBase& get_attribute(const ::std::string& name) final override\n')
-        f.write('    {\n')
-        for attribute in self._attributes:
-            f.write('        %s\n' % attribute.get_attribute_case())
-        if len(self._attributes) > 0:
-            f.write('        else\n')
-            f.write('        {\n')
-            f.write('    ')
-        f.write(
-            '        NGRAPH_CHECK(false, "get_attribute: Invalid attribute name ", name);\n')
-        if len(self._attributes) > 0:
-            f.write('        }\n')
-            f.write('    }\n')
-
         f.write('    bool is_commutative() const final override { return %s; }\n' % (
             'true' if self._commutative else 'false'))
         f.write('    bool has_state() const final override { return %s; }\n' % (

@@ -41,7 +41,6 @@ namespace ngraph
                 virtual Output<const Node> get_result(const std::string& name) const = 0;
                 virtual Output<Node> get_result(const std::string& name) = 0;
                 virtual const AttributeBase& get_attribute(const std::string& name) const = 0;
-                virtual AttributeBase& get_attribute(const std::string& name) = 0;
             };
         }
     }
