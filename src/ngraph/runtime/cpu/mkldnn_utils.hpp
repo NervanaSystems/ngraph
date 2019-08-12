@@ -53,6 +53,8 @@
 #define QUERY_SCRATCHPAD_3ARGS(op_name, x, y, z)
 #define QUERY_SCRATCHPAD_4ARGS(op_name, x, y, z, u)
 
+#define MKLDNN_ERROR_MESSAGE e.message
+
 #else
 #define TENSOR_MAX_DIMS MKLDNN_MAX_NDIMS
 #define FORMAT format_tag
@@ -84,6 +86,8 @@
     mkldnn::memory::desc scratchpad_md = pd.scratchpad_desc();                                     \
     size_t size = scratchpad_md.get_size();                                                        \
     m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;
+
+#define MKLDNN_ERROR_MESSAGE *e.message
 
 #endif
 

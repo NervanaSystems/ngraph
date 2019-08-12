@@ -43,7 +43,7 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
     }
     catch (const mkldnn::error& e)
     {
-        throw ngraph_error("Could not run mkdnn primitive " + e.message);
+        throw ngraph_error("Could not run mkdnn primitive " + MKLDNN_ERROR_MESSAGE);
     }
 }
 #else
@@ -211,7 +211,7 @@ extern "C" void ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(
     }
     catch (const mkldnn::error& e)
     {
-        throw ngraph_error(/*"Could not run mkdnn primitive " + */ e.message);
+        throw ngraph_error("Could not run mkdnn primitive " + MKLDNN_ERROR_MESSAGE);
     }
 }
 #endif

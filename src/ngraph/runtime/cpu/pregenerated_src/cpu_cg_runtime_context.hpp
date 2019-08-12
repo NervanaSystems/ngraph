@@ -260,7 +260,7 @@ struct CPURuntimeContextCG
         }
         catch (const mkldnn::error& e)
         {
-            throw std::runtime_error("Could not run mkdnn primitive ");
+            throw std::runtime_error("Could not run mkdnn primitive " + *e.message);
         }
     }
 

@@ -59,7 +59,7 @@ set(SRC
     builder/gather.cpp
     builder/gather_nd.cpp
     builder/leaky_relu.cpp
-	builder/lstm.cpp
+    builder/lstm.cpp
     builder/lrn.cpp
     builder/matmul_bias.cpp
     builder/max.cpp

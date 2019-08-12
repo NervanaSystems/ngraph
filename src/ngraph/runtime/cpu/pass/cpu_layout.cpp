@@ -466,8 +466,8 @@ namespace ngraph
                         catch (const mkldnn::error& e)
                         {
                             throw ngraph_error(
-                                "setting layouts on Convolution failed with MKLDNN error: " /*+
-                                e.message*/);
+                                "setting layouts on Convolution failed with MKLDNN error: " +
+                                MKLDNN_ERROR_MESSAGE);
                         }
                     }
                     else
@@ -488,8 +488,8 @@ namespace ngraph
                         catch (const mkldnn::error& e)
                         {
                             throw ngraph_error(
-                                "setting layouts on Convolution failed with MKLDNN error: " /* +
-                                e.message*/);
+                                "setting layouts on Convolution failed with MKLDNN error: " +
+                                MKLDNN_ERROR_MESSAGE);
                         }
                     }
                     convolution_forward::primitive_desc prim_desc(*fwd_desc,
@@ -561,8 +561,8 @@ namespace ngraph
                         catch (const mkldnn::error& e)
                         {
                             throw ngraph_error(
-                                "setting layouts on inner_product failed with MKLDNN error: " /* +
-                                e.message*/);
+                                "setting layouts on inner_product failed with MKLDNN error: " +
+                                MKLDNN_ERROR_MESSAGE);
                         }
                     }
                     else
@@ -575,8 +575,8 @@ namespace ngraph
                         catch (const mkldnn::error& e)
                         {
                             throw ngraph_error(
-                                "setting layouts on inner_product failed with MKLDNN error: " /* +
-                                e.message*/);
+                                "setting layouts on inner_product failed with MKLDNN error: " +
+                                MKLDNN_ERROR_MESSAGE);
                         }
                     }
                     inner_product_forward::primitive_desc prim_desc(*fwd_desc,
@@ -1310,8 +1310,14 @@ namespace ngraph
                         }
                         else
                         {
-                            throw ngraph_error("MKLDNN Unsupported pooling layout" /*+
-                                               to_string(input_desc.data.format) + e.message*/);
+#if MKLDNN_VERSION_MAJOR < 1
+                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                               to_string(input_desc.data.format) +
+                                               MKLDNN_ERROR_MESSAGE);
+#else
+                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                               MKLDNN_ERROR_MESSAGE);
+#endif
                         }
                     }
                 }
@@ -1403,8 +1409,14 @@ namespace ngraph
                         }
                         catch (const mkldnn::error& e)
                         {
-                            throw ngraph_error("MKLDNN Unsupported pooling layout" /*+
-                                               to_string(input_desc.data.format) + e.message*/);
+#if MKLDNN_VERSION_MAJOR < 1
+                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                               to_string(input_desc.data.format) +
+                                               MKLDNN_ERROR_MESSAGE);
+#else
+                            throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                               MKLDNN_ERROR_MESSAGE);
+#endif
                         }
 
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -1508,8 +1520,14 @@ namespace ngraph
                         }
                         else
                         {
-                            throw ngraph_error("MKLDNN Unsupported pooling fwd layout" /*+
-                                               to_string(input_desc.data.format) + e.message*/);
+#if MKLDNN_VERSION_MAJOR < 1
+                            throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
+                                               to_string(input_desc.data.format) +
+                                               MKLDNN_ERROR_MESSAGE);
+#else
+                            throw ngraph_error("MKLDNN Unsupported pooling fwd layout" +
+                                               MKLDNN_ERROR_MESSAGE);
+#endif
                         }
                     }
                 }
@@ -1829,8 +1847,14 @@ namespace ngraph
                     }
                     catch (const mkldnn::error& e)
                     {
-                        throw ngraph_error("MKLDNN Unsupported pooling layout" /*+
-                                           to_string(fprop_input_md.data.format) + e.message*/);
+#if MKLDNN_VERSION_MAJOR < 1
+                        throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                           to_string(fprop_input_md.data.format) +
+                                           MKLDNN_ERROR_MESSAGE);
+#else
+                        throw ngraph_error("MKLDNN Unsupported pooling layout" +
+                                           MKLDNN_ERROR_MESSAGE);
+#endif
                     }
                 }
 
@@ -2508,7 +2532,8 @@ namespace ngraph
 #endif
                     catch (const mkldnn::error& e)
                     {
-                        throw ngraph_error(e.message);
+                        throw ngraph_error("setting layouts on Concat failed with MKLDNN error: " +
+                                           MKLDNN_ERROR_MESSAGE);
                     }
                 }
 
