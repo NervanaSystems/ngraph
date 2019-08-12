@@ -29,7 +29,7 @@ op::SliceInput::SliceInput(const Output<Node>& value,
                            std::ptrdiff_t part_size,
                            std::ptrdiff_t end,
                            std::ptrdiff_t axis)
-    : Op({value})
+    : FusedOp({value})
     , m_start(start)
     , m_stride(stride)
     , m_part_size(part_size)

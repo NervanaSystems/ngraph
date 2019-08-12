@@ -18,12 +18,13 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class SliceInput : public Op
+        class SliceInput : public util::FusedOp
         {
         public:
             NGRAPH_API
@@ -51,6 +52,7 @@ namespace ngraph
 
             void validate_and_infer_types() override;
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            NodeVector decompose_op() const override;
 
             std::ptrdiff_t get_axis() const;
             void set_axis(std::ptrdiff_t axis);
