@@ -14,27 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#pragma once
+#include "ngraph/op/fused/space_to_depth.hpp"
+#include "pyngraph/ops/fused/space_to_depth.hpp"
 
-#include "contrib/mlir/compiler.hpp"
+namespace py = pybind11;
 
-#include <mlir/Pass/Pass.h>
-
-namespace ngraph
+void regclass_pyngraph_op_SpaceToDepth(py::module m)
 {
-    namespace runtime
-    {
-        namespace ngmlir
-        {
-            class MLIRCompiler;
-        }
-    }
-}
-
-namespace mlir
-{
-    mlir::Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
+    py::class_<ngraph::op::SpaceToDepth, std::shared_ptr<ngraph::op::SpaceToDepth>, ngraph::op::Op>
+        spacetodepth(m, "SpaceToDepth");
+    spacetodepth.doc() = "ngraph.impl.op.SpaceToDepth wraps ngraph::op::SpaceToDepth";
+    spacetodepth.def(py::init<const std::shared_ptr<ngraph::Node>&, int&>());
 }

@@ -15,6 +15,7 @@ MLIR_OP(Less)
 MLIR_OP(Maximum)
 MLIR_OP(Minimum)
 MLIR_OP(Multiply)
+MLIR_OP(Negative)
 MLIR_OP(Subtract)
 MLIR_OP(Relu)
 // Add new supported ops here

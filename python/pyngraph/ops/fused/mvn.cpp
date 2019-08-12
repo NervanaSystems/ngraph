@@ -14,27 +14,18 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#pragma once
+#include "ngraph/op/fused/mvn.hpp"
+#include "pyngraph/ops/fused/mvn.hpp"
 
-#include "contrib/mlir/compiler.hpp"
+namespace py = pybind11;
 
-#include <mlir/Pass/Pass.h>
-
-namespace ngraph
+void regclass_pyngraph_op_MVN(py::module m)
 {
-    namespace runtime
-    {
-        namespace ngmlir
-        {
-            class MLIRCompiler;
-        }
-    }
-}
-
-namespace mlir
-{
-    mlir::Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
+    py::class_<ngraph::op::MVN, std::shared_ptr<ngraph::op::MVN>, ngraph::op::Op> mvn(m, "MVN");
+    mvn.doc() = "ngraph.impl.op.MVN wraps ngraph::op::MVN";
+    mvn.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&, bool&, double&>());
 }

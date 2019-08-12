@@ -14,27 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
-
 #pragma once
 
-#include "contrib/mlir/compiler.hpp"
+#include <pybind11/pybind11.h>
 
-#include <mlir/Pass/Pass.h>
+namespace py = pybind11;
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace ngmlir
-        {
-            class MLIRCompiler;
-        }
-    }
-}
-
-namespace mlir
-{
-    mlir::Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
-}
+void regclass_pyngraph_op_HardSigmoid(py::module m);

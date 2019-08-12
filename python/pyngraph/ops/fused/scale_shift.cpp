@@ -14,27 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#pragma once
+#include "ngraph/op/fused/scale_shift.hpp"
+#include "pyngraph/ops/fused/scale_shift.hpp"
 
-#include "contrib/mlir/compiler.hpp"
+namespace py = pybind11;
 
-#include <mlir/Pass/Pass.h>
-
-namespace ngraph
+void regclass_pyngraph_op_ScaleShift(py::module m)
 {
-    namespace runtime
-    {
-        namespace ngmlir
-        {
-            class MLIRCompiler;
-        }
-    }
-}
-
-namespace mlir
-{
-    mlir::Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
+    py::class_<ngraph::op::ScaleShift, std::shared_ptr<ngraph::op::ScaleShift>, ngraph::op::Op>
+        scaleshift(m, "ScaleShift");
+    scaleshift.doc() = "ngraph.impl.op.ScaleShift wraps ngraph::op::ScaleShift";
+    scaleshift.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&>());
 }
