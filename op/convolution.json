@@ -1,0 +1,54 @@
+{
+    "name": "Convolution",
+    "dialect": "core",
+    "versions": [2, 3, 4, 5],
+    "description": "Batched convolution operation",
+    "arguments": [
+        {
+            "name": "data",
+            "description": "Data operand tensor"
+        },
+        {
+            "name": "filter",
+            "description": "Filter operand tensor"
+        }
+    ],
+    "results": [
+        {
+            "name": "output",
+            "description": "Result tensor"
+        }
+    ],
+    "attributes": [
+        {
+            "name": "strides",
+            "type": "Strides",
+            "description": "Window movement strides"
+        },
+        {
+            "name": "dilation",
+            "type": "Strides",
+            "description": "Window dilation strides"
+        },
+        {
+            "name": "data_dilation",
+            "type": "Strides",
+            "description": "Data dilation strides"
+        },
+        {
+            "name": "padding_before",
+            "type": "CoordinateDiff",
+            "description": "Padding at lower-numbered indices"
+        },
+        {
+            "name": "padding_after",
+            "type": "CoordinateDiff",
+            "description": "Padding at higher-numbered indices"
+        },
+        {
+            "name": "pad_type",
+            "type": "PadType",
+            "description": "Padding type I don't actually know what this attribute is, sigh"
+        }
+    ]
+}

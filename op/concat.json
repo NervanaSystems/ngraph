@@ -1,0 +1,29 @@
+{
+    "name": "Concat",
+    "dialect": "core",
+    "versions": [2, 3, 4, 5],
+    "description": "Tensor concatenation operation",
+    "arguments": [
+        {
+            "name": "data",
+            "description": "Data operand tensors",
+            "variadic": true
+        },
+        {
+            "name": "axis",
+            "description": "Axis of concatenation"
+        }
+    ],
+    "results": [
+        {
+            "name": "output",
+            "description": "Result tensor"
+        },
+        {
+            "name": "bogus",
+            "description": "Bogus thing",
+            "variadic": true
+        }
+    ],
+    "attributes": []
+}
