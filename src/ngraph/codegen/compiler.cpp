@@ -190,8 +190,8 @@ void codegen::CompilerCore::initialize()
     // Prevent Eigen from using any LGPL3 code
     args.push_back("-DEIGEN_MPL2_ONLY");
 
-#if defined(NGRAPH_USE_MKLDNN_V1)
-    args.push_back("-DNGRAPH_USE_MKLDNN_V1");
+#if defined(NGRAPH_USE_LEGACY_MKLDNN)
+    args.push_back("-DNGRAPH_USE_LEGACY_MKLDNN");
 #endif
 
     // Prepare DiagnosticEngine
