@@ -39,6 +39,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/sign.hpp"
 #include "ngraph/op/subtract.hpp"
 
 using namespace ngraph::descriptor;
@@ -351,7 +352,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         return true;
     }
 
-    if (TI(ngraph::op::Abs) == TI(*node))
+    if (TI(ngraph::op::Abs) == TI(*node) || TI(ngraph::op::Sign) == TI(*node))
     {
         return true;
     }

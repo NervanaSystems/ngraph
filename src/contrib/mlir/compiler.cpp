@@ -44,6 +44,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/sign.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -592,6 +593,12 @@ namespace ngraph
             mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Abs)
             {
                 return compiler.create_generic_op<mlir::NGAbsOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Sign)
+            {
+                return compiler.create_generic_op<mlir::NGSignOp>(ng_node);
             }
         }
     }

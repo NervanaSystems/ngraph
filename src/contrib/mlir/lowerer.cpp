@@ -551,6 +551,12 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGSignOp)
+    {
+        lower_unary_elementwise<mlir::NGSignOp>(op, operands, rewriter, pass);
+        return matchSuccess();
+    }
+
     REWRITER(NGDotOp)
     {
         auto dot = cast<NGDotOp>(op);
@@ -889,6 +895,30 @@ namespace
                 else
                 {
                     NGRAPH_CHECK(false, "Unsupported type for Abs");
+                }
+            }
+            else if (isa<NGSignOp>(op))
+            {
+                if (auto floatTy = elemTy.dyn_cast<FloatType>())
+                {
+                    ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+                    ValueHandle one = intrinsics::constant_float(llvm::APFloat(1.0f), floatTy);
+                    iRes(ivs) =
+                        edsc::intrinsics::select((val < zero),
+                                                 zero - one,
+                                                 edsc::intrinsics::select((val > zero), one, zero));
+                }
+                else if (auto intTy = elemTy.dyn_cast<IntegerType>())
+                {
+                    ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
+                    ValueHandle one = intrinsics::constant_int(1, intTy.getWidth());
+                    edsc::intrinsics::select((val < zero),
+                                             zero - one,
+                                             edsc::intrinsics::select((val > zero), one, zero));
+                }
+                else
+                {
+                    NGRAPH_CHECK(false, "Unsupported type for Sign");
                 }
             }
             else
