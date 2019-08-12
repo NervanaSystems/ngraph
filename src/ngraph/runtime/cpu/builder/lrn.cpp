@@ -87,7 +87,7 @@ namespace ngraph
                                                      CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<float>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
-                                static_cast<float*>(ctx->buffer_data[axes_buffer_index]),
+                                static_cast<uint64_t*>(ctx->buffer_data[axes_buffer_index]),
                                 static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 arg_shape,
                                 alpha,
@@ -110,7 +110,7 @@ namespace ngraph
                                                      CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<double>(
                                 static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
-                                static_cast<double*>(ctx->buffer_data[axes_buffer_index]),
+                                static_cast<uint64_t*>(ctx->buffer_data[axes_buffer_index]),
                                 static_cast<double*>(ctx->buffer_data[out_buffer_index]),
                                 arg_shape,
                                 alpha,

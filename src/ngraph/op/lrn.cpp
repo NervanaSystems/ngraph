@@ -24,7 +24,7 @@ using namespace ngraph;
 const string op::LRN::type_name{"LRN"};
 
 op::LRN::LRN(const Output<Node>& arg, double alpha, double beta, double bias, size_t size)
-    : LRN(arg, op::Constant::create(element::i32, Shape{1}, {1}), alpha, beta, bias, size)
+    : LRN(arg, op::Constant::create(element::u64, Shape{1}, {1}), alpha, beta, bias, size)
 {
 }
 
@@ -74,6 +74,13 @@ void op::LRN::validate_and_infer_types()
                           "Number of elements of axes must be >= 1 and <= argument rank (axes_shape[0]: ",
                           axes_shape[0],
                           ").");
+
+    const auto& axes_type = get_input_element_type(1);
+    NODE_VALIDATION_CHECK(this,
+        axes_type.compatible(element::Type_t::u64),
+        "Axes input must have element type u64 (axes tpye: ",
+        axes_type,
+        ").");
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const

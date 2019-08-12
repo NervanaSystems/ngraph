@@ -30,7 +30,7 @@ namespace ngraph
         {
             template <typename T>
             void lrn(const T* arg,
-                     const T* axes,
+                     const uint64_t* axes,
                      T* out,
                      const Shape& arg_shape,
                      double dalpha,
@@ -43,20 +43,20 @@ namespace ngraph
                 T bias = static_cast<T>(dbias);
 
                 CoordinateTransform input_transform(arg_shape);
-                const size_t CHANNEL_DIM = 1;
-                const size_t MAX_C = arg_shape.at(CHANNEL_DIM);
+                const size_t current_dim = axes[0];
+                const size_t elem_number_along_dim = arg_shape.at(current_dim);
                 for (const Coordinate& in_coord : input_transform)
                 {
-                    size_t c = in_coord.at(CHANNEL_DIM);
+                    size_t c = in_coord.at(current_dim);
                     T square_sum = 0;
                     for (size_t i = c; i < c + size; i++)
                     {
                         if (i < (size - 1) / 2)
                             continue;
-                        if (i >= MAX_C + (size - 1) / 2)
+                        if (i >= elem_number_along_dim + (size - 1) / 2)
                             continue;
                         auto sum_coord = in_coord;
-                        sum_coord.at(CHANNEL_DIM) = i - (size - 1) / 2;
+                        sum_coord.at(current_dim) = i - (size - 1) / 2;
                         square_sum += arg[input_transform.index(sum_coord)] *
                                       arg[input_transform.index(sum_coord)];
                     }
