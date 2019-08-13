@@ -37,7 +37,7 @@ project/doc-contributor-README.rst  @indie
 /src/resource/                      @rkimballn1
 /src/tools/                         @rkimballn1
 /src/ngraph/autodiff/               @diyessi
-/src/ngraph/builder/                @sfvaroglu
+/src/ngraph/builder/                @mbrookhart
 /src/ngraph/codegen/                @rkimballn1
 /src/ngraph/distributed.*           @wenzhe-nrv @diyessi
 /src/ngraph/frontend/               @postrational
@@ -55,7 +55,7 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/runtime/hybrid/         @rkimballn1
 /src/ngraph/runtime/intelgpu/       @dmyershov
 /src/ngraph/runtime/interpreter/    @rkimballn1
-/src/ngraph/runtime/plaidml/        @earhart
+/src/ngraph/runtime/plaidml/        @earhart @dgkutnic
 /src/ngraph/runtime/reference/      @aprocter
 /src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @aprocter
 /src/ngraph/type/                   @diyessi

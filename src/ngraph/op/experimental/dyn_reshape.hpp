@@ -34,6 +34,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            DynReshape() = default;
             /// \brief Constructs a dynamic reshape operation. This operation does not perform transpose.
             ///
             /// \param arg The tensor to be reshaped.
@@ -44,8 +45,8 @@ namespace ngraph
             ///        size is inferred based on element count of input tensor.
             /// \param zero_flag Treats zeros in `pattern` as wildcard flags indicating a copy from input
             ///                  shape at the same index.
-            DynReshape(const std::shared_ptr<Node>& arg,
-                       const std::shared_ptr<Node>& pattern,
+            DynReshape(const Output<Node>& arg,
+                       const Output<Node>& pattern,
                        bool zero_flag = false);
 
             void validate_and_infer_types() override;
