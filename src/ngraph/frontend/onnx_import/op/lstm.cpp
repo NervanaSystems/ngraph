@@ -267,7 +267,7 @@ namespace ngraph
                     {
                     }
 
-                    NodeVector run(bool reverse = false)
+                    NodeVector lstm_pass(bool is_reverse = false)
                     {
                         // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
                         // The names used below are analogous to the one used in ONNX documentation.
@@ -294,7 +294,7 @@ namespace ngraph
                         std::shared_ptr<ngraph::Node> H_t = m_initial_h;
                         std::shared_ptr<ngraph::Node> C_t = m_initial_c;
 
-                        if (reverse)
+                        if (is_reverse)
                         {
                             m_X = std::make_shared<ngraph::op::ReverseSequence>(
                                 m_X, m_seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
@@ -358,7 +358,7 @@ namespace ngraph
                             std::make_shared<ngraph::op::Concat>(h_list, 0)};
 
                         // Get back the original order of the output data.
-                        if (reverse)
+                        if (is_reverse)
                         {
                             Y = std::make_shared<ngraph::op::ReverseSequence>(
                                 Y, m_seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
@@ -477,7 +477,7 @@ namespace ngraph
                                              attributes.m_direction,
                                              attributes.m_hidden_size,
                                              attributes.m_input_forget);
-                        results = lstm_fwd.run(
+                        results = lstm_fwd.lstm_pass(
                             (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_REVERSE));
                     }
                     if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
@@ -528,8 +528,8 @@ namespace ngraph
                                                   attributes.m_hidden_size,
                                                   attributes.m_input_forget);
 
-                        NodeVector fwd_results{lstm_fwd.run()};
-                        NodeVector rev_results{lstm_reversed.run(true)};
+                        NodeVector fwd_results{lstm_fwd.lstm_pass()};
+                        NodeVector rev_results{lstm_reversed.lstm_pass(true)};
 
                         // Stack together respective outputs from both forward and reverse passess.
                         std::shared_ptr<ngraph::Node> Y{std::make_shared<ngraph::op::Concat>(
