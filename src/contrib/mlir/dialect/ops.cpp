@@ -205,6 +205,24 @@ mlir::LogicalResult verifyOp(NGGatherOp* op)
     return mlir::success();
 }
 
+template <>
+mlir::LogicalResult verifyOp(NGConvolutionOp* op)
+{
+    Type ty = op->images()->getType();
+    NGTensorType imagesType = ty.cast<NGTensorType>();
+    Type imagesEt = imagesType.getElementType();
+
+    ty = op->filters()->getType();
+    NGTensorType filtersType = ty.cast<NGTensorType>();
+    Type filtersEt = filtersType.getElementType();
+
+    //if (imagesEt.isa<NGIntegerType>() && )
+    // elt types of images and filters are compatible. 
+    // shapes are compatible
+    // Attributes are I64Arrays
+    // strides are non-negative and below img dim
+    // paddings are all non-negative
+}
 namespace mlir
 {
 #define GET_OP_CLASSES
