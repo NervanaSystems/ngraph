@@ -29,8 +29,11 @@ namespace ngraph
             class GenOp : public Op
             {
             protected:
-                GenOp();
-                GenOp(const OutputVector& arguments);
+                GenOp() = default;
+                GenOp(const OutputVector& arguments)
+                    : Op(arguments)
+                {
+                }
 
             public:
                 virtual std::vector<std::string> get_argument_keys() const = 0;
@@ -44,4 +47,13 @@ namespace ngraph
             };
         }
     }
+
+    class GenOpBuilder
+    {
+    public:
+        virtual ~GenOpBuilder() {}
+        virtual std::shared_ptr<Node>
+            build(const OutputVector& source_outputs,
+                  const std::vector<const AttributeBase*>& attributes) const = 0;
+    };
 }

@@ -17,3 +17,10 @@
 #include "ngraph/op/gen/core/add.hpp"
 
 const std::string ngraph::op::gen::core::Add::type_name = "core.Add";
+
+::std::shared_ptr<::ngraph::Node>
+    ngraph::op::gen::core::Add::build(const ::ngraph::OutputVector& source_outputs,
+                                      const ::std::vector<const AttributeBase*>& attributes)
+{
+    return ::std::make_shared<::ngraph::op::gen::core::Add>(source_outputs, attributes);
+}

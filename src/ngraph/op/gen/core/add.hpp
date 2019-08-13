@@ -33,11 +33,15 @@ namespace ngraph
 } // namespace ngraph
 
 // Elementwise addition operation
-class ::ngraph::op::gen::core::Add : public ::ngraph::op::util::GenOp
+class ::ngraph::op::gen::core::Add final : public ::ngraph::op::util::GenOp
 {
 public:
     NGRAPH_API static const ::std::string type_name;
     const std::string& description() const final override { return type_name; }
+    class Builder;
+    static ::std::shared_ptr<::ngraph::Node>
+        build(const ::ngraph::OutputVector& source_outputs,
+              const ::std::vector<const ::ngraph::AttributeBase*>& attributes);
     Add() = default;
     Add(const ::ngraph::Output<::ngraph::Node>& x,
         const ::ngraph::Output<::ngraph::Node>& y,
@@ -45,6 +49,20 @@ public:
         : ::ngraph::op::util::GenOp(::ngraph::OutputVector{x, y})
         , m_autobroadcast(autobroadcast)
     {
+    }
+    Add(const ::ngraph::OutputVector& source_outputs,
+        const ::std::vector<const ::ngraph::AttributeBase*>& attributes)
+        : ::ngraph::op::util::GenOp(source_outputs)
+    {
+        NGRAPH_CHECK(source_outputs.size() == 2,
+                     "Source output count should be 2, not ",
+                     source_outputs.size());
+        NGRAPH_CHECK(
+            attributes.size() == 1, "Attribute count should be 1, not ", attributes.size());
+        NGRAPH_CHECK(
+            attributes[0]->has_type<AutoBroadcastSpec>(),
+            "Attribute 0 (name: autobroadcast) has incorrect type (AutoBroadcastSpec expected)");
+        m_autobroadcast.set(attributes[0]->as_type<AutoBroadcastSpec>().get());
     }
     ::ngraph::Input<::ngraph::Node> get_x() { return input(0); }
     ::ngraph::Input<::ngraph::Node> get_y() { return input(1); }
@@ -139,7 +157,7 @@ public:
     ::std::shared_ptr<::ngraph::Node>
         copy_with_new_args(const ::ngraph::NodeVector& inputs) const final override
     {
-        // TODO: check input count
+        NGRAPH_CHECK(inputs.size() == 2, "New argument count should be 2, not ", inputs.size());
         ::std::shared_ptr<::ngraph::Node> new_node =
             ::std::make_shared<Add>(inputs[0], inputs[1], m_autobroadcast.get());
         // TODO: control deps
@@ -148,4 +166,14 @@ public:
 
 private:
     ::ngraph::Attribute<AutoBroadcastSpec> m_autobroadcast;
+};
+class ::ngraph::op::gen::core::Add::Builder final : public ::ngraph::GenOpBuilder
+{
+public:
+    ::std::shared_ptr<::ngraph::Node>
+        build(const ::ngraph::OutputVector& source_outputs,
+              const ::std::vector<const ::ngraph::AttributeBase*>& attributes) const final override
+    {
+        return ::ngraph::op::gen::core::Add::build(source_outputs, attributes);
+    }
 };

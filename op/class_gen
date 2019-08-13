@@ -118,6 +118,14 @@ class OpAttributeWriter():
               (self._name, self.member_var_name()))
         return s
 
+    def ctor_type_check(self):
+        return('NGRAPH_CHECK(attributes[%d]->has_type<%s>(), "Attribute %d (name: %s) has incorrect type (%s expected)");'
+               % (self._idx, self._type, self._idx, self._name, self._type))
+
+    def ctor_assignment(self):
+        return('%s.set(attributes[%d]->as_type<%s>().get());'
+               % (self.member_var_name(), self._idx, self._type))
+
     def member_var_proto(self):
         return ('::ngraph::Attribute<%s> %s;' % (self._type, self.member_var_name()))
 
@@ -227,7 +235,7 @@ class ClassWriter():
         f.write('// ')
         f.write(self._description)
         f.write('\n')
-        f.write('class ::%s : public ::ngraph::op::util::GenOp\n' %
+        f.write('class ::%s final : public ::ngraph::op::util::GenOp\n' %
                 self.qualified_name())
         f.write('{')
         f.write('\n')
@@ -238,11 +246,13 @@ class ClassWriter():
         f.write(
             '    const std::string& description() const final override { return type_name; }\n')
 
+        f.write('    class Builder;\n')
+
+        f.write('    static ::std::shared_ptr<::ngraph::Node> build(const ::ngraph::OutputVector& source_outputs, const ::std::vector<const ::ngraph::AttributeBase*>& attributes);\n')
+
         f.write('    %s() = default;\n' % self._name)
 
-        f.write('    ')
-        f.write(self._name)
-        f.write('(')
+        f.write('    %s(' % self._name)
 
         f.write(', '.join(argument.ctor_parameter_proto()
                           for argument in self._arguments))
@@ -263,6 +273,22 @@ class ClassWriter():
                     (attribute.member_var_name(), attribute.name()))
 
         f.write('    {\n')
+        f.write('    }\n')
+
+        f.write('    %s(const ::ngraph::OutputVector& source_outputs, const ::std::vector<const ::ngraph::AttributeBase*>& attributes)\n' % self._name)
+        f.write('        : ::ngraph::op::util::GenOp(source_outputs)\n')
+        f.write('    {\n')
+        f.write('        NGRAPH_CHECK(source_outputs.size() == %d, "Source output count should be %d, not ", source_outputs.size());\n'
+                % (len(self._arguments), len(self._arguments)))
+        f.write('        NGRAPH_CHECK(attributes.size() == %d, "Attribute count should be %d, not ", attributes.size());\n'
+                % (len(self._attributes), len(self._attributes)))
+
+        for attribute in self._attributes:
+            f.write('        %s\n' % attribute.ctor_type_check())
+
+        for attribute in self._attributes:
+            f.write('        %s\n' % attribute.ctor_assignment())
+
         f.write('    }\n')
 
         for argument in self._arguments:
@@ -381,7 +407,8 @@ class ClassWriter():
         f.write('        (const ::ngraph::NodeVector& inputs)\n')
         f.write('        const final override\n')
         f.write('    {\n')
-        f.write('        // TODO: check input count\n')
+        f.write('        NGRAPH_CHECK(inputs.size() == %d, "New argument count should be %d, not ", inputs.size());\n'
+                % (len(self._arguments), len(self._arguments)))
         f.write(
             '        ::std::shared_ptr<::ngraph::Node> new_node = ::std::make_shared<%s>(' % self._name)
         f.write(', '.join('inputs[%d]' % idx
@@ -402,6 +429,23 @@ class ClassWriter():
 
         f.write('};\n')
 
+    def gen_builder_class_definition(self, f):
+        f.write('class ::%s::Builder final : public ::ngraph::GenOpBuilder\n' %
+                self.qualified_name())
+        f.write('{')
+        f.write('\n')
+
+        f.write('public:\n')
+        f.write(
+            '    ::std::shared_ptr<::ngraph::Node> build(const ::ngraph::OutputVector& source_outputs,\n')
+        f.write('                                            const ::std::vector<const ::ngraph::AttributeBase*>& attributes)\n')
+        f.write('               const final override\n')
+        f.write('    {\n')
+        f.write('        return ::%s::build(source_outputs, attributes);\n'
+                % self.qualified_name())
+        f.write('    }\n')
+        f.write('};\n')
+
     def gen_hpp_file(self, outdir_name):
         os.makedirs('%s/ngraph/op/gen/%s' %
                     (outdir_name, self._dialect), exist_ok=True)
@@ -419,12 +463,21 @@ class ClassWriter():
 
         self.gen_class_definition(f)
 
+        self.gen_builder_class_definition(f)
+
         f.close()
 
     def gen_function_definitions(self, f):
         f.write('const std::string %s::type_name = "%s.%s";\n' %
                 (self.qualified_name(), self._dialect, self._name))
         f.write('\n')
+
+        f.write('::std::shared_ptr<::ngraph::Node> %s::build(const ::ngraph::OutputVector& source_outputs, const ::std::vector<const AttributeBase*>& attributes)\n'
+                % self.qualified_name())
+        f.write('{\n')
+        f.write('    return ::std::make_shared<::%s>(source_outputs, attributes);\n'
+                % self.qualified_name())
+        f.write('}\n')
 
     def gen_cpp_file(self, outdir_name):
         os.makedirs('%s/ngraph/op/gen/%s' %

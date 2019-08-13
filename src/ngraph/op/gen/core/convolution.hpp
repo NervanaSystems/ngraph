@@ -33,11 +33,15 @@ namespace ngraph
 } // namespace ngraph
 
 // Batched convolution operation
-class ::ngraph::op::gen::core::Convolution : public ::ngraph::op::util::GenOp
+class ::ngraph::op::gen::core::Convolution final : public ::ngraph::op::util::GenOp
 {
 public:
     NGRAPH_API static const ::std::string type_name;
     const std::string& description() const final override { return type_name; }
+    class Builder;
+    static ::std::shared_ptr<::ngraph::Node>
+        build(const ::ngraph::OutputVector& source_outputs,
+              const ::std::vector<const ::ngraph::AttributeBase*>& attributes);
     Convolution() = default;
     Convolution(const ::ngraph::Output<::ngraph::Node>& data,
                 const ::ngraph::Output<::ngraph::Node>& filter,
@@ -55,6 +59,36 @@ public:
         , m_padding_after(padding_after)
         , m_pad_type(pad_type)
     {
+    }
+    Convolution(const ::ngraph::OutputVector& source_outputs,
+                const ::std::vector<const ::ngraph::AttributeBase*>& attributes)
+        : ::ngraph::op::util::GenOp(source_outputs)
+    {
+        NGRAPH_CHECK(source_outputs.size() == 2,
+                     "Source output count should be 2, not ",
+                     source_outputs.size());
+        NGRAPH_CHECK(
+            attributes.size() == 6, "Attribute count should be 6, not ", attributes.size());
+        NGRAPH_CHECK(attributes[0]->has_type<Strides>(),
+                     "Attribute 0 (name: strides) has incorrect type (Strides expected)");
+        NGRAPH_CHECK(attributes[1]->has_type<Strides>(),
+                     "Attribute 1 (name: dilation) has incorrect type (Strides expected)");
+        NGRAPH_CHECK(attributes[2]->has_type<Strides>(),
+                     "Attribute 2 (name: data_dilation) has incorrect type (Strides expected)");
+        NGRAPH_CHECK(
+            attributes[3]->has_type<CoordinateDiff>(),
+            "Attribute 3 (name: padding_before) has incorrect type (CoordinateDiff expected)");
+        NGRAPH_CHECK(
+            attributes[4]->has_type<CoordinateDiff>(),
+            "Attribute 4 (name: padding_after) has incorrect type (CoordinateDiff expected)");
+        NGRAPH_CHECK(attributes[5]->has_type<PadType>(),
+                     "Attribute 5 (name: pad_type) has incorrect type (PadType expected)");
+        m_strides.set(attributes[0]->as_type<Strides>().get());
+        m_dilation.set(attributes[1]->as_type<Strides>().get());
+        m_data_dilation.set(attributes[2]->as_type<Strides>().get());
+        m_padding_before.set(attributes[3]->as_type<CoordinateDiff>().get());
+        m_padding_after.set(attributes[4]->as_type<CoordinateDiff>().get());
+        m_pad_type.set(attributes[5]->as_type<PadType>().get());
     }
     ::ngraph::Input<::ngraph::Node> get_data() { return input(0); }
     ::ngraph::Input<::ngraph::Node> get_filter() { return input(1); }
@@ -183,7 +217,7 @@ public:
     ::std::shared_ptr<::ngraph::Node>
         copy_with_new_args(const ::ngraph::NodeVector& inputs) const final override
     {
-        // TODO: check input count
+        NGRAPH_CHECK(inputs.size() == 2, "New argument count should be 2, not ", inputs.size());
         ::std::shared_ptr<::ngraph::Node> new_node =
             ::std::make_shared<Convolution>(inputs[0],
                                             inputs[1],
@@ -204,4 +238,14 @@ private:
     ::ngraph::Attribute<CoordinateDiff> m_padding_before;
     ::ngraph::Attribute<CoordinateDiff> m_padding_after;
     ::ngraph::Attribute<PadType> m_pad_type;
+};
+class ::ngraph::op::gen::core::Convolution::Builder final : public ::ngraph::GenOpBuilder
+{
+public:
+    ::std::shared_ptr<::ngraph::Node>
+        build(const ::ngraph::OutputVector& source_outputs,
+              const ::std::vector<const ::ngraph::AttributeBase*>& attributes) const final override
+    {
+        return ::ngraph::op::gen::core::Convolution::build(source_outputs, attributes);
+    }
 };

@@ -17,3 +17,10 @@
 #include "ngraph/op/gen/core/convolution.hpp"
 
 const std::string ngraph::op::gen::core::Convolution::type_name = "core.Convolution";
+
+::std::shared_ptr<::ngraph::Node>
+    ngraph::op::gen::core::Convolution::build(const ::ngraph::OutputVector& source_outputs,
+                                              const ::std::vector<const AttributeBase*>& attributes)
+{
+    return ::std::make_shared<::ngraph::op::gen::core::Convolution>(source_outputs, attributes);
+}
