@@ -107,6 +107,9 @@ static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
 #define COMPILE_OP_DECL(op_name)                                                                   \
     create_op<op_name>(MLIRCompiler & compiler, const ngraph::Node* ng_node)
 
+// Default optimization level.
+unsigned MLIRCompiler::mlir_opt_level = 2;
+
 void MLIRCompiler::init_mlir()
 {
     // Mutex to safely initialize MLIR.
@@ -120,6 +123,14 @@ void MLIRCompiler::init_mlir()
         mlir::registerDialect<mlir::NGraphOpsDialect>();
         // Register any LLVM command line options
         llvm::cl::ParseEnvironmentOptions("ngraph", "NGRAPH_MLIR_OPTIONS", "");
+
+        // Override default optimization level with macro value.
+        if (char* opt_level_str = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
+        {
+            mlir_opt_level = std::stoi(opt_level_str);
+            NGRAPH_CHECK(mlir_opt_level >= 0 && mlir_opt_level <= 3, "Invalid optimization level");
+        }
+
         initialized = true;
     }
 }
@@ -312,24 +323,19 @@ void MLIRCompiler::lower_ng_dialect()
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
 
-    unsigned opt_level = 3;
-    if (char* opt_level_str = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
-    {
-        opt_level = std::stoi(opt_level_str);
-        NGRAPH_CHECK(opt_level >= 0 && opt_level <= 3, "Invalid optimization level");
-    }
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
-    // don't run MLIR passes that were already run. We also pass a default transformer to run
-    // LLVM optimizations at level 3.
+    // don't run MLIR passes that were already run. We also pass a default transformer created with
+    // the default or user-provided optimization level.
     auto llvm_transformer =
-        mlir::makeOptimizingTransformer(opt_level, /*sizeLevel=*/0, /*targetMachine*/ nullptr);
+        mlir::makeOptimizingTransformer(mlir_opt_level, /*sizeLevel=*/0, /*targetMachine*/ nullptr);
     auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
 }
 
 /// Creates target machine for current host.
-static llvm::Expected<std::unique_ptr<llvm::TargetMachine>> createDefaultTargetMachine()
+static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
+    createDefaultTargetMachine(unsigned opt_level)
 {
     auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
     if (!machineBuilder)
@@ -346,9 +352,16 @@ static llvm::Expected<std::unique_ptr<llvm::TargetMachine>> createDefaultTargetM
         subtargetFeatures.AddFeature(feature.first(), feature.second);
     }
 
-    // Relocation model and code model are kept to default values.
+    // Relocation model and code model are kept to default values. CodeGen optimization level
+    // matches LLVM recommendations, i.e.:
+    // enum Level {
+    //   None,        // -O0
+    //   Less,        // -O1
+    //   Default,     // -O2, -Os
+    //   Aggressive   // -O3
+    // };
     machineBuilder->setCPU(llvm::sys::getHostCPUName());
-    machineBuilder->setCodeGenOptLevel(llvm::CodeGenOpt::Aggressive);
+    machineBuilder->setCodeGenOptLevel((llvm::CodeGenOpt::Level)opt_level);
     machineBuilder->addFeatures(subtargetFeatures.getFeatures());
 
     return machineBuilder->createTargetMachine();
@@ -390,7 +403,7 @@ void MLIRCompiler::optimize()
     // Create target machine with all the current host features.
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
-    auto expectedTargetMachine = createDefaultTargetMachine();
+    auto expectedTargetMachine = createDefaultTargetMachine(mlir_opt_level);
     NGRAPH_CHECK(expectedTargetMachine, "Invalid target machine");
     auto targetMachine = std::move(*expectedTargetMachine);
 
