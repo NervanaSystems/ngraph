@@ -76,6 +76,7 @@
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/fake_quantize.hpp"
 #include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/fused/gelu_grad.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -1219,6 +1220,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Gelu:
         {
             node = make_shared<op::Gelu>(args[0]);
+            break;
+        }
+        case OP_TYPEID::GeluGrad:
+        {
+            node = make_shared<op::GeluGrad>(args[0]);
             break;
         }
         case OP_TYPEID::Gemm:
@@ -2410,6 +2416,8 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Gelu: { break;
+    }
+    case OP_TYPEID::GeluGrad: { break;
     }
     case OP_TYPEID::Gemm:
     {

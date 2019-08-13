@@ -105,6 +105,7 @@
 #include "ngraph/op/fused/elu.hpp"
 #include "ngraph/op/fused/fake_quantize.hpp"
 #include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/fused/gelu_grad.hpp"
 #include "ngraph/op/fused/gemm.hpp"
 #include "ngraph/op/fused/grn.hpp"
 #include "ngraph/op/fused/group_conv.hpp"

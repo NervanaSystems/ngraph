@@ -318,6 +318,8 @@ set (SRC
     op/fused/fake_quantize.hpp
     op/fused/gelu.cpp
     op/fused/gelu.hpp
+    op/fused/gelu_grad.cpp
+    op/fused/gelu_grad.hpp
     op/fused/gemm.cpp
     op/fused/gemm.hpp
     op/fused/grn.cpp

@@ -24,18 +24,15 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Gaussian Error Linear Unit
-        /// f(x) = 0.5 * x * (1 + erf( x / sqrt(2) )
-        /// erf'(x) = 2 / sqrt(pi) * exp (-x^2)
-        /// f'(x) = 0.5 * (1 + erf( x / sqrt(2)) + x * sqrt(2 / pi) * exp (-(x / sqrt(2))^2))
-        ///
-        class Gelu : public ngraph::op::util::FusedOp
+        class GeluGrad : public util::FusedOp
         {
         public:
-            /// \brief Constructs an Gelu operation.
-            ///
-            /// \param data Input tensor
-            Gelu(const std::shared_ptr<ngraph::Node>& data);
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            GeluGrad() = default;
+
+            GeluGrad(const Output<Node>& x);
 
             virtual NodeVector decompose_op() const override;
 
@@ -43,9 +40,6 @@ namespace ngraph
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-
-        protected:
-            void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) override;
         };
     }
 }

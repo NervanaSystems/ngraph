@@ -236,6 +236,7 @@ set(MULTI_TEST_SRC
     backend/function_name.in.cpp
     backend/fused_op.in.cpp
     backend/gather.in.cpp
+    backend/gelu_grad.in.cpp
     backend/generate_mask.in.cpp
     backend/logical_and.in.cpp
     backend/logical_or.in.cpp
