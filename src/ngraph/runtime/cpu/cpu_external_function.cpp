@@ -1160,13 +1160,18 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         // graph pass
         if (typeid(ngraph::op::LSTMCell) == typeid(node))
         {
-            // MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell has peephole.
-            // LSTMCell with no peephole support is constant initialized to zero
+// MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell has peephole.
+// LSTMCell with no peephole support is constant initialized to zero
+#if MKLDNN_VERSION_MAJOR < 1
             if (std::dynamic_pointer_cast<ngraph::op::Constant>(node.get_argument(6)) != nullptr)
             {
                 return true;
             }
-            return false;
+            else
+            {
+                return false;
+            }
+#endif
         }
 
         if (dex)

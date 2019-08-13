@@ -173,9 +173,10 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto R_reshape = std::make_shared<op::Reshape>(
             R_ifco, AxisVector{1, 0}, Shape{R_ifco->get_shape()[1], R_ifco->get_shape()[0]});
 
+#if MKLDNN_VERSION_MAJOR < 1
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             pattern_map[X], src_iter, W_reshape, R_reshape, bias_ifco, rnn_type);
-
+#endif
         if (lstm_node->get_outputs().size() != 2)
         {
             throw ngraph_error("Lstm node doesnt have two outputs");
