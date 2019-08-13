@@ -23,8 +23,11 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/gen/core/add.hpp"
+#include "ngraph/op/gen/core/convolution.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/passthrough.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/serializer.hpp"
@@ -339,4 +342,26 @@ TEST(serialize, non_zero_node_output)
     auto topk_out = g_abs->input(0).get_source_output();
     EXPECT_EQ(topk_out.get_index(), 1);
     EXPECT_EQ(topk_out.get_node()->description(), "TopK");
+}
+
+TEST(serialize, gen_op)
+{
+    auto arg0 = make_shared<op::Parameter>(element::f32, Shape{10});
+    auto arg1 = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto add = make_shared<op::gen::core::Add>(arg0, arg1, op::AutoBroadcastType::NUMPY);
+    auto f = make_shared<Function>(NodeVector{add}, ParameterVector{arg0, arg1});
+    std::cout << serialize(f) << std::endl;
+
+    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{64, 3, 3, 3});
+    auto conv = make_shared<op::gen::core::Convolution>(data,
+                                                        filters,
+                                                        Strides{2, 2},
+                                                        Strides{2, 1},
+                                                        Strides{1, 1},
+                                                        CoordinateDiff{2, 2},
+                                                        CoordinateDiff{3, 3},
+                                                        op::PadType::AUTO);
+    auto g = make_shared<Function>(NodeVector{conv}, ParameterVector{data, filters});
+    std::cout << serialize(g) << std::endl;
 }

@@ -36,6 +36,52 @@
 namespace ngraph
 {
     template <typename T>
+    struct IsAttributeType
+    {
+        static constexpr bool value = false;
+    };
+
+#define LEGALIZE_ATTRIBUTE_TYPE(T)                                                                 \
+    template <>                                                                                    \
+    struct IsAttributeType<T>                                                                      \
+    {                                                                                              \
+        static constexpr bool value = true;                                                        \
+    };
+
+    LEGALIZE_ATTRIBUTE_TYPE(bool);
+    LEGALIZE_ATTRIBUTE_TYPE(int8_t);
+    LEGALIZE_ATTRIBUTE_TYPE(int16_t);
+    LEGALIZE_ATTRIBUTE_TYPE(int32_t);
+    LEGALIZE_ATTRIBUTE_TYPE(int64_t);
+    LEGALIZE_ATTRIBUTE_TYPE(uint8_t);
+    LEGALIZE_ATTRIBUTE_TYPE(uint16_t);
+    LEGALIZE_ATTRIBUTE_TYPE(uint32_t);
+    LEGALIZE_ATTRIBUTE_TYPE(uint64_t);
+    LEGALIZE_ATTRIBUTE_TYPE(bfloat16);
+    LEGALIZE_ATTRIBUTE_TYPE(float16);
+    LEGALIZE_ATTRIBUTE_TYPE(float);
+    LEGALIZE_ATTRIBUTE_TYPE(double);
+
+    LEGALIZE_ATTRIBUTE_TYPE(std::string);
+    LEGALIZE_ATTRIBUTE_TYPE(element::Type);
+    LEGALIZE_ATTRIBUTE_TYPE(PartialShape);
+    LEGALIZE_ATTRIBUTE_TYPE(Dimension);
+    LEGALIZE_ATTRIBUTE_TYPE(Shape);
+    LEGALIZE_ATTRIBUTE_TYPE(Strides);
+    LEGALIZE_ATTRIBUTE_TYPE(Coordinate);
+    LEGALIZE_ATTRIBUTE_TYPE(CoordinateDiff);
+    LEGALIZE_ATTRIBUTE_TYPE(AxisSet);
+    LEGALIZE_ATTRIBUTE_TYPE(AxisVector);
+
+    LEGALIZE_ATTRIBUTE_TYPE(op::PadMode);
+    LEGALIZE_ATTRIBUTE_TYPE(op::PadType);
+    LEGALIZE_ATTRIBUTE_TYPE(op::AutoBroadcastSpec);
+    LEGALIZE_ATTRIBUTE_TYPE(op::RoundMode);
+    LEGALIZE_ATTRIBUTE_TYPE(op::SortType);
+
+#undef LEGALIZE_ATTRIBUTE_TYPE
+
+    template <typename T>
     class Attribute;
 
     class AttributeBase
@@ -57,39 +103,10 @@ namespace ngraph
         template <typename T>
         Attribute<T>& as_type();
 
-        friend class Attribute<bool>;
-        friend class Attribute<int8_t>;
-        friend class Attribute<int16_t>;
-        friend class Attribute<int32_t>;
-        friend class Attribute<int64_t>;
-        friend class Attribute<uint8_t>;
-        friend class Attribute<uint16_t>;
-        friend class Attribute<uint32_t>;
-        friend class Attribute<uint64_t>;
-        friend class Attribute<bfloat16>;
-        friend class Attribute<float16>;
-        friend class Attribute<float>;
-        friend class Attribute<double>;
-
-        friend class Attribute<std::string>;
-        friend class Attribute<element::Type>;
-        friend class Attribute<PartialShape>;
-        friend class Attribute<Dimension>;
-        friend class Attribute<Shape>;
-        friend class Attribute<Strides>;
-        friend class Attribute<Coordinate>;
-        friend class Attribute<CoordinateDiff>;
-        friend class Attribute<AxisSet>;
-        friend class Attribute<AxisVector>;
-
-        friend class Attribute<op::PadMode>;
-        friend class Attribute<op::PadType>;
-        friend class Attribute<op::AutoBroadcastSpec>;
-        friend class Attribute<op::RoundMode>;
-        friend class Attribute<op::SortType>;
+    protected:
+        AttributeBase() = default;
 
     private:
-        AttributeBase() = default;
         AttributeBase(const AttributeBase&) = delete;
         AttributeBase(AttributeBase&&) = delete;
         AttributeBase& operator=(const AttributeBase&) = delete;
@@ -99,7 +116,13 @@ namespace ngraph
     class Attribute : public AttributeBase
     {
     public:
-        Attribute() = default;
+        static_assert(
+            IsAttributeType<T>::value,
+            "Attribute<T> is only valid for types where IsAttributeType<T>::value is true");
+        Attribute()
+            : AttributeBase()
+        {
+        }
         Attribute(const T& val)
             : AttributeBase()
             , m_val(val)

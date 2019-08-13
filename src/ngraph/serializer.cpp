@@ -145,6 +145,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/util/gen_op.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
@@ -228,6 +229,7 @@ public:
     json serialize_parameter_vector(const ParameterVector& parameters);
     json serialize_output_vector(const OutputVector& output_vector);
     json serialize_node_reference(const Node& node);
+    json serialize_attribute(const AttributeBase& attribute);
     json serialize_node(const Node& node);
     json serialize_axis_set(const AxisSet& axis_set);
 
@@ -2023,6 +2025,157 @@ json JSONSerializer::serialize_output_vector(const OutputVector& output_vector)
     return result;
 }
 
+json JSONSerializer::serialize_attribute(const AttributeBase& attribute)
+{
+    json result;
+    if (attribute.has_type<bool>())
+    {
+        result["type"] = "bool";
+        result["value"] = attribute.get<bool>();
+    }
+    else if (attribute.has_type<int8_t>())
+    {
+        result["type"] = "int8_t";
+        result["value"] = attribute.get<int8_t>();
+    }
+    else if (attribute.has_type<int16_t>())
+    {
+        result["type"] = "int16_t";
+        result["value"] = attribute.get<int16_t>();
+    }
+    else if (attribute.has_type<int32_t>())
+    {
+        result["type"] = "int32_t";
+        result["value"] = attribute.get<int32_t>();
+    }
+    else if (attribute.has_type<int64_t>())
+    {
+        result["type"] = "int64_t";
+        result["value"] = attribute.get<int64_t>();
+    }
+    else if (attribute.has_type<uint8_t>())
+    {
+        result["type"] = "uint8_t";
+        result["value"] = attribute.get<uint8_t>();
+    }
+    else if (attribute.has_type<uint16_t>())
+    {
+        result["type"] = "uint16_t";
+        result["value"] = attribute.get<uint16_t>();
+    }
+    else if (attribute.has_type<uint32_t>())
+    {
+        result["type"] = "uint32_t";
+        result["value"] = attribute.get<uint32_t>();
+    }
+    else if (attribute.has_type<uint64_t>())
+    {
+        result["type"] = "uint64_t";
+        result["value"] = attribute.get<uint64_t>();
+    }
+    else if (attribute.has_type<bfloat16>())
+    {
+        result["type"] = "bfloat16";
+        result["value"] = static_cast<double>(attribute.get<bfloat16>());
+    }
+    else if (attribute.has_type<float16>())
+    {
+        result["type"] = "float16";
+        result["value"] = static_cast<double>(attribute.get<float16>());
+    }
+    else if (attribute.has_type<float>())
+    {
+        result["type"] = "float";
+        result["value"] = attribute.get<float>();
+    }
+    else if (attribute.has_type<double>())
+    {
+        result["type"] = "double";
+        result["value"] = attribute.get<double>();
+    }
+    else if (attribute.has_type<string>())
+    {
+        result["type"] = "string";
+        result["value"] = attribute.get<string>();
+    }
+    else if (attribute.has_type<element::Type>())
+    {
+        result["type"] = "element::Type";
+        result["value"] = write_element_type(attribute.get<element::Type>());
+    }
+    else if (attribute.has_type<PartialShape>())
+    {
+        result["type"] = "PartialShape";
+        result["value"] = write_partial_shape(attribute.get<PartialShape>());
+    }
+    else if (attribute.has_type<Dimension>())
+    {
+        result["type"] = "Dimension";
+        result["value"] = write_dimension(attribute.get<Dimension>());
+    }
+    else if (attribute.has_type<Shape>())
+    {
+        result["type"] = "Shape";
+        result["value"] = attribute.get<Shape>();
+    }
+    else if (attribute.has_type<Strides>())
+    {
+        result["type"] = "Strides";
+        result["value"] = attribute.get<Strides>();
+    }
+    else if (attribute.has_type<Coordinate>())
+    {
+        result["type"] = "Coordinate";
+        result["value"] = attribute.get<Coordinate>();
+    }
+    else if (attribute.has_type<CoordinateDiff>())
+    {
+        result["type"] = "CoordinateDiff";
+        result["value"] = attribute.get<CoordinateDiff>();
+    }
+    else if (attribute.has_type<AxisSet>())
+    {
+        result["type"] = "AxisSet";
+        result["value"] = attribute.get<AxisSet>();
+    }
+    else if (attribute.has_type<AxisVector>())
+    {
+        result["type"] = "AxisVector";
+        result["value"] = attribute.get<AxisVector>();
+    }
+    else if (attribute.has_type<op::PadMode>())
+    {
+        result["type"] = "op::PadMode";
+        result["value"] = attribute.get<op::PadMode>();
+    }
+    else if (attribute.has_type<op::PadType>())
+    {
+        result["type"] = "op::PadType";
+        result["value"] = attribute.get<op::PadType>();
+    }
+    else if (attribute.has_type<op::AutoBroadcastSpec>())
+    {
+        result["type"] = "op::AutoBroadcastSpec";
+        result["value"] = write_auto_broadcast(attribute.get<op::AutoBroadcastSpec>());
+    }
+    else if (attribute.has_type<op::RoundMode>())
+    {
+        result["type"] = "op::RoundMode";
+        result["value"] = attribute.get<op::RoundMode>();
+    }
+    else if (attribute.has_type<op::SortType>())
+    {
+        result["type"] = "op::SortType";
+        result["value"] = attribute.get<op::SortType>();
+    }
+    else
+    {
+        NGRAPH_CHECK(false, "serialize_attribute: Unhandled type");
+    }
+
+    return result;
+}
+
 json JSONSerializer::serialize_node(const Node& n)
 {
     m_nodes_serialized.insert(&n);
@@ -2919,7 +3072,16 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::UnknownOp: { break;
+    case OP_TYPEID::UnknownOp:
+    {
+        if (auto gen_op = dynamic_cast<const op::util::GenOp*>(&n))
+        {
+            for (auto& attr_key : gen_op->get_attribute_keys())
+            {
+                node["attributes"][attr_key] = serialize_attribute(gen_op->get_attribute(attr_key));
+            }
+        }
+        break;
     }
     }
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
