@@ -61,6 +61,31 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_all)
         (vector<float>{6, 5, 4, 3, 2, 1}), read_vector<float>(result1), MIN_FLOAT_TOLERANCE_BITS));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, topk_1d_i32_max_all)
+{
+    Shape shape{6};
+    Shape rshape{6};
+    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto B = make_shared<op::TopK>(A, 0, element::i32, 0, true);
+    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
+    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::i32, shape);
+    copy_data(a, vector<int32_t>{1, 2, 3, 4, 5, 6});
+    auto result0 = backend->create_tensor(element::i32, rshape);
+    auto result1 = backend->create_tensor(element::i32, rshape);
+
+    auto h0 = backend->compile(f0);
+    h0->call_with_validate({result0}, {a});
+    EXPECT_EQ((vector<int32_t>{5, 4, 3, 2, 1, 0}), read_vector<int32_t>(result0));
+    auto h1 = backend->compile(f1);
+    h1->call_with_validate({result1}, {a});
+    EXPECT_EQ((vector<int32_t>{6, 5, 4, 3, 2, 1}), read_vector<int32_t>(result1));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_partial)
 {
     Shape shape{6};
