@@ -266,6 +266,12 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
 {
+    // Disable any op using boolean type until we have support for i1<->i8 conversion in MLIR.
+    if (((element::Type_t)node->get_element_type()) == element::Type_t::boolean)
+    {
+        return false;
+    }
+
     if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
     {
         return true;
