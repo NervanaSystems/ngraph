@@ -161,6 +161,9 @@ namespace ngraph
 
                 // Memory manager for temp allocations inside JIT'ed code
                 MLIRMemMgr m_mem_mgr;
+
+                // Optimization level used by MLIR and LLVM compilers.
+                static unsigned mlir_opt_level;
             };
         }
     }
