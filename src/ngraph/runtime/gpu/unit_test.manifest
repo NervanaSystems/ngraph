@@ -216,3 +216,7 @@ send_recv_ring
 gelu_f32
 gelu_f64
 logical_xor
+
+# axes input param not supported
+lrn_across_h
+lrn_across_hw

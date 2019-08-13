@@ -4,3 +4,7 @@ batch_norm_inference_f64
 batch_norm_inference_f32
 send_recv
 send_recv_ring
+
+# axes input param not supported
+lrn_across_h
+lrn_across_hw

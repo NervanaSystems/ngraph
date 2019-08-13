@@ -17,6 +17,7 @@
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -41,6 +42,15 @@ op::LRN::LRN(const Output<Node>& arg,
     , m_size(size)
 {
     constructor_validate_and_infer_types();
+}
+
+AxisSet op::LRN::get_reduction_axes() const
+{
+    auto axes_node = input(1).get_source_output().get_node_shared_ptr();
+    auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
+    auto axes_vector = axes_constant->get_vector<size_t>();
+    AxisSet reduction_axes{ axes_vector };
+    return reduction_axes;
 }
 
 void op::LRN::validate_and_infer_types()
@@ -86,7 +96,7 @@ void op::LRN::validate_and_infer_types()
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::LRN>(new_args.at(0), m_alpha, m_beta, m_bias, m_size);
+    return make_shared<op::LRN>(new_args.at(0), new_args.at(1), m_alpha, m_beta, m_bias, m_size);
 }
 
 void op::LRN::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

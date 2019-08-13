@@ -38,7 +38,6 @@ namespace ngraph
                 CPUKernelFunctor functor;
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
-                auto axes_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
@@ -65,6 +64,7 @@ namespace ngraph
                 }
                 else
                 {
+                    AxisSet axes = lrn->get_reduction_axes();
                     double alpha = lrn->get_alpha();
                     double beta = lrn->get_beta();
                     double bias = lrn->get_bias();
@@ -87,7 +87,7 @@ namespace ngraph
                                                      CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<float>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
-                                static_cast<uint64_t*>(ctx->buffer_data[axes_buffer_index]),
+                                axes,
                                 static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 arg_shape,
                                 alpha,
@@ -110,7 +110,7 @@ namespace ngraph
                                                      CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<double>(
                                 static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
-                                static_cast<uint64_t*>(ctx->buffer_data[axes_buffer_index]),
+                                axes,
                                 static_cast<double*>(ctx->buffer_data[out_buffer_index]),
                                 arg_shape,
                                 alpha,

@@ -30,7 +30,7 @@ namespace ngraph
         {
             template <typename T>
             void lrn(const T* arg,
-                     const uint64_t* axes,
+                     const AxisSet& axes,
                      T* out,
                      const Shape& arg_shape,
                      double dalpha,
@@ -43,24 +43,25 @@ namespace ngraph
                 T bias = static_cast<T>(dbias);
 
                 CoordinateTransform input_transform(arg_shape);
-                const size_t current_dim = axes[0];
-                const size_t elem_number_along_dim = arg_shape.at(current_dim);
                 for (const Coordinate& in_coord : input_transform)
                 {
-                    size_t c = in_coord.at(current_dim);
                     T square_sum = 0;
-                    for (size_t i = c; i < c + size; i++)
+                    for (const auto& current_axis : axes)
                     {
-                        if (i < (size - 1) / 2)
-                            continue;
-                        if (i >= elem_number_along_dim + (size - 1) / 2)
-                            continue;
-                        auto sum_coord = in_coord;
-                        sum_coord.at(current_dim) = i - (size - 1) / 2;
-                        square_sum += arg[input_transform.index(sum_coord)] *
-                                      arg[input_transform.index(sum_coord)];
+                        const size_t elem_number_across_current_axis = arg_shape.at(current_axis);
+                        size_t base_elem_index = in_coord.at(current_axis);
+                        for (size_t i = base_elem_index; i < base_elem_index + size; i++)
+                        {
+                            if (i < (size - 1) / 2)
+                                continue;
+                            if (i >= elem_number_across_current_axis + (size - 1) / 2)
+                                continue;
+                            auto sum_coord = in_coord;
+                            sum_coord.at(current_axis) = i - (size - 1) / 2;
+                            square_sum += arg[input_transform.index(sum_coord)] *
+                                arg[input_transform.index(sum_coord)];
+                        }
                     }
-
                     T x = arg[input_transform.index(in_coord)];
                     out[input_transform.index(in_coord)] =
                         x / (std::pow(bias + (alpha / size) * square_sum, beta));
@@ -69,3 +70,4 @@ namespace ngraph
         }
     }
 }
+
