@@ -241,7 +241,13 @@ namespace ngraph
                                          const std::shared_ptr<ngraph::Node>& initial_h,
                                          const std::shared_ptr<ngraph::Node>& initial_c,
                                          const std::shared_ptr<ngraph::Node>& seq_lengths,
-                                         const LSTMAttributes& attributes)
+                                         const std::vector<float> activations_alpha,
+                                         const std::vector<float> activations_beta,
+                                         const std::vector<std::string> activations,
+                                         const float clip_threshold,
+                                         const LSTMDirection direction,
+                                         const std::int64_t hidden_size,
+                                         const bool input_forget)
                         : m_X{X} // Since we have forward LSTM we can squeeze `num_directions` axis
                                  // from inputs.
                         , m_W(builder::squeeze(W))
@@ -251,7 +257,13 @@ namespace ngraph
                         , m_initial_h(builder::squeeze(initial_h))
                         , m_initial_c(builder::squeeze(initial_c))
                         , m_seq_lengths(seq_lengths)
-                        , m_attributes(attributes)
+                        , m_activations_alpha(activations_alpha)
+                        , m_activations_beta(activations_beta)
+                        , m_activations(activations)
+                        , m_clip_threshold(clip_threshold)
+                        , m_direction(direction)
+                        , m_hidden_size(hidden_size)
+                        , m_input_forget(input_forget)
                     {
                     }
 
@@ -308,20 +320,19 @@ namespace ngraph
                         for (const auto& in_x : in_seqs)
                         {
                             std::shared_ptr<ngraph::Node> lstm_cell =
-                                std::make_shared<ngraph::op::LSTMCell>(
-                                    in_x,
-                                    m_W,
-                                    m_R,
-                                    H_t,
-                                    C_t,
-                                    m_attributes.m_hidden_size,
-                                    m_B,
-                                    m_P,
-                                    m_attributes.m_activations,
-                                    m_attributes.m_activation_alpha,
-                                    m_attributes.m_activation_beta,
-                                    m_attributes.m_clip_threshold,
-                                    m_attributes.m_input_forget);
+                                std::make_shared<ngraph::op::LSTMCell>(in_x,
+                                                                       m_W,
+                                                                       m_R,
+                                                                       H_t,
+                                                                       C_t,
+                                                                       m_hidden_size,
+                                                                       m_B,
+                                                                       m_P,
+                                                                       m_activations,
+                                                                       m_activations_alpha,
+                                                                       m_activations_beta,
+                                                                       m_clip_threshold,
+                                                                       m_input_forget);
 
                             std::shared_ptr<ngraph::Node> H = get_output_element(lstm_cell, 0);
                             std::shared_ptr<ngraph::Node> C = get_output_element(lstm_cell, 1);
@@ -427,7 +438,14 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> m_initial_h;
                     std::shared_ptr<ngraph::Node> m_initial_c;
                     std::shared_ptr<ngraph::Node> m_seq_lengths;
-                    const LSTMAttributes& m_attributes;
+
+                    const std::vector<float> m_activations_alpha;
+                    const std::vector<float> m_activations_beta;
+                    const std::vector<std::string> m_activations;
+                    const float m_clip_threshold;
+                    const LSTMDirection m_direction;
+                    const std::int64_t m_hidden_size;
+                    const bool m_input_forget;
                 };
 
             } // anonymous namespace
@@ -452,7 +470,13 @@ namespace ngraph
                                              input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
                                              input_map.at(LSTMInput::LSTM_INPUT_INIT_C),
                                              input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
-                                             attributes);
+                                             attributes.m_activation_alpha,
+                                             attributes.m_activation_beta,
+                                             attributes.m_activations,
+                                             attributes.m_clip_threshold,
+                                             attributes.m_direction,
+                                             attributes.m_hidden_size,
+                                             attributes.m_input_forget);
                         results = lstm_fwd.run(
                             (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_REVERSE));
                     }
@@ -481,7 +505,13 @@ namespace ngraph
                                              H.at(0),
                                              C.at(0),
                                              input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
-                                             attributes);
+                                             attributes.m_activation_alpha,
+                                             attributes.m_activation_beta,
+                                             attributes.m_activations,
+                                             attributes.m_clip_threshold,
+                                             attributes.m_direction,
+                                             attributes.m_hidden_size,
+                                             attributes.m_input_forget);
                         LSTMForward lstm_reversed(input_map.at(LSTMInput::LSTM_INPUT_X),
                                                   W.at(1),
                                                   R.at(1),
@@ -490,7 +520,13 @@ namespace ngraph
                                                   H.at(1),
                                                   C.at(1),
                                                   input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
-                                                  attributes);
+                                                  attributes.m_activation_alpha,
+                                                  attributes.m_activation_beta,
+                                                  attributes.m_activations,
+                                                  attributes.m_clip_threshold,
+                                                  attributes.m_direction,
+                                                  attributes.m_hidden_size,
+                                                  attributes.m_input_forget);
 
                         NodeVector fwd_results{lstm_fwd.run()};
                         NodeVector rev_results{lstm_reversed.run(true)};
