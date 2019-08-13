@@ -265,6 +265,89 @@ namespace ngraph
                     {
                     }
 
+                    NodeVector run()
+                    {
+                        NodeVector results;
+
+                        if (m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD ||
+                            m_direction == LSTMDirection::LSTM_DIRECTION_REVERSE)
+                        {
+                            results =
+                                lstm_pass(m_direction == LSTMDirection::LSTM_DIRECTION_REVERSE);
+                        }
+                        if (m_direction == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
+                        {
+                            NodeVector fwd_results{lstm_pass()};
+                            NodeVector rev_results{lstm_pass(true)};
+
+                            // Stack together respective outputs from both forward and reverse passess.
+                            std::shared_ptr<ngraph::Node> Y{std::make_shared<ngraph::op::Concat>(
+                                NodeVector{fwd_results.at(0), rev_results.at(0)}, 1)};
+                            std::shared_ptr<ngraph::Node> Y_h{std::make_shared<ngraph::op::Concat>(
+                                NodeVector{fwd_results.at(1), rev_results.at(1)}, 0)};
+                            std::shared_ptr<ngraph::Node> Y_c{std::make_shared<ngraph::op::Concat>(
+                                NodeVector{fwd_results.at(2), rev_results.at(2)}, 0)};
+                            results = NodeVector{Y, Y_h, Y_c};
+                        }
+
+                        return results;
+                    }
+
+                private:
+                    ///
+                    /// \brief      Gets the masked node according to sequence lenght in a batch.
+                    ///
+                    /// \note       Zeros out values or sets them to default value for inputs with
+                    ///             sequence lenght shorter than currently procssed time step.
+                    ///
+                    /// \param[in]  data           The input node.
+                    /// \param[in]  time_step      The current time step denoting sequence lenght.
+                    /// \param[in]  batch_axis     The batch axis index of data tensor.
+                    /// \param[in]  default_value  The default value for masked elements.
+                    ///
+                    /// \return     The masked node.
+                    ///
+                    std::shared_ptr<ngraph::Node> get_masked_node(
+                        const std::shared_ptr<ngraph::Node>& data,
+                        std::int32_t time_step,
+                        std::size_t batch_axis = 0,
+                        const std::shared_ptr<ngraph::Node>& default_value = {nullptr})
+                    {
+                        std::shared_ptr<ngraph::Node> mask_value = default_value;
+                        // Create zero mask value node.
+                        if (!mask_value)
+                        {
+                            mask_value = ngraph::op::Constant::create(
+                                data->get_element_type(),
+                                data->get_shape(),
+                                std::vector<float>(shape_size(data->get_shape()), 0.f));
+                        }
+
+                        // Create predicate nodes. The condition is whether current time step value
+                        // is greater than sequence length for respective batch inputs.
+                        std::shared_ptr<ngraph::Node> curr_time_step_node =
+                            ngraph::op::Constant::create(
+                                element::i32,
+                                data->get_shape(),
+                                std::vector<std::int32_t>(shape_size(data->get_shape()),
+                                                          time_step));
+
+                        std::shared_ptr<ngraph::Node> batch_seq_length =
+                            ngraph::op::legacy_style_broadcast_for_binary_operation(
+                                curr_time_step_node, m_seq_lengths, batch_axis)
+                                .at(1);
+
+                        // Create mask node deciding whether or not to mask batch data.
+                        std::shared_ptr<ngraph::Node> mask_condition =
+                            std::make_shared<ngraph::op::Greater>(curr_time_step_node,
+                                                                  batch_seq_length);
+
+                        // Select values depnding on mask_condition.
+                        // Select(<condition>, <true_value>, <false_value>)
+                        return std::make_shared<ngraph::op::Select>(
+                            mask_condition, mask_value, data);
+                    }
+
                     NodeVector lstm_pass(bool is_reverse = false)
                     {
                         // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
@@ -370,61 +453,6 @@ namespace ngraph
                         return {Y, Y_h, Y_c};
                     }
 
-                private:
-                    ///
-                    /// \brief      Gets the masked node according to sequence lenght in a batch.
-                    ///
-                    /// \note       Zeros out values or sets them to default value for inputs with
-                    ///             sequence lenght shorter than currently procssed time step.
-                    ///
-                    /// \param[in]  data           The input node.
-                    /// \param[in]  time_step      The current time step denoting sequence lenght.
-                    /// \param[in]  batch_axis     The batch axis index of data tensor.
-                    /// \param[in]  default_value  The default value for masked elements.
-                    ///
-                    /// \return     The masked node.
-                    ///
-                    std::shared_ptr<ngraph::Node> get_masked_node(
-                        const std::shared_ptr<ngraph::Node>& data,
-                        std::int32_t time_step,
-                        std::size_t batch_axis = 0,
-                        const std::shared_ptr<ngraph::Node>& default_value = {nullptr})
-                    {
-                        std::shared_ptr<ngraph::Node> mask_value = default_value;
-                        // Create zero mask value node.
-                        if (!mask_value)
-                        {
-                            mask_value = ngraph::op::Constant::create(
-                                data->get_element_type(),
-                                data->get_shape(),
-                                std::vector<float>(shape_size(data->get_shape()), 0.f));
-                        }
-
-                        // Create predicate nodes. The condition is whether current time step value
-                        // is greater than sequence length for respective batch inputs.
-                        std::shared_ptr<ngraph::Node> curr_time_step_node =
-                            ngraph::op::Constant::create(
-                                element::i32,
-                                data->get_shape(),
-                                std::vector<std::int32_t>(shape_size(data->get_shape()),
-                                                          time_step));
-
-                        std::shared_ptr<ngraph::Node> batch_seq_length =
-                            ngraph::op::legacy_style_broadcast_for_binary_operation(
-                                curr_time_step_node, m_seq_lengths, batch_axis)
-                                .at(1);
-
-                        // Create mask node deciding whether or not to mask batch data.
-                        std::shared_ptr<ngraph::Node> mask_condition =
-                            std::make_shared<ngraph::op::Greater>(curr_time_step_node,
-                                                                  batch_seq_length);
-
-                        // Select values depnding on mask_condition.
-                        // Select(<condition>, <true_value>, <false_value>)
-                        return std::make_shared<ngraph::op::Select>(
-                            mask_condition, mask_value, data);
-                    }
-
                     std::shared_ptr<ngraph::Node> prepare_input(std::shared_ptr<ngraph::Node> node,
                                                                 bool is_reverse)
                     {
@@ -465,8 +493,6 @@ namespace ngraph
                     LSTMNgInputMap input_map{node};
                     LSTMAttributes attributes{node};
 
-                    NodeVector results;
-
                     LSTMForward lstm_fwd(input_map.at(LSTMInput::LSTM_INPUT_X),
                                          input_map.at(LSTMInput::LSTM_INPUT_W),
                                          input_map.at(LSTMInput::LSTM_INPUT_R),
@@ -483,28 +509,7 @@ namespace ngraph
                                          attributes.m_hidden_size,
                                          attributes.m_input_forget);
 
-                    if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_FORWARD ||
-                        attributes.m_direction == LSTMDirection::LSTM_DIRECTION_REVERSE)
-                    {
-                        results = lstm_fwd.lstm_pass(
-                            (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_REVERSE));
-                    }
-                    if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
-                    {
-                        NodeVector fwd_results{lstm_fwd.lstm_pass()};
-                        NodeVector rev_results{lstm_fwd.lstm_pass(true)};
-
-                        // Stack together respective outputs from both forward and reverse passess.
-                        std::shared_ptr<ngraph::Node> Y{std::make_shared<ngraph::op::Concat>(
-                            NodeVector{fwd_results.at(0), rev_results.at(0)}, 1)};
-                        std::shared_ptr<ngraph::Node> Y_h{std::make_shared<ngraph::op::Concat>(
-                            NodeVector{fwd_results.at(1), rev_results.at(1)}, 0)};
-                        std::shared_ptr<ngraph::Node> Y_c{std::make_shared<ngraph::op::Concat>(
-                            NodeVector{fwd_results.at(2), rev_results.at(2)}, 0)};
-                        results = NodeVector{Y, Y_h, Y_c};
-                    }
-
-                    return results;
+                    return lstm_fwd.run();
                 }
             } // namespace set_1
 
