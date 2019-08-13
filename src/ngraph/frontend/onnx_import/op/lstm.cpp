@@ -300,15 +300,7 @@ namespace ngraph
                                 m_X, m_seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
                         }
 
-                        NodeVector in_seqs{};
-                        if (m_X->get_shape().at(0) != 1)
-                        {
-                            in_seqs = ngraph::builder::split(m_X, m_X->get_shape().at(0));
-                        }
-                        else
-                        {
-                            in_seqs = NodeVector{m_X};
-                        }
+                        NodeVector in_seqs = ngraph::builder::split(m_X, m_X->get_shape().at(0));
 
                         for (auto& in_x : in_seqs)
                         {
