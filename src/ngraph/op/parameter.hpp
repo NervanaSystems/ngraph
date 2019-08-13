@@ -38,6 +38,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            /// \brief Constructions a tensor-typed parameter node.
             Parameter() = default;
             /// \brief Constructions a tensor-typed parameter node.
             ///
@@ -56,6 +57,19 @@ namespace ngraph
 
             bool is_relevant_to_shapes() const;
             void set_is_relevant_to_shapes(bool is_relevant);
+
+            const PartialShape& get_partial_shape() const { return m_partial_shape; }
+            PartialShape& get_partial_shape() { return m_partial_shape; }
+            void set_partial_shape(const PartialShape& partial_shape)
+            {
+                m_partial_shape = partial_shape;
+            }
+
+            const element::Type& get_element_type() const { return m_element_type; }
+            void set_element_type(const element::Type& element_type)
+            {
+                m_element_type = element_type;
+            }
 
         protected:
             bool m_cacheable;
