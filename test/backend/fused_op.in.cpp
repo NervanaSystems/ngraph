@@ -775,45 +775,45 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
 {
-    auto data = make_shared<op::Parameter>(element::f64, Shape{4, 4});
+    auto data = make_shared<op::Parameter>(element::f32, Shape{4, 4});
     auto tested_op = make_shared<op::Clamp>(data, 10.0, 20.0);
     auto function = make_shared<Function>(tested_op, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
-    test_case.add_input<double>({numeric_limits<double>::min(),
-                                 numeric_limits<double>::max(),
-                                 -numeric_limits<double>::infinity(),
-                                 numeric_limits<double>::infinity(),
-                                 -1.0,
-                                 0.0,
-                                 1.0,
-                                 9.99999,
-                                 10.0,
-                                 10.0000001,
-                                 15.0,
-                                 19.9999999,
-                                 20.0,
-                                 20.0000001,
-                                 21.0,
-                                 100.0});
+    test_case.add_input<float>({numeric_limits<float>::min(),
+                                numeric_limits<float>::max(),
+                                -numeric_limits<float>::infinity(),
+                                numeric_limits<float>::infinity(),
+                                -1.0,
+                                0.0,
+                                1.0,
+                                9.99999,
+                                10.0,
+                                10.000001,
+                                15.0,
+                                19.999999,
+                                20.0,
+                                20.000001,
+                                21.0,
+                                100.0});
 
-    test_case.add_expected_output<double>(Shape{4, 4},
-                                          {10.0,
-                                           20.0,
-                                           10.0,
-                                           20.0,
-                                           10.0,
-                                           10.0,
-                                           10.0,
-                                           10.0,
-                                           10.0,
-                                           10.0000001,
-                                           15.0,
-                                           19.9999999,
-                                           20.0,
-                                           20.0,
-                                           20.0,
-                                           20.0});
+    test_case.add_expected_output<float>(Shape{4, 4},
+                                         {10.0,
+                                          20.0,
+                                          10.0,
+                                          20.0,
+                                          10.0,
+                                          10.0,
+                                          10.0,
+                                          10.0,
+                                          10.0,
+                                          10.000001,
+                                          15.0,
+                                          19.999999,
+                                          20.0,
+                                          20.0,
+                                          20.0,
+                                          20.0});
 
     test_case.run();
 }
