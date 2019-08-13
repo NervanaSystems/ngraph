@@ -176,15 +176,32 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 #if MKLDNN_VERSION_MAJOR < 1
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             pattern_map[X], src_iter, W_reshape, R_reshape, bias_ifco, rnn_type);
-#endif
+
         if (lstm_node->get_outputs().size() != 2)
         {
             throw ngraph_error("Lstm node doesnt have two outputs");
         }
+#else
+        auto lstm_node = std::make_shared<ngraph::op::Lstm>(pattern_map[X],
+                                                            pattern_map[H_t],
+                                                            pattern_map[C_t],
+                                                            W_reshape,
+                                                            R_reshape,
+                                                            bias_ifco,
+                                                            rnn_type);
+        if (lstm_node->get_outputs().size() != 3)
+        {
+            throw ngraph_error("Lstm node doesnt have three outputs");
+        }
+#endif
 
+#if MKLDNN_VERSION_MAJOR < 1
         auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 0);
         auto lstm_ht_ct_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
-
+#else
+        auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
+        auto lstm_ht_ct_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 2);
+#endif
         // set LSTM cell attributes
         const size_t lstm_n_gates = 4;
         const size_t batch_size = pattern_map[X]->get_shape()[0];
