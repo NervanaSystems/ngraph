@@ -16,11 +16,8 @@ We are pleased to announce the release of version |version|-doc.
 
 Core updates for |version|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ Better PlaidML support
-+ Double-buffering support
-+ Constant folding
-+ Support for static linking
-+ Additional ops
+
+
 
 .. Latest doc updates
 .. ~~~~~~~~~~~~~~~~~~
@@ -33,6 +30,16 @@ Core updates for |version|
 
 Changelog on Previous Releases
 ==============================
+
+0.25
+----
+
++ Better PlaidML support
++ Double-buffering support
++ Constant folding
++ Support for static linking
++ Additional ops
+
 
 0.24
 ----
