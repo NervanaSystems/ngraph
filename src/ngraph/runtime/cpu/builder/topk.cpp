@@ -152,9 +152,59 @@ namespace ngraph
                         };
                     }
                 }
+                else if (element_type == element::i32)
+                {
+                    if (is_int64)
+                    {
+                        functor = [&,
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   k,
+                                   compute_max,
+                                   arg_buffer_index,
+                                   out_indices_buffer_index,
+                                   out_values_buffer_index](CPURuntimeContext* ctx,
+                                                            CPUExecutionContext* ectx) {
+                            ngraph::runtime::reference::topk<int32_t, int64_t>(
+                                static_cast<int32_t*>(ctx->buffer_data[arg_buffer_index]),
+                                static_cast<int64_t*>(ctx->buffer_data[out_indices_buffer_index]),
+                                static_cast<int32_t*>(ctx->buffer_data[out_values_buffer_index]),
+                                in_shape,
+                                out_shape,
+                                axis,
+                                k,
+                                compute_max);
+                        };
+                    }
+                    else
+                    {
+                        functor = [&,
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   k,
+                                   compute_max,
+                                   arg_buffer_index,
+                                   out_indices_buffer_index,
+                                   out_values_buffer_index](CPURuntimeContext* ctx,
+                                                            CPUExecutionContext* ectx) {
+                            ngraph::runtime::reference::topk<int32_t, int32_t>(
+                                static_cast<int32_t*>(ctx->buffer_data[arg_buffer_index]),
+                                static_cast<int32_t*>(ctx->buffer_data[out_indices_buffer_index]),
+                                static_cast<int32_t*>(ctx->buffer_data[out_values_buffer_index]),
+                                in_shape,
+                                out_shape,
+                                axis,
+                                k,
+                                compute_max);
+                        };
+                    }
+                }
                 else
                 {
-                    throw ngraph_error("Unsupported type in CPU Builder for TopK");
+                    throw ngraph_error("Unsupported type (" + element_type.get_type_name() +
+                                       ") in CPU Builder for TopK");
                 }
 
                 functors.emplace_back(functor);
