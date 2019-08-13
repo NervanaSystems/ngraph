@@ -78,45 +78,45 @@ void op::DynBroadcast::validate_and_infer_types()
                              ->get_axis_set_val();
     }
 
-    PartialShape arg_shape = input(0).get_partial_shape();
-    if (result_shape.is_static() && axes_known && arg_shape.is_static())
-    {
-        for (auto axis : broadcast_axes)
-        {
-            NODE_VALIDATION_CHECK(this,
-                                  axis < size_t(result_shape.rank()),
-                                  "Broadcast axis index (",
-                                  axis,
-                                  ") exceeds specified output shape rank ",
-                                  "(broadcast axes: ",
-                                  broadcast_axes,
-                                  ", output shape: ",
-                                  result_shape,
-                                  ").");
-        }
-
-        Shape required_input_shape = result_shape.to_shape();
-        for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
-        {
-            required_input_shape.erase(required_input_shape.begin() + *i);
-        }
+//    PartialShape arg_shape = input(0).get_partial_shape();
+//    if (result_shape.is_static() && axes_known && arg_shape.is_static())
+//    {
+//        for (auto axis : broadcast_axes)
+//        {
+//            NODE_VALIDATION_CHECK(this,
+//                                  axis < size_t(result_shape.rank()),
+//                                  "Broadcast axis index (",
+//                                  axis,
+//                                  ") exceeds specified output shape rank ",
+//                                  "(broadcast axes: ",
+//                                  broadcast_axes,
+//                                  ", output shape: ",
+//                                  result_shape,
+//                                  ").");
+//        }
+//
+//        Shape required_input_shape = result_shape.to_shape();
+//        for (auto i = broadcast_axes.rbegin(); i != broadcast_axes.rend(); ++i)
+//        {
+//            required_input_shape.erase(required_input_shape.begin() + *i);
+//        }
 
         // TODO(amprocte): We can probably have a more helpful error message here.
         // There are two things that can go wrong, which are being picked up in
         // one fell swoop by this check: either the number of broadcast axes is not
         // enough, or there is a mismatch with one of the pre-broadcast axis lengths.
-        NODE_VALIDATION_CHECK(
-            this,
-            arg_shape.compatible(required_input_shape),
-            "Broadcast argument shape, specified output shape, and axes are incompatible ",
-            "(argument shape: ",
-            arg_shape,
-            ", output shape: ",
-            result_shape,
-            ", broadcast axes: ",
-            broadcast_axes,
-            ").");
-    }
+//        NODE_VALIDATION_CHECK(
+//            this,
+//            arg_shape.compatible(required_input_shape),
+//            "Broadcast argument shape, specified output shape, and axes are incompatible ",
+//            "(argument shape: ",
+//            arg_shape,
+//            ", output shape: ",
+//            result_shape,
+//            ", broadcast axes: ",
+//            broadcast_axes,
+//            ").");
+//    }
 
     set_input_is_relevant_to_shape(1);
     set_input_is_relevant_to_shape(2);
