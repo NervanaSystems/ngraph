@@ -1234,8 +1234,6 @@ namespace ngraph
                     auto batch = static_cast<unsigned long>(rnn_node->get_batch_size());
                     auto rnn_cell_n_gates =
                         static_cast<unsigned long>(rnn_node->get_gates_per_cell());
-                    auto rnn_cell_n_states =
-                        static_cast<unsigned long>(rnn_node->get_num_cell_states());
 
                     auto get_mkldnn_rnn_direction = [&]() {
                         switch (direction)
