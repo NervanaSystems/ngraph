@@ -49,6 +49,7 @@ public:
         : ::ngraph::op::util::GenOp(::ngraph::OutputVector{x, y})
         , m_autobroadcast(autobroadcast)
     {
+        constructor_validate_and_infer_types();
     }
     Add(const ::ngraph::OutputVector& source_outputs,
         const ::std::vector<const ::ngraph::AttributeBase*>& attributes)
@@ -63,6 +64,7 @@ public:
             attributes[0]->has_type<AutoBroadcastSpec>(),
             "Attribute 0 (name: autobroadcast) has incorrect type (AutoBroadcastSpec expected)");
         m_autobroadcast.set(attributes[0]->as_type<AutoBroadcastSpec>().get());
+        constructor_validate_and_infer_types();
     }
     ::ngraph::Input<::ngraph::Node> get_x() { return input(0); }
     ::ngraph::Input<::ngraph::Node> get_y() { return input(1); }
@@ -163,6 +165,11 @@ public:
         // TODO: control deps
         return new_node;
     }
+
+protected:
+    void validate_and_infer_types() final override;
+    void generate_adjoints(::ngraph::autodiff::Adjoints& adjoints,
+                           const ::ngraph::NodeVector& deltas) final override;
 
 private:
     ::ngraph::Attribute<AutoBroadcastSpec> m_autobroadcast;

@@ -208,6 +208,7 @@ set (SRC
     op/gen/core/add.hpp
     op/gen/core/convolution.cpp
     op/gen/core/convolution.hpp
+    op/gen/core/impl/add.cpp
     op/get_output_element.cpp
     op/get_output_element.hpp
     op/greater.cpp

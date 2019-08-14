@@ -16,6 +16,7 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/gen/core/add.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -85,6 +86,14 @@ TEST(type_prop, add_bad_arguments)
     test_binary("Add",
                 [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
                     return make_shared<op::Add>(x, y);
+                });
+}
+
+TEST(type_prop, gen_add_bad_arguments)
+{
+    test_binary("core.Add",
+                [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
+                    return make_shared<op::gen::core::Add>(x, y, op::AutoBroadcastType::NONE);
                 });
 }
 

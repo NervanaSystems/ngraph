@@ -10,6 +10,8 @@
     "description": "Elementwise addition operation",
     "commutative": true,
     "has_state": false,
+    "validation_implemented": true,
+    "adjoints_implemented": true,
     "arguments": [
         {
             "name": "x",

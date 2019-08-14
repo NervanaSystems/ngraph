@@ -155,6 +155,9 @@ class ClassWriter():
 
         self._commutative = 'commutative' in j and j['commutative']
         self._has_state = 'has_state' in j and j['has_state']
+        self._validation_implemented = 'validation_implemented' in j and j[
+            'validation_implemented']
+        self._adjoints_implemented = 'adjoints_implemented' in j and j['adjoints_implemented']
 
         if 'description' in j:
             self._description = j['description']
@@ -273,6 +276,7 @@ class ClassWriter():
                     (attribute.member_var_name(), attribute.name()))
 
         f.write('    {\n')
+        f.write('        constructor_validate_and_infer_types();\n')
         f.write('    }\n')
 
         f.write('    %s(const ::ngraph::OutputVector& source_outputs, const ::std::vector<const ::ngraph::AttributeBase*>& attributes)\n' % self._name)
@@ -289,6 +293,7 @@ class ClassWriter():
         for attribute in self._attributes:
             f.write('        %s\n' % attribute.ctor_assignment())
 
+        f.write('        constructor_validate_and_infer_types();\n')
         f.write('    }\n')
 
         for argument in self._arguments:
@@ -422,6 +427,17 @@ class ClassWriter():
         f.write('        return new_node;\n')
         f.write('    }\n')
 
+        f.write('protected:\n')
+
+        if self._validation_implemented:
+            f.write('    void validate_and_infer_types() final override;\n')
+
+        if self._adjoints_implemented:
+            f.write(
+                '    void generate_adjoints(::ngraph::autodiff::Adjoints& adjoints,\n')
+            f.write(
+                '                           const ::ngraph::NodeVector& deltas) final override;\n')
+
         f.write('private:\n')
 
         for attribute in self._attributes:
@@ -495,7 +511,7 @@ class ClassWriter():
         self.gen_function_definitions(f)
 
         f.write('bool ::%s::s_registered = ::ngraph::register_gen_op("%s.%s", new ::%s::Builder());\n'
-                  % (self.qualified_name(), self._dialect, self._name, self.qualified_name()))
+                % (self.qualified_name(), self._dialect, self._name, self.qualified_name()))
 
         f.close()
 
