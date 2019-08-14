@@ -113,7 +113,7 @@ TEST(type_prop, proposal_invalid_image_shape_size)
         EXPECT_HAS_SUBSTRING(
             error.what(),
             std::string(
-                "Image_shape 1D tensor must have =>3 and <= 4 elements (image_shape_shape[0]"));
+                "Image_shape 1D tensor must have => 3 and <= 4 elements (image_shape_shape[0]"));
     }
     catch (...)
     {

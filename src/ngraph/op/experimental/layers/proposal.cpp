@@ -90,7 +90,7 @@ void op::Proposal::validate_and_infer_types()
         NODE_VALIDATION_CHECK(
             this,
             image_shape_shape[0] >= 3 && image_shape_shape[0] <= 4,
-            "Image_shape 1D tensor must have =>3 and <= 4 elements (image_shape_shape[0]",
+            "Image_shape 1D tensor must have => 3 and <= 4 elements (image_shape_shape[0]",
             image_shape_shape[0],
             ").");
 
