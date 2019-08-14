@@ -60,6 +60,7 @@ set(SRC
     input_output_assign.cpp
     main.cpp
     misc.cpp
+    ngraph_api.cpp
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
@@ -369,6 +370,7 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
+target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
     target_link_libraries(unit-test PRIVATE libjson)
 endif()

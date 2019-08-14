@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/op/lrn.hpp"
-#include "ngraph/op/multiply.hpp"
 
 using namespace std;
 using namespace ngraph;

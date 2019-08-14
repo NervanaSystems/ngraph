@@ -16,7 +16,6 @@
 
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;

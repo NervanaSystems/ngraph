@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "ngraph/log.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/not.hpp"

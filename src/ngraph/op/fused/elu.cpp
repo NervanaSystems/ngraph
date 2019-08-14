@@ -17,7 +17,6 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"

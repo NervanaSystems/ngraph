@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
 #include <cmath>
 #include <functional>
 
@@ -26,7 +25,6 @@
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
