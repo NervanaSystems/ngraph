@@ -344,14 +344,26 @@ TEST(serialize, non_zero_node_output)
     EXPECT_EQ(topk_out.get_node()->description(), "TopK");
 }
 
-TEST(serialize, gen_op)
+TEST(serialize, gen_op_add)
 {
     auto arg0 = make_shared<op::Parameter>(element::f32, Shape{10});
     auto arg1 = make_shared<op::Parameter>(element::f32, Shape{1});
     auto add = make_shared<op::gen::core::Add>(arg0, arg1, op::AutoBroadcastType::NUMPY);
     auto f = make_shared<Function>(NodeVector{add}, ParameterVector{arg0, arg1});
-    std::cout << serialize(f) << std::endl;
 
+    auto f_ser = serialize(f);
+    auto f_des = deserialize(f_ser);
+
+    ASSERT_EQ(f_des->get_results().size(), 1);
+    auto add_des = dynamic_pointer_cast<op::gen::core::Add>(
+        f_des->get_results().at(0)->input(0).get_source_output().get_node_shared_ptr());
+    ASSERT_TRUE(add_des);
+    auto autob = add_des->get_autobroadcast();
+    ASSERT_EQ(autob.m_type, op::AutoBroadcastType::NUMPY);
+}
+
+TEST(serialize, gen_op_conv)
+{
     auto data = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
     auto filters = make_shared<op::Parameter>(element::f32, Shape{64, 3, 3, 3});
     auto conv = make_shared<op::gen::core::Convolution>(data,
@@ -362,6 +374,18 @@ TEST(serialize, gen_op)
                                                         CoordinateDiff{2, 2},
                                                         CoordinateDiff{3, 3},
                                                         op::PadType::AUTO);
-    auto g = make_shared<Function>(NodeVector{conv}, ParameterVector{data, filters});
-    std::cout << serialize(g) << std::endl;
+    auto f = make_shared<Function>(NodeVector{conv}, ParameterVector{data, filters});
+    auto f_ser = serialize(f);
+    auto f_des = deserialize(f_ser);
+
+    ASSERT_EQ(f_des->get_results().size(), 1);
+    auto conv_des = dynamic_pointer_cast<op::gen::core::Convolution>(
+        f_des->get_results().at(0)->input(0).get_source_output().get_node_shared_ptr());
+    ASSERT_TRUE(conv_des);
+    ASSERT_EQ(conv_des->get_strides(), conv->get_strides());
+    ASSERT_EQ(conv_des->get_dilation(), conv->get_dilation());
+    ASSERT_EQ(conv_des->get_data_dilation(), conv->get_data_dilation());
+    ASSERT_EQ(conv_des->get_padding_before(), conv->get_padding_before());
+    ASSERT_EQ(conv_des->get_padding_after(), conv->get_padding_after());
+    ASSERT_EQ(conv_des->get_pad_type(), conv->get_pad_type());
 }

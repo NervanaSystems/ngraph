@@ -372,6 +372,8 @@ set (SRC
     op/util/broadcasting.hpp
     op/util/fused_op.cpp
     op/util/fused_op.hpp
+    op/util/gen_op.cpp
+    op/util/gen_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
     op/util/logical_reduction.cpp

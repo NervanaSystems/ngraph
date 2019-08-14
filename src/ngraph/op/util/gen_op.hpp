@@ -56,4 +56,7 @@ namespace ngraph
             build(const OutputVector& source_outputs,
                   const std::vector<const AttributeBase*>& attributes) const = 0;
     };
+
+    bool register_gen_op(const char* op_name, GenOpBuilder* op_builder);
+    const GenOpBuilder* get_op_builder(const std::string& op_name);
 }

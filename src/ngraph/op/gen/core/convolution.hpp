@@ -238,6 +238,7 @@ private:
     ::ngraph::Attribute<CoordinateDiff> m_padding_before;
     ::ngraph::Attribute<CoordinateDiff> m_padding_after;
     ::ngraph::Attribute<PadType> m_pad_type;
+    NGRAPH_API static bool s_registered;
 };
 class ::ngraph::op::gen::core::Convolution::Builder final : public ::ngraph::GenOpBuilder
 {

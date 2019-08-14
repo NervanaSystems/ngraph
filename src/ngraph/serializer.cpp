@@ -229,7 +229,7 @@ public:
     json serialize_parameter_vector(const ParameterVector& parameters);
     json serialize_output_vector(const OutputVector& output_vector);
     json serialize_node_reference(const Node& node);
-    json serialize_attribute(const AttributeBase& attribute);
+    json serialize_attribute(const std::string& attr_key, const AttributeBase& attribute);
     json serialize_node(const Node& node);
     json serialize_axis_set(const AxisSet& axis_set);
 
@@ -257,6 +257,7 @@ public:
     shared_ptr<Node> deserialize_node_reference(json j);
     shared_ptr<Node> deserialize_node(json j);
     AxisSet deserialize_axis_set(json j);
+    unique_ptr<AttributeBase> deserialize_attribute(json j);
 
 protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
@@ -333,13 +334,18 @@ static json write_auto_broadcast(const op::AutoBroadcastSpec& autob)
     return j;
 }
 
-static op::AutoBroadcastSpec read_auto_broadcast(json js_node, const std::string& attr)
+static op::AutoBroadcastSpec read_auto_broadcast(json j)
+{
+    return op::AutoBroadcastSpec(static_cast<op::AutoBroadcastType>(j.at("type")),
+                                 j.at("axis").get<size_t>());
+}
+
+static op::AutoBroadcastSpec read_auto_broadcast_from_node(json js_node, const std::string& attr)
 {
     if (has_key(js_node, attr))
     {
         json j = js_node[attr];
-        return op::AutoBroadcastSpec(static_cast<op::AutoBroadcastType>(j.at("type")),
-                                     j.at("axis").get<size_t>());
+        return read_auto_broadcast(j);
     }
     else
     {
@@ -714,10 +720,145 @@ struct OutputVectorHelper
     OutputVector m_vector;
 };
 
+template <typename T, typename FUNCTOR>
+static AttributeBase* get_attr(json j, FUNCTOR f)
+{
+    AttributeBase* result;
+    result = new Attribute<T>;
+    result->set(f(j["value"]));
+    return result;
+}
+
+template <typename T>
+static AttributeBase* get_attr(json j)
+{
+    return get_attr<T>(j, [](json x) -> T { return static_cast<T>(x.get<T>()); });
+}
+
+unique_ptr<AttributeBase> JSONDeserializer::deserialize_attribute(json j)
+{
+    AttributeBase* result;
+    if (j["type"] == "bool")
+    {
+        result = get_attr<bool>(j);
+    }
+    else if (j["type"] == "int8_t")
+    {
+        result = get_attr<int8_t>(j);
+    }
+    else if (j["type"] == "int16_t")
+    {
+        result = get_attr<int16_t>(j);
+    }
+    else if (j["type"] == "int32_t")
+    {
+        result = get_attr<int32_t>(j);
+    }
+    else if (j["type"] == "int64_t")
+    {
+        result = get_attr<int64_t>(j);
+    }
+    else if (j["type"] == "uint8_t")
+    {
+        result = get_attr<uint8_t>(j);
+    }
+    else if (j["type"] == "uint16_t")
+    {
+        result = get_attr<uint16_t>(j);
+    }
+    else if (j["type"] == "uint32_t")
+    {
+        result = get_attr<uint32_t>(j);
+    }
+    else if (j["type"] == "uint64_t")
+    {
+        result = get_attr<uint64_t>(j);
+    }
+    else if (j["type"] == "bfloat16")
+    {
+        result = get_attr<bfloat16>(
+            j, [](json x) -> bfloat16 { return static_cast<bfloat16>(x.get<double>()); });
+    }
+    else if (j["type"] == "float16")
+    {
+        result = get_attr<float16>(
+            j, [](json x) -> float16 { return static_cast<float16>(x.get<double>()); });
+    }
+    else if (j["type"] == "float")
+    {
+        result = get_attr<float>(j);
+    }
+    else if (j["type"] == "double")
+    {
+        result = get_attr<double>(j);
+    }
+    else if (j["type"] == "string")
+    {
+        result = get_attr<string>(j);
+    }
+    else if (j["type"] == "element::Type")
+    {
+        result = get_attr<element::Type>(j, read_element_type);
+    }
+    else if (j["type"] == "PartialShape")
+    {
+        result = get_attr<PartialShape>(j, read_partial_shape);
+    }
+    else if (j["type"] == "Shape")
+    {
+        result = get_attr<Shape>(j);
+    }
+    else if (j["type"] == "Strides")
+    {
+        result = get_attr<Strides>(j);
+    }
+    else if (j["type"] == "Coordinate")
+    {
+        result = get_attr<Coordinate>(j);
+    }
+    else if (j["type"] == "CoordinateDiff")
+    {
+        result = get_attr<CoordinateDiff>(j);
+    }
+    else if (j["type"] == "AxisSet")
+    {
+        result = get_attr<AxisSet>(j);
+    }
+    else if (j["type"] == "AxisVector")
+    {
+        result = get_attr<AxisVector>(j);
+    }
+    else if (j["type"] == "op::PadMode")
+    {
+        result = get_attr<op::PadMode>(j);
+    }
+    else if (j["type"] == "op::PadType")
+    {
+        result = get_attr<op::PadType>(j);
+    }
+    else if (j["type"] == "op::AutoBroadcastSpec")
+    {
+        result = get_attr<op::AutoBroadcastSpec>(j, read_auto_broadcast);
+    }
+    else if (j["type"] == "op::RoundMode")
+    {
+        result = get_attr<op::RoundMode>(j);
+    }
+    else if (j["type"] == "op::SortType")
+    {
+        result = get_attr<op::SortType>(j);
+    }
+    else
+    {
+        NGRAPH_CHECK(false, "deserialize_attribute: Unhandled type: ", j["type"]);
+    }
+    return unique_ptr<AttributeBase>(result);
+}
+
 shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 {
     shared_ptr<Node> node;
-    try
+    //    try
     {
         string node_name = node_js.at("name").get<string>();
         string node_op = node_js.at("op").get<string>();
@@ -745,7 +886,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Add:
         {
-            node = make_shared<op::Add>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Add>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::All:
@@ -761,7 +903,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::And:
         {
-            node = make_shared<op::And>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::And>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::Any:
@@ -1101,7 +1244,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             bool pythondiv = get_or_default(node_js, "pythondiv", true);
             node = make_shared<op::Divide>(
-                args[0], args[1], pythondiv, read_auto_broadcast(node_js, "autob"));
+                args[0], args[1], pythondiv, read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::Dot:
@@ -1182,7 +1325,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Equal:
         {
-            node = make_shared<op::Equal>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Equal>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::Erf:
@@ -1253,14 +1397,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Greater:
         {
-            node =
-                make_shared<op::Greater>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Greater>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::GreaterEq:
         {
-            node =
-                make_shared<op::GreaterEq>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::GreaterEq>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::GRN:
@@ -1346,12 +1490,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
         case OP_TYPEID::Less:
         {
-            node = make_shared<op::Less>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Less>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::LessEq:
         {
-            node = make_shared<op::LessEq>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::LessEq>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::Log:
@@ -1464,8 +1610,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Maximum:
         {
-            node =
-                make_shared<op::Maximum>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Maximum>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::Min:
@@ -1476,14 +1622,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Minimum:
         {
-            node =
-                make_shared<op::Minimum>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Minimum>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::Multiply:
         {
-            node =
-                make_shared<op::Multiply>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Multiply>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::MVN:
@@ -1510,8 +1656,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::NotEqual:
         {
-            node =
-                make_shared<op::NotEqual>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::NotEqual>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::Not:
@@ -1528,7 +1674,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Or:
         {
-            node = make_shared<op::Or>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Or>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::Pad:
@@ -1578,7 +1725,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Power:
         {
-            node = make_shared<op::Power>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Power>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::PRelu:
@@ -1868,8 +2016,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Subtract:
         {
-            node =
-                make_shared<op::Subtract>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Subtract>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::Sum:
@@ -1919,14 +2067,35 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Xor:
         {
-            node = make_shared<op::Xor>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Xor>(
+                args[0], args[1], read_auto_broadcast_from_node(node_js, "autob"));
             break;
         }
         case OP_TYPEID::UnknownOp:
         {
-            stringstream ss;
-            ss << "unsupported op " << node_op;
-            throw runtime_error(ss.str());
+            auto builder = get_op_builder(node_op);
+            if (builder != nullptr)
+            {
+                auto attrs = node_js.at("attributes");
+                vector<unique_ptr<AttributeBase>> attr_uptrs(attrs.size());
+                vector<const AttributeBase*> attr_ptrs(attrs.size());
+
+                size_t i = 0;
+                for (auto& a : attrs)
+                {
+                    attr_uptrs[i] = deserialize_attribute(a);
+                    attr_ptrs[i] = attr_uptrs[i].get();
+                    i++;
+                }
+                node = builder->build(args, attr_ptrs);
+            }
+            else
+            {
+                stringstream ss;
+                ss << "unsupported op " << node_op;
+                throw runtime_error(ss.str());
+            }
+            break;
         }
         }
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
@@ -1956,7 +2125,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         m_node_map[node_name] = node;
     }
-    catch (...)
+    /*    catch (...)
     {
         string node_name;
         auto it = node_js.find("name");
@@ -1969,7 +2138,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node_name = "UNKNOWN";
         }
         throw runtime_error("Error parsing json at node '" + node_name + "'");
-    }
+    }*/
     return node;
 }
 
@@ -2025,9 +2194,11 @@ json JSONSerializer::serialize_output_vector(const OutputVector& output_vector)
     return result;
 }
 
-json JSONSerializer::serialize_attribute(const AttributeBase& attribute)
+json JSONSerializer::serialize_attribute(const std::string& attr_key,
+                                         const AttributeBase& attribute)
 {
     json result;
+    result["name"] = attr_key;
     if (attribute.has_type<bool>())
     {
         result["type"] = "bool";
@@ -3078,7 +3249,8 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             for (auto& attr_key : gen_op->get_attribute_keys())
             {
-                node["attributes"][attr_key] = serialize_attribute(gen_op->get_attribute(attr_key));
+                node["attributes"].push_back(
+                    serialize_attribute(attr_key, gen_op->get_attribute(attr_key)));
             }
         }
         break;

@@ -166,6 +166,7 @@ public:
 
 private:
     ::ngraph::Attribute<AutoBroadcastSpec> m_autobroadcast;
+    NGRAPH_API static bool s_registered;
 };
 class ::ngraph::op::gen::core::Add::Builder final : public ::ngraph::GenOpBuilder
 {

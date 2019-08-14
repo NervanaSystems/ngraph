@@ -427,6 +427,7 @@ class ClassWriter():
         for attribute in self._attributes:
             f.write('    %s\n' % attribute.member_var_proto())
 
+        f.write('    NGRAPH_API static bool s_registered;\n')
         f.write('};\n')
 
     def gen_builder_class_definition(self, f):
@@ -492,6 +493,9 @@ class ClassWriter():
         f.write('\n')
 
         self.gen_function_definitions(f)
+
+        f.write('bool ::%s::s_registered = ::ngraph::register_gen_op("%s.%s", new ::%s::Builder());\n'
+                  % (self.qualified_name(), self._dialect, self._name, self.qualified_name()))
 
         f.close()
 

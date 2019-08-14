@@ -24,3 +24,5 @@ const std::string ngraph::op::gen::core::Add::type_name = "core.Add";
 {
     return ::std::make_shared<::ngraph::op::gen::core::Add>(source_outputs, attributes);
 }
+bool ::ngraph::op::gen::core::Add::s_registered =
+    ::ngraph::register_gen_op("core.Add", new ::ngraph::op::gen::core::Add::Builder());

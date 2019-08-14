@@ -24,3 +24,5 @@ const std::string ngraph::op::gen::core::Convolution::type_name = "core.Convolut
 {
     return ::std::make_shared<::ngraph::op::gen::core::Convolution>(source_outputs, attributes);
 }
+bool ::ngraph::op::gen::core::Convolution::s_registered = ::ngraph::register_gen_op(
+    "core.Convolution", new ::ngraph::op::gen::core::Convolution::Builder());
