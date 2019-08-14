@@ -18,6 +18,9 @@
 
 #include <cmath>
 #include <numeric>
+#include <algorithm>
+
+#include <iostream> //TODO
 
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/util.hpp"
@@ -46,25 +49,20 @@ namespace ngraph
                 for (const Coordinate& in_coord : input_transform)
                 {
                     T square_sum = 0;
-                    for (const auto& current_axis : axes)
+                    auto current_axis = 1;
+                    auto begin_c = std::max<int>((int)0, (int)in_coord.at(current_axis) - (int)(size - 1) / 2);
+                    auto end_c = std::min<int>((int)arg_shape.at(current_axis), (int)in_coord.at(current_axis) + (size - 1)/2 + 1);
+                    std::cout << "begin_c: " << begin_c << ", end_c: " << end_c << "\n";
+                    for (auto elem = begin_c; elem < end_c; ++elem)
                     {
-                        const size_t elem_number_across_current_axis = arg_shape.at(current_axis);
-                        size_t base_elem_index = in_coord.at(current_axis);
-                        for (size_t i = base_elem_index; i < base_elem_index + size; i++)
-                        {
-                            if (i < (size - 1) / 2)
-                                continue;
-                            if (i >= elem_number_across_current_axis + (size - 1) / 2)
-                                continue;
-                            auto sum_coord = in_coord;
-                            sum_coord.at(current_axis) = i - (size - 1) / 2;
-                            square_sum += arg[input_transform.index(sum_coord)] *
-                                arg[input_transform.index(sum_coord)];
-                        }
+                        auto sum_coord = in_coord;
+                        sum_coord.at(current_axis) = elem;
+                        square_sum += arg[input_transform.index(sum_coord)] *
+                            arg[input_transform.index(sum_coord)];
                     }
                     T x = arg[input_transform.index(in_coord)];
                     out[input_transform.index(in_coord)] =
-                        x / (std::pow(bias + (alpha / size) * square_sum, beta));
+                    x / (std::pow(bias + (alpha / size) * square_sum, beta));
                 }
             }
         }
