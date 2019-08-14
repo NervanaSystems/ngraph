@@ -506,9 +506,6 @@ namespace
 
         NGRAPH_CHECK(lhs->getType().isa<MemRefType>());
         Type elemTy = lhs->getType().dyn_cast<MemRefType>().getElementType();
-        NGRAPH_CHECK(!elemTy.isa<FloatType>(),
-                     "NGReluOp with float element type should not be lowered until MLIR supports "
-                     "lowering !std.CmpF");
 
         LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
