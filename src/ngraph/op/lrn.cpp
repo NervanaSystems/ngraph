@@ -67,13 +67,13 @@ void op::LRN::validate_and_infer_types()
                           axes_shape,
                           ").");
 
-    NODE_VALIDATION_CHECK(this,
-                          static_cast<size_t>(axes_shape[0]) >= 1 &&
-                              static_cast<size_t>(axes_shape[0]) <=
-                                  static_cast<size_t>(input_shape.rank()),
-                          "Number of elements of axes must be >= 1 and <= argument rank (axes_shape[0]: ",
-                          axes_shape[0],
-                          ").");
+    NODE_VALIDATION_CHECK(
+        this,
+        static_cast<size_t>(axes_shape[0]) >= 1 &&
+            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape.rank()),
+        "Number of elements of axes must be >= 1 and <= argument rank (axes_shape[0]: ",
+        axes_shape[0],
+        ").");
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
