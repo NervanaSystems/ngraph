@@ -34,8 +34,8 @@ op::Squeeze::Squeeze(const Output<Node>& data, const Output<Node>& axes)
 
 NodeVector op::Squeeze::decompose_op() const
 {
-    auto data = input(0).get_source_output();
-    auto axes_node = input(1).get_source_output().get_node_shared_ptr();
+    auto data = input_value(0);
+    auto axes_node = input_value(1).get_node_shared_ptr();
 
     // Currently only support Constant node for axes.
     NODE_VALIDATION_CHECK(this,
