@@ -17,18 +17,28 @@ We are pleased to announce the release of version |version|-doc.
 
 
 Core updates for |version|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
+
 + Better PlaidML support
 + Double-buffering support
 + Constant folding
 + Support for static linking
 + Additional ops
 + Preliminary static linking support
-+ Add instructions how to build ``NGRAPH_PLAIDML`` backend
+
+Known issues
+~~~~~~~~~~~~
+
+• No training support
+• 5 functional TensorFlow models and 4 functional ONNX models may experience performance degradations if upgraded from a previous version.
 
 
-.. Latest doc updates
-.. ~~~~~~~~~~~~~~~~~~
+Latest doc updates |version|-doc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++ Instructions how to build ``NGRAPH_PLAIDML`` backend added to :doc:`../buildlb`. 
++ Publishing interim version of doc navigation for updates at ngraph.ai
+
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
