@@ -151,3 +151,20 @@ bool runtime::Backend::set_config(const map<string, string>& config, string& err
     error = "set_config not supported";
     return false;
 }
+
+bool runtime::Backend::executable_can_create_tensors()
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape());
+    auto function = make_shared<Function>(NodeVector{A}, ParameterVector{A});
+    auto exec = compile(function);
+    bool exec_can_create_tensors = false;
+    try
+    {
+        auto t = exec->create_input_tensor(0);
+        exec_can_create_tensors = true;
+    }
+    catch(...)
+    {
+    }
+    return exec_can_create_tensors;
+}
