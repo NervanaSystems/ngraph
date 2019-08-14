@@ -29,8 +29,7 @@ Core updates for |version|
 Known issues
 ~~~~~~~~~~~~
 
-• No training support
-• 5 functional TensorFlow models and 4 functional ONNX models may experience performance degradations if upgraded from a previous version.
++ No training support
 
 
 Latest doc updates |version|-doc
@@ -38,7 +37,7 @@ Latest doc updates |version|-doc
 
 + Instructions how to build ``NGRAPH_PLAIDML`` backend added to :doc:`../buildlb`. 
 + Publishing interim version of doc navigation for updates at ngraph.ai
-
++ GPU validations: added 5 functional TensorFlow workloads and 4 functional ONNX workloads to :doc:`../frameworks/validated/list`.
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
