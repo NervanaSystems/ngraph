@@ -157,8 +157,6 @@ namespace ngraph
                     auto batch = static_cast<unsigned long>(rnn_node->get_batch_size());
                     auto rnn_cell_n_gates =
                         static_cast<unsigned long>(rnn_node->get_gates_per_cell());
-                    auto rnn_cell_n_states =
-                        static_cast<unsigned long>(rnn_node->get_num_cell_states());
 
                     auto get_mkldnn_rnn_direction_string = [&]() {
                         switch (direction)
@@ -770,7 +768,6 @@ namespace ngraph
 
                     // Write memory descriptors to file
                     std::vector<mkldnn::memory::desc> descs = {input_sub_desc, result_desc};
-                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
@@ -2290,7 +2287,6 @@ namespace ngraph
 
                     // Write memory descriptors to file
                     std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
-                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
@@ -2330,7 +2326,6 @@ namespace ngraph
 
                     // Write memory descriptors to file
                     std::vector<mkldnn::memory::desc> descs = {input_desc, result_desc};
-                    auto desc_index = mkldnn_emitter.get_mkldnn_descriptors_size();
                     mkldnn_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
