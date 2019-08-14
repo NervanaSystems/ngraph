@@ -24,10 +24,8 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/shape.hpp"
 
 #include <string>
-#include <vector>
 
 using namespace std;
 using namespace ngraph;

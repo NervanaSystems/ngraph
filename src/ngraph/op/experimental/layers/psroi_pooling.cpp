@@ -22,18 +22,20 @@ using namespace ngraph;
 const string op::PSROIPooling::type_name{"PSROIPooling"};
 
 op::PSROIPooling::PSROIPooling(const shared_ptr<Node>& input,
-                               const std::shared_ptr<Node>& coords,
+                               const shared_ptr<Node>& coords,
                                const size_t output_dim,
                                const size_t group_size,
                                const float spatial_scale,
-                               const Shape& num_bins,
-                               const std::string& kind)
+                               int spatial_bins_x,
+                               int spatial_bins_y,
+                               const string& mode)
     : Op(check_single_output_args({input, coords}))
     , m_output_dim(output_dim)
     , m_group_size(group_size)
     , m_spatial_scale(spatial_scale)
-    , m_num_bins(num_bins)
-    , m_kind(kind)
+    , m_spatial_bins_x(spatial_bins_x)
+    , m_spatial_bins_y(spatial_bins_y)
+    , m_mode(mode)
 {
     constructor_validate_and_infer_types();
 }
@@ -74,6 +76,7 @@ shared_ptr<Node> op::PSROIPooling::copy_with_new_args(const NodeVector& new_args
                                      m_output_dim,
                                      m_group_size,
                                      m_spatial_scale,
-                                     m_num_bins,
-                                     m_kind);
+                                     m_spatial_bins_x,
+                                     m_spatial_bins_y,
+                                     m_mode);
 }

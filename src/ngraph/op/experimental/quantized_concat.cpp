@@ -17,13 +17,19 @@
 #include <memory>
 
 #include "ngraph/op/concat.hpp"
-#include "ngraph/op/slice.hpp"
 #include "quantized_concat.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 const string op::QuantizedConcat::type_name{"QuantizedConcat"};
+
+op::QuantizedConcat::QuantizedConcat(const OutputVector& args, size_t concatenation_axis)
+    : Op(args)
+    , m_concatenation_axis(concatenation_axis)
+{
+    constructor_validate_and_infer_types();
+}
 
 op::QuantizedConcat::QuantizedConcat(const NodeVector& args, size_t concatenation_axis)
     : Op(check_single_output_args(args))

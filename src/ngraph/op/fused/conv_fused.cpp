@@ -14,8 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <numeric>
-
 #include "conv_fused.hpp"
 
 #include "ngraph/op/add.hpp"
@@ -24,7 +22,6 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
