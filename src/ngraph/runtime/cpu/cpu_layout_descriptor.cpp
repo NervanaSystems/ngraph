@@ -127,9 +127,8 @@ namespace ngraph
                 }
                 catch (const mkldnn::error& e)
                 {
-                    throw ngraph_error(
-                        //     "error in computing mkldnn memory size from memory desc: " +
-                        e.message);
+                    throw ngraph_error("error in computing mkldnn memory size from memory desc: " +
+                                       MKLDNN_ERROR_MESSAGE);
                 }
             }
 

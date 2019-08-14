@@ -1507,7 +1507,8 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& 
     }
 
     if (md1.offset0 != md2.offset0 || md1.extra.flags != md2.extra.flags ||
-        md1.extra.scale_adjust != md2.extra.scale_adjust)
+        // scale_adjust can only be 0.5 or 1.
+        std::fabs(md1.extra.scale_adjust - md2.extra.scale_adjust) > 0.1f)
     {
         return false;
     }
@@ -1612,11 +1613,17 @@ bool runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(const mkldnn::memo
                                                               const mkldnn::memory::format_tag& fmt)
 {
     auto format_tag_to_kind = [](mkldnn::memory::format_tag tag) {
-        switch (tag)
+        if (tag == mkldnn::memory::format_tag::undef)
         {
-        case mkldnn::memory::format_tag::undef: return mkldnn::memory::format_kind::undef;
-        case mkldnn::memory::format_tag::any: return mkldnn::memory::format_kind::any;
-        default: return mkldnn::memory::format_kind::blocked;
+            return mkldnn::memory::format_kind::undef;
+        }
+        else if (tag == mkldnn::memory::format_tag::any)
+        {
+            return mkldnn::memory::format_kind::any;
+        }
+        else
+        {
+            return mkldnn::memory::format_kind::blocked;
         }
     };
 

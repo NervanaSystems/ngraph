@@ -87,7 +87,7 @@
     size_t size = scratchpad_md.get_size();                                                        \
     m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;
 
-#define MKLDNN_ERROR_MESSAGE *e.message
+#define MKLDNN_ERROR_MESSAGE std::string(e.message)
 
 #endif
 
