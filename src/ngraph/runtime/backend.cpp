@@ -160,7 +160,10 @@ bool runtime::Backend::executable_can_create_tensors()
     bool exec_can_create_tensors = false;
     try
     {
-        auto t = exec->create_input_tensor(0);
+        auto t0 = exec->create_input_tensor(0);
+        auto t1 = exec->create_input_tensor(0, 1);
+        auto t2 = exec->create_output_tensor(0);
+        auto t3 = exec->create_output_tensor(0, 1);
         exec_can_create_tensors = true;
     }
     catch(...)
