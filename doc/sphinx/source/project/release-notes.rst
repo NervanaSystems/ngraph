@@ -1,5 +1,7 @@
 .. project/release-notes.rst:
 
+:orphan:
+
 Release Notes
 #############
 
@@ -15,14 +17,28 @@ We are pleased to announce the release of version |version|-doc.
 
 
 Core updates for |version|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
+
++ Better PlaidML support
++ Double-buffering support
++ Constant folding
++ Support for static linking
++ Additional ops
++ Preliminary static linking support
+
+Known issues
+~~~~~~~~~~~~
+
+• No training support
+• 5 functional TensorFlow models and 4 functional ONNX models may experience performance degradations if upgraded from a previous version.
 
 
+Latest doc updates |version|-doc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. Latest doc updates
-.. ~~~~~~~~~~~~~~~~~~
++ Instructions how to build ``NGRAPH_PLAIDML`` backend added to :doc:`../buildlb`. 
++ Publishing interim version of doc navigation for updates at ngraph.ai
 
-.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
@@ -30,16 +46,6 @@ Core updates for |version|
 
 Changelog on Previous Releases
 ==============================
-
-0.25
-----
-
-+ Better PlaidML support
-+ Double-buffering support
-+ Constant folding
-+ Support for static linking
-+ Additional ops
-
 
 0.24
 ----
@@ -51,7 +57,6 @@ Changelog on Previous Releases
 + Graph visualization improvements
 + Preserve control dependencies in more places
 + GetOutputElement has single input
-.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
 
 
 0.23
@@ -96,7 +101,7 @@ Changelog on Previous Releases
 + offset arg for tensor creation is deprecated
 + static linking support
 + Initial test of 0.21-doc
-+ Updated :doc:`doc-contributor-README` for new community-based contributions. 
++ Updated ``doc-contributor-README`` for new community-based contributions. 
 + Added instructions on how to test or display the installed nGraph version.
 + Added instructions on building nGraph bridge (ngraph-bridge).
 + Updated Backend Developer Guides and ToC structure.
