@@ -49,16 +49,22 @@ namespace ngraph
                 for (const Coordinate& in_coord : input_transform)
                 {
                     T square_sum = 0;
-                    auto current_axis = 1;
-                    auto begin_c = std::max<int>((int)0, (int)in_coord.at(current_axis) - (int)(size - 1) / 2);
-                    auto end_c = std::min<int>((int)arg_shape.at(current_axis), (int)in_coord.at(current_axis) + (size - 1)/2 + 1);
-                    std::cout << "begin_c: " << begin_c << ", end_c: " << end_c << "\n";
-                    for (auto elem = begin_c; elem < end_c; ++elem)
+                    auto h_axis = 2;
+                    auto w_axis = 3;
+                    auto begin_h = std::max<int>((int)0, (int)in_coord.at(h_axis) - (int)(size - 1) / 2);
+                    auto end_h = std::min<int>((int)arg_shape.at(h_axis), (int)in_coord.at(h_axis) + (size - 1)/2 + 1);
+                    auto begin_w = std::max<int>((int)0, (int)in_coord.at(w_axis) - (int)(size - 1) / 2);
+                    auto end_w = std::min<int>((int)arg_shape.at(w_axis), (int)in_coord.at(w_axis) + (size - 1) / 2 + 1);
+                    for (auto elem_h = begin_h; elem_h < end_h; ++elem_h)
                     {
-                        auto sum_coord = in_coord;
-                        sum_coord.at(current_axis) = elem;
-                        square_sum += arg[input_transform.index(sum_coord)] *
-                            arg[input_transform.index(sum_coord)];
+                        for (auto elem_w = begin_w; elem_w < end_w; ++elem_w)
+                        {
+                            auto sum_coord = in_coord;
+                            sum_coord.at(h_axis) = elem_h;
+                            sum_coord.at(w_axis) = elem_w;
+                            square_sum += arg[input_transform.index(sum_coord)] *
+                                arg[input_transform.index(sum_coord)];
+                        }
                     }
                     T x = arg[input_transform.index(in_coord)];
                     out[input_transform.index(in_coord)] =
