@@ -13,13 +13,13 @@ https://github.com/NervanaSystems/ngraph/releases.
 
 This page includes additional documentation updates.
 
-We are pleased to announce the release of version |version|-doc.
+We are pleased to announce the release of version |version|.
 
 
 Core updates for |version|
 --------------------------
 
-+ Better PlaidML support
++ PlaidML support
 + Double-buffering support
 + Constant folding
 + Support for static linking
@@ -29,7 +29,7 @@ Core updates for |version|
 Known issues
 ~~~~~~~~~~~~
 
-+ No training support
++ No PlaidML training support
 
 
 Latest doc updates |version|-doc
