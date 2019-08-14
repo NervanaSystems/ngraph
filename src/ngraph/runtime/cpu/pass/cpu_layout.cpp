@@ -1935,6 +1935,12 @@ namespace ngraph
                         if (input_shape[axis_order[i]] != output_shape[i])
                             return false;
                     }
+#if MKLDNN_VERSION_MAJOR >= 1
+                    if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(md))
+                    {
+                        return false;
+                    }
+#endif
                     return true;
                 }
 
@@ -2026,7 +2032,6 @@ namespace ngraph
                         // Case 2: Squeeze dims. Removes size-1 dimensions. Squeeze mkldnn layout
                         // Case 3: Exapnd dims. Add size-1 dimensions. Expand mkldnn layout
                         // Default: Convert to row-major if needed
-                        //if (false)
                         if (can_be_rotated(reshape, input_md))
                         {
                             auto output_md = mkldnn_utils::rotate_blocked_md(
