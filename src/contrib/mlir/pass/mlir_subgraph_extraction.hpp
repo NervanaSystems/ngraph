@@ -105,7 +105,7 @@ namespace ngraph
             /// inputs: the list of input nodes outside sub-graphs to the node we want to add.
             /// subgraph_ids: the sub-graphs the predecessor nodes belong to.
             /// It traverses backwards from all input nodes and checks if we left the to-be-merged sub-graphs
-            /// and entered again. If so, we have a cycle. 
+            /// and entered again. If so, we have a cycle.
             ///
             /// Example:
             /// A(1)
@@ -116,9 +116,9 @@ namespace ngraph
             /// we want to add D to sub-graph 1. C is an input to D. sugraph_ids are 1
             /// we traverse backwards C->A(1) and find 1, then we cannot add D since we will form a cycle
             bool check_cycles(std::shared_ptr<Node> node,
-                                              std::unordered_set<int>& subgraph_ids,
-                                              bool inside_subgraphs = true,
-                                              unsigned depth = 0);
+                              std::unordered_set<int>& subgraph_ids,
+                              bool inside_subgraphs = true,
+                              unsigned depth = 0);
 
         private:
             static const std::set<std::type_index> m_supported_ops;

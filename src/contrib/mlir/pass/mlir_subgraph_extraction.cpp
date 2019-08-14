@@ -45,7 +45,7 @@ using namespace ngraph::pass;
 
 #define TI(x) std::type_index(typeid(x))
 
-// Maximum depth to check for cycles. If exceeded, we conservatively assume a cycle. 
+// Maximum depth to check for cycles. If exceeded, we conservatively assume a cycle.
 #define MAX_CYCLE_DEPTH 100
 
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
@@ -360,16 +360,16 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
                                               bool inside_subgraphs,
                                               unsigned depth)
 {
-    // Going too deep, bail out. 
+    // Going too deep, bail out.
     if (depth >= MAX_CYCLE_DEPTH)
         return true;
 
-    // root node is always inside merged sub-graphs. 
+    // root node is always inside merged sub-graphs.
     if (depth != 0)
     {
         if (subgraph_ids.find(get_subgraph_id(node)) != subgraph_ids.end())
         {
-            // This node is inside a sub-graph. If we are coming from outside the sub-graphs, then we formed a cycle. 
+            // This node is inside a sub-graph. If we are coming from outside the sub-graphs, then we formed a cycle.
             if (!inside_subgraphs)
             {
                 return true;
@@ -383,7 +383,7 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
     for (auto& input : node->get_arguments())
     {
         if (check_cycles(input, subgraph_ids, inside_subgraphs, ++depth))
-            return true;;
+            return true;
     }
     return false;
 }
