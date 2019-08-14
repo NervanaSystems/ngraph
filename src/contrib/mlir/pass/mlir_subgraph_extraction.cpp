@@ -334,19 +334,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         }
     }
 
-    // Relu is supported for integer types only until MLIR adds support for lowering !std.CmpF to LLVM dialect
-    if (TI(ngraph::op::Relu) == TI(*node))
-    {
-        if (!node->get_element_type().is_integral())
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
     if (TI(ngraph::op::Negative) == TI(*node))
     {
         return true;
