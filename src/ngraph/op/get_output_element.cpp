@@ -33,7 +33,7 @@ op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
 void op::GetOutputElement::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
-                          m_n < input(0).get_source_output().get_node()->get_output_size(),
+                          m_n < input_value(0).get_node()->get_output_size(),
                           "Output at index ",
                           m_n,
                           " requested, but node has only ",
@@ -51,19 +51,19 @@ shared_ptr<Node> op::GetOutputElement::copy_with_new_args(const NodeVector& new_
 
 Output<Node> op::GetOutputElement::get_as_output() const
 {
-    return input(0).get_source_output();
+    return input_value(0);
 }
 
 NodeVector op::GetOutputElement::get_arguments() const
 {
-    return NodeVector{input(0).get_source_output().get_node_shared_ptr()};
+    return NodeVector{input_value(0).get_node_shared_ptr()};
 }
 
 void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    adjoints.add_delta(input(0).get_source_output().get_node_shared_ptr(), delta, get_n());
+    adjoints.add_delta(input_value(0).get_node_shared_ptr(), delta, get_n());
 }
 
 NodeVector op::get_output_elements(const shared_ptr<Node>& mon)

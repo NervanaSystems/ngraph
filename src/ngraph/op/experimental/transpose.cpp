@@ -47,7 +47,8 @@ void op::Transpose::validate_and_infer_types()
 
     set_input_is_relevant_to_shape(1);
 
-    if (auto input_const = std::dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    if (auto input_const =
+            std::dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
         auto permutation = input_const->get_axis_vector_val();
         NODE_VALIDATION_CHECK(this,
