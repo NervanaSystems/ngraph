@@ -69,10 +69,7 @@ void op::Gelu::pre_validate_and_infer_types()
     element::Type input_element_type = get_input_element_type(0);
 
     NODE_VALIDATION_CHECK(this,
-                          input_element_type.is_dynamic() || input_element_type == element::f32 ||
-                              input_element_type == element::f64 ||
-                              input_element_type == element::f16 ||
-                              input_element_type == element::bf16,
+                          input_element_type.is_dynamic() || input_element_type.is_real(),
                           "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
                           input_element_type,
                           ").");
@@ -100,10 +97,7 @@ void op::GeluBackpropFactor::pre_validate_and_infer_types()
     element::Type input_element_type = get_input_element_type(0);
 
     NODE_VALIDATION_CHECK(this,
-                          input_element_type.is_dynamic() || input_element_type == element::f32 ||
-                              input_element_type == element::f64 ||
-                              input_element_type == element::f16 ||
-                              input_element_type == element::bf16,
+                          input_element_type.is_dynamic() || input_element_type.is_real(),
                           "Argument element type must be f16, bf16, f32, f64 or dynamic (got ",
                           input_element_type,
                           ").");
