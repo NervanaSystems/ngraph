@@ -45,8 +45,8 @@ void op::Power::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector
 
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = input_value(0);
+    auto y = input_value(1);
 
     auto log_x = make_shared<op::Log>(x);
 
