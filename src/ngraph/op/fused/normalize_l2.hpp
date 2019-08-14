@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
@@ -30,14 +31,6 @@ namespace ngraph
         class NormalizeL2 : public ngraph::op::util::FusedOp
         {
         public:
-            /// \brief Specifies how eps is combined with L2 value
-            enum class EpsMode
-            {
-                // Add bias to norm
-                ADD,
-                // Calculate max of norm and bias
-                MAX
-            };
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
@@ -64,7 +57,7 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            float m_eps{1.f};
+            float m_eps;
             EpsMode m_eps_mode;
         };
     }

@@ -20,9 +20,9 @@
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "normalize_l2.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -45,6 +45,9 @@ void op::NormalizeL2::pre_validate_and_infer_types()
     const auto& data_pshape = get_input_partial_shape(0);
     const auto& axes_pshape = get_input_partial_shape(1);
 
+    NODE_VALIDATION_CHECK(this, data_pshape.is_static(), "Input data must be static.");
+    NODE_VALIDATION_CHECK(this, axes_pshape.is_static(), "Input axes must be static.");
+
     const Shape data_shape{data_pshape.to_shape()};
 
     // Input data must be 2, 3 or 4D tensor.
@@ -54,8 +57,6 @@ void op::NormalizeL2::pre_validate_and_infer_types()
                           "shape: ",
                           data_shape,
                           ").");
-
-    NODE_VALIDATION_CHECK(this, axes_pshape.is_static(), "Input axes must be static.");
 
     NODE_VALIDATION_CHECK(this,
                           static_cast<size_t>(axes_pshape.rank()) == 1,

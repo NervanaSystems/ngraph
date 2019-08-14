@@ -145,6 +145,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
@@ -1500,7 +1501,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::NormalizeL2:
         {
             float eps = node_js.at("eps").get<float>();
-            auto eps_mode = node_js.at("eps_mode").get<op::NormalizeL2::EpsMode>();
+            auto eps_mode = node_js.at("eps_mode").get<op::EpsMode>();
             node = make_shared<op::NormalizeL2>(args[0], args[1], eps, eps_mode);
             break;
         }
