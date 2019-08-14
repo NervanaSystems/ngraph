@@ -50,7 +50,7 @@ void op::DynReshape::validate_and_infer_types()
 
     set_input_is_relevant_to_shape(1);
 
-    if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    if (auto const_shape = dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
         std::vector<int64_t> out_shape_val = const_shape->get_vector<int64_t>();
         NODE_VALIDATION_CHECK(this,
