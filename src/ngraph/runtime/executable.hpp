@@ -103,6 +103,7 @@ public:
     virtual std::vector<std::shared_ptr<runtime::Tensor>>
         create_output_tensor(size_t output_index, size_t pipeline_depth);
 
+    virtual bool can_create_tensors() const { return false; }
 protected:
     /// \brief Called at the end of compile to the values to be returned by get_parameters
     ///     and get_results
