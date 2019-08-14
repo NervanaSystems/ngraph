@@ -175,7 +175,6 @@ struct CPURuntimeContextCG
         case OpType::CONVOLUTIONBIAS:
         case OpType::CONVOLUTIONBIASADD:
         case OpType::GROUPCONVOLUTIONBIAS:
-        case OpType::QUANTIZEDDOTBIAS:
         case OpType::QUANTIZEDCONVOLUTIONBIAS:
         case OpType::QUANTIZEDCONVOLUTIONBIASADD:
         case OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD:
@@ -183,6 +182,12 @@ struct CPURuntimeContextCG
                          {MKLDNN_ARG_WEIGHTS, *mkldnn_memories[deps[1]]},
                          {MKLDNN_ARG_BIAS, *mkldnn_memories[deps[2]]},
                          {MKLDNN_ARG_DST, *mkldnn_memories[deps[3]]}};
+            break;
+        case OpType::QUANTIZEDDOTBIAS:
+            exec_args = {{MKLDNN_ARG_SRC, *mkldnn_memories[deps[0]]},
+                         {MKLDNN_ARG_WEIGHTS, *mkldnn_memories[deps[1]]},
+                         {MKLDNN_ARG_BIAS, *mkldnn_memories[deps[3]]},
+                         {MKLDNN_ARG_DST, *mkldnn_memories[deps[2]]}};
             break;
         case OpType::CONVOLUTIONBACKPROPDATA:
             exec_args = {{MKLDNN_ARG_DIFF_DST, *mkldnn_memories[deps[1]]},
