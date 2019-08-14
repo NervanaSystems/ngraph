@@ -47,6 +47,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_dot_u8u8)
     Shape shape_r{1, 3}; // output shape
     auto QD = make_shared<op::QuantizedDot>(A,
                                             B,
+                                            1,
                                             input_scale,
                                             input_zero_point,
                                             filter_scale,
@@ -89,6 +90,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_dot_int32_output)
     Shape shape_r{1, 3}; // output shape
     auto QD = make_shared<op::QuantizedDot>(A,
                                             B,
+                                            1,
                                             input_scale,
                                             input_zero_point,
                                             filter_scale,

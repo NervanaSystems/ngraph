@@ -2578,6 +2578,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
 
     auto q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0,
                                                             input1,
+                                                            1,
                                                             input0_scale,
                                                             uint8_zero,
                                                             input1_scale,
@@ -2601,12 +2602,17 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
         auto scale_output = pattern_map[output_scale];
         auto scale_new = input_0_scale * input_1_scale / scale_output;
 
+        if (input_0->get_shape().size() != 2 || input_1->get_shape().size() != 2)
+        {
+            return false;
+        }
         if (input_0->get_element_type() == element::u8 &&
             input_1->get_element_type() == element::u8)
         {
             return false;
         }
 
+        std::cout << "IN HERE " << std::endl;
         auto reshape_input1 = std::make_shared<op::Reshape>(
             input_1, AxisVector{1, 0}, Shape{input_1->get_shape()[1], input_1->get_shape()[0]});
         auto qmatmul = std::make_shared<ngraph::op::QuantizedMatmul>(

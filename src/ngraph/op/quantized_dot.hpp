@@ -45,6 +45,7 @@ namespace ngraph
             /// \param output_axes Output axes set for channel wise quantization
             QuantizedDot(const Output<Node>& input0,
                          const Output<Node>& input1,
+                         size_t reduction_axes_count,
                          const Output<Node>& input0_scale,
                          const Output<Node>& input0_zero_point,
                          const Output<Node>& input1_scale,
@@ -62,6 +63,11 @@ namespace ngraph
             const ngraph::AxisSet& get_input0_axes() const { return m_input0_axes; }
             const ngraph::AxisSet& get_input1_axes() const { return m_input1_axes; }
             const ngraph::AxisSet& get_output_axes() const { return m_output_axes; }
+            size_t get_reduction_axes_count() const { return m_reduction_axes_count; }
+            void set_reduction_axes_count(size_t reduction_axes_count)
+            {
+                m_reduction_axes_count = reduction_axes_count;
+            }
             void validate_and_infer_types() override;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -70,6 +76,8 @@ namespace ngraph
                                            const NodeVector& deltas) override;
 
         protected:
+            size_t m_reduction_axes_count;
+            bool m_has_reduction_axes_count;
             ngraph::element::Type m_output_type;
             ngraph::AxisSet m_input0_axes;
             ngraph::AxisSet m_input1_axes;

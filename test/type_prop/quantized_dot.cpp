@@ -44,6 +44,7 @@ TEST(type_prop, quantized_dot_8_bit_output)
     auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{});
     auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                    input1,
+                                                   1,
                                                    scale,
                                                    input0_zero_point,
                                                    scale,
@@ -83,6 +84,7 @@ TEST(type_prop, quantized_dot_32_bit_output)
     auto output_zero_point = make_shared<op::Parameter>(output_zero_point_type, Shape{});
     auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                    input1,
+                                                   1,
                                                    scale,
                                                    input0_zero_point,
                                                    scale,
@@ -123,6 +125,7 @@ TEST(type_prop, quantized_dot_non_quantized_input0_fails)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -173,6 +176,7 @@ TEST(type_prop, quantized_dot_non_quantized_input1_fails)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -223,6 +227,7 @@ TEST(type_prop, quantized_dot_dyn_output_fails)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -271,6 +276,7 @@ TEST(type_prop, quantized_dot_non_floating_point_scale_fails)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -319,6 +325,7 @@ TEST(type_prop, quantized_dot_input0_zero_point_type_mismatch_fails)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -370,6 +377,7 @@ TEST(type_prop, quantized_dot_input1_zero_point_type_mismatch_fails)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -421,6 +429,7 @@ TEST(type_prop, quantized_dot_non_scalar_input0_zero_point_fails)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -470,6 +479,7 @@ TEST(type_prop, quantized_dot_non_scalar_input1_zero_point_fails)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -519,6 +529,7 @@ TEST(type_prop, quantized_dot_non_scalar_output_zero_point_fails)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -568,6 +579,7 @@ TEST(type_prop, quantized_dot_non_empty_input0_axes)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -616,6 +628,7 @@ TEST(type_prop, quantized_dot_non_empty_input1_axes)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,
@@ -664,6 +677,7 @@ TEST(type_prop, quantized_dot_non_empty_output_axes)
     {
         auto quant_dot = make_shared<op::QuantizedDot>(input0,
                                                        input1,
+                                                       1,
                                                        scale,
                                                        input0_zero_point,
                                                        scale,

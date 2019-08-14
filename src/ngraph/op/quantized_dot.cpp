@@ -27,6 +27,7 @@ const string op::QuantizedDot::type_name{"QuantizedDot"};
 
 op::QuantizedDot::QuantizedDot(const Output<Node>& input0,
                                const Output<Node>& input1,
+                               size_t reduction_axes_count,
                                const Output<Node>& input0_scale,
                                const Output<Node>& input0_zero_point,
                                const Output<Node>& input1_scale,
@@ -45,6 +46,7 @@ op::QuantizedDot::QuantizedDot(const Output<Node>& input0,
           input1_zero_point,
           output_scale,
           output_zero_point})
+    , m_reduction_axes_count(reduction_axes_count)
     , m_output_type(output_type)
     , m_input0_axes(input0_axes)
     , m_input1_axes(input1_axes)
@@ -138,8 +140,8 @@ void op::QuantizedDot::validate_and_infer_types()
 
     const PartialShape& arg0_shape = get_input_partial_shape(0);
     const PartialShape& arg1_shape = get_input_partial_shape(1);
+
     PartialShape result_shape;
-    size_t m_reduction_axes_count = 1;
 
     if (arg0_shape.rank().is_static() && arg1_shape.rank().is_static())
     {
@@ -202,6 +204,7 @@ shared_ptr<Node> op::QuantizedDot::copy_with_new_args(const NodeVector& new_args
     check_new_args_count(this, new_args);
     return shared_ptr<Node>(new QuantizedDot(new_args.at(0),
                                              new_args.at(1),
+                                             m_reduction_axes_count,
                                              new_args.at(2),
                                              new_args.at(3),
                                              new_args.at(4),

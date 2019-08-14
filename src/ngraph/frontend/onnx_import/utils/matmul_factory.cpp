@@ -189,6 +189,7 @@ std::shared_ptr<ngraph::Node>
 
     return std::make_shared<ngraph::op::QuantizedDot>(left,
                                                       right,
+                                                      1,
                                                       m_inputs.at(1),
                                                       m_inputs.at(2),
                                                       m_inputs.at(4),
@@ -214,6 +215,7 @@ std::shared_ptr<ngraph::Node>
     {
         return std::make_shared<ngraph::op::QuantizedDot>(left,
                                                           right,
+                                                          1,
                                                           scale_one,
                                                           left_zero_point,
                                                           scale_one,
@@ -234,6 +236,7 @@ std::shared_ptr<ngraph::Node>
 
     return std::make_shared<ngraph::op::QuantizedDot>(left,
                                                       right,
+                                                      1,
                                                       scale_one,
                                                       left_zero_point,
                                                       scale_one,

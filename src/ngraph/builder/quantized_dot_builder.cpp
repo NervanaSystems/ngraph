@@ -28,6 +28,7 @@ namespace ngraph
     {
         shared_ptr<Node> QuantizedDotBuilder(const Output<Node>& input0,
                                              const Output<Node>& input1,
+                                             const size_t reduction_axes_count,
                                              const Output<Node>& min_input0,
                                              const Output<Node>& max_input0,
                                              const Output<Node>& min_input1,
@@ -52,6 +53,7 @@ namespace ngraph
 
             return make_shared<op::QuantizedDot>(input0,
                                                  input1,
+                                                 reduction_axes_count,
                                                  input0_scale,
                                                  input0_zero_point,
                                                  input1_scale,
