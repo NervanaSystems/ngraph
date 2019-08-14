@@ -330,8 +330,6 @@ set (SRC
     op/fused/group_conv_transpose.cpp
     op/fused/gru_cell.cpp
     op/fused/gru_cell.hpp
-    op/fused/leaky_relu.cpp
-    op/fused/leaky_relu.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
     op/fused/mvn.cpp
@@ -389,6 +387,27 @@ set (SRC
     pass/batch_fusion.cpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
+    pass/constant_folding_arithmetic_reduction.cpp
+    pass/constant_folding_binary.cpp
+    pass/constant_folding_broadcast.cpp
+    pass/constant_folding_concat.cpp
+    pass/constant_folding_convert.cpp
+    pass/constant_folding_dequantize.cpp
+    pass/constant_folding_dyn_broadcast.cpp
+    pass/constant_folding_dyn_reshape.cpp
+    pass/constant_folding_dyn_slice.cpp
+    pass/constant_folding_gather.cpp
+    pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_pad.cpp
+    pass/constant_folding_quantize.cpp
+    pass/constant_folding_range.cpp
+    pass/constant_folding_reshape.cpp
+    pass/constant_folding_reverse.cpp
+    pass/constant_folding_select.cpp
+    pass/constant_folding_shape_of.cpp
+    pass/constant_folding_slice.cpp
+    pass/constant_folding_transpose.cpp
+    pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp
@@ -519,6 +538,14 @@ endif()
 
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
+endif()
+
+if(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+endif()
+
+if(NGRAPH_CPU_STATIC_LIB_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_CPU_STATIC_LIB_ENABLE)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)

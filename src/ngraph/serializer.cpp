@@ -81,7 +81,6 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
@@ -1343,11 +1342,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             break;
         }
 
-        case OP_TYPEID::LeakyRelu:
-        {
-            node = make_shared<op::LeakyRelu>(args[0], args[1]);
-            break;
-        }
         case OP_TYPEID::Less:
         {
             node = make_shared<op::Less>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
@@ -1576,7 +1570,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Passthrough>(node_js.at("logical_type"),
                                                 node_js.at("language"),
                                                 node_js.at("function"),
-                                                args,
+                                                static_cast<OutputVector>(args),
                                                 std::move(outputs));
             break;
         }
@@ -2521,8 +2515,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["alpha"] = tmp->get_alpha();
         node["beta"] = tmp->get_beta();
         break;
-    }
-    case OP_TYPEID::LeakyRelu: { break;
     }
     case OP_TYPEID::Less:
     {

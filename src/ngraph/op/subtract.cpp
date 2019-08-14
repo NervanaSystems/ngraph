@@ -45,8 +45,8 @@ void op::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
 
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = input(0).get_source_output();
+    auto y = input(1).get_source_output();
 
     adjoints.add_delta(x, delta);
     adjoints.add_delta(y, -delta);

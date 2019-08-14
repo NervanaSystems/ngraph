@@ -34,14 +34,15 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            ScaleShift() = default;
             /// \brief Constructs an ScaleShift operation.
             ///
             /// \param data Input tensor
             /// \param scale Input tensor that scale input data
             /// \param shift Input tensor that shift input data
-            ScaleShift(const std::shared_ptr<ngraph::Node>& data,
-                       const std::shared_ptr<ngraph::Node>& scale,
-                       const std::shared_ptr<ngraph::Node>& shift);
+            ScaleShift(const Output<Node>& data,
+                       const Output<Node>& scale,
+                       const Output<Node>& shift);
 
             virtual NodeVector decompose_op() const override;
 

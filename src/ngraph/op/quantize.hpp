@@ -92,6 +92,8 @@ namespace ngraph
                      const ngraph::AxisSet& axes,
                      RoundMode round_mode);
 
+            Quantize() = default;
+
             void validate_and_infer_types() override;
 
             virtual std::shared_ptr<Node>

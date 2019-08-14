@@ -33,13 +33,14 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            HardSigmoid() = default;
             /// \brief      Constructs a HardSigmoid operation.
             ///
             /// \param      data   Input tensor.
             /// \param[in]  alpha  The alpha parameter.
             /// \param[in]  beta   The beta parameter.
             ///
-            HardSigmoid(const std::shared_ptr<ngraph::Node>& data, float alpha, float beta);
+            HardSigmoid(const Output<Node>& data, float alpha, float beta);
 
             virtual NodeVector decompose_op() const override;
             virtual std::shared_ptr<Node>

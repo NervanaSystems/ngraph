@@ -674,6 +674,16 @@ OutputVector ngraph::as_output_vector(const NodeVector& args)
     return output_vector;
 }
 
+NodeVector ngraph::as_node_vector(const OutputVector& values)
+{
+    NodeVector node_vector;
+    for (auto& value : values)
+    {
+        node_vector.push_back(value.as_single_output_node());
+    }
+    return node_vector;
+}
+
 std::tuple<element::Type, PartialShape>
     Node::validate_and_infer_elementwise_args(const op::AutoBroadcastSpec& autob)
 {

@@ -29,13 +29,14 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            ScatterNDAdd() = default;
             /// \param inputs Tensor
             /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
             /// \param updates Tensor: Must have same type as inputs
-            ScatterNDAdd(const std::shared_ptr<Node>& inputs,
-                         const std::shared_ptr<Node>& indices,
-                         const std::shared_ptr<Node>& updates)
-                : Op(check_single_output_args({inputs, indices, updates}))
+            ScatterNDAdd(const Output<Node>& inputs,
+                         const Output<Node>& indices,
+                         const Output<Node>& updates)
+                : Op({inputs, indices, updates})
             {
                 constructor_validate_and_infer_types();
             }

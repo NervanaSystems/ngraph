@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/deprecated.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/type/bfloat16.hpp"
@@ -73,7 +74,10 @@ namespace ngraph
                  const std::string& cname);
             ~Type() {}
             Type& operator=(const Type&) = default;
-            Type_t get_type_enum() const { return m_type; }
+            NGRAPH_DEPRECATED("Use operator Type_t()") Type_t get_type_enum() const
+            {
+                return m_type;
+            }
             const std::string& c_type_string() const;
             size_t size() const;
             size_t hash() const;
@@ -119,6 +123,8 @@ namespace ngraph
             ///              does nothing to dst, and returns false
             static bool merge(element::Type& dst, const element::Type& t1, const element::Type& t2);
 
+            // \brief This allows switch(element_type)
+            operator Type_t() const { return m_type; }
         private:
             Type_t m_type{Type_t::undefined};
         };

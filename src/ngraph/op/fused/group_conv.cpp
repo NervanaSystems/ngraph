@@ -21,17 +21,12 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 const string op::GroupConvolution::type_name{"GroupConvolution"};
-
-op::GroupConvolution::GroupConvolution()
-{
-}
 
 op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
                                        const Output<Node>& filters,

@@ -23,7 +23,7 @@ using namespace ngraph;
 
 const string op::Tanh::type_name{"Tanh"};
 
-op::Tanh::Tanh(const shared_ptr<Node>& arg)
+op::Tanh::Tanh(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
@@ -39,7 +39,7 @@ void op::Tanh::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input(0).get_source_output();
 
     adjoints.add_delta(x, delta - (delta * (shared_from_this() * shared_from_this())));
 }

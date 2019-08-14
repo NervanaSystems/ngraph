@@ -15,11 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/op/max_pool.hpp"
-#include "ngraph/function.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;

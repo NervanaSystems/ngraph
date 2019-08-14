@@ -1172,7 +1172,7 @@ static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t po
 
 TEST(cpu_test, constant_unary_binary)
 {
-    Shape shape_in{4};
+    Shape shape_in{2, 2};
     vector<int> values_a{1, 2, 3, 4};
     vector<int> values_b{1, 2, 3, 4};
     vector<int> values_c{-1, -1, -1, -1};
@@ -1184,6 +1184,7 @@ TEST(cpu_test, constant_unary_binary)
     vector<char> values_i{0, 0, 1, 1};
     vector<char> values_j{0, 1, 0, 1};
     vector<float> values_k{-0.1f, 0.0f, -1.5f, 2.6f};
+    vector<int> values_l{1, 2};
     auto a = make_shared<op::Constant>(element::i32, shape_in, values_a);
     auto b = make_shared<op::Constant>(element::i32, shape_in, values_b);
     auto c = make_shared<op::Constant>(element::i32, shape_in, values_c);
@@ -1195,6 +1196,7 @@ TEST(cpu_test, constant_unary_binary)
     auto i = make_shared<op::Constant>(element::boolean, shape_in, values_i);
     auto j = make_shared<op::Constant>(element::boolean, shape_in, values_j);
     auto k = make_shared<op::Constant>(element::f32, shape_in, values_k);
+    auto l = make_shared<op::Constant>(element::i32, Shape{2}, values_l);
 
     auto add = a + b;
     auto sub = a - b;
@@ -1220,12 +1222,17 @@ TEST(cpu_test, constant_unary_binary)
     auto ceil = make_shared<op::Ceiling>(k);
     auto floor = make_shared<op::Floor>(k);
     auto logical_not = make_shared<op::Not>(j);
+    // Note: The CPU functors do not actually support autobroadcast yet; instead the pass itself
+    // falls back if autobroadcasting is in use. Putting this check here just to make sure the
+    // fallback works as expected, but if direct support for autobroadcast is added to the CPU
+    // folders we should add more comprehensive tests here. --amprocte
+    auto add_autob_numpy = make_shared<op::Add>(a, l, op::AutoBroadcastType::NUMPY);
 
     auto func = make_shared<Function>(
-        NodeVector{add,        sub,         mul,        divn,  min,        max,
-                   absn,       neg,         sqrt,       relu,  sign,       equal,
-                   not_equal,  greater,     greater_eq, less,  less_eq,    logical_and,
-                   logical_or, logical_xor, ceil,       floor, logical_not},
+        NodeVector{add,        sub,         mul,        divn,  min,         max,
+                   absn,       neg,         sqrt,       relu,  sign,        equal,
+                   not_equal,  greater,     greater_eq, less,  less_eq,     logical_and,
+                   logical_or, logical_xor, ceil,       floor, logical_not, add_autob_numpy},
         ParameterVector{});
 
     auto func_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
@@ -1282,6 +1289,7 @@ TEST(cpu_test, constant_unary_binary)
     vector<float> ceil_expected{0.0f, 0.0f, -1.0f, 3.0f};
     vector<float> floor_expected{-1.0f, 0.0f, -2.0f, 2.0f};
     vector<char> not_expected{1, 0, 1, 0};
+    vector<int> add_autob_numpy_expected{2, 4, 4, 6};
 
     ASSERT_EQ(get_result_constant<int>(func, 0), add_expected);
     ASSERT_EQ(get_result_constant<int>(func, 1), sub_expected);
@@ -1308,6 +1316,7 @@ TEST(cpu_test, constant_unary_binary)
     ASSERT_TRUE(test::all_close_f(
         get_result_constant<float>(func, 21), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
     ASSERT_EQ(get_result_constant<char>(func, 22), not_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 23), add_autob_numpy_expected);
     ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
 }
 

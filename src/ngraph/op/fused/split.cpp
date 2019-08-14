@@ -23,8 +23,8 @@ using namespace ngraph;
 
 const string op::Split::type_name{"Split"};
 
-op::Split::Split(const shared_ptr<Node>& data, const int axis, const size_t num_split)
-    : FusedOp(check_single_output_args({data}))
+op::Split::Split(const Output<Node>& data, const int axis, const size_t num_split)
+    : FusedOp({data})
     , m_split_evenly{true}
     , m_axis{axis}
     , m_num_split{num_split}
@@ -32,10 +32,8 @@ op::Split::Split(const shared_ptr<Node>& data, const int axis, const size_t num_
     constructor_validate_and_infer_types();
 }
 
-op::Split::Split(const std::shared_ptr<ngraph::Node>& data,
-                 const int axis,
-                 const std::vector<size_t>& splits)
-    : FusedOp(check_single_output_args({data}))
+op::Split::Split(const Output<Node>& data, const int axis, const std::vector<size_t>& splits)
+    : FusedOp({data})
     , m_split_evenly{false}
     , m_axis{axis}
     , m_splits{splits}
@@ -45,7 +43,7 @@ op::Split::Split(const std::shared_ptr<ngraph::Node>& data,
 
 void op::Split::pre_validate_and_infer_types()
 {
-    const auto shape = get_argument(0)->get_shape();
+    const auto shape = input(0).get_shape();
 
     m_axis = adjust_axis_value(m_axis, shape.size());
     NODE_VALIDATION_CHECK(this,
@@ -86,7 +84,7 @@ void op::Split::pre_validate_and_infer_types()
 
 NodeVector op::Split::decompose_op() const
 {
-    return builder::split(get_argument(0), m_splits, m_axis);
+    return builder::split(input(0).get_source_output(), m_splits, m_axis);
 }
 
 shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const

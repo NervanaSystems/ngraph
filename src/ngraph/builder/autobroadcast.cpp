@@ -22,7 +22,6 @@
 #include "ngraph/util.hpp"
 
 #include <memory>
-#include <numeric>
 #include <sstream>
 
 using namespace std;

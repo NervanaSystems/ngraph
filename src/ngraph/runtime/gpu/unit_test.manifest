@@ -102,6 +102,9 @@ all_2x2x3_eliminate_dims_1_2
 all_2x2x3_eliminate_dims_0_1_2
 all_dynamic
 
+# Corner-case tests for sum with infs and -infs.
+sum_inf
+
 # GPU backend uses floats to implement these ops for int32
 floor_int32
 divide_int32

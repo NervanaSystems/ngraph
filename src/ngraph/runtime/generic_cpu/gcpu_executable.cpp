@@ -213,7 +213,7 @@ void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
                                                    const vector<shared_ptr<HostTensor>>& in)
 {
     stringstream ss;
-    switch (type.get_type_enum())
+    switch (type)
     {
     case element::Type_t::boolean: op_engine<char>(op, out, in); break;
     case element::Type_t::f32: op_engine<float>(op, out, in); break;

@@ -26,10 +26,6 @@ using namespace ngraph;
 
 const string op::TopK::type_name{"TopK"};
 
-op::TopK::TopK()
-{
-}
-
 op::TopK::TopK(const Output<Node>& arg,
                size_t top_k_axis,
                const element::Type& index_element_type,
@@ -63,7 +59,8 @@ op::TopK::TopK(const Output<Node>& arg,
 size_t op::TopK::get_k() const
 {
     size_t k = 0;
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    if (auto const_op =
+            dynamic_pointer_cast<op::Constant>(input(1).get_source_output().get_node_shared_ptr()))
     {
         k = const_op->get_vector<int64_t>()[0];
     }

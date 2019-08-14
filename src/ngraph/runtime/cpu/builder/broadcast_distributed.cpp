@@ -33,7 +33,7 @@ namespace ngraph
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto count = static_cast<int>(args[0].get_size());
-                auto data_type = args[0].get_element_type().get_type_enum();
+                auto data_type = args[0].get_element_type();
                 auto broadcast = static_cast<const ngraph::op::BroadcastDistributed*>(node);
                 auto root_id = broadcast->get_root_id();
                 auto functor = [&, count, data_type, arg_buffer_index, root_id](

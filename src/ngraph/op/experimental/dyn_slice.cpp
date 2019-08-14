@@ -26,16 +26,16 @@ using namespace ngraph;
 
 const string op::DynSlice::type_name{"DynSlice"};
 
-op::DynSlice::DynSlice(const shared_ptr<Node>& arg,
-                       const shared_ptr<Node>& lower_bounds,
-                       const shared_ptr<Node>& upper_bounds,
-                       const shared_ptr<Node>& strides,
+op::DynSlice::DynSlice(const Output<Node>& arg,
+                       const Output<Node>& lower_bounds,
+                       const Output<Node>& upper_bounds,
+                       const Output<Node>& strides,
                        const AxisSet& lower_bounds_mask,
                        const AxisSet& upper_bounds_mask,
                        const AxisSet& new_axis,
                        const AxisSet& shrink_axis,
                        const AxisSet& ellipsis_mask)
-    : Op(check_single_output_args({arg, lower_bounds, upper_bounds, strides}))
+    : Op({arg, lower_bounds, upper_bounds, strides})
     , m_lower_bounds_mask(lower_bounds_mask)
     , m_upper_bounds_mask(upper_bounds_mask)
     , m_new_axis(new_axis)

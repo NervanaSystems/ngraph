@@ -23,8 +23,8 @@ using namespace ngraph;
 
 const string op::Tile::type_name{"Tile"};
 
-op::Tile::Tile(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& repeats)
-    : Op(check_single_output_args({arg, repeats}))
+op::Tile::Tile(const Output<Node>& arg, const Output<Node>& repeats)
+    : Op({arg, repeats})
 {
     constructor_validate_and_infer_types();
 }

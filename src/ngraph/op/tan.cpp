@@ -24,7 +24,7 @@ using namespace ngraph;
 
 const string op::Tan::type_name{"Tan"};
 
-op::Tan::Tan(const shared_ptr<Node>& arg)
+op::Tan::Tan(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
@@ -40,7 +40,7 @@ void op::Tan::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input(0).get_source_output();
 
     auto c = make_shared<op::Cos>(x);
 
