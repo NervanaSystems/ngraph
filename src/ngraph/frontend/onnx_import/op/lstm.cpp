@@ -156,23 +156,6 @@ namespace ngraph
                 };
 
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ATTRIBUTES PARSING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                LSTMDirection getLSTMDirection(const std::string& s)
-                {
-                    if (s == "forward")
-                    {
-                        return LSTMDirection::LSTM_DIRECTION_FORWARD;
-                    }
-                    if (s == "reverse")
-                    {
-                        return LSTMDirection::LSTM_DIRECTION_REVERSE;
-                    }
-                    if (s == "bidirectional")
-                    {
-                        return LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL;
-                    }
-                    return LSTMDirection::LSTM_DIRECTION_UNKNOWN;
-                }
-
                 struct LSTMAttributes
                 {
                     explicit LSTMAttributes(const Node& node)
@@ -190,16 +173,11 @@ namespace ngraph
                               node.get_attribute_value<std::int64_t>("input_forget", 0))}
                     {
                         m_clip_threshold = std::abs(m_clip_threshold);
-                        std::string direction{ngraph::to_lower(
-                            node.get_attribute_value<std::string>("direction", {"forward"}))};
-
-                        m_direction = getLSTMDirection(direction);
-                        ASSERT_VALID_ARGUMENT(node,
-                                              m_direction != LSTMDirection::LSTM_DIRECTION_UNKNOWN)
-                            << "Provided attribute \"direction\" value is incorrect: " << direction;
+                        m_direction = ngraph::to_lower(
+                            node.get_attribute_value<std::string>("direction", {"forward"}));
                     }
 
-                    LSTMDirection m_direction;
+                    std::string m_direction;
                     std::int64_t m_hidden_size;
                     float m_clip_threshold;
                     std::vector<std::string> m_activations;

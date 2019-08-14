@@ -26,14 +26,6 @@
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 
-enum class LSTMDirection
-{
-    LSTM_DIRECTION_FORWARD,
-    LSTM_DIRECTION_REVERSE,
-    LSTM_DIRECTION_BIDIRECTIONAL,
-    LSTM_DIRECTION_UNKNOWN,
-};
-
 namespace ngraph
 {
     namespace op
@@ -59,7 +51,7 @@ namespace ngraph
                                  const std::vector<float> activations_beta,
                                  const std::vector<std::string> activations,
                                  const float clip_threshold,
-                                 const LSTMDirection direction,
+                                 const std::string direction,
                                  const std::int64_t hidden_size,
                                  const bool input_forget)
                 : m_X{X}
@@ -74,7 +66,7 @@ namespace ngraph
                 , m_activations_beta(activations_beta)
                 , m_activations(activations)
                 , m_clip_threshold(clip_threshold)
-                , m_direction(direction)
+                , m_direction(getLSTMDirection(direction))
                 , m_hidden_size(hidden_size)
                 , m_input_forget(input_forget)
             {
@@ -108,6 +100,30 @@ namespace ngraph
             }
 
         private:
+            enum class LSTMDirection
+            {
+                LSTM_DIRECTION_FORWARD,
+                LSTM_DIRECTION_REVERSE,
+                LSTM_DIRECTION_BIDIRECTIONAL,
+                LSTM_DIRECTION_UNKNOWN,
+            };
+
+            LSTMDirection getLSTMDirection(const std::string& direction)
+            {
+                if (direction == "forward")
+                {
+                    return LSTMDirection::LSTM_DIRECTION_FORWARD;
+                }
+                if (direction == "reverse")
+                {
+                    return LSTMDirection::LSTM_DIRECTION_REVERSE;
+                }
+                if (direction == "bidirectional")
+                {
+                    return LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL;
+                }
+                return LSTMDirection::LSTM_DIRECTION_UNKNOWN;
+            }
             ///
             /// \brief      Gets the masked node according to sequence lenght in a batch.
             ///
