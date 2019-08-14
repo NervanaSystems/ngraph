@@ -38,7 +38,7 @@ namespace ngraph
             /// `[d0, ...]`
             /// \param arg1 Node that produces the second input tensor.<br>
             /// `[d0, ...]`
-            /// \param autob Auto broadcast specification
+            /// \param auto_broadcast Auto broadcast specification
             ///
             /// Output `[d0, ...]`
             ///
