@@ -360,8 +360,6 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
                                               bool inside_subgraphs,
                                               unsigned depth)
 {
-    auto inputs = node->get_arguments();
-
     // Going too deep, bail out. 
     if (depth >= MAX_CYCLE_DEPTH)
         return true;
@@ -382,7 +380,7 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
             inside_subgraphs = false;
         }
     }
-    for (auto& input : inputs)
+    for (auto& input : node->get_arguments())
     {
         if (check_cycles(input, subgraph_ids, inside_subgraphs, ++depth))
             return true;;
