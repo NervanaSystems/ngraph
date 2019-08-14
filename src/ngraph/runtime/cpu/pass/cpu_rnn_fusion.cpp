@@ -287,7 +287,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 
         // set LSTM cell attributes
         size_t lstm_n_gates = 4;
-        size_t batch_size = src_layer->get_shape()[0];
         size_t direction = 1;
         size_t layers = 1;
         auto dlc = weights_layer->get_shape()[1] / (lstm_n_gates * direction * layers);
@@ -307,6 +306,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto bias = std::make_shared<ngraph::op::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
 
 #if MKLDNN_VERSION_MAJOR < 1
+        size_t batch_size = src_layer->get_shape()[0];
         std::shared_ptr<Node> src_iter =
             std::make_shared<ngraph::op::Concat>(NodeVector{hidden_state, cell_state}, 0);
         if (src_layer->get_shape()[1] != slc || src_iter->get_shape()[1] != sic)
