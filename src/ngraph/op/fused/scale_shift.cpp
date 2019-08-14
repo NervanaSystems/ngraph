@@ -33,9 +33,9 @@ op::ScaleShift::ScaleShift(const Output<Node>& data,
 
 NodeVector op::ScaleShift::decompose_op() const
 {
-    auto data = input(0).get_source_output();
-    auto scale = input(1).get_source_output();
-    auto shift = input(2).get_source_output();
+    auto data = input_value(0);
+    auto scale = input_value(1);
+    auto shift = input_value(2);
 
     // broadcast all data
     auto broadcasted_nodes = numpy_style_broadcast_values({data, scale, shift});

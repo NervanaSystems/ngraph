@@ -186,11 +186,11 @@ NodeVector op::GRUCell::decompose_op() const
     // Ht = (1 - zt) (.) ht + zt (.) Ht-1
     // -------------------
 
-    Output<Node> X = input(0).get_source_output();
-    Output<Node> W = input(1).get_source_output();
-    Output<Node> R = input(2).get_source_output();
-    Output<Node> H_t = input(3).get_source_output();
-    Output<Node> B = input(4).get_source_output();
+    Output<Node> X = input_value(0);
+    Output<Node> W = input_value(1);
+    Output<Node> R = input_value(2);
+    Output<Node> H_t = input_value(3);
+    Output<Node> B = input_value(4);
 
     // Get W and R biases separately.
     NodeVector b_W_R = builder::split(B, 2);

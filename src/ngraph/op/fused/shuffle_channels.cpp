@@ -74,7 +74,7 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 
 NodeVector op::ShuffleChannels::decompose_op() const
 {
-    const auto data = input(0).get_source_output();
+    const auto data = input_value(0);
     const auto& data_shape = data.get_shape();
 
     const auto reshaped = builder::reshape(data, get_pre_shuffle_shape(data_shape));
