@@ -184,11 +184,11 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    const auto x_shape = x->get_shape();
+    auto x = input_value(0);
+    const auto x_shape = x.get_shape();
 
-    auto f = get_argument(1);
-    const auto f_shape = f->get_shape();
+    auto f = input_value(1);
+    const auto f_shape = f.get_shape();
 
     adjoints.add_delta(x,
                        make_shared<op::ConvolutionBackpropData>(x_shape,
@@ -300,11 +300,11 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(1);
-    const auto x_shape = x->get_shape();
+    auto x = input_value(1);
+    const auto x_shape = x.get_shape();
 
-    auto f = get_argument(0);
-    const auto f_shape = f->get_shape();
+    auto f = input_value(0);
+    const auto f_shape = f.get_shape();
 
     auto data_conv = make_shared<op::Convolution>(delta,
                                                   f,
