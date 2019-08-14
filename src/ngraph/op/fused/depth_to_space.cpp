@@ -35,7 +35,7 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data, const size_t block_size
 
 NodeVector op::DepthToSpace::decompose_op() const
 {
-    auto data = input(0).get_source_output();
+    auto data = input_value(0);
     const Shape& data_shape = data.get_shape();
 
     // Set default values to each dimension to be able to work with both 3D or 4D data.

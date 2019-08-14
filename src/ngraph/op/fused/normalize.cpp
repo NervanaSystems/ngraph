@@ -88,7 +88,7 @@ void op::Normalize::pre_validate_and_infer_types()
 
 NodeVector op::Normalize::decompose_op() const
 {
-    Output<Node> data{input(0).get_source_output()};
+    Output<Node> data{input_value(0)};
     const Shape input_shape{data.get_shape()};
 
     // Reshape to 4D tensor.
@@ -111,7 +111,7 @@ NodeVector op::Normalize::decompose_op() const
     Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps);
     norm = make_broadcast_node(norm, data.get_shape(), 0);
 
-    Output<Node> scale_node{input(1).get_source_output()};
+    Output<Node> scale_node{input_value(1)};
 
     // Broadcast scale to data tensor shape.
     if (m_channel_shared)

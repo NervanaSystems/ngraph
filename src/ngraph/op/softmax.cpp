@@ -87,6 +87,6 @@ void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 
     auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
 
-    auto x = input(0).get_source_output();
+    auto x = input_value(0);
     adjoints.add_delta(x, adjoint);
 }
