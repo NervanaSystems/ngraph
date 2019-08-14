@@ -100,11 +100,11 @@ void op::FakeQuantize::pre_validate_and_infer_types()
 
 NodeVector op::FakeQuantize::decompose_op() const
 {
-    Output<Node> data{input(0).get_source_output()};
-    Output<Node> input_low{input(1).get_source_output()};
-    Output<Node> input_high{input(2).get_source_output()};
-    Output<Node> output_low{input(3).get_source_output()};
-    Output<Node> output_high{input(4).get_source_output()};
+    Output<Node> data{input_value(0)};
+    Output<Node> input_low{input_value(1)};
+    Output<Node> input_high{input_value(2)};
+    Output<Node> output_low{input_value(3)};
+    Output<Node> output_high{input_value(4)};
 
     if (input_low.get_shape().size() == 0)
     {

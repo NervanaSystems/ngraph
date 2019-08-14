@@ -40,7 +40,7 @@ op::QuantizedAvgPool::QuantizedAvgPool(const Output<Node>& arg,
 
 void op::QuantizedAvgPool::validate_and_infer_types()
 {
-    auto arg(input(0).get_source_output());
+    auto arg(input_value(0));
     if (arg.get_element_type() != element::u8 && arg.get_element_type() != element::i8)
     {
         throw ngraph_error("QuantizedAvgPool supported only for i8/u8!");

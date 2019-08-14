@@ -167,10 +167,10 @@ NodeVector op::RNNCell::decompose_op() const
     // Ht = f(Xt*(Wi^T) + Ht-1*(Ri^T) + Wbi + Rbi)
     // --------------------
 
-    Output<Node> X = input(0).get_source_output();
-    Output<Node> W = input(1).get_source_output();
-    Output<Node> R = input(2).get_source_output();
-    Output<Node> H_t = input(3).get_source_output();
+    Output<Node> X = input_value(0);
+    Output<Node> W = input_value(1);
+    Output<Node> R = input_value(2);
+    Output<Node> H_t = input_value(3);
     Output<Node> bias = get_bias();
 
     // Xt*(W^T)
@@ -190,7 +190,7 @@ Output<Node> op::RNNCell::get_bias() const
 {
     Output<Node> bias;
     // Split B onto Wb an Rb and add them.
-    NodeVector b_W_R = builder::split(input(4).get_source_output(), 2);
+    NodeVector b_W_R = builder::split(input_value(4), 2);
     bias = b_W_R.at(0) + b_W_R.at(1);
     return bias;
 }
