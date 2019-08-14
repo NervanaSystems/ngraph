@@ -33,7 +33,6 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
-#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
@@ -200,7 +199,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto lstm_ht_ct_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
 #else
         auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
-        auto lstm_ht_ct_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 2);
+        auto ct_slice = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 2);
 #endif
         // set LSTM cell attributes
         const size_t lstm_n_gates = 4;
@@ -212,11 +211,12 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto goe_nodes = ngraph::op::get_output_elements(m.get_match_root());
         auto dst_layer = goe_nodes[0];
         auto dst_iter = goe_nodes[1];
-        // dst_iter of lstm mkldnn output holds the results of both recurrent state
-        // tensor outputs. we need to slice the ct.
+// dst_iter of lstm mkldnn output holds the results of both recurrent state
+// tensor outputs. we need to slice the ct.
+#if MKLDNN_VERSION_MAJOR < 1
         auto ct_slice = std::make_shared<ngraph::op::Slice>(
             lstm_ht_ct_output, Coordinate{batch_size, 0}, Coordinate{(2 * batch_size), dic});
-
+#endif
         // find the user's for {ht} and replace them with lstm_goe_0
         if (std::dynamic_pointer_cast<ngraph::op::GetOutputElement>(dst_iter) != nullptr)
         {
