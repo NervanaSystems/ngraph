@@ -44,7 +44,7 @@ namespace ngraph
             ///
             Or(const Output<Node>& arg0,
                const Output<Node>& arg1,
-               const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+               const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
