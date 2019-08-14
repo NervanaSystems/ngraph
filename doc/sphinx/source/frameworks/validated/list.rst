@@ -11,19 +11,7 @@ We validated performance [#f1]_ for the following workloads:
 .. contents::
    :local:
 
-GPU
-===
-
-.. csv-table::
-   :header: "GPU Workload", "Genre of Deep learning"
-
-   Inception V1, Image recognition
-   Inception V2, Image recognition
-   Resnet50, Image recognition
-   Squeezenet, Image recognition
-   Squeezenet 1.1, Image recognition
-   VGG-19, Image recognition
-
+.. _cpu_tensorflow:
 
 CPU Tensorflow
 ==============
@@ -39,12 +27,11 @@ CPU Tensorflow
    Inception V4, Image recognition
    Inception-ResNetv2, Image recognition
    MobileNet v1, Image recognition
-   MobileNet v2, Image recognition
+   Faster RCNN, Object detection
    VGG16, Image recognition
    SSD-VGG16, Object detection
    SSD-MobileNetv1, Object detection
    R-FCN, Object detection
-   Faster RCNN, Object detection
    Yolo v2, Object detection
    Transformer-LT, Language translation
    Wide & Deep, Recommender system
@@ -54,6 +41,8 @@ CPU Tensorflow
    DRAW, Image generation
    A3C, Reinforcement learning
 
+
+.. _cpu_onnx:
 
 CPU ONNX
 ========
@@ -66,15 +55,14 @@ Additionally, we validated the following workloads are functional through
    :widths: 27, 53
    :escape: ~
 
-   ResNet-50, Image recognition
-   ResNet-50-v2, Image recognition
    DenseNet-121, Image recognition
    Inception-v1, Image recognition
    Inception-v2, Image recognition
+   ResNet-50, Image recognition
    Mobilenet, Image recognition
    Shufflenet, Image recognition
    SqueezeNet, Image recognition
-   VGG-19, Image recognition
+   VGG-16, Image recognition
    ZFNet-512, Image recognition
    MNIST, Image recognition
    Emotion-FERPlus, Image recognition
@@ -83,6 +71,40 @@ Additionally, we validated the following workloads are functional through
    BVLC CaffeNet, Image recognition
    BVLC R-CNN ILSVRC13, Object detection
    ArcFace, Face Detection and Recognition
+
+
+.. _gpu_tensorflow:
+
+GPU TensorFlow
+==============
+
+.. csv-table::
+   :header: "TensorFlow Workload", "Genre of Deep Learning"
+   :escape: ~
+
+
+   Resnet50 v2, Image recognition 
+   Inception V3, Image recognition
+   Inception V4, Image recognition
+   Inception-ResNetv2, Image recognition
+   VGG-16, Image recognition 
+
+
+.. _gpu_onnx:
+
+GPU ONNX
+========
+
+.. csv-table::
+   :header: "ONNX Workload", "Genre of Deep Learning"
+   :escape: ~
+
+   Inception V1, Image recognition 
+   Inception V2, Image recognition 
+   ResNet-50, Image recognition 
+   SqueezeNet, Image recognition 
+   
+
 
 
 .. important:: Please see Intel's `Optimization Notice`_ for details on disclaimers. 
