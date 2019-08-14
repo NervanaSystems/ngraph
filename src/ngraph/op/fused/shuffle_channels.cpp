@@ -16,7 +16,6 @@
 
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/builder/reshape.hpp"
-#include "ngraph/op/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;

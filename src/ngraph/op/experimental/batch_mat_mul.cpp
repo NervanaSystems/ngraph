@@ -17,17 +17,15 @@
 #include "batch_mat_mul.hpp"
 #include "ngraph/dimension.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/reshape.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 const string op::BatchMatMul::type_name{"BatchMatMul"};
 
-op::BatchMatMul::BatchMatMul(const shared_ptr<Node>& arg0, const shared_ptr<Node>& arg1)
-    : Op(check_single_output_args({arg0, arg1}))
+op::BatchMatMul::BatchMatMul(const Output<Node>& arg0, const Output<Node>& arg1)
+    : Op({arg0, arg1})
 {
     constructor_validate_and_infer_types();
 }

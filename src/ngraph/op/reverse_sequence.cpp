@@ -16,8 +16,6 @@
 
 #include <algorithm>
 #include <memory>
-#include <typeindex>
-#include <typeinfo>
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/reverse_sequence.hpp"

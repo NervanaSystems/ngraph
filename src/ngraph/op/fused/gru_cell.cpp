@@ -14,19 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
 #include <cmath>
 #include <functional>
 
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
-#include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
