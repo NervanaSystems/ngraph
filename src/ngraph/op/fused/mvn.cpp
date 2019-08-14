@@ -59,7 +59,7 @@ op::MVN::MVN(const Output<Node>& data, AxisSet reduction_axes, bool normalize_va
 
 NodeVector op::MVN::decompose_op() const
 {
-    auto data = input(0).get_source_output();
+    auto data = input_value(0);
     auto data_shape = data.get_shape(); // assume that data has n and c channels.
 
     // calculate mean normalization

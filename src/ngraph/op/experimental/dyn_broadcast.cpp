@@ -63,21 +63,19 @@ void op::DynBroadcast::validate_and_infer_types()
                           axes_shape_rank);
 
     PartialShape result_shape{PartialShape::dynamic()};
-    if (input(1).get_source_output().get_node_shared_ptr()->is_constant())
+    if (input_value(1).get_node_shared_ptr()->is_constant())
     {
-        result_shape =
-            static_pointer_cast<op::Constant>(input(1).get_source_output().get_node_shared_ptr())
-                ->get_shape_val();
+        result_shape = static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
+                           ->get_shape_val();
     }
 
     bool axes_known = false;
     AxisSet broadcast_axes;
-    if (input(2).get_source_output().get_node_shared_ptr()->is_constant())
+    if (input_value(2).get_node_shared_ptr()->is_constant())
     {
         axes_known = true;
-        broadcast_axes =
-            static_pointer_cast<op::Constant>(input(2).get_source_output().get_node_shared_ptr())
-                ->get_axis_set_val();
+        broadcast_axes = static_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr())
+                             ->get_axis_set_val();
     }
 
     PartialShape arg_shape = input(0).get_partial_shape();
