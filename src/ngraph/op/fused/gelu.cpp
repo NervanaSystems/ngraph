@@ -36,7 +36,7 @@ op::Gelu::Gelu(const Output<Node>& data)
 // f(x) = 0.5 * x * (1.0 + erf( x / sqrt(2.0) )
 NodeVector op::Gelu::decompose_op() const
 {
-    auto data = input(0).get_source_output();
+    auto data = input_value(0);
 
     shared_ptr<ngraph::Node> half =
         builder::make_constant(data.get_element_type(), data.get_shape(), 0.5);

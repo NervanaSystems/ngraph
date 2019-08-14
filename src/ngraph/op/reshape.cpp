@@ -143,5 +143,5 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
         reshape = make_shared<op::Reshape>(reshape, x_input_order, x_shape);
     }
 
-    adjoints.add_delta(get_argument(0), reshape);
+    adjoints.add_delta(input_value(0), reshape);
 }
