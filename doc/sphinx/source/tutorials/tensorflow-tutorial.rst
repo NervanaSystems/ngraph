@@ -315,7 +315,7 @@ Use a different backend
 You can substitute the default CPU backend with a different backend such as
 ``INTELGPU`` or ``PLAIDML`` (coming soon). 
 
-For ``INTELGPU`` support use nGraph TensorFlow bridge version ``0.16``.
+For ``INTELGPU`` support, use nGraph TensorFlow bridge version ``0.16``.
 
 
 To determine what backends are available, use the following API:
