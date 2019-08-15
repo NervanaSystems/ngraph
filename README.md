@@ -21,7 +21,7 @@ workloads on CPU for inference, please refer to the links below.
 #### Python wheels for nGraph 
 
 The Python wheels for nGraph have been tested and are supported on the following 
-64-bit systems
+64-bit systems:
 
 * Ubuntu 16.04 or later
 * CentOS 7.6
@@ -50,7 +50,6 @@ supported by nGraph. NNP-L and NNP-I in the diagram refer to Intel's next genera
 deep learning accelerators: Intel® Nervana™ Neural Network Processor for Learning and 
 Inference respectively.  Future plans for supporting addtional deep learning frameworks 
 and backends are outlined in the [ecosystem] section. 
-
 
 ![](doc/sphinx/source/graphics/ngpipelines.png)
 
@@ -87,11 +86,11 @@ to improve it:
 
 
 [Ecosystem]: ./ecosystem-overview.md
-[Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
+[Architecture and features]: ./ABOUT.md
 [Documentation]: https://www.ngraph.ai/documentation
-[build the Library]:  https://www.ngraph.ai/documentation/buildlb#building-ngraph-from-source
+[build the Library]:  https://www.ngraph.ai/documentation/buildlb
 [Getting Started Guides]: Getting-started-guides
-[Validated workloads]: https://www.ngraph.ai/documentation/frameworks/validated/list#validated-workloads
+[Validated workloads]: https://www.ngraph.ai/documentation/frameworks/validated/list
 [Functional]: https://github.com/NervanaSystems/ngraph-onnx/ 
 [How to contribute]: How-to-contribute
 [framework integration guides]: https://ngraph.ai/documentation/frameworks/overview
