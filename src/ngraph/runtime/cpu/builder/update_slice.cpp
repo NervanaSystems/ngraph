@@ -61,8 +61,7 @@ namespace ngraph
                     return;
                 }
 
-                if (ngraph::is_strided(strides) && is_fp_i64(args[0].get_element_type()) &&
-                    is_fp_i64(args[1].get_element_type()))
+                if (ngraph::is_strided(strides))
                 {
                     std::function<decltype(runtime::cpu::kernel::strided_update_slice<float, 2>)>
                         kernel;
