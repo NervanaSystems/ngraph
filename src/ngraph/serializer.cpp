@@ -1170,7 +1170,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Elu:
         {
-            node = make_shared<op::Elu>(args[0], args[1]);
+            auto alpha = node_js.at("alpha").get<double>();
+            node = make_shared<op::Elu>(args[0], alpha);
             break;
         }
         case OP_TYPEID::EmbeddingLookup:
@@ -2375,7 +2376,11 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
-    case OP_TYPEID::Elu: { break;
+    case OP_TYPEID::Elu:
+    {
+        auto tmp = dynamic_cast<const op::Elu*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        break;
     }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
