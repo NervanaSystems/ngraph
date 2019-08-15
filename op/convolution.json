@@ -8,7 +8,7 @@
         5
     ],
     "description": "Batched convolution operation",
-    "zdte_implemented": "true",
+    "zdte_implemented": true,
     "arguments": [
         {
             "name": "data",
