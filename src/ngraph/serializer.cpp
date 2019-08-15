@@ -1368,7 +1368,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto beta = node_js.at("beta").get<double>();
             auto bias = node_js.at("bias").get<double>();
             auto nsize = node_js.at("nsize").get<size_t>();
-            node = make_shared<op::LRN>(args[0], alpha, beta, bias, nsize);
+            node = make_shared<op::LRN>(args[0], args[1], alpha, beta, bias, nsize);
             break;
         }
         case OP_TYPEID::LSTMCell:

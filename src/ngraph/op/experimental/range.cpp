@@ -123,9 +123,12 @@ static
 template <typename T>
 static PartialShape infer_output_shape(const op::Range* node, const element::Type& et)
 {
-    auto const_start = dynamic_pointer_cast<op::Constant>(node->get_argument(0));
-    auto const_stop = dynamic_pointer_cast<op::Constant>(node->get_argument(1));
-    auto const_step = dynamic_pointer_cast<op::Constant>(node->get_argument(2));
+    auto const_start =
+        dynamic_pointer_cast<op::Constant>(node->input_value(0).get_node_shared_ptr());
+    auto const_stop =
+        dynamic_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr());
+    auto const_step =
+        dynamic_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr());
 
     T start = static_cast<T>(0);
     T stop = static_cast<T>(0);

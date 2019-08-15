@@ -60,7 +60,8 @@ void op::Tile::validate_and_infer_types()
 
     auto out_shape = PartialShape::dynamic(output_rank);
 
-    if (auto const_repeats = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    if (auto const_repeats =
+            dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
         if (arg_shape.is_static())
         {
