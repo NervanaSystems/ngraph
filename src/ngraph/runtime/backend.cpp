@@ -166,7 +166,7 @@ bool runtime::Backend::executable_can_create_tensors()
         auto t3 = exec->create_output_tensor(0, 1);
         exec_can_create_tensors = true;
     }
-    catch(...)
+    catch (...)
     {
     }
     return exec_can_create_tensors;

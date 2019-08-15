@@ -102,6 +102,7 @@ public:
     /// \returns A vector of Tensors, one for each stage of the pipeline
     virtual std::vector<std::shared_ptr<runtime::Tensor>>
         create_output_tensor(size_t output_index, size_t pipeline_depth);
+
 protected:
     /// \brief Called at the end of compile to the values to be returned by get_parameters
     ///     and get_results
