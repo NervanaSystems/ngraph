@@ -3,7 +3,7 @@
 
 <div align="left">
   <h4>
-    <a href="./ABOUT.md">Architecture & features</a> | <a href="./ecosystem-overview.md" >Ecosystem</a> | <a href="https://ngraph.nervanasys.com/docs/latest/project/release-notes.html">Release notes</a><span> | </span> <a href="https://ngraph.nervanasys.com/docs/latest">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contribution guide</a>
+    <a href="./ABOUT.md">Architecture &amp; features</a> | <a href="./ecosystem-overview.md" >Ecosystem</a> | <a href="https://ngraph.ai/documentation/project/release-notes.html">Release notes</a><span> | </span> <a href="https://ngraph.ai/documentation">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contribution guide</a>
  </h4>
 </div>
 
@@ -14,8 +14,8 @@ workloads on CPU for inference, please refer to the links below.
 
 |  Framework (Version)       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
-| TensorFlow*                | [Pip install](https://github.com/tensorflow/ngraph-bridge#use-pre-built-packages) or [Build from source](https://github.com/tensorflow/ngraph-bridge#build-ngraph-from-source) | 20 [Validated workloads]   
-| ONNX 1.4                   | [Pip install](https://github.com/NervanaSystems/ngraph-onnx#installation)                          | 17 [Validated workloads] 
+| TensorFlow*                | [Pip install](https://ngraph.ai/tutorials/tensorflow-tutorial#use-pre-built-packages) or [Build from source](https://ngraph.ai/tutorials/tensorflow-tutorial#build-from-source) | 20 [Validated workloads]   
+| ONNX 1.5                   | [Pip install](https://ngraph.ai/tutorials/onnx-tutorial#use-pre-built-packages)                          | 17 [Validated workloads] 
 
 
 #### Python wheels for nGraph 
@@ -52,7 +52,7 @@ Inference respectively.  Future plans for supporting addtional deep learning fra
 and backends are outlined in the [ecosystem] section. 
 
 
-![](doc/sphinx/source/graphics/main_diagram_fw_hw.png)
+![](doc/sphinx/source/graphics/ngpipelines.png)
 
 
 While the ecosystem shown above is all functioning, we have validated 
@@ -66,7 +66,7 @@ stack to create an nGraph computational graph, integrate custom frameworks,
 and to interact with supported backends. If you wish to contribute to the 
 project, please don't hesitate to ask questions in [GitHub issues] after 
 reviewing our contribution guide below. 
-
+	
 
 ## How to contribute
 
@@ -88,21 +88,19 @@ to improve it:
 
 [Ecosystem]: ./ecosystem-overview.md
 [Architecture and features]:https://ngraph.nervanasys.com/docs/latest/project/about.html
-[Documentation]: https://ngraph.nervanasys.com/docs/latest
-[build the Library]: https://ngraph.nervanasys.com/docs/latest/buildlb.html
+[Documentation]: https://www.ngraph.ai/documentation
+[build the Library]:  https://www.ngraph.ai/documentation/buildlb#building-ngraph-from-source
 [Getting Started Guides]: Getting-started-guides
-[Validated workloads]: https://ngraph.nervanasys.com/docs/latest/frameworks/validated/list.html
+[Validated workloads]: https://www.ngraph.ai/documentation/frameworks/validated/list#validated-workloads
 [Functional]: https://github.com/NervanaSystems/ngraph-onnx/ 
 [How to contribute]: How-to-contribute
-[framework integration guides]: https://ngraph.nervanasys.com/docs/latest/frameworks/index.html
-[release notes]: https://ngraph.nervanasys.com/docs/latest/project/release-notes.html
+[framework integration guides]: https://ngraph.ai/documentation/frameworks/overview
+[release notes]: https://ngraph.ai/documentation/project/release-notes
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
-[contrib guide]: https://ngraph.nervanasys.com/docs/latest/project/contribution-guide.html
+[contrib guide]: https://ngraph.ai/documentation/contributing/guide
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
-[how to import]: https://ngraph.nervanasys.com/docs/latest/core/constructing-graphs/import.html
-[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/readme_stack.png "nGraph wireframe"
-[ngraph_diagram_with fw_hw]: doc/sphinx/source/graphics/main_diagram_fw_hw.png "nGraph stack with current framework & backend support"
-[ngraph-compiler-stack-readme]: doc/sphinx/source/graphics/ngraph-compiler-stack-readme.png "nGraph Compiler Stack"
+[how to import]: https://ngraph.ai/tutorials/onnx-tutorial#import-a-model-with-onnx-and-ngraph
+[ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/ngpipelines.png "nGraph wireframe"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master
 [PlaidML]: https://github.com/plaidml/plaidml
