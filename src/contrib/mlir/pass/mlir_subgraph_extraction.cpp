@@ -279,6 +279,18 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
 
     // check on invariants expected by MLIR backend
 
+    if (TI(ngraph::op::Divide) == TI(*node))
+    {
+        auto* div = static_cast<ngraph::op::Divide*>(node.get());
+        if (div->is_pythondiv())
+        {
+            // Python specific division rounding is not supported yet.
+            return false;
+        }
+
+        return true;
+    }
+
     // Dot is 2D only
     if (TI(ngraph::op::Dot) == TI(*node))
     {
