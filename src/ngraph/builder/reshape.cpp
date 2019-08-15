@@ -86,7 +86,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
 shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>& axis)
 {
     // value_shape := ShapeOf(value)
-    auto value_shape = make_shared<op::ShapeOf>(value.as_single_output_node());
+    auto value_shape = make_shared<op::ShapeOf>(value);
     // value_shape_shape := ShapeOf(value_shape)
     auto value_shape_shape = make_shared<op::ShapeOf>(value_shape);
 
@@ -98,8 +98,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
     // row_dims := value_shape[0:axis]
     auto row_dims_slice_start =
         make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{0});
-    auto row_dims_slice_end =
-        make_shared<op::DynReshape>(axis.as_single_output_node(), shape_1_vector);
+    auto row_dims_slice_end = make_shared<op::DynReshape>(axis, shape_1_vector);
     auto row_dims = make_shared<op::DynSlice>(
         value_shape, row_dims_slice_start, row_dims_slice_end, unit_strides);
 
@@ -118,5 +117,5 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
     auto flattened_dims = make_shared<op::Concat>(NodeVector{row_dims_prod, col_dims_prod}, 0);
 
     // result := DynReshape(value, flattened_dims)
-    return make_shared<op::DynReshape>(value.as_single_output_node(), flattened_dims);
+    return make_shared<op::DynReshape>(value, flattened_dims);
 }
