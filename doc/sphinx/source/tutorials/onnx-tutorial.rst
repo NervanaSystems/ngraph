@@ -89,7 +89,7 @@ Choose which backends to enable:
 
 **Intel GPU backend**
 
-For ``INTELGPU`` support use nGraph version ``0.25``.
+For ``INTELGPU`` support use nGraph version ``0.24``.
 
 To build nGraph with an Intel GPU backend, add ``-DNGRAPH_INTELGPU_ENABLE=TRUE``
 to the cmake command. For example:
