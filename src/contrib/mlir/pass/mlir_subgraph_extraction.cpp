@@ -254,7 +254,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
             for (descriptor::Input* in_desc : input_descs)
             {
-                if (std::find(nodes.begin(), nodes.end(), in_desc->get_node()) == nodes.end())
+                if (nodes.find(in_desc->get_node()) == nodes.end())
                 {
                     in_desc->replace_output(ck, i);
                 }
