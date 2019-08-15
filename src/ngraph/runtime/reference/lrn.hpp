@@ -31,6 +31,28 @@ namespace ngraph
     {
         namespace reference
         {
+            static void region_across_axis(
+                std::vector<int64_t>& axes,
+                std::vector<int>& begin_area,
+                std::vector<int>& end_area,
+                Coordinate& sum_coord,
+                float& square_sum,
+                float* arg,
+                CoordinateTransform& input_transform)
+            {
+                if (axes.empty())
+                    return;
+                auto current_axis = axes.front();
+                axes.pop_back();
+                for (auto elem_index = begin_area[current_axis]; elem_index < end_area[current_axis]; ++elem_index)
+                {
+                    region_across_axis(axes, begin_area, end_area, sum_coord, square_sum, arg, input_transform);
+                    sum_coord.at(current_axis) = elem_index;
+                    square_sum += arg[input_transform.index(sum_coord)] *
+                        arg[input_transform.index(sum_coord)];
+                }
+            }
+
             template <typename T>
             void lrn(const T* arg,
                      const AxisSet& axes,
@@ -45,27 +67,29 @@ namespace ngraph
                 T beta = static_cast<T>(dbeta);
                 T bias = static_cast<T>(dbias);
 
+                std::vector<int> begin_area(arg_shape.size());
+                std::vector<int> end_area(arg_shape.size());
+
                 CoordinateTransform input_transform(arg_shape);
                 for (const Coordinate& in_coord : input_transform)
                 {
-                    T square_sum = 0;
-                    auto h_axis = 2;
-                    auto w_axis = 3;
-                    auto begin_h = std::max<int>((int)0, (int)in_coord.at(h_axis) - (int)(size - 1) / 2);
-                    auto end_h = std::min<int>((int)arg_shape.at(h_axis), (int)in_coord.at(h_axis) + (size - 1)/2 + 1);
-                    auto begin_w = std::max<int>((int)0, (int)in_coord.at(w_axis) - (int)(size - 1) / 2);
-                    auto end_w = std::min<int>((int)arg_shape.at(w_axis), (int)in_coord.at(w_axis) + (size - 1) / 2 + 1);
-                    for (auto elem_h = begin_h; elem_h < end_h; ++elem_h)
+                    for (const auto axis_coord : axes)
                     {
-                        for (auto elem_w = begin_w; elem_w < end_w; ++elem_w)
-                        {
-                            auto sum_coord = in_coord;
-                            sum_coord.at(h_axis) = elem_h;
-                            sum_coord.at(w_axis) = elem_w;
-                            square_sum += arg[input_transform.index(sum_coord)] *
-                                arg[input_transform.index(sum_coord)];
-                        }
+                        begin_area[axis_coord] = std::max<int>((int)0, (int)in_coord.at(axis_coord) - (int)(size - 1) / 2);
+                        end_area[axis_coord] = std::min<int>((int)arg_shape.at(axis_coord), (int)in_coord.at(axis_coord) + (size - 1) / 2 + 1);
                     }
+                    float square_sum = 0;
+                    auto sum_coord = in_coord;
+                    auto axes_vec = axes.to_vector();
+                    region_across_axis(
+                        axes_vec,
+                        begin_area,
+                        end_area,
+                        sum_coord,
+                        square_sum,
+                        (float*)arg,
+                        input_transform);
+
                     T x = arg[input_transform.index(in_coord)];
                     out[input_transform.index(in_coord)] =
                     x / (std::pow(bias + (alpha / size) * square_sum, beta));
