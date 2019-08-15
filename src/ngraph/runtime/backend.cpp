@@ -169,5 +169,6 @@ bool runtime::Backend::executable_can_create_tensors()
     catch (...)
     {
     }
+    remove_compiled_function(exec);
     return exec_can_create_tensors;
 }
