@@ -17,7 +17,6 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -38,8 +37,8 @@ op::Elu::Elu(const Output<Node>& data, const Output<Node>& alpha)
 
 NodeVector op::Elu::decompose_op() const
 {
-    auto data = input(0).get_source_output();
-    auto alpha_node = input(1).get_source_output();
+    auto data = input_value(0);
+    auto alpha_node = input_value(1);
 
     alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data.get_shape());
 

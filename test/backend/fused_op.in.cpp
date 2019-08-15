@@ -344,6 +344,205 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_striding)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
+    auto group_conv = make_shared<op::GroupConvolution>(data,
+                                                        filters,
+                                                        Strides{2, 2},
+                                                        Strides{1, 1},
+                                                        CoordinateDiff{0, 0},
+                                                        CoordinateDiff{0, 0},
+                                                        Strides{1, 1},
+                                                        2);
+    auto f0 = make_shared<Function>(NodeVector{group_conv}, ParameterVector{data, filters});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, Shape{1, 4, 2, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->create_tensor(element::f32, Shape{2, 2, 1, 1});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    auto result0 = backend->create_tensor(element::f32, Shape{1, 2, 1, 1});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{11, 79};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_window_dilation)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
+    auto group_conv = make_shared<op::GroupConvolution>(data,
+                                                        filters,
+                                                        Strides{1, 1},
+                                                        Strides{2, 2},
+                                                        CoordinateDiff{0, 0},
+                                                        CoordinateDiff{0, 0},
+                                                        Strides{1, 1},
+                                                        2);
+    auto f0 = make_shared<Function>(NodeVector{group_conv}, ParameterVector{data, filters});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, Shape{1, 4, 2, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->create_tensor(element::f32, Shape{2, 2, 1, 1});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    auto result0 = backend->create_tensor(element::f32, Shape{1, 2, 2, 2});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{11, 14, 17, 20, 79, 86, 93, 100};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_data_dilation)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
+    auto group_conv = make_shared<op::GroupConvolution>(data,
+                                                        filters,
+                                                        Strides{1, 1},
+                                                        Strides{1, 1},
+                                                        CoordinateDiff{0, 0},
+                                                        CoordinateDiff{0, 0},
+                                                        Strides{2, 2},
+                                                        2);
+    auto f0 = make_shared<Function>(NodeVector{group_conv}, ParameterVector{data, filters});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, Shape{1, 4, 2, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->create_tensor(element::f32, Shape{2, 2, 1, 1});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    auto result0 = backend->create_tensor(element::f32, Shape{1, 2, 3, 3});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{11, 0, 14, 0, 0, 0, 17, 0, 20, 79, 0, 86, 0, 0, 0, 93, 0, 100};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_padding)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
+    auto group_conv = make_shared<op::GroupConvolution>(data,
+                                                        filters,
+                                                        Strides{1, 1},
+                                                        Strides{1, 1},
+                                                        CoordinateDiff{1, 0},
+                                                        CoordinateDiff{0, 1},
+                                                        Strides{1, 1},
+                                                        2);
+    auto f0 = make_shared<Function>(NodeVector{group_conv}, ParameterVector{data, filters});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, Shape{1, 4, 2, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->create_tensor(element::f32, Shape{2, 2, 1, 1});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    auto result0 = backend->create_tensor(element::f32, Shape{1, 2, 3, 3});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{0, 0, 0, 11, 14, 0, 17, 20, 0, 0, 0, 0, 79, 86, 0, 93, 100, 0};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_padding_and_window_dilation)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 2, 2});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
+    auto group_conv = make_shared<op::GroupConvolution>(data,
+                                                        filters,
+                                                        Strides{1, 1},
+                                                        Strides{2, 2},
+                                                        CoordinateDiff{1, 0},
+                                                        CoordinateDiff{0, 1},
+                                                        Strides{1, 1},
+                                                        2);
+    auto f0 = make_shared<Function>(NodeVector{group_conv}, ParameterVector{data, filters});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, Shape{1, 4, 2, 2});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->create_tensor(element::f32, Shape{2, 2, 1, 1});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    auto result0 = backend->create_tensor(element::f32, Shape{1, 2, 3, 3});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{0, 0, 0, 11, 14, 0, 17, 20, 0, 0, 0, 0, 79, 86, 0, 93, 100, 0};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_input_shape_variation)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 4, 1});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
+    auto group_conv = make_shared<op::GroupConvolution>(data,
+                                                        filters,
+                                                        Strides{1, 1},
+                                                        Strides{2, 2},
+                                                        CoordinateDiff{1, 0},
+                                                        CoordinateDiff{0, 1},
+                                                        Strides{1, 1},
+                                                        2);
+    auto f0 = make_shared<Function>(NodeVector{group_conv}, ParameterVector{data, filters});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, Shape{1, 4, 4, 1});
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+    auto b = backend->create_tensor(element::f32, Shape{2, 2, 1, 1});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    auto result0 = backend->create_tensor(element::f32, Shape{1, 2, 5, 2});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{0, 0, 11, 0, 14, 0, 17, 0, 20, 0, 0, 0, 79, 0, 86, 0, 93, 0, 100, 0};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, group_conv_input_data_variation)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 4, 3, 3});
+    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 2, 1, 1});
+    auto group_conv = make_shared<op::GroupConvolution>(data,
+                                                        filters,
+                                                        Strides{1, 1},
+                                                        Strides{2, 2},
+                                                        CoordinateDiff{1, 0},
+                                                        CoordinateDiff{0, 1},
+                                                        Strides{1, 1},
+                                                        2);
+    auto f0 = make_shared<Function>(NodeVector{group_conv}, ParameterVector{data, filters});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, Shape{1, 4, 3, 3});
+    copy_data(a, vector<float>{1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
+                               13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+                               25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36});
+    auto b = backend->create_tensor(element::f32, Shape{2, 2, 1, 1});
+    copy_data(b, vector<float>{1, 2, 3, 4});
+    auto result0 = backend->create_tensor(element::f32, Shape{1, 2, 4, 4});
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{0, 0, 0, 0, 21,  24,  27,  0, 30,  33,  36,  0, 39,  42,  45,  0,
+                           0, 0, 0, 0, 169, 176, 183, 0, 190, 197, 204, 0, 211, 218, 225, 0};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, space_to_depth)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 4, 4});
@@ -537,84 +736,84 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, normalize_across_hw_w_scale)
 
 NGRAPH_TEST(${BACKEND_NAME}, gemm)
 {
-    auto A = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f64, Shape{6, 4});
-    auto C = make_shared<op::Parameter>(element::f64, Shape{3, 4});
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
 
     auto gemm_func = make_shared<op::Gemm>(A, B, C);
     auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
-    test_case.add_input<double>(vector<double>(18, 1));
+    test_case.add_input<float>(vector<float>(18, 1));
     // B
-    test_case.add_input<double>(vector<double>(24, 2));
+    test_case.add_input<float>(vector<float>(24, 2));
     // C
-    test_case.add_input<double>(vector<double>(12, 0));
+    test_case.add_input<float>(vector<float>(12, 0));
     //output
-    test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 12));
+    test_case.add_expected_output<float>(Shape{3, 4}, vector<float>(12, 12));
     test_case.run();
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
 {
-    auto A = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f64, Shape{6, 4});
-    auto C = make_shared<op::Parameter>(element::f64, Shape{});
+    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::Parameter>(element::f32, Shape{});
 
     auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
     auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
-    test_case.add_input<double>(vector<double>(18, 1));
+    test_case.add_input<float>(vector<float>(18, 1));
     // B
-    test_case.add_input<double>(vector<double>(24, 2));
+    test_case.add_input<float>(vector<float>(24, 2));
     // C
-    test_case.add_input<double>(vector<double>{1});
+    test_case.add_input<float>(vector<float>{1});
     //output
-    test_case.add_expected_output<double>(Shape{3, 4}, vector<double>(12, 7));
+    test_case.add_expected_output<float>(Shape{3, 4}, vector<float>(12, 7));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
 {
-    auto data = make_shared<op::Parameter>(element::f64, Shape{4, 4});
+    auto data = make_shared<op::Parameter>(element::f32, Shape{4, 4});
     auto tested_op = make_shared<op::Clamp>(data, 10.0, 20.0);
     auto function = make_shared<Function>(tested_op, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
-    test_case.add_input<double>({numeric_limits<double>::min(),
-                                 numeric_limits<double>::max(),
-                                 -numeric_limits<double>::infinity(),
-                                 numeric_limits<double>::infinity(),
-                                 -1.0,
-                                 0.0,
-                                 1.0,
-                                 9.99999,
-                                 10.0,
-                                 10.0000001,
-                                 15.0,
-                                 19.9999999,
-                                 20.0,
-                                 20.0000001,
-                                 21.0,
-                                 100.0});
+    test_case.add_input<float>({numeric_limits<float>::min(),
+                                numeric_limits<float>::max(),
+                                -numeric_limits<float>::infinity(),
+                                numeric_limits<float>::infinity(),
+                                -1.0,
+                                0.0,
+                                1.0,
+                                9.99999,
+                                10.0,
+                                10.000001,
+                                15.0,
+                                19.999999,
+                                20.0,
+                                20.000001,
+                                21.0,
+                                100.0});
 
-    test_case.add_expected_output<double>(Shape{4, 4},
-                                          {10.0,
-                                           20.0,
-                                           10.0,
-                                           20.0,
-                                           10.0,
-                                           10.0,
-                                           10.0,
-                                           10.0,
-                                           10.0,
-                                           10.0000001,
-                                           15.0,
-                                           19.9999999,
-                                           20.0,
-                                           20.0,
-                                           20.0,
-                                           20.0});
+    test_case.add_expected_output<float>(Shape{4, 4},
+                                         {10.0,
+                                          20.0,
+                                          10.0,
+                                          20.0,
+                                          10.0,
+                                          10.0,
+                                          10.0,
+                                          10.0,
+                                          10.0,
+                                          10.000001,
+                                          15.0,
+                                          19.999999,
+                                          20.0,
+                                          20.0,
+                                          20.0,
+                                          20.0});
 
     test_case.run();
 }
@@ -622,19 +821,19 @@ NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
 {
     Shape data_shape{1, 2, 5};
-    auto data = make_shared<op::Parameter>(element::f64, data_shape);
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
 
     auto mvn_func = make_shared<op::MVN>(data, true, false);
     auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
-    vector<double> data_vector(shape_size(data_shape));
+    vector<float> data_vector(shape_size(data_shape));
     iota(begin(data_vector), end(data_vector), 0);
-    test_case.add_input<double>(data_vector);
+    test_case.add_input<float>(data_vector);
 
     // expected result
-    test_case.add_expected_output<double>(
-        data_shape, vector<double>{-4.5, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5, 4.5});
+    test_case.add_expected_output<float>(
+        data_shape, vector<float>{-4.5, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5, 4.5});
 
     test_case.run();
 }
@@ -642,19 +841,19 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_split_channels)
 {
     Shape data_shape{1, 2, 5, 1};
-    auto data = make_shared<op::Parameter>(element::f64, data_shape);
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
 
     auto mvn_func = make_shared<op::MVN>(data, false, false);
     auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
-    vector<double> data_vector(shape_size(data_shape));
+    vector<float> data_vector(shape_size(data_shape));
     iota(begin(data_vector), end(data_vector), 0);
-    test_case.add_input<double>(data_vector);
+    test_case.add_input<float>(data_vector);
 
     // expected result
-    test_case.add_expected_output<double>({1, 2, 5, 1},
-                                          vector<double>{-2, -1, 0, 1, 2, -2, -1, 0, 1, 2});
+    test_case.add_expected_output<float>({1, 2, 5, 1},
+                                         vector<float>{-2, -1, 0, 1, 2, -2, -1, 0, 1, 2});
 
     test_case.run();
 }
@@ -662,28 +861,28 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_split_channels)
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization)
 {
     Shape data_shape{1, 2, 5};
-    auto data = make_shared<op::Parameter>(element::f64, data_shape);
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
 
     auto mvn_func = make_shared<op::MVN>(data);
     auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
-    vector<double> data_vector(shape_size(data_shape));
+    vector<float> data_vector(shape_size(data_shape));
     iota(begin(data_vector), end(data_vector), 0);
-    test_case.add_input<double>(data_vector);
+    test_case.add_input<float>(data_vector);
 
     // expected result
-    test_case.add_expected_output<double>(data_shape,
-                                          vector<double>{-1.566698903055826,
-                                                         -1.2185435912656424,
-                                                         -0.87038827947545883,
-                                                         -0.52223296768527527,
-                                                         -0.17407765589509178,
-                                                         0.17407765589509178,
-                                                         0.52223296768527527,
-                                                         0.87038827947545883,
-                                                         1.2185435912656424,
-                                                         1.566698903055826});
+    test_case.add_expected_output<float>(data_shape,
+                                         vector<float>{-1.566698903055826,
+                                                       -1.2185435912656424,
+                                                       -0.87038827947545883,
+                                                       -0.52223296768527527,
+                                                       -0.17407765589509178,
+                                                       0.17407765589509178,
+                                                       0.52223296768527527,
+                                                       0.87038827947545883,
+                                                       1.2185435912656424,
+                                                       1.566698903055826});
 
     test_case.run();
 }
@@ -691,28 +890,28 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization)
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization_split_channels)
 {
     Shape data_shape{1, 2, 5};
-    auto data = make_shared<op::Parameter>(element::f64, data_shape);
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
 
     auto mvn_func = make_shared<op::MVN>(data, false);
     auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
-    vector<double> data_vector(shape_size(data_shape));
+    vector<float> data_vector(shape_size(data_shape));
     iota(begin(data_vector), end(data_vector), 0);
-    test_case.add_input<double>(data_vector);
+    test_case.add_input<float>(data_vector);
 
     // expected result
-    test_case.add_expected_output<double>(data_shape,
-                                          vector<double>{-1.4142135613730948,
-                                                         -0.70710678068654742,
-                                                         0.000000000000000,
-                                                         0.70710678068654742,
-                                                         1.4142135613730948,
-                                                         -1.4142135613730948,
-                                                         -0.70710678068654742,
-                                                         0.000000000000000,
-                                                         0.70710678068654742,
-                                                         1.4142135613730948});
+    test_case.add_expected_output<float>(data_shape,
+                                         vector<float>{-1.4142135613730948,
+                                                       -0.70710678068654742,
+                                                       0.000000000000000,
+                                                       0.70710678068654742,
+                                                       1.4142135613730948,
+                                                       -1.4142135613730948,
+                                                       -0.70710678068654742,
+                                                       0.000000000000000,
+                                                       0.70710678068654742,
+                                                       1.4142135613730948});
 
     test_case.run();
 }
@@ -790,43 +989,43 @@ NGRAPH_TEST(${BACKEND_NAME}, unsqueeze)
 
 NGRAPH_TEST(${BACKEND_NAME}, scale_shift_no_broadcast)
 {
-    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto shift = make_shared<op::Parameter>(element::f64, Shape{3, 6});
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto shift = make_shared<op::Parameter>(element::f32, Shape{3, 6});
 
     auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
     auto function =
         make_shared<Function>(NodeVector{scale_shift_func}, ParameterVector{data, scale, shift});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // Data
-    test_case.add_input<double>(vector<double>(18, 2));
+    test_case.add_input<float>(vector<float>(18, 2));
     // Scale
-    test_case.add_input<double>(vector<double>(18, 2));
+    test_case.add_input<float>(vector<float>(18, 2));
     // Shift
-    test_case.add_input<double>(vector<double>(18, 2));
+    test_case.add_input<float>(vector<float>(18, 2));
     //output
-    test_case.add_expected_output<double>(Shape{3, 6}, vector<double>(18, 6));
+    test_case.add_expected_output<float>(Shape{3, 6}, vector<float>(18, 6));
     test_case.run();
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, scale_shift)
 {
-    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto shift = make_shared<op::Parameter>(element::f64, Shape{});
+    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto scale = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto shift = make_shared<op::Parameter>(element::f32, Shape{});
 
     auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
     auto function =
         make_shared<Function>(NodeVector{scale_shift_func}, ParameterVector{data, scale, shift});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // Data
-    test_case.add_input<double>(vector<double>(18, 2));
+    test_case.add_input<float>(vector<float>(18, 2));
     // Scale
-    test_case.add_input<double>(vector<double>(18, 2));
+    test_case.add_input<float>(vector<float>(18, 2));
     // Shift
-    test_case.add_input<double>(vector<double>{2});
+    test_case.add_input<float>(vector<float>{2});
     //output
-    test_case.add_expected_output<double>(Shape{3, 6}, vector<double>(18, 6));
+    test_case.add_expected_output<float>(Shape{3, 6}, vector<float>(18, 6));
     test_case.run();
 }
 
@@ -930,17 +1129,17 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze_dynamic)
 
 NGRAPH_TEST(${BACKEND_NAME}, squared_difference)
 {
-    const auto x1 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
-    const auto x2 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
+    const auto x1 = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+    const auto x2 = make_shared<op::Parameter>(element::f32, Shape{2, 2});
 
     auto tested_op = make_shared<op::SquaredDifference>(x1, x2);
     auto function = make_shared<Function>(tested_op, ParameterVector{x1, x2});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
-    test_case.add_input<double>({1.0, 16.0, 0.0, 1.234567});
-    test_case.add_input<double>({1.0, 8.0, -3.0, 3.456789});
+    test_case.add_input<float>({1.0, 16.0, 0.0, 1.234567});
+    test_case.add_input<float>({1.0, 8.0, -3.0, 3.456789});
 
-    test_case.add_expected_output<double>(Shape{2, 2}, {0.0, 64.0, 9.0, 4.938270617284});
+    test_case.add_expected_output<float>(Shape{2, 2}, {0.0, 64.0, 9.0, 4.938270617284});
     test_case.run();
 }
 

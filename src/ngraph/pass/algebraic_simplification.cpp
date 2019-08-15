@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <memory>
-#include <numeric>
 #include <set>
 
 #include "algebraic_simplification.hpp"
@@ -28,7 +27,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/product.hpp"

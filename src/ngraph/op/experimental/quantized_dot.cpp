@@ -15,8 +15,6 @@
 //*****************************************************************************
 
 #include <functional>
-#include <memory>
-#include <utility>
 
 #include "ngraph/shape.hpp"
 #include "quantized_dot.hpp"

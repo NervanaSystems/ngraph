@@ -26,16 +26,16 @@ using namespace ngraph;
 
 const string op::DynSlice::type_name{"DynSlice"};
 
-op::DynSlice::DynSlice(const shared_ptr<Node>& arg,
-                       const shared_ptr<Node>& lower_bounds,
-                       const shared_ptr<Node>& upper_bounds,
-                       const shared_ptr<Node>& strides,
+op::DynSlice::DynSlice(const Output<Node>& arg,
+                       const Output<Node>& lower_bounds,
+                       const Output<Node>& upper_bounds,
+                       const Output<Node>& strides,
                        const AxisSet& lower_bounds_mask,
                        const AxisSet& upper_bounds_mask,
                        const AxisSet& new_axis,
                        const AxisSet& shrink_axis,
                        const AxisSet& ellipsis_mask)
-    : Op(check_single_output_args({arg, lower_bounds, upper_bounds, strides}))
+    : Op({arg, lower_bounds, upper_bounds, strides})
     , m_lower_bounds_mask(lower_bounds_mask)
     , m_upper_bounds_mask(upper_bounds_mask)
     , m_new_axis(new_axis)
@@ -86,9 +86,9 @@ void op::DynSlice::validate_and_infer_types()
     set_input_is_relevant_to_shape(2);
     set_input_is_relevant_to_shape(3);
 
-    auto lower_bounds = dynamic_pointer_cast<op::Constant>(get_argument(1));
-    auto upper_bounds = dynamic_pointer_cast<op::Constant>(get_argument(2));
-    auto strides = dynamic_pointer_cast<op::Constant>(get_argument(3));
+    auto lower_bounds = dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr());
+    auto upper_bounds = dynamic_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr());
+    auto strides = dynamic_pointer_cast<op::Constant>(input_value(3).get_node_shared_ptr());
 
     if (lower_bounds && upper_bounds && strides)
     {

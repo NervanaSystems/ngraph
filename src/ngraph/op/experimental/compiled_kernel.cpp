@@ -18,7 +18,6 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -27,7 +26,7 @@ const string op::CompiledKernel::type_name{"CompiledKernel"};
 
 shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector& new_args) const
 {
-    auto args = inputs();
+    auto args = input_values();
     if (new_args.size() != args.size())
     {
         throw ngraph_error("number of arguments don't match");
@@ -37,17 +36,16 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     NodeMap nm;
     for (size_t i = 0; i < args.size(); i++)
     {
-        nm[args.at(i).get_source_output().get_node()] = new_args.at(i);
+        nm[args.at(i).get_node()] = new_args.at(i);
     }
 
     NodeVector new_node_list;
     for (auto n : m_node_list)
     {
         OutputVector cur_args;
-        for (auto a : n->inputs())
+        for (auto a : n->input_values())
         {
-            auto o = a.get_source_output();
-            cur_args.push_back(o.for_node(nm.at(o.get_node())));
+            cur_args.push_back(a.for_node(nm.at(a.get_node())));
         }
         auto new_n = n->copy_with_new_inputs(cur_args);
         nm[n.get()] = new_n;
@@ -61,6 +59,13 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     }
 
     return std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
+}
+
+ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
+                                           const OutputVector& outputs,
+                                           const OutputVector& args)
+    : CompiledKernel(as_node_vector(node_list), as_node_vector(outputs), as_node_vector(args))
+{
 }
 
 ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
