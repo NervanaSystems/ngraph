@@ -172,6 +172,8 @@ public:
     /// \param ptr pointer to the memory to determine if its in device memory or not
     virtual bool is_device_memory(void* ptr);
 
+    virtual bool executable_can_create_tensors();
+
 private:
     // mutex to modify s_backend_shared_library_search_directory thread safe
     static std::mutex m_mtx;
