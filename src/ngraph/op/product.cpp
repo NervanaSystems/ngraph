@@ -21,10 +21,6 @@ using namespace ngraph;
 
 const string op::Product::type_name{"Product"};
 
-op::Product::Product()
-{
-}
-
 op::Product::Product(const Output<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {

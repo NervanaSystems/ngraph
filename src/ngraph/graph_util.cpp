@@ -86,9 +86,9 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
         if (instances_seen.insert(n).second)
         {
             f(n->shared_from_this());
-            for (auto& arg : n->get_arguments())
+            for (auto input : n->inputs())
             {
-                stack.push(arg.get());
+                stack.push(input.get_source_output().get_node());
             }
 
             if (include_control_deps)

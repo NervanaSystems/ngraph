@@ -22,8 +22,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Transpose::Transpose(const shared_ptr<Node>& arg, const shared_ptr<Node>& input_order)
-    : Op("Transpose", check_single_output_args({arg, input_order}))
+const string op::Transpose::type_name{"Transpose"};
+
+op::Transpose::Transpose(const Output<Node>& arg, const Output<Node>& input_order)
+    : Op({arg, input_order})
 {
     constructor_validate_and_infer_types();
 }
@@ -45,7 +47,8 @@ void op::Transpose::validate_and_infer_types()
 
     set_input_is_relevant_to_shape(1);
 
-    if (auto input_const = std::dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    if (auto input_const =
+            std::dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
         auto permutation = input_const->get_axis_vector_val();
         NODE_VALIDATION_CHECK(this,

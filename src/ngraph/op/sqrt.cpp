@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Sqrt::Sqrt(const shared_ptr<Node>& arg)
-    : UnaryElementwiseArithmetic("Sqrt", arg)
+const string op::Sqrt::type_name{"Sqrt"};
+
+op::Sqrt::Sqrt(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
@@ -37,7 +39,7 @@ void op::Sqrt::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
     adjoints.add_delta(x, delta / (shared_from_this() + shared_from_this()));
 }

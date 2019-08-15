@@ -18,11 +18,15 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 
+using namespace ngraph;
+
+const std::string op::BatchNormTrainingRelu::type_name{"BatchNormTrainingRelu"};
+
 ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
-                                                         std::shared_ptr<ngraph::Node> gamma,
-                                                         std::shared_ptr<ngraph::Node> beta,
-                                                         std::shared_ptr<ngraph::Node> input)
-    : Op("BatchNormTrainingRelu", check_single_output_args({gamma, beta, input}))
+                                                         const Output<Node>& gamma,
+                                                         const Output<Node>& beta,
+                                                         const Output<Node>& input)
+    : Op({gamma, beta, input})
     , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
@@ -42,7 +46,7 @@ ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
             "input tensor must have at least one channel axis for batch normalization");
     }
 
-    auto et = input->get_element_type();
+    auto et = input.get_element_type();
     const char* input_names[] = {"gamma", "beta"};
 
     for (size_t i = 0; i < 2; i++)
@@ -55,34 +59,36 @@ ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
         }
     }
 
-    if ((gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
+    if ((gamma.get_shape().size() != 1) || (beta.get_shape().size() != 1))
     {
         throw ngraph_error("gamma and beta should have rank 1");
     }
 
-    if (gamma->get_shape().size() != beta->get_shape().size())
+    if (gamma.get_shape().size() != beta.get_shape().size())
     {
         throw ngraph_error("gamma and beta rank does not match");
     }
 
-    if (gamma->get_element_type() != beta->get_element_type())
+    if (gamma.get_element_type() != beta.get_element_type())
     {
         throw ngraph_error("gamma and beta element type does not match");
     }
 
     set_output_size(3);
-    set_output_type(0, input->get_element_type(), bn_input_shape);
-    set_output_type(1, input->get_element_type(), channel_shape);
-    set_output_type(2, input->get_element_type(), channel_shape);
+    set_output_type(0, input.get_element_type(), bn_input_shape);
+    set_output_type(1, input.get_element_type(), channel_shape);
+    set_output_type(2, input.get_element_type(), channel_shape);
 }
 
+const std::string op::BatchNormInferenceRelu::type_name{"BatchNormInferenceRelu"};
+
 ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
-                                                           std::shared_ptr<ngraph::Node> gamma,
-                                                           std::shared_ptr<ngraph::Node> beta,
-                                                           std::shared_ptr<ngraph::Node> input,
-                                                           std::shared_ptr<ngraph::Node> mean,
-                                                           std::shared_ptr<ngraph::Node> variance)
-    : Op("BatchNormInferenceRelu", check_single_output_args({gamma, beta, input, mean, variance}))
+                                                           const Output<ngraph::Node>& gamma,
+                                                           const Output<ngraph::Node>& beta,
+                                                           const Output<ngraph::Node>& input,
+                                                           const Output<ngraph::Node>& mean,
+                                                           const Output<ngraph::Node>& variance)
+    : Op({gamma, beta, input, mean, variance})
     , m_epsilon(eps)
 {
     constructor_validate_and_infer_types();
@@ -99,7 +105,7 @@ ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
             "input tensor must have at least one channel axis for batch normalization");
     }
 
-    auto et = input->get_element_type();
+    auto et = input.get_element_type();
     const char* input_names[] = {"gamma", "beta"};
 
     for (size_t i = 0; i < 2; i++)
@@ -112,22 +118,22 @@ ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
         }
     }
 
-    if ((gamma->get_shape().size() != 1) || (beta->get_shape().size() != 1))
+    if ((gamma.get_shape().size() != 1) || (beta.get_shape().size() != 1))
     {
         throw ngraph_error("gamma and beta should have rank 1");
     }
 
-    if (gamma->get_shape().size() != beta->get_shape().size())
+    if (gamma.get_shape().size() != beta.get_shape().size())
     {
         throw ngraph_error("gamma and beta rank does not match");
     }
 
-    if (gamma->get_element_type() != beta->get_element_type())
+    if (gamma.get_element_type() != beta.get_element_type())
     {
         throw ngraph_error("gamma and beta element type does not match");
     }
 
-    set_output_type(0, input->get_element_type(), bn_input_shape);
+    set_output_type(0, input.get_element_type(), bn_input_shape);
 }
 
 std::shared_ptr<ngraph::Node>

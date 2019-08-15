@@ -32,6 +32,11 @@
 #include <unordered_map>
 #include <vector>
 
+namespace llvm
+{
+    class TargetMachine;
+}
+
 namespace ngraph
 {
     namespace descriptor
@@ -77,10 +82,7 @@ namespace ngraph
                 /// Returns the memory manager used by this sub-graph compiler.
                 MLIRMemMgr& get_mem_mgr() { return m_mem_mgr; }
                 /// Returns memory manager pointer argument ID in call interface.
-                unsigned get_mem_mgr_arg_id(mlir::Function* func)
-                {
-                    return func->getNumArguments() - 1;
-                }
+                unsigned get_mem_mgr_arg_id(mlir::FuncOp& func);
 
             private:
                 struct TensorInfo
@@ -147,7 +149,7 @@ namespace ngraph
                 // compilation.
                 mlir::MLIRContext m_context;
 
-                std::unique_ptr<mlir::Module> m_module;
+                mlir::OwningModuleRef m_module;
                 std::unique_ptr<mlir::OpBuilder> m_builder;
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
 
@@ -164,6 +166,19 @@ namespace ngraph
 
                 // Memory manager for temp allocations inside JIT'ed code
                 MLIRMemMgr m_mem_mgr;
+
+                // Optimization level used by MLIR and LLVM compilers.
+                static unsigned mlir_opt_level;
+
+                // LLVM target machine to be used by this MLIR compiler instance to retrieve
+                // information about target features.
+                // TODO: Note that, unfortunatelly, MLIR/OrcJIT execution engine creates its own
+                // target machine for compilation internally. This target machine is for non-JIT
+                // related stuff. We should change OrcJIT API so that we can pass an external target
+                // machine or configuration flags.
+                // TODO: Move target machine to external nGraph backend when multiple backends start
+                // to use MLIR.
+                static std::unique_ptr<llvm::TargetMachine> target_machine;
             };
         }
     }

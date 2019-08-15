@@ -30,10 +30,12 @@ namespace ngraph
         class CPULeakyRelu : public ngraph::op::util::UnaryElementwiseArithmetic
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a CPULeakyRelu operation.
             ///
             /// \param arg Node input to the Relu.
-            CPULeakyRelu(std::shared_ptr<ngraph::Node> arg, float alpha);
+            CPULeakyRelu(const Output<Node>& arg, float alpha);
             float get_alpha() const { return m_alpha; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

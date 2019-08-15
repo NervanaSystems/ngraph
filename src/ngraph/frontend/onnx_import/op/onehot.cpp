@@ -28,7 +28,6 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "onehot.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {

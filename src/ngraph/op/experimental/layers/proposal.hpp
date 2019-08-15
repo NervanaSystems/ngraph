@@ -57,6 +57,9 @@ namespace ngraph
         class Proposal : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a Proposal operation
             ///
             /// \param class_probs     Class probability scores

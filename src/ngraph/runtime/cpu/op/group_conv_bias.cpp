@@ -95,14 +95,15 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
     return weights_shape_groups;
 }
 
+const std::string op::GroupConvolutionBias::type_name{"GroupConvolutionBias"};
+
 op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolution>& conv,
-                                               const shared_ptr<Node>& bias,
+                                               const Output<Node>& bias,
                                                size_t groups,
                                                const Shape& output_shape,
                                                bool with_relu,
                                                float alpha)
-    : Op("GroupConvolutionBias",
-         check_single_output_args({conv->get_argument(0), conv->get_argument(1), bias}))
+    : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output(), bias})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -114,23 +115,23 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
 {
     constructor_validate_and_infer_types();
 
-    if (conv->get_element_type() != bias->get_element_type())
+    if (conv->output(0).get_element_type() != bias.get_element_type())
     {
         throw ngraph_error("GroupConvolution's element type isn't equal to bias!");
     }
 
-    validate_groupconvbias_shapes(conv->get_argument(0)->get_shape(),
-                                  conv->get_argument(1)->get_shape(),
-                                  bias->get_shape(),
+    validate_groupconvbias_shapes(conv->input(0).get_shape(),
+                                  conv->input(1).get_shape(),
+                                  bias.get_shape(),
                                   output_shape,
                                   groups);
 
     set_output_type(0, conv->get_element_type(), output_shape);
 }
 
-op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batch,
-                                               const shared_ptr<Node>& filters,
-                                               const shared_ptr<Node>& bias,
+op::GroupConvolutionBias::GroupConvolutionBias(const Output<Node>& data_batch,
+                                               const Output<Node>& filters,
+                                               const Output<Node>& bias,
                                                const Strides& window_movement_strides,
                                                const Strides& window_dilation_strides,
                                                const CoordinateDiff& padding_below,
@@ -140,7 +141,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
                                                const Shape& output_shape,
                                                bool with_relu,
                                                float alpha)
-    : Op("GroupConvolutionBias", check_single_output_args({data_batch, filters, bias}))
+    : Op({data_batch, filters, bias})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)
@@ -152,10 +153,10 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
 {
     constructor_validate_and_infer_types();
 
-    auto& data_batch_shape = data_batch->get_shape();
-    auto& data_batch_et = data_batch->get_element_type();
-    auto& filters_shape = filters->get_shape();
-    auto& filters_et = filters->get_element_type();
+    auto& data_batch_shape = data_batch.get_shape();
+    auto& data_batch_et = data_batch.get_element_type();
+    auto& filters_shape = filters.get_shape();
+    auto& filters_et = filters.get_element_type();
 
     //
     // Make sure data batch and filter element types match.
@@ -166,7 +167,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<Node>& data_batc
     }
 
     validate_groupconvbias_shapes(
-        data_batch_shape, filters_shape, bias->get_shape(), output_shape, groups);
+        data_batch_shape, filters_shape, bias.get_shape(), output_shape, groups);
 
     set_output_type(0, data_batch_et, output_shape);
 }

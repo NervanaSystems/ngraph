@@ -29,7 +29,6 @@
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/strides.hpp"
 
 namespace ngraph
 {

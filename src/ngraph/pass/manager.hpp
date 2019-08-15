@@ -24,6 +24,7 @@
 #include "ngraph/pass/manager_state.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/pass_config.hpp"
+#include "ngraph/pass/validate.hpp"
 
 namespace ngraph
 {
@@ -40,10 +41,27 @@ public:
     Manager();
     ~Manager();
 
-    void initialize_default_passes();
-
     template <typename T, class... Args>
     void register_pass(Args&&... args)
+    {
+        push_pass<T>(std::forward<Args>(args)...);
+        if (m_per_pass_validation)
+        {
+            push_pass<Validate>();
+        }
+    }
+
+    void run_passes(std::shared_ptr<Function>, bool transitive = true);
+
+    ManagerState& get_state();
+    PassConfig& get_pass_config() { return m_pass_config; }
+    void set_pass_config(const PassConfig& pass_config) { m_pass_config = pass_config; }
+    void set_pass_visualization(bool new_state) { m_visualize = new_state; }
+    void set_pass_serialization(bool new_state) { m_serialize = new_state; }
+    void set_per_pass_validation(bool new_state) { m_per_pass_validation = new_state; }
+private:
+    template <typename T, class... Args>
+    void push_pass(Args&&... args)
     {
         static_assert(std::is_base_of<pass::PassBase, T>::value, "pass not derived from pass base");
         auto pass = std::make_shared<T>(std::forward<Args>(args)...);
@@ -64,18 +82,11 @@ public:
         }
     }
 
-    void run_passes(std::shared_ptr<Function>, bool transitive = true, bool revalidate = true);
-
-    ManagerState& get_state();
-    PassConfig& get_pass_config() { return m_pass_config; }
-    void set_pass_config(const PassConfig& pass_config) { m_pass_config = pass_config; }
-    void set_pass_visualization(bool new_state) { m_visualize = new_state; }
-    void set_pass_serialization(bool new_state) { m_serialize = new_state; }
-private:
     std::vector<std::string> m_pass_names;
     std::vector<std::shared_ptr<PassBase>> m_pass_list;
     ManagerState m_state;
     PassConfig m_pass_config;
     bool m_visualize = false;
     bool m_serialize = false;
+    bool m_per_pass_validation = true;
 };

@@ -23,6 +23,7 @@
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
 #include "lowerer.hpp"
+#include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -39,17 +40,22 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
 
 #include <llvm/ADT/STLExtras.h>
+#include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Support/ErrorOr.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Target/TargetMachine.h>
+#include <mlir/Conversion/ControlFlowToCFG/ConvertControlFlowToCFG.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
@@ -64,19 +70,70 @@
 #include <memory>
 #include <mutex>
 
+// Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
+#define DEBUG_TYPE "mlir-compiler"
+
 using llvm::SmallVector;
 using llvm::StringRef;
 using llvm::make_unique;
 using llvm::ArrayRef;
+
+using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
 static llvm::cl::opt<bool>
-    clEnableAffineLoopFusion("enable-affine-loop-fusion",
+    clEnableAffineLoopFusion("affine-loop-fusion",
                              llvm::cl::init(false),
                              llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
 
+static llvm::cl::opt<bool>
+    clEnableAffineLoopTiling("affine-loop-tile",
+                             llvm::cl::init(false),
+                             llvm::cl::desc("Enable loop tiling optimization in Affine dialect"));
+
+static llvm::cl::opt<unsigned>
+    clLoopTilingCacheLevel("affine-loop-tile-cache-level",
+                           llvm::cl::init(2),
+                           llvm::cl::desc("Cache level to which to apply affine loop tiling."));
+
+static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
+    "affine-loop-tile-cache-size",
+    llvm::cl::init(0),
+    llvm::cl::desc(
+        "Cache size to use in affine loop tiling. If not zero, it overrides the cache-size "
+        "inferred from the host CPU using for the cache level specified by "
+        "-loop-tile-cache-level."));
+
 #define COMPILE_OP_DECL(op_name)                                                                   \
     create_op<op_name>(MLIRCompiler & compiler, const ngraph::Node* ng_node)
+
+// Default optimization level.
+unsigned MLIRCompiler::mlir_opt_level = 2;
+
+// Target machine will be properly initialized by `init_mlir`.
+std::unique_ptr<llvm::TargetMachine> MLIRCompiler::target_machine;
+
+/// Creates target machine for current host.
+static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
+    createDefaultTargetMachine(unsigned opt_level)
+{
+    auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
+    if (!machineBuilder)
+    {
+        return machineBuilder.takeError();
+    }
+
+    // Relocation model and code model are kept to default values. CodeGen optimization level
+    // matches LLVM recommendations, i.e.:
+    // enum Level {
+    //   None,        // -O0
+    //   Less,        // -O1
+    //   Default,     // -O2, -Os
+    //   Aggressive   // -O3
+    // };
+    machineBuilder->setCodeGenOptLevel((llvm::CodeGenOpt::Level)opt_level);
+    return machineBuilder->createTargetMachine();
+}
 
 void MLIRCompiler::init_mlir()
 {
@@ -91,6 +148,21 @@ void MLIRCompiler::init_mlir()
         mlir::registerDialect<mlir::NGraphOpsDialect>();
         // Register any LLVM command line options
         llvm::cl::ParseEnvironmentOptions("ngraph", "NGRAPH_MLIR_OPTIONS", "");
+
+        // Override default optimization level with macro value.
+        if (char* opt_level_str = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
+        {
+            mlir_opt_level = std::stoi(opt_level_str);
+            NGRAPH_CHECK(mlir_opt_level >= 0 && mlir_opt_level <= 3, "Invalid optimization level");
+        }
+
+        // Initialize LLVM targets and target machine for current host.
+        llvm::InitializeNativeTarget();
+        llvm::InitializeNativeTargetAsmPrinter();
+        auto expected_target_machine = createDefaultTargetMachine(mlir_opt_level);
+        NGRAPH_CHECK(expected_target_machine, "Invalid target machine");
+        target_machine = std::move(*expected_target_machine);
+
         initialized = true;
     }
 }
@@ -108,11 +180,16 @@ void MLIRCompiler::run(std::vector<void*>& external_tensors)
     cleanup();
 }
 
+unsigned MLIRCompiler::get_mem_mgr_arg_id(mlir::FuncOp& func)
+{
+    return func.getNumArguments() - 1;
+}
+
 // Creates an MLIR module and function with nGraph dialect ops from the input CompiledKernel.
 void MLIRCompiler::build_ng_dialect_module()
 {
     // initialize an empty module
-    m_module = make_unique<mlir::Module>(&m_context);
+    m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
 
     TypeList args_type_list, result_type_list;
 
@@ -133,15 +210,14 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     auto func_type = mlir::FunctionType::get(args_type_list, result_type_list, &m_context);
-    auto function =
-        make_unique<mlir::Function>(mlir::UnknownLoc::get(&m_context), "main", func_type);
-    function->addEntryBlock();
+    auto function = mlir::FuncOp::create(mlir::UnknownLoc::get(&m_context), "main", func_type);
+    function.addEntryBlock();
 
     // populate Tensor->Value maps
     int i = 0;
     for (auto input : kernel_inputs)
     {
-        mlir::Value* arg = function->getArgument(i);
+        mlir::Value* arg = function.getArgument(i);
         TensorInfo tensor_info{arg};
         m_tensor_to_value_map.insert(
             TensorToInfo(input->get_output_tensor_ptr().get(), tensor_info));
@@ -149,9 +225,9 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     // create builder
-    m_builder = llvm::make_unique<mlir::OpBuilder>(function->getBody());
+    m_builder = llvm::make_unique<mlir::OpBuilder>(function.getBody());
     build_ng_dialect();
-    m_module->getFunctions().push_back(function.release());
+    m_module->push_back(function);
     if (failed(m_module->verify()))
     {
         NGRAPH_CHECK(false, "Invalid module after lowering to NG dialect");
@@ -182,13 +258,13 @@ mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
 // Converts an nGraph element type into an MLIR type.
 mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
 {
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
 
-    switch (type.get_type_enum())
+    switch (type)
     {
     case ngraph::element::Type_t::undefined:
     case ngraph::element::Type_t::dynamic:
@@ -210,7 +286,7 @@ mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
     NGRAPH_CHECK(false, "Unreachable");
     return mlir::Type();
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 }
@@ -260,46 +336,94 @@ void MLIRCompiler::lower_ng_dialect()
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
     // Lower Standard dialect to LLVM dialect.
-    // TODO: Do this via PassManager
     mlir::LLVMTypeConverter llvm_converter(&m_context);
-    OwningRewritePatternList patterns;
+    mlir::OwningRewritePatternList patterns;
+    mlir::populateLoopToStdConversionPatterns(patterns, &m_context);
     mlir::populateStdToLLVMConversionPatterns(llvm_converter, patterns);
 
     mlir::ConversionTarget target(m_context);
     target.addLegalDialect<mlir::LLVM::LLVMDialect>();
-    auto result = applyConversionPatterns(*m_module, target, llvm_converter, std::move(patterns));
+    target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
+    target.addDynamicallyLegalOp<mlir::FuncOp>(
+        [&](mlir::FuncOp op) { return llvm_converter.isSignatureLegal(op.getType()); });
+    auto result = applyFullConversion(*m_module, target, std::move(patterns), &llvm_converter);
     NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
 
     dump_mlir_module("LLVM-IR Dialect Dump:");
 
-    // Lower to LLVM BC and optimize
-    // Initialize LLVM targets.
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-
-    unsigned opt_level = 3;
-    if (char* opt_level_str = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
-    {
-        opt_level = std::stoi(opt_level_str);
-        NGRAPH_CHECK(opt_level >= 0 && opt_level <= 3, "Invalid optimization level");
-    }
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
-    // don't run MLIR passes that were already run. We also pass a default transformer to run
-    // LLVM optimizations at level 3.
+    // don't run MLIR passes that were already run. We also pass a default transformer created with
+    // the default or user-provided optimization level.
     auto llvm_transformer =
-        mlir::makeOptimizingTransformer(opt_level /*optLevel*/, 0 /*sizeLevel*/);
+        mlir::makeOptimizingTransformer(mlir_opt_level, /*sizeLevel=*/0, target_machine.get());
     auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
 }
 
+/// Returns the cache level size from `targetInfo` for the `cacheLevel` provided. If `userCacheSize`
+/// is not zero, it returns `userCacheSize`.
+static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
+                                  unsigned cacheLevel,
+                                  unsigned userCacheSize)
+{
+    if (userCacheSize)
+    {
+        return userCacheSize;
+    }
+
+    llvm::Optional<unsigned> optCacheLevelSize;
+    switch (cacheLevel)
+    {
+    case 1:
+        optCacheLevelSize = targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L1D);
+        break;
+    case 2:
+        optCacheLevelSize = targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L2D);
+        break;
+    default:
+        NGRAPH_UNREACHABLE("Unsupported cache level: ", cacheLevel, ". Only 1 and 2 are supported");
+    }
+
+    NGRAPH_CHECK(optCacheLevelSize.hasValue() && "Cache level size is not available in TTI");
+    return optCacheLevelSize.getValue();
+}
+
+// Receives affine dialect as input and applies affine and standard dialect based optimizations.
+// Lowering from affine dialect to standard dialect happens along the way. Output consists of
+// standard dialect only ops.
 void MLIRCompiler::optimize()
 {
+    // Create target transform info to obtain some target information to be used in MLIR
+    // optimizations. This is a temporary attempt to retrieve some target information by reusing
+    // LLVM TTI infra while MLIR does not have target model.
+    llvm::LLVMContext llvmContext;
+    auto module = make_unique<llvm::Module>("test", llvmContext);
+    module->setDataLayout(target_machine->createDataLayout());
+    auto ttiSetupFunc = llvm::cast<llvm::Function>(
+        module
+            ->getOrInsertFunction("__ngraph_tti_setup",
+                                  llvm::FunctionType::get(llvm::Type::getVoidTy(llvmContext), {}))
+            .getCallee());
+    auto targetInfo = target_machine->getTargetTransformInfo(*ttiSetupFunc);
+
     // Run Affine dialect optimizations.
     mlir::PassManager pm_opts;
     if (clEnableAffineLoopFusion)
     {
         pm_opts.addPass(mlir::createLoopFusionPass());
+    }
+
+    if (clEnableAffineLoopTiling)
+    {
+        unsigned cacheLevelSize =
+            getCacheLevelSize(targetInfo, clLoopTilingCacheLevel, clLoopTilingCacheSize);
+        LLVM_DEBUG(llvm::dbgs() << "Enabling Affine Loop Tiling for cache level "
+                                << clLoopTilingCacheLevel
+                                << ": "
+                                << cacheLevelSize
+                                << " bytes.\n");
+        pm_opts.addPass(mlir::createLoopTilingPass(cacheLevelSize));
     }
 
     auto opt_res = pm_opts.run(m_module.get());
@@ -449,6 +573,12 @@ namespace ngraph
             {
                 return compiler.create_generic_op<mlir::NGReluOp>(ng_node);
             }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Negative)
+            {
+                return compiler.create_generic_op<mlir::NGNegOp>(ng_node);
+            }
         }
     }
 }
@@ -509,8 +639,8 @@ void MLIRCompiler::bind_arguments(std::vector<void*>& external_tensors)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    mlir::Function* func = m_module->getNamedFunction("main");
-    NGRAPH_CHECK(func && !func->getBlocks().empty(), "Function not found");
+    mlir::FuncOp func = m_module->lookupSymbol<mlir::FuncOp>("main");
+    NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Set external arguments
     NGRAPH_CHECK(m_compiled_kernel, "No compiled kernel set for compiler");

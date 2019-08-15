@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "ngraph/log.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/not.hpp"
@@ -72,12 +71,12 @@ void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
 {
     auto delta = deltas.at(0);
 
-    auto p = get_argument(0);
-    auto x = get_argument(1);
-    auto y = get_argument(2);
+    auto p = input_value(0);
+    auto x = input_value(1);
+    auto y = input_value(2);
 
-    auto p_as_x_type = make_shared<op::Convert>(p, x->get_element_type());
-    auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y->get_element_type());
+    auto p_as_x_type = make_shared<op::Convert>(p, x.get_element_type());
+    auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y.get_element_type());
 
     adjoints.add_delta(x, delta * p_as_x_type);
     adjoints.add_delta(y, delta * not_p_as_y_type);

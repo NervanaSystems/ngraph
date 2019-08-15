@@ -170,6 +170,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(Concat);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_concat_cpp() {}
+#endif
         }
     }
 }

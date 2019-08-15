@@ -44,7 +44,7 @@ namespace ngraph
                       const PartialShape& s,
                       Predicate pred = nullptr,
                       const NodeVector& wrapped_nodes = NodeVector{})
-                    : Pattern("Label", wrapped_nodes, pred)
+                    : Pattern(wrapped_nodes, pred)
                 {
                     set_output_type(0, type, s);
                 }
@@ -66,6 +66,12 @@ namespace ngraph
                             pred,
                             wrapped_nodes)
                 {
+                }
+
+                const std::string& description() const override
+                {
+                    static std::string desc = "Label";
+                    return desc;
                 }
             };
         }

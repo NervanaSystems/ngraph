@@ -53,6 +53,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            ReplaceSlice() = default;
             /// \brief Constructs a tensor slice replacement operation.
             ///
             /// \param arg0 The tensor to overwrite into.
@@ -85,10 +86,16 @@ namespace ngraph
 
             /// \return The inclusive lower-bound coordinates.
             const Coordinate& get_lower_bounds() const { return m_lower_bounds; }
+            void set_lower_bounds(const Coordinate& lower_bounds) { m_lower_bounds = lower_bounds; }
             /// \return The exclusive upper-bound coordinates.
             const Coordinate& get_upper_bounds() const { return m_upper_bounds; }
+            void set_uppper_bounds(const Coordinate& upper_bounds)
+            {
+                m_upper_bounds = upper_bounds;
+            }
             /// \return The slicing strides.
             const Strides& get_strides() const { return m_strides; }
+            void set_strides(const Strides& strides) { m_strides = strides; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

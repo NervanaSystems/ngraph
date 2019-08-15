@@ -49,14 +49,18 @@ namespace ngraph
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
 // Kill clang diagnostics bug
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-braces"
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+#endif
 
                 array<size_t, 2> weight_sizes{
                     args[0].get_size() * args[0].get_element_type().size(),
                     args[1].get_size() * args[1].get_element_type().size()};
 
-#pragma GCC diagnostic pop
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
                 shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]],
                                                     std::default_delete<uint8_t[]>());
@@ -396,14 +400,18 @@ namespace ngraph
                 auto out2_buffer_index = external_function->get_buffer_index(out[2].get_name());
 
 // Kill clang diagnostics bug
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-braces"
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+#endif
 
                 array<size_t, 2> weight_sizes{
                     args[0].get_size() * args[0].get_element_type().size(),
                     args[1].get_size() * args[1].get_element_type().size()};
 
-#pragma GCC diagnostic pop
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
                 shared_ptr<uint8_t> stacked_weights(new uint8_t[weight_sizes[0] + weight_sizes[1]],
                                                     std::default_delete<uint8_t[]>());
                 shared_ptr<uint8_t> stacked_dweights(new uint8_t[weight_sizes[0] + weight_sizes[1]],
@@ -508,6 +516,10 @@ namespace ngraph
             REGISTER_OP_BUILDER(BatchNormTrainingRelu);
             REGISTER_OP_BUILDER(BatchNormInferenceRelu);
             REGISTER_OP_BUILDER(BatchNormTrainingBackprop);
+
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_batch_norm_cpp() {}
+#endif
         }
     }
 }

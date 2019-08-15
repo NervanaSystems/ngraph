@@ -20,7 +20,6 @@
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/node.hpp"
 #include "transpose.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {

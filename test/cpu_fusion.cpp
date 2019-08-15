@@ -88,7 +88,6 @@
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
 #include "util/random.hpp"
-#include "util/random.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
@@ -252,8 +251,8 @@ TEST(cpu_fusion, gemm_cpu_no_bias)
     auto reshape_w = make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{2, 3});
     auto reshape_x = make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2});
 
-    auto cg =
-        make_shared<op::MatmulBias>(A, B, nullptr, A->get_shape(), B->get_shape(), true, true);
+    auto cg = make_shared<op::MatmulBias>(
+        A, B, Output<Node>(), A->get_shape(), B->get_shape(), true, true);
 
     auto f = make_shared<Function>(cg, ParameterVector{A, B});
 
@@ -326,7 +325,7 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
     auto b = make_shared<op::Parameter>(element::f32, shape_b);
 
     auto mmb = std::make_shared<op::MatmulBias>(
-        W, x, nullptr, W->get_shape(), x->get_shape(), false, false);
+        W, x, Output<Node>(), W->get_shape(), x->get_shape(), false, false);
     auto broadcast = std::make_shared<op::Broadcast>(b, mmb->get_shape(), AxisSet{0});
     auto add = mmb + broadcast;
 
@@ -621,7 +620,7 @@ static void test_batchnorm_multiply_add_relu(Shape input_shape)
     ASSERT_EQ(bn_relu, 1);
 }
 
-TEST(cpu_fusion, batchnorm_multiply_add_relu)
+TEST(cpu_fusion, MLIR_DISABLE_TEST(batchnorm_multiply_add_relu))
 {
     test_batchnorm_multiply_add_relu(Shape{1, 3, 2, 2});
     test_batchnorm_multiply_add_relu(Shape{1, 2, 2, 2, 2});
@@ -2503,14 +2502,14 @@ static void check_bounded_relu(Shape param_shape, float constant_val)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0), 1.0e-4f, 1.0e-4f));
 }
 
-TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
+TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_bounded_relu_inter_vs_cpu))
 {
     check_bounded_relu(Shape{4, 3, 2, 2}, 6.0f);
     check_bounded_relu(Shape{4, 3}, 4.0f);
     check_bounded_relu(Shape{4, 3, 2}, 2.0f);
 }
 
-TEST(cpu_fusion, fuse_dropout)
+TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_dropout))
 {
     auto make_function = [](Shape input_shape,
                             const uint32_t seed_val,
@@ -2538,7 +2537,6 @@ TEST(cpu_fusion, fuse_dropout)
         auto f = make_shared<Function>(NodeVector{pdivide, gen_mask}, ParameterVector{input});
 
         return f;
-
     };
 
     uint32_t seed = rand();
@@ -2583,7 +2581,7 @@ TEST(cpu_fusion, fuse_dropout)
     }
 }
 
-TEST(cpu_fusion, fuse_leaky_relu)
+TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_leaky_relu))
 {
     auto make_function = [](Shape input_shape, vector<float> alpha_val) {
         auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
@@ -2854,7 +2852,6 @@ static std::shared_ptr<Function>
     auto bias = std::make_shared<op::Parameter>(element::f32, Shape{400});
     ParameterVector params{W, bias};
     auto create_graph = [&]() -> std::shared_ptr<Node> {
-
         auto data_param = (data_is_4d)
                               ? std::make_shared<op::Parameter>(element::f32, Shape{2, 5, 1, 50})
                               : std::make_shared<op::Parameter>(element::f32, Shape{10, 1, 50});
@@ -2867,7 +2864,6 @@ static std::shared_ptr<Function>
         auto bias_broadcast = make_shared<op::Broadcast>(bias, dot->get_shape(), AxisSet{0});
         auto add_bias = std::make_shared<op::Add>(dot, bias_broadcast);
         return move(add_bias);
-
     };
 
     NodeVector graph_nodes;

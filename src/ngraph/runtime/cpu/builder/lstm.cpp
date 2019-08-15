@@ -108,6 +108,9 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
             REGISTER_OP_BUILDER(Lstm);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_lstm_cpp() {}
+#endif
         }
     }
 }

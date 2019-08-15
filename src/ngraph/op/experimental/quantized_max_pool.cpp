@@ -16,7 +16,6 @@
 
 #include "quantized_max_pool.hpp"
 #include "ngraph/function.hpp"
-#include "ngraph/op/constant.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

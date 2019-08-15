@@ -210,6 +210,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(ArgMin);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_argmin_cpp() {}
+#endif
         }
     }
 }

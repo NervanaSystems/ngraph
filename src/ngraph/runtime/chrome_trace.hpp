@@ -123,8 +123,8 @@ public:
 
 private:
     std::string to_json() const;
-    size_t m_start;
-    size_t m_stop;
+    size_t m_start{0};
+    size_t m_stop{0};
     std::string m_name;
     std::string m_category;
     std::string m_args;
@@ -140,5 +140,5 @@ public:
 private:
     void write_snapshot(std::ostream& out, const std::string& args);
     const std::string m_name;
-    size_t m_id;
+    size_t m_id{0};
 };

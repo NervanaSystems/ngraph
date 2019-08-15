@@ -34,6 +34,7 @@ namespace ngraph
             class INTBackend;
             class INTExecutable;
             class INTBackendConstructor;
+            BackendConstructor* get_backend_constructor_pointer();
         }
     }
 }

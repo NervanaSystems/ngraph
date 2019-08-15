@@ -35,13 +35,17 @@ namespace ngraph
             {
 // this is intentional to be able to compare floats directly
 // without using relative or absolute tolerance
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
                 if (std::get<0>(a) == std::get<0>(b))
                 {
                     return std::get<1>(a) < std::get<1>(b);
                 }
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif
 
                 return a > b;
             }

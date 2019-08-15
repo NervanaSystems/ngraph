@@ -42,8 +42,7 @@ namespace ngraph
             return N;
         }
 
-        std::shared_ptr<Node> l2_norm(const std::shared_ptr<Node>& node,
-                                      const AxisSet& reduction_axes)
+        std::shared_ptr<Node> l2_norm(const Output<Node>& node, const AxisSet& reduction_axes)
         {
             auto x2 = node * node;
             auto x2sum = std::make_shared<op::Sum>(x2, reduction_axes);
@@ -51,19 +50,19 @@ namespace ngraph
             return std::make_shared<op::Sqrt>(x2sum);
         }
 
-        std::shared_ptr<Node> mean(const std::shared_ptr<Node>& node, const AxisSet& reduction_axes)
+        std::shared_ptr<Node> mean(const Output<Node>& value, const AxisSet& reduction_axes)
         {
-            auto xsum = std::make_shared<op::Sum>(node, reduction_axes);
+            auto xsum = std::make_shared<op::Sum>(value, reduction_axes);
 
-            auto N = get_num_elements(node->get_shape(), reduction_axes);
-            const auto& et = node->get_element_type();
+            auto N = get_num_elements(value.get_shape(), reduction_axes);
+            const auto& et = value.get_element_type();
 
             auto divisor = op::Constant::create(et, xsum->get_shape(), {N});
 
             return xsum / divisor;
         }
 
-        std::shared_ptr<Node> std_dev(const std::shared_ptr<Node>& node,
+        std::shared_ptr<Node> std_dev(const Output<Node>& node,
                                       const AxisSet& reduction_axes,
                                       const bool bessel_correction)
         {
@@ -74,13 +73,13 @@ namespace ngraph
         // The second might be more numerically stable/easier to pattern match
         // It also requires adding a broadcast op, and would probably be slower
         // TODO(mbrookhart): Switch to E[(X-\mu)^2]?
-        std::shared_ptr<Node> variance(const std::shared_ptr<Node>& node,
+        std::shared_ptr<Node> variance(const Output<Node>& value,
                                        const AxisSet& reduction_axes,
                                        const bool bessel_correction)
         {
-            std::shared_ptr<Node> mu = mean(node, reduction_axes);
+            std::shared_ptr<Node> mu = mean(value, reduction_axes);
 
-            auto reshape = node->get_shape();
+            auto reshape = value.get_shape();
             for (auto i : reduction_axes)
             {
                 reshape[i] = 1;
@@ -90,21 +89,21 @@ namespace ngraph
 
             mu = std::make_shared<op::Reshape>(mu, order, reshape);
 
-            std::shared_ptr<Node> diff = make_with_numpy_broadcast<op::Subtract>(node, mu);
+            Output<Node> diff = make_with_numpy_broadcast<op::Subtract>(value, mu);
 
             diff = std::make_shared<op::Sum>(diff * diff, reduction_axes);
 
-            const auto& et = node->get_element_type();
-            auto N = get_num_elements(node->get_shape(), reduction_axes);
+            const auto& et = value.get_element_type();
+            auto N = get_num_elements(value.get_shape(), reduction_axes);
 
             if (bessel_correction)
             {
-                auto N1const = op::Constant::create(et, diff->get_shape(), {N - 1});
+                auto N1const = op::Constant::create(et, diff.get_shape(), {N - 1});
                 return diff / N1const;
             }
             else
             {
-                auto Nconst = op::Constant::create(et, diff->get_shape(), {N});
+                auto Nconst = op::Constant::create(et, diff.get_shape(), {N});
                 return diff / Nconst;
             }
         }

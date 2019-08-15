@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/op/one_hot.hpp"
-#include "ngraph/op/sum.hpp"
 
 using namespace std;
 using namespace ngraph;

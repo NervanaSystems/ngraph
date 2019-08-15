@@ -80,6 +80,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(ReverseSequence);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_reverse_sequence_cpp() {}
+#endif
         }
     }
 }

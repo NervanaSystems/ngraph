@@ -42,6 +42,10 @@ namespace ngraph
         class LSTMCell : public util::FusedOp, public util::RNNCellBase
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            LSTMCell() = default;
             ///
             /// \brief      Constructs LSTMCell node.
             ///
@@ -55,11 +59,11 @@ namespace ngraph
             ///                             [batch_size, hidden_size].
             /// \param[in]  hidden_size  The number of hidden units for recurrent cell.
             ///
-            LSTMCell(const std::shared_ptr<Node>& X,
-                     const std::shared_ptr<Node>& W,
-                     const std::shared_ptr<Node>& R,
-                     const std::shared_ptr<Node>& H_t,
-                     const std::shared_ptr<Node>& C_t,
+            LSTMCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& H_t,
+                     const Output<Node>& C_t,
                      std::size_t hidden_size);
 
             ///
@@ -84,11 +88,11 @@ namespace ngraph
             ///                               input of activation functions.
             /// \param[in]  input_forget      Controls coupling input and forget gates.
             ///
-            LSTMCell(const std::shared_ptr<Node>& X,
-                     const std::shared_ptr<Node>& W,
-                     const std::shared_ptr<Node>& R,
-                     const std::shared_ptr<Node>& H_t,
-                     const std::shared_ptr<Node>& C_t,
+            LSTMCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& H_t,
+                     const Output<Node>& C_t,
                      std::size_t hidden_size,
                      const std::vector<std::string>& activations,
                      const std::vector<float>& activation_alpha,
@@ -121,14 +125,14 @@ namespace ngraph
             ///                               input of activation functions.
             /// \param[in]  input_forget      Controls coupling input and forget gates.
             ///
-            LSTMCell(const std::shared_ptr<Node>& X,
-                     const std::shared_ptr<Node>& W,
-                     const std::shared_ptr<Node>& R,
-                     const std::shared_ptr<Node>& H_t,
-                     const std::shared_ptr<Node>& C_t,
+            LSTMCell(const Output<Node>& X,
+                     const Output<Node>& W,
+                     const Output<Node>& R,
+                     const Output<Node>& H_t,
+                     const Output<Node>& C_t,
                      std::size_t hidden_size,
-                     const std::shared_ptr<Node>& B,
-                     const std::shared_ptr<Node>& P,
+                     const Output<Node>& B,
+                     const Output<Node>& P,
                      const std::vector<std::string>& activations =
                          std::vector<std::string>{"sigmoid", "tanh", "tanh"},
                      const std::vector<float>& activation_alpha = {},
@@ -143,8 +147,8 @@ namespace ngraph
 
             bool get_input_forget() const { return m_input_forget; }
         private:
-            std::shared_ptr<Node> get_bias() const;
-            NodeVector get_peephole_weigths() const;
+            Output<Node> get_bias() const;
+            NodeVector get_peephole_weights() const;
 
             /// brief Add and initialize bias input to all zeros.
             void add_default_bias_input();
