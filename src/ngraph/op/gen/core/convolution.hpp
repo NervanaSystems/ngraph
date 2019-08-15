@@ -59,6 +59,7 @@ public:
         , m_padding_after(padding_after)
         , m_pad_type(pad_type)
     {
+        constructor_validate_and_infer_types();
     }
     Convolution(const ::ngraph::OutputVector& source_outputs,
                 const ::std::vector<const ::ngraph::AttributeBase*>& attributes)
@@ -89,6 +90,7 @@ public:
         m_padding_before.set(attributes[3]->as_type<CoordinateDiff>().get());
         m_padding_after.set(attributes[4]->as_type<CoordinateDiff>().get());
         m_pad_type.set(attributes[5]->as_type<PadType>().get());
+        constructor_validate_and_infer_types();
     }
     ::ngraph::Input<::ngraph::Node> get_data() { return input(0); }
     ::ngraph::Input<::ngraph::Node> get_filter() { return input(1); }
@@ -230,7 +232,9 @@ public:
         // TODO: control deps
         return new_node;
     }
+    ::std::shared_ptr<::ngraph::Node> get_default_value() const final override;
 
+protected:
 private:
     ::ngraph::Attribute<Strides> m_strides;
     ::ngraph::Attribute<Strides> m_dilation;

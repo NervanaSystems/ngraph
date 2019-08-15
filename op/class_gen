@@ -158,6 +158,7 @@ class ClassWriter():
         self._validation_implemented = 'validation_implemented' in j and j[
             'validation_implemented']
         self._adjoints_implemented = 'adjoints_implemented' in j and j['adjoints_implemented']
+        self._zdte_implemented = 'zdte_implemented' in j and j['zdte_implemented']
 
         if 'description' in j:
             self._description = j['description']
@@ -426,6 +427,10 @@ class ClassWriter():
         f.write('        // TODO: control deps\n')
         f.write('        return new_node;\n')
         f.write('    }\n')
+
+        if self._zdte_implemented:
+            f.write(
+                '    ::std::shared_ptr<::ngraph::Node> get_default_value() const final override;\n')
 
         f.write('protected:\n')
 
