@@ -104,6 +104,19 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
     return get_numpy_broadcast_shapes(input_shapes);
 }
 
+static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
+    get_numpy_broadcast_shapes(const ngraph::OutputVector& values)
+{
+    std::vector<ngraph::Shape> input_shapes;
+
+    for (const auto& input : values)
+    {
+        input_shapes.push_back(input.get_shape());
+    }
+
+    return get_numpy_broadcast_shapes(input_shapes);
+}
+
 /// \brief      Broadcast input node.
 ///
 /// \note       The source shape does not have to be the actual shape of input node. However
@@ -112,21 +125,21 @@ static std::pair<ngraph::Shape, std::vector<ngraph::Shape>>
 ///             The ranks of source_shape and output_shape must be equal. This means that the
 ///             source_shape has to be padded with ones for this operation.
 ///
-/// \param[in]  node          The input Node to be broadcast.
+/// \param[in]  value         The input Node to be broadcast.
 /// \param[in]  output_shape  The output shape.
 /// \param[in]  source_shape  The source shape from which we want to broadcast input node.
 ///
 /// \return     The broadcasted Node.
 ///
 static std::shared_ptr<ngraph::Node>
-    broadcast_node_numpy_style(const std::shared_ptr<ngraph::Node>& node,
+    broadcast_node_numpy_style(const ngraph::Output<ngraph::Node>& value,
                                const ngraph::Shape& output_shape,
                                const ngraph::Shape& source_shape)
 {
     // If node already has the required shape, return original node
-    if (output_shape == node->get_shape())
+    if (output_shape == value.get_shape())
     {
-        return node;
+        return value.as_single_output_node();
     }
 
     if (source_shape.size() != output_shape.size())
@@ -153,16 +166,35 @@ static std::shared_ptr<ngraph::Node>
     }
 
     // Remove axes which have length of 1 from source shape
-    auto broadcasted_node = std::make_shared<ngraph::op::Reshape>(
-        node, ngraph::get_default_order(node->get_shape()), squeezed_shape);
+    ngraph::Output<ngraph::Node> broadcasted_value = std::make_shared<ngraph::op::Reshape>(
+        value, ngraph::get_default_order(value.get_shape()), squeezed_shape);
 
-    return std::make_shared<ngraph::op::Broadcast>(broadcasted_node, output_shape, broadcast_axes);
+    return std::make_shared<ngraph::op::Broadcast>(broadcasted_value, output_shape, broadcast_axes);
 }
 
 namespace ngraph
 {
     namespace op
     {
+        OutputVector numpy_style_broadcast_values(const OutputVector& values)
+        {
+            if (values.size() <= 1)
+            {
+                return values;
+            }
+
+            // find the output tensor's shape, then broadcast all inputs so that they are compatible
+            auto bcast_shapes = get_numpy_broadcast_shapes(values);
+
+            OutputVector broadcasted_inputs;
+            for (std::size_t i = 0; i < values.size(); ++i)
+            {
+                broadcasted_inputs.push_back(broadcast_node_numpy_style(
+                    values[i], bcast_shapes.first, bcast_shapes.second[i]));
+            }
+            return broadcasted_inputs;
+        }
+
         NodeVector numpy_style_broadcast(const NodeVector& inputs)
         {
             if (inputs.size() <= 1)
@@ -176,19 +208,17 @@ namespace ngraph
             NodeVector broadcasted_inputs;
             for (std::size_t i = 0; i < inputs.size(); ++i)
             {
-                const std::shared_ptr<ngraph::Node> input_node = inputs[i];
                 broadcasted_inputs.push_back(broadcast_node_numpy_style(
                     inputs[i], bcast_shapes.first, bcast_shapes.second[i]));
             }
             return broadcasted_inputs;
         }
 
-        std::shared_ptr<ngraph::Node>
-            numpy_style_broadcast(const std::shared_ptr<ngraph::Node>& input_node,
-                                  const Shape& shape)
+        std::shared_ptr<ngraph::Node> numpy_style_broadcast(const Output<ngraph::Node>& value,
+                                                            const Shape& shape)
         {
-            auto bcast_shape = get_numpy_broadcast_shapes({input_node->get_shape(), shape});
-            return broadcast_node_numpy_style(input_node, bcast_shape.first, bcast_shape.second[0]);
+            auto bcast_shape = get_numpy_broadcast_shapes({value.get_shape(), shape});
+            return broadcast_node_numpy_style(value, bcast_shape.first, bcast_shape.second[0]);
         }
 
         NodeVector
@@ -227,6 +257,42 @@ namespace ngraph
                     broadcast_node_numpy_style(right, right_output_shape, right_full_shape)};
         }
 
+        OutputVector
+            numpy_style_broadcast_values_for_matmul_operation(const Output<ngraph::Node>& left,
+                                                              const Output<ngraph::Node>& right)
+        {
+            const auto& left_shape = left.get_shape();
+            const auto& right_shape = right.get_shape();
+            // Broadcast only _stack of matrices_ axes.
+            const auto& numpy_shapes = get_numpy_broadcast_shapes(
+                {Shape{std::begin(left_shape), std::next(std::end(left_shape), -2)},
+                 Shape{std::begin(right_shape), std::next(std::end(right_shape), -2)}});
+
+            // Prepare tensors output shapes with broadcasted _stack of matrices_ axes.
+            auto left_output_shape = numpy_shapes.first;
+            auto right_output_shape = numpy_shapes.first;
+            // Append the last two axes original dimensions.
+            left_output_shape.insert(std::end(left_output_shape),
+                                     std::next(std::begin(left_shape), left_shape.size() - 2),
+                                     std::end(left_shape));
+            right_output_shape.insert(std::end(right_output_shape),
+                                      std::next(std::begin(right_shape), right_shape.size() - 2),
+                                      std::end(right_shape));
+
+            auto left_full_shape = numpy_shapes.second.at(0);
+            auto right_full_shape = numpy_shapes.second.at(1);
+            // Append the last two axes original dimensions.
+            left_full_shape.insert(std::end(left_full_shape),
+                                   std::next(std::begin(left_shape), left_shape.size() - 2),
+                                   std::end(left_shape));
+            right_full_shape.insert(std::end(right_full_shape),
+                                    std::next(std::begin(right_shape), right_shape.size() - 2),
+                                    std::end(right_shape));
+
+            return {broadcast_node_numpy_style(left, left_output_shape, left_full_shape),
+                    broadcast_node_numpy_style(right, right_output_shape, right_full_shape)};
+        }
+
         NodeVector
             legacy_style_broadcast_for_binary_operation(const std::shared_ptr<ngraph::Node>& left,
                                                         const std::shared_ptr<ngraph::Node>& right,
@@ -234,6 +300,67 @@ namespace ngraph
         {
             const auto& left_shape = left->get_shape();
             const auto& right_shape = right->get_shape();
+
+            bool dimensions_identical = (left_shape == right_shape);
+            if (dimensions_identical)
+            {
+                return {left, right};
+            }
+
+            // Prepare new shape of right operand for broadcasting
+            // Remove dimensions with length=1 from back
+            auto new_right_shape = right_shape;
+            for (int dimension = new_right_shape.size() - 1; dimension >= 0; --dimension)
+            {
+                if (new_right_shape[dimension] == 1)
+                {
+                    new_right_shape.pop_back();
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Find first dimensions at front with length different from 1
+            std::size_t num_ones = 0;
+            for (std::size_t dimension : new_right_shape)
+            {
+                if (dimension == 1)
+                {
+                    ++num_ones;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Remove dimensions with length=1 from front
+            new_right_shape.erase(std::begin(new_right_shape),
+                                  std::next(std::begin(new_right_shape), num_ones));
+
+            auto reshape_right = std::make_shared<ngraph::op::Reshape>(
+                right, ngraph::get_default_order(right_shape), new_right_shape);
+
+            // Move broadcast start axis parameter to right
+            start_match_axis += num_ones;
+
+            auto broadcast_right = std::make_shared<ngraph::op::Broadcast>(
+                reshape_right,
+                left_shape,
+                calculate_broadcast_axes(left_shape, new_right_shape, start_match_axis));
+
+            return {left, broadcast_right};
+        }
+
+        OutputVector
+            legacy_style_broadcast_values_for_binary_operation(const Output<ngraph::Node>& left,
+                                                               const Output<ngraph::Node>& right,
+                                                               size_t start_match_axis)
+        {
+            const auto& left_shape = left.get_shape();
+            const auto& right_shape = right.get_shape();
 
             bool dimensions_identical = (left_shape == right_shape);
             if (dimensions_identical)

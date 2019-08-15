@@ -557,3 +557,59 @@ AxisVector ngraph::get_permutation_to_default_order(const AxisVector& axis_order
     }
     return out;
 }
+
+void ngraph::parse_version_string(
+    std::string version, size_t& major, size_t& minor, size_t& patch, string& extra)
+{
+    // Since regex is broken in gcc 4.8 I will just manually parse the version string
+    // Version strings look like `0.25.0-rc.0+7c32240` or `v0.25.0-rc.0+7c32240`
+    size_t start;
+    size_t end;
+    extra = "";
+    start = (version[0] == 'v' ? 1 : 0);
+    end = version.find_first_of('.', start);
+    string major_str = version.substr(start, end - start);
+    start = end + 1;
+
+    end = version.find_first_of('.', start);
+    string minor_str = version.substr(start, end - start);
+    start = end + 1;
+
+    end = version.find_first_of("-+", start);
+    string patch_str = version.substr(start, end - start);
+    start = end;
+
+    if (start != string::npos)
+    {
+        extra = version.substr(start);
+    }
+
+    size_t err;
+    bool error = false;
+    try
+    {
+        major = stoi(major_str, &err);
+        if (err != major_str.size())
+        {
+            error = true;
+        }
+        minor = stoi(minor_str, &err);
+        if (err != minor_str.size())
+        {
+            error = true;
+        }
+        patch = stoi(patch_str, &err);
+        if (err != patch_str.size())
+        {
+            error = true;
+        }
+    }
+    catch (...)
+    {
+        error = true;
+    }
+    if (error)
+    {
+        throw runtime_error("Error parsing version string '" + version + "'");
+    }
+}

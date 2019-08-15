@@ -16,14 +16,11 @@ We are pleased to announce the release of version |version|-doc.
 
 Core updates for |version|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-+ More ONNX ops
-+ Elementwise divide defaults to Python semantics
-+ GenerateMask seed optional
-+ Graph visualization improvements
-+ Preserve control dependencies in more places
-+ GetOutputElement has single input
-
++ Better PlaidML support
++ Double-buffering support
++ Constant folding
++ Support for static linking
++ Additional ops
 
 .. Latest doc updates
 .. ~~~~~~~~~~~~~~~~~~
@@ -36,6 +33,19 @@ Core updates for |version|
 
 Changelog on Previous Releases
 ==============================
+
+0.24
+----
+
++ Fixes reshape sink/swim issue
++ More ONNX ops
++ Elementwise divide defaults to Python semantics
++ GenerateMask seed optional
++ Graph visualization improvements
++ Preserve control dependencies in more places
++ GetOutputElement has single input
+.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
+
 
 0.23
 ----

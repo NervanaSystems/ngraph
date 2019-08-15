@@ -171,7 +171,7 @@ TEST(type_prop_layers, psroi_pooling)
 {
     auto inputs = make_shared<op::Parameter>(element::f32, Shape{1, 3, 4, 5});
     auto coords = make_shared<op::Parameter>(element::f32, Shape{150, 5});
-    auto op = make_shared<op::PSROIPooling>(inputs, coords, 2, 6, 0.0625, Shape{}, "Avg");
+    auto op = make_shared<op::PSROIPooling>(inputs, coords, 2, 6, 0.0625, 0, 0, "Avg");
     ASSERT_EQ(op->get_shape(), (Shape{150, 2, 6, 6}));
 }
 

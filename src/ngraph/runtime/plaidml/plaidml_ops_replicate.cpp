@@ -28,22 +28,24 @@ namespace ngraph
     }
 }
 
-ngraph::runtime::plaidml::op::Replicate::Replicate(std::shared_ptr<Node> arg,
+const std::string ngraph::runtime::plaidml::op::Replicate::type_name{"Replicate"};
+
+ngraph::runtime::plaidml::op::Replicate::Replicate(const Output<Node>& arg,
                                                    std::size_t replication_axis,
                                                    std::size_t replication_count)
-    : Op{"Replicate", NodeVector{arg}}
-    , m_replication_axes(arg->get_shape().size(), 1)
+    : Op{{arg}}
+    , m_replication_axes(arg.get_shape().size(), 1)
 {
     m_replication_axes.at(replication_axis) = replication_count;
     constructor_validate_and_infer_types();
 }
 
-ngraph::runtime::plaidml::op::Replicate::Replicate(std::shared_ptr<Node> arg,
+ngraph::runtime::plaidml::op::Replicate::Replicate(const Output<Node>& arg,
                                                    std::vector<std::size_t> replication_axes)
-    : Op{"Replicate", NodeVector{arg}}
+    : Op{{arg}}
     , m_replication_axes(std::move(replication_axes))
 {
-    if (arg->get_shape().size() != m_replication_axes.size())
+    if (arg.get_shape().size() != m_replication_axes.size())
     {
         throw ngraph_error{"Replicate requires compatible axes dimensions"};
     }

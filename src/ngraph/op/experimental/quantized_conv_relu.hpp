@@ -30,6 +30,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            QuantizedConvolutionRelu() = default;
             QuantizedConvolutionRelu(const Output<Node>& data_batch,
                                      const Output<Node>& filters,
                                      const Strides& window_movement_strides,
@@ -44,8 +45,8 @@ namespace ngraph
             const CoordinateDiff& get_padding_below() const { return m_padding_below; }
             const CoordinateDiff& get_padding_above() const { return m_padding_above; }
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-            Output<Node> get_filters() { return input(1).get_source_output(); }
-            Output<Node> get_data_batch() { return input(0).get_source_output(); }
+            Output<Node> get_filters() { return input_value(1); }
+            Output<Node> get_data_batch() { return input_value(0); }
             bool with_relu() const { return true; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

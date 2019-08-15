@@ -16,39 +16,40 @@
 
 #pragma once
 
-#include "ngraph/op/op.hpp"
-#include "ngraph/util.hpp"
+#include <memory>
+
+#include "ngraph/op/util/binary_elementwise_logical.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        class Sigmoid : public Op
-        {
-        public:
-            Sigmoid(std::shared_ptr<Node> input);
-            Shape get_input_shape() const { return m_shape_input; }
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
-
-        private:
-            Shape m_shape_input;
-        };
-
-        /// \brief Elementwise SigmoidBackprop operation.
+        /// \brief Elementwise logical-xor operation.
         ///
-        class SigmoidBackprop : public Op
+        class Xor : public util::BinaryElementwiseLogical
         {
         public:
-            /// \brief Constructs a SigmoidBackprop operation.
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a logical-xor operation.
             ///
-            /// \param arg Node that produces the Sigmoid forward input tensor.
-            SigmoidBackprop(std::shared_ptr<ngraph::Node> arg, std::shared_ptr<ngraph::Node> delta);
+            /// \param arg0 Node that produces the first input tensor.<br>
+            /// `[d0, ...]`
+            /// \param arg1 Node that produces the second input tensor.<br>
+            /// `[d0, ...]`
+            /// \param autob Auto broadcast specification
+            ///
+            /// Output `[d0, ...]`
+            ///
+            Xor(const Output<Node>& arg0,
+                const Output<Node>& arg1,
+                const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
+
+            virtual bool is_commutative() const override { return true; }
         };
     }
 }

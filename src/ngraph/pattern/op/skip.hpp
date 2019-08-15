@@ -32,9 +32,15 @@ namespace ngraph
             {
             public:
                 Skip(const std::shared_ptr<Node>& arg, Predicate predicate = nullptr)
-                    : Pattern("Skip", NodeVector{arg}, predicate)
+                    : Pattern(NodeVector{arg}, predicate)
                 {
                     set_output_type(0, arg->get_element_type(), arg->get_output_partial_shape(0));
+                }
+
+                const std::string& description() const override
+                {
+                    static std::string desc = "Skip";
+                    return desc;
                 }
             };
         }

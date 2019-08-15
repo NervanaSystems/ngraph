@@ -21,10 +21,12 @@
 using namespace std;
 using namespace ngraph;
 
+const string op::PriorBox::type_name{"PriorBox"};
+
 op::PriorBox::PriorBox(const shared_ptr<Node>& layer_shape,
                        const shared_ptr<Node>& image_shape,
                        const PriorBoxAttrs& attrs)
-    : Op("PriorBox", check_single_output_args({layer_shape, image_shape}))
+    : Op(check_single_output_args({layer_shape, image_shape}))
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();

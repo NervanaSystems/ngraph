@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::Tile::Tile(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& repeats)
-    : Op("Tile", check_single_output_args({arg, repeats}))
+const string op::Tile::type_name{"Tile"};
+
+op::Tile::Tile(const Output<Node>& arg, const Output<Node>& repeats)
+    : Op({arg, repeats})
 {
     constructor_validate_and_infer_types();
 }
@@ -58,7 +60,8 @@ void op::Tile::validate_and_infer_types()
 
     auto out_shape = PartialShape::dynamic(output_rank);
 
-    if (auto const_repeats = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    if (auto const_repeats =
+            dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
         if (arg_shape.is_static())
         {

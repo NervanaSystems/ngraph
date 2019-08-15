@@ -91,3 +91,14 @@ TEST(backend_api, save_load)
     }
 }
 #endif
+
+#if defined(NGRAPH_INTERPRETER_ENABLE) && defined(NGRAPH_CPU_ENABLE)
+TEST(backend_api, executable_can_create_tensor)
+{
+    auto interpreter = runtime::Backend::create("INTERPRETER");
+    auto cpu = runtime::Backend::create("CPU");
+
+    EXPECT_TRUE(interpreter->executable_can_create_tensors());
+    EXPECT_FALSE(cpu->executable_can_create_tensors());
+}
+#endif

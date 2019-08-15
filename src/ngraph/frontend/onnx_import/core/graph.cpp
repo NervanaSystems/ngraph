@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <functional>
-#include <set>
 
 #include "graph.hpp"
 #include "node.hpp"

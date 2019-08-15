@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 
 #include "ngraph/builder/reshape.hpp"
@@ -24,8 +23,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::SpaceToDepth::SpaceToDepth(const shared_ptr<Node>& data, const size_t block_size)
-    : FusedOp("SpaceToDepth", {data})
+const string op::SpaceToDepth::type_name{"SpaceToDepth"};
+
+op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const size_t block_size)
+    : FusedOp({data})
     , m_blocksize(block_size)
 {
     constructor_validate_and_infer_types();
@@ -33,8 +34,8 @@ op::SpaceToDepth::SpaceToDepth(const shared_ptr<Node>& data, const size_t block_
 
 NodeVector op::SpaceToDepth::decompose_op() const
 {
-    auto data = get_argument(0);
-    const Shape& data_shape = data->get_shape();
+    auto data = input_value(0);
+    const Shape& data_shape = data.get_shape();
 
     // Set default values to each dimension to be able to work with both 3D or 4D data.
     size_t n{1}, c{1}, h{1}, w{1};
@@ -72,7 +73,7 @@ NodeVector op::SpaceToDepth::decompose_op() const
     // First we have to disperse the data from height and width channels, then
     // rearrange them so as appropriate chunks of data where close to their
     // destination place. Finally squeeze data from respective dimensions.
-    shared_ptr<Node> flat_node = builder::reshape(data, Shape{n, c, h_flat, bs, w_flat, bs});
+    Output<Node> flat_node = builder::reshape(data, Shape{n, c, h_flat, bs, w_flat, bs});
     flat_node = builder::reorder_axes(flat_node, {0, 3, 5, 1, 2, 4});
     return NodeVector{builder::reshape(flat_node, Shape{n, c_high, h_flat, w_flat})};
 }

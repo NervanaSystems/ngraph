@@ -19,11 +19,22 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 
 using namespace std;
 
+static void configure_static_backends()
+{
+#ifdef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
+    ngraph::runtime::BackendManager::register_backend(
+        "INTERPRETER", ngraph::runtime::interpreter::get_backend_constructor_pointer());
+#endif
+}
+
 int main(int argc, char** argv)
 {
+    configure_static_backends();
     const char* exclude = "--gtest_filter=-benchmark.*";
     vector<char*> argv_vector;
     argv_vector.push_back(argv[0]);

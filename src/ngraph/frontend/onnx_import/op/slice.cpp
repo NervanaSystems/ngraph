@@ -18,7 +18,6 @@
 #include <memory>
 #include <vector>
 
-#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/slice.hpp"
 #include "slice.hpp"

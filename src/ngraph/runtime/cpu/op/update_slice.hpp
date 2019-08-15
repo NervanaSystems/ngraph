@@ -50,6 +50,8 @@ namespace ngraph
         class UpdateSlice : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a tensor slice update operation.
             ///
             /// \param arg0 The tensor to overwrite into.
@@ -59,8 +61,8 @@ namespace ngraph
             /// \param strides The slicing strides; for example, strides of `{n,m}` means to take
             ///                every nth row and every mth column of `arg0` as part of the
             ///                slice to be replaced.
-            UpdateSlice(const std::shared_ptr<Node>& arg0,
-                        const std::shared_ptr<Node>& arg1,
+            UpdateSlice(const Output<Node>& arg0,
+                        const Output<Node>& arg1,
                         const Coordinate& lower_bounds,
                         const Coordinate& upper_bounds,
                         const Strides& strides);
@@ -71,8 +73,8 @@ namespace ngraph
             /// \param arg1 The tensor to increment into `arg0`.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).
             /// \param upper_bounds The axiswise upper bounds of the slice (exclusive).
-            UpdateSlice(const std::shared_ptr<Node>& arg0,
-                        const std::shared_ptr<Node>& arg1,
+            UpdateSlice(const Output<Node>& arg0,
+                        const Output<Node>& arg1,
                         const Coordinate& lower_bounds,
                         const Coordinate& upper_bounds);
 
