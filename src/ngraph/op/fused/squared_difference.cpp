@@ -24,18 +24,20 @@
 using namespace std;
 using namespace ngraph;
 
-op::SquaredDifference::SquaredDifference(const shared_ptr<Node>& x1, const shared_ptr<Node>& x2)
-    : FusedOp("SquaredDifference", {x1, x2})
+const string op::SquaredDifference::type_name{"SquaredDifference"};
+
+op::SquaredDifference::SquaredDifference(const Output<Node>& x1, const Output<Node>& x2)
+    : FusedOp({x1, x2})
 {
     constructor_validate_and_infer_types();
 }
 
 NodeVector op::SquaredDifference::decompose_op() const
 {
-    const auto x1 = get_argument(0);
-    const auto x2 = get_argument(1);
+    const auto x1 = input_value(0);
+    const auto x2 = input_value(1);
 
-    const auto broadcasted = numpy_style_broadcast({x1, x2});
+    const auto broadcasted = numpy_style_broadcast_values({x1, x2});
 
     const auto difference = broadcasted.at(0) - broadcasted.at(1);
 

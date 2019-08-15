@@ -62,14 +62,14 @@ more detail and describe how nGraph addresses them.
 Problem 1: Kernel libraries do not support graph-level optimizations
 --------------------------------------------------------------------
 
-The example diagrams below shows how a deep learning framework, when integrated
+The example diagrams below show how a deep learning framework, when integrated
 with a kernel library, can optimally run each operation in a computational
 graph, but the choice of operations in the graph may not be optimal.
 
 .. _figure-A:
 
 .. figure:: ../graphics/kernel-problem-1.png
-   :width: 555px
+   :width: 100%
    :alt:
 
 
@@ -95,7 +95,7 @@ diagram.
 .. _figure-B:
 
 .. figure:: ../graphics/kernel-problem-2.png
-   :width: 555px
+   :width: 100%
    :alt:
 
 Each framework must be manually integrated with each hardware-specific kernel
@@ -130,7 +130,7 @@ work for what will ultimately be a fragile setup that is costly to maintain.
 .. _figure-C:
 
 .. figure:: ../graphics/kernel-problem-3.png
-   :width: 555px
+   :width: 100%
    :alt:
 
 

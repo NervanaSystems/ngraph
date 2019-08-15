@@ -262,6 +262,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(Dot);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_dot_cpp() {}
+#endif
         }
     }
 }

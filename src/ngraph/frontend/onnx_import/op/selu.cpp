@@ -17,10 +17,7 @@
 #include <memory>
 #include <vector>
 
-#include "core/node.hpp"
-#include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/maximum.hpp"

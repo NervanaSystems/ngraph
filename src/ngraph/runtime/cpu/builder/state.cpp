@@ -140,6 +140,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(GenerateMask);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_state_cpp() {}
+#endif
         }
     }
 }

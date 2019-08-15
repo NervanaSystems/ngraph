@@ -20,8 +20,11 @@
 using namespace std;
 using namespace ngraph;
 
-op::Relu::Relu(shared_ptr<Node> arg)
-    : UnaryElementwiseArithmetic("Relu", {arg})
+const string op::Relu::type_name{"Relu"};
+const string op::ReluBackprop::type_name{"ReluBackprop"};
+
+op::Relu::Relu(const Output<Node>& arg)
+    : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
@@ -33,7 +36,7 @@ shared_ptr<Node> op::Relu::copy_with_new_args(const NodeVector& new_args) const
 }
 
 op::ReluBackprop::ReluBackprop(shared_ptr<Node> arg, shared_ptr<Node> delta)
-    : BinaryElementwiseArithmetic("ReluBackprop", arg, delta)
+    : BinaryElementwiseArithmetic(arg, delta)
 {
     constructor_validate_and_infer_types();
 }
@@ -49,5 +52,5 @@ void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
     auto delta = deltas.at(0);
 
     auto backprop = make_shared<op::ReluBackprop>(shared_from_this(), delta);
-    adjoints.add_delta(get_argument(0), backprop);
+    adjoints.add_delta(input_value(0), backprop);
 }

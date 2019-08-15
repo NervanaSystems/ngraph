@@ -17,6 +17,7 @@
 #include "ngraph/op/and.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/or.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/plaidml/plaidml_impl.hpp"
 
 namespace ngraph
@@ -28,6 +29,7 @@ namespace ngraph
             NGRAPH_PLAIDML_OP_CLASS(ImplAnd, OpImpl<op::And>);
             NGRAPH_PLAIDML_OP_CLASS(ImplNot, OpImpl<op::Not>);
             NGRAPH_PLAIDML_OP_CLASS(ImplOr, OpImpl<op::Or>);
+            NGRAPH_PLAIDML_OP_CLASS(ImplXor, OpImpl<op::Xor>);
         }
     }
 }
@@ -67,5 +69,18 @@ void ngraph::runtime::plaidml::ImplOr::Apply()
                    .add(builder::Input{op_input(1), "B"})
                    .add(builder::Output{"C"})
                    .add(builder::Elementwise{"C", "A ? A : B"})
+                   .finalize());
+}
+
+// Xor performs a simple elementwise logical xor.
+void ngraph::runtime::plaidml::ImplXor::Apply()
+{
+    check_inputs(2);
+    check_outputs(1);
+    set_output(start_tile_function()
+                   .add(builder::Input{op_input(0), "A"})
+                   .add(builder::Input{op_input(1), "B"})
+                   .add(builder::Output{"C"})
+                   .add(builder::Elementwise{"C", "A ? (B ? 0 : A) : B"})
                    .finalize());
 }

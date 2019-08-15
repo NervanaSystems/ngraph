@@ -89,7 +89,7 @@ static bool cse_reshape(shared_ptr<Node> a, shared_ptr<Node> b)
     auto reshape_a = static_pointer_cast<ngraph::op::Reshape>(a);
     auto reshape_b = static_pointer_cast<ngraph::op::Reshape>(b);
 
-    return (a->get_argument(0) == b->get_argument(0)) &&
+    return (a->input(0).get_source_output() == b->input(0).get_source_output()) &&
            (reshape_a->get_input_order() == reshape_b->get_input_order()) &&
            (reshape_a->get_output_shape() == reshape_b->get_output_shape());
 }
@@ -100,7 +100,7 @@ static bool cse_broadcast(shared_ptr<Node> a, shared_ptr<Node> b)
     auto broadcast_a = static_pointer_cast<ngraph::op::Broadcast>(a);
     auto broadcast_b = static_pointer_cast<ngraph::op::Broadcast>(b);
 
-    return (a->get_argument(0) == b->get_argument(0)) &&
+    return (a->input(0).get_source_output() == b->input(0).get_source_output()) &&
            (broadcast_a->get_broadcast_axes() == broadcast_b->get_broadcast_axes()) &&
            (broadcast_a->get_broadcast_shape() == broadcast_b->get_broadcast_shape());
 }
@@ -108,15 +108,17 @@ static bool cse_unarywise(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_unarywise for " << a->get_name() << " and " << b->get_name();
 
-    return a->get_argument(0) == b->get_argument(0);
+    return a->input(0).get_source_output() == b->input(0).get_source_output();
 }
 
 static bool cse_binarywise(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_binary for " << a->get_name() << " and " << b->get_name();
 
-    return (a->get_argument(0) == b->get_argument(0) && a->get_argument(1) == b->get_argument(1)) ||
-           (a->get_argument(1) == b->get_argument(0) && a->get_argument(0) == b->get_argument(1));
+    return (a->input(0).get_source_output() == b->input(0).get_source_output() &&
+            a->input(1).get_source_output() == b->input(1).get_source_output()) ||
+           (a->input(1).get_source_output() == b->input(0).get_source_output() &&
+            a->input(0).get_source_output() == b->input(1).get_source_output());
 }
 
 static bool cse_reduction(shared_ptr<Node> a, shared_ptr<Node> b)
@@ -126,7 +128,7 @@ static bool cse_reduction(shared_ptr<Node> a, shared_ptr<Node> b)
     auto ar_a = static_pointer_cast<op::util::ArithmeticReduction>(a);
     auto ar_b = static_pointer_cast<op::util::ArithmeticReduction>(b);
 
-    return ar_a->get_argument(0) == ar_b->get_argument(0) &&
+    return ar_a->input(0).get_source_output() == ar_b->input(0).get_source_output() &&
            ar_a->get_reduction_axes() == ar_b->get_reduction_axes();
 }
 
@@ -137,7 +139,7 @@ static bool cse_one_hot(shared_ptr<Node> a, shared_ptr<Node> b)
     auto one_hot_a = static_pointer_cast<ngraph::op::OneHot>(a);
     auto one_hot_b = static_pointer_cast<ngraph::op::OneHot>(b);
 
-    return (a->get_argument(0) == b->get_argument(0)) &&
+    return (a->input(0).get_source_output() == b->input(0).get_source_output()) &&
            (one_hot_a->get_one_hot_axis() == one_hot_b->get_one_hot_axis()) &&
            (a->get_shape() == b->get_shape());
 }
@@ -247,7 +249,11 @@ namespace std
 
             arg_ids.push_back(type_hash);
 
-            auto cargs = k.get_node()->get_arguments();
+            std::vector<Output<Node>> cargs;
+            for (auto input : k.get_node()->inputs())
+            {
+                cargs.push_back(input.get_source_output());
+            }
 
             // TODO: Do we need another map, so we could
             // specify how to compute hash for each op?
@@ -258,7 +264,8 @@ namespace std
 
             for (auto arg : cargs)
             {
-                arg_ids.push_back(arg->get_instance_id());
+                arg_ids.push_back(arg.get_node_shared_ptr()->get_instance_id());
+                arg_ids.push_back(arg.get_index());
             }
 
             auto hashc = ngraph::hash_combine(arg_ids);

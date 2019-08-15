@@ -26,35 +26,34 @@ namespace ngraph
 {
     namespace builder
     {
-        shared_ptr<Node> QuantizedConvolutionBuilder(const shared_ptr<Node>& input,
-                                                     const shared_ptr<Node>& filters,
+        shared_ptr<Node> QuantizedConvolutionBuilder(const Output<Node>& input,
+                                                     const Output<Node>& filters,
                                                      const Strides& window_movement_strides,
                                                      const Strides& window_dilation_strides,
                                                      const CoordinateDiff& padding_below,
                                                      const CoordinateDiff& padding_above,
                                                      const Strides& data_dilation_strides,
-                                                     const shared_ptr<Node>& min_input,
-                                                     const shared_ptr<Node>& max_input,
-                                                     const shared_ptr<Node>& min_filter,
-                                                     const shared_ptr<Node>& max_filter,
-                                                     const shared_ptr<Node>& min_output,
-                                                     const shared_ptr<Node>& max_output,
+                                                     const Output<Node>& min_input,
+                                                     const Output<Node>& max_input,
+                                                     const Output<Node>& min_filter,
+                                                     const Output<Node>& max_filter,
+                                                     const Output<Node>& min_output,
+                                                     const Output<Node>& max_output,
                                                      const ngraph::element::Type& output_type,
                                                      const ngraph::AxisSet& input_axes,
                                                      const ngraph::AxisSet& filter_axes,
                                                      const ngraph::AxisSet& output_axes)
         {
             auto input_scale =
-                quantization_utils::get_scale(min_input, max_input, input->get_element_type());
+                quantization_utils::get_scale(min_input, max_input, input.get_element_type());
             auto filter_scale =
-                quantization_utils::get_scale(min_filter, max_filter, filters->get_element_type());
+                quantization_utils::get_scale(min_filter, max_filter, filters.get_element_type());
             auto output_scale = quantization_utils::get_scale(min_output, max_output, output_type);
 
             // TODO: Check for this later
             // For Builders the zero point is assumed to be zero (for now)
-            auto input_zero_point = op::Constant::create(input->get_element_type(), Shape{}, {0});
-            auto filter_zero_point =
-                op::Constant::create(filters->get_element_type(), Shape{}, {0});
+            auto input_zero_point = op::Constant::create(input.get_element_type(), Shape{}, {0});
+            auto filter_zero_point = op::Constant::create(filters.get_element_type(), Shape{}, {0});
 
             return make_shared<op::QuantizedConvolution>(
                 input,

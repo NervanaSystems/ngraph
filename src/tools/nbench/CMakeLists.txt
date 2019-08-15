@@ -17,6 +17,8 @@
 set (SRC
     nbench.cpp
     benchmark.cpp
+    benchmark_pipelined.cpp
+    benchmark_utils.cpp
 )
 
 add_executable(nbench ${SRC})

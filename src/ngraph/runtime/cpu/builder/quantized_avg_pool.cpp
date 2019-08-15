@@ -69,6 +69,9 @@ namespace ngraph
                 }
             }
             REGISTER_OP_BUILDER(QuantizedAvgPool);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_quantized_avg_pool_cpp() {}
+#endif
         }
     }
 }

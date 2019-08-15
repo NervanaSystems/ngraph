@@ -164,8 +164,31 @@ namespace ngraph
                     }
                     case op::PadMode::SYMMETRIC:
                     {
-                        // TODO: Add support for Symmetric mode
-                        throw ngraph_error("Symmetric mode padding not supported");
+                        Coordinate c = in_coord; // have to copy because in_coord is const
+                        for (size_t i = 0; i < c.size(); i++)
+                        {
+                            ptrdiff_t pos = padding_below[i] - (c[i] + 1);
+                            if (pos >= 0)
+                            {
+                                c[i] = static_cast<size_t>(pos + padding_below[i]);
+                            }
+                            else
+                            {
+                                pos = -(pos + 1);
+                                ptrdiff_t src_dim = static_cast<ptrdiff_t>(arg0_shape[i]);
+                                if (pos < src_dim)
+                                {
+                                    c[i] = static_cast<size_t>(pos + padding_below[i]);
+                                }
+                                else
+                                {
+                                    c[i] = static_cast<size_t>(padding_below[i] + src_dim +
+                                                               padding_above[i] - pos);
+                                }
+                            }
+                        }
+                        v = arg0[input_transform.index(c)];
+                        break;
                     }
                     }
 

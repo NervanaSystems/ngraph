@@ -30,10 +30,12 @@ namespace ngraph
         class BatchNormTrainingRelu : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             CPU_BACKEND_API BatchNormTrainingRelu(double eps,
-                                                  std::shared_ptr<Node> gamma,
-                                                  std::shared_ptr<Node> beta,
-                                                  std::shared_ptr<Node> input);
+                                                  const Output<Node>& gamma,
+                                                  const Output<Node>& beta,
+                                                  const Output<Node>& input);
 
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>
@@ -57,12 +59,14 @@ namespace ngraph
         class BatchNormInferenceRelu : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             BatchNormInferenceRelu(double eps,
-                                   std::shared_ptr<ngraph::Node> gamma,
-                                   std::shared_ptr<ngraph::Node> beta,
-                                   std::shared_ptr<ngraph::Node> input,
-                                   std::shared_ptr<ngraph::Node> mean,
-                                   std::shared_ptr<ngraph::Node> variance);
+                                   const Output<ngraph::Node>& gamma,
+                                   const Output<ngraph::Node>& beta,
+                                   const Output<ngraph::Node>& input,
+                                   const Output<ngraph::Node>& mean,
+                                   const Output<ngraph::Node>& variance);
 
             double get_eps_value() const { return m_epsilon; }
             virtual std::shared_ptr<Node>

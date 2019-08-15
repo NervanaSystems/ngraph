@@ -27,11 +27,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::MVN::MVN(const std::shared_ptr<Node>& data,
-             bool across_channels,
-             bool normalize_variance,
-             double eps)
-    : FusedOp("MVN", {data})
+const string op::MVN::type_name{"MVN"};
+
+op::MVN::MVN(const Output<Node>& data, bool across_channels, bool normalize_variance, double eps)
+    : FusedOp({data})
     , m_eps{eps}
     , m_across_channels{across_channels}
     , m_normalize_variance{normalize_variance}
@@ -42,17 +41,14 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
     // else we calculate these per channel
     m_reduction_axes.insert(0);
     size_t start_axis = m_across_channels ? 1 : 2;
-    for (size_t i = start_axis; i < data->get_shape().size(); ++i)
+    for (size_t i = start_axis; i < data.get_shape().size(); ++i)
     {
         m_reduction_axes.insert(i);
     }
 }
 
-op::MVN::MVN(const std::shared_ptr<Node>& data,
-             AxisSet reduction_axes,
-             bool normalize_variance,
-             double eps)
-    : FusedOp("MVN", {data})
+op::MVN::MVN(const Output<Node>& data, AxisSet reduction_axes, bool normalize_variance, double eps)
+    : FusedOp({data})
     , m_eps{eps}
     , m_across_channels{false}
     , m_normalize_variance{normalize_variance}
@@ -63,8 +59,8 @@ op::MVN::MVN(const std::shared_ptr<Node>& data,
 
 NodeVector op::MVN::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto data_shape = data->get_shape(); // assume that data has n and c channels.
+    auto data = input_value(0);
+    auto data_shape = data.get_shape(); // assume that data has n and c channels.
 
     // calculate mean normalization
     auto mean = builder::mean(data, m_reduction_axes);
@@ -82,11 +78,11 @@ NodeVector op::MVN::decompose_op() const
         variance = make_shared<op::Sqrt>(variance);
         // add epsilon
         auto eps_node = op::Constant::create(
-            data->get_element_type(), variance->get_shape(), vector<double>{m_eps});
+            data.get_element_type(), Output<Node>(variance).get_shape(), vector<double>{m_eps});
         variance = variance + eps_node;
         variance = std::make_shared<op::Broadcast>(variance, data_shape, m_reduction_axes);
 
-        return {mean_normalization / variance};
+        return as_node_vector({mean_normalization / variance});
     }
 }
 

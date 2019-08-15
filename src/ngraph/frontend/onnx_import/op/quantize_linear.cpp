@@ -14,12 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstddef>
 #include <cstdint>
-#include <iterator>
 #include <memory>
 
-#include "exceptions.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/shape.hpp"

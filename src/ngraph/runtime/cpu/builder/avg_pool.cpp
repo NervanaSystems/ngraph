@@ -197,6 +197,10 @@ namespace ngraph
             }
             REGISTER_OP_BUILDER(AvgPool);
             REGISTER_OP_BUILDER(AvgPoolBackprop);
+
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_avg_pool_cpp() {}
+#endif
         }
     }
 }

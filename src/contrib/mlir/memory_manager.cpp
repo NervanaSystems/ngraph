@@ -14,6 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+// NOTE: This file follows nGraph format style and MLIR naming convention since it does
+// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+
 #include "memory_manager.hpp"
 #include <memory>
 #include "ngraph/ngraph_visibility.hpp"
@@ -21,9 +24,9 @@
 using namespace ngraph::runtime::ngmlir;
 
 /// Call back to allocate memory for temps from JIT'ed code
-extern "C" NGRAPH_API void* __mlir_allocate(MLIRMemMgr* mem_mgr, size_t size)
+extern "C" NGRAPH_API void* __mlir_allocate(MLIRMemMgr* memMgr, size_t size)
 {
-    return mem_mgr->allocate(size);
+    return memMgr->allocate(size);
 }
 
 void* MLIRMemMgr::allocate(size_t size)

@@ -316,3 +316,53 @@ NGRAPH_TEST(${BACKEND_NAME}, all_change_axis)
     handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<char>{1, 0, 1}), read_vector<char>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, all_dynamic)
+{
+    // Create a graph for f(x,axes:int32) = All(x,Convert<int64>(axes)).
+    auto x = make_shared<op::Parameter>(element::boolean, PartialShape::dynamic());
+    auto axes = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto axes_i64 = make_shared<op::Convert>(axes, element::i64);
+
+    auto all = make_shared<op::All>(x, axes_i64);
+    ASSERT_TRUE(all->get_output_partial_shape(0).rank().is_dynamic());
+
+    auto f = make_shared<Function>(NodeVector{all}, ParameterVector{x, axes});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::boolean, PartialShape::dynamic());
+
+    std::vector<Shape> x_shapes{
+        Shape{2, 3}, Shape{2, 3}, Shape{2, 3}, Shape{2, 3}, Shape{5}, Shape{5}};
+    std::vector<std::vector<int32_t>> axeses{{}, {0}, {1}, {0, 1}, {}, {0}};
+    std::vector<std::vector<char>> inputs{{1, 0, 1, 0, 1, 0},
+                                          {1, 0, 1, 0, 0, 1},
+                                          {1, 0, 1, 1, 1, 1},
+                                          {1, 0, 1, 0, 1, 0},
+                                          {1, 0, 1, 0, 1},
+                                          {1, 0, 1, 0, 1}};
+    std::vector<Shape> expected_result_shapes{
+        Shape{2, 3}, Shape{3}, Shape{2}, Shape{}, Shape{5}, Shape{}};
+    std::vector<std::vector<char>> expected_results{
+        {1, 0, 1, 0, 1, 0}, {0, 0, 1}, {0, 1}, {0}, {1, 0, 1, 0, 1}, {0}};
+
+    for (size_t i = 0; i < x_shapes.size(); i++)
+    {
+        auto t_x = backend->create_tensor(element::boolean, x_shapes[i]);
+        auto t_axes = backend->create_tensor(element::i32, Shape{axeses[i].size()});
+
+        copy_data(t_x, inputs[i]);
+        copy_data(t_axes, axeses[i]);
+
+        ex->call_with_validate({t_r}, {t_x, t_axes});
+
+        ASSERT_EQ(t_r->get_shape(), expected_result_shapes[i]);
+
+        auto results = read_vector<char>(t_r);
+
+        ASSERT_EQ(results, expected_results[i]);
+    }
+}

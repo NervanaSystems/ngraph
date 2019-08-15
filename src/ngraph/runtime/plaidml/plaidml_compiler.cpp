@@ -17,6 +17,7 @@
 #include "ngraph/runtime/plaidml/plaidml_compiler.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
@@ -66,7 +67,7 @@ namespace
             PLAIDML_DEBUG << "Retire tensor: " << t;
         }
     }
-}
+} // namespace
 
 ngraph::runtime::plaidml::Compiler::Compiler(Config* config)
     : m_config{config}
@@ -84,9 +85,14 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     // compilation.
 
     ngraph::pass::Manager pass_manager;
+    pass_manager.set_per_pass_validation(false);
 
     // We apply the same general-purposes passes as the CPU backend.
-    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
+    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>([](const Node& node) -> bool {
+        if (node.description() == ngraph::op::GroupConvolution().description())
+            return true;
+        return false;
+    });
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
     pass_manager.register_pass<ngraph::pass::NopElimination>();
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -124,7 +130,7 @@ std::shared_ptr<ngraph::runtime::plaidml::PlaidML_Executable>
     auto rewrite_func = clone_function(*func);
 
     // Apply passes, with revalidation disabled.
-    pass_manager.run_passes(rewrite_func, true, false);
+    pass_manager.run_passes(rewrite_func);
 
     // Compile the resulting function.
     Build b;

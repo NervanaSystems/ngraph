@@ -690,3 +690,89 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_simple_double)
 #endif
 
 #endif
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_dynamic)
+{
+    // Create a graph for f(x,axes:int32) = Sum(x,Convert<int64>(axes)).
+    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto axes = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto axes_i64 = make_shared<op::Convert>(axes, element::i64);
+
+    auto sum = make_shared<op::Sum>(x, axes_i64);
+    ASSERT_TRUE(sum->get_output_partial_shape(0).rank().is_dynamic());
+
+    auto f = make_shared<Function>(NodeVector{sum}, ParameterVector{x, axes});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    std::vector<Shape> x_shapes{
+        Shape{2, 3}, Shape{2, 3}, Shape{2, 3}, Shape{2, 3}, Shape{5}, Shape{5}};
+    std::vector<std::vector<int32_t>> axeses{{}, {0}, {1}, {0, 1}, {}, {0}};
+    std::vector<std::vector<float>> inputs{{1, 2, 3, 4, 5, 6},
+                                           {1, 2, 3, 4, 5, 6},
+                                           {1, 2, 3, 4, 5, 6},
+                                           {1, 2, 3, 4, 5, 6},
+                                           {1, 2, 3, 4, 5},
+                                           {1, 2, 3, 4, 5}};
+    std::vector<Shape> expected_result_shapes{
+        Shape{2, 3}, Shape{3}, Shape{2}, Shape{}, Shape{5}, Shape{}};
+    std::vector<std::vector<float>> expected_results{
+        {1, 2, 3, 4, 5, 6}, {5, 7, 9}, {6, 15}, {21}, {1, 2, 3, 4, 5}, {15}};
+
+    for (size_t i = 0; i < x_shapes.size(); i++)
+    {
+        auto t_x = backend->create_tensor(element::f32, x_shapes[i]);
+        auto t_axes = backend->create_tensor(element::i32, Shape{axeses[i].size()});
+
+        copy_data(t_x, inputs[i]);
+        copy_data(t_axes, axeses[i]);
+
+        ex->call_with_validate({t_r}, {t_x, t_axes});
+
+        ASSERT_EQ(t_r->get_shape(), expected_result_shapes[i]);
+
+        auto results = read_vector<float>(t_r);
+
+        ASSERT_TRUE(test::all_close_f(results, expected_results[i], MIN_FLOAT_TOLERANCE_BITS));
+    }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_inf)
+{
+    Shape shape{7, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), ParameterVector{A});
+
+    auto infi = std::numeric_limits<float>::infinity();
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 2>({{-infi, 0, 0, infi},
+                                       {infi, 100, -100, -infi},
+                                       {infi, 0, 100, infi},
+                                       {-infi, -100, 0, -infi},
+                                       {infi, infi, infi, infi},
+                                       {infi, infi, infi, -infi},
+                                       {infi, std::nanf(""), 42, infi}})
+                  .get_vector());
+    auto result = backend->create_tensor(element::f32, Shape{7});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    auto r = read_vector<float>(result);
+    ASSERT_EQ(r.size(), 7);
+    EXPECT_TRUE(isnan(r[0]));
+    EXPECT_TRUE(isnan(r[1]));
+    EXPECT_TRUE(r[2] > 0 && isinf(r[2]));
+    EXPECT_TRUE(r[3] < 0 && isinf(r[3]));
+    EXPECT_TRUE(r[4] > 0 && isinf(r[4]));
+    EXPECT_TRUE(isnan(r[5]));
+    EXPECT_TRUE(isnan(r[6]));
+}

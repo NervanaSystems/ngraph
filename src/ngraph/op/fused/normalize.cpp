@@ -26,12 +26,14 @@
 using namespace std;
 using namespace ngraph;
 
-op::Normalize::Normalize(const shared_ptr<ngraph::Node>& data,
-                         const shared_ptr<ngraph::Node>& scale,
+const string op::Normalize::type_name{"Normalize"};
+
+op::Normalize::Normalize(const Output<Node>& data,
+                         const Output<Node>& scale,
                          bool across_spatial,
                          bool channel_shared,
                          float eps)
-    : FusedOp("Normalize", {data, scale})
+    : FusedOp({data, scale})
     , m_across_spatial{across_spatial}
     , m_channel_shared{channel_shared}
     , m_eps{eps}
@@ -86,8 +88,8 @@ void op::Normalize::pre_validate_and_infer_types()
 
 NodeVector op::Normalize::decompose_op() const
 {
-    shared_ptr<Node> data{get_argument(0)};
-    const Shape input_shape{data->get_shape()};
+    Output<Node> data{input_value(0)};
+    const Shape input_shape{data.get_shape()};
 
     // Reshape to 4D tensor.
     if (input_shape.size() != 4)
@@ -106,21 +108,21 @@ NodeVector op::Normalize::decompose_op() const
     }
 
     // Calculate l2 norm across channels.
-    shared_ptr<Node> norm = builder::l2_norm(data, reduction_axes, m_eps);
-    norm = make_broadcast_node(norm, data->get_shape(), 0);
+    Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps);
+    norm = make_broadcast_node(norm, data.get_shape(), 0);
 
-    shared_ptr<Node> scale_node{get_argument(1)};
+    Output<Node> scale_node{input_value(1)};
 
     // Broadcast scale to data tensor shape.
     if (m_channel_shared)
     {
         // Scale is a scalar.
-        scale_node = make_broadcast_node(scale_node, data->get_shape());
+        scale_node = make_broadcast_node(scale_node, data.get_shape());
     }
     else
     {
         // Scale is a vector of size equal to C axis.
-        scale_node = make_broadcast_node(scale_node, data->get_shape(), 1);
+        scale_node = make_broadcast_node(scale_node, data.get_shape(), 1);
     }
 
     data = data / norm * scale_node;
@@ -131,7 +133,7 @@ NodeVector op::Normalize::decompose_op() const
         data = builder::reshape(data, input_shape);
     }
 
-    return {data};
+    return as_node_vector({data});
 }
 
 shared_ptr<Node> op::Normalize::copy_with_new_args(const NodeVector& new_args) const

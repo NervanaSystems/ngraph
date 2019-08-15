@@ -21,9 +21,9 @@ from a framework on a CPU, GPU, or ASIC; it can also be used with an
 *Interpreter* mode, which is primarily intended for testing, to analyze a 
 program, or to help a framework developer customize targeted solutions. 
 
-nGraph also provides a way to use the advanced tensor compiler PlaidML 
-as a backend; you can learn more about this backend and how to build it 
-from source in our documentation: :ref:`ngraph_plaidml_backend`.
+.. nGraph also provides a way to use the advanced tensor compiler PlaidML 
+.. as a backend; you can learn more about this backend and how to build it 
+.. from source in our documentation: :ref:`ngraph_plaidml_backend`.
 
 .. csv-table::
    :header: "Backend", "Current nGraph support", "Future nGraph support"

@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cmath>
 #include <cstddef>
 
 #include "exceptions.hpp"
@@ -24,7 +23,6 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/divide.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/sqrt.hpp"

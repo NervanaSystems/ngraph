@@ -46,8 +46,6 @@ namespace ngraph
             /// \param c An expression for where to evaluate the derivatives
             Adjoints(const OutputVector& y, const OutputVector& c);
 
-            Adjoints(const NodeVector& y, const NodeVector& c);
-
             Adjoints(const Adjoints& adjoints) = default;
             Adjoints& operator=(const Adjoints& adjoints) = default;
             Adjoints() = default;

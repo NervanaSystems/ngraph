@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <memory>

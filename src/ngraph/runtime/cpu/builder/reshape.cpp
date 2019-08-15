@@ -248,6 +248,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(Reshape);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_reshape_cpp() {}
+#endif
         }
     }
 }

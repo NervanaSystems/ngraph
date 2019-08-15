@@ -26,7 +26,6 @@
 #include "exceptions.hpp"
 #include "lstm.hpp"
 #include "ngraph/axis_set.hpp"
-#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"

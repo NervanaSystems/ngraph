@@ -129,6 +129,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/gpu/gpu_cuda_kernel_ops.hpp"
 #include "ngraph/runtime/gpu/gpu_emitter.hpp"
 #include "ngraph/runtime/gpu/gpu_kernel_emitters.hpp"
@@ -1461,6 +1462,11 @@ std::string runtime::gpu::GPU_Emitter::emit_TopK(EMIT_ARGS)
         dtypes, input_shape, topk_axis, topk_k, index_elem_type, compute_max);
 
     return compiled_function->add_to_runtime(index, function_name, args, out);
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_Xor(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_DynBroadcast(EMIT_ARGS)

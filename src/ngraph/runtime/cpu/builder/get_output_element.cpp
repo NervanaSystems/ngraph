@@ -48,6 +48,9 @@ namespace ngraph
             }
 
             REGISTER_OP_BUILDER(GetOutputElement);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_get_output_element_cpp() {}
+#endif
         }
     }
 }

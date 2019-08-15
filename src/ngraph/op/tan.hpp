@@ -38,10 +38,14 @@ namespace ngraph
         class Tan : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a tangent operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Tan(const std::shared_ptr<Node>& arg);
+            Tan(const Output<Node>& arg);
+            Tan() = default;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;

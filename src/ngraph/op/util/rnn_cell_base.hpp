@@ -81,8 +81,7 @@ namespace ngraph
                 ///
                 /// \return     Node with element-wise add operation.
                 ///
-                static std::shared_ptr<Node> add(const std::shared_ptr<Node>& lhs,
-                                                 const std::shared_ptr<Node>& rhs);
+                static std::shared_ptr<Node> add(const Output<Node>& lhs, const Output<Node>& rhs);
                 ///
                 /// \brief      Creates node with element-wise subtract operation with numpy broadcasting.
                 ///
@@ -91,8 +90,7 @@ namespace ngraph
                 ///
                 /// \return     Node with element-wise subtract operation.
                 ///
-                static std::shared_ptr<Node> sub(const std::shared_ptr<Node>& lhs,
-                                                 const std::shared_ptr<Node>& rhs);
+                static std::shared_ptr<Node> sub(const Output<Node>& lhs, const Output<Node>& rhs);
                 ///
                 /// \brief      Creates node with element-wise multiply operation with numpy broadcasting.
                 ///
@@ -101,8 +99,7 @@ namespace ngraph
                 ///
                 /// \return     Node with element-wise multiply operation.
                 ///
-                static std::shared_ptr<Node> mul(const std::shared_ptr<Node>& lhs,
-                                                 const std::shared_ptr<Node>& rhs);
+                static std::shared_ptr<Node> mul(const Output<Node>& lhs, const Output<Node>& rhs);
                 ///
                 /// \brief      Creates node with element-wise clip operation with numpy broadcasting.
                 ///
@@ -110,7 +107,7 @@ namespace ngraph
                 ///
                 /// \return     Node with element-wise clip operation.
                 ///
-                std::shared_ptr<Node> clip(const std::shared_ptr<Node>& data) const;
+                std::shared_ptr<Node> clip(const Output<Node>& data) const;
 
             private:
                 const std::size_t m_hidden_size;

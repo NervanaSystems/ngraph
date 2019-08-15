@@ -24,6 +24,7 @@
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/allocator.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
 
 namespace ngraph
 {
@@ -33,7 +34,7 @@ namespace ngraph
         {
             class CPU_ExternalFunction;
             class CPU_CallFrame;
-
+            BackendConstructor* get_backend_constructor_pointer();
             class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:
@@ -65,7 +66,7 @@ namespace ngraph
                 void remove_compiled_function(std::shared_ptr<Executable> exec) override;
 
                 Allocator* get_host_memory_allocator() override;
-                void set_host_memory_allocator(std::unique_ptr<Allocator> allocator) override;
+                void set_host_memory_allocator(Allocator* allocator) override;
 
                 bool is_supported(const Node& node) const override;
                 bool is_supported_property(const Property prop) const override;
@@ -76,7 +77,7 @@ namespace ngraph
                 std::mutex m_exec_map_mutex;
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;
-                std::unique_ptr<Allocator> m_allocator;
+                Allocator* m_allocator;
             };
 
             class CPU_BACKEND_API CPU_Executable : public runtime::Executable

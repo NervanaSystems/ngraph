@@ -23,6 +23,9 @@ function(NGRAPH_GET_CURRENT_HASH)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         ERROR_QUIET)
 
+    if(NOT HASH)
+        return()
+    endif()
     string(STRIP ${HASH} HASH)
     set(NGRAPH_CURRENT_HASH ${HASH} PARENT_SCOPE)
 endfunction()
@@ -39,10 +42,15 @@ function(NGRAPH_GET_TAG_OF_CURRENT_HASH)
     NGRAPH_GET_CURRENT_HASH()
 
     if (NOT ${TAG_LIST} STREQUAL "")
-        string(REGEX MATCH "${NGRAPH_CURRENT_HASH}\t[^\r\n]*" TAG ${TAG_LIST})
-        set(FINAL_TAG ${TAG})
+        # first look for vX.Y.Z release tag
+        string(REGEX MATCH "${NGRAPH_CURRENT_HASH}[\t ]+refs/tags/v([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)" TAG ${TAG_LIST})
+        if ("${TAG}" STREQUAL "")
+            # release tag not found so now look for vX.Y.Z-rc.N tag
+            string(REGEX MATCH "${NGRAPH_CURRENT_HASH}[\t ]+refs/tags/v([0-9?]+)\\.([0-9?]+)\\.([0-9?]+)-(rc\\.[0-9?]+)" TAG ${TAG_LIST})
+        endif()
+        set(STATUS ${TAG})
         if (NOT "${TAG}" STREQUAL "")
-            string(REGEX REPLACE "${NGRAPH_CURRENT_HASH}\trefs/tags/(.*)" "\\1" FINAL_TAG ${TAG})
+            string(REGEX REPLACE "${NGRAPH_CURRENT_HASH}[\t ]+refs/tags/(.*)" "\\1" FINAL_TAG ${TAG})
         endif()
     else()
         set(FINAL_TAG "")
@@ -53,7 +61,7 @@ endfunction()
 function(NGRAPH_GET_MOST_RECENT_TAG)
     find_package(Git REQUIRED)
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --match v*.*.*
         RESULT_VARIABLE RESULT
         OUTPUT_VARIABLE TAG
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -75,7 +83,14 @@ function(NGRAPH_GET_VERSION_LABEL)
         if (NOT ${NGRAPH_MOST_RECENT_RELEASE_TAG} STREQUAL "")
             set(NGRAPH_VERSION_LABEL "${NGRAPH_MOST_RECENT_RELEASE_TAG}+${HASH}" PARENT_SCOPE)
         else()
-            set(NGRAPH_VERSION_LABEL "?.?.?+${HASH}" PARENT_SCOPE)
+            if(HASH)
+                set(NGRAPH_VERSION_LABEL "?.?.?+${HASH}" PARENT_SCOPE)
+            else()
+                # Not in a git repo
+                file(READ ${CMAKE_SOURCE_DIR}/TAG NGRAPH_TAG)
+                string(STRIP ${NGRAPH_TAG} NGRAPH_TAG)
+                set(NGRAPH_VERSION_LABEL "${NGRAPH_TAG}" PARENT_SCOPE)
+            endif()
         endif()
     endif()
 endfunction()

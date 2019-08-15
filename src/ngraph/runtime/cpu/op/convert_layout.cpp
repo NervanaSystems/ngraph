@@ -21,8 +21,10 @@
 using namespace std;
 using namespace ngraph;
 
+const std::string runtime::cpu::op::ConvertLayout::type_name{"ConvertLayout"};
+
 runtime::cpu::op::ConvertLayout::ConvertLayout(
-    const shared_ptr<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
+    const Output<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
     : ConvertLayout(arg, 0, layout)
 {
     runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(this);
@@ -39,10 +41,10 @@ shared_ptr<Node>
 }
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
-    const shared_ptr<Node>& arg,
+    const Output<Node>& arg,
     size_t output_index,
     const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
-    : Op("ConvertLayout", check_single_output_args({arg}))
+    : Op({arg})
     , arg_output_index(output_index)
     , output_layout(layout)
 {

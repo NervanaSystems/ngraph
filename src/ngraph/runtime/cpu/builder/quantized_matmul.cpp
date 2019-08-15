@@ -103,6 +103,9 @@ namespace ngraph
                 }
             }
             REGISTER_OP_BUILDER(QuantizedMatmul);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_quantized_matmul_cpp() {}
+#endif
         }
     }
 }
