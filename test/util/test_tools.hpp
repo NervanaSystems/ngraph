@@ -34,6 +34,12 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
 
+#ifdef NGRAPH_MLIR_ENABLE
+#define MLIR_DISABLE_TEST(name) DISABLED_##name
+#else
+#define MLIR_DISABLE_TEST(name) name
+#endif
+
 namespace ngraph
 {
     class Node;
