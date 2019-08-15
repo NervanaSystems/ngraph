@@ -16,6 +16,8 @@
 
 set (SRC
     assertion.hpp
+    attribute.cpp
+    attribute.hpp
     autodiff/adjoints.cpp
     autodiff/adjoints.hpp
     axis_set.cpp
@@ -363,6 +365,8 @@ set (SRC
     op/util/activation_functions.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
+    op/util/attr_types.cpp
+    op/util/attr_types.hpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_arithmetic.hpp
     op/util/binary_elementwise_comparison.cpp

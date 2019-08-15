@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstddef>
+#include <iostream>
 
 namespace ngraph
 {
@@ -30,6 +31,8 @@ namespace ngraph
             REFLECT,
             SYMMETRIC
         };
+
+        std::ostream& operator<<(std::ostream& str, const PadMode& pad_mode);
 
         /// \brief Padding Type used for `Convolution` and `Pooling`
         ///
@@ -52,6 +55,8 @@ namespace ngraph
             AUTO = SAME_UPPER,
             NOTSET = EXPLICIT,
         };
+
+        std::ostream& operator<<(std::ostream& str, const PadType& pad_type);
 
         /// \brief Specifies the algorithm to use for implicit broadcasting of a tensor
         ///        to align with another tensor
@@ -81,6 +86,8 @@ namespace ngraph
             NUMPY
         };
 
+        std::ostream& operator<<(std::ostream& str, const AutoBroadcastType& autobroadcast_type);
+
         /// \brief Implicit broadcast specification
         struct AutoBroadcastSpec
         {
@@ -103,6 +110,8 @@ namespace ngraph
             AutoBroadcastType m_type; // Implicit broadcasting algorithm
             size_t m_axis;            // Axis to start alignment on
         };
+
+        std::ostream& operator<<(std::ostream& str, const AutoBroadcastSpec& autobroadcast_spec);
 
         /// \brief Rounding mode for a quantization operation.
         enum class RoundMode
@@ -150,6 +159,8 @@ namespace ngraph
             ROUND_DOWN,
         };
 
+        std::ostream& operator<<(std::ostream& str, const RoundMode& round_mode);
+
         /// \brief Sorting mode for TopK operation.
         enum class SortType
         {
@@ -160,5 +171,7 @@ namespace ngraph
             // Sort result based on element values
             SORT_VALUES,
         };
+
+        std::ostream& operator<<(std::ostream& str, const SortType& sort_type);
     }
 }

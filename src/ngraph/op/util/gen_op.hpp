@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <iostream>
+
 #include "ngraph/attribute.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/op.hpp"
@@ -36,6 +38,7 @@ namespace ngraph
                 }
 
             public:
+                std::ostream& write_long_description(std::ostream&) const override;
                 virtual std::vector<std::string> get_argument_keys() const = 0;
                 virtual std::vector<std::string> get_result_keys() const = 0;
                 virtual std::vector<std::string> get_attribute_keys() const = 0;

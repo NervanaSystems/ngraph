@@ -57,6 +57,7 @@ set(SRC
     element_type.cpp
     file_util.cpp
     float16.cpp
+    gen_op.cpp
     includes.cpp
     input_output_assign.cpp
     main.cpp

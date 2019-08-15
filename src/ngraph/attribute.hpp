@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 #include <string>
 
 #include "ngraph/axis_set.hpp"
@@ -103,6 +104,8 @@ namespace ngraph
         template <typename T>
         Attribute<T>& as_type();
 
+        virtual std::ostream& write_to_stream(std::ostream& str) const = 0;
+
     protected:
         AttributeBase() = default;
 
@@ -111,6 +114,8 @@ namespace ngraph
         AttributeBase(AttributeBase&&) = delete;
         AttributeBase& operator=(const AttributeBase&) = delete;
     };
+
+    std::ostream& operator<<(std::ostream& str, const AttributeBase& attr);
 
     template <typename T>
     class Attribute : public AttributeBase
@@ -130,6 +135,7 @@ namespace ngraph
         }
         const T& get() const { return m_val; }
         void set(const T& val) { m_val = val; }
+        std::ostream& write_to_stream(std::ostream& str) const { return (str << m_val); }
     private:
         T m_val;
     };
