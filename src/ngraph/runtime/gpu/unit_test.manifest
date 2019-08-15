@@ -216,6 +216,12 @@ fake_quantize_with_clip
 fake_quantize_with_clip_across_channels
 send_recv
 send_recv_ring
+logical_xor
+
+# Needs erf
 gelu_f32
 gelu_f64
-logical_xor
+gelu_backprop_factor_f32
+gelu_backprop_factor_f64
+backwards_gelu_f32
+backwards_gelu_f64

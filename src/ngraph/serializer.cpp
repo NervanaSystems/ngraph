@@ -1221,6 +1221,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Gelu>(args[0]);
             break;
         }
+        case OP_TYPEID::GeluBackpropFactor:
+        {
+            node = make_shared<op::GeluBackpropFactor>(args[0]);
+            break;
+        }
         case OP_TYPEID::Gemm:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -2410,6 +2415,8 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Gelu: { break;
+    }
+    case OP_TYPEID::GeluBackpropFactor: { break;
     }
     case OP_TYPEID::Gemm:
     {
