@@ -62,7 +62,7 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
 
 
 @nameable_op
-def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def elu(data, alpha, name=None):  # type: (NodeInput, NumericType, str) -> Node
     """Perform Exponential Linear Unit operation element-wise on data from input node.
 
     Computes exponential linear: alpha * (exp(data) - 1) if < 0, data otherwise.
@@ -72,11 +72,11 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     <http://arxiv.org/abs/1511.07289>`_
 
     :param data: Input tensor. One of: input node, array or scalar.
-    :param alpha: Multiplier for negative values. One of: input node or scalar value.
+    :param alpha: Scalar multiplier for negative values.
     :param name: Optional output node name.
     :return: The new node performing an ELU operation on its input data element-wise.
     """
-    return Elu(as_node(data), as_node(alpha))
+    return Elu(as_node(data), alpha)
 
 
 @nameable_op

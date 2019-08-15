@@ -57,7 +57,7 @@ static void open_logs(ifstream& meta, ifstream& bin, const string& trace_log, co
     ASSERT_TRUE(bin.is_open());
 }
 
-TEST(cpu_debug_tracer, check_flow_with_external_function)
+TEST(cpu_debug_tracer, MLIR_DISABLE_TEST(check_flow_with_external_function))
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
