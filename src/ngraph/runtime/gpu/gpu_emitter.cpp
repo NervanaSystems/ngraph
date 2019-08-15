@@ -68,6 +68,7 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/range.hpp"
