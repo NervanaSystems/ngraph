@@ -32,6 +32,7 @@ ngraph.ops
       cosh
       divide
       dot
+      elu
       equal
       exp
       floor

@@ -26,6 +26,9 @@ namespace ngraph
         class QuantizedConvolution : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a quantized convolution operation.
             ///
             /// \param input The node producing the input data batch tensor.
@@ -45,19 +48,19 @@ namespace ngraph
             /// \param input_axes Input axes set for channel wise quantization
             /// \param filter_axes Filter axes set for channel wise quantization
             /// \param output_axes Output axes set for channel wise quantization
-            QuantizedConvolution(const std::shared_ptr<Node>& input,
-                                 const std::shared_ptr<Node>& filters,
+            QuantizedConvolution(const Output<Node>& input,
+                                 const Output<Node>& filters,
                                  const Strides& window_movement_strides,
                                  const Strides& window_dilation_strides,
                                  const CoordinateDiff& padding_below,
                                  const CoordinateDiff& padding_above,
                                  const Strides& data_dilation_strides,
-                                 const std::shared_ptr<Node>& input_scale,
-                                 const std::shared_ptr<Node>& input_zero_point,
-                                 const std::shared_ptr<Node>& filter_scale,
-                                 const std::shared_ptr<Node>& filter_zero_point,
-                                 const std::shared_ptr<Node>& output_scale,
-                                 const std::shared_ptr<Node>& output_zero_point,
+                                 const Output<Node>& input_scale,
+                                 const Output<Node>& input_zero_point,
+                                 const Output<Node>& filter_scale,
+                                 const Output<Node>& filter_zero_point,
+                                 const Output<Node>& output_scale,
+                                 const Output<Node>& output_zero_point,
                                  const ngraph::element::Type& output_type,
                                  const ngraph::AxisSet& input_axes = ngraph::AxisSet{},
                                  const ngraph::AxisSet& filter_axes = ngraph::AxisSet{},

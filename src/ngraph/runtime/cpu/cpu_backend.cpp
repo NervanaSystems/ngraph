@@ -187,11 +187,10 @@ runtime::Allocator* runtime::cpu::CPU_Backend::get_host_memory_allocator()
     {
         return runtime::get_default_allocator();
     }
-    return m_allocator.get();
+    return m_allocator;
 }
 
-void runtime::cpu::CPU_Backend::set_host_memory_allocator(
-    std::unique_ptr<runtime::Allocator> allocator)
+void runtime::cpu::CPU_Backend::set_host_memory_allocator(Allocator* allocator)
 {
     if (m_allocator)
     {
@@ -200,7 +199,7 @@ void runtime::cpu::CPU_Backend::set_host_memory_allocator(
         throw ngraph_error(
             "Allocator already exists. Changing allocators mid-execution is not permitted.");
     }
-    m_allocator = std::move(allocator);
+    m_allocator = allocator;
 }
 
 vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const

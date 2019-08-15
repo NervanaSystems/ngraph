@@ -39,9 +39,9 @@ namespace ngraph
             /// \param gamma gamma scaling for normalized value. [C]
             /// \param beta bias added to the scaled normalized value [C]
             /// \param epsilon Avoids divsion by 0 if input has 0 variance
-            BatchNormTraining(Output<Node> input,
-                              Output<Node> gamma,
-                              Output<Node> beta,
+            BatchNormTraining(const Output<Node>& input,
+                              const Output<Node>& gamma,
+                              const Output<Node>& beta,
                               double epsilon);
 
             NGRAPH_DEPRECATED_DOC
@@ -66,9 +66,9 @@ namespace ngraph
             ///   output[2]: shall have rank 1, with the same span as input's channel axis.
             NGRAPH_DEPRECATED("Use another constructor")
             BatchNormTraining(double eps,
-                              Output<Node> gamma,
-                              Output<Node> beta,
-                              Output<Node> input);
+                              const Output<Node>& gamma,
+                              const Output<Node>& beta,
+                              const Output<Node>& input);
 
             void validate_and_infer_types() override;
 
@@ -101,11 +101,11 @@ namespace ngraph
             /// \param mean value for mean normalization [C]
             /// \param variance value for variance normalization [C]
             /// \param epsilon Avoids divsion by 0 if input has 0 variance
-            BatchNormInference(Output<ngraph::Node> input,
-                               Output<ngraph::Node> gamma,
-                               Output<ngraph::Node> beta,
-                               Output<ngraph::Node> mean,
-                               Output<ngraph::Node> variance,
+            BatchNormInference(const Output<Node>& input,
+                               const Output<Node>& gamma,
+                               const Output<Node>& beta,
+                               const Output<Node>& mean,
+                               const Output<Node>& variance,
                                double epsilon);
 
             NGRAPH_DEPRECATED_DOC
@@ -128,11 +128,11 @@ namespace ngraph
             ///   output:   shall have the same shape as 'input'.
             NGRAPH_DEPRECATED("Use another constructor")
             BatchNormInference(double eps,
-                               Output<ngraph::Node> gamma,
-                               Output<ngraph::Node> beta,
-                               Output<ngraph::Node> input,
-                               Output<ngraph::Node> mean,
-                               Output<ngraph::Node> variance);
+                               const Output<Node>& gamma,
+                               const Output<Node>& beta,
+                               const Output<Node>& input,
+                               const Output<Node>& mean,
+                               const Output<Node>& variance);
 
             void validate_and_infer_types() override;
 
@@ -165,24 +165,23 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             BatchNormTrainingBackprop() = default;
-            BatchNormTrainingBackprop(Output<Node> input,
-                                      Output<Node> gamma,
-                                      Output<Node> beta,
-                                      Output<Node> mean,
-                                      Output<Node> variance,
-                                      Output<Node> delta,
+            BatchNormTrainingBackprop(const Output<Node>& input,
+                                      const Output<Node>& gamma,
+                                      const Output<Node>& beta,
+                                      const Output<Node>& mean,
+                                      const Output<Node>& variance,
+                                      const Output<Node>& delta,
                                       double epsilon);
 
             NGRAPH_DEPRECATED_DOC
             NGRAPH_DEPRECATED("Use another constructor")
             BatchNormTrainingBackprop(double epsilon,
-                                      Output<Node> gamma,
-                                      Output<Node> beta,
-                                      Output<Node> input,
-
-                                      Output<Node> mean,
-                                      Output<Node> variance,
-                                      Output<Node> delta);
+                                      const Output<Node>& gamma,
+                                      const Output<Node>& beta,
+                                      const Output<Node>& input,
+                                      const Output<Node>& mean,
+                                      const Output<Node>& variance,
+                                      const Output<Node>& delta);
 
             void validate_and_infer_types() override;
 

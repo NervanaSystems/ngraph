@@ -24,19 +24,21 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
-                               const shared_ptr<Node>& weights,
-                               const shared_ptr<Node>& scale,
+const string op::QuantizedDot::type_name{"QuantizedDot"};
+
+op::QuantizedDot::QuantizedDot(const Output<Node>& data,
+                               const Output<Node>& weights,
+                               const Output<Node>& scale,
                                bool requantize,
                                bool with_relu)
-    : Op("QuantizedDot", check_single_output_args({data, weights, scale}))
+    : Op({data, weights, scale})
     , m_requantize(requantize)
     , m_with_relu(with_relu)
 {
     constructor_validate_and_infer_types();
 
-    auto& data_shape = data->get_shape();
-    auto& weights_shape = weights->get_shape();
+    auto& data_shape = data.get_shape();
+    auto& weights_shape = weights.get_shape();
     // QuantizedDot does [m ,n] * [n, k] = [m, k]
     NODE_VALIDATION_CHECK(this,
                           data_shape.size() == 2 && weights_shape.size() == 2 &&
@@ -47,7 +49,7 @@ op::QuantizedDot::QuantizedDot(const shared_ptr<Node>& data,
                           weights_shape);
 
     auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::i32;
-    if (data->get_element_type() == element::u8 && weights->get_element_type() == element::u8)
+    if (data.get_element_type() == element::u8 && weights.get_element_type() == element::u8)
     {
         output_et = element::u8;
     }

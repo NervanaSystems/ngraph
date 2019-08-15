@@ -155,6 +155,8 @@ add_library(onnx_import STATIC
         op/relu.hpp
         op/reshape.cpp
         op/reshape.hpp
+        op/reverse_sequence.cpp
+        op/reverse_sequence.h
         op/selu.cpp
         op/selu.hpp
         op/shape.hpp

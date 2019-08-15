@@ -30,7 +30,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a "min" reduction operation.
-            Min();
+            Min() = default;
             /// \brief Constructs a min-reduction operation.
             ///
             /// \param arg The tensor to be reduced.

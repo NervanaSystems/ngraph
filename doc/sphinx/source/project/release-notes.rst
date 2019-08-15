@@ -16,14 +16,19 @@ We are pleased to announce the release of version |version|-doc.
 
 Core updates for |version|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ Better PlaidML support
+
++ More ONNX ops
++ Elementwise divide defaults to Python semantics
++ GenerateMask seed optional
++ Graph visualization improvements
++ Preserve control dependencies in more places
++ GetOutputElement has single input
 
 
-Latest doc updates
-~~~~~~~~~~~~~~~~~~
+.. Latest doc updates
+.. ~~~~~~~~~~~~~~~~~~
 
-+ Add instructions how to build ``NGRAPH_PLAIDML`` backend.
-
+.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
@@ -35,7 +40,6 @@ Changelog on Previous Releases
 0.23
 ----
 
-+ PlaidML support
 + More ONNX ops
 + Elementwise divide defaults to Python semantics
 + GenerateMask seed optional

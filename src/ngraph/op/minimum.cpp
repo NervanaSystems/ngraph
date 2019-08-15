@@ -25,10 +25,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::Minimum::Minimum(const shared_ptr<Node>& arg0,
-                     const shared_ptr<Node>& arg1,
+const string op::Minimum::type_name{"Minimum"};
+
+op::Minimum::Minimum(const Output<Node>& arg0,
+                     const Output<Node>& arg1,
                      const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic("Minimum", arg0, arg1, autob)
+    : BinaryElementwiseArithmetic(arg0, arg1, autob)
 {
     constructor_validate_and_infer_types();
 }

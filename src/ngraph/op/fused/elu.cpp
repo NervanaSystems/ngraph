@@ -39,7 +39,7 @@ NodeVector op::Elu::decompose_op() const
     auto data = get_argument(0);
     auto alpha_node = get_argument(1);
 
-    alpha_node = ngraph::op::make_broadcast_node(alpha_node, data->get_shape());
+    alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data->get_shape());
 
     shared_ptr<ngraph::Node> zero_node =
         builder::make_constant(data->get_element_type(), data->get_shape(), 0);

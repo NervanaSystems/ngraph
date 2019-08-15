@@ -26,10 +26,14 @@ namespace ngraph
         class GatherND : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            GatherND() = default;
             /// \param params The tensor from which slices are gathered
             /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
-            GatherND(const std::shared_ptr<Node>& params, const std::shared_ptr<Node>& indices)
-                : Op("GatherND", check_single_output_args({params, indices}))
+            GatherND(const Output<Node>& params, const Output<Node>& indices)
+                : Op({params, indices})
             {
                 constructor_validate_and_infer_types();
             }

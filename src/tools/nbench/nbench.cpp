@@ -24,6 +24,7 @@
 #include <iomanip>
 
 #include "benchmark.hpp"
+#include "benchmark_pipelined.hpp"
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
@@ -181,6 +182,7 @@ int main(int argc, char** argv)
     int warmup_iterations = 1;
     bool copy_data = true;
     bool dot_file = false;
+    bool double_buffer = false;
 
     for (size_t i = 1; i < argc; i++)
     {
@@ -228,6 +230,10 @@ int main(int argc, char** argv)
         else if (arg == "-d" || arg == "--directory")
         {
             directory = argv[++i];
+        }
+        else if (arg == "--double_buffer")
+        {
+            double_buffer = true;
         }
         else if (arg == "-w" || arg == "--warmup_iterations")
         {
@@ -283,6 +289,7 @@ OPTIONS
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
         --dot                     Generate Graphviz dot file
+        --double_buffer           Double buffer inputs and outputs
 )###";
         return 1;
     }
@@ -420,8 +427,17 @@ OPTIONS
             {
                 cout << "\n---- Benchmark ----\n";
                 shared_ptr<Function> f = deserialize(model);
-                auto perf_data = run_benchmark(
-                    f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                vector<runtime::PerformanceCounter> perf_data;
+                if (double_buffer)
+                {
+                    perf_data = run_benchmark_pipelined(
+                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                }
+                else
+                {
+                    perf_data = run_benchmark(
+                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                }
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(
                     aggregate_perf_data.end(), perf_shape.begin(), perf_shape.end());

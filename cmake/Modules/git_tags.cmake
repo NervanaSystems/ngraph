@@ -53,7 +53,7 @@ endfunction()
 function(NGRAPH_GET_MOST_RECENT_TAG)
     find_package(Git REQUIRED)
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --match v*.*.*
         RESULT_VARIABLE RESULT
         OUTPUT_VARIABLE TAG
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

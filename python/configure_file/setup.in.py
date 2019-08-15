@@ -113,14 +113,30 @@ if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
 
 extra_link_args = []
 if sys.platform.startswith('linux'):
-    extra_link_args += ['-Wl,-rpath,$ORIGIN']
+    extra_link_args += ['-Wl,-rpath,$ORIGIN/../..']
     extra_link_args += ['-z', 'noexecstack']
     extra_link_args += ['-z', 'relro']
     extra_link_args += ['-z', 'now']
 elif sys.platform == 'darwin':
-    extra_link_args += ['-Wl,-rpath,@loader_path']
+    extra_link_args += ['-Wl,-rpath,@loader_path/../..']
+
+if sys.platform == 'win32':
+    lib_suffix = '.dll'
+elif sys.platform.startswith('linux'):
+    lib_suffix = '.so'
+elif sys.platform == 'darwin':
+    lib_suffix = '.dylib'
+else:
+    raise RuntimeError('Unsupported platform!')
 
 data_files = [
+    (
+        'lib',
+        [
+            NGRAPH_CPP_LIBRARY_DIR + '/' + library
+            for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if lib_suffix in library
+        ],
+    ),
     (
         'licenses',
         [
@@ -132,20 +148,6 @@ data_files = [
         '',
         ['${CMAKE_SOURCE_DIR}/LICENSE'],
     ),
-]
-
-if sys.platform == 'win32':
-    lib_suffix = '.dll'
-elif sys.platform.startswith('linux'):
-    lib_suffix = '.so'
-elif sys.platform == 'darwin':
-    lib_suffix = '.dylib'
-else:
-    raise RuntimeError('Unsupported platform!')
-
-sharedlib_files = [
-    NGRAPH_CPP_LIBRARY_DIR + '/' + library
-    for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if lib_suffix in library
 ]
 
 ext_modules = [
@@ -161,25 +163,6 @@ ext_modules = [
         language='c++',
     ),
 ]
-
-
-build_shared_lib = None
-
-
-class Develop(develop):
-    """Custom develop class for copying shared libaries."""
-
-    def run(self):
-        """Override run."""
-        global build_shared_lib
-        develop.run(self)
-        if self.uninstall:
-            return
-        # Copy nGraph library to a path accessible in develop mode
-        libs = os.listdir(build_shared_lib)
-        for lib in libs:
-            src = os.path.join(build_shared_lib, lib)
-            copyfile(src, lib)
 
 
 class BuildExt(build_ext):
@@ -220,22 +203,10 @@ class BuildExt(build_ext):
         flags += ['-O2', '-D_FORTIFY_SOURCE=2']
         return flags
 
-    def copy_prebuilt_libraries(self):
-        """Copy prebuild libraries."""
-        global sharedlib_files
-        for source in sharedlib_files:
-            destination = self.build_lib + '/' + os.path.basename(source)
-            copyfile(source, destination)
-
     def build_extensions(self):
         """Override build_extension."""
-        global build_shared_lib
         if sys.platform == 'win32':
             raise RuntimeError('Unsupported platform: win32!')
-        if not os.path.exists(self.build_lib + '/'):
-            os.makedirs(self.build_lib)
-        build_shared_lib = self.build_lib
-        self.copy_prebuilt_libraries()
         """-Wstrict-prototypes is not a valid option for c++"""
         try:
             self.compiler.compiler_so.remove('-Wstrict-prototypes')
@@ -292,7 +263,7 @@ setup(
     ext_modules=ext_modules,
     package_dir=package_dir,
     packages=packages,
-    cmdclass={'build_ext': BuildExt, 'bdist_wheel': BdistWheel, 'develop': Develop},
+    cmdclass={'build_ext': BuildExt, 'bdist_wheel': BdistWheel},
     data_files=data_files,
     setup_requires=setup_requires,
     install_requires=requirements,

@@ -207,49 +207,90 @@ add_subdirectory(util)
 
 # backend specific test files must meet the following requirements:
 # 1) The must be named <name>.in.cpp
-# 2) They must be in the test directory
+# 2) They must be in the `test/backend` directory
 # 3) Include "util/test_control.hpp" in your cpp file
 # 4) add the line `static string s_manifest = "${MANIFEST}";` to your cpp file
 # 5) Use the `NGRAPH_TEST` macro in place of `TEST`.
 # All such files are configured via cmake which replaces all instances of cmake variables
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
-    autodiff.in.cpp
-    backend_all.in.cpp
-    backend_any.in.cpp
-    backend_api.in.cpp
-    backend_binary_elementwise.in.cpp
-    backend_broadcast.in.cpp
-    backend_comparison.in.cpp
-    backend_dot.in.cpp
-    backend_embedding_lookup.in.cpp
-    backend_fused_op.in.cpp
-    backend_gather.in.cpp
-    backend_one_hot.in.cpp
-    backend_pool.in.cpp
-    backend_reshape.in.cpp
-    backend_scatter.in.cpp
-    backend_sum.in.cpp
-    backend_topk.in.cpp
-    backend_arg_reduce.in.cpp
-    backend_test.in.cpp
-    backend_unary_elementwise.in.cpp
-    convolution_test.in.cpp
-    dyn_replace_slice_test.in.cpp
-    dyn_slice_test.in.cpp
-    dynamic.in.cpp
+    backend/abc.in.cpp
+    backend/aliased_output.in.cpp
+    backend/all.in.cpp
+    backend/any.in.cpp
+    backend/api.in.cpp
+    backend/arg_reduce.in.cpp
+    backend/autodiff.in.cpp
+    backend/batch_mat_mul.in.cpp
+    backend/batch_norm.in.cpp
+    backend/binary_elementwise.in.cpp
+    backend/broadcast.in.cpp
+    backend/comparison.in.cpp
+    backend/computation_reuse.in.cpp
+    backend/concat.in.cpp
+    backend/constant.in.cpp
+    backend/convert.in.cpp
+    backend/convolution.in.cpp
+    backend/convolution_reference.in.cpp
+    backend/dot.in.cpp
+    backend/dyn_broadcast.in.cpp
+    backend/dyn_replace_slice_reference.in.cpp
+    backend/dyn_reshape.in.cpp
+    backend/dyn_slice_reference.in.cpp
+    backend/dynamic.in.cpp
+    backend/embedding_lookup.in.cpp
+    backend/function_name.in.cpp
+    backend/fused_op.in.cpp
+    backend/gather.in.cpp
+    backend/generate_mask.in.cpp
+    backend/logical_and.in.cpp
+    backend/logical_or.in.cpp
+    backend/lrn.in.cpp
+    backend/max.in.cpp
+    backend/min.in.cpp
+    backend/multiple_backends.in.cpp
+    backend/multiple_result.in.cpp
+    backend/node_name.in.cpp
+    backend/numeric.in.cpp
+    backend/one_hot.in.cpp
+    backend/pad.in.cpp
+    backend/parameter_as_output.in.cpp
+    backend/pool.in.cpp
+    backend/product.in.cpp
+    backend/quantize_dequantize.in.cpp
+    backend/quantized_convolution.in.cpp
+    backend/range.in.cpp
+    backend/relu.in.cpp
+    backend/replace_slice.in.cpp
+    backend/reshape.in.cpp
+    backend/reverse.in.cpp
+    backend/reverse_sequence.in.cpp
+    backend/scatter.in.cpp
+    backend/select.in.cpp
+    backend/shape_of.in.cpp
+    backend/sigmoid.in.cpp
+    backend/slice.in.cpp
+    backend/softmax.in.cpp
+    backend/sum.in.cpp
+    backend/tensorview_custom_mem.in.cpp
+    backend/topk.in.cpp
+    backend/transpose.in.cpp
+    backend/unhandled_op.in.cpp
+    backend/unary_elementwise.in.cpp
+    backend/validate_call.in.cpp
+    backend/zero_sized.in.cpp
 )
 
 if (NGRAPH_MLIR_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend_mlir.in.cpp)
+    list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)
-    list(APPEND MULTI_TEST_SRC distributed.in.cpp)
+    list(APPEND MULTI_TEST_SRC backend/distributed.in.cpp)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend_graph_comparison.in.cpp)
+    list(APPEND MULTI_TEST_SRC backend/graph_comparison.in.cpp)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)

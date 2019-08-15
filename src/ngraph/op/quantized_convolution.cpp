@@ -24,32 +24,33 @@
 using namespace std;
 using namespace ngraph;
 
-op::QuantizedConvolution::QuantizedConvolution(const shared_ptr<Node>& input,
-                                               const shared_ptr<Node>& filters,
+const string op::QuantizedConvolution::type_name{"QuantizedConvolution"};
+
+op::QuantizedConvolution::QuantizedConvolution(const Output<Node>& input,
+                                               const Output<Node>& filters,
                                                const Strides& window_movement_strides,
                                                const Strides& window_dilation_strides,
                                                const CoordinateDiff& padding_below,
                                                const CoordinateDiff& padding_above,
                                                const Strides& data_dilation_strides,
-                                               const shared_ptr<Node>& input_scale,
-                                               const shared_ptr<Node>& input_zero_point,
-                                               const shared_ptr<Node>& filter_scale,
-                                               const shared_ptr<Node>& filter_zero_point,
-                                               const shared_ptr<Node>& output_scale,
-                                               const shared_ptr<Node>& output_zero_point,
+                                               const Output<Node>& input_scale,
+                                               const Output<Node>& input_zero_point,
+                                               const Output<Node>& filter_scale,
+                                               const Output<Node>& filter_zero_point,
+                                               const Output<Node>& output_scale,
+                                               const Output<Node>& output_zero_point,
                                                const element::Type& output_type,
                                                const AxisSet& input_axes,
                                                const AxisSet& filter_axes,
                                                const AxisSet& output_axes)
-    : Op("QuantizedConvolution",
-         check_single_output_args({input,
-                                   filters,
-                                   input_scale,
-                                   input_zero_point,
-                                   filter_scale,
-                                   filter_zero_point,
-                                   output_scale,
-                                   output_zero_point}))
+    : Op({input,
+          filters,
+          input_scale,
+          input_zero_point,
+          filter_scale,
+          filter_zero_point,
+          output_scale,
+          output_zero_point})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
     , m_padding_below(padding_below)

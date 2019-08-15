@@ -36,25 +36,25 @@ namespace ngraph
     {
         namespace quantization
         {
-            shared_ptr<Node> QuantizedLinearConvolutionBias(const shared_ptr<Node>& input,
-                                                            const shared_ptr<Node>& filter,
-                                                            const shared_ptr<Node>& bias,
+            shared_ptr<Node> QuantizedLinearConvolutionBias(const Output<Node>& input,
+                                                            const Output<Node>& filter,
+                                                            const Output<Node>& bias,
                                                             const Strides& window_movement_strides,
                                                             const Strides& window_dilation_strides,
                                                             const CoordinateDiff& padding_below,
                                                             const CoordinateDiff& padding_above,
                                                             const Strides& data_dilation_strides,
-                                                            const shared_ptr<Node>& input_scale,
-                                                            const shared_ptr<Node>& filter_scale,
-                                                            const shared_ptr<Node>& output_scale)
+                                                            const Output<Node>& input_scale,
+                                                            const Output<Node>& filter_scale,
+                                                            const Output<Node>& output_scale)
             {
                 // TODO: need to establish cross-nGraph view of scale (mult or div)
                 auto requantization_scale = (input_scale * filter_scale) / output_scale;
 
                 auto mybias = bias;
-                if (bias->get_element_type() != element::i32)
+                if (bias.get_element_type() != element::i32)
                 {
-                    const auto zero = make_constant(element::i32, input_scale->get_shape(), 0);
+                    const auto zero = make_constant(element::i32, input_scale.get_shape(), 0);
                     const AxisSet quantization_axes;
                     const auto bias_scale = input_scale * filter_scale;
                     op::Quantize::RoundMode round_mode =

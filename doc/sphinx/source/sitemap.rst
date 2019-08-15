@@ -1,12 +1,12 @@
 :orphan:
 
-.. toctree::
-   :caption: Sitemap
-   :maxdepth: 1 
-   
-   frameworks/index
-   python_api/index
-   inspection/index
-   core/overview
-   backends/index
-   project/index
+  .. toctree::
+     :includehidden:
+
+     frameworks/index
+     project/index
+     python_api/index
+     inspection/index
+     core/overview
+     backends/index
+     project/extras/index

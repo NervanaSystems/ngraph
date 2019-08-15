@@ -71,20 +71,7 @@ NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
     NodeVector goes(mon->get_output_size());
     for (auto o : mon->outputs())
     {
-        shared_ptr<Node> goe;
-        for (auto in : o.get_target_inputs())
-        {
-            if (in.get_node()->description() == op::GetOutputElement::type_name)
-            {
-                goe = in.get_node()->shared_from_this();
-                break;
-            }
-        }
-        if (goe == nullptr)
-        {
-            goe = get_output_element(o, true);
-        }
-        goes.at(o.get_index()) = goe;
+        goes.at(o.get_index()) = o.as_single_output_node();
     }
     return goes;
 }

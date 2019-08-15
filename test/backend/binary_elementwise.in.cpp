@@ -257,10 +257,10 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_adjoint_stability)
         auto B = make_shared<op::Parameter>(element::f32, shape);
         auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
 
-        auto Y_out = f->get_output_op(0);
+        auto Y_out = f->output(0);
         auto Xs = f->get_parameters();
-        auto C = std::make_shared<op::Parameter>(Y_out->get_element_type(), Y_out->get_shape());
-        ngraph::autodiff::Adjoints adjoints(NodeVector{Y_out}, NodeVector{C});
+        auto C = std::make_shared<op::Parameter>(Y_out.get_element_type(), Y_out.get_shape());
+        ngraph::autodiff::Adjoints adjoints(OutputVector{Y_out}, OutputVector{C});
         std::vector<std::shared_ptr<Node>> dYdXs(Xs.size());
         transform(
             Xs.begin(), Xs.end(), dYdXs.begin(), [C, &adjoints](const std::shared_ptr<Node>& X) {

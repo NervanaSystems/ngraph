@@ -1833,7 +1833,7 @@ namespace ngraph
                      args[0].get_element_type() == element::f32 ||
                      args[0].get_element_type() == element::u8 ||
                      args[0].get_element_type() == element::i8) &&
-                    args[0].get_shape().size() <= 3 && out[0].get_shape().size() <= 3)
+                    args[0].get_shape().size() <= 3 && out[0].get_shape().size() <= 5)
                 {
                     writer << "cpu::kernel::gather<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
@@ -1897,7 +1897,7 @@ namespace ngraph
                      args[0].get_element_type() == element::f32 ||
                      args[0].get_element_type() == element::u8 ||
                      args[0].get_element_type() == element::i8) &&
-                    args[0].get_shape().size() <= 3 && args[2].get_shape().size() <= 3)
+                    args[0].get_shape().size() <= 3 && args[2].get_shape().size() <= 5)
                 {
                     writer << "cpu::kernel::scatter_add<" << args[0].get_type() << ", "
                            << args[1].get_element_type().c_type_string() << ", "
@@ -3027,7 +3027,9 @@ namespace ngraph
                     case ngraph::op::PadMode::REFLECT:
                         pad_mode_string = "ngraph::op::PadMode::REFLECT";
                         break;
-                    case ngraph::op::PadMode::SYMMETRIC: throw ngraph_error("Unsupported PadMode");
+                    case ngraph::op::PadMode::SYMMETRIC:
+                        pad_mode_string = "ngraph::op::PadMode::SYMMETRIC";
+                        break;
                     }
                     writer << "reference::pad<" << out[0].get_type() << ">(" << args[0].get_name()
                            << ",\n";

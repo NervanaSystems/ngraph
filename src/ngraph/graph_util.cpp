@@ -293,9 +293,9 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
     return std::make_shared<ngraph::Function>(cloned_results, cloned_params);
 }
 
-bool ngraph::is_equal_to_const_value(std::string const_value, std::shared_ptr<Node> reduce_constant)
+bool ngraph::is_equal_to_const_value(std::string const_value, const Output<Node>& reduce_constant)
 {
-    if (auto rc = dynamic_pointer_cast<ngraph::op::Constant>(reduce_constant))
+    if (auto rc = dynamic_pointer_cast<ngraph::op::Constant>(reduce_constant.get_node_shared_ptr()))
     {
         auto cshape = rc->get_shape();
         size_t n = shape_size(cshape);
@@ -454,7 +454,7 @@ std::shared_ptr<Node> ngraph::make_constant_from_string(std::string val,
     return std::make_shared<op::Constant>(element_type, shape, cvals);
 }
 
-bool ngraph::is_zero(std::shared_ptr<Node> reduce_constant)
+bool ngraph::is_zero(const Output<Node>& reduce_constant)
 {
     auto result_bool = is_equal_to_const_value("0", reduce_constant);
     return result_bool;

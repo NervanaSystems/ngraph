@@ -49,6 +49,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Cosh(m_op);
     regclass_pyngraph_op_Divide(m_op);
     regclass_pyngraph_op_Dot(m_op);
+    regclass_pyngraph_op_Elu(m_op);
     regclass_pyngraph_op_Equal(m_op);
     regclass_pyngraph_op_Exp(m_op);
     regclass_pyngraph_op_Floor(m_op);

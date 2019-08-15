@@ -64,7 +64,7 @@ void op::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
     adjoints.add_delta(y, -delta * shared_from_this() / y);
 }
 
-shared_ptr<Node> ngraph::operator/(const Output<Node> arg0, const Output<Node> arg1)
+shared_ptr<Node> ngraph::operator/(const Output<Node>& arg0, const Output<Node>& arg1)
 {
     return make_shared<op::Divide>(arg0, arg1);
 }

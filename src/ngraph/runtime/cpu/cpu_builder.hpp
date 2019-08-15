@@ -227,6 +227,14 @@
     {                                                                                              \
         SELECT_RANK1(KV, ET, R1, 3, K);                                                            \
     }                                                                                              \
+    else if (R2 == 4)                                                                              \
+    {                                                                                              \
+        SELECT_RANK1(KV, ET, R1, 4, K);                                                            \
+    }                                                                                              \
+    else if (R2 == 5)                                                                              \
+    {                                                                                              \
+        SELECT_RANK1(KV, ET, R1, 5, K);                                                            \
+    }                                                                                              \
     else                                                                                           \
     {                                                                                              \
         throw ngraph_error("Unsupported second rank " + std::to_string(R2) + " for kernel " #K);   \

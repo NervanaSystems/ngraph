@@ -32,7 +32,7 @@ int main()
     auto t1 = std::make_shared<op::Multiply>(t0, c);
 
     // Make the function
-    auto f = std::make_shared<Function>(NodeVector{t1},
+    auto f = std::make_shared<Function>(OutputVector{t1},
                                         ParameterVector{a, b, c});
 
     // Create the backend

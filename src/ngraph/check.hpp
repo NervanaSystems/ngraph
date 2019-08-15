@@ -160,5 +160,5 @@ namespace ngraph
 /// \brief Macro to signal a code path that is unreachable in a successful execution. It's
 /// implemented with NGRAPH_CHECK macro.
 /// \param ... Additional error message that should describe why that execution path is unreachable.
-/// \throws ::ngrap::CheckFailure if the macro is executed.
+/// \throws ::ngraph::CheckFailure if the macro is executed.
 #define NGRAPH_UNREACHABLE(...) NGRAPH_CHECK(false, "Unreachable: ", ##__VA_ARGS__)

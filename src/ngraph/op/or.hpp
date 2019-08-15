@@ -29,6 +29,9 @@ namespace ngraph
         class Or : public util::BinaryElementwiseLogical
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a logical-or operation.
             ///
             /// \param arg0 Node that produces the first input tensor.<br>
@@ -39,15 +42,14 @@ namespace ngraph
             ///
             /// Output `[d0, ...]`
             ///
-            Or(const std::shared_ptr<Node>& arg0,
-               const std::shared_ptr<Node>& arg1,
+            Or(const Output<Node>& arg0,
+               const Output<Node>& arg1,
                const AutoBroadcastSpec& autob = AutoBroadcastSpec());
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-        protected:
-            virtual bool is_commutative() override { return true; }
+            virtual bool is_commutative() const override { return true; }
         };
     }
 }

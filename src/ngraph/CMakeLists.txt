@@ -433,6 +433,8 @@ set (SRC
     pass/shape_relevance.hpp
     pass/validate_graph.cpp
     pass/validate_graph.hpp
+    pass/validate.cpp
+    pass/validate.hpp
     pass/visualize_tree.cpp
     pass/visualize_tree.hpp
     pass/zero_dim_tensor_elimination.cpp
@@ -463,6 +465,8 @@ set (SRC
     runtime/backend.hpp
     runtime/backend_manager.cpp
     runtime/backend_manager.hpp
+    runtime/chrome_trace.cpp
+    runtime/chrome_trace.hpp
     runtime/executable.cpp
     runtime/executable.hpp
     runtime/host_tensor.cpp

@@ -69,6 +69,7 @@ from _pyngraph.op import Cos
 from _pyngraph.op import Cosh
 from _pyngraph.op import Divide
 from _pyngraph.op import Dot
+from _pyngraph.op import Elu
 from _pyngraph.op import Equal
 from _pyngraph.op import Exp
 from _pyngraph.op import Floor

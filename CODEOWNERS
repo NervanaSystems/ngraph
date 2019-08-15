@@ -61,7 +61,7 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/type/                   @diyessi
 /src/ngraph/serializer.*pp          @rkimballn1
 
-/test/distributed.in.cpp            @wenzhe-nrv @diyessi @jianyinglang
+/test/backend/distributed.in.cpp    @wenzhe-nrv @diyessi @jianyinglang
 
 # Putting this last so it's not overridden by directory rules
 CMakeLists.txt                      @rkimballn1 @silee2

@@ -31,9 +31,7 @@ RUN ln -s /opt/python/cp27-cp27mu/bin/virtualenv /usr/local/bin/virtualenv
 RUN cd /opt/rh/devtoolset-8/root/usr/lib/gcc && ln -s x86_64-CentOS-linux x86_64-redhat-linux
 RUN cd /opt/rh/devtoolset-8/root/usr/include/c++/8 && ln -s x86_64-CentOS-linux x86_64-redhat-linux
 RUN cd /opt/rh/devtoolset-8/root/usr/libexec/gcc && ln -s x86_64-CentOS-linux x86_64-redhat-linux
-RUN git clone --depth 1 --single-branch -b llvmorg-8.0.1 https://github.com/llvm/llvm-project.git
-RUN cd llvm-project/llvm && cp CMakeLists.txt CMakeLists.txt.orig && \
-  sed '121,126d' CMakeLists.txt.orig > CMakeLists.txt
+RUN git clone --depth 1 --single-branch -b llvmorg-9.0.0-rc2 https://github.com/llvm/llvm-project.git
 RUN cd llvm-project && mkdir build && cd build && \
   cmake -DCMAKE_INSTALL_PREFIX=/opt/rh/devtoolset-8/root/usr -DCMAKE_BUILD_TYPE=Release \
     -DLLVM_ENABLE_PROJECTS="clang;openmp" -DLLVM_INCLUDE_TESTS=OFF \

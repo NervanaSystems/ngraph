@@ -26,17 +26,23 @@ namespace ngraph
         class Negative : public util::UnaryElementwiseArithmetic
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            /// \brief Constructs a negative operation.
+            Negative() = default;
             /// \brief Constructs a negative operation.
             ///
             /// \param arg Node that produces the input tensor.
-            Negative(const std::shared_ptr<Node>& arg);
+            Negative(const Output<Node>& arg);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+        protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
     }
-    std::shared_ptr<ngraph::Node> operator-(const std::shared_ptr<ngraph::Node> arg0);
+    std::shared_ptr<Node> operator-(const Output<Node>& arg0);
 }

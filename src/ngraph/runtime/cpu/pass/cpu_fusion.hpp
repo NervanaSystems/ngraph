@@ -27,12 +27,26 @@ namespace ngraph
         {
             namespace pass
             {
+                class CPUPreFusion;
                 class CPUFusion;
                 class CPUQuantFusion;
             }
         }
     }
 }
+
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUPreFusion : public ngraph::pass::GraphRewrite
+{
+public:
+    CPUPreFusion()
+        : GraphRewrite()
+    {
+        construct_maxpool_relu_switch();
+    }
+
+private:
+    void construct_maxpool_relu_switch();
+};
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUFusion : public ngraph::pass::GraphRewrite
 {

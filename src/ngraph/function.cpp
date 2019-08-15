@@ -41,6 +41,30 @@ Function::Function(const ResultVector& results,
     init();
 }
 
+Function::Function(const OutputVector& results,
+                   const ParameterVector& parameters,
+                   const std::string& name)
+    : m_results(results.size())
+    , m_parameters(parameters)
+    , m_temporary_pool_size(0)
+    , m_instance_id(m_next_instance_id.fetch_add(1))
+    , m_name(name)
+    , m_unique_name("Function_" + to_string(m_instance_id))
+{
+    if (std::any_of(results.cbegin(), results.cend(), [](Output<Node> n) {
+            return std::dynamic_pointer_cast<op::Result>(n.get_node_shared_ptr());
+        }))
+    {
+        throw ngraph_error(
+            " Results already contain op::Results. Use a c-tor that takes a ResultVector");
+    }
+
+    std::transform(results.begin(), results.end(), m_results.begin(), [](Output<Node> n) {
+        return std::make_shared<op::Result>(n);
+    });
+    init();
+}
+
 Function::Function(const NodeVector& results,
                    const ParameterVector& parameters,
                    const std::string& name)
@@ -204,6 +228,11 @@ const PartialShape& Function::get_output_partial_shape(size_t i) const
 }
 
 shared_ptr<Node> Function::get_output_op(size_t i) const
+{
+    return m_results.at(i);
+}
+
+Output<Node> Function::output(size_t i) const
 {
     return m_results.at(i);
 }
