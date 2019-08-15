@@ -86,6 +86,7 @@
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1157,6 +1158,26 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     auto dex = is_direct_execution();
     auto is_supported = [dex](const Node& node) {
+
+        // this checks averts the decomposition of LSTMCell
+        // we will map LSTMCell to LSTM CPU op in the later
+        // graph pass
+        if (typeid(ngraph::op::LSTMCell) == typeid(node))
+        {
+            // MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell has peephole.
+            // LSTMCell with no peephole support is constant initialized to zero
+            // TODO (pthoreho) : For MKLDNN > V1.0, change mkldnn kernel integration to compute for LSTMCell
+            // with peephole as well.
+            if (std::dynamic_pointer_cast<ngraph::op::Constant>(node.get_argument(6)) != nullptr)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         if (dex)
         {
             auto handler = GetGlobalBuildDispatcher().find(type_index(typeid(node)));
