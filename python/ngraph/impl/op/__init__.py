@@ -82,6 +82,7 @@ from _pyngraph.op import GetOutputElement
 from _pyngraph.op import Greater
 from _pyngraph.op import GreaterEq
 from _pyngraph.op import GRN
+from _pyngraph.op import HardSigmoid
 from _pyngraph.op import Less
 from _pyngraph.op import LessEq
 from _pyngraph.op import Log
@@ -93,6 +94,7 @@ from _pyngraph.op import MaxPoolBackprop
 from _pyngraph.op import Min
 from _pyngraph.op import Minimum
 from _pyngraph.op import Multiply
+from _pyngraph.op import MVN
 from _pyngraph.op import Negative
 from _pyngraph.op import Not
 from _pyngraph.op import NotEqual
@@ -102,18 +104,21 @@ from _pyngraph.op import Or
 from _pyngraph.op import Pad
 from _pyngraph.op import Parameter
 from _pyngraph.op import Power
+from _pyngraph.op import PRelu
 from _pyngraph.op import Product
 from _pyngraph.op import Relu
 from _pyngraph.op import ReluBackprop
 from _pyngraph.op import ReplaceSlice
 from _pyngraph.op import Reshape
 from _pyngraph.op import Reverse
+from _pyngraph.op import ScaleShift
 from _pyngraph.op import Select
 from _pyngraph.op import Sign
 from _pyngraph.op import Sin
 from _pyngraph.op import Sinh
 from _pyngraph.op import Slice
 from _pyngraph.op import Softmax
+from _pyngraph.op import SpaceToDepth
 from _pyngraph.op import Sqrt
 from _pyngraph.op import Subtract
 from _pyngraph.op import Sum

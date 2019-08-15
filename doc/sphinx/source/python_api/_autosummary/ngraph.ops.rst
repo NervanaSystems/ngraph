@@ -45,6 +45,7 @@ ngraph.ops
       greater
       greater_eq
       grn
+      hard_sigmoid
       less
       less_eq
       log
@@ -58,23 +59,27 @@ ngraph.ops
       min
       minimum
       multiply
+      mvn
       negative
       not_equal
       one_hot
       pad
       parameter
       power
+      prelu
       prod
       relu
       replace_slice
       reshape
       reverse
+      scale_shift
       select
       sign
       sin
       sinh
       slice
       softmax
+      space_to_depth
       sqrt
       subtract
       sum
