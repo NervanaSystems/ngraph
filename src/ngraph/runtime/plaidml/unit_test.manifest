@@ -149,7 +149,7 @@ logical_or
 batch_norm_inference_parameters_duplication
 batch_norm_fprop_b1c2h2w2
 batch_norm_fprop_b2c2h2w1
-batchnorm_fprop_b2c2d2h1w1
+batch_norm_fprop_b2c2d2h1w1
 batch_norm_fprop_inference_b2c2h2w1
 argmax_3D_axis_0
 argmax_3D_axis_1
