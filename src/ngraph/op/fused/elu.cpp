@@ -39,7 +39,7 @@ op::Elu::Elu(const Output<Node>& data, const double alpha)
 
 NodeVector op::Elu::decompose_op() const
 {
-    auto data = input(0).get_source_output();
+    auto data = input_value(0);
     shared_ptr<Node> alpha_node =
         make_shared<op::Constant>(data.get_element_type(), Shape{}, vector<double>{m_alpha});
 

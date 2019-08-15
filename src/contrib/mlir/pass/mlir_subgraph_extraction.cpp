@@ -279,6 +279,18 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
 
     // check on invariants expected by MLIR backend
 
+    if (TI(ngraph::op::Divide) == TI(*node))
+    {
+        auto* div = static_cast<ngraph::op::Divide*>(node.get());
+        if (div->is_pythondiv())
+        {
+            // Python specific division rounding is not supported yet.
+            return false;
+        }
+
+        return true;
+    }
+
     // Dot is 2D only
     if (TI(ngraph::op::Dot) == TI(*node))
     {
@@ -322,19 +334,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     {
         // TODO: Remove this when MLIR has float point cmp support
         if (!node->input(0).get_element_type().is_integral())
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    // Relu is supported for integer types only until MLIR adds support for lowering !std.CmpF to LLVM dialect
-    if (TI(ngraph::op::Relu) == TI(*node))
-    {
-        if (!node->get_element_type().is_integral())
         {
             return false;
         }
