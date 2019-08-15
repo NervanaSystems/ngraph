@@ -36,7 +36,7 @@ namespace ngraph
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto count = static_cast<int>(out[0].get_size());
-                auto data_type = args[0].get_element_type().get_type_enum();
+                auto data_type = args[0].get_element_type();
                 const ngraph::op::AllReduce* allreduce =
                     static_cast<const ngraph::op::AllReduce*>(node);
                 auto reduce_type = allreduce->get_reduce_type();

@@ -390,7 +390,7 @@ void pass::DynElimination::construct_range()
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-        switch (et.get_type_enum())
+        switch (et)
         {
         case element::Type_t::bf16:
             replacement = make_range_replacement<bfloat16>(et, shape, start_arg, step_arg);

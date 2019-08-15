@@ -40,7 +40,7 @@ void op::Cos::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
     adjoints.add_delta(x, -delta * (make_shared<op::Sin>(x)));
 }

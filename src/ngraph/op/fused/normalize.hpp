@@ -33,6 +33,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            Normalize() = default;
             ///
             /// \brief      Constructs a Normalize operation.
             ///
@@ -42,8 +43,8 @@ namespace ngraph
             /// \param      channel_shared  - Whether scale is shared across channels.
             /// \param      eps             - The epsilon added to L2 norm.
             ///
-            Normalize(const std::shared_ptr<ngraph::Node>& data,
-                      const std::shared_ptr<ngraph::Node>& scale,
+            Normalize(const Output<Node>& data,
+                      const Output<Node>& scale,
                       bool across_spatial,
                       bool channel_shared,
                       float eps);

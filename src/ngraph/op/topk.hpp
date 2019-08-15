@@ -44,7 +44,7 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a TopK operation
-            TopK();
+            TopK() = default;
             /// \brief Constructs a TopK operation.
             ///
             /// \param arg The input tensor
@@ -90,7 +90,7 @@ namespace ngraph
             size_t m_top_k_axis{0};
             element::Type m_index_element_type;
             bool m_compute_max{false};
-            SortType m_sort;
+            SortType m_sort{SortType::NONE};
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };

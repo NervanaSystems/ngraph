@@ -82,7 +82,6 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize.hpp"
@@ -1222,6 +1221,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Gelu>(args[0]);
             break;
         }
+        case OP_TYPEID::GeluBackpropFactor:
+        {
+            node = make_shared<op::GeluBackpropFactor>(args[0]);
+            break;
+        }
         case OP_TYPEID::Gemm:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -1343,11 +1347,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             break;
         }
 
-        case OP_TYPEID::LeakyRelu:
-        {
-            node = make_shared<op::LeakyRelu>(args[0], args[1]);
-            break;
-        }
         case OP_TYPEID::Less:
         {
             node = make_shared<op::Less>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
@@ -1369,7 +1368,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto beta = node_js.at("beta").get<double>();
             auto bias = node_js.at("bias").get<double>();
             auto nsize = node_js.at("nsize").get<size_t>();
-            node = make_shared<op::LRN>(args[0], alpha, beta, bias, nsize);
+            node = make_shared<op::LRN>(args[0], args[1], alpha, beta, bias, nsize);
             break;
         }
         case OP_TYPEID::LSTMCell:
@@ -1576,7 +1575,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Passthrough>(node_js.at("logical_type"),
                                                 node_js.at("language"),
                                                 node_js.at("function"),
-                                                args,
+                                                static_cast<OutputVector>(args),
                                                 std::move(outputs));
             break;
         }
@@ -2417,6 +2416,8 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Gelu: { break;
     }
+    case OP_TYPEID::GeluBackpropFactor: { break;
+    }
     case OP_TYPEID::Gemm:
     {
         auto tmp = dynamic_cast<const op::Gemm*>(&n);
@@ -2502,8 +2503,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["alpha"] = tmp->get_alpha();
         node["beta"] = tmp->get_beta();
         break;
-    }
-    case OP_TYPEID::LeakyRelu: { break;
     }
     case OP_TYPEID::Less:
     {

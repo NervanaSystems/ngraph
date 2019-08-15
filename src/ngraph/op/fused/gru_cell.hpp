@@ -44,6 +44,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            GRUCell() = default;
             ///
             /// \brief      Constructs GRUCell node.
             ///
@@ -56,10 +57,10 @@ namespace ngraph
             ///                               shape: [batch_size, hidden_size].
             /// \param[in]  hidden_size  The number of hidden units for recurrent cell.
             ///
-            GRUCell(const std::shared_ptr<Node>& X,
-                    const std::shared_ptr<Node>& W,
-                    const std::shared_ptr<Node>& R,
-                    const std::shared_ptr<Node>& H_t,
+            GRUCell(const Output<Node>& X,
+                    const Output<Node>& W,
+                    const Output<Node>& R,
+                    const Output<Node>& H_t,
                     std::size_t hidden_size);
 
             ///
@@ -82,10 +83,10 @@ namespace ngraph
             /// \param[in]  clip              The value defining clipping range [-clip, clip] on
             ///                               input of activation functions.
             ///
-            GRUCell(const std::shared_ptr<Node>& X,
-                    const std::shared_ptr<Node>& W,
-                    const std::shared_ptr<Node>& R,
-                    const std::shared_ptr<Node>& H_t,
+            GRUCell(const Output<Node>& X,
+                    const Output<Node>& W,
+                    const Output<Node>& R,
+                    const Output<Node>& H_t,
                     std::size_t hidden_size,
                     const std::vector<std::string>& activations,
                     const std::vector<float>& activation_alpha,
@@ -115,12 +116,12 @@ namespace ngraph
             /// \param[in]  clip              The value defining clipping range [-clip, clip] on
             ///                               input of activation functions.
             ///
-            GRUCell(const std::shared_ptr<Node>& X,
-                    const std::shared_ptr<Node>& W,
-                    const std::shared_ptr<Node>& R,
-                    const std::shared_ptr<Node>& H_t,
+            GRUCell(const Output<Node>& X,
+                    const Output<Node>& W,
+                    const Output<Node>& R,
+                    const Output<Node>& H_t,
                     std::size_t hidden_size,
-                    const std::shared_ptr<Node>& B,
+                    const Output<Node>& B,
                     const std::vector<std::string>& activations =
                         std::vector<std::string>{"sigmoid", "tanh"},
                     const std::vector<float>& activation_alpha = {},

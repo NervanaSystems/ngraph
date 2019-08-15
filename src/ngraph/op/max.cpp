@@ -42,7 +42,7 @@ shared_ptr<Node> op::Max::copy_with_new_args(const NodeVector& new_args) const
 
 shared_ptr<Node> op::Max::get_default_value() const
 {
-    switch (get_element_type().get_type_enum())
+    switch (get_element_type())
     {
     case element::Type_t::boolean:
         return make_constant_from_string("0", get_element_type(), get_shape());

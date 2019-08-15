@@ -37,11 +37,12 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            DepthToSpace() = default;
             /// \brief Constructs a DepthToSpace operation.
             ///
             /// \param data - Node producing the input tensor
             /// \param block_size - the size of the block of values to be moved
-            DepthToSpace(const std::shared_ptr<ngraph::Node>& data, std::size_t block_size);
+            DepthToSpace(const Output<Node>& data, std::size_t block_size);
 
             std::size_t get_block_size() const { return m_blocksize; }
             virtual NodeVector decompose_op() const override;

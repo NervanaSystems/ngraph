@@ -35,6 +35,7 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 
@@ -278,6 +279,18 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
 
     // check on invariants expected by MLIR backend
 
+    if (TI(ngraph::op::Divide) == TI(*node))
+    {
+        auto* div = static_cast<ngraph::op::Divide*>(node.get());
+        if (div->is_pythondiv())
+        {
+            // Python specific division rounding is not supported yet.
+            return false;
+        }
+
+        return true;
+    }
+
     // Dot is 2D only
     if (TI(ngraph::op::Dot) == TI(*node))
     {
@@ -330,18 +343,11 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         }
     }
 
-    // Relu is supported for integer types only until MLIR adds support for lowering !std.CmpF to LLVM dialect
-    if (TI(ngraph::op::Relu) == TI(*node))
+    if (TI(ngraph::op::Negative) == TI(*node))
     {
-        if (!node->get_element_type().is_integral())
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        return true;
     }
+
     return true;
 }
 

@@ -289,7 +289,7 @@ namespace ngraph
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-                switch (target_type.get_type_enum())
+                switch (target_type)
                 {
                 case element::Type_t::boolean:
                     write_buffer<char, T>(target, source, target_element_count);

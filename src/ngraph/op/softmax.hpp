@@ -30,6 +30,7 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            Softmax() = default;
             /// \brief Constructs a softmax operation.
             ///
             /// \param arg Node that produces the first input tensor.<br>
@@ -38,12 +39,13 @@ namespace ngraph
             ///
             /// Output `[d0, ...]`
             ///
-            Softmax(const std::shared_ptr<Node>& arg, const AxisSet& axes);
+            Softmax(const Output<Node>& arg, const AxisSet& axes);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
             const AxisSet& get_axes() const { return m_axes; }
+            void set_axes(const AxisSet& axes) { m_axes = axes; }
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

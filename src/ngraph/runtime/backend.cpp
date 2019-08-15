@@ -37,6 +37,9 @@ std::string runtime::Backend::s_backend_shared_library_search_directory;
 // This finds the full path of the containing shared library
 static string find_my_pathname()
 {
+#ifdef NGRAPH_STATIC_LIB_ENABLE
+    return "";
+#else
 #ifdef _WIN32
     HMODULE hModule = GetModuleHandleW(L"ngraph.dll");
     WCHAR wpath[MAX_PATH];
@@ -51,6 +54,7 @@ static string find_my_pathname()
     Dl_info dl_info;
     dladdr(reinterpret_cast<void*>(find_my_pathname), &dl_info);
     return dl_info.dli_fname;
+#endif
 #endif
 }
 
@@ -146,4 +150,24 @@ bool runtime::Backend::set_config(const map<string, string>& config, string& err
 {
     error = "set_config not supported";
     return false;
+}
+
+bool runtime::Backend::executable_can_create_tensors()
+{
+    auto A = make_shared<op::Parameter>(element::f32, Shape());
+    auto function = make_shared<Function>(NodeVector{A}, ParameterVector{A});
+    auto exec = compile(function);
+    bool exec_can_create_tensors = false;
+    try
+    {
+        auto t0 = exec->create_input_tensor(0);
+        auto t1 = exec->create_input_tensor(0, 1);
+        auto t2 = exec->create_output_tensor(0);
+        auto t3 = exec->create_output_tensor(0, 1);
+        exec_can_create_tensors = true;
+    }
+    catch (...)
+    {
+    }
+    return exec_can_create_tensors;
 }

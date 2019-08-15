@@ -33,12 +33,13 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            GRN() = default;
             /// \brief      Constructs a GRN operation.
             ///
             /// \param      data  - Node producing the input tensor
             /// \param      bias  - The bias added to the variance.
             ///
-            GRN(const std::shared_ptr<ngraph::Node>& data, float bias);
+            GRN(const Output<Node>& data, float bias);
 
             float get_bias() const { return m_bias; }
             virtual void pre_validate_and_infer_types() override;
