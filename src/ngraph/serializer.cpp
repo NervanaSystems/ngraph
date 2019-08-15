@@ -2075,7 +2075,7 @@ json JSONSerializer::serialize_node(const Node& n)
         json output_shapes = json::array();
         for (size_t i = 0; i < n.get_output_size(); ++i)
         {
-            output_shapes.push_back(n.get_output_shape(i));
+            output_shapes.push_back(write_partial_shape(n.get_output_partial_shape(i)));
         }
         node["output_shapes"] = output_shapes;
     }

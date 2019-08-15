@@ -31,11 +31,12 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
                                                   size_t iterations,
                                                   bool timing_detail,
                                                   int warmup_iterations,
-                                                  bool copy_data)
+                                                  bool copy_data,
+                                                  bool request_dynamic_support)
 {
     stopwatch timer;
     timer.start();
-    auto backend = runtime::Backend::create(backend_name);
+    auto backend = runtime::Backend::create(backend_name, request_dynamic_support);
     auto exec = backend->compile(f, timing_detail);
     timer.stop();
     cout.imbue(locale(""));
@@ -62,11 +63,20 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     vector<shared_ptr<runtime::Tensor>> results;
     for (shared_ptr<Node> out : f->get_results())
     {
-        auto result = backend->create_tensor(out->get_element_type(), out->get_shape());
-        auto tensor_data =
-            make_shared<runtime::HostTensor>(out->get_element_type(), out->get_shape());
-        results.push_back(result);
-        result_data.push_back(tensor_data);
+        if (request_dynamic_support)
+        {
+            auto result = backend->create_dynamic_tensor(out->get_element_type(),
+                                                         out->get_output_partial_shape(0));
+            results.push_back(result);
+        }
+        else
+        {
+            auto result = backend->create_tensor(out->get_element_type(), out->get_shape());
+            auto tensor_data =
+                make_shared<runtime::HostTensor>(out->get_element_type(), out->get_shape());
+            results.push_back(result);
+            result_data.push_back(tensor_data);
+        }
     }
 
     for (size_t i = 0; i < args.size(); i++)
@@ -98,7 +108,7 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
             }
         }
         exec->call(results, args);
-        if (copy_data)
+        if (copy_data && !request_dynamic_support)
         {
             for (size_t result_index = 0; result_index < results.size(); result_index++)
             {

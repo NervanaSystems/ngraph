@@ -193,6 +193,7 @@ int main(int argc, char** argv)
     bool copy_data = true;
     bool dot_file = false;
     bool double_buffer = false;
+    bool request_dynamic_support = false;
 
     configure_static_backends();
     for (size_t i = 1; i < argc; i++)
@@ -230,6 +231,16 @@ int main(int argc, char** argv)
         {
             copy_data = false;
         }
+        else if (arg == "--request_dynamic_support")
+        {
+            request_dynamic_support = true;
+
+            if (double_buffer)
+            {
+                cout << "--double_buffer and --request_dynamic_support are incompatible" << endl;
+                failed = true;
+            }
+        }
         else if (arg == "-v" || arg == "--visualize")
         {
             visualize = true;
@@ -245,6 +256,12 @@ int main(int argc, char** argv)
         else if (arg == "--double_buffer")
         {
             double_buffer = true;
+
+            if (request_dynamic_support)
+            {
+                cout << "--double_buffer and --request_dynamic_support are incompatible" << endl;
+                failed = true;
+            }
         }
         else if (arg == "-w" || arg == "--warmup_iterations")
         {
@@ -299,6 +316,7 @@ OPTIONS
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
+        --request_dynamic_support Request dynamic tensor backend support from nGraph
         --dot                     Generate Graphviz dot file
         --double_buffer           Double buffer inputs and outputs
 )###";
@@ -446,8 +464,13 @@ OPTIONS
                 }
                 else
                 {
-                    perf_data = run_benchmark(
-                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                    perf_data = run_benchmark(f,
+                                              backend,
+                                              iterations,
+                                              timing_detail,
+                                              warmup_iterations,
+                                              copy_data,
+                                              request_dynamic_support);
                 }
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(
