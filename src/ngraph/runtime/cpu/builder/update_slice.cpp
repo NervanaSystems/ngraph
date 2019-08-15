@@ -67,10 +67,10 @@ namespace ngraph
                     std::function<decltype(runtime::cpu::kernel::strided_update_slice<float, 2>)>
                         kernel;
 
-                    SELECT_BY_RANK(kernel,
-                                   args[0].get_element_type(),
-                                   arg0_shape.size(),
-                                   runtime::cpu::kernel::strided_update_slice);
+                    SELECT_KERNEL_BY_RANK(kernel,
+                                          args[0].get_element_type(),
+                                          arg0_shape.size(),
+                                          runtime::cpu::kernel::strided_update_slice);
 
                     auto functor = [&,
                                     kernel,
@@ -99,10 +99,10 @@ namespace ngraph
                 {
                     std::function<decltype(runtime::cpu::kernel::update_slice<float, 2>)> kernel;
 
-                    SELECT_BY_RANK(kernel,
-                                   args[0].get_element_type(),
-                                   arg0_shape.size(),
-                                   runtime::cpu::kernel::update_slice);
+                    SELECT_KERNEL_BY_RANK(kernel,
+                                          args[0].get_element_type(),
+                                          arg0_shape.size(),
+                                          runtime::cpu::kernel::update_slice);
 
                     auto functor = [&,
                                     kernel,
