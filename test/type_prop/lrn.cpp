@@ -70,7 +70,7 @@ TEST(type_prop, lrn_invalid_axes_rank)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Number of elements of axes must be >= 1 and <= argument rank"));
+            std::string("Number of elements of axes must be >= 0 and <= argument rank"));
     }
     catch (...)
     {

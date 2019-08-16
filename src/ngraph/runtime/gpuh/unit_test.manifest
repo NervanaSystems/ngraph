@@ -8,3 +8,6 @@ send_recv_ring
 # axes input param not supported
 lrn_across_h
 lrn_across_hw
+lrn_across_nchw
+lrn_across_nw
+lrn_across_empty

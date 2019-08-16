@@ -31,30 +31,29 @@ namespace ngraph
         {
             template <typename T>
             static void sum_region_across_axes(const T* arg,
-                                               std::vector<size_t>& axes,
+                                               size_t current_axis_index,
+                                               const std::vector<size_t>& axes,
                                                Coordinate& sum_coord,
                                                T& square_sum,
                                                const std::vector<size_t>& begin_area,
                                                const std::vector<size_t>& end_area,
                                                const CoordinateTransform& input_transform)
             {
-                if (axes.empty())
+                // all nested axes were visited
+                if (current_axis_index == axes.size())
                 {
                     square_sum += arg[input_transform.index(sum_coord)] *
                                   arg[input_transform.index(sum_coord)];
                     return;
                 }
-
-                auto current_axis = axes.front();
-                axes.erase(axes.begin());
-
+                auto current_axis = axes[current_axis_index];
                 for (auto current_axis_coord = begin_area[current_axis];
                      current_axis_coord < end_area[current_axis];
                      ++current_axis_coord)
                 {
                     sum_coord.at(current_axis) = current_axis_coord;
                     sum_region_across_axes(
-                        arg, axes, sum_coord, square_sum, begin_area, end_area, input_transform);
+                        arg, current_axis_index+1, axes, sum_coord, square_sum, begin_area, end_area, input_transform);
                 }
             }
 
@@ -91,6 +90,7 @@ namespace ngraph
                     auto sum_coord = in_coord;
                     auto axes_vec = std::vector<size_t>(axes.begin(), axes.end());
                     sum_region_across_axes(arg,
+                                           0,
                                            axes_vec,
                                            sum_coord,
                                            square_sum,
