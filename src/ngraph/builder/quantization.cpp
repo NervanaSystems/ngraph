@@ -217,18 +217,6 @@ namespace ngraph
                                                              requantization_scale);
         }
 
-        shared_ptr<Node> ScaledQuantizedMaxPool(const Output<Node>& input,
-                                                const Shape& window_shape,
-                                                const Strides& window_movement_strides,
-                                                const Shape& padding_below,
-                                                const Shape& padding_above,
-                                                const Output<Node>& min,
-                                                const Output<Node>& max)
-        {
-            return make_shared<op::QuantizedMaxPool>(
-                input, window_shape, window_movement_strides, padding_below, padding_above);
-        }
-
         shared_ptr<Node> ScaledQuantizedConvolutionBiasAdd(const Output<Node>& input,
                                                            const Output<Node>& filters,
                                                            const Output<Node>& bias,

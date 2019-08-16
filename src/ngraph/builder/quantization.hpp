@@ -25,7 +25,6 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
 
 namespace ngraph
@@ -88,14 +87,6 @@ namespace ngraph
                                                              const Output<Node>& max_filter,
                                                              const Output<Node>& min_output,
                                                              const Output<Node>& max_output);
-
-        std::shared_ptr<Node> ScaledQuantizedMaxPool(const Output<Node>& input,
-                                                     const Shape& window_shape,
-                                                     const Strides& window_movement_strides,
-                                                     const Shape& padding_below,
-                                                     const Shape& padding_above,
-                                                     const Output<Node>& min,
-                                                     const Output<Node>& max);
 
         std::shared_ptr<Node>
             ScaledQuantizedConvolutionBiasAdd(const Output<Node>& input,

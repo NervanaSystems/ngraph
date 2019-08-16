@@ -162,8 +162,6 @@ set (SRC
     op/experimental/quantized_conv_bias.hpp
     op/experimental/quantized_conv_relu.cpp
     op/experimental/quantized_conv_relu.hpp
-    op/experimental/quantized_max_pool.cpp
-    op/experimental/quantized_max_pool.hpp
     op/experimental/range.cpp
     op/experimental/range.hpp
     op/experimental/shape_of.cpp

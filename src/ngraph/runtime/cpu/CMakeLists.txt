@@ -76,7 +76,6 @@ set(SRC
     builder/quantized_conv.cpp
     builder/quantized_concat.cpp
     builder/quantized_dot.cpp
-    builder/quantized_max_pool.cpp
     builder/quantized_matmul.cpp
     builder/reshape.cpp
     builder/reverse.cpp
