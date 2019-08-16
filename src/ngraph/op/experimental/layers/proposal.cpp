@@ -35,10 +35,6 @@ op::Proposal::Proposal(const std::shared_ptr<Node>& class_probs,
 
 void op::Proposal::validate_and_infer_types()
 {
-    const auto& class_prob_et = get_input_element_type(0);
-    const auto& class_logits_et = get_input_element_type(1);
-    const auto& image_shape_et = get_input_element_type(2);
-
     set_input_is_relevant_to_shape(2);
 
     const auto& class_probs_pshape = get_input_partial_shape(0);
