@@ -19,6 +19,8 @@
 #include <cuda_runtime.h>
 #include <cudnn.h>
 
+#include "ngraph/runtime/gpu/gpu_backend_visibility.hpp"
+
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
@@ -33,20 +35,11 @@
 using namespace ngraph;
 using namespace std;
 
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+extern "C" GPU_BACKEND_API void ngraph_register_gpu_backend()
 {
-    class LocalBackendConstructor : public runtime::BackendConstructor
-    {
-    public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
-        {
-            return std::make_shared<runtime::gpu::GPU_Backend>();
-        }
-    };
-
-    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
-        new LocalBackendConstructor());
-    return s_backend_constructor.get();
+    runtime::BackendManager::register_backend("GPU", [](const std::string& config) {
+        return std::make_shared<runtime::gpu::GPU_Backend>();
+    });
 }
 
 runtime::gpu::GPU_Backend::GPU_Backend()

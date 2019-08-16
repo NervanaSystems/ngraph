@@ -160,7 +160,6 @@ namespace ngraph
                 }
                 return functor;
             }
-            REGISTER_CF_BUILDER(Reshape);
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Reshape)
@@ -247,10 +246,11 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Reshape);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_reshape_cpp() {}
-#endif
+            void register_builders_reshape_cpp()
+            {
+                REGISTER_CF_BUILDER(Reshape);
+                REGISTER_OP_BUILDER(Reshape);
+            }
         }
     }
 }

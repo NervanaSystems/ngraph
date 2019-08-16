@@ -17,9 +17,12 @@
 #include <tbb/tbb_stddef.h>
 
 #include "cpu_backend_visibility.h"
+
+#include "ngraph/component_manager.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
@@ -33,53 +36,18 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::BackendConstructor* runtime::cpu::get_backend_constructor_pointer()
+extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 {
-    class CPU_BackendConstructor : public runtime::BackendConstructor
-    {
-    public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+    runtime::BackendManager::register_backend("CPU", [](const std::string& config) {
+        static bool is_initialized = false;
+        if (!is_initialized)
         {
-            // Force TBB to link to the backend
             tbb::TBB_runtime_interface_version();
-            return make_shared<runtime::cpu::CPU_Backend>();
+            ngraph::runtime::cpu::register_builders();
+            is_initialized = true;
         }
-    };
-
-    static unique_ptr<runtime::BackendConstructor> s_backend_constructor(
-        new CPU_BackendConstructor());
-    return s_backend_constructor.get();
-}
-
-#if !defined(NGRAPH_CPU_STATIC_LIB_ENABLE)
-extern "C" CPU_BACKEND_API runtime::BackendConstructor* get_backend_constructor_pointer()
-{
-    return runtime::cpu::get_backend_constructor_pointer();
-}
-#endif
-
-void runtime::cpu::static_initialize()
-{
-    static bool s_is_initialized = false;
-    if (!s_is_initialized)
-    {
-        s_is_initialized = true;
-        BackendManager::register_backend("CPU", runtime::cpu::get_backend_constructor_pointer());
-    }
-}
-
-namespace
-{
-    static class CPUStaticInit
-    {
-    public:
-        CPUStaticInit()
-        {
-            runtime::BackendManager::register_backend(
-                "CPU", runtime::cpu::get_backend_constructor_pointer());
-        }
-        ~CPUStaticInit() {}
-    } s_cpu_static_init;
+        return make_shared<runtime::cpu::CPU_Backend>();
+    });
 }
 
 runtime::cpu::CPU_Backend::~CPU_Backend()
