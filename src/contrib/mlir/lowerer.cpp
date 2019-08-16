@@ -1013,20 +1013,23 @@ namespace
         if (auto floatTy = type.dyn_cast<FloatType>())
         {
             if (floatTy.isF32())
+            {
                 return intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+            }
             else if (floatTy.isF64())
+            {
                 return intrinsics::constant_float(llvm::APFloat(0.0), floatTy);
+            }
             else
-                NGRAPH_CHECK(false, "Unsupported floating-point precision");
+            {
+                NGRAPH_UNREACHABLE("Unsupported floating-point precision");
+            }
         }
         else if (auto intTy = type.dyn_cast<IntegerType>())
         {
             return intrinsics::constant_int(0, intTy.getWidth());
         }
-        else
-        {
-            NGRAPH_CHECK(false, "Unsupported type");
-        }
+        NGRAPH_UNREACHABLE("Unsupported type");
     }
 }
 
