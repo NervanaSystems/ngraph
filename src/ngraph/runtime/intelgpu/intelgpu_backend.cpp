@@ -2076,7 +2076,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
         case OP_TYPEID::RNNCell:
-        case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:

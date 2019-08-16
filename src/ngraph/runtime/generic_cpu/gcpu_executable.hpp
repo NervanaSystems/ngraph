@@ -1281,7 +1281,6 @@ private:
             break;
         }
 
-        case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
         case OP_TYPEID::QuantizedConvolutionBiasSignedAdd:

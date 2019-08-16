@@ -127,23 +127,6 @@ namespace ngraph
             return make_shared<op::QuantizedConcat>(rescaled_args, concatenation_axis);
         }
 
-        shared_ptr<Node> ScaledQuantizedAvgPool(const Output<Node>& input,
-                                                const Shape& window_shape,
-                                                const Strides& window_movement_strides,
-                                                const Shape& padding_below,
-                                                const Shape& padding_above,
-                                                bool include_padding_in_avg_computation,
-                                                const Output<Node>& min,
-                                                const Output<Node>& max)
-        {
-            return make_shared<op::QuantizedAvgPool>(input,
-                                                     window_shape,
-                                                     window_movement_strides,
-                                                     padding_below,
-                                                     padding_above,
-                                                     include_padding_in_avg_computation);
-        }
-
         shared_ptr<Node> ScaledQuantizedConvolutionBias(const Output<Node>& input,
                                                         const Output<Node>& filters,
                                                         const Output<Node>& bias,

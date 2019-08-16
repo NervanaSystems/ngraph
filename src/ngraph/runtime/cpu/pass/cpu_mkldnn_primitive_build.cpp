@@ -27,7 +27,6 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
@@ -1513,14 +1512,6 @@ namespace ngraph
 
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
-                    QuantizedAvgPool)
-                {
-                    construct_primitive_build_string_avg_pool<QuantizedAvgPool>(
-                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
-                }
-
-                template <>
-                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     MaxPoolWithIndices)
                 {
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
@@ -2502,8 +2493,6 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
     {TI(Softmax), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Softmax>},
     {TI(MaxPool), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPool>},
     {TI(AvgPool), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<AvgPool>},
-    {TI(QuantizedAvgPool),
-     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedAvgPool>},
     {TI(AvgPoolBackprop),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<AvgPoolBackprop>},
     {TI(MaxPoolBackprop),

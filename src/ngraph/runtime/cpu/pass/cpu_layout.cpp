@@ -34,7 +34,6 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
@@ -1429,25 +1428,6 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedAvgPool)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        vector<memory::desc> i_mds;
-                        vector<memory::desc> o_mds;
-
-                        AvgPoolLayout<ngraph::op::QuantizedAvgPool>(node, i_mds, o_mds);
-
-                        node = insert_input_conversions(external_function, node, i_mds);
-                        set_output_layouts(node, o_mds);
-                    }
-                    else
-                    {
-                        set_native_layouts(external_function, node);
-                    }
-                }
-
-                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -2331,8 +2311,6 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPool>},
-    {TI(ngraph::op::QuantizedAvgPool),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
     {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
     {TI(ngraph::op::MaxPoolWithIndices),

@@ -55,7 +55,6 @@ namespace ngraph
                 register_builders_pad_cpp();
                 register_builders_product_cpp();
                 register_builders_quantization_cpp();
-                register_builders_quantized_avg_pool_cpp();
                 register_builders_quantized_conv_cpp();
                 register_builders_quantized_dot_cpp();
                 register_builders_quantized_matmul_cpp();

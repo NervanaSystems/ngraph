@@ -55,7 +55,6 @@
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
@@ -2787,28 +2786,6 @@ namespace ngraph
                     writer << "                 {" << join(max_pool->get_padding_below()) << "},\n";
                     writer << "                 {" << join(max_pool->get_padding_above())
                            << "});\n";
-                }
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedAvgPool)
-            {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    size_t avg_pool_index;
-                    std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, avg_pool_index, deps);
-
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
-                           << args[0].get_name() << ");\n";
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
-                           << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(avg_pool_index)
-                           << ");\n";
-                }
-                else
-                {
-                    throw ngraph_error("unsupported parameters for QuantizedAvgPool");
                 }
             }
 
