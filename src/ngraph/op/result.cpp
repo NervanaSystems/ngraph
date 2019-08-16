@@ -32,7 +32,7 @@ op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
 {
     constructor_validate_and_infer_types();
     // always borrow the placement conf even the default one
-    set_placement_index(get_argument(0)->get_placement_index());
+    set_placement_index(input_value(0).get_node()->get_placement_index());
 }
 
 void op::Result::validate_and_infer_types()
@@ -55,5 +55,5 @@ void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
 {
     auto delta = deltas.at(0);
 
-    adjoints.add_delta(get_argument(0), delta);
+    adjoints.add_delta(input_value(0), delta);
 }

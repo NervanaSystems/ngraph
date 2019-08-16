@@ -67,7 +67,7 @@ void op::NormalizeL2::pre_validate_and_infer_types()
 
 NodeVector op::NormalizeL2::decompose_op() const
 {
-    Output<Node> data{input(0).get_source_output()};
+    Output<Node> data{input_value(0)};
     const Shape input_shape{data.get_shape()};
 
     // Reshape to 4D tensor.

@@ -114,8 +114,8 @@ namespace ngraph
                                       const Shape& output_shape,
                                       const std::size_t groups = 1UL);
 
-            Output<Node> get_data() { return input(0).get_source_output(); }
-            Output<Node> get_filters() { return input(1).get_source_output(); }
+            Output<Node> get_data() { return input_value(0); }
+            Output<Node> get_filters() { return input_value(1); }
             const Strides& get_strides() const { return m_strides; }
             const Strides& get_dilations() const { return m_dilations; }
             const CoordinateDiff& get_padding_begin() const { return m_padding_begin; }
