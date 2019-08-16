@@ -52,8 +52,14 @@ namespace ngraph
                      ++current_axis_coord)
                 {
                     sum_coord.at(current_axis) = current_axis_coord;
-                    sum_region_across_axes(
-                        arg, current_axis_index+1, axes, sum_coord, square_sum, begin_area, end_area, input_transform);
+                    sum_region_across_axes(arg,
+                                           current_axis_index + 1,
+                                           axes,
+                                           sum_coord,
+                                           square_sum,
+                                           begin_area,
+                                           end_area,
+                                           input_transform);
                 }
             }
 
