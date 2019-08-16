@@ -100,6 +100,8 @@ namespace
                                  PatternRewriter& rewriter,
                                  DialectLoweringPass& pass);
 
+    ValueHandle createZeroConstant(mlir::Type type);
+
     /// Conversion from types in the nGraph dialect to the Standard dialect.
     class NGraphTypeConverter : public TypeConverter
     {
@@ -509,20 +511,8 @@ namespace
 
         LoopNestBuilder(pivs, lbs, ubs, steps)([&] {
             ValueHandle val = iLHS(ivs);
-            if (auto floatTy = elemTy.dyn_cast<FloatType>())
-            {
-                ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
-                iRes(ivs) = intrinsics::select(val > zero, val, zero);
-            }
-            else if (auto intTy = elemTy.dyn_cast<IntegerType>())
-            {
-                ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
-                iRes(ivs) = intrinsics::select(val > zero, val, zero);
-            }
-            else
-            {
-                NGRAPH_CHECK(false, "Unsupported type for Relu");
-            }
+            ValueHandle zero = createZeroConstant(elemTy);
+            iRes(ivs) = intrinsics::select(val > zero, val, zero);
         });
 
         rewriter.replaceOp(op, {result});
@@ -840,20 +830,8 @@ namespace
             ValueHandle val = iLHS(ivs);
             if (isa<NGNegOp>(op))
             {
-                if (auto floatTy = elemTy.dyn_cast<FloatType>())
-                {
-                    ValueHandle zero = intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
-                    iRes(ivs) = zero - val;
-                }
-                else if (auto intTy = elemTy.dyn_cast<IntegerType>())
-                {
-                    ValueHandle zero = intrinsics::constant_int(0, intTy.getWidth());
-                    iRes(ivs) = zero - val;
-                }
-                else
-                {
-                    NGRAPH_CHECK(false, "Unsupported type for Negative");
-                }
+                ValueHandle zero = createZeroConstant(elemTy);
+                iRes(ivs) = zero - val;
             }
             else
             {
@@ -1028,6 +1006,27 @@ namespace
         }
 
         rewriter.replaceOp(op, result);
+    }
+
+    ValueHandle createZeroConstant(mlir::Type type)
+    {
+        if (auto floatTy = type.dyn_cast<FloatType>())
+        {
+            if (floatTy.isF32())
+                return intrinsics::constant_float(llvm::APFloat(0.0f), floatTy);
+            else if (floatTy.isF64())
+                return intrinsics::constant_float(llvm::APFloat(0.0), floatTy);
+            else
+                NGRAPH_CHECK(false, "Unsupported floating-point precision");
+        }
+        else if (auto intTy = type.dyn_cast<IntegerType>())
+        {
+            return intrinsics::constant_int(0, intTy.getWidth());
+        }
+        else
+        {
+            NGRAPH_CHECK(false, "Unsupported type");
+        }
     }
 }
 
