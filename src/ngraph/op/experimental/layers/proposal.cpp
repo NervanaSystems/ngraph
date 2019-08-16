@@ -39,21 +39,6 @@ void op::Proposal::validate_and_infer_types()
     const auto& class_logits_et = get_input_element_type(1);
     const auto& image_shape_et = get_input_element_type(2);
 
-    NODE_VALIDATION_CHECK(this,
-                          class_prob_et.compatible(element::Type_t::f32),
-                          "Class input input must have element type f32, but has ",
-                          class_prob_et);
-
-    NODE_VALIDATION_CHECK(this,
-                          class_logits_et.compatible(element::Type_t::f32),
-                          "Class logits input must have element type f32, but has ",
-                          class_logits_et);
-
-    NODE_VALIDATION_CHECK(this,
-                          image_shape_et.compatible(element::Type_t::f32),
-                          "Image shape input must have element type f32, but has ",
-                          image_shape_et);
-
     set_input_is_relevant_to_shape(2);
 
     const auto& class_probs_pshape = get_input_partial_shape(0);
