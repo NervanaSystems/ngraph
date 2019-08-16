@@ -16,6 +16,7 @@
 
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/multiply.hpp"
 
 using namespace std;
@@ -24,7 +25,7 @@ using namespace ngraph;
 const string op::LRN::type_name{"LRN"};
 
 op::LRN::LRN(const Output<Node>& arg, double alpha, double beta, double bias, size_t size)
-    : LRN(arg, op::Constant::create(element::i32, Shape{1}, {1}), alpha, beta, bias, size)
+    : LRN(arg, op::Constant::create(element::u64, Shape{1}, {1}), alpha, beta, bias, size)
 {
 }
 
@@ -41,6 +42,15 @@ op::LRN::LRN(const Output<Node>& arg,
     , m_size(size)
 {
     constructor_validate_and_infer_types();
+}
+
+AxisSet op::LRN::get_reduction_axes() const
+{
+    auto axes_node = input(1).get_source_output().get_node_shared_ptr();
+    auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
+    auto axes_vector = axes_constant->get_vector<size_t>();
+    AxisSet reduction_axes{axes_vector};
+    return reduction_axes;
 }
 
 void op::LRN::validate_and_infer_types()
@@ -74,6 +84,13 @@ void op::LRN::validate_and_infer_types()
         "Number of elements of axes must be >= 1 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");
+
+    const auto& axes_type = get_input_element_type(1);
+    NODE_VALIDATION_CHECK(this,
+                          axes_type.compatible(element::Type_t::u64),
+                          "Axes input must have element type u64 (axes tpye: ",
+                          axes_type,
+                          ").");
 }
 
 shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const

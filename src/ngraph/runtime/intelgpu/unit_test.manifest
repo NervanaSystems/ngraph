@@ -135,3 +135,7 @@ quantized_conv_int32_output
 
 # Need to update implementation
 divide_python_rounding_int32
+
+# axes input param not supported
+lrn_across_h
+lrn_across_hw
