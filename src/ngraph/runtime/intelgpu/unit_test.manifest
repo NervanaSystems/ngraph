@@ -142,3 +142,4 @@ lrn_across_hw
 lrn_across_nchw
 lrn_across_nw
 lrn_across_empty
+lrn_6D_across_2_axes
