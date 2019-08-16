@@ -20,8 +20,6 @@
 #include <numeric>
 #include <algorithm>
 
-#include <iostream> //TODO
-
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/util.hpp"
 
@@ -31,14 +29,15 @@ namespace ngraph
     {
         namespace reference
         {
-            static void region_across_axis(
-                std::vector<int64_t>& axes,
-                std::vector<int>& begin_area,
-                std::vector<int>& end_area,
+            template <typename T>
+            static void sum_region_across_axes(
+                const T* arg,
+                std::vector<size_t>& axes,
                 Coordinate& sum_coord,
-                float& square_sum,
-                float* arg,
-                CoordinateTransform& input_transform)
+                T& square_sum,
+                const std::vector<size_t>& begin_area,
+                const std::vector<size_t>& end_area,
+                const CoordinateTransform& input_transform)
             {
                 if (axes.empty())
                 {
@@ -46,13 +45,14 @@ namespace ngraph
                         arg[input_transform.index(sum_coord)];
                     return;
                 }
+
                 auto current_axis = axes.front();
                 axes.erase(axes.begin());
-                std::cout << "axes.size: " << axes.size() << ", current_axis: " <<current_axis << ", begin: " << begin_area[current_axis] << ", end: " << end_area[current_axis] << "\n";
-                for (auto elem_index = begin_area[current_axis]; elem_index < end_area[current_axis]; ++elem_index)
+
+                for (auto current_axis_coord = begin_area[current_axis]; current_axis_coord < end_area[current_axis]; ++current_axis_coord)
                 {
-                    sum_coord.at(current_axis) = elem_index;
-                    region_across_axis(axes, begin_area, end_area, sum_coord, square_sum, arg, input_transform);
+                    sum_coord.at(current_axis) = current_axis_coord;
+                    sum_region_across_axes(arg, axes, sum_coord, square_sum, begin_area, end_area, input_transform);
                 }
             }
 
@@ -70,27 +70,28 @@ namespace ngraph
                 T beta = static_cast<T>(dbeta);
                 T bias = static_cast<T>(dbias);
 
-                std::vector<int> begin_area(arg_shape.size());
-                std::vector<int> end_area(arg_shape.size());
+                std::vector<size_t> begin_area(arg_shape.size());
+                std::vector<size_t> end_area(arg_shape.size());
 
                 CoordinateTransform input_transform(arg_shape);
                 for (const Coordinate& in_coord : input_transform)
                 {
-                    for (const auto axis_coord : axes)
+                    // area determined by in_coord local neighborhood
+                    for (const auto& axis_coord : axes)
                     {
-                        begin_area[axis_coord] = std::max<int>((int)0, (int)in_coord.at(axis_coord) - (int)(size - 1) / 2);
-                        end_area[axis_coord] = std::min<int>((int)arg_shape.at(axis_coord), (int)in_coord.at(axis_coord) + (size - 1) / 2 + 1);
+                        begin_area[axis_coord] = std::max<int>(0, in_coord.at(axis_coord) - (size - 1) / 2);
+                        end_area[axis_coord] = std::min<int>(arg_shape.at(axis_coord), in_coord.at(axis_coord) + (size - 1) / 2 + 1);
                     }
-                    float square_sum = 0;
+
+                    T square_sum = 0;
                     auto sum_coord = in_coord;
-                    auto axes_vec = axes.to_vector();
-                    region_across_axis(
+                    auto axes_vec = std::vector<size_t>(axes.begin(), axes.end());
+                    sum_region_across_axes(arg,
                         axes_vec,
-                        begin_area,
-                        end_area,
                         sum_coord,
                         square_sum,
-                        (float*)arg,
+                        begin_area,
+                        end_area,
                         input_transform);
 
                     T x = arg[input_transform.index(in_coord)];
