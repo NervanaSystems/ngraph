@@ -41,15 +41,18 @@ namespace ngraph
                 CoordinateTransform& input_transform)
             {
                 if (axes.empty())
-                    return;
-                auto current_axis = axes.front();
-                axes.pop_back();
-                for (auto elem_index = begin_area[current_axis]; elem_index < end_area[current_axis]; ++elem_index)
                 {
-                    region_across_axis(axes, begin_area, end_area, sum_coord, square_sum, arg, input_transform);
-                    sum_coord.at(current_axis) = elem_index;
                     square_sum += arg[input_transform.index(sum_coord)] *
                         arg[input_transform.index(sum_coord)];
+                    return;
+                }
+                auto current_axis = axes.front();
+                axes.erase(axes.begin());
+                std::cout << "axes.size: " << axes.size() << ", current_axis: " <<current_axis << ", begin: " << begin_area[current_axis] << ", end: " << end_area[current_axis] << "\n";
+                for (auto elem_index = begin_area[current_axis]; elem_index < end_area[current_axis]; ++elem_index)
+                {
+                    sum_coord.at(current_axis) = elem_index;
+                    region_across_axis(axes, begin_area, end_area, sum_coord, square_sum, arg, input_transform);
                 }
             }
 
