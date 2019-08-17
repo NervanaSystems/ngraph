@@ -287,10 +287,12 @@ namespace
         // TODO:
         // Enable dynamic memref allocation via call-back to nGraph allocator
         // We should create a list of Values representing each dynamic dim
-        // The values would be computed based on the shape of the input to the ng op we are lowering.
+        // The values would be computed based on the shape of the input to the ng op we are
+        // lowering.
         // E.g. If lowering concat, Value for dynamic concat axis will be the sum of input dims.
         // The lowerer will generate code to compute the dims.
-        // This is better be done via std.AllocOp but we need to make it hookable to nGraph allocator call-back.
+        // This is better be done via std.AllocOp but we need to make it hookable to nGraph
+        // allocator call-back.
 
         return alloc;
     }
@@ -739,7 +741,8 @@ namespace
         // ...
         //               for I_(M-1):0 -> indices.dim[M-1]
         //                 res[P_0, P_1, .. P_(A-1), I_0, .., I_(M-1), P_(A+1), ... P_(N-1)] =
-        //                   params[P_0, P_1, .. P_(A-1), indices[I_0, .., I_(M-1)], P_(A+1), ... P_(N-1)];
+        //                   params[P_0, P_1, .. P_(A-1), indices[I_0, .., I_(M-1)],
+        //                          P_(A+1), ... P_(N-1)];
 
         LoopNestBuilder(paramsIVPtrs, paramsLbs, paramsUbs, paramsSteps)([&] {
             LoopNestBuilder(indicesIVPtrs, indicesLbs, indicesUbs, indicesSteps)([&] {
