@@ -81,7 +81,8 @@ static bool eliminate_slice(const std::shared_ptr<Node>& node)
 
 static bool replace_broadcast_like(const std::shared_ptr<Node>& node)
 {
-    // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
+    // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like"
+    // argument
     auto broadcast_like = std::static_pointer_cast<op::BroadcastLike>(node);
     replace_node(node,
                  std::make_shared<op::Broadcast>(broadcast_like->get_argument(0),
