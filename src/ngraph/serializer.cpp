@@ -1170,7 +1170,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Elu:
         {
-            node = make_shared<op::Elu>(args[0], args[1]);
+            auto alpha = node_js.at("alpha").get<double>();
+            node = make_shared<op::Elu>(args[0], alpha);
             break;
         }
         case OP_TYPEID::EmbeddingLookup:
@@ -1219,6 +1220,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Gelu:
         {
             node = make_shared<op::Gelu>(args[0]);
+            break;
+        }
+        case OP_TYPEID::GeluBackpropFactor:
+        {
+            node = make_shared<op::GeluBackpropFactor>(args[0]);
             break;
         }
         case OP_TYPEID::Gemm:
@@ -1363,7 +1369,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto beta = node_js.at("beta").get<double>();
             auto bias = node_js.at("bias").get<double>();
             auto nsize = node_js.at("nsize").get<size_t>();
-            node = make_shared<op::LRN>(args[0], alpha, beta, bias, nsize);
+            node = make_shared<op::LRN>(args[0], args[1], alpha, beta, bias, nsize);
             break;
         }
         case OP_TYPEID::LSTMCell:
@@ -2392,7 +2398,11 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
-    case OP_TYPEID::Elu: { break;
+    case OP_TYPEID::Elu:
+    {
+        auto tmp = dynamic_cast<const op::Elu*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        break;
     }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
@@ -2432,6 +2442,8 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Gelu: { break;
+    }
+    case OP_TYPEID::GeluBackpropFactor: { break;
     }
     case OP_TYPEID::Gemm:
     {
