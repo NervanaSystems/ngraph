@@ -101,12 +101,15 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
 
 // The sub-graph construction algorithm is as follows
 // For each node, check its predecessors, if
-// - all predecessors in sub-graphs belong to the same sub-graph (graph ID), then extend the sub-graph to include the current node.
+// - all predecessors in sub-graphs belong to the same sub-graph (graph ID), then extend the
+//   sub-graph to include the current node.
 //   Predecessors outside sub-graphs are marked as input to the sub-graph.
-// - predecessors in sub-graphs belong to different sub-graphs, then merge all the sub-graphs into one, and add current node to it.
-//   Predecessors outside sub-graphs are marked as input to the sub-graph.
+// - predecessors in sub-graphs belong to different sub-graphs, then merge all the sub-graphs into
+//   one, and add current node to it. Predecessors outside sub-graphs are marked as input to the
+//   sub-graph.
 //
-// If the node has any external inputs, then it's possible that the input may come from one of the predecessor sub-graphs (cycle).
+// If the node has any external inputs, then it's possible that the input may come from one of the
+// predecessor sub-graphs (cycle).
 // If a cycle is found, always start a new sub-graph.
 //
 // For each sub-graph found build a CompiledKernel(CK) node around it as follows
@@ -380,7 +383,8 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
     {
         if (subgraph_ids.find(get_subgraph_id(node)) != subgraph_ids.end())
         {
-            // This node is inside a sub-graph. If we are coming from outside the sub-graphs, then we formed a cycle.
+            // This node is inside a sub-graph. If we are coming from outside the sub-graphs, then
+            // we formed a cycle.
             if (!inside_subgraphs)
             {
                 return true;
