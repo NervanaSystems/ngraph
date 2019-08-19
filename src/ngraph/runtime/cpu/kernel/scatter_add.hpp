@@ -49,7 +49,8 @@ namespace ngraph
                     }
                 }
 
-                // ScatterAdd is to update bunch of slices of the inputs. The rank of slice is 1 less than the rank of the inputs.
+                // ScatterAdd is to update bunch of slices of the inputs. The rank of slice is 1
+                // less than the rank of the inputs.
                 template <typename ElementType,
                           typename IndicesType,
                           unsigned int Rank1,
@@ -63,7 +64,8 @@ namespace ngraph
                                  const Shape& updates_shape,
                                  int arena)
                 {
-                    // For Eigen slice op, both parameters (offsets and extents) need to have the same rank.
+                    // For Eigen slice op, both parameters (offsets and extents) need to have the
+                    // same rank.
                     // Here *_offsets and *_extents have the same rank.
                     Eigen::array<Eigen::Index, Rank1> in_dims, in_extents, in_offsets;
                     Eigen::array<Eigen::Index, Rank2> updates_dims, updates_extents,

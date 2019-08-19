@@ -42,11 +42,11 @@ namespace ngraph
                 size_t element_count = out[0].get_size();
 
                 auto arg2_buffer_index =
-                    external_function->get_buffer_index(args[2].get_name()); //use_seed
+                    external_function->get_buffer_index(args[2].get_name()); // use_seed
                 auto arg3_buffer_index =
-                    external_function->get_buffer_index(args[3].get_name()); //seed
+                    external_function->get_buffer_index(args[3].get_name()); // seed
                 auto arg4_buffer_index =
-                    external_function->get_buffer_index(args[4].get_name()); //prob
+                    external_function->get_buffer_index(args[4].get_name()); // prob
 
                 auto seed_attr = gm->get_use_seed() ? gm->get_seed() : 0;
                 auto index = external_function->add_state(

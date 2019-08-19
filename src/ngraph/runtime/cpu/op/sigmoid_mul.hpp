@@ -46,7 +46,8 @@ namespace ngraph
                                             const Output<Node>& input_1,
                                             const FunctionType input_0_type,
                                             const FunctionType input_1_type);
-            /// WARNING: copy_with_new_args() implicitly expects new args must match the original input function types.
+            /// WARNING: copy_with_new_args() implicitly expects new args must match the original
+            /// input function types.
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
