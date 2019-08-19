@@ -656,7 +656,8 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::format 
 
 bool runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(mkldnn::memory::format fmt)
 {
-    if (fmt == memory::format::nChw8c || fmt == memory::format::nChw16c)
+    if (fmt == memory::format::nChw8c || fmt == memory::format::nChw16c ||
+        fmt == memory::format::OIhw4i16o4i_s8s8 || fmt == memory::format::OIhw4i16o4i)
     {
         return true;
     }

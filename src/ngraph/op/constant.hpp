@@ -28,11 +28,23 @@
 
 namespace ngraph
 {
+    namespace runtime
+    {
+        namespace cpu
+        {
+            namespace pass
+            {
+                class CPUConvertLayoutConstantFolding;
+            }
+        }
+    }
     namespace op
     {
         /// \brief Class for constants.
         class Constant : public Node
         {
+            friend class ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding;
+
         public:
             NGRAPH_API
             static const std::string type_name;
