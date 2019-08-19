@@ -300,6 +300,11 @@ def NGConvolutionOp :
 
   let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
   let verifier = [{ return verifyOp(this); }];
+  let extraClassDeclaration = [{
+    void setStrides(ArrayAttr& arrayAttr)  { this->setAttr("strides", arrayAttr);  }
+    void setPadBelow(ArrayAttr& arrayAttr) { this->setAttr("padBelow", arrayAttr); }
+    void setPadAbove(ArrayAttr& arrayAttr) { this->setAttr("padAbove", arrayAttr); }
+  }];
 }
 
 // Terminator Ops
