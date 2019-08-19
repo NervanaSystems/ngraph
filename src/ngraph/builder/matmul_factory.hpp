@@ -29,11 +29,6 @@ namespace ngraph
         class MatmulFactory
         {
         public:
-            explicit MatmulFactory(const NodeVector& inputs)
-                : m_inputs(inputs)
-            {
-            }
-
             explicit MatmulFactory(const OutputVector& inputs)
                 : m_inputs({inputs.at(0).get_node_shared_ptr(), inputs.at(0).get_node_shared_ptr()})
             {
@@ -64,7 +59,7 @@ namespace ngraph
         class QLinearMatmulFactory : public MatmulFactory
         {
         public:
-            explicit QLinearMatmulFactory(const NodeVector& inputs)
+            explicit QLinearMatmulFactory(const OutputVector& inputs)
                 : MatmulFactory(inputs)
             {
             }
@@ -79,7 +74,7 @@ namespace ngraph
         class MatmulIntegerFactory : public MatmulFactory
         {
         public:
-            explicit MatmulIntegerFactory(const NodeVector& inputs)
+            explicit MatmulIntegerFactory(const OutputVector& inputs)
                 : MatmulFactory(inputs)
             {
             }

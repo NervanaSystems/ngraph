@@ -27,9 +27,11 @@ namespace ngraph
             {
                 NodeVector qlinear_matmul(const Node& node)
                 {
-                    auto factory = builder::QLinearMatmulFactory(node.get_ng_inputs());
-                    std::size_t left_rank{node.get_ng_inputs().at(0)->get_shape().size()};
-                    std::size_t right_rank{node.get_ng_inputs().at(3)->get_shape().size()};
+                    auto ng_inputs = node.get_ng_inputs();
+                    auto factory =
+                        builder::QLinearMatmulFactory({ng_inputs.at(0), ng_inputs.at(1)});
+                    std::size_t left_rank{ng_inputs.at(0)->get_shape().size()};
+                    std::size_t right_rank{ng_inputs.at(1)->get_shape().size()};
 
                     if (left_rank == 0 || right_rank == 0)
                     {
