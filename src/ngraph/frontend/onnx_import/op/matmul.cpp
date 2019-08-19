@@ -28,7 +28,8 @@ namespace ngraph
                 NodeVector matmul(const Node& node)
                 {
                     auto ng_inputs = node.get_ng_inputs();
-                    auto factory = builder::MatmulFactory({ng_inputs.at(0), ng_inputs.at(1)});
+                    auto factory = builder::MatmulFactory(
+                        (OutputVector(std::begin(ng_inputs), std::end(ng_inputs))));
                     std::size_t left_rank{ng_inputs.at(0)->get_shape().size()};
                     std::size_t right_rank{ng_inputs.at(1)->get_shape().size()};
 

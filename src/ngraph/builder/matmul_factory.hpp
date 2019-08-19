@@ -30,7 +30,7 @@ namespace ngraph
         {
         public:
             explicit MatmulFactory(const OutputVector& inputs)
-                : m_inputs({inputs.at(0).get_node_shared_ptr(), inputs.at(0).get_node_shared_ptr()})
+                : m_inputs(inputs)
             {
             }
 
@@ -52,7 +52,7 @@ namespace ngraph
             virtual std::shared_ptr<Node> make_dot(const std::shared_ptr<Node>& left,
                                                    const std::shared_ptr<Node>& right);
 
-            const NodeVector m_inputs;
+            const OutputVector m_inputs;
         };
 
         /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX QLinearMatMul operation.

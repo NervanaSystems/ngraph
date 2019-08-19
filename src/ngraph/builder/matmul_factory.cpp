@@ -60,12 +60,12 @@ static shared_ptr<Node> get_sub_matrix(const shared_ptr<Node>& node, size_t idx)
 
 shared_ptr<Node> builder::MatmulFactory::get_left()
 {
-    return m_inputs.at(0);
+    return m_inputs.at(0).get_node_shared_ptr();
 }
 
 shared_ptr<Node> builder::MatmulFactory::get_right()
 {
-    return m_inputs.at(1);
+    return m_inputs.at(1).get_node_shared_ptr();
 }
 
 NodeVector builder::MatmulFactory::make_matmul_op()
@@ -156,7 +156,7 @@ shared_ptr<Node> builder::MatmulFactory::make_dot(const shared_ptr<Node>& left,
 
 shared_ptr<Node> builder::QLinearMatmulFactory::get_right()
 {
-    return m_inputs.at(3);
+    return m_inputs.at(3).get_node_shared_ptr();
 }
 
 shared_ptr<Node> builder::QLinearMatmulFactory::make_dot(const shared_ptr<Node>& left,
@@ -186,7 +186,7 @@ shared_ptr<Node> builder::MatmulIntegerFactory::make_dot(const shared_ptr<Node>&
     auto right_zero_point = builder::make_constant(right->get_element_type(), Shape{}, 0);
     if (num_inputs == 4)
     {
-        right_zero_point = m_inputs.at(3);
+        right_zero_point = m_inputs.at(3).get_node_shared_ptr();
     }
 
     return builder::quantization::QuantizedLinearMatmulInteger(
