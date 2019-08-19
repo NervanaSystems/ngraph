@@ -28,7 +28,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
-#include "ngraph/op/result.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/provenance.hpp"
@@ -139,10 +138,12 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
         throw ngraph_error("Result nodes cannot be replaced.");
     }
 
-    if (target->get_users().empty())
-    {
-        throw ngraph_error("replacing an unreachable node");
-    }
+    NGRAPH_CHECK(!target->get_users().empty(),
+                 "Attempted to replace unreachable node '",
+                 *target,
+                 "'. Replacement: '",
+                 *replacement,
+                 "'");
 
     // Fix input/output descriptors
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
@@ -177,6 +178,31 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
 
     replacement->add_node_control_dependents(target);
     target->clear_control_dependents();
+}
+
+size_t
+    ngraph::replace_by_friendly_name(const shared_ptr<Function>& f,
+                                     const unordered_map<string, shared_ptr<Node>>& replacement_map)
+{
+    size_t num_replacements = 0;
+
+    for (auto& replacee : f->get_ops())
+    {
+        auto& fname = replacee->get_friendly_name();
+        if (replacement_map.count(fname) != 0)
+        {
+            auto& replacement = replacement_map.at(fname);
+            if (replacee != replacement)
+            {
+                replacement->set_friendly_name(replacee->get_friendly_name());
+                replace_node(replacee, replacement);
+                replacee->set_friendly_name("");
+            }
+            num_replacements++;
+        }
+    }
+
+    return num_replacements;
 }
 
 // Check if all paths from X to a result go through Y

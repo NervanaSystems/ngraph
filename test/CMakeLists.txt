@@ -72,6 +72,7 @@ set(SRC
     pass_shape_relevance.cpp
     pattern.cpp
     provenance.cpp
+    replace_node.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
     shape.cpp

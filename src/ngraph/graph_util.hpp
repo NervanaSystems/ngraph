@@ -214,6 +214,21 @@ namespace ngraph
     ///        replace_node(N, M);
     void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
+    /// \brief Replace named nodes in a function graph according to a map from friendly names to
+    ///        replacement nodes.
+    /// \param f The function in which to replace nodes.
+    /// \param replacement_map A map from strings to node shared pointers. Keys are friendly names
+    ///                        of nodes to be replaced, and each value in the map is the node that
+    ///                        will replace the existing node.
+    /// \return The number of nodes replaced in the graph.
+    ///
+    /// Note that any replaced Parameter nodes will still be in the function's vector of bound
+    /// parameters, remaining in the graph as "dead" nodes. Any such dead parameters will have
+    /// their friendly names revert to be the same as their "unfriendly" name.
+    size_t replace_by_friendly_name(
+        const std::shared_ptr<Function>& f,
+        const std::unordered_map<std::string, std::shared_ptr<Node>>& replacement_map);
+
     NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     /// Topological sort of nodes needed to compute root_nodes
