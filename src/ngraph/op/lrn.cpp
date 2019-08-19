@@ -30,11 +30,11 @@ op::LRN::LRN(const Output<Node>& arg, double alpha, double beta, double bias, si
 }
 
 op::LRN::LRN(const Output<Node>& arg,
-    const Output<Node>& axes,
-    double alpha,
-    double beta,
-    double bias,
-    size_t size)
+             const Output<Node>& axes,
+             double alpha,
+             double beta,
+             double bias,
+             size_t size)
     : Op({arg, axes})
     , m_alpha(alpha)
     , m_beta(beta)
@@ -46,7 +46,7 @@ op::LRN::LRN(const Output<Node>& arg,
 
 AxisSet op::LRN::get_reduction_axes() const
 {
-    AxisSet axes {1}; // channel axis as default
+    AxisSet axes{1}; // channel axis as default
     if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(1)))
     {
         axes = const_op->get_axis_set_val();
@@ -63,13 +63,13 @@ void op::LRN::validate_and_infer_types()
     const PartialShape& input_shape = get_input_partial_shape(0);
 
     NODE_VALIDATION_CHECK(this,
-        input_shape.rank().is_dynamic() ||
-        static_cast<size_t>(input_shape.rank()) >= 3,
-        "Argument must have rank >= 3 (argument shape: ",
-        input_shape,
-        ").");
+                          input_shape.rank().is_dynamic() ||
+                              static_cast<size_t>(input_shape.rank()) >= 3,
+                          "Argument must have rank >= 3 (argument shape: ",
+                          input_shape,
+                          ").");
 
-    PartialShape axes_shape{ PartialShape::dynamic() };
+    PartialShape axes_shape{PartialShape::dynamic()};
     if (get_input_partial_shape(1).is_static())
     {
         axes_shape = get_input_partial_shape(1);
@@ -77,15 +77,15 @@ void op::LRN::validate_and_infer_types()
 
     auto axes_rank = axes_shape.rank();
     NODE_VALIDATION_CHECK(this,
-        axes_rank.compatible(1),
-        "Input axes must have rank equals 1 (axes_rank: ",
-        axes_rank,
-        ").");
+                          axes_rank.compatible(1),
+                          "Input axes must have rank equals 1 (axes_rank: ",
+                          axes_rank,
+                          ").");
 
     NODE_VALIDATION_CHECK(
         this,
         static_cast<size_t>(axes_shape[0]) >= 0 &&
-        static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape.rank()),
+            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape.rank()),
         "Number of elements of axes must be >= 0 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");
