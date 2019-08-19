@@ -77,9 +77,9 @@ std::shared_ptr<Node> op::BatchNormTraining::copy_with_new_args(const NodeVector
 void op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
                                               const NodeVector& deltas)
 {
-    auto gamma = input(0).get_source_output();
-    auto beta = input(1).get_source_output();
-    auto data = input(2).get_source_output();
+    auto gamma = input_value(0);
+    auto beta = input_value(1);
+    auto data = input_value(2);
 
     // Extract mean and variance outputs from BatchNormBase
     // as these are used by BatchNormTrainingBackprop.
