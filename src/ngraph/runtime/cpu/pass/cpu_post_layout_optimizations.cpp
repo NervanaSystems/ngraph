@@ -276,7 +276,6 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
 template <typename T>
 static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     const shared_ptr<op::Constant>& input,
-    void* input_ptr,
     const shared_ptr<runtime::cpu::op::ConvertLayout>& convertlayout,
     mkldnn::memory::desc& input_desc,
     mkldnn::memory::desc& result_desc)
@@ -317,11 +316,11 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
             mkldnn::memory::dims(weights_shape_groups.begin(), weights_shape_groups.end()),
             runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_element_type()),
             mkldnn::memory::format::goihw);
-        std::cout << "goihw\n";
     }
 
     // build mkldnn primitive and execute
-    mkldnn::memory in{{input_desc, runtime::cpu::executor::global_cpu_engine}, input_ptr};
+    mkldnn::memory in{{input_desc, runtime::cpu::executor::global_cpu_engine},
+                      const_cast<void*>(input->get_data_ptr())};
     mkldnn::memory out{{result_desc, runtime::cpu::executor::global_cpu_engine}, result_vec.data()};
     mkldnn::reorder reorder{in, out};
     mkldnn::stream s(mkldnn::stream::kind::eager);
@@ -424,9 +423,7 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
             if (dynamic_pointer_cast<ngraph::op::Constant>(arg))
             {
                 auto m_input = static_pointer_cast<ngraph::op::Constant>(arg);
-                auto m_input_ptr = m_input->get_data_ptr_nc();
                 auto input_md = mkldnn_utils::get_input_mkldnn_md(m_convertlayout.get(), 0);
-                auto output_md = mkldnn_utils::get_output_mkldnn_md(m_convertlayout.get(), 0);
 
                 std::shared_ptr<ngraph::op::Constant> replacement;
 
@@ -444,55 +441,55 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
                     break;
                 case element::Type_t::boolean:
                     replacement = fold_constant_convertlayout_helper<char>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::bf16:
                     replacement = fold_constant_convertlayout_helper<bfloat16>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::f16:
                     replacement = fold_constant_convertlayout_helper<float16>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::f32:
                     replacement = fold_constant_convertlayout_helper<float>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::f64:
                     replacement = fold_constant_convertlayout_helper<double>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::i8:
                     replacement = fold_constant_convertlayout_helper<int8_t>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::i16:
                     replacement = fold_constant_convertlayout_helper<int16_t>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::i32:
                     replacement = fold_constant_convertlayout_helper<int32_t>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::i64:
                     replacement = fold_constant_convertlayout_helper<int64_t>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::u8:
                     replacement = fold_constant_convertlayout_helper<uint8_t>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::u16:
                     replacement = fold_constant_convertlayout_helper<uint16_t>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::u32:
                     replacement = fold_constant_convertlayout_helper<uint32_t>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 case element::Type_t::u64:
                     replacement = fold_constant_convertlayout_helper<uint64_t>(
-                        m_input, m_input_ptr, m_convertlayout, input_md, output_md);
+                        m_input, m_convertlayout, input_md, output_md);
                     break;
                 }
 
