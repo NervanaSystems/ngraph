@@ -36,28 +36,28 @@ namespace ngraph
         /// \note       It follows notation and equations defined as in ONNX standard:
         ///             https://github.com/onnx/onnx/blob/master/docs/Operators.md#LSTM
         ///
-        class LSTMForward : public util::FusedOp
+        class LSTMSequence : public util::FusedOp
         {
         public:
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            LSTMForward() = default;
-            explicit LSTMForward(const Output<Node>& X,
-                                 const Output<Node>& W,
-                                 const Output<Node>& R,
-                                 const Output<Node>& B,
-                                 const Output<Node>& P,
-                                 const Output<Node>& initial_h,
-                                 const Output<Node>& initial_c,
-                                 const Output<Node>& seq_lengths,
-                                 const std::vector<float> activations_alpha,
-                                 const std::vector<float> activations_beta,
-                                 const std::vector<std::string> activations,
-                                 const float clip_threshold,
-                                 const std::string direction,
-                                 const std::int64_t hidden_size,
-                                 const bool input_forget)
+            LSTMSequence() = default;
+            explicit LSTMSequence(const Output<Node>& X,
+                                  const Output<Node>& W,
+                                  const Output<Node>& R,
+                                  const Output<Node>& B,
+                                  const Output<Node>& P,
+                                  const Output<Node>& initial_h,
+                                  const Output<Node>& initial_c,
+                                  const Output<Node>& seq_lengths,
+                                  const std::vector<float> activations_alpha,
+                                  const std::vector<float> activations_beta,
+                                  const std::vector<std::string> activations,
+                                  const float clip_threshold,
+                                  const std::string direction,
+                                  const std::int64_t hidden_size,
+                                  const bool input_forget)
                 : FusedOp({X, W, R, B, P, initial_h, initial_c, seq_lengths})
                 , m_activations_alpha(activations_alpha)
                 , m_activations_beta(activations_beta)
@@ -105,21 +105,21 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override
             {
                 check_new_args_count(this, new_args);
-                return std::make_shared<LSTMForward>(new_args.at(0),
-                                                     new_args.at(1),
-                                                     new_args.at(2),
-                                                     new_args.at(3),
-                                                     new_args.at(4),
-                                                     new_args.at(5),
-                                                     new_args.at(6),
-                                                     new_args.at(7),
-                                                     m_activations_alpha,
-                                                     m_activations_beta,
-                                                     m_activations,
-                                                     m_clip_threshold,
-                                                     m_direction,
-                                                     m_hidden_size,
-                                                     m_input_forget);
+                return std::make_shared<LSTMSequence>(new_args.at(0),
+                                                      new_args.at(1),
+                                                      new_args.at(2),
+                                                      new_args.at(3),
+                                                      new_args.at(4),
+                                                      new_args.at(5),
+                                                      new_args.at(6),
+                                                      new_args.at(7),
+                                                      m_activations_alpha,
+                                                      m_activations_beta,
+                                                      m_activations,
+                                                      m_clip_threshold,
+                                                      m_direction,
+                                                      m_hidden_size,
+                                                      m_input_forget);
             }
 
         private:
@@ -324,4 +324,4 @@ namespace ngraph
     } // namespace op
 } // namespace ngraph
 
-const std::string ngraph::op::LSTMForward::type_name{"LSTMForward"};
+const std::string ngraph::op::LSTMSequence::type_name{"LSTMSequence"};

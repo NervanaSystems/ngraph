@@ -195,7 +195,7 @@ namespace ngraph
                     LSTMNgInputMap input_map{node};
                     LSTMAttributes attributes{node};
 
-                    return std::make_shared<ngraph::op::LSTMForward>(
+                    return std::make_shared<ngraph::op::LSTMSequence>(
                                input_map.at(LSTMInput::LSTM_INPUT_X),
                                input_map.at(LSTMInput::LSTM_INPUT_W),
                                input_map.at(LSTMInput::LSTM_INPUT_R),
