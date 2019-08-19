@@ -69,8 +69,9 @@ namespace ngraph
                                 auto offset = 0;
                                 for (size_t i = 0; i < nargs; i++)
                                 {
-                                    // if the argument pointer does not fall within the concat output buffer
-                                    // (caused by propagate_in_place_output or propagate_in_place_input), we need to copy the data;
+                                    // if the argument pointer does not fall within the concat
+                                    // output buffer (caused by propagate_in_place_output or
+                                    // propagate_in_place_input), we need to copy the data;
                                     // otherwise, we can skip the copy.
                                     if (ctx->buffer_data[arg_buffer_indices[i]] <
                                             ctx->buffer_data[out_buffer_index] ||
@@ -105,7 +106,8 @@ namespace ngraph
                     {
                         inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
                     }
-                    // Concat needs number of inputs plus 2 primitives; those two are for result and concat.
+                    // Concat needs number of inputs plus 2 primitives; those two are for result and
+                    // concat.
                     auto concat_index = mkldnn_emitter->reserve_primitive_space(nargs + 2);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 

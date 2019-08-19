@@ -164,7 +164,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto R_iofc = pattern_map[R];
         auto W_ifco = get_weights_ifco_gate_order(W_iofc);
         auto R_ifco = get_weights_ifco_gate_order(R_iofc);
-        // here onnx bias will be of shape (2 * gates_count * hidden_size) bias of Wb and Rb are concatenated, we will split the bias, add and rearrange in order IFCO
+        // here onnx bias will be of shape (2 * gates_count * hidden_size) bias of Wb and Rb are
+        // concatenated, we will split the bias, add and rearrange in order IFCO
         auto bias_ifco = get_bias_ifco_gate_order(bias_iofc);
 
         auto W_reshape = std::make_shared<op::Reshape>(
@@ -551,7 +552,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto concat_rnn_inputs_across_timestep =
             [&](std::shared_ptr<pattern::op::Label> input_label) -> std::shared_ptr<Node> {
             NodeVector concat_args;
-            // src_layer -> concatenate input symbols from different LSTM cells belonging to same RNN layer
+            // src_layer -> concatenate input symbols from different LSTM cells belonging to same
+            // RNN layer
             // in the order 0, 1, 2... t time slice
             {
                 auto node_labels = m.get_bound_nodes_for_pattern(input_label);
@@ -883,10 +885,10 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         // Replace all the users of RNN cell state {ct} across different user.
         auto replace_rnn_output_cellstate = [&](std::shared_ptr<Node> rnn_ct_goe1, size_t layer) {
 
-            // multi layerd fused rnn second output {GOE1} holds the recurrent output state tensors for the last cell
-            // of all the layers, {{ht_1 | ct_1} || {ht2 |ct2} || ....{htn | ctn}}
-            // we will slice the cell state output tensor {ct_*} from the fused RNN kerenel output and feeds
-            // {ct_*} consumer if any
+            // multi layerd fused rnn second output {GOE1} holds the recurrent output state tensors
+            // for the last cell of all the layers, {{ht_1 | ct_1} || {ht2 |ct2} || ....{htn | ctn}}
+            // we will slice the cell state output tensor {ct_*} from the fused RNN kerenel output
+            // and feeds {ct_*} consumer if any
             auto ct_slice = std::make_shared<ngraph::op::Slice>(
                 mrnn_ht_ct,
                 Coordinate{((layer - 1) * batch_size * num_rnn_cell_states) + batch_size, 0},
@@ -895,15 +897,14 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             replace_collapse_node_user(rnn_ct_goe1, ct_slice->output(0));
         };
 
-        // we will replace cell_state {ct} of all the matched RNN cell
-        // with the new {ct} of the fused RNN cell
-        // Note: RNN cells are captured in the reverse order
-        // i.e {RNN7, RNN6, RNN5.... RNN0}
+        // we will replace cell_state {ct} of all the matched RNN cell with the new {ct} of the
+        // fused RNN cell Note: RNN cells are captured in the reverse order i.e {RNN7, RNN6,
+        // RNN5.... RNN0}
         for (size_t index = 0; index < rnn_nodes.size(); index++)
         {
             auto goe_nodes = ngraph::op::get_output_elements(rnn_nodes[index]);
-            // if there is no GOE followed by the Lstm, their might be pattern match error
-            // we will return safely
+            // if there is no GOE followed by the Lstm, their might be pattern match error we will
+            // return safely
             if (goe_nodes.size() != 2)
             {
                 throw ngraph_error("Expecting two outputs for each RNN node");
@@ -921,8 +922,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             }
 
             // dst_layer of layer fused rnn holds the intermediate results of all the lstm cells
-            // belonging to the last layer we will replace the GOE, since RNN_n->GOE0 and MutliLayerRnn->GOE0
-            // holds the same output
+            // belonging to the last layer we will replace the GOE, since RNN_n->GOE0 and
+            // MutliLayerRnn->GOE0 holds the same output
             if ((index == 0) && goe_0)
             {
                 replace_collapse_node_user(goe_0, mrnn_ht->output(0));
@@ -1050,7 +1051,8 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         size_t batch_size = layer_rnn_ht->get_shape()[0] / num_time_steps;
         size_t feature_size = layer_rnn_ht->get_shape()[1];
 
-        // if the shape doesnt match, we will logically reshape it to expaned_dims{tnc} from squeezed_dims{t*n, c}
+        // if the shape doesnt match, we will logically reshape it to expaned_dims{tnc} from
+        // squeezed_dims{t*n, c}
         std::shared_ptr<Node> layer_rnn_ht_reshape = layer_rnn_ht;
         if (m.get_match_root()->get_shape() != layer_rnn_ht->get_shape())
         {
