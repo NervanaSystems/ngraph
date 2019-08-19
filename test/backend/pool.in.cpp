@@ -72,7 +72,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_uint8)
     auto QMP = make_shared<ngraph::op::MaxPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(NodeVector{QMP}, ParameterVector{A});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
     copy_data(a, a_data);
@@ -95,7 +95,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_int8)
     auto QMP = make_shared<ngraph::op::MaxPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(NodeVector{QMP}, ParameterVector{A});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i8, shape_a);
     copy_data(a, a_data);
@@ -118,7 +118,7 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_uint8)
     auto QAP = make_shared<ngraph::op::AvgPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(NodeVector{QAP}, ParameterVector{A});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
     copy_data(a, a_data);
@@ -141,7 +141,7 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_int8)
     auto QAP = make_shared<ngraph::op::AvgPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(NodeVector{QAP}, ParameterVector{A});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i8, shape_a);
     copy_data(a, a_data);
