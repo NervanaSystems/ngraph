@@ -32,9 +32,7 @@
 using namespace std;
 using namespace ngraph;
 
-#ifdef NGRAPH_STATIC_LIB_ENABLE
-#define DLERROR() ""
-#else
+#ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE
 #ifdef _WIN32
 #define CLOSE_LIBRARY(a) FreeLibrary(a)
 #define DLSYM(a, b) GetProcAddress(a, b)
@@ -44,6 +42,8 @@ using namespace ngraph;
 #define DLSYM(a, b) dlsym(a, b)
 #define DLERROR() dlerror()
 #endif
+#else
+#define DLERROR() ""
 #endif
 
 unordered_map<string, runtime::BackendConstructor*>& runtime::BackendManager::get_registry()
@@ -107,7 +107,7 @@ shared_ptr<runtime::Backend> runtime::BackendManager::create_backend(const std::
     }
     else
     {
-#ifndef NGRAPH_STATIC_LIB_ENABLE
+#ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE
         DL_HANDLE handle = open_shared_library(type);
         if (!handle)
         {
@@ -153,7 +153,7 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
     string lib_suffix = SHARED_LIB_SUFFIX;
 
     DL_HANDLE handle = nullptr;
-#ifndef NGRAPH_STATIC_LIB_ENABLE
+#ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE
 
     // strip off attributes, IE:CPU becomes IE
     auto colon = type.find(":");
@@ -190,7 +190,7 @@ DL_HANDLE runtime::BackendManager::open_shared_library(string type)
 map<string, string> runtime::BackendManager::get_registered_device_map()
 {
     map<string, string> rc;
-#ifndef NGRAPH_STATIC_LIB_ENABLE
+#ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE
     string my_directory =
         file_util::get_directory(Backend::get_backend_shared_library_search_directory());
     vector<string> backend_list;

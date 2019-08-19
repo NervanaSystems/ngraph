@@ -35,8 +35,10 @@ namespace ngraph
             /// \param filters The node producing the filters from forward-prop.
             /// \param output_delta The node producing output delta.
             /// \param bias The node producing bias
-            /// \param window_movement_strides_forward The window movement strides from forward-prop.
-            /// \param window_dilation_strides_forward The window dilation strides from forward-prop.
+            /// \param window_movement_strides_forward The window movement strides from
+            ///        forward-prop.
+            /// \param window_dilation_strides_forward The window dilation strides from
+            ///        forward-prop.
             /// \param padding_below_forward The padding-below sizes from forward-prop.
             /// \param padding_above_forward The padding-above sizes from forward-prop.
             /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
