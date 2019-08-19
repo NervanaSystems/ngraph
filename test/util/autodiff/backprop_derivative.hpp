@@ -90,7 +90,7 @@ namespace ngraph
             auto c_vec = read_vector<T>(c_arg);
             fill(c_vec.begin(), c_vec.end(), static_cast<T>(0));
 
-            auto df_handle = backend->compile(df);
+            auto df_handle = backend->compile(clone_function(*df));
 
             // for each element of the adjoint
             // same as saying for each element of y
