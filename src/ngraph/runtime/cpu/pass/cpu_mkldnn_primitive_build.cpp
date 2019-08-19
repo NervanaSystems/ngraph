@@ -28,7 +28,6 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
@@ -2300,14 +2299,6 @@ namespace ngraph
                     construct_string = writer.get_code();
                 }
 
-                template <>
-                void
-                    MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedConcat)
-                {
-                    construct_primitive_build_string_concat<QuantizedConcat>(
-                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
-                }
-
                 template <typename OP>
                 void construct_primitive_build_string_inner_product(
                     ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
@@ -2498,8 +2489,6 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
          ConvolutionBiasBackpropFiltersBias>},
     {TI(DeconvolutionBias),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<DeconvolutionBias>},
-    {TI(QuantizedConcat),
-     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedConcat>},
     {TI(MaxPoolWithIndices),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPoolWithIndices>},
     {TI(MaxPoolWithIndicesBackprop),

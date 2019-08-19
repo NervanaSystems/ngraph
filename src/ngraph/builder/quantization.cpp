@@ -124,7 +124,7 @@ namespace ngraph
                                               op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
             }
 
-            return make_shared<op::QuantizedConcat>(rescaled_args, concatenation_axis);
+            return make_shared<op::Concat>(rescaled_args, concatenation_axis);
         }
 
         shared_ptr<Node> ScaledQuantizedAvgPool(const Output<Node>& input,

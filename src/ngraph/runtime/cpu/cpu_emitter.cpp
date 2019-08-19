@@ -56,7 +56,6 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
@@ -4136,33 +4135,6 @@ namespace ngraph
                     writer << "            {" << join(quantize->get_axes()) << "},\n";
                     writer << "            static_cast<ngraph::op::Quantize::RoundMode>("
                            << static_cast<int>(quantize->get_round_mode()) << "));\n";
-                }
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConcat)
-            {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    size_t concat_index;
-                    std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, concat_index, deps);
-
-                    size_t i;
-                    for (i = 0; i < args.size(); i++)
-                    {
-                        writer << "cg_ctx->set_memory_ptr(" << to_string(deps[i]) << ", "
-                               << args[i].get_name() << ");\n";
-                    }
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[i]) << ", "
-                           << out[0].get_name() << ");\n";
-
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(concat_index)
-                           << ");\n";
-                }
-                else
-                {
-                    throw ngraph_error("unsupported parameters for QuantizedConcat via DEX");
                 }
             }
 

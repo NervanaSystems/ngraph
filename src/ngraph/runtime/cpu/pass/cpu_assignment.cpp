@@ -33,7 +33,6 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
@@ -100,36 +99,8 @@ namespace ngraph
                 template <>
                 void CPUAssignment::ASSIGN_DECL(ngraph::op::Concat)
                 {
-                    if (node->get_input_element_type(0) == element::f32 &&
-                        ((node->get_input_shape(0)).size() == 4 ||
-                         (node->get_input_shape(0)).size() == 2))
-                    {
-                        // MKLDNN seems to throw an exception when given tensors with 0-length
-                        // dimensions, so don't assign it in such cases.
-                        bool any_zero = false;
-
-                        for (size_t i = 0; i < node->get_input_size(); i++)
-                        {
-                            if (shape_size(node->get_input_shape(i)) == 0)
-                            {
-                                any_zero = true;
-                                break;
-                            }
-                        }
-
-                        if (!any_zero)
-                        {
-                            runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
-                        }
-                    }
-                }
-
-                template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedConcat)
-                {
-                    auto quantized_concat = static_cast<ngraph::op::QuantizedConcat*>(node);
-
-                    if ((node->get_input_element_type(0) == element::i8 ||
+                    if ((node->get_input_element_type(0) == element::f32 ||
+                         node->get_input_element_type(0) == element::i8 ||
                          node->get_input_element_type(0) == element::u8) &&
                         ((node->get_input_shape(0)).size() == 4 ||
                          (node->get_input_shape(0)).size() == 2))
@@ -149,10 +120,7 @@ namespace ngraph
 
                         if (!any_zero)
                         {
-                            auto op_annotations =
-                                std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                            op_annotations->set_mkldnn_op(true);
-                            quantized_concat->set_op_annotations(op_annotations);
+                            runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                         }
                     }
                 }
@@ -1020,8 +988,6 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
     {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Quantize>},
     {TI(ngraph::op::Dequantize),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Dequantize>},
-    {TI(ngraph::op::QuantizedConcat),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedConcat>},
     {TI(ngraph::op::QuantizedMatmul),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedMatmul>},
     {TI(ngraph::op::QuantizedDotBias),
