@@ -95,8 +95,7 @@ namespace ngraph
                             }
                         }
                     }
-                    //TODO: this needs to be extended to support multi-output ops inside
-                    //a subgraph
+                    // TODO: this needs to be extended to support multi-output ops inside a subgraph
                     if (op->get_outputs().size() > 1)
                     {
                         throw ngraph_error("no multi-output ops in a CompiledKernel");
