@@ -195,24 +195,23 @@ namespace ngraph
                     LSTMNgInputMap input_map{node};
                     LSTMAttributes attributes{node};
 
-                    ngraph::op::LSTMForward lstm_fwd(
-                        input_map.at(LSTMInput::LSTM_INPUT_X),
-                        input_map.at(LSTMInput::LSTM_INPUT_W),
-                        input_map.at(LSTMInput::LSTM_INPUT_R),
-                        input_map.at(LSTMInput::LSTM_INPUT_B),
-                        input_map.at(LSTMInput::LSTM_INPUT_P),
-                        input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
-                        input_map.at(LSTMInput::LSTM_INPUT_INIT_C),
-                        input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
-                        attributes.m_activation_alpha,
-                        attributes.m_activation_beta,
-                        attributes.m_activations,
-                        attributes.m_clip_threshold,
-                        attributes.m_direction,
-                        attributes.m_hidden_size,
-                        attributes.m_input_forget);
-
-                    return lstm_fwd.run();
+                    return std::make_shared<ngraph::op::LSTMForward>(
+                               input_map.at(LSTMInput::LSTM_INPUT_X),
+                               input_map.at(LSTMInput::LSTM_INPUT_W),
+                               input_map.at(LSTMInput::LSTM_INPUT_R),
+                               input_map.at(LSTMInput::LSTM_INPUT_B),
+                               input_map.at(LSTMInput::LSTM_INPUT_P),
+                               input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
+                               input_map.at(LSTMInput::LSTM_INPUT_INIT_C),
+                               input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
+                               attributes.m_activation_alpha,
+                               attributes.m_activation_beta,
+                               attributes.m_activations,
+                               attributes.m_clip_threshold,
+                               attributes.m_direction,
+                               attributes.m_hidden_size,
+                               attributes.m_input_forget)
+                        ->decompose_op();
                 }
             } // namespace set_1
 
