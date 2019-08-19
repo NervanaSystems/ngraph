@@ -34,6 +34,11 @@ namespace ngraph
             {
             }
 
+            explicit MatmulFactory(const OutputVector& inputs)
+                : m_inputs({inputs.at(0).get_node_shared_ptr(), inputs.at(0).get_node_shared_ptr()})
+            {
+            }
+
             virtual ~MatmulFactory() = default;
 
             /// \brief Create a sub-graph representing an ONNX MatMul operation.

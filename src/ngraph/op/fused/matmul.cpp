@@ -39,8 +39,8 @@ op::MatMul::MatMul(const Output<Node>& A,
 
 NodeVector op::MatMul::decompose_op() const
 {
-    auto A = input(0).get_source_output();
-    auto B = input(1).get_source_output();
+    auto A = input_value(0);
+    auto B = input_value(1);
 
     // Specification is expecting that A & B have at least 2 dimenstions.
     // Missing dimensions are padded with 1.
@@ -78,7 +78,7 @@ NodeVector op::MatMul::decompose_op() const
         B = builder::reorder_axes(B, axes_order);
     }
 
-    builder::MatmulFactory factory({A.get_node_shared_ptr(), B.get_node_shared_ptr()});
+    builder::MatmulFactory factory({A, B});
     return factory.make_matmul_op();
 }
 
