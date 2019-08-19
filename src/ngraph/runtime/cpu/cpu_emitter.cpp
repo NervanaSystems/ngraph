@@ -1006,7 +1006,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
             {
                 writer.block_begin();
-                // Some C++ implementations don't like it when we call std::abs on unsigned types, so we will
+                // Some C++ implementations don't like it when we call std::abs on unsigned types,
+                // so we will
                 // avoid doing so here.
                 auto& result_element_type = out[0].get_element_type();
 
@@ -3989,7 +3990,10 @@ namespace ngraph
                        << "[0]);\n";
                 writer << "size_t count = " << args[0].get_size() << ";\n";
                 writer << "size_t nthr = " << to_string(ncr) << ";\n";
-                //writer << "size_t nthr = " << to_string(ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores()) << ";\n";
+                // writer << "size_t nthr = "
+                //        << to_string(
+                //               ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores())
+                //        << ";\n";
                 writer << "size_t chunk_size = (count + nthr - 1) / nthr;\n";
                 writer << "std::vector<std::minstd_rand> vmsr(nthr);\n";
                 writer << "for (size_t i = 0; i < nthr; i++)\n\

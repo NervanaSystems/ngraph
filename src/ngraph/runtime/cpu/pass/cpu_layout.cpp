@@ -908,9 +908,9 @@ namespace ngraph
 
                         deconvolution_forward::desc deconv_desc(prop_kind::forward_inference,
                                                                 algorithm::deconvolution_direct,
-                                                                delta_desc,   //src_desc
-                                                                weights_desc, //weights_desc
-                                                                bias_desc,    //bias_desc
+                                                                delta_desc,   // src_desc
+                                                                weights_desc, // weights_desc
+                                                                bias_desc,    // bias_desc
                                                                 result_desc,  // dst_desc
                                                                 mkldnn_filter_strides,
                                                                 mkldnn_dilated_strides,
@@ -924,7 +924,7 @@ namespace ngraph
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
                         i_mds.push_back(deconv_prim_desc.weights_primitive_desc()
-                                            .desc()); //TODO: Find what format this is?
+                                            .desc()); // TODO: Find what format this is?
                         i_mds.push_back(deconv_prim_desc.src_primitive_desc().desc());
                         i_mds.push_back(deconv_prim_desc.bias_primitive_desc().desc());
                         o_mds.push_back(deconv_prim_desc.dst_primitive_desc().desc());
@@ -1438,7 +1438,8 @@ namespace ngraph
                         if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                         {
-                            // Cannot pass through layout information for blocked layouts at the moment
+                            // Cannot pass through layout information for blocked layouts at the
+                            // moment
                             set_native_layouts(external_function, node);
                         }
                         else
@@ -1473,7 +1474,8 @@ namespace ngraph
                         if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                         {
-                            // Cannot pass through layout information for blocked layouts at the moment
+                            // Cannot pass through layout information for blocked layouts at the
+                            // moment
                             set_native_layouts(external_function, node);
                         }
                         else
@@ -1831,8 +1833,8 @@ namespace ngraph
 
                             auto output_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
                                 node->get_output_tensor_ptr()->get_tensor_layout());
-                            // TODO (jbobba): For now non-MKLDNN layouts are always in row-major format
-                            // Enable this once we support non row-major strided formats
+                            // TODO (jbobba): For now non-MKLDNN layouts are always in row-major
+                            // format. Enable this once we support non row-major strided formats
                             // output_tvl->set_strides(output_strides);
                         }
                         else
@@ -2219,9 +2221,9 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
-                        // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
-                        // if the format doesn't matches.
+                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer
+                        // and weights_iter matches to the expected mkldnn format. we need to handle
+                        // a case to insert convert Op's if the format doesn't matches.
                         set_native_layouts(external_function, node, false);
                     }
                     else
@@ -2235,9 +2237,9 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
-                        // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
-                        // if the format doesn't matches.
+                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer
+                        // and weights_iter matches to the expected mkldnn format. we need to handle
+                        // a case to insert convert Op's if the format doesn't matches.
                         set_native_layouts(external_function, node, false);
                     }
                     else
