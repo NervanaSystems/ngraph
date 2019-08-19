@@ -48,11 +48,10 @@ namespace ngraph
                     call_seq,
                     external_function_name.c_str(),
                     node->get_name().c_str(),
+                    // if provenance_tags is set in nGraph once and only once, it will print the tag
+                    // name otherwise, it will print the get_friendly_name
                     node->get_provenance_tags().size() == 1
-                        ?
-                        // if provenance_tags is set in nGraph once and only once, it will print the tag name
-                        // otherwise, it will print the get_friendly_name
-                        (*(node->get_provenance_tags()).begin()).c_str()
+                        ? (*(node->get_provenance_tags()).begin()).c_str()
                         : node->get_friendly_name().c_str(),
                     count);
 
