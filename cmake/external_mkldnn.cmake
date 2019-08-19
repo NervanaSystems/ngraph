@@ -20,9 +20,9 @@ include(ExternalProject)
 set(NGRAPH_MKLDNN_SHORT_VERSION 0)
 set(NGRAPH_MKLDNN_FULL_VERSION 0.20.0.0)
 set(NGRAPH_MKLDNN_ASSET_VERSION "v0.20")
-set(NGRAPH_MKLDNN_VERSION "v0.20.1")
+set(NGRAPH_MKLDNN_VERSION "v0.20.2")
 set(NGRAPH_MKLDNN_MKLML_VERSION "2019.0.5.20190502")
-set(NGRAPH_MKLDNN_GIT_TAG "v0.20.1")
+set(NGRAPH_MKLDNN_GIT_TAG "v0.20.2")
 
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
