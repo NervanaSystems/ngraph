@@ -50,6 +50,7 @@ public:
 private:
     std::mutex m_mu;
 
-    // N.B. The key here is the original source function, *not* the copy that's been processed by the compilation passes.
+    // N.B. The key here is the original source function, *not* the copy that's been processed by
+    // the compilation passes.
     std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<PlaidML_Executable>> m_cache;
 };
