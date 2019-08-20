@@ -23,14 +23,23 @@ set(NGRAPH_MKLDNN_VERSION "v1.0")
 set(NGRAPH_MKLDNN_SUB_VERSION "2019.0.5.20190502")
 set(NGRAPH_MKLDNN_GIT_TAG "553c23f")
 
+if(LINUX)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+        set(NGRAPH_LINUX_USE_IOMP ON)
+    endif()
+endif()
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
 #------------------------------------------------------------------------------
 
 set(MKLDNN_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX})
 if (LINUX)
-    set(MKLML_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mklml_intel${CMAKE_SHARED_LIBRARY_SUFFIX})
-    set(OMP_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX})
+    if(NGRAPH_LINUX_USE_IOMP)
+        set(MKLML_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mklml_intel${CMAKE_SHARED_LIBRARY_SUFFIX})
+        set(OMP_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX})
+    else()
+        set(MKLML_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mklml_gnu${CMAKE_SHARED_LIBRARY_SUFFIX})
+    endif()
     set(MKLDNN_SHORT_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}.${NGRAPH_MKLDNN_SHORT_VERSION})
     set(MKLDNN_FULL_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mkldnn${CMAKE_SHARED_LIBRARY_SUFFIX}.${NGRAPH_MKLDNN_FULL_VERSION})
 elseif (APPLE)
@@ -62,9 +71,15 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     else()
         add_library(libmkl SHARED IMPORTED)
         set_property(TARGET libmkl PROPERTY IMPORTED_LOCATION ${MKLML_LIB_DIR}/${MKLML_LIB})
-        set_target_properties(libmkl PROPERTIES
-            IMPORTED_LINK_INTERFACE_LIBRARIES ${MKLML_LIB_DIR}/${OMP_LIB})
+        if(APPLE)
+            set_target_properties(libmkl PROPERTIES
+                IMPORTED_LINK_INTERFACE_LIBRARIES ${MKLML_LIB_DIR}/${OMP_LIB})
+        endif()
         if(LINUX)
+            if(NGRAPH_LINUX_USE_IOMP)
+                set_target_properties(libmkl PROPERTIES
+                    IMPORTED_LINK_INTERFACE_LIBRARIES ${MKLML_LIB_DIR}/${OMP_LIB})
+            endif()
             set_property(TARGET libmkl PROPERTY IMPORTED_NO_SONAME 1)
         endif()
     endif()
@@ -72,17 +87,13 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     if(WIN32)
         add_library(libmkldnn STATIC IMPORTED)
         set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_IMPLIB})
-        set_target_properties(libmkldnn PROPERTIES
-            IMPORTED_LINK_INTERFACE_LIBRARIES "${MKLML_LIB_DIR}/${MKLML_IMPLIB};${MKLML_LIB_DIR}/${OMP_IMPLIB}")
     else()
         add_library(libmkldnn SHARED IMPORTED)
         set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_LIB})
-        set_target_properties(libmkldnn PROPERTIES
-            IMPORTED_LINK_INTERFACE_LIBRARIES "${MKLML_LIB_DIR}/${MKLML_LIB};${MKLML_LIB_DIR}/${OMP_LIB}")
     endif()
     set_target_properties(libmkldnn PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${MKLDNN_INCLUDE_DIR})
 
-    install(FILES ${MKLDNN_LIB_DIR}/${MKLDNN_LIB} ${MKLML_LIB_DIR}/${MKLML_LIB} ${MKLML_LIB_DIR}/${OMP_LIB}  DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(FILES ${MKLDNN_LIB_DIR}/${MKLDNN_LIB} DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
 endif()
 
@@ -143,13 +154,15 @@ ExternalProject_Add_Step(
     DEPENDEES download
     )
 
-ExternalProject_Add_Step(
-    ext_mkl
-    CopyOMP
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${OMP_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
-    COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
-    DEPENDEES download
-    )
+if(NOT LINUX OR NGRAPH_LINUX_USE_IOMP)
+    ExternalProject_Add_Step(
+        ext_mkl
+        CopyOMP
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${OMP_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
+        COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
+        DEPENDEES download
+        )
+endif()
 
 if(WIN32)
     ExternalProject_Add_Step(
@@ -175,10 +188,13 @@ if(WIN32)
     target_link_libraries(libmkl INTERFACE
         ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLML_IMPLIB}
         ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${OMP_IMPLIB})
-else()
+elseif(NOT LINUX OR NGRAPH_LINUX_USE_IOMP)
     target_link_libraries(libmkl INTERFACE
         ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
         ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB})
+else()
+    target_link_libraries(libmkl INTERFACE
+        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB})
 endif()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
@@ -205,11 +221,10 @@ if (WIN32)
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
         CMAKE_ARGS
             ${NGRAPH_FORWARD_CMAKE_ARGS}
-            -DWITH_TEST=FALSE
-            -DWITH_EXAMPLE=FALSE
+            -DMKLDNN_BUILD_TESTS=OFF
+            -DMKLDNN_BUILD_EXAMPLES=OFF
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
-            -DMKLROOT=${MKL_ROOT}
             -DMKLDNN_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
@@ -238,12 +253,11 @@ else()
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
         CMAKE_ARGS
             ${NGRAPH_FORWARD_CMAKE_ARGS}
-            -DWITH_TEST=FALSE
-            -DWITH_EXAMPLE=FALSE
+            -DMKLDNN_BUILD_TESTS=OFF
+            -DMKLDNN_BUILD_EXAMPLES=OFF
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             ${MKLDNN_RPATH}
             -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
-            -DMKLROOT=${MKL_ROOT}
             -DMKLDNN_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
             "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${MKLDNN_FLAG}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
@@ -306,12 +320,10 @@ target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/
 if (WIN32)
     target_link_libraries(libmkldnn INTERFACE
         ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
-        libmkl
     )
 else()
     target_link_libraries(libmkldnn INTERFACE
         ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
-        libmkl
     )
 endif()
 
@@ -332,12 +344,20 @@ else()
     install(
         FILES
             ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLML_LIB}
-            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${OMP_LIB}
             ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLDNN_LIB}
         DESTINATION
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
         )
+    if(NOT LINUX OR NGRAPH_LINUX_USE_IOMP)
+        install(
+            FILES
+                ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${OMP_LIB}
+            DESTINATION
+                ${NGRAPH_INSTALL_LIB}
+            OPTIONAL
+        )
+    endif()
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         install(
             FILES
