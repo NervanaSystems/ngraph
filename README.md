@@ -77,7 +77,7 @@ to improve it:
 * Ensure you can build the product and run all the examples with your patch.
 * In the case of a larger feature, create a test.
 * Submit a [pull request].
-* Make sure your PR passes all CI tests.
+* Make sure your PR passes all CI tests. Note: You can test locally with `make check`.
 * We will review your contribution and, if any additional fixes or
   modifications are necessary, may provide feedback to guide you. When
   accepted, your pull request will be merged to the repository.
