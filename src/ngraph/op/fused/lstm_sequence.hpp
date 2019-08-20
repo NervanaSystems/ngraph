@@ -73,6 +73,13 @@ namespace ngraph
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
+            std::vector<float> get_activations_alpha() const { return m_activations_alpha; }
+            std::vector<float> get_activations_beta() const { return m_activations_beta; }
+            std::vector<std::string> get_activations() const { return m_activations; }
+            float get_clip_threshold() const { return m_clip_threshold; }
+            std::string get_direction() const { return m_direction; }
+            std::int64_t get_hidden_size() const { return m_hidden_size; }
+            bool get_input_forget() const { return m_input_forget; }
         private:
             ///
             /// \brief      Gets the masked node according to sequence lenght in a batch.
