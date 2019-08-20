@@ -380,7 +380,7 @@ namespace ngraph
         NodeVector get_users(bool check_is_used = false) const;
 
         /// Return which operation set defines the operation associated with this node
-        size_t get_opset_version() const;
+        virtual size_t get_opset_version() const;
 
         /// Set the operation set associated with this node
         void set_opset_version(const size_t);

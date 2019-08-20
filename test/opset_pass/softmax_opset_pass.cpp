@@ -20,7 +20,6 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset1_transform.hpp"
-#include "ngraph/serializer.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -38,10 +37,8 @@ TEST(serialize, opset1_softmax_pass_axis)
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset1Transformation>();
     pass_manager.run_passes(f);
-    string s = serialize(f);
-    shared_ptr<Function> softmax_s1_function = deserialize(s);
 
-    auto softmax_s1_result = softmax_s1_function->get_results().at(0);
+    auto softmax_s1_result = f->get_results().at(0);
     auto node = softmax_s1_result->input(0).get_source_output().get_node_shared_ptr();
     auto softmax_s1_node = static_pointer_cast<op::set1::Softmax>(node);
 
