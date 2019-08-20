@@ -379,7 +379,8 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     }
 
     // build mkldnn primitive and execute
-    mkldnn::memory in{{input_desc, runtime::cpu::executor::global_cpu_engine}, input_ptr};
+    mkldnn::memory in{{input_desc, runtime::cpu::executor::global_cpu_engine},
+                      const_cast<void*>(input->get_data_ptr())};
     mkldnn::memory out{{result_desc, runtime::cpu::executor::global_cpu_engine}, result_vec.data()};
     mkldnn::reorder reorder{in, out};
     mkldnn::stream s(mkldnn::stream::kind::eager);
@@ -412,9 +413,9 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
         {
             auto m_convertlayout = static_pointer_cast<runtime::cpu::op::ConvertLayout>(n);
             auto output_md = mkldnn_utils::get_output_mkldnn_md(m_convertlayout.get(), 0);
-            // do not do constant folding if the output is blocked data layout
-            if (mkldnn_utils::is_mkldnn_blocked_data_format(
-                    static_cast<mkldnn::memory::format>(output_md.data.format)))
+            // do not do constant folding if the output is padded data layout
+            if (mkldnn_utils::is_mkldnn_padded_layout(
+                    output_md, ngraph::get_default_order(m_convertlayout->get_output_shape(0))))
             {
                 continue;
             }
