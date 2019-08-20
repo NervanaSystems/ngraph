@@ -626,8 +626,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_ceiling)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    // The numeric derivative and the symbolic one may disagree near integers, so we will dance around
-    // them.
+    // The numeric derivative and the symbolic one may disagree near integers, so we will dance
+    // around them.
     test::Uniform<float> rng_minusone(-0.95f, -0.05f);
     test::Uniform<float> rng_plusone(0.05f, 0.95f);
     test::Uniform<float> rng_plustwo(1.05f, 1.95f);
@@ -894,8 +894,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_floor)
 {
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    // The numeric derivative and the symbolic one may disagree near integers, so we will dance around
-    // them.
+    // The numeric derivative and the symbolic one may disagree near integers, so we will dance
+    // around them.
     test::Uniform<float> rng_minusone(-0.95f, -0.05f);
     test::Uniform<float> rng_plusone(0.05f, 0.95f);
     test::Uniform<float> rng_plustwo(1.05f, 1.95f);

@@ -184,8 +184,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-//this test cover the case with multiple image and with asymetric pad
-//one bug been found on GPU side is covered by this test
+// this test cover the case with multiple image and with asymetric pad
+// one bug been found on GPU side is covered by this test
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image_asym_pad)
 {
     Shape shape_a{2, 2, 4, 4};
@@ -338,11 +338,8 @@ NGRAPH_TEST_F(${BACKEND_NAME}, MaxPool2D1ChannelTests, max_pool_2d_1channel_1ima
 // values still "win" versus out-of-bounds values), which is good.
 NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
 {
-    auto shape_a = Shape{
-        1,
-        1,
-        1,
-        14}; // 1 image, 1 channel, 1 row, 14 columns (if it's 1D we don't get mkldnn as of this writing)
+    auto shape_a = Shape{1, 1, 1, 14}; // 1 image, 1 channel, 1 row, 14 columns (if it's 1D we don't
+                                       // get mkldnn as of this writing)
     Shape window_shape{1, 3};
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{0, 1};

@@ -596,4 +596,4 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_shufflenet_5d)
     EXPECT_TRUE(test::all_close_f(ref_results.at(0), bk_results.at(0), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-#endif //NGRAPH_INTERPRETER_ENABLE
+#endif // NGRAPH_INTERPRETER_ENABLE
