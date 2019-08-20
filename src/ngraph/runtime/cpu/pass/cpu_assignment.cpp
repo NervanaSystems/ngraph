@@ -87,7 +87,8 @@ namespace ngraph
 
                     auto src_size = shape_size(arg0_shape);
 
-                    // insert Add as MKLDNN op, only if the src_size is big. this is to avoid MKLDNN overhead
+                    // insert Add as MKLDNN op, only if the src_size is big. this is to avoid MKLDNN
+                    // overhead
                     // for smaller tensor sizes
                     if (node->get_input_element_type(0) == element::f32 &&
                         node->get_input_element_type(1) == element::f32 && arg0_rank == 4 &&

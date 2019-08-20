@@ -334,8 +334,8 @@ set (SRC
     op/fused/lstm_cell.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
-    op/fused/normalize.cpp
-    op/fused/normalize.hpp
+    op/fused/normalize_l2.cpp
+    op/fused/normalize_l2.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/rnn_cell.cpp
@@ -387,6 +387,27 @@ set (SRC
     pass/batch_fusion.cpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
+    pass/constant_folding_arithmetic_reduction.cpp
+    pass/constant_folding_binary.cpp
+    pass/constant_folding_broadcast.cpp
+    pass/constant_folding_concat.cpp
+    pass/constant_folding_convert.cpp
+    pass/constant_folding_dequantize.cpp
+    pass/constant_folding_dyn_broadcast.cpp
+    pass/constant_folding_dyn_reshape.cpp
+    pass/constant_folding_dyn_slice.cpp
+    pass/constant_folding_gather.cpp
+    pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_pad.cpp
+    pass/constant_folding_quantize.cpp
+    pass/constant_folding_range.cpp
+    pass/constant_folding_reshape.cpp
+    pass/constant_folding_reverse.cpp
+    pass/constant_folding_select.cpp
+    pass/constant_folding_shape_of.cpp
+    pass/constant_folding_slice.cpp
+    pass/constant_folding_transpose.cpp
+    pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp

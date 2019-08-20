@@ -63,3 +63,45 @@ NGRAPH_TEST(${BACKEND_NAME}, negative)
                                   read_vector<float>(result),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, negative_i32)
+{
+    auto shape_a = Shape{2, 5};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto relu = make_shared<op::Negative>(A);
+    auto shape_rt = Shape{2, 5};
+    auto f = make_shared<Function>(relu, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::i32, shape_a);
+    copy_data(a, vector<int32_t>{1, 8, -8, 17, -2, 1, 8, -8, 17, -1});
+    auto result = backend->create_tensor(element::i32, shape_rt);
+    vector<int32_t> expected{-1, -8, 8, -17, 2, -1, -8, 8, -17, 1};
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ(expected, read_vector<int32_t>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, negative_f32)
+{
+    auto shape_a = Shape{2, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto relu = make_shared<op::Negative>(A);
+    auto shape_rt = Shape{2, 5};
+    auto f = make_shared<Function>(relu, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(
+        a, vector<float>{1.35f, 8.76f, -8.0f, 17.234f, -2.121f, 1.0f, 8.7f, -8.92f, 17.0f, -1.0f});
+    auto result = backend->create_tensor(element::f32, shape_rt);
+    vector<float> expected{
+        -1.35f, -8.76f, 8.0f, -17.234f, 2.121f, -1.0f, -8.7f, 8.92f, -17.0f, 1.0f};
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ(expected, read_vector<float>(result));
+}

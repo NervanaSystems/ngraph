@@ -35,25 +35,48 @@ op::Proposal::Proposal(const std::shared_ptr<Node>& class_probs,
 
 void op::Proposal::validate_and_infer_types()
 {
-    // shape node should have integer data type. For now we only allow i64
-    auto image_shape_et = get_input_element_type(2);
-    NODE_VALIDATION_CHECK(this,
-                          image_shape_et.compatible(element::Type_t::i64),
-                          "image shape input must have element type i64, but has ",
-                          image_shape_et);
-
     set_input_is_relevant_to_shape(2);
 
-    if (auto const_shape = dynamic_pointer_cast<op::Constant>(get_argument(2)))
+    const auto& class_probs_pshape = get_input_partial_shape(0);
+    const auto& class_logits_pshape = get_input_partial_shape(1);
+    const auto& image_shape_pshape = get_input_partial_shape(2);
+    if (class_probs_pshape.is_static() && class_logits_pshape.is_static() &&
+        image_shape_pshape.is_static())
     {
-        NODE_VALIDATION_CHECK(this,
-                              shape_size(const_shape->get_shape()) >= 1,
-                              "Layer shape must have rank greater than 1",
-                              const_shape->get_shape());
+        const Shape class_probs_shape{class_probs_pshape.to_shape()};
+        const Shape class_logits_shape{class_logits_pshape.to_shape()};
+        const Shape image_shape_shape{image_shape_pshape.to_shape()};
 
-        auto image_shape = const_shape->get_shape_val();
+        NODE_VALIDATION_CHECK(
+            this,
+            class_probs_shape.size() == 4,
+            "Proposal layer shape class_probs input must have rank 4 (class_probs_shape: ",
+            class_probs_shape,
+            ").");
 
-        set_output_type(0, element::f32, Shape{image_shape[0] * m_attrs.post_nms_topn, 5});
+        NODE_VALIDATION_CHECK(
+            this,
+            class_logits_shape.size() == 4,
+            "Proposal layer shape class_logits_shape input must have rank 4 (class_logits_shape: ",
+            class_logits_shape,
+            ").");
+
+        NODE_VALIDATION_CHECK(
+            this,
+            image_shape_shape.size() == 1,
+            "Proposal layer image_shape input must have rank 1 (image_shape_shape: ",
+            image_shape_shape,
+            ").");
+
+        NODE_VALIDATION_CHECK(
+            this,
+            image_shape_shape[0] >= 3 && image_shape_shape[0] <= 4,
+            "Image_shape 1D tensor must have => 3 and <= 4 elements (image_shape_shape[0]",
+            image_shape_shape[0],
+            ").");
+
+        auto batch_size = class_probs_shape[0];
+        set_output_type(0, element::f32, Shape{batch_size * m_attrs.post_nms_topn, 5});
     }
     else
     {

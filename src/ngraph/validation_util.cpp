@@ -506,7 +506,8 @@ static std::tuple<element::Type, PartialShape, PartialShape> infer_batch_norm_fo
         channel_dim = input_shape[1];
     }
 
-    // Infer gamma/beta/mu/sigma shape, which must be consistent with a vector of size "channel_dim".
+    // Infer gamma/beta/mu/sigma shape, which must be consistent with a vector of size
+    // "channel_dim".
     PartialShape channel_shape{PartialShape::dynamic()};
 
     for (auto& inp : channel_shaped_inputs)

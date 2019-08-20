@@ -135,7 +135,8 @@ op::MaxPoolWithIndices::MaxPoolWithIndices(const Output<Node>& arg,
     }
 
     //
-    // Compute output item shape Do, checking at the same time that all window movement strides are larger than 0.
+    // Compute output item shape Do, checking at the same time that all window movement strides are
+    // larger than 0.
     //
     Shape output_item_shape;
 
@@ -309,7 +310,8 @@ op::MaxPoolWithIndicesBackprop::MaxPoolWithIndicesBackprop(const Output<Node>& a
     }
 
     //
-    // Compute output item shape Do, checking at the same time that all window movement strides are larger than 0.
+    // Compute output item shape Do, checking at the same time that all window movement strides are
+    // larger than 0.
     //
     Shape output_item_shape;
 
