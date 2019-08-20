@@ -33,10 +33,10 @@ set (SRC
     builder/quantization.hpp
     builder/quantized_conv_builder.cpp
     builder/quantized_conv_builder.hpp
+    builder/quantized_dot_builder.cpp
+    builder/quantized_dot_builder.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization/quantized_linear_matmul.cpp
-    builder/quantization/quantized_linear_matmul.hpp
     builder/quantization_util.hpp
     builder/quantization_utils.hpp
     builder/quantization_utils.cpp
@@ -166,8 +166,6 @@ set (SRC
     op/experimental/shape_of.hpp
     op/experimental/tile.cpp
     op/experimental/tile.hpp
-    op/experimental/quantized_dot.cpp
-    op/experimental/quantized_dot.hpp
     op/experimental/quantized_dot_bias.cpp
     op/experimental/quantized_dot_bias.hpp
     op/experimental/compiled_kernel.cpp
@@ -252,6 +250,8 @@ set (SRC
     op/quantize.hpp
     op/quantized_convolution.cpp
     op/quantized_convolution.hpp
+    op/quantized_dot.cpp
+    op/quantized_dot.hpp
     op/recv.cpp
     op/recv.hpp
     op/relu.cpp

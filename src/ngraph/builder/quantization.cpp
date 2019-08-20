@@ -355,29 +355,5 @@ namespace ngraph
                 input, filters, mybias, requantization_scale, requantize, with_relu);
         }
 
-        shared_ptr<Node> ScaledQuantizedDot(const Output<Node>& input,
-                                            const Output<Node>& filters,
-                                            const Output<Node>& min_input,
-                                            const Output<Node>& max_input,
-                                            const Output<Node>& min_filter,
-                                            const Output<Node>& max_filter,
-                                            const Output<Node>& min_output,
-                                            const Output<Node>& max_output,
-                                            const bool requantize,
-                                            const bool with_relu)
-        {
-            auto requantization_scale =
-                quantization_util::get_dot_scale(min_input,
-                                                 max_input,
-                                                 min_filter,
-                                                 max_filter,
-                                                 min_output,
-                                                 max_output,
-                                                 input.get_element_type(),
-                                                 with_relu ? element::u8 : element::i8,
-                                                 requantize);
-            return make_shared<op::QuantizedDot>(
-                input, filters, requantization_scale, requantize, with_relu);
-        }
     } // namespace builder
 } // namespace ngraph
