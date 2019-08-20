@@ -57,7 +57,6 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
@@ -2592,21 +2591,21 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedDot)
             {
-                if (shape_size(args[2].get_shape()) != 1)
-                {
-                    throw ngraph_error("Scale size should be 1 for QuantizedDot");
-                }
-                writer << "float dyn_scale = *(static_cast<float*>(" << args[2].get_name()
-                       << "));\n";
-
-                writer << "reference::dot(" << args[0].get_name() << ",\n";
+                writer << "reference::dot<" << args[0].get_type() << " , " << args[1].get_type()
+                       << " , " << out[0].get_type() << ", int32_t>(" << args[0].get_name()
+                       << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
                 writer << "            " << out[0].get_name() << ",\n";
                 writer << "            {" << join(args[0].get_shape()) << "},\n";
                 writer << "            {" << join(args[1].get_shape()) << "},\n";
                 writer << "            {" << join(out[0].get_shape()) << "},\n";
                 writer << "            1,\n";
-                writer << "            dyn_scale);\n";
+                writer << "            " << args[2].get_name() << ",\n";
+                writer << "            " << args[3].get_name() << ",\n";
+                writer << "            " << args[4].get_name() << ",\n";
+                writer << "            " << args[5].get_name() << ",\n";
+                writer << "            " << args[6].get_name() << ",\n";
+                writer << "            " << args[7].get_name() << ");\n";
             }
 
             template <>

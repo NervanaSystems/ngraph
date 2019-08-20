@@ -136,6 +136,8 @@ model_matmul_integer_scalar
 quantized_convolution
 quantized_conv_non_zero_zero_point
 quantized_conv_int32_output
+quantized_dot_u8u8
+quantized_dot_int32_output
 
 # Need to update implementation
 divide_python_rounding_int32

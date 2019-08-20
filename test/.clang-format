@@ -1,5 +1,5 @@
 #
-# OVERRIDE TO STYLE: Comments wrap, ColumnLimit to 75.
+# OVERRIDE TO STYLE: Comments wrap.
 #
 BasedOnStyle: LLVM
 IndentWidth: 4
@@ -26,7 +26,7 @@ BinPackParameters: false
 BreakBeforeBraces: Allman
 BreakConstructorInitializersBeforeComma: true
 
-ColumnLimit: 75
+ColumnLimit: 100
 #CommentPragmas: '.*'
 
 IndentCaseLabels: false

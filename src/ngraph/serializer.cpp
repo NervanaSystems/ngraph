@@ -61,7 +61,6 @@
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
@@ -119,6 +118,7 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/recv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -1645,7 +1645,29 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::QuantizedDotBias: { break;
         }
-        case OP_TYPEID::QuantizedDot: { break;
+        case OP_TYPEID::QuantizedDot:
+        {
+            size_t reduction_axes_count = node_js["reduction_axes_count"].get<size_t>();
+            auto output_type = read_element_type(node_js.at("output_type"));
+            auto input0_axes = node_js.at("input0_axes").get<set<size_t>>();
+            auto input1_axes = node_js.at("input1_axes").get<set<size_t>>();
+            auto output_axes = node_js.at("output_axes").get<set<size_t>>();
+
+            node = make_shared<op::QuantizedDot>(args[0],
+                                                 args[1],
+                                                 reduction_axes_count,
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 args[5],
+                                                 args[6],
+                                                 args[7],
+                                                 output_type,
+                                                 input0_axes,
+                                                 input1_axes,
+                                                 output_axes);
+
+            break;
         }
         case OP_TYPEID::Recv:
         {
@@ -2697,7 +2719,15 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::QuantizedDotBias: { break;
     }
-    case OP_TYPEID::QuantizedDot: { break;
+    case OP_TYPEID::QuantizedDot:
+    {
+        auto tmp = dynamic_cast<const op::QuantizedDot*>(&n);
+        node["reduction_axes_count"] = tmp->get_reduction_axes_count();
+        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["input0_axes"] = tmp->get_input0_axes();
+        node["input1_axes"] = tmp->get_input1_axes();
+        node["output_axes"] = tmp->get_output_axes();
+        break;
     }
     case OP_TYPEID::Recv:
     {
