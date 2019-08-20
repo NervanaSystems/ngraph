@@ -48,8 +48,8 @@ namespace ngraph
         /// The elements in the std::pair returned by this function correspond to those supplied
         /// in the std::pair provided via \p args.
         ///
-        /// If \p args.first and \p args.second produce identical shapes, then the returned std::pair
-        /// will have the same value as \p args.
+        /// If \p args.first and \p args.second produce identical shapes, then the returned
+        /// std::pair will have the same value as \p args.
         ///
         /// If \p args.first and \p args.second produce different shapes, then this function creates
         /// new ngraph::op::Reshape and/or ngraph::op::Broadcast nodes, as needed, to wrap
@@ -73,14 +73,16 @@ namespace ngraph
         std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
             numpy_broadcast(const std::pair<Output<Node>, Output<Node>>& args);
 
-        /// Create a new \p NodeType node, and any additional nodes required to simulate NumPy-style autobroadcast
-        /// semantics.  Intended for binary operations such as "Add".
+        /// Create a new \p NodeType node, and any additional nodes required to simulate NumPy-style
+        /// autobroadcast semantics.  Intended for binary operations such as "Add".
         ///
-        /// \param [in] operand1_reshapeable The first operand to supply to the \p NodeType constructor.  Subject to
-        ///   being wrapped with additional nodes required for autobroadcasting.  Must not be null.
+        /// \param [in] operand1_reshapeable The first operand to supply to the \p NodeType
+        ///                                  constructor.  Subject to being wrapped with additional
+        ///                                  nodes required for autobroadcasting.  Must not be null.
         ///
-        /// \param [in] operand2_reshapeable The second operand to supply to the \p NodeType constructor.  Subject to
-        ///   being wrapped with additional nodes required for autobroadcasting.  Must not be null.
+        /// \param [in] operand2_reshapeable The second operand to supply to the \p NodeType
+        ///                                  constructor.  Subject to being wrapped with additional
+        ///                                  nodes required for autobroadcasting.  Must not be null.
         ///
         /// \return The sink node of any/all nodes created by this function.  Will never be null.
         ///
@@ -94,18 +96,20 @@ namespace ngraph
             return std::make_shared<NodeType>(shaped_op1_op2.first, shaped_op1_op2.second);
         }
 
-        /// Create a new \p NodeType node, and any additional nodes required to simulate NumPy-style autobroadcast
-        /// semantics.  Intended for non-binary operations such as "Select", where precisely the second and third
-        /// operands are subject to autobroadcast semantics.
+        /// Create a new \p NodeType node, and any additional nodes required to simulate NumPy-style
+        /// autobroadcast semantics.  Intended for non-binary operations such as "Select", where
+        /// precisely the second and third operands are subject to autobroadcast semantics.
         ///
-        /// \param [in] operand1 This operand is not subject to autobraodcast logic, and will be passed as-is as
-        /// the first argument to the \p NodeType constructor.
+        /// \param [in] operand1 This operand is not subject to autobraodcast logic, and will be
+        ///                      passed as-is as the first argument to the \p NodeType constructor.
         ///
-        /// \param [in] operand2_reshapeable The second operand to supply to the \p NodeType constructor.  Subject to
-        ///   being wrapped with additional nodes required for autobroadcasting.  Must not be null.
+        /// \param [in] operand2_reshapeable The second operand to supply to the \p NodeType
+        ///                                  constructor.  Subject to being wrapped with additional
+        ///                                  nodes required for autobroadcasting.  Must not be null.
         ///
-        /// \param [in] operand3_reshapeable The third operand to supply to the \p NodeType constructor.  Subject to
-        ///   being wrapped with additional nodes required for autobroadcasting.  Must not be null.
+        /// \param [in] operand3_reshapeable The third operand to supply to the \p NodeType
+        ///                                  constructor.  Subject to being wrapped with additional
+        ///                                  nodes required for autobroadcasting.  Must not be null.
         ///
         /// \return The sink node of any/all nodes created by this function.  Will never be null.
         ///

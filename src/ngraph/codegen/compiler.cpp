@@ -216,7 +216,8 @@ void codegen::CompilerCore::initialize()
     {
         diag_consumer = new IgnoringDiagConsumer();
     }
-    // Create diagnostics after compiler invocation is created, otherwise report outputs do not get generated.
+    // Create diagnostics after compiler invocation is created, otherwise report outputs do not get
+    // generated.
     m_compiler->createDiagnostics(diag_consumer);
 
     configure_search_path();

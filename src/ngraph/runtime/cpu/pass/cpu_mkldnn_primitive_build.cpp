@@ -27,12 +27,10 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -124,7 +122,7 @@ namespace ngraph
 
                     writer << "\n// build sum primitive\n";
                     writer << "std::vector<mkldnn::memory::primitive::at> inputs_primitive;\n";
-                    //emit_memory_primitive_build(writer, desc_names, deps);
+                    // emit_memory_primitive_build(writer, desc_names, deps);
                     writer << "inputs_primitive.push_back(*cg_ctx->mkldnn_primitives["
                            << std::to_string(deps[0]) << "]);\n";
                     writer << "inputs_primitive.push_back(*cg_ctx->mkldnn_primitives["
@@ -239,8 +237,8 @@ namespace ngraph
                     auto dst_iter_md = mkldnn_emitter.build_memory_descriptor(
                         dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format::ldsnc);
 
-                    // Lstm/Rnn needs 9 primitives: src_layer, src_iter, weights_layer, weights_iter, bias,
-                    // dst_layer, dst_iter, workspace, and rnn_forward.
+                    // Lstm/Rnn needs 9 primitives: src_layer, src_iter, weights_layer,
+                    // weights_iter, bias, dst_layer, dst_iter, workspace, and rnn_forward.
                     // It needs a new workspace.
                     index = mkldnn_emitter.reserve_primitive_space_cg(9, true /* new workspace */);
                     deps = mkldnn_emitter.get_primitive_deps_cg(index);
@@ -644,7 +642,8 @@ namespace ngraph
                     size_t concat_dim = concat->get_concatenation_axis();
                     size_t nargs = node->get_inputs().size();
 
-                    // Concat needs number of inputs plus 2 primitives; those two are for result and concat.
+                    // Concat needs number of inputs plus 2 primitives; those two are for result and
+                    // concat.
                     index = mkldnn_emitter.reserve_primitive_space_cg(nargs + 2);
                     deps = mkldnn_emitter.get_primitive_deps_cg(index);
 
@@ -916,7 +915,7 @@ namespace ngraph
                         writer << "conv_attr.set_output_scales(mask, dyn_scales);\n";
                     }
 
-                    //emit_memory_primitive_build(writer, desc_names, deps);
+                    // emit_memory_primitive_build(writer, desc_names, deps);
                     writer << "mkldnn::primitive* prim;\n";
                     if (mkldnn_emitter.has_bias<OP>())
                     {
@@ -1078,7 +1077,8 @@ namespace ngraph
                     std::vector<mkldnn::memory::desc> descs = {arg0_desc, arg1_desc, out0_desc};
                     // ConvolutionBackpropFilter needs 4 primitives: src, diff_dst, diff_weights,
                     // and convolution_backward_weights.
-                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst, diff_weights,
+                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst,
+                    // diff_weights,
                     // diff_bias, and convolution_backward_weights.
                     if (has_bias)
                     {
@@ -1283,8 +1283,9 @@ namespace ngraph
                 {
                     auto dconv = static_cast<const DeconvolutionBias*>(node);
 
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not
+                    // how far apart to space the elements like nGraph. So we have to subtract 1
+                    // from each pos.
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : dconv->get_window_dilation_strides_forward())
@@ -1506,25 +1507,9 @@ namespace ngraph
                 }
 
                 template <>
-                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
-                    QuantizedMaxPool)
-                {
-                    construct_primitive_build_string_max_pool<QuantizedMaxPool>(
-                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
-                }
-
-                template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(AvgPool)
                 {
                     construct_primitive_build_string_avg_pool<AvgPool>(
-                        mkldnn_emitter, node, construct_string, deps, index, desc_file);
-                }
-
-                template <>
-                void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
-                    QuantizedAvgPool)
-                {
-                    construct_primitive_build_string_avg_pool<QuantizedAvgPool>(
                         mkldnn_emitter, node, construct_string, deps, index, desc_file);
                 }
 
@@ -1540,7 +1525,8 @@ namespace ngraph
                     auto padding_below = pool->get_padding_below();
                     auto padding_above = pool->get_padding_above();
 
-                    // MaxPoolWithIndices needs 4 primitives: input, result, workspace, and pooling_forward.
+                    // MaxPoolWithIndices needs 4 primitives: input, result, workspace, and
+                    // pooling_forward.
                     index = mkldnn_emitter.reserve_primitive_space_cg(4);
                     deps = mkldnn_emitter.get_primitive_deps_cg(index);
 
@@ -1771,7 +1757,8 @@ namespace ngraph
                     auto padding_below = pool->get_padding_below();
                     auto padding_above = pool->get_padding_above();
 
-                    // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace, diff_src
+                    // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace,
+                    // diff_src
                     // and pooling_backward.
                     index = mkldnn_emitter.reserve_primitive_space_cg(4);
                     deps = mkldnn_emitter.get_primitive_deps_cg(index);
@@ -1815,7 +1802,8 @@ namespace ngraph
                               "cg_ctx->global_cpu_engine};\n";
                     writer << "mkldnn::pooling_backward::primitive_desc bwd_pd{bwd_desc, "
                               "cg_ctx->global_cpu_engine, fwd_pd};\n";
-                    // this is different from cpu builder because we do not write workspace desc to desc_file.
+                    // this is different from cpu builder because we do not write workspace desc to
+                    // desc_file.
                     // here workspace's mkldnn primitive index is in deps[2] in stead of deps[1].
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(deps[2])
                            << "] = new mkldnn::memory({fwd_pd.workspace_primitive_desc().desc(), "
@@ -2127,7 +2115,8 @@ namespace ngraph
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 1);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
-                    // SigmoidBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
+                    // SigmoidBackprop needs 4 primitives: input, delta, result, and
+                    // eltwise_backward.
                     index = mkldnn_emitter.reserve_primitive_space_cg(4);
                     deps = mkldnn_emitter.get_primitive_deps_cg(index);
 
@@ -2339,12 +2328,14 @@ namespace ngraph
 
                     if (has_bias)
                     {
-                        // QuantizedDotBias needs 5 primitives: input, weights, bias, result, and inner_product.
+                        // QuantizedDotBias needs 5 primitives: input, weights, bias, result, and
+                        // inner_product.
                         index = mkldnn_emitter.reserve_primitive_space_cg(5);
                     }
                     else
                     {
-                        // QuantizedDot needs 4 primitives: input, weights, result, and inner_product.
+                        // QuantizedDot needs 4 primitives: input, weights, result, and
+                        // inner_product.
                         index = mkldnn_emitter.reserve_primitive_space_cg(4);
                     }
                     deps = mkldnn_emitter.get_primitive_deps_cg(index);
@@ -2511,11 +2502,7 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
     {TI(Slice), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Slice>},
     {TI(Softmax), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<Softmax>},
     {TI(MaxPool), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<MaxPool>},
-    {TI(QuantizedMaxPool),
-     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedMaxPool>},
     {TI(AvgPool), &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<AvgPool>},
-    {TI(QuantizedAvgPool),
-     &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<QuantizedAvgPool>},
     {TI(AvgPoolBackprop),
      &MKLDNNPrimitiveBuildPass::construct_primitive_build_string<AvgPoolBackprop>},
     {TI(MaxPoolBackprop),

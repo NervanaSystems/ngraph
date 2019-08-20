@@ -55,12 +55,10 @@
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
@@ -1007,7 +1005,8 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
             {
                 writer.block_begin();
-                // Some C++ implementations don't like it when we call std::abs on unsigned types, so we will
+                // Some C++ implementations don't like it when we call std::abs on unsigned types,
+                // so we will
                 // avoid doing so here.
                 auto& result_element_type = out[0].get_element_type();
 
@@ -2791,50 +2790,6 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedMaxPool)
-            {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    size_t max_pool_index;
-                    std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, max_pool_index, deps);
-
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
-                           << args[0].get_name() << ");\n";
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
-                           << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
-                           << ");\n";
-                }
-                else
-                {
-                    throw ngraph_error("unsupported parameters for QuantizedMaxPool");
-                }
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedAvgPool)
-            {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    size_t avg_pool_index;
-                    std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, avg_pool_index, deps);
-
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
-                           << args[0].get_name() << ");\n";
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
-                           << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(avg_pool_index)
-                           << ");\n";
-                }
-                else
-                {
-                    throw ngraph_error("unsupported parameters for QuantizedAvgPool");
-                }
-            }
-
-            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolWithIndices)
             {
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
@@ -4034,7 +3989,10 @@ namespace ngraph
                        << "[0]);\n";
                 writer << "size_t count = " << args[0].get_size() << ";\n";
                 writer << "size_t nthr = " << to_string(ncr) << ";\n";
-                //writer << "size_t nthr = " << to_string(ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores()) << ";\n";
+                // writer << "size_t nthr = "
+                //        << to_string(
+                //               ngraph::runtime::cpu::executor::GetCPUExecutor().get_num_cores())
+                //        << ";\n";
                 writer << "size_t chunk_size = (count + nthr - 1) / nthr;\n";
                 writer << "std::vector<std::minstd_rand> vmsr(nthr);\n";
                 writer << "for (size_t i = 0; i < nthr; i++)\n\

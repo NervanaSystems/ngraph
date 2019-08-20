@@ -154,16 +154,12 @@ set (SRC
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
-    op/experimental/quantized_avg_pool.cpp
-    op/experimental/quantized_avg_pool.hpp
     op/experimental/quantized_concat.cpp
     op/experimental/quantized_concat.hpp
     op/experimental/quantized_conv_bias.cpp
     op/experimental/quantized_conv_bias.hpp
     op/experimental/quantized_conv_relu.cpp
     op/experimental/quantized_conv_relu.hpp
-    op/experimental/quantized_max_pool.cpp
-    op/experimental/quantized_max_pool.hpp
     op/experimental/range.cpp
     op/experimental/range.hpp
     op/experimental/shape_of.cpp
@@ -334,8 +330,8 @@ set (SRC
     op/fused/lstm_cell.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
-    op/fused/normalize.cpp
-    op/fused/normalize.hpp
+    op/fused/normalize_l2.cpp
+    op/fused/normalize_l2.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/rnn_cell.cpp

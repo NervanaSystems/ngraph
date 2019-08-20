@@ -279,9 +279,12 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     // Otherwise, we would generate code like this:
     //   %0 = icmp %a, %b : i1
     //   store %0, %c[%arg1] : i8  // Type error: trying to store an i1 into an i8.
-    if (((element::Type_t)node->get_element_type()) == element::Type_t::boolean)
+    for (auto& output : node->get_outputs())
     {
-        return false;
+        if (output.get_element_type() == element::boolean)
+        {
+            return false;
+        }
     }
 
     if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))

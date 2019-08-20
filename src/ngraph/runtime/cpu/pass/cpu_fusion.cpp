@@ -41,11 +41,9 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -728,7 +726,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 //      \      \|           /                      /
 //            BatchNormInferenceRelu
 //
-// Multiply1, Multiply2, and newAdd operate on vectors while Multiply an Add operate on multi-dimensional matrices.
+// Multiply1, Multiply2, and newAdd operate on vectors while Multiply an Add operate on
+// multi-dimensional matrices.
 // Multiply1, Multiply2, and newAdd may be folded away with constant folding pass later.
 void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with_multiply_add()
 {
@@ -1909,7 +1908,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
 void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_folding_relu()
 {
     Shape data_batch_shape{100, 512, 4, 4};
-    Shape filters_shape{512, 64, 4, 4}; //Note: the weights are in o,i,h,w
+    Shape filters_shape{512, 64, 4, 4}; // Note: the weights are in o,i,h,w
     auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, filters_shape);
     Shape conv_out_shape{100, 64, 1, 1};
@@ -2195,7 +2194,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
     this->add_matcher(m, callback);
 }
 
-// Dequantize + AvgPool -> QuantizedAvgPool + Dequantize
+// Dequantize + AvgPool -> AvgPool + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
 {
     Shape shape{2, 2, 1, 1};
@@ -2213,7 +2212,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
         auto avg_pool_m = std::static_pointer_cast<ngraph::op::AvgPool>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(avg_pool_m->get_argument(0));
 
-        auto qavg_pool_n = std::make_shared<ngraph::op::QuantizedAvgPool>(
+        auto qavg_pool_n = std::make_shared<ngraph::op::AvgPool>(
             dq_m->get_argument(0),
             avg_pool_m->get_window_shape(),
             avg_pool_m->get_window_movement_strides(),
@@ -2233,7 +2232,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
                       callback);
 }
 
-// Dequantize + Maxpool -> QuantizedMaxpool + Dequantize
+// Dequantize + Maxpool -> Maxpool + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
 {
     Shape shape{2, 2, 1, 1};
@@ -2251,12 +2250,12 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
         auto max_pool_m = std::static_pointer_cast<ngraph::op::MaxPool>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(max_pool_m->get_argument(0));
 
-        auto qmax_pool_n = std::make_shared<ngraph::op::QuantizedMaxPool>(
-            dq_m->get_argument(0),
-            max_pool_m->get_window_shape(),
-            max_pool_m->get_window_movement_strides(),
-            max_pool_m->get_padding_below(),
-            max_pool_m->get_padding_above());
+        auto qmax_pool_n =
+            std::make_shared<ngraph::op::MaxPool>(dq_m->get_argument(0),
+                                                  max_pool_m->get_window_shape(),
+                                                  max_pool_m->get_window_movement_strides(),
+                                                  max_pool_m->get_padding_below(),
+                                                  max_pool_m->get_padding_above());
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(qmax_pool_n,
                                                              dq_m->get_argument(1),
                                                              dq_m->get_argument(2),
@@ -2414,7 +2413,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
     auto skipb_l = std::make_shared<pattern::op::Skip>(
         skipr_l, [](std::shared_ptr<Node> n) { return n->description() == "Broadcast"; });
 
-    //Right Graph
+    // Right Graph
     auto summand = std::make_shared<pattern::op::Label>(element::i8, qconvb->get_shape());
     auto dq_r = std::make_shared<ngraph::op::Dequantize>(
         summand, dq_scale2, dq_zp2, element::f32, AxisSet{});
@@ -2424,7 +2423,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
     auto skipb_r = std::make_shared<pattern::op::Skip>(
         skipr_r, [](std::shared_ptr<Node> n) { return n->description() == "Broadcast"; });
 
-    //Add left + right
+    // Add left + right
     auto add = skipb_l + skipb_r;
     auto prelu = std::make_shared<ngraph::op::Relu>(add);
 
