@@ -56,6 +56,8 @@ quantize_ROUND_DOWN
 quantized_convolution
 quantized_conv_non_zero_zero_point
 quantized_conv_int32_output
+quantized_dot_u8u8
+quantized_dot_int32_output
 shape_of_scalar
 shape_of_vector
 shape_of_matrix
@@ -217,6 +219,10 @@ fake_quantize_with_clip_across_channels
 send_recv
 send_recv_ring
 logical_xor
+max_pool_uint8
+max_pool_int8
+avg_pool_uint8
+avg_pool_int8
 
 # Needs erf
 gelu_f32

@@ -38,10 +38,12 @@ namespace ngraph
             {
             }
 
-            /// \brief Makes the test case print the expected and computed values to the console. This should only be used for debugging purposes.
+            /// \brief Makes the test case print the expected and computed values to the console.
+            ///        This should only be used for debugging purposes.
             ///
-            /// Just before the assertion is done, the current test case will gather expected and computed values,
-            /// format them as 2 columns and print out to the console along with a corresponding index in the vector.
+            /// Just before the assertion is done, the current test case will gather expected and
+            /// computed values, format them as 2 columns and print out to the console along with
+            //  a corresponding index in the vector.
             ///
             /// \param dump - Indicates if the test case should perform the console printout
             NgraphTestCase& dump_results(bool dump = true);

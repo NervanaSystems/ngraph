@@ -42,8 +42,20 @@ namespace ngraph
                      const Shape& arg1_shape,
                      const Shape& out_shape,
                      size_t reduction_axes_count,
-                     const float requant_scale = 1.0f)
+                     const float* input0_scale = nullptr,
+                     const INPUT0* input0_zero_point = nullptr,
+                     const float* input1_scale = nullptr,
+                     const INPUT1* input1_zero_point = nullptr,
+                     const float* output_scale = nullptr,
+                     const OUTPUT* output_zero_point = nullptr)
             {
+                bool is_quantized = false;
+                if (input0_scale && input0_zero_point && input1_scale && input1_zero_point &&
+                    output_scale && output_zero_point)
+                {
+                    is_quantized = true;
+                }
+
                 auto old_mode = std::fegetround();
                 std::fesetround(FE_TONEAREST);
                 // Get the sizes of the dot axes. It's easiest to pull them from arg1 because
@@ -119,12 +131,30 @@ namespace ngraph
                                 arg1_projected_coord.begin(), arg1_projected_coord.end(), arg1_it);
 
                             // Multiply and add to the sum.
-                            sum += arg0[arg0_transform.index(arg0_coord)] *
-                                   arg1[arg1_transform.index(arg1_coord)];
+                            if (is_quantized)
+                            {
+                                sum +=
+                                    (arg0[arg0_transform.index(arg0_coord)] - *input0_zero_point) *
+                                    (arg1[arg1_transform.index(arg1_coord)] - *input1_zero_point);
+                            }
+                            else
+                            {
+                                sum += arg0[arg0_transform.index(arg0_coord)] *
+                                       arg1[arg1_transform.index(arg1_coord)];
+                            }
                         }
 
-                        // Write the sum back.
-                        out[out_index] = static_cast<OUTPUT>(sum * requant_scale);
+                        if (is_quantized)
+                        {
+                            float scale = *input0_scale * *input1_scale / *output_scale;
+                            // Write the sum back.
+                            out[out_index] = static_cast<OUTPUT>(
+                                std::round(static_cast<float>(sum) * scale) + *output_zero_point);
+                        }
+                        else
+                        {
+                            out[out_index] = sum;
+                        }
                     }
                     std::fesetround(old_mode);
                 }
