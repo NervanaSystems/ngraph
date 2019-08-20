@@ -257,7 +257,7 @@ namespace ngraph
                            nullptr,
                            nullptr,
                            nullptr,
-                           nullptr); // Requantization scale (1 for non quant dot)
+                           nullptr);
                 };
                 functors.emplace_back(functor);
             }
