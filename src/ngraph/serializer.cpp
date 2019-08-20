@@ -82,7 +82,7 @@
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
@@ -143,6 +143,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
@@ -1501,13 +1502,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Negative>(args[0]);
             break;
         }
-        case OP_TYPEID::Normalize:
+        case OP_TYPEID::NormalizeL2:
         {
-            bool across_spatial = node_js.at("across_spatial").get<bool>();
-            bool channel_shared = node_js.at("channel_shared").get<bool>();
             float eps = node_js.at("eps").get<float>();
-            node =
-                make_shared<op::Normalize>(args[0], args[1], across_spatial, channel_shared, eps);
+            auto eps_mode = node_js.at("eps_mode").get<op::EpsMode>();
+            node = make_shared<op::NormalizeL2>(args[0], args[1], eps, eps_mode);
             break;
         }
         case OP_TYPEID::NotEqual:
@@ -2582,12 +2581,11 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Negative: { break;
     }
-    case OP_TYPEID::Normalize:
+    case OP_TYPEID::NormalizeL2:
     {
-        auto tmp = dynamic_cast<const op::Normalize*>(&n);
-        node["across_spatial"] = tmp->get_across_spatial();
-        node["channel_shared"] = tmp->get_channel_shared();
+        auto tmp = dynamic_cast<const op::NormalizeL2*>(&n);
         node["eps"] = tmp->get_eps();
+        node["eps_mode"] = tmp->get_eps_mode();
         break;
     }
     case OP_TYPEID::NotEqual:

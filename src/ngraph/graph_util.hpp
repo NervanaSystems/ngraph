@@ -390,7 +390,8 @@ namespace ngraph
                                     bool ignore_unused = false,
                                     bool ignore_output_duplicates = true);
 
-    // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter node
+    // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter
+    // node
     // or a node that belongs to args
     NodeVector extract_subgraph(const NodeVector& results, const NodeVector& args);
 
