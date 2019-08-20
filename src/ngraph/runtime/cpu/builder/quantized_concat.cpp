@@ -57,7 +57,8 @@ namespace ngraph
                         inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
                     }
 
-                    // Concat needs number of inputs plus 2 primitives; those two are for result and concat.
+                    // Concat needs number of inputs plus 2 primitives; those two are for result and
+                    // concat.
                     auto concat_index = mkldnn_emitter->reserve_primitive_space(nargs + 2);
                     auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
 
@@ -95,6 +96,9 @@ namespace ngraph
                 }
             }
             REGISTER_OP_BUILDER(QuantizedConcat);
+#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
+            void register_builders_quantized_concat_cpp() {}
+#endif
         }
     }
 }

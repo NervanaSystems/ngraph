@@ -73,7 +73,8 @@ void op::DeconvolutionBias::validate_and_infer_types()
     // Window movement strides  q_x       p_x
     // Window dilation strides  p_f       p_f
     // Padding below            a_x       (S_f - 1)p_f - a_x
-    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q_x) - b_x
+    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f)
+    //                                    % q_x) - b_x
     // Data dilation strides    p_x       q_x
     // Output shape             S_o       S_x
     //

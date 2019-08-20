@@ -60,6 +60,7 @@ set(SRC
     input_output_assign.cpp
     main.cpp
     misc.cpp
+    ngraph_api.cpp
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
@@ -110,6 +111,7 @@ set(SRC
     type_prop/gru_cell.cpp
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
+    type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
@@ -118,6 +120,7 @@ set(SRC
     type_prop/pad.cpp
     type_prop/parameter.cpp
     type_prop/prelu.cpp
+    type_prop/proposal.cpp
     type_prop/quantize.cpp
     type_prop/quantized_convolution.cpp
     type_prop/range.cpp
@@ -368,6 +371,7 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
+target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
     target_link_libraries(unit-test PRIVATE libjson)
 endif()
@@ -390,6 +394,7 @@ if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE libmkldnn)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_TOOLS_ENABLE)

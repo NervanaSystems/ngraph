@@ -39,7 +39,7 @@ op::HardSigmoid::HardSigmoid(const Output<Node>& data, float alpha, float beta)
 
 NodeVector op::HardSigmoid::decompose_op() const
 {
-    auto data = input(0).get_source_output();
+    auto data = input_value(0);
     auto data_shape = data.get_shape();
     size_t elem_count = shape_size(data_shape);
 

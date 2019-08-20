@@ -86,6 +86,7 @@
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -680,7 +681,7 @@ using namespace ngraph::runtime;
 
     writer << common_function_string << "\n";
 
-    //initiate mkldnn_primitives for CPURuntimeContextCG
+    // initiate mkldnn_primitives for CPURuntimeContextCG
     writer << "void inline CPURuntimeContextCG::init_mkldnn_primitives()\n";
     writer.block_begin();
     writer << "mkldnn_primitives = std::vector<mkldnn::primitive*>("
@@ -740,7 +741,7 @@ using namespace ngraph::runtime;
     writer << "{\n";
     writer.indent++;
 
-    //deserialize and build mkldnn primitives
+    // deserialize and build mkldnn primitives
     if (m_mkldnn_emitter->get_mkldnn_descriptors_size() > 0)
     {
         writer << "if (ctx->first_iteration)\n";
@@ -1157,6 +1158,27 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     auto dex = is_direct_execution();
     auto is_supported = [dex](const Node& node) {
+
+        // this checks averts the decomposition of LSTMCell
+        // we will map LSTMCell to LSTM CPU op in the later
+        // graph pass
+        if (typeid(ngraph::op::LSTMCell) == typeid(node))
+        {
+            // MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell
+            // has peephole. LSTMCell with no peephole support is constant initialized to zero
+            // TODO (pthoreho) : For MKLDNN > V1.0, change mkldnn kernel integration to compute for
+            // LSTMCell
+            // with peephole as well.
+            if (std::dynamic_pointer_cast<ngraph::op::Constant>(node.get_argument(6)) != nullptr)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         if (dex)
         {
             auto handler = GetGlobalBuildDispatcher().find(type_index(typeid(node)));
@@ -1640,7 +1662,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             }
         };
 
-        //dump the tensor roles to debug manifest
+        // dump the tensor roles to debug manifest
         for (const auto& tensor_roles : m_tensor_roles)
         {
             strm << tensor_roles.first << ", " << find_role(tensor_roles.second) << "\n";
@@ -1649,8 +1671,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         write_to_file(strm.str(), s_debug_dir, filename);
         strm.str("");
 
-        //dump the op's order of execution along with the address of
-        //tensor_data which holds the base address of each tensor.
+        // dump the op's order of execution along with the address of tensor_data which holds the
+        // base address of each tensor.
         for (shared_ptr<Node> node : m_function->get_ordered_ops())
         {
             std::vector<string> node_inputs;
@@ -1685,7 +1707,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             strm.str("");
         }
     }
-    //This check ensures we have exactly one functor for Op.
+    // This check ensures we have exactly one functor for Op.
     NGRAPH_CHECK(m_op_attrs.size() == functors.size());
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
@@ -1860,7 +1882,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                 auto index = profiler_count++;
                 if ((enables.at(ctx->pc))(ctx) || ctx->first_iteration)
                 {
-                    // Each Op will have exactly one functor, start the clock before the exceution of functor
+                    // Each Op will have exactly one functor, start the clock before the exceution
+                    // of functor
                     // and collect the profiler_count once the execution complets
                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
                     {
