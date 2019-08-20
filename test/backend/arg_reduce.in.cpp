@@ -373,17 +373,17 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_0) // Along Channels
     auto a = backend->create_tensor(element::f32, shape);
 
     copy_data(a,
-              test::NDArray<float, 3>({{{8, 4}, //ch0
+              test::NDArray<float, 3>({{{8, 4}, // ch0
                                         {12, 10},
                                         {2, 9},
                                         {1, 5}},
 
-                                       {{6, 7}, //ch1
+                                       {{6, 7}, // ch1
                                         {11, 3},
                                         {9, 2},
                                         {10, 12}},
 
-                                       {{8, 4}, //ch2
+                                       {{8, 4}, // ch2
                                         {6, 1},
                                         {5, 3},
                                         {11, 7}}})
@@ -392,10 +392,10 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_0) // Along Channels
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<int, 2>({{0, 1},  //r0
-                                      {0, 0},  //r1
-                                      {1, 0},  //r2
-                                      {2, 1}}) //r3
+    EXPECT_EQ((test::NDArray<int, 2>({{0, 1},  // r0
+                                      {0, 0},  // r1
+                                      {1, 0},  // r2
+                                      {2, 1}}) // r3
                    .get_vector()),
               read_vector<int>(result));
 }
@@ -412,17 +412,17 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_1) // Along Height
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
-              test::NDArray<float, 3>({{{8, 4}, //ch0
+              test::NDArray<float, 3>({{{8, 4}, // ch0
                                         {12, 10},
                                         {2, 9},
                                         {1, 5}},
 
-                                       {{6, 7}, //ch1
+                                       {{6, 7}, // ch1
                                         {11, 3},
                                         {9, 2},
                                         {10, 12}},
 
-                                       {{8, 4}, //ch2
+                                       {{8, 4}, // ch2
                                         {6, 1},
                                         {5, 3},
                                         {11, 7}}})
@@ -450,17 +450,17 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_2) // Along Width
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a,
-              test::NDArray<float, 3>({{{8, 4}, //ch0
+              test::NDArray<float, 3>({{{8, 4}, // ch0
                                         {12, 10},
                                         {2, 9},
                                         {1, 5}},
 
-                                       {{6, 7}, //ch1
+                                       {{6, 7}, // ch1
                                         {11, 3},
                                         {9, 2},
                                         {10, 12}},
 
-                                       {{8, 4}, //ch2
+                                       {{8, 4}, // ch2
                                         {6, 1},
                                         {5, 3},
                                         {11, 7}}})
@@ -516,8 +516,8 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_axis_3)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<int, 3>({{{3, 1, 0, 0, 1}, {3, 2, 0, 0, 0}},  //ch0
-                                      {{1, 2, 4, 3, 0}, {0, 1, 2, 0, 4}}}) //ch1
+    EXPECT_EQ((test::NDArray<int, 3>({{{3, 1, 0, 0, 1}, {3, 2, 0, 0, 0}},  // ch0
+                                      {{1, 2, 4, 3, 0}, {0, 1, 2, 0, 4}}}) // ch1
                    .get_vector()),
               read_vector<int>(result));
 }
@@ -579,8 +579,8 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_axis_3_i64_in_i32)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((test::NDArray<int64_t, 3>({{{3, 1, 0, 0, 1}, {3, 2, 0, 0, 0}},  //ch0
-                                          {{1, 2, 4, 3, 0}, {0, 1, 2, 0, 4}}}) //ch1
+    EXPECT_EQ((test::NDArray<int64_t, 3>({{{3, 1, 0, 0, 1}, {3, 2, 0, 0, 0}},  // ch0
+                                          {{1, 2, 4, 3, 0}, {0, 1, 2, 0, 4}}}) // ch1
                    .get_vector()),
               read_vector<int64_t>(result));
 }

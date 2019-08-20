@@ -144,7 +144,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcastdistributed)
     }
 }
 
-//MLSL does not support send recv
+// MLSL does not support send recv
 #if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
 NGRAPH_TEST(${BACKEND_NAME}, send_recv)
 {
@@ -182,7 +182,7 @@ NGRAPH_TEST(${BACKEND_NAME}, send_recv)
 }
 #endif
 
-//MLSL does not support send recv
+// MLSL does not support send recv
 #if !defined(NGRAPH_DISTRIBUTED_MLSL_ENABLE)
 NGRAPH_TEST(${BACKEND_NAME}, send_recv_ring)
 {

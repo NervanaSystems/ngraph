@@ -976,7 +976,7 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is a new release of gtest
+        // TODO change to skip when there is a new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -1266,7 +1266,7 @@ TEST(cpu_test, constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::Floor>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Not>(func), 0);
 
-    //expected values
+    // expected values
     vector<int> add_expected{2, 4, 6, 8};
     vector<int> sub_expected{0, 0, 0, 0};
     vector<int> mul_expected{1, 4, 9, 16};
@@ -1322,6 +1322,7 @@ TEST(cpu_test, constant_unary_binary)
 
 TEST(cpu_test, conv_test_winograd)
 {
+    // clang-format off
     // This test checks for the cpu specific graph pass handling for conv_winograd implementation.
     // On SKX with MKLDNN version >= v0.18.0, mkldnn_verbose should match the following
     //
@@ -1334,6 +1335,7 @@ TEST(cpu_test, conv_test_winograd)
     // mkldnn_verbose,exec,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,46.6631
     // mkldnn_verbose,create,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,0.279053
     // mkldnn_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
+    // clang-format on
     auto make_function = []() -> std::shared_ptr<Function> {
         auto input = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
         auto filter = make_shared<op::Parameter>(element::f32, Shape{64, 3, 3, 3});
@@ -2118,7 +2120,8 @@ TEST(cpu_test, tensor_copy_from_same_rotated_layouts)
     auto result2_internal_buffer = reinterpret_cast<uint8_t*>(
         static_pointer_cast<runtime::cpu::CPUTensorView>(result2)->get_data_ptr());
     vector<uint8_t> vec(result2_internal_buffer, result2_internal_buffer + 6);
-    // This check can be removed if the CPU backend stops optimizing reshapes using layout transformations
+    // This check can be removed if the CPU backend stops optimizing reshapes using layout
+    // transformations
     EXPECT_EQ((vector<uint8_t>{1, 2, 3, 4, 5, 6}), vec);
 
     // Check native layout
