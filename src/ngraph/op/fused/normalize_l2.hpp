@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
@@ -27,31 +28,28 @@ namespace ngraph
     {
         /// \brief  Normalization input tensor with L2 norm.
         ///
-        class Normalize : public ngraph::op::util::FusedOp
+        class NormalizeL2 : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            Normalize() = default;
+            NormalizeL2() = default;
             ///
             /// \brief      Constructs a Normalize operation.
             ///
             /// \param      data            - Node producing the input tensor
-            /// \param      scale           - Node producing the scale tensor
-            /// \param      across_spatial  - Whether calculate norm across all channels.
-            /// \param      channel_shared  - Whether scale is shared across channels.
+            /// \param      axes            - Node indicating axes along which reduction is calculated
             /// \param      eps             - The epsilon added to L2 norm.
+            /// \param      eps_mode        - Specifies how eps is combined with L2 value calculated before division
             ///
-            Normalize(const Output<Node>& data,
-                      const Output<Node>& scale,
-                      bool across_spatial,
-                      bool channel_shared,
-                      float eps);
+            NormalizeL2(const Output<Node>& data,
+                        const Output<Node>& axes,
+                        float eps,
+                        EpsMode eps_mode);
 
-            float get_across_spatial() const { return m_across_spatial; }
-            float get_channel_shared() const { return m_channel_shared; }
             float get_eps() const { return m_eps; }
+            EpsMode get_eps_mode() const { return m_eps_mode; }
             virtual NodeVector decompose_op() const override;
             virtual void pre_validate_and_infer_types() override;
 
@@ -59,9 +57,8 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            bool m_across_spatial{false};
-            bool m_channel_shared{false};
-            float m_eps{1.f};
+            float m_eps;
+            EpsMode m_eps_mode;
         };
     }
 }
