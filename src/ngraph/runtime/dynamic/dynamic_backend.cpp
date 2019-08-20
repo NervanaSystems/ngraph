@@ -16,6 +16,12 @@
 
 #include "ngraph/runtime/dynamic/dynamic_backend.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/experimental/dyn_broadcast.hpp"
+#include "ngraph/op/experimental/dyn_replace_slice.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/dyn_slice.hpp"
+#include "ngraph/op/experimental/range.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -70,6 +76,26 @@ runtime::dynamic::DynamicExecutable::DynamicExecutable(shared_ptr<Function> wrap
     passes.run_passes(m_wrapped_function);
 
     set_parameters_and_results(*wrapped_function);
+}
+
+// Helper for a vile hack in DynamicExecutable::call. See body of that function for details.
+static size_t count_dyn_nodes(const shared_ptr<ngraph::Function>& f)
+{
+    size_t count = 0;
+    for (auto op : f->get_ops())
+    {
+        if (std::dynamic_pointer_cast<op::Transpose>(op) ||
+            std::dynamic_pointer_cast<op::DynBroadcast>(op) ||
+            std::dynamic_pointer_cast<op::DynReplaceSlice>(op) ||
+            std::dynamic_pointer_cast<op::DynSlice>(op) ||
+            std::dynamic_pointer_cast<op::DynReshape>(op) ||
+            std::dynamic_pointer_cast<op::Range>(op))
+        {
+            count++;
+        }
+    }
+
+    return count;
 }
 
 bool runtime::dynamic::DynamicExecutable::call(
@@ -146,12 +172,43 @@ bool runtime::dynamic::DynamicExecutable::call(
     pass::Manager passes;
     passes.register_pass<pass::ConstantFolding>();
     passes.register_pass<pass::DynElimination>();
-    passes.run_passes(clone);
+    passes.set_per_pass_validation(false);
 
-    const ResultVector& results = clone->get_results();
-    NGRAPH_CHECK(results.size() == outputs.size());
+    // FIXME(amprocte): Vile, temporary hack: we need to do repeated rounds of
+    // ConstantFolding/DynElimination until everything that DynElimination is supposed to
+    // eliminate has actually been eliminated. We could do this by monitoring the return values of
+    // of the passes (keep iterating until both CF and DE report no changes), but that did not
+    // seem to work so here we are. Probably a better fix is to somehow combine the matchers in CF
+    // and DE into one pass.
+    size_t num_dyn_nodes_last_pass = std::numeric_limits<size_t>::max();
+
+    while (num_dyn_nodes_last_pass != 0)
+    {
+        passes.run_passes(clone);
+        auto num_dyn_nodes_this_pass = count_dyn_nodes(clone);
+
+        NGRAPH_CHECK(num_dyn_nodes_this_pass < num_dyn_nodes_last_pass,
+                     "Could not eliminate all Dyn nodes (",
+                     num_dyn_nodes_this_pass,
+                     " remaining)");
+
+        num_dyn_nodes_last_pass = num_dyn_nodes_this_pass;
+    }
+
+    pass::Manager pass_val;
+    pass_val.register_pass<pass::Validate>();
+    pass_val.run_passes(clone);
 
     std::vector<std::shared_ptr<runtime::Tensor>> wrapped_outputs;
+
+    const ResultVector& results = clone->get_results();
+    for (auto& result : results)
+    {
+        NGRAPH_CHECK(result->get_output_partial_shape(0).is_static(),
+                     "Shape staticization failed for result node ",
+                     *result);
+    }
+    NGRAPH_CHECK(results.size() == outputs.size());
 
     for (size_t i = 0; i < outputs.size(); i++)
     {
