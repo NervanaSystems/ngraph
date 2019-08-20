@@ -56,7 +56,7 @@ TEST(debugger, MLIR_DISABLE_TEST(add_breakpoint))
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is a new release of gtest
+        // TODO change to skip when there is a new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -100,7 +100,7 @@ TEST(debugger, MLIR_DISABLE_TEST(stepping))
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is a new release of gtest
+        // TODO change to skip when there is a new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -145,7 +145,7 @@ TEST(debugger, MLIR_DISABLE_TEST(delete_breakpoint))
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is new release of gtest
+        // TODO change to skip when there is new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -193,7 +193,7 @@ TEST(debugger, MLIR_DISABLE_TEST(while_stepping))
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is new release of gtest
+        // TODO change to skip when there is new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -239,7 +239,7 @@ TEST(debugger, MLIR_DISABLE_TEST(resume))
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is new release of gtest
+        // TODO change to skip when there is new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
