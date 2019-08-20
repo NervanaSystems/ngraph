@@ -46,7 +46,8 @@ namespace ngraph
                 virtual ~TensorLayout() {}
                 /// Extent of this tensor in buffer.
                 ///
-                /// When we support non-linear buffers, this will need to be something other than size_t.
+                /// When we support non-linear buffers, this will need to be something other than
+                /// size_t.
                 size_t get_size() const;
                 virtual size_t get_allocated_size();
                 /// Offset of an index; useful for slice implementation.

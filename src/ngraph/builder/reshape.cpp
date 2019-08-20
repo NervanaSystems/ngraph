@@ -70,8 +70,9 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
 {
     auto data_shape = value.get_shape();
 
-    //  First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of input tensor.
-    //  The last dimension is the product of the rest of input tensor dimensions: [d_{axis}, ..., d_n]
+    // First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of input
+    // tensor. The last dimension is the product of the rest of input tensor dimensions:
+    // [d_{axis}, ..., d_n]
     size_t first_dim_size =
         accumulate(begin(data_shape), next(begin(data_shape), axis), 1UL, multiplies<size_t>());
 
