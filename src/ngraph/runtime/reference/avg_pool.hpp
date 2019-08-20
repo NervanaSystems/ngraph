@@ -155,7 +155,8 @@ namespace ngraph
                     //
                     // with unit stride.
                     //
-                    // We iterate this over the *padded* data, so below we will need to check for coordinates that fall in the padding area.
+                    // We iterate this over the *padded* data, so below we will need to check for
+                    // coordinates that fall in the padding area.
 
                     size_t n_spatial_dimensions = arg_shape.size() - 2;
 

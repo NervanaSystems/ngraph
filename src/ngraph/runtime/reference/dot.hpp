@@ -46,8 +46,8 @@ namespace ngraph
             {
                 auto old_mode = std::fegetround();
                 std::fesetround(FE_TONEAREST);
-                // Get the sizes of the dot axes. It's easiest to pull them from arg1 because they're
-                // right up front.
+                // Get the sizes of the dot axes. It's easiest to pull them from arg1 because
+                // they're right up front.
                 Shape dot_axis_sizes(reduction_axes_count);
                 std::copy(arg1_shape.begin(),
                           arg1_shape.begin() + reduction_axes_count,
@@ -82,7 +82,8 @@ namespace ngraph
                 {
                     for (const Coordinate& arg1_projected_coord : arg1_projected_transform)
                     {
-                        // The output coordinate is just the concatenation of the projected coordinates.
+                        // The output coordinate is just the concatenation of the projected
+                        // coordinates.
                         Coordinate out_coord(arg0_projected_coord.size() +
                                              arg1_projected_coord.size());
 
@@ -105,8 +106,9 @@ namespace ngraph
                                                  arg0_coord.begin());
                         for (const Coordinate& dot_axis_positions : dot_axes_transform)
                         {
-                            // In order to find the points to multiply together, we need to inject our current
-                            // positions along the dotted axes back into the projected arg0 and arg1 coordinates.
+                            // In order to find the points to multiply together, we need to inject
+                            // our current positions along the dotted axes back into the projected
+                            // arg0 and arg1 coordinates.
                             std::copy(
                                 dot_axis_positions.begin(), dot_axis_positions.end(), arg0_it);
 
