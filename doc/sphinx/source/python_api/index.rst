@@ -1,5 +1,7 @@
 .. python_api/index.rst
 
+.. _python_api:
+
 ###########
 Python API 
 ###########

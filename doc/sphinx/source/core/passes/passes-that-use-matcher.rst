@@ -1,7 +1,8 @@
 .. fusion/passes-that-use-matcher.rst:
 
+.. _passes_that_use_matcher:
 
-Passes that use Matcher
+Passes that use matcher
 =======================
 
 * CPUFusion (GraphRewrite)

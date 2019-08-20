@@ -1,6 +1,5 @@
-.. operator.rst
+.. _operator:
 
-############################
 Build a graph with operators
 ############################
 

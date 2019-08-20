@@ -1,5 +1,7 @@
 .. core/passes/list-of-passes:
 
+.. _list_of_passes:
+
 List of passes
 ##############
 

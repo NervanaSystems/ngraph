@@ -1,5 +1,7 @@
 .. core/constructing-graphs/distribute-train.rst 
 
+.. _distribute_train:
+
 Overview
 ########
 

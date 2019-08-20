@@ -3,13 +3,8 @@
 Compiler passes
 ===============
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Compiler passes 
-
-   list-of-passes.rst 
-   passes-that-use-matcher.rst
-
+* :ref:`list_of_passes`
+* :ref:`passes_that_use_matcher`
 
 
 Overview

@@ -1,8 +1,7 @@
-.. execute-cmp.rst
+.. _execute:
 
-######################
 Execute a computation
-######################
+#####################
 
 This section explains how to manually perform the steps that would normally be 
 performed by a framework :term:`bridge` to execute a computation. The nGraph 

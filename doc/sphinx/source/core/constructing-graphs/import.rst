@@ -1,5 +1,7 @@
 .. core/constructing-graphs/import.rst:
 
+.. _import:
+
 Import a model
 ##############
 

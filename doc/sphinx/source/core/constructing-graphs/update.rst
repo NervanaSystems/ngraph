@@ -1,6 +1,5 @@
-.. update.rst
+.. _update:
 
-###########################
 Make a stateful computation
 ###########################
 
