@@ -41,11 +41,9 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -2195,7 +2193,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
     this->add_matcher(m, callback);
 }
 
-// Dequantize + AvgPool -> QuantizedAvgPool + Dequantize
+// Dequantize + AvgPool -> AvgPool + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
 {
     Shape shape{2, 2, 1, 1};
@@ -2213,7 +2211,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
         auto avg_pool_m = std::static_pointer_cast<ngraph::op::AvgPool>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(avg_pool_m->get_argument(0));
 
-        auto qavg_pool_n = std::make_shared<ngraph::op::QuantizedAvgPool>(
+        auto qavg_pool_n = std::make_shared<ngraph::op::AvgPool>(
             dq_m->get_argument(0),
             avg_pool_m->get_window_shape(),
             avg_pool_m->get_window_movement_strides(),
@@ -2233,7 +2231,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
                       callback);
 }
 
-// Dequantize + Maxpool -> QuantizedMaxpool + Dequantize
+// Dequantize + Maxpool -> Maxpool + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
 {
     Shape shape{2, 2, 1, 1};
@@ -2251,12 +2249,12 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
         auto max_pool_m = std::static_pointer_cast<ngraph::op::MaxPool>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(max_pool_m->get_argument(0));
 
-        auto qmax_pool_n = std::make_shared<ngraph::op::QuantizedMaxPool>(
-            dq_m->get_argument(0),
-            max_pool_m->get_window_shape(),
-            max_pool_m->get_window_movement_strides(),
-            max_pool_m->get_padding_below(),
-            max_pool_m->get_padding_above());
+        auto qmax_pool_n =
+            std::make_shared<ngraph::op::MaxPool>(dq_m->get_argument(0),
+                                                  max_pool_m->get_window_shape(),
+                                                  max_pool_m->get_window_movement_strides(),
+                                                  max_pool_m->get_padding_below(),
+                                                  max_pool_m->get_padding_above());
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(qmax_pool_n,
                                                              dq_m->get_argument(1),
                                                              dq_m->get_argument(2),
