@@ -381,7 +381,7 @@ namespace ngraph
         virtual size_t get_opset_version() const;
 
         /// Set the operation set associated with this node
-        void set_opset_version(const size_t);
+        virtual void set_opset_version(const size_t);
 
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
