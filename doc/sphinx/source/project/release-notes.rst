@@ -13,31 +13,17 @@ https://github.com/NervanaSystems/ngraph/releases.
 
 This page includes additional documentation updates.
 
-We are pleased to announce the release of version |version|-doc.
+We are pleased to announce the release of version |version|.
 
 
 Core updates for |version|
 --------------------------
 
-+ Better PlaidML support
-+ Double-buffering support
-+ Constant folding
-+ Support for static linking
-+ Additional ops
-+ Preliminary static linking support
-
-Known issues
-~~~~~~~~~~~~
-
-• No training support
-• 5 functional TensorFlow models and 4 functional ONNX models may experience performance degradations if upgraded from a previous version.
+Allow DLLs that link nGraph statically to load backends
 
 
 Latest doc updates |version|-doc
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-+ Instructions how to build ``NGRAPH_PLAIDML`` backend added to :doc:`../buildlb`. 
-+ Publishing interim version of doc navigation for updates at ngraph.ai
 
 
 
@@ -46,6 +32,23 @@ Latest doc updates |version|-doc
 
 Changelog on Previous Releases
 ==============================
+
+
+0.25.0
+------
+
++ Better PlaidML support
++ Double-buffering support
++ Constant folding
++ Support for static linking
++ Additional ops
++ Preliminary static linking support
++ Known issue: No training support
++ Instructions how to build NGRAPH_PLAIDML backend
++ Publishing interim version of doc navigation for updates at ngraph.ai
++ GPU validations: added 5 functional TensorFlow workloads and 4 functional 
+  ONNX workloads
+
 
 0.24
 ----
