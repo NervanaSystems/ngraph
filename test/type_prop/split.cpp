@@ -40,7 +40,7 @@ TEST(type_prop, split)
     try
     {
         const std::vector<size_t> splits = {4, 2};
-        const auto split = make_shared<op::Split>(data, -5, splits); //invalid axis
+        const auto split = make_shared<op::Split>(data, -5, splits); // invalid axis
         FAIL() << "Split node was created with incorrect data.";
     }
     catch (const NodeValidationFailure& error)

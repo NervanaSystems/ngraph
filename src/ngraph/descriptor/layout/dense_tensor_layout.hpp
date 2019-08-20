@@ -29,7 +29,8 @@ namespace ngraph
 
         namespace layout
         {
-            /// \brief The standard strided layout, used for row-major and column-major, their permutations and slices.
+            /// \brief The standard strided layout, used for row-major and column-major, their
+            ///        permutations and slices.
             ///
             /// The linearized offset of an index I is dot(I, strides) + offset.
             class DenseTensorLayout : public TensorLayout

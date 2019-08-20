@@ -16,8 +16,12 @@
 
 // tool to benchmark any ngraph json model with given backend.
 // compile and run with:
-// g++ ./nbench.cpp -std=c++11 -I$HOME/ngraph_dist/include -L$HOME/ngraph_dist/lib -lngraph -o nbench
-// env LD_LIBRARY_PATH=$HOME/ngraph_dist/lib env NGRAPH_INTERPRETER_EMIT_TIMING=1 ./nbench
+// $ g++ ./nbench.cpp
+//             -std=c++11
+//             -I$HOME/ngraph_dist/include
+//             -L$HOME/ngraph_dist/lib
+//             -lngraph -o nbench
+// $ env LD_LIBRARY_PATH=$HOME/ngraph_dist/lib env NGRAPH_INTERPRETER_EMIT_TIMING=1 ./nbench
 // sample models are under ../../test/models
 
 #include <fstream>
