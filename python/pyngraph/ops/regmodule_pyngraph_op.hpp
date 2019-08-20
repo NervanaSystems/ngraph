@@ -52,6 +52,7 @@
 #include "pyngraph/ops/fused/hard_sigmoid.hpp"
 #include "pyngraph/ops/fused/mvn.hpp"
 #include "pyngraph/ops/fused/prelu.hpp"
+#include "pyngraph/ops/fused/rnn_cell.hpp"
 #include "pyngraph/ops/fused/scale_shift.hpp"
 #include "pyngraph/ops/fused/shuffle_channels.hpp"
 #include "pyngraph/ops/fused/space_to_depth.hpp"
