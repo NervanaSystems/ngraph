@@ -22,11 +22,6 @@ Core updates for |version|
 Allow DLLs that link nGraph statically to load backends
 
 
-Latest doc updates |version|-doc
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
 
 

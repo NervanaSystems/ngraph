@@ -111,6 +111,7 @@ set(SRC
     type_prop/gru_cell.cpp
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
+    type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
@@ -119,6 +120,7 @@ set(SRC
     type_prop/pad.cpp
     type_prop/parameter.cpp
     type_prop/prelu.cpp
+    type_prop/proposal.cpp
     type_prop/quantize.cpp
     type_prop/quantized_convolution.cpp
     type_prop/range.cpp
@@ -392,6 +394,7 @@ if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE libmkldnn)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_TOOLS_ENABLE)
