@@ -19,6 +19,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/maximum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/power.hpp"
@@ -97,8 +98,10 @@ namespace ngraph
             return values + bias_node;
         }
 
-        shared_ptr<Node>
-            l2_norm(const Output<Node>& value, const AxisSet& reduction_axes, float bias)
+        shared_ptr<Node> l2_norm(const Output<Node>& value,
+                                 const AxisSet& reduction_axes,
+                                 float bias,
+                                 BiasMode bias_mode)
         {
             shared_ptr<Node> values{make_shared<op::Sum>(value * value, reduction_axes)};
 
@@ -106,8 +109,16 @@ namespace ngraph
                 op::Constant::create(values->get_element_type(),
                                      values->get_shape(),
                                      vector<float>(shape_size(values->get_shape()), bias))};
-
-            return {make_shared<op::Sqrt>(values + bias_node)};
+            switch (bias_mode)
+            {
+            case BiasMode::MAX:
+            {
+                return {make_shared<op::Sqrt>(make_shared<op::Maximum>(values, bias_node))};
+            }
+            case BiasMode::ADD:
+            default: { return {make_shared<op::Sqrt>(values + bias_node)};
+            }
+            }
         }
 
         shared_ptr<Node> lp_norm(const Output<Node>& value,

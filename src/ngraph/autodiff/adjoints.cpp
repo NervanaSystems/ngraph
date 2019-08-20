@@ -168,7 +168,7 @@ void autodiff::Adjoints::add_delta(const Output<Node>& x,
     }
 }
 
-//This doesn't need an index since slice can only sit on top of GOE
+// This doesn't need an index since slice can only sit on top of GOE
 void autodiff::Adjoints::add_delta_to_slice(const Output<Node>& x,
                                             const Output<Node>& delta,
                                             const Coordinate& lower_bounds,

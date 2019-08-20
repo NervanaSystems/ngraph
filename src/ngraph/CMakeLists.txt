@@ -332,8 +332,8 @@ set (SRC
     op/fused/lstm_cell.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
-    op/fused/normalize.cpp
-    op/fused/normalize.hpp
+    op/fused/normalize_l2.cpp
+    op/fused/normalize_l2.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/rnn_cell.cpp
