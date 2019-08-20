@@ -1704,8 +1704,7 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<element::Type>
         return this->m_primitive_emitter->register_primitive(memset, hash);
     }
     // if reduce not include last axis, this is a heuristic to choose by reduce axis for better
-    // cache
-    // a more accurate but slow way is to tune with actual kernel
+    // cache. a more accurate but slow way is to tune with actual kernel
     else if (reduce_strides_in_input.back() != 1)
     {
         // TODO: currently we set it to 64, will add tuning method later
@@ -2810,14 +2809,14 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
 
     // launch arguments:
     // each output pixel is its own block. if the batch size is greater than reg_tile_size *
-    // sm_tile_size, a single
-    // output pixel is spread over multiple blocks along the batch axis so that memory coordination
-    // is not required
-    // each block consists of 2 warps in an 8 x 8 array used for accessing the SM block of the GEMM
+    // sm_tile_size, a single output pixel is spread over multiple blocks along the batch axis so
+    // that memory coordination is not required each block consists of 2 warps in an 8 x 8 array
+    // used for accessing the SM block of the GEMM
 
     // do_i = output pixel coordinates
-    // grid = (do_1*do_2*...*do_N*ceil_div(N, REG_TILE_SIZE*SM_TILE_SIZE), ceil_div(K,
-    // REG_TILE_SIZE*SM_TILE_SIZE), 1)
+    // grid = (do_1*do_2*...*do_N*ceil_div(N, REG_TILE_SIZE*SM_TILE_SIZE),
+    //         ceil_div(K, REG_TILE_SIZE*SM_TILE_SIZE),
+    //         1)
     // block = (8, 8, 1)
     dim3 blocks(output_pixels * idiv_ceil(N, reg_tile_size * sm_tile_size),
                 idiv_ceil(K, reg_tile_size * sm_tile_size),
