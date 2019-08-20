@@ -80,8 +80,8 @@ TEST(type_prop, lrn_invalid_axes_rank)
 
 TEST(type_prop, lrn_incorrect_axes_value)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3 });
-    auto axes = make_shared<op::Constant>(element::i64, Shape{ 2 }, vector<int64_t>{3, 4});
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{3, 4});
     double alpha = 0.1f, beta = 0.2f, bias = 0.3f;
     size_t size = 3;
     try
