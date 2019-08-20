@@ -39,37 +39,6 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-/* Python script used to calculate expected results of LRN
- * Here is version for hw axes (for other axes implementation is analogical)
- *
- * import copy
- * import numpy as np
- *
- * def LRN(input, size=3, bias=1.0, alpha=3.0, beta=0.5):
- *     output = copy.deepcopy(input)
- *     N = input.shape[0]
- *     C = input.shape[1]
- *     H = input.shape[2]
- *     W = input.shape[3]
- *     for n in range(N):
- *         for c in range(C):
- *             for h in range(H):
- *                     begin_h = max(0, h - (size-1)/2)
- *                     end_h = min(H, h + (size-1)/2 + 1)
- *                     for w in range(W):
- *                         begin_w = max(0, w - (size-1)/2)
- *                         end_w = min(W, w + (size-1)/2 + 1)
- *                         patch = input[n, c, begin_h:end_h, begin_w:end_w]
- *                         output[n, c, h, w] /= (
- *                             np.power(bias + (alpha/size) * np.sum(patch * patch), beta))
- *     return output
- *
- * input = np.arange(0, 12, 1).reshape(2, 3, 2, 1).astype(np.float32)
- * result = LRN(input)
- * for elem in np.nditer(result):
- *     print(str(round(elem, 7)) + "f, ")
- */
-
 NGRAPH_TEST(${BACKEND_NAME}, lrn_across_c)
 {
     Shape shape{2, 3, 2, 1};

@@ -47,7 +47,8 @@ op::LRN::LRN(const Output<Node>& arg,
 AxisSet op::LRN::get_reduction_axes() const
 {
     AxisSet axes{1}; // channel axis as default
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(1)))
+    auto axes_input_node = input_value(1).get_node_shared_ptr();
+    if (auto const_op = dynamic_pointer_cast<op::Constant>(axes_input_node))
     {
         axes = const_op->get_axis_set_val();
     }
