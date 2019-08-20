@@ -28,11 +28,11 @@ using namespace ngraph;
 TEST(serialize, opset1_softmax_pass_axis)
 {
     const size_t axis = 2;
-    const AxisSet axes{ axis };
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 2, 3, 4 });
+    const AxisSet axes{axis};
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
     auto softmax_s0 = make_shared<op::set0::Softmax>(arg, axes);
     auto result = make_shared<op::Result>(softmax_s0);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ arg });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset1Transformation>();
@@ -49,11 +49,11 @@ TEST(serialize, opset1_softmax_pass_axis)
 
 TEST(serialize, opset1_softmax_pass_axis_exception)
 {
-    const AxisSet axes{ 1, 2 };
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{ 2, 3, 4 });
+    const AxisSet axes{1, 2};
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
     auto softmax_s0 = make_shared<op::set0::Softmax>(arg, axes);
     auto result = make_shared<op::Result>(softmax_s0);
-    auto f = make_shared<Function>(ResultVector{ result }, ParameterVector{ arg });
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset1Transformation>();
@@ -65,7 +65,8 @@ TEST(serialize, opset1_softmax_pass_axis_exception)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
             std::string("Unable to convert Softmax:0 to Softmax:1 with more then one axis."));
     }
     catch (...)
