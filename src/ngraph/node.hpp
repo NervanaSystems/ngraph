@@ -132,7 +132,8 @@ namespace ngraph
         Node(const NodeVector& arguments, size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
-        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows on deep networks.
+        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
+        ///        on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:

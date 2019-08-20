@@ -132,7 +132,7 @@ namespace ngraph
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"

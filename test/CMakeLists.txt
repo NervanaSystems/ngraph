@@ -121,6 +121,7 @@ set(SRC
     type_prop/pad.cpp
     type_prop/parameter.cpp
     type_prop/prelu.cpp
+    type_prop/proposal.cpp
     type_prop/quantize.cpp
     type_prop/quantized_convolution.cpp
     type_prop/range.cpp
