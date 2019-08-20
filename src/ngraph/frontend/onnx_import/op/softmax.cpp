@@ -45,13 +45,6 @@ namespace ngraph
                         << "provided 'axis' value:" << axis
                         << " is out of input tensor dimensions range.";
 
-                    // OPSET 0 Version:
-                    // create vector of capacity data_dimensions - axis_divider position
-                    // std::vector<size_t> axes(data_shape.size() - axis);
-                    // std::iota(std::begin(axes), std::end(axes), axis);
-                    // return {std::make_shared<ngraph::op::Softmax>(data, axes)};
-
-                    // OPSET 1 Version:
                     return {std::make_shared<ngraph::op::set1::Softmax>(data, axis)};
                 }
 
