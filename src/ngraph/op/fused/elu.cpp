@@ -17,6 +17,7 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
@@ -29,16 +30,18 @@ using namespace ngraph;
 
 const string op::Elu::type_name{"Elu"};
 
-op::Elu::Elu(const Output<Node>& data, const Output<Node>& alpha)
-    : FusedOp({data, alpha})
+op::Elu::Elu(const Output<Node>& data, const double alpha)
+    : FusedOp({data})
+    , m_alpha{alpha}
 {
     constructor_validate_and_infer_types();
 }
 
 NodeVector op::Elu::decompose_op() const
 {
-    auto data = input(0).get_source_output();
-    auto alpha_node = input(1).get_source_output();
+    auto data = input_value(0);
+    shared_ptr<Node> alpha_node =
+        make_shared<op::Constant>(data.get_element_type(), Shape{}, vector<double>{m_alpha});
 
     alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data.get_shape());
 
@@ -53,9 +56,6 @@ NodeVector op::Elu::decompose_op() const
 
 shared_ptr<Node> op::Elu::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-    return make_shared<Elu>(new_args.at(0), new_args.at(1));
+    check_new_args_count(this, new_args);
+    return make_shared<Elu>(new_args.at(0), m_alpha);
 }
