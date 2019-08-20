@@ -42,15 +42,14 @@ namespace ngraph
             virtual NodeVector make_matmul_op();
 
         protected:
-            /// \return Node representing the left operand.
-            virtual std::shared_ptr<Node> get_left();
+            /// \return Output representing the left operand.
+            virtual Output<Node> get_left();
 
-            /// \return Node representing the right operand.
-            virtual std::shared_ptr<Node> get_right();
+            /// \return Output representing the right operand.
+            virtual Output<Node> get_right();
 
-            /// \return Node representing the nGraph Dot operation used to construct MatMul.
-            virtual std::shared_ptr<Node> make_dot(const std::shared_ptr<Node>& left,
-                                                   const std::shared_ptr<Node>& right);
+            /// \return Output representing the nGraph Dot operation used to construct MatMul.
+            virtual Output<Node> make_dot(const Output<Node>& left, const Output<Node>& right);
 
             const OutputVector m_inputs;
         };
@@ -65,9 +64,8 @@ namespace ngraph
             }
 
         protected:
-            std::shared_ptr<Node> get_right() override;
-            std::shared_ptr<Node> make_dot(const std::shared_ptr<Node>& left,
-                                           const std::shared_ptr<Node>& right) override;
+            Output<Node> get_right() override;
+            Output<Node> make_dot(const Output<Node>& left, const Output<Node>& right) override;
         };
 
         /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX MatMulInteger operation.
@@ -80,8 +78,7 @@ namespace ngraph
             }
 
         protected:
-            std::shared_ptr<Node> make_dot(const std::shared_ptr<Node>& left,
-                                           const std::shared_ptr<Node>& right) override;
+            Output<Node> make_dot(const Output<Node>& left, const Output<Node>& right) override;
         };
     } // namespace builder
 } // namespace ngraph

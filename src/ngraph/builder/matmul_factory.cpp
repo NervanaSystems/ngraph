@@ -38,12 +38,12 @@ using namespace std;
 ///
 /// \return     The node representing sub matrix.
 ///
-static shared_ptr<Node> get_sub_matrix(const shared_ptr<Node>& node, size_t idx)
+static Output<Node> get_sub_matrix(const Output<Node>& node, size_t idx)
 {
-    const Shape& shape{node->get_shape()};
+    const Shape& shape{node.get_shape()};
     if (shape.size() < 3)
     {
-        return node;
+        return node.get_node_shared_ptr();
     }
     // Below bounds defines the sub_matrix through ranges for each input node axis.
     Coordinate lower_bounds(shape.size());
@@ -53,19 +53,19 @@ static shared_ptr<Node> get_sub_matrix(const shared_ptr<Node>& node, size_t idx)
     lower_bounds.at(0) = idx;
     upper_bounds.at(0) = idx + 1;
 
-    auto sub_matrix = shared_ptr<Node>{make_shared<op::Slice>(node, lower_bounds, upper_bounds)};
+    auto sub_matrix = Output<Node>{make_shared<op::Slice>(node, lower_bounds, upper_bounds)};
     // Remove first single entry dim.
     return builder::squeeze(sub_matrix);
 }
 
-shared_ptr<Node> builder::MatmulFactory::get_left()
+Output<Node> builder::MatmulFactory::get_left()
 {
-    return m_inputs.at(0).get_node_shared_ptr();
+    return m_inputs.at(0);
 }
 
-shared_ptr<Node> builder::MatmulFactory::get_right()
+Output<Node> builder::MatmulFactory::get_right()
 {
-    return m_inputs.at(1).get_node_shared_ptr();
+    return m_inputs.at(1);
 }
 
 NodeVector builder::MatmulFactory::make_matmul_op()
@@ -73,14 +73,14 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     auto left = get_left();
     auto right = get_right();
 
-    size_t left_rank{left->get_shape().size()};
-    size_t right_rank{right->get_shape().size()};
+    size_t left_rank{left.get_shape().size()};
+    size_t right_rank{right.get_shape().size()};
 
     // First (easy) case that is already internally handled by Ngraph Dot operator.
     // Multiply two tensors where both of them has rank lower equal 2.
     if (left_rank <= 2 && right_rank <= 2)
     {
-        return NodeVector{make_dot(left, right)};
+        return {make_dot(left, right).get_node_shared_ptr()};
     }
 
     // Second case:
@@ -89,14 +89,14 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     // Broadcast input arguments only if both of them are not vectors.
     if (left_rank > 1 && right_rank > 1)
     {
-        const NodeVector& broadcasted_nodes =
-            op::numpy_style_broadcast_for_matmul_operation(left, right);
+        const NodeVector& broadcasted_nodes = op::numpy_style_broadcast_for_matmul_operation(
+            left.get_node_shared_ptr(), right.get_node_shared_ptr());
 
         left = broadcasted_nodes.at(0);
         right = broadcasted_nodes.at(1);
     }
-    const auto& left_shape = left->get_shape();
-    const auto& right_shape = right->get_shape();
+    const auto& left_shape = left.get_shape();
+    const auto& right_shape = right.get_shape();
 
     // Collapse both tensors _stack of matrices_ axes (all except the last two).
     // This will make easier further dot product calculations.
@@ -110,12 +110,12 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     }
 
     // Perform multiple small dot products
-    size_t groups = left->get_shape().at(0);
+    size_t groups = left.get_shape().at(0);
     // If we haven't broadcast earlier this means that one of the inputs is a vector,
     // thus the number of groups is defined by the shape of the bigger tensor.
-    if (right->get_shape().size() > left->get_shape().size())
+    if (right.get_shape().size() > left.get_shape().size())
     {
-        groups = right->get_shape().at(0);
+        groups = right.get_shape().at(0);
     }
     NodeVector small_dots(groups);
 
@@ -148,19 +148,18 @@ NodeVector builder::MatmulFactory::make_matmul_op()
     }
 }
 
-shared_ptr<Node> builder::MatmulFactory::make_dot(const shared_ptr<Node>& left,
-                                                  const shared_ptr<Node>& right)
+Output<Node> builder::MatmulFactory::make_dot(const Output<Node>& left, const Output<Node>& right)
 {
     return make_shared<op::Dot>(left, right);
 }
 
-shared_ptr<Node> builder::QLinearMatmulFactory::get_right()
+Output<Node> builder::QLinearMatmulFactory::get_right()
 {
-    return m_inputs.at(3).get_node_shared_ptr();
+    return m_inputs.at(3);
 }
 
-shared_ptr<Node> builder::QLinearMatmulFactory::make_dot(const shared_ptr<Node>& left,
-                                                         const shared_ptr<Node>& right)
+Output<Node> builder::QLinearMatmulFactory::make_dot(const Output<Node>& left,
+                                                     const Output<Node>& right)
 {
     return builder::quantization::QuantizedLinearMatmul(left,
                                                         right,
@@ -172,8 +171,8 @@ shared_ptr<Node> builder::QLinearMatmulFactory::make_dot(const shared_ptr<Node>&
                                                         m_inputs.at(7));
 }
 
-shared_ptr<Node> builder::MatmulIntegerFactory::make_dot(const shared_ptr<Node>& left,
-                                                         const shared_ptr<Node>& right)
+Output<Node> builder::MatmulIntegerFactory::make_dot(const Output<Node>& left,
+                                                     const Output<Node>& right)
 {
     auto num_inputs = m_inputs.size();
 
@@ -183,7 +182,7 @@ shared_ptr<Node> builder::MatmulIntegerFactory::make_dot(const shared_ptr<Node>&
     }
 
     auto left_zero_point = m_inputs.at(2);
-    auto right_zero_point = builder::make_constant(right->get_element_type(), Shape{}, 0);
+    auto right_zero_point = builder::make_constant(right.get_element_type(), Shape{}, 0);
     if (num_inputs == 4)
     {
         right_zero_point = m_inputs.at(3).get_node_shared_ptr();
