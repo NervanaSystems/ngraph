@@ -63,11 +63,13 @@ namespace ngraph
             /// \return the tensor of the connected output
             Tensor& get_tensor();
 
-            /// \brief Replace the current output that supplies a value for this input with output i of node
+            /// \brief Replace the current output that supplies a value for this input with output i
+            ///        of node
             void replace_output(std::shared_ptr<Node> node, size_t i);
             /// \brief Replace the current output that supplies a value for this input with output
             void replace_output(Output& output);
-            /// \brief Remove the output from this input. The node will not be valid until another output is supplied.
+            /// \brief Remove the output from this input. The node will not be valid until another
+            ///        output is supplied.
             void remove_output();
 
             /// \return true if the value of this input is relevant to the output shapes of the
