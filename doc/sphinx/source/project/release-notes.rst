@@ -38,9 +38,9 @@ Changelog on Previous Releases
 + Support for static linking
 + Additional ops
 + Preliminary static linking support
-+ Known issue: No training support
-+ Instructions how to build NGRAPH_PLAIDML backend
-+ Publishing interim version of doc navigation for updates at ngraph.ai
++ Known issue: No PlaidML training support
++ Doc: Add instructions how to build NGRAPH_PLAIDML backend
++ Published interim version of doc navigation for updates at ngraph.ai
 + GPU validations: added 5 functional TensorFlow workloads and 4 functional 
   ONNX workloads
 
