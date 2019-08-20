@@ -34,18 +34,16 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -279,7 +277,8 @@ namespace ngraph
 
                     mkldnn::post_ops ops;
 
-                    if (has_relu<OP>(node))
+                    if (std::is_same<OP, ngraph::op::QuantizedDotBias>() &&
+                        has_relu<ngraph::op::QuantizedDotBias>(node))
                     {
                         const float ops_scale = 1.f;
                         const float ops_alpha = -0.f; // relu negative slope
@@ -1117,7 +1116,8 @@ namespace ngraph
                 {
                     mkldnn::post_ops ops;
 
-                    if (has_relu<OP>(node))
+                    if (std::is_same<OP, ngraph::op::QuantizedDotBias>() &&
+                        has_relu<ngraph::op::QuantizedDotBias>(node))
                     {
                         const float ops_scale = 1.f;
                         const float ops_alpha = -0.f; // relu negative slope

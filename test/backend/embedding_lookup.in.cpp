@@ -102,7 +102,7 @@ NGRAPH_TEST(${BACKEND_NAME}, embedding_lookup_10x1_arbitrary_index_type_int)
     auto result0 = backend->create_tensor(element::f32, rshape);
     auto handle = backend->compile(f0);
     handle->call_with_validate({result0}, {a, b});
-    //vector<float> expected{9.5, 2.5, 1.5, 0.5, 3.5, 5.5, 4.5, 6.5, 8.5, 7.5};
+    // vector<float> expected{9.5, 2.5, 1.5, 0.5, 3.5, 5.5, 4.5, 6.5, 8.5, 7.5};
     vector<float> expected{9.5, 2.5, 1.5, 0.5, 3.5, 5.5, 4.5, 6.5, 8.5, 7.5};
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result0), MIN_FLOAT_TOLERANCE_BITS));
 }
@@ -126,7 +126,7 @@ NGRAPH_TEST(${BACKEND_NAME}, embedding_lookup_10x1_arbitrary_index_type_int64)
     auto result0 = backend->create_tensor(element::f32, rshape);
     auto handle = backend->compile(f0);
     handle->call_with_validate({result0}, {a, b});
-    //vector<float> expected{9.5, 2.5, 1.5, 0.5, 3.5, 5.5, 4.5, 6.5, 8.5, 7.5};
+    // vector<float> expected{9.5, 2.5, 1.5, 0.5, 3.5, 5.5, 4.5, 6.5, 8.5, 7.5};
     vector<float> expected{9.5, 2.5, 1.5, 0.5, 3.5, 5.5, 4.5, 6.5, 8.5, 7.5};
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result0), MIN_FLOAT_TOLERANCE_BITS));
 }
