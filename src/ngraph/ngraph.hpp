@@ -65,6 +65,7 @@ namespace ngraph
 #include "ngraph/builder/numpy_transpose.hpp"
 #include "ngraph/builder/quantized_conv_builder.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/tensor_mask.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/descriptor/input.hpp"

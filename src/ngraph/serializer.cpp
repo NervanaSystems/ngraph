@@ -59,12 +59,10 @@
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"
@@ -1603,23 +1601,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Quantize>(args[0], args[1], args[2], type, axes, round_mode);
             break;
         }
-        case OP_TYPEID::QuantizedAvgPool:
-        {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            auto include_padding_in_avg_computation =
-                node_js.at("include_padding_in_avg_computation").get<bool>();
-            node = make_shared<op::QuantizedAvgPool>(args[0],
-                                                     window_shape,
-                                                     window_movement_strides,
-                                                     padding_below,
-                                                     padding_above,
-                                                     include_padding_in_avg_computation);
-            break;
-        }
         case OP_TYPEID::QuantizedConvolutionBias: { break;
         }
         case OP_TYPEID::QuantizedConvolutionBiasAdd: { break;
@@ -1665,22 +1646,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::QuantizedDotBias: { break;
         }
         case OP_TYPEID::QuantizedDot: { break;
-        }
-        case OP_TYPEID::QuantizedMaxPool:
-        {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            // For backwards compatibility, both (but not just one) of the padding_ fields may be
-            // omitted.
-            auto padding_below_maybe = get_or_default(node_js, "padding_below", json{});
-            auto padding_above_maybe = get_or_default(node_js, "padding_above", json{});
-            auto padding_below = padding_below_maybe.get<vector<size_t>>();
-            auto padding_above = padding_above_maybe.get<vector<size_t>>();
-            node = make_shared<op::QuantizedMaxPool>(
-                args[0], window_shape, window_movement_strides, padding_below, padding_above);
-
-            break;
         }
         case OP_TYPEID::Recv:
         {
@@ -2708,16 +2673,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["round_mode"] = tmp->get_round_mode();
         break;
     }
-    case OP_TYPEID::QuantizedAvgPool:
-    {
-        auto tmp = dynamic_cast<const op::QuantizedAvgPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
-        break;
-    }
     case OP_TYPEID::QuantizedConvolutionBias: { break;
     }
     case OP_TYPEID::QuantizedConvolutionBiasAdd: { break;
@@ -2743,15 +2698,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::QuantizedDotBias: { break;
     }
     case OP_TYPEID::QuantizedDot: { break;
-    }
-    case OP_TYPEID::QuantizedMaxPool:
-    {
-        auto tmp = dynamic_cast<const op::QuantizedMaxPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        break;
     }
     case OP_TYPEID::Recv:
     {
