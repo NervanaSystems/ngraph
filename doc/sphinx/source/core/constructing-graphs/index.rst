@@ -6,13 +6,17 @@ Constructing graphs
 How to
 ======
 
-* :ref:`execute`
-* :ref:`operator`
-* :ref:`update`
-* :ref:`derive_for_training`
-* :ref:`Train a data parallel model <distribute_train>`
-* :ref:`import`
-* :ref:`Use the Python API <python_api>`
+.. toctree::
+   :maxdepth: 1
+   :caption: How to 
+
+   execute.rst
+   operator.rst
+   update.rst
+   derive-for-training.rst
+   distribute-train.rst
+   import.rst
+   Using the Python API <../../python_api/index.rst>
        
 
 The "How to" articles in this section explain how to build or construct graphs 
