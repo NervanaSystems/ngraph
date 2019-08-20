@@ -62,9 +62,10 @@ void op::LRN::validate_and_infer_types()
     set_output_type(0, arg_type, arg_shape);
 
     const PartialShape& input_shape = get_input_partial_shape(0);
+    const auto input_shape_rank = input_shape.rank();
 
     NODE_VALIDATION_CHECK(this,
-                          input_shape.rank().is_dynamic() ||
+                          input_shape_rank.is_dynamic() ||
                               static_cast<size_t>(input_shape.rank()) >= 3,
                           "Argument must have rank >= 3 (argument shape: ",
                           input_shape,
@@ -86,10 +87,28 @@ void op::LRN::validate_and_infer_types()
     NODE_VALIDATION_CHECK(
         this,
         static_cast<size_t>(axes_shape[0]) >= 0 &&
-            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape.rank()),
+            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
         "Number of elements of axes must be >= 0 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");
+
+    if (input_shape_rank.is_static())
+    {
+        const auto reduction_axes = get_reduction_axes();
+        for (auto axis : reduction_axes)
+        {
+            NODE_VALIDATION_CHECK(this,
+                axis < size_t(input_shape_rank),
+                "Reduction axis (",
+                axis,
+                ") is out of bounds ",
+                "(argument shape: ",
+                input_shape,
+                ", reduction axes: ",
+                reduction_axes,
+                ")");
+        }
+    }
 
     const auto& axes_type = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
