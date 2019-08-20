@@ -217,6 +217,10 @@ fake_quantize_with_clip_across_channels
 send_recv
 send_recv_ring
 logical_xor
+max_pool_uint8
+max_pool_int8
+avg_pool_uint8
+avg_pool_int8
 
 # Needs erf
 gelu_f32
