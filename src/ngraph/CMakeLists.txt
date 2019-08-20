@@ -331,6 +331,7 @@ set (SRC
     op/fused/gru_cell.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
+    op/fused/lstm_sequence.cpp
     op/fused/lstm_sequence.hpp
     op/fused/matmul.cpp
     op/fused/matmul.hpp
