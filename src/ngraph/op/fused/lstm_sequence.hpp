@@ -74,15 +74,6 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         private:
-            enum class LSTMDirection
-            {
-                LSTM_DIRECTION_FORWARD,
-                LSTM_DIRECTION_REVERSE,
-                LSTM_DIRECTION_BIDIRECTIONAL,
-                LSTM_DIRECTION_UNKNOWN,
-            };
-
-            LSTMDirection getLSTMDirection(const std::string& direction) const;
             ///
             /// \brief      Gets the masked node according to sequence lenght in a batch.
             ///

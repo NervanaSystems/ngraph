@@ -35,16 +35,11 @@ const string op::LSTMSequence::type_name{"LSTMSequence"};
 NodeVector op::LSTMSequence::decompose_op() const
 {
     NodeVector results;
-
-    switch (getLSTMDirection(m_direction))
+    if (m_direction == "forward" || m_direction == "reverse")
     {
-    case LSTMDirection::LSTM_DIRECTION_FORWARD:
-    case LSTMDirection::LSTM_DIRECTION_REVERSE:
-    {
-        results = lstm_pass(getLSTMDirection(m_direction) == LSTMDirection::LSTM_DIRECTION_REVERSE);
-        break;
+        results = lstm_pass(m_direction == "reverse");
     }
-    case LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL:
+    if (m_direction == "bidirectional")
     {
         NodeVector fwd_results{lstm_pass()};
         NodeVector rev_results{lstm_pass(true)};
@@ -57,8 +52,6 @@ NodeVector op::LSTMSequence::decompose_op() const
         shared_ptr<Node> Y_c{
             make_shared<op::Concat>(NodeVector{fwd_results.at(2), rev_results.at(2)}, 0)};
         results = NodeVector{Y, Y_h, Y_c};
-        break;
-    }
     }
     return results;
 }
@@ -81,23 +74,6 @@ shared_ptr<Node> op::LSTMSequence::copy_with_new_args(const NodeVector& new_args
                                      m_direction,
                                      m_hidden_size,
                                      m_input_forget);
-}
-
-op::LSTMSequence::LSTMDirection op::LSTMSequence::getLSTMDirection(const string& direction) const
-{
-    if (direction == "forward")
-    {
-        return LSTMDirection::LSTM_DIRECTION_FORWARD;
-    }
-    if (direction == "reverse")
-    {
-        return LSTMDirection::LSTM_DIRECTION_REVERSE;
-    }
-    if (direction == "bidirectional")
-    {
-        return LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL;
-    }
-    return LSTMDirection::LSTM_DIRECTION_UNKNOWN;
 }
 
 shared_ptr<Node> op::LSTMSequence::get_masked_node(const shared_ptr<Node>& data,
@@ -237,7 +213,7 @@ shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reve
 {
     // In bidirectional mode inputs are stacked together, so we must split them.
     shared_ptr<Node> tmp = node.get_node_shared_ptr();
-    if (getLSTMDirection(m_direction) == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
+    if (m_direction == "bidirectional")
     {
         tmp = builder::split(node, 2).at(is_reverse ? 1 : 0);
     }
