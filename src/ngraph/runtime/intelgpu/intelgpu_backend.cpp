@@ -90,7 +90,7 @@
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
@@ -2072,7 +2072,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::MVN:
-        case OP_TYPEID::Normalize:
+        case OP_TYPEID::NormalizeL2:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
         case OP_TYPEID::RNNCell:
@@ -2199,7 +2199,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::GRUCell:
     case OP_TYPEID::LSTMCell:
     case OP_TYPEID::MVN:
-    case OP_TYPEID::Normalize:
+    case OP_TYPEID::NormalizeL2:
     case OP_TYPEID::PRelu:
     case OP_TYPEID::RNNCell:
     case OP_TYPEID::ScaleShift:

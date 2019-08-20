@@ -182,10 +182,11 @@ conv_bias_bprop_2d
 conv_bias_add_2d
 space_to_depth
 depth_to_space
-normalize_across_chw_scalar_scale_4d
-normalize_across_chw_scalar_scale_3d
-normalize_across_chw_scalar_scale_2d
-normalize_across_chw_w_scale
+normalize_across_chw_4d
+normalize_across_chw_4d_max_bias
+normalize_across_chw_3d
+normalize_across_chw_2d
+normalize_across_hw_4d
 gemm
 fused_clamp
 mvn_mean_normalization
@@ -232,8 +233,15 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
+
+# Need erf
 gelu_f32
 gelu_f64
+gelu_backprop_factor_f32
+gelu_backprop_factor_f64
+backwards_gelu_f32
+backwards_gelu_f64
+
 # From onnx tests
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d

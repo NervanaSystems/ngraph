@@ -86,8 +86,8 @@ void pass::Manager::run_passes(shared_ptr<Function> func, bool transitive)
             for (auto f_pair : fs)
             {
                 shared_ptr<Function> f = f_pair.first;
-                // This checks is to skip the graph optimization when the graph pass relies on static shape
-                // but the function state is dynamic.
+                // This checks is to skip the graph optimization when the graph pass relies on
+                // static shape but the function state is dynamic.
                 // we update the function dynamic state only if we run the graph pass successfully.
                 if (function_pass->get_property(PassProperty::REQUIRE_STATIC_SHAPE) &&
                     f_pair.second)
