@@ -38,6 +38,7 @@ env.MB_PIPELINE_CHECKOUT = true
 
 timestamps {
     node("trigger") {
+        sh 'env'
 
         deleteDir()  // Clear the workspace before starting
 
