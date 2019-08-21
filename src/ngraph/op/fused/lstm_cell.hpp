@@ -68,25 +68,25 @@ namespace ngraph
             ///
             /// \brief      Constructs LSTMCell node.
             ///
-            /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W                 The weight tensor with shape: [4*hidden_size,
+            /// \param[in]  X                  The input tensor with shape: [batch_size, input_size].
+            /// \param[in]  W                 The weight tensor with shape: [4*hidden_size, input_size].
             ///                                                              input_size].
-            /// \param[in]  R                 The recurrence weight tensor with shape:
-            ///                               [4*hidden_size, hidden_size].
-            /// \param[in]  H_t               The hidden state tensor at current time step with
-            ///                               shape: [batch_size, hidden_size].
-            /// \param[in]  C_t               The cell state tensor at current time step with shape:
-            ///                               [batch_size, hidden_size].
-            /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
-            /// \param[in]  activations       The vector of activation functions used inside
-            ///                               recurrent cell.
-            /// \param[in]  activation_alpha  The vector of alpha parameters for activation
-            ///                               functions in order respective to activation list.
-            /// \param[in]  activation_beta   The vector of beta parameters for activation functions
-            ///                               in order respective to activation list.
-            /// \param[in]  clip              The value defining clipping range [-clip, clip] on
-            ///                               input of activation functions.
-            /// \param[in]  input_forget      Controls coupling input and forget gates.
+            /// \param[in]  R                  The recurrence weight tensor with shape:
+            ///                                [4*hidden_size, hidden_size].
+            /// \param[in]  H_t                The hidden state tensor at current time step with
+            ///                                shape: [batch_size, hidden_size].
+            /// \param[in]  C_t                The cell state tensor at current time step with shape:
+            ///                                [batch_size, hidden_size].
+            /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
+            /// \param[in]  activations        The vector of activation functions used inside
+            ///                                recurrent cell.
+            /// \param[in]  activations_alpha  The vector of alpha parameters for activation
+            ///                                functions in order respective to activation list.
+            /// \param[in]  activations_beta   The vector of beta parameters for activation functions
+            ///                                in order respective to activation list.
+            /// \param[in]  clip               The value defining clipping range [-clip, clip] on
+            ///                                input of activation functions.
+            /// \param[in]  input_forget       Controls coupling input and forget gates.
             ///
             LSTMCell(const Output<Node>& X,
                      const Output<Node>& W,
@@ -95,8 +95,8 @@ namespace ngraph
                      const Output<Node>& C_t,
                      std::size_t hidden_size,
                      const std::vector<std::string>& activations,
-                     const std::vector<float>& activation_alpha,
-                     const std::vector<float>& activation_beta,
+                     const std::vector<float>& activations_alpha,
+                     const std::vector<float>& activations_beta,
                      float clip,
                      bool input_forget);
 
@@ -136,29 +136,29 @@ namespace ngraph
             ///
             /// \brief      Constructs LSTMCell node.
             ///
-            /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W                 The weight tensor with shape: [4*hidden_size,
+            /// \param[in]  X                  The input tensor with shape: [batch_size, input_size].
+            /// \param[in]  W                 The weight tensor with shape: [4*hidden_size, input_size].
             ///                                                              input_size].
-            /// \param[in]  R                 The recurrence weight tensor with shape:
-            ///                               [4*hidden_size, hidden_size].
-            /// \param[in]  H_t               The hidden state tensor at current time step with
-            ///                               shape: [batch_size, hidden_size].
-            /// \param[in]  C_t               The cell state tensor at current time step with
-            ///                               shape: [batch_size, hidden_size].
-            /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
-            /// \param[in]  B                 The bias tensor for input gate with shape: [8*hidden_size].
+            /// \param[in]  R                  The recurrence weight tensor with shape:
+            ///                                [4*hidden_size, hidden_size].
+            /// \param[in]  H_t                The hidden state tensor at current time step with
+            ///                                shape: [batch_size, hidden_size].
+            /// \param[in]  C_t                The cell state tensor at current time step with
+            ///                                shape: [batch_size, hidden_size].
+            /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
+            /// \param[in]  B                 The bias tensor for input gate with shape: [4*hidden_size].
             ///                               [8*hidden_size].
-            /// \param[in]  P                 The weight tensor for peepholes with shape:
-            ///                               [3*hidden_size] - 3 equals to only iof gates.
-            /// \param[in]  activations       The vector of activation functions used inside
-            ///                               recurrent cell.
-            /// \param[in]  activation_alpha  The vector of alpha parameters for activation
-            ///                               functions in order respective to activation list.
-            /// \param[in]  activation_beta   The vector of beta parameters for activation functions
-            ///                               in order respective to activation list.
-            /// \param[in]  clip              The value defining clipping range [-clip, clip] on
-            ///                               input of activation functions.
-            /// \param[in]  input_forget      Controls coupling input and forget gates.
+            /// \param[in]  P                  The weight tensor for peepholes with shape:
+            ///                                [3*hidden_size] - 3 equals to only iof gates.
+            /// \param[in]  activations        The vector of activation functions used inside
+            ///                                recurrent cell.
+            /// \param[in]  activations_alpha  The vector of alpha parameters for activation
+            ///                                functions in order respective to activation list.
+            /// \param[in]  activations_beta   The vector of beta parameters for activation functions
+            ///                                in order respective to activation list.
+            /// \param[in]  clip               The value defining clipping range [-clip, clip] on
+            ///                                input of activation functions.
+            /// \param[in]  input_forget       Controls coupling input and forget gates.
             ///
             LSTMCell(const Output<Node>& X,
                      const Output<Node>& W,
@@ -170,8 +170,8 @@ namespace ngraph
                      const Output<Node>& P,
                      const std::vector<std::string>& activations =
                          std::vector<std::string>{"sigmoid", "tanh", "tanh"},
-                     const std::vector<float>& activation_alpha = {},
-                     const std::vector<float>& activation_beta = {},
+                     const std::vector<float>& activations_alpha = {},
+                     const std::vector<float>& activations_beta = {},
                      float clip = 0.f,
                      bool input_forget = false);
 

@@ -54,12 +54,12 @@ op::GRUCell::GRUCell(const Output<Node>& X,
                      const Output<Node>& H_t,
                      size_t hidden_size,
                      const vector<string>& activations,
-                     const vector<float>& activation_alpha,
-                     const vector<float>& activation_beta,
+                     const vector<float>& activations_alpha,
+                     const vector<float>& activations_beta,
                      float clip,
                      bool linear_before_reset)
     : FusedOp({X, W, R, H_t})
-    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
     , m_linear_before_reset{linear_before_reset}
@@ -75,12 +75,12 @@ op::GRUCell::GRUCell(const Output<Node>& X,
                      size_t hidden_size,
                      const Output<Node>& B,
                      const vector<string>& activations,
-                     const vector<float>& activation_alpha,
-                     const vector<float>& activation_beta,
+                     const vector<float>& activations_alpha,
+                     const vector<float>& activations_beta,
                      float clip,
                      bool linear_before_reset)
     : FusedOp({X, W, R, H_t, B})
-    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
     , m_linear_before_reset{linear_before_reset}
@@ -290,8 +290,8 @@ shared_ptr<Node> op::GRUCell::copy_with_new_args(const NodeVector& new_args) con
                                     new_args.at(3),
                                     get_hidden_size(),
                                     get_activations(),
-                                    get_activation_alpha(),
-                                    get_activation_beta(),
+                                    get_activations_alpha(),
+                                    get_activations_beta(),
                                     get_clip(),
                                     m_linear_before_reset);
     }
@@ -304,8 +304,8 @@ shared_ptr<Node> op::GRUCell::copy_with_new_args(const NodeVector& new_args) con
                                     get_hidden_size(),
                                     new_args.at(4),
                                     get_activations(),
-                                    get_activation_alpha(),
-                                    get_activation_beta(),
+                                    get_activations_alpha(),
+                                    get_activations_beta(),
                                     get_clip(),
                                     m_linear_before_reset);
     }

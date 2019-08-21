@@ -59,12 +59,12 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
                        const Output<Node>& C_t,
                        size_t hidden_size,
                        const vector<string>& activations,
-                       const vector<float>& activation_alpha,
-                       const vector<float>& activation_beta,
+                       const vector<float>& activations_alpha,
+                       const vector<float>& activations_beta,
                        float clip,
                        bool input_forget)
     : FusedOp({X, W, R, H_t, C_t})
-    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
     , m_activation_h{get_activation_function(2)}
@@ -108,12 +108,12 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
                        const Output<Node>& B,
                        const Output<Node>& P,
                        const vector<string>& activations,
-                       const vector<float>& activation_alpha,
-                       const vector<float>& activation_beta,
+                       const vector<float>& activations_alpha,
+                       const vector<float>& activations_beta,
                        float clip,
                        bool input_forget)
     : FusedOp({X, W, R, H_t, C_t, B, P})
-    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
     , m_activation_g{get_activation_function(1)}
     , m_activation_h{get_activation_function(2)}
@@ -361,8 +361,8 @@ shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) co
                                      new_args.at(4),
                                      get_hidden_size(),
                                      get_activations(),
-                                     get_activation_alpha(),
-                                     get_activation_beta(),
+                                     get_activations_alpha(),
+                                     get_activations_beta(),
                                      get_clip(),
                                      m_input_forget);
     }
@@ -377,8 +377,8 @@ shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) co
                                      new_args.at(5),
                                      new_args.at(6),
                                      get_activations(),
-                                     get_activation_alpha(),
-                                     get_activation_beta(),
+                                     get_activations_alpha(),
+                                     get_activations_beta(),
                                      get_clip(),
                                      m_input_forget);
     }

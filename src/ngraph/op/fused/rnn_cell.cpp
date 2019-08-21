@@ -47,11 +47,11 @@ op::RNNCell::RNNCell(const Output<Node>& X,
                      const Output<Node>& H_t,
                      size_t hidden_size,
                      const vector<string>& activations,
-                     const vector<float>& activation_alpha,
-                     const vector<float>& activation_beta,
+                     const vector<float>& activations_alpha,
+                     const vector<float>& activations_beta,
                      float clip)
     : FusedOp({X, W, R, H_t})
-    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
 {
     add_default_bias_input();
@@ -65,11 +65,11 @@ op::RNNCell::RNNCell(const Output<Node>& X,
                      size_t hidden_size,
                      const Output<Node>& B,
                      const vector<string>& activations,
-                     const vector<float>& activation_alpha,
-                     const vector<float>& activation_beta,
+                     const vector<float>& activations_alpha,
+                     const vector<float>& activations_beta,
                      float clip)
     : FusedOp({X, W, R, H_t, B})
-    , RNNCellBase(hidden_size, clip, activations, activation_alpha, activation_beta)
+    , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
 {
     constructor_validate_and_infer_types();
@@ -216,8 +216,8 @@ shared_ptr<Node> op::RNNCell::copy_with_new_args(const NodeVector& new_args) con
                                     new_args.at(3),
                                     get_hidden_size(),
                                     get_activations(),
-                                    get_activation_alpha(),
-                                    get_activation_beta(),
+                                    get_activations_alpha(),
+                                    get_activations_beta(),
                                     get_clip());
     }
     else if (new_args.size() == 5)
@@ -229,8 +229,8 @@ shared_ptr<Node> op::RNNCell::copy_with_new_args(const NodeVector& new_args) con
                                     get_hidden_size(),
                                     new_args.at(4),
                                     get_activations(),
-                                    get_activation_alpha(),
-                                    get_activation_beta(),
+                                    get_activations_alpha(),
+                                    get_activations_beta(),
                                     get_clip());
     }
     else
