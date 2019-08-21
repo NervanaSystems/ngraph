@@ -12,7 +12,11 @@
 /contrib/docker/                    @aslepko
 /.travis.yml                        @aslepko @postrational
 
-/.clang-format                      @rkimballn1
+#/.clang-format                      @rkimballn1
+
+# Temporary while we're bikeshedding the comment flow rules.
+.clang-format                       @aprocter
+
 /.gitattributes                     @rkimballn1
 /.gitignore                         @rkimballn1
 /VERSION.in                         @rkimballn1 @silee2
@@ -21,7 +25,7 @@
 /doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
 /doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik @avijit-nervana @sayantan-nervana
 /doc/*/*/backends/plaidml-ng-api/   @flaub @brianretford @dgkutnic
-/doc/*/*/inspection/                @aproctor
+/doc/*/*/inspection/                @aprocter
 /doc/examples/onnx/                 @arogowie-intel @tsocha
 /README.md                          @adstraw
 project/introduction.rst            @adstraw
