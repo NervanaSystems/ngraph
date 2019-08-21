@@ -155,7 +155,8 @@ std::string runtime::gpu::GPUInternalFunction::add_to_runtime(
     {
         primitive_invocation = [args, out, primitive_index](GPUCallFrame& call_frame,
                                                             GPURuntimeContext* ctx) mutable {
-            // here, these inputs and outputs could be any of [constant, input, output, intermediate]
+            // here, these inputs and outputs could be any of [constant, input, output,
+            // intermediate]
             auto inputs = call_frame.get_tensor_io(args);
             auto outputs = call_frame.get_tensor_io(out);
             runtime::gpu::invoke_primitive(ctx, primitive_index, inputs.data(), outputs.data());
@@ -165,7 +166,8 @@ std::string runtime::gpu::GPUInternalFunction::add_to_runtime(
     {
         primitive_invocation = [this, args, out, primitive_index](GPUCallFrame& call_frame,
                                                                   GPURuntimeContext* ctx) mutable {
-            // here, these inputs and outputs could be any of [constant, input, output, intermediate]
+            // here, these inputs and outputs could be any of [constant, input, output,
+            // intermediate]
             auto inputs = call_frame.get_tensor_io(args);
             auto outputs = call_frame.get_tensor_io(out);
             *m_trace << "(";
@@ -277,9 +279,9 @@ void runtime::gpu::GPUInternalFunction::build_functions()
             m_variable_name_map[tv->get_name()] = std::make_tuple(TensorRole::OUTPUT, i, ss.str());
 
             auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
-            //keep assigning different outputs to a result descriptor
-            //op::Result emitter will check if in and out descriptors are the same
-            //and skip a copy
+            // keep assigning different outputs to a result descriptor
+            // op::Result emitter will check if in and out descriptors are the same
+            // and skip a copy
             auto input_node = res->get_inputs().at(0).get_output().get_node();
             if (!input_node->is_constant() && !input_node->is_parameter())
             {
@@ -288,7 +290,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
                 auto output_name = ss.str();
                 m_variable_name_map[itv->get_name()] =
                     std::make_tuple(TensorRole::OUTPUT, i, ss.str());
-                //propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
+                // propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
             }
         }
 
