@@ -18,6 +18,7 @@
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/quantized_dot.hpp"
 #include "quantization_utils.hpp"
 
@@ -38,5 +39,17 @@ namespace ngraph
                                                   const ngraph::AxisSet& input0_axes,
                                                   const ngraph::AxisSet& input1_axes,
                                                   const ngraph::AxisSet& output_axes);
+
+        std::shared_ptr<Node> QuantizedDotBiasBuilder(const Output<Node>& input,
+                                                      const Output<Node>& filters,
+                                                      const Output<Node>& bias,
+                                                      const Output<Node>& min_input,
+                                                      const Output<Node>& max_input,
+                                                      const Output<Node>& min_filter,
+                                                      const Output<Node>& max_filter,
+                                                      const Output<Node>& min_output,
+                                                      const Output<Node>& max_output,
+                                                      const bool requantize = true,
+                                                      const bool with_relu = false);
     }
 }
