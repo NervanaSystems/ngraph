@@ -348,7 +348,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(CodeWriter& writer,
             writer << "uint32_t init_in_idx = in_idx;\n";
             int64_t last_r_idx = static_cast<int64_t>(reduce_rank) - 1;
 
-            //find max
+            // find max
             writer << data_types[1] << " r_max = in[init_in_idx];\n";
             writer << data_types[1] << " input_i;\n";
 
@@ -406,7 +406,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(CodeWriter& writer,
             }
             writer.block_end();
 
-            //exp and sum , https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+            // exp and sum , https://en.wikipedia.org/wiki/Kahan_summation_algorithm
             writer << data_types[1] << " r_sum = 0;\n";
             writer << data_types[1] << " c = 0;\n";
             writer << data_types[1] << " y;\n";
@@ -457,7 +457,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_op(CodeWriter& writer,
             }
             writer.block_end();
 
-            //divide
+            // divide
             writer.block_begin();
             for (int64_t j = 0; j < last_r_idx; j++)
             {
@@ -638,7 +638,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
                 writer << "r_max = sdata[tid];\n";
             }
             writer.block_end();
-            //accumulate WARPSIZE threads
+            // accumulate WARPSIZE threads
             for (int i = (WARPSIZE >> 1); i >= 1; i >>= 1)
             {
                 if (num_of_warp > i)
@@ -660,7 +660,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
         writer << "__syncthreads();\n";
         writer << "r_max = sdata[0];\n";
 
-        //exp and sum , https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+        // exp and sum , https://en.wikipedia.org/wiki/Kahan_summation_algorithm
         writer << data_types[1] << " r_sum = 0;\n";
         writer << data_types[1] << " c = 0;\n";
         writer << data_types[1] << " y;\n";
@@ -718,7 +718,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
                 writer << "r_sum = sdata[tid];\n";
             }
             writer.block_end();
-            //accumulate WARPSIZE = 32 threads
+            // accumulate WARPSIZE = 32 threads
             for (int i = (WARPSIZE >> 1); i >= 1; i >>= 1)
             {
                 if (num_of_warp > i)
@@ -771,7 +771,7 @@ void runtime::gpu::CudaKernelBuilder::get_softmax_block_reduce_op(
     return;
 }
 
-//each thread calculate the whole reduction of one output
+// each thread calculate the whole reduction of one output
 void runtime::gpu::CudaKernelBuilder::get_reduce_to_nd_op(
     CodeWriter& writer,
     const std::string& name,
@@ -920,7 +920,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         writer << "r = in[input_idx];\n";
         writer << "input_idx += step;\n";
         writer.block_end();
-        //accumulate reduction to blockDim.x threads
+        // accumulate reduction to blockDim.x threads
         if (stable_sum)
         {
             writer << data_types[1] << " c = 0;\n";
@@ -946,7 +946,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
         }
         writer.block_end();
 
-        //accumulate WARPSIZE threads for each warp
+        // accumulate WARPSIZE threads for each warp
         for (int i = (WARPSIZE >> 1); i >= 1; i >>= 1)
         {
             if (block_size_x > i)
@@ -976,7 +976,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_op(
                 writer << "r = sdata[tid];\n";
             }
             writer.block_end();
-            //accumulate WARPSIZE threads
+            // accumulate WARPSIZE threads
             for (int i = (WARPSIZE >> 1); i >= 1; i >>= 1)
             {
                 if (num_of_warp > i)
@@ -1034,7 +1034,7 @@ void runtime::gpu::CudaKernelBuilder::get_reduce_to_scalar_acc_op(
         writer << "r = in[input_idx];\n";
         writer << "input_idx += step;\n";
         writer.block_end();
-        //accumulate reduction to step threads
+        // accumulate reduction to step threads
         if (stable_sum)
         {
             writer << data_types[1] << " c = 0;\n";

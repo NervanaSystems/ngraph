@@ -759,7 +759,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm)
     test_case.add_input<float>(vector<float>(24, 2));
     // C
     test_case.add_input<float>(vector<float>(12, 0));
-    //output
+    // output
     test_case.add_expected_output<float>(Shape{3, 4}, vector<float>(12, 12));
     test_case.run();
 }
@@ -779,7 +779,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
     test_case.add_input<float>(vector<float>(24, 2));
     // C
     test_case.add_input<float>(vector<float>{1});
-    //output
+    // output
     test_case.add_expected_output<float>(Shape{3, 4}, vector<float>(12, 7));
 }
 
@@ -1013,7 +1013,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scale_shift_no_broadcast)
     test_case.add_input<float>(vector<float>(18, 2));
     // Shift
     test_case.add_input<float>(vector<float>(18, 2));
-    //output
+    // output
     test_case.add_expected_output<float>(Shape{3, 6}, vector<float>(18, 6));
     test_case.run();
 }
@@ -1034,7 +1034,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scale_shift)
     test_case.add_input<float>(vector<float>(18, 2));
     // Shift
     test_case.add_input<float>(vector<float>{2});
-    //output
+    // output
     test_case.add_expected_output<float>(Shape{3, 6}, vector<float>(18, 6));
     test_case.run();
 }
@@ -1063,7 +1063,8 @@ NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_simple)
 NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_negative_axis)
 {
     // in this test the output is the same as in shuffle_channels_simple but
-    // the axis value is negative and the C(channels) value is in a different dimension(0) of the shape
+    // the axis value is negative and the C(channels) value is in a different dimension(0) of the
+    // shape
     const auto data = make_shared<op::Parameter>(element::i32, Shape{15, 2, 1, 2});
     auto tested_op = make_shared<op::ShuffleChannels>(data, -4, 5);
     auto function = make_shared<Function>(tested_op, ParameterVector{data});

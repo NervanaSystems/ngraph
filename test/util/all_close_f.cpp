@@ -262,6 +262,7 @@ uint32_t test::matching_mantissa_bits(uint32_t distance)
         ++tolerance_bit_shift;
     }
 
+    // clang-format off
     // all_close_f calculation of tolerance_bit_shift:
     // e.g. for float with 24 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
     //  tolerance_bit_shift   =     32 -          (1 +  8 + (24 -                    1         ) - 2             )
@@ -271,6 +272,7 @@ uint32_t test::matching_mantissa_bits(uint32_t distance)
     //  tolerance_bit_shift   =     32 -          (1 +  8 + (matching_matissa_bits - 1         ) - 0             )
     //  tolerance_bit_shift   =     32 -          (1 +  8 + (matching_matissa_bits - 1         )                 )
     //  matching_matissa_bits =     32 -          (1 +  8 + (tolerance_bit_shift   - 1         )                 )
+    // clang-format on
     uint32_t matching_matissa_bits =
         tolerance_bit_shift < 24 ? (32 - (1 + 8 + (tolerance_bit_shift - 1))) : 0;
     return matching_matissa_bits;
@@ -299,6 +301,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
         ++tolerance_bit_shift;
     }
 
+    // clang-format off
     // all_close_f calculation of tolerance_bit_shift:
     // e.g. for double with 53 bit mantissa, 2 bit accuracy, and hard-coded 8 bit exponent_bits
     //  tolerance_bit_shift   =     64 -          (1 +  11 + (53 -                    1         ) - 2             )
@@ -308,6 +311,7 @@ uint32_t test::matching_mantissa_bits(uint64_t distance)
     //  tolerance_bit_shift   =     64 -          (1 +  11 + (matching_matissa_bits - 1         ) - 0             )
     //  tolerance_bit_shift   =     64 -          (1 +  11 + (matching_matissa_bits - 1         )                 )
     //  matching_matissa_bits =     64 -          (1 +  11 + (tolerance_bit_shift   - 1         )                 )
+    // clang-format on
     uint32_t matching_matissa_bits =
         tolerance_bit_shift < 53 ? (64 - (1 + 11 + (tolerance_bit_shift - 1))) : 0;
     return matching_matissa_bits;

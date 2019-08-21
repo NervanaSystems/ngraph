@@ -454,7 +454,7 @@ TEST(algebraic_simplification, concat_parameter_slices_reversed)
 TEST(algebraic_simplification, concat_parameter_slices_element_count)
 {
     auto a = make_shared<op::Parameter>(element::f32, Shape{96, 100});
-    //slicing 30 elements out of 96; should trigger a check that some elements are missing
+    // slicing 30 elements out of 96; should trigger a check that some elements are missing
     auto slice1 = make_shared<op::Slice>(a, Coordinate{0, 0}, Coordinate{10, 100}, Strides{1, 1});
     auto slice2 = make_shared<op::Slice>(a, Coordinate{10, 0}, Coordinate{20, 100}, Strides{1, 1});
     auto slice3 = make_shared<op::Slice>(a, Coordinate{20, 0}, Coordinate{30, 100}, Strides{1, 1});

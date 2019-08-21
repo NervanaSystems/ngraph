@@ -229,8 +229,8 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         auto driver_op = first_bound_reshape_op->get_argument(0);
         auto last_bound_reshape_op = reshape_node_vector.back();
 
-        // Need to check if the user of the last bound op is a reshape since the last reshape is allowed
-        // to have fan-out but the matcher will discard any reshape if it has fan-out
+        // Need to check if the user of the last bound op is a reshape since the last reshape is
+        // allowed to have fan-out but the matcher will discard any reshape if it has fan-out
         auto user_of_last_bound_reshape_op = last_bound_reshape_op->get_users(true)[0];
         if (std::dynamic_pointer_cast<op::Reshape>(user_of_last_bound_reshape_op))
         {
