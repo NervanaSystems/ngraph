@@ -25,7 +25,7 @@
 String  PR_URL = CHANGE_URL
 String  PR_COMMIT_AUTHOR = CHANGE_AUTHOR
 String  PR_TARGET = CHANGE_TARGET
-//String  PR_LABEL = CHANGE_LABEL
+String  PR_TITLE = CHANGE_TITLE
 String  JENKINS_BRANCH = "aslepko/ci"
 Integer TIMEOUTTIME = "3600"
 // BRANCH parameter is no loner needed
@@ -38,7 +38,6 @@ env.MB_PIPELINE_CHECKOUT = true
 
 timestamps {
     node("trigger") {
-        sh 'env'
 
         deleteDir()  // Clear the workspace before starting
 
@@ -59,7 +58,7 @@ timestamps {
         
         echo "Calling ngraph-ci-premerge.groovy"
         def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
-        ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME, PR_TARGET, PR_LABEL)
+        ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME, PR_TARGET, PR_TITLE)
         echo "ngraph-ci-premerge.groovy completed"
 
     }  // End:  node
