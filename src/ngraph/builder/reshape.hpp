@@ -52,12 +52,21 @@ namespace ngraph
         /// \return: Value with reversed dimensions.
         std::shared_ptr<Node> transpose(const Output<Node>& value);
 
-        /// \brief Flatten a value into a 2D matrix.
+        /// \brief Flatten a value into a 2D matrix, with a static dividing axis.
         ///
         /// \param value The tensor to be flattened.
         /// \param axis The axis dividing shape.
         ///
         /// \return The new value will be a 2D matrix representing the flattened input node.
         std::shared_ptr<Node> flatten(const Output<Node>& value, int axis);
+
+        /// \brief Flatten a value into a 2D matrix, with a dynamic dividing axis.
+        ///
+        /// \param value The tensor to be flattened.
+        /// \param axis The tensor representing the axis dividing the shape. Must be reshapeable
+        ///             to the shape (1,).
+        ///
+        /// \return The new value will be a 2D matrix representing the flattened input node.
+        std::shared_ptr<Node> flatten(const Output<Node>& value, const Output<Node>& axis);
     } // namespace  builder
 } // namespace  ngraph

@@ -1,5 +1,5 @@
 #
-# OVERRIDE TO STYLE: Comments do *not* wrap.
+# OVERRIDE TO STYLE: Comments wrap.
 #
 BasedOnStyle: LLVM
 IndentWidth: 4
@@ -27,7 +27,7 @@ BreakBeforeBraces: Allman
 BreakConstructorInitializersBeforeComma: true
 
 ColumnLimit: 100
-CommentPragmas: '.*'
+#CommentPragmas: '.*'
 
 IndentCaseLabels: false
 IndentWrappedFunctionNames: true

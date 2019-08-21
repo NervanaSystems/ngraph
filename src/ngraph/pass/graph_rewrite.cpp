@@ -44,7 +44,8 @@ using namespace ngraph;
 // replace nodes `Abs2` and `Constant1` if needed
 // This gives Matchers a nice cascading property. For example, if m1 folds `Abs2(Constant1)`
 // and `m2` folds `Neg3(Constant1)` when `m3` is called on `Add4` it will discover that
-// both `Abs2` and `Neg3` were already replaced by constants, so `Add4` will also be folded into one.
+// both `Abs2` and `Neg3` were already replaced by constants, so `Add4` will also be folded into
+// one.
 // If any Matcher succeeds the rest of the matchers will **not** be called.
 // E.g. if `m1` succeeds and replaces `Abs2` with a new constant, nor `m2` or `m3` will be called
 // However, sometimes, you will need more than one fusion occur on the same node.
@@ -56,7 +57,8 @@ using namespace ngraph;
 // a) need more than one fusion occur on the same node
 // b) you are modifying nodes after the current node in the topological order
 // c) there's no linear order of fusions which will give
-//    the correct final fusion. i.e. the same fusion needs to occur before and after some other fusion
+//    the correct final fusion. i.e. the same fusion needs to occur before and after some other
+//    fusion
 
 bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
 {
@@ -113,7 +115,7 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
     } while (rewritten && m_matchers.size() > 0 && tries--);
 
     m_matchers.assign(original_matchers.begin(), original_matchers.end());
-    return (NUM_TRIES - tries) > 1; //this means a graph was transformed
+    return (NUM_TRIES - tries) > 1; // this means a graph was transformed
 }
 
 static vector<regex> initialize_fusion_regexes()
@@ -135,7 +137,7 @@ static vector<regex> initialize_fusion_regexes()
 
 bool pass::GraphRewrite::is_enabled(const shared_ptr<pattern::Matcher>& m) const
 {
-    //note, regexes are static to avoid re-initialization
+    // note, regexes are static to avoid re-initialization
     static const auto regexes = initialize_fusion_regexes();
 
     for (const auto& regex : regexes)

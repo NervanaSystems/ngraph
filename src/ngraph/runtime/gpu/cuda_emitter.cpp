@@ -107,7 +107,7 @@ size_t runtime::gpu::CUDAEmitter::build_concat(const std::string& dtype,
     // a launch primitive for it based on the input tensor shape
     // but do not recompile the kernel. otherwise, do it all:
     // recompile the kernel and then create the primutive
-    size_t split_input_size = 256; //max num of inputs fit 4KB parameter space: 256 * 8 + 7 * ?
+    size_t split_input_size = 256; // max num of inputs fit 4KB parameter space: 256 * 8 + 7 * ?
     size_t residue = input_num % split_input_size;
     std::stringstream kernel_name_1;
     std::stringstream kernel_name_2;
@@ -243,8 +243,9 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
     //         __device__ void set_value(float val){value = val;}
     //
     // };
-    // Based on the datatypes, the max size of the struct can be 16 bytes. Any arbitrary size of the struct can
-    // therfore be given by 'shared_struct_bytes' as calculated below accounting for structure padding
+    // Based on the datatypes, the max size of the struct can be 16 bytes. Any arbitrary size of the
+    // struct can therfore be given by 'shared_struct_bytes' as calculated below accounting for
+    // structure padding
 
     size_t shared_struct_bytes = (((dtypes[0].size() + index_elem_type.size()) <= 8) ? 8 : 16);
     size_t shared_data_bytes = num_cols * shared_struct_bytes;
@@ -332,7 +333,7 @@ size_t runtime::gpu::CUDAEmitter::build_topk(const std::vector<element::Type>& d
                                               1,
                                               1,
                                               shared_data_bytes, // shared mem
-                                              nullptr,           //stream
+                                              nullptr,           // stream
                                               args_list,
                                               nullptr)); // arguments
                 debug_sync();
@@ -849,9 +850,9 @@ size_t runtime::gpu::CUDAEmitter::build_reshape_3d(const std::array<std::string,
     std::vector<uint32_t> block_size(3, 0);
     // TODO: currently we set it to 16, will add tuning method later
     uint32_t block_size_x = 16;
-    block_size[0] = block_size_x;                                       //x
-    block_size[2] = (input_order[2] == 0) ? block_size_x : 1;           //z
-    block_size[1] = (block_size[2] == block_size_x) ? 1 : block_size_x; //y
+    block_size[0] = block_size_x;                                       // x
+    block_size[2] = (input_order[2] == 0) ? block_size_x : 1;           // z
+    block_size[1] = (block_size[2] == block_size_x) ? 1 : block_size_x; // y
     uint32_t aligned_grid_size_x = align_to_block_size(input_shape[2], block_size[0]);
     uint32_t aligned_grid_size_y = align_to_block_size(input_shape[1], block_size[1]);
     uint32_t aligned_grid_size_z = align_to_block_size(input_shape[0], block_size[2]);
@@ -1571,7 +1572,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
         input_shape_padded =
             runtime::gpu::get_padded_shape(input_shape, padding_below, padding_above, {});
         padded_size = shape_size(input_shape_padded);
-        //currntly we set this to float point only, need to add other datatype support later
+        // currntly we set this to float point only, need to add other datatype support later
         float pad_value = std::numeric_limits<float>::lowest();
         std::vector<float> temp(padded_size, pad_value);
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
@@ -1609,7 +1610,8 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
                 //                       std::vector<void*>{pad_buffer}.data());
 
                 // gpu::invoke_primitive(
-                //     m_ctx, conv_index, std::vector<void*>{pad_buffer, inputs[1]}.data(), outputs);
+                //     m_ctx, conv_index, std::vector<void*>{pad_buffer, inputs[1]}.data(),
+                //     outputs);
 
                 void* pad_buffer = runtime::gpu::invoke_memory_primitive(m_ctx, idx_workspace);
                 gpu::invoke_primitive(m_ctx,
@@ -1701,8 +1703,8 @@ size_t runtime::gpu::CUDAEmitter::build_softmax(const std::vector<element::Type>
         }});
         return this->m_primitive_emitter->register_primitive(memset, hash);
     }
-    // if reduce not include last axis, this is a heuristic to choose by reduce axis for better cache
-    // a more accurate but slow way is to tune with actual kernel
+    // if reduce not include last axis, this is a heuristic to choose by reduce axis for better
+    // cache. a more accurate but slow way is to tune with actual kernel
     else if (reduce_strides_in_input.back() != 1)
     {
         // TODO: currently we set it to 64, will add tuning method later
@@ -1817,10 +1819,11 @@ size_t runtime::gpu::CUDAEmitter::build_reduce_to_nd(const std::vector<element::
                                                      const char* kernel)
 {
     std::vector<std::string> dtypes_str = get_string_vector(dtypes);
-    //if call from reduce, this is duplicated
+    // if call from reduce, this is duplicated
     NVShape simplified_reduce_axis;
     NVShape simplified_input_shape;
-    // simplified_reduce_axis will not be empty, since we checked if input size is same as output size in gpu_emitter
+    // simplified_reduce_axis will not be empty, since we checked if input size is same as output
+    // size in gpu_emitter
     simplify_reduce_shape(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
     size_t rank = simplified_input_shape.size();
     size_t reduce_rank = simplified_reduce_axis.size();
@@ -2070,7 +2073,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<element::Type>&
 {
     NVShape simplified_reduce_axis;
     NVShape simplified_input_shape;
-    // simplified_reduce_axis will not be empty, since we checked if input size is same as output size in gpu_emitter
+    // simplified_reduce_axis will not be empty, since we checked if input size is same as output
+    // size in gpu_emitter
     simplify_reduce_shape(input_shape, reduce_axis, simplified_input_shape, simplified_reduce_axis);
 
     size_t rank = simplified_input_shape.size();
@@ -2166,8 +2170,8 @@ size_t runtime::gpu::CUDAEmitter::build_reduce(const std::vector<element::Type>&
     }
     else
     {
-        //if the data size is large, call reduce_to_scalar_acc first and then reduce_to_scalar.
-        //other wise, call reduce to scalar directly.
+        // if the data size is large, call reduce_to_scalar_acc first and then reduce_to_scalar.
+        // other wise, call reduce to scalar directly.
         const uint32_t unroll_size = 8;
         if (nthreads > nthreads_acc * (unroll_size + 1))
         {
@@ -2804,12 +2808,15 @@ size_t runtime::gpu::CUDAEmitter::build_convolution(const std::array<std::string
     }
 
     // launch arguments:
-    // each output pixel is its own block. if the batch size is greater than reg_tile_size * sm_tile_size, a single
-    // output pixel is spread over multiple blocks along the batch axis so that memory coordination is not required
-    // each block consists of 2 warps in an 8 x 8 array used for accessing the SM block of the GEMM
+    // each output pixel is its own block. if the batch size is greater than reg_tile_size *
+    // sm_tile_size, a single output pixel is spread over multiple blocks along the batch axis so
+    // that memory coordination is not required each block consists of 2 warps in an 8 x 8 array
+    // used for accessing the SM block of the GEMM
 
     // do_i = output pixel coordinates
-    // grid = (do_1*do_2*...*do_N*ceil_div(N, REG_TILE_SIZE*SM_TILE_SIZE), ceil_div(K, REG_TILE_SIZE*SM_TILE_SIZE), 1)
+    // grid = (do_1*do_2*...*do_N*ceil_div(N, REG_TILE_SIZE*SM_TILE_SIZE),
+    //         ceil_div(K, REG_TILE_SIZE*SM_TILE_SIZE),
+    //         1)
     // block = (8, 8, 1)
     dim3 blocks(output_pixels * idiv_ceil(N, reg_tile_size * sm_tile_size),
                 idiv_ceil(K, reg_tile_size * sm_tile_size),
@@ -3060,7 +3067,7 @@ void* runtime::gpu::CUDAEmitter::get_init_reduce_val(std::string reduce_op, std:
     }
     else
     {
-        //not defined.
+        // not defined.
         throw std::runtime_error(data_type + "currently not supportted with init value.");
     }
 }

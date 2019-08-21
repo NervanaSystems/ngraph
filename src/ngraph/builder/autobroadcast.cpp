@@ -68,11 +68,12 @@ namespace ngraph
             ngraph::Shape m_final_shape;
         };
 
-        /// \brief Compute the details regarding what reshape and/or broadcast operations must be applied to
-        /// arg1 and/or arg2, as well as what the final resulting shape shall be.
+        /// \brief Compute the details regarding what reshape and/or broadcast operations must be
+        ///        applied to arg1 and/or arg2, as well as what the final resulting shape shall
+        ///        be.
         ///
-        /// If this algorithm cannot handle the particular combination of shapes supplied as inputs, throw
-        /// an ngraph::builder::autobroadcast_incompatible_shapes exception.
+        /// If this algorithm cannot handle the particular combination of shapes supplied as
+        /// inputs, throw an ngraph::builder::autobroadcast_incompatible_shapes exception.
         ///
         /// \exception ngraph::builder::autobroadcast_incompatible_shapes
         static Autobroadcast_plan

@@ -1817,7 +1817,8 @@ shared_ptr<runtime::Executable>
 
                 if ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1)))
                 {
-                    // symmetric padding case temporally excluded (custom kernel executed) due to stability issues
+                    // symmetric padding case temporally excluded (custom kernel executed) due to
+                    // stability issues
                     const CoordinateDiff& pad_below_for = conv_op->get_padding_below_forward();
                     input_offset_xy = -pad_below_for.at(0);
                 }
@@ -2076,7 +2077,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
         case OP_TYPEID::RNNCell:
-        case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
@@ -2084,7 +2084,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedConvolutionRelu:
         case OP_TYPEID::QuantizedDot:
         case OP_TYPEID::QuantizedDotBias:
-        case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::Recv:
         case OP_TYPEID::Range:
         case OP_TYPEID::ReplaceSlice:

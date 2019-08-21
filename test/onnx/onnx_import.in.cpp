@@ -355,7 +355,7 @@ NGRAPH_TEST(onnx_${BACKEND_NAME}, model_argmin_no_keepdims)
     test_case.run();
 }
 
-NGRAPH_TEST(onnx_${BACKEND_NAME}, model_batchnorm_default)
+NGRAPH_TEST(onnx_${BACKEND_NAME}, model_batch_norm_default)
 {
     // Batch Normalization with default parameters
     auto function = onnx_import::import_onnx_model(
