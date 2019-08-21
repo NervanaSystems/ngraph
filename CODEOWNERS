@@ -21,7 +21,7 @@
 /doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
 /doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik @avijit-nervana @sayantan-nervana
 /doc/*/*/backends/plaidml-ng-api/   @flaub @brianretford @dgkutnic
-/doc/*/*/inspection/                @aprocter
+/doc/*/*/inspection/                @aproctor
 /doc/examples/onnx/                 @arogowie-intel @tsocha
 /README.md                          @adstraw
 project/introduction.rst            @adstraw
@@ -65,9 +65,6 @@ project/doc-contributor-README.rst  @indie
 
 # Putting this last so it's not overridden by directory rules
 CMakeLists.txt                      @rkimballn1 @silee2
-
-# Temporary megalomaniacal power grab, while we're bikeshedding the comment flow rules.
-.clang-format                       @aprocter
 
 # Putting this last to make sure nothing else overrides.
 /CODEOWNERS                         @diyessi
