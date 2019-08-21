@@ -28,9 +28,10 @@ namespace ngraph
         {
             namespace op
             {
-                // Implements NumPy-style broadcast semantics by passing its single argument through to its
-                // output and pretending that this changes the shape.  The creator of this node is responsible
-                // for ensuring that the downstream operation will perform a NumPy-style broadcast.
+                // Implements NumPy-style broadcast semantics by passing its single argument through
+                // to its output and pretending that this changes the shape.  The creator of this
+                // node is responsible for ensuring that the downstream operation will perform a
+                // NumPy-style broadcast.
                 class ImplicitBroadcast;
             }
         }

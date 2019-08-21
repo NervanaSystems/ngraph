@@ -149,7 +149,7 @@ logical_or
 batch_norm_inference_parameters_duplication
 batch_norm_fprop_b1c2h2w2
 batch_norm_fprop_b2c2h2w1
-batchnorm_fprop_b2c2d2h1w1
+batch_norm_fprop_b2c2d2h1w1
 batch_norm_fprop_inference_b2c2h2w1
 argmax_3D_axis_0
 argmax_3D_axis_1
@@ -233,6 +233,10 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
+max_pool_uint8
+max_pool_int8
+avg_pool_uint8
+avg_pool_int8
 
 # Need erf
 gelu_f32
@@ -298,12 +302,21 @@ model_quant_conv_linear
 model_conv_integer_no_zero_point
 model_matmul_integer_no_zero_point
 model_matmul_integer_4d_no_zero_point
+model_qlinear_matmul
+model_qlinear_matmul_3d
+model_matmul_integer
+model_matmul_integer_zero_point_zero
+model_matmul_integer_scalar
+model_matmul_integer_4d
+model_matmul_integer_4d_zero_point
 model_top_k
 model_erf
 model_erf_int32
 model_hardmax
 quantized_convolution
 quantized_conv_int32_output
+quantized_dot_u8u8
+quantized_dot_int32_output
 
 # unsupported op: `ReverseSequence`
 model_lstm_bdir_short_input_seq

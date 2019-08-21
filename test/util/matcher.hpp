@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-//this is for more nuanced testing
+// this is for more nuanced testing
 class TestMatcher : public ngraph::pattern::Matcher
 {
     using ngraph::pattern::Matcher::Matcher;
@@ -40,9 +40,8 @@ public:
     bool match(const std::shared_ptr<ngraph::Node>& pattern_node,
                const std::shared_ptr<ngraph::Node>& graph_node)
     {
-        NGRAPH_CHECK(
-            pattern_node &&
-            graph_node); // the same condition throws an exception in the non-test version of `match`
+        NGRAPH_CHECK(pattern_node && graph_node); // the same condition throws an exception in the
+                                                  // non-test version of `match`
         NGRAPH_DEBUG << "Starting match pattern = " << pattern_node->get_name()
                      << " , graph_node = " << graph_node->get_name();
 

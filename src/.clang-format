@@ -1,3 +1,6 @@
+#
+# OVERRIDE TO STYLE: Comments wrap.
+#
 BasedOnStyle: LLVM
 IndentWidth: 4
 UseTab: Never
@@ -24,6 +27,7 @@ BreakBeforeBraces: Allman
 BreakConstructorInitializersBeforeComma: true
 
 ColumnLimit: 100
+#CommentPragmas: '.*'
 
 IndentCaseLabels: false
 IndentWrappedFunctionNames: true
