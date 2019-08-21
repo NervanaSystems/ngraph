@@ -36,5 +36,6 @@ namespace ngraph
 
 namespace mlir
 {
-    mlir::Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
+    std::unique_ptr<Pass>
+        createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
 }
