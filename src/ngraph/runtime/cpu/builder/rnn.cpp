@@ -121,7 +121,8 @@ namespace ngraph
                 auto dst_iter_c_buffer_index =
                     external_function->get_buffer_index(out[2].get_name());
 
-                // Rnn needs 11 primitives: src_layer, src_iter, src_iter_c, weights_layer, weights_iter, bias,
+                // Rnn needs 11 primitives: src_layer, src_iter, src_iter_c, weights_layer,
+                // weights_iter, bias,
                 // dst_layer, dst_iter, dst_iter_c, workspace, and lstm_forward.
                 // It needs a new workspace.
                 auto rnn_index =

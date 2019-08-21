@@ -808,7 +808,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto concat_rnn_inputs_across_timestep =
             [&](std::shared_ptr<pattern::op::Label> input_label) -> std::shared_ptr<Node> {
             NodeVector concat_args;
-            // src_layer -> concatenate input symbols from different LSTM cells belonging to same RNN layer
+            // src_layer -> concatenate input symbols from different LSTM cells belonging to same
+            // RNN layer
             // in the order 0, 1, 2... t time slice
             {
                 auto node_labels = m.get_bound_nodes_for_pattern(input_label);
@@ -931,7 +932,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             }
         }
 
-        // replace LSTM dst_iter with RNN dst_layer slice for LSTM dst_iter users (not including the LSTM in the same layer)
+        // replace LSTM dst_iter with RNN dst_layer slice for LSTM dst_iter users (not including the
+        // LSTM in the same layer)
         for (size_t index = 0; index < sequence_len; index++)
         {
             auto goe_nodes = ngraph::op::get_output_elements(lstm_nodes[index]);
@@ -1213,7 +1215,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         // Replace all the users of RNN cell state {ct} across different user.
         auto replace_rnn_output_cellstate = [&](std::shared_ptr<Node> rnn_ct_goe2, size_t layer) {
 
-            // multi layerd fused rnn second output {GOE2} holds the recurrent output state tensors for the last cell
+            // multi layerd fused rnn second output {GOE2} holds the recurrent output state tensors
+            // for the last cell
             // of all the layers, { ct_1 || ct2 || ....|| ctn}
             auto ct_slice = std::make_shared<ngraph::op::Slice>(
                 mrnn_ct,
@@ -1251,7 +1254,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             }
 
             // dst_layer of layer fused rnn holds the intermediate results of all the lstm cells
-            // belonging to the last layer we will replace the GOE, since RNN_n->GOE0 and MutliLayerRnn->GOE0
+            // belonging to the last layer we will replace the GOE, since RNN_n->GOE0 and
+            // MutliLayerRnn->GOE0
             // holds the same output
             if ((index == 0) && goe_0)
             {

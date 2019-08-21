@@ -88,7 +88,7 @@ namespace ngraph
                     mkldnn_utils::mkldnn_md_matches_format_tag(result_desc.data,
                                                                mkldnn::memory::format_tag::goihw))
                 {
-                    //becomes a copy
+                    // becomes a copy
                     input_desc = result_desc;
                 }
                 else if ((input_format_is_nchw ||

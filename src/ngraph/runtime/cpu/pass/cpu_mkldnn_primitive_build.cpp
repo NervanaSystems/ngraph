@@ -250,7 +250,8 @@ namespace ngraph
                                                                dst_iter_c_md);
                     mkldnn_emitter.query_scratchpad_rnn_forward(rnn_desc);
 
-                    // Lstm/Rnn needs 11 primitives: src_layer, src_iter, src_iter_c, weights_layer, weights_iter, bias,
+                    // Lstm/Rnn needs 11 primitives: src_layer, src_iter, src_iter_c, weights_layer,
+                    // weights_iter, bias,
                     // dst_layer, dst_iter, dst_iter_c, workspace, and rnn_forward.
                     // It needs a new workspace.
                     index = mkldnn_emitter.reserve_primitive_space(11, true /* new workspace */);
@@ -641,7 +642,8 @@ namespace ngraph
                     auto concat_pd = mkldnn_emitter.get_concat_desc<OP>(node, nargs);
                     mkldnn_emitter.query_scratchpad_concat(concat_pd);
 
-                    // Concat needs number of inputs plus 2 primitives; those two are for result and concat.
+                    // Concat needs number of inputs plus 2 primitives; those two are for result and
+                    // concat.
                     index = mkldnn_emitter.reserve_primitive_space(nargs + 2);
                     deps = mkldnn_emitter.get_primitive_deps(index);
 
@@ -1246,8 +1248,10 @@ namespace ngraph
                                 node);
                     mkldnn_emitter.query_scratchpad_deconvolution_forward(deconvbias_desc);
 
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not
+                    // how far
+                    // apart to space the elements like nGraph. So we have to subtract 1 from each
+                    // pos.
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : dconv->get_window_dilation_strides_forward())
@@ -1497,7 +1501,8 @@ namespace ngraph
                         ngraph::op::MaxPoolWithIndices>(node);
                     mkldnn_emitter.query_scratchpad_pooling_forward(max_pool_desc);
 
-                    // MaxPoolWithIndices needs 4 primitives: input, result, workspace, and pooling_forward.
+                    // MaxPoolWithIndices needs 4 primitives: input, result, workspace, and
+                    // pooling_forward.
                     index = mkldnn_emitter.reserve_primitive_space(4);
                     deps = mkldnn_emitter.get_primitive_deps(index);
 
@@ -1734,7 +1739,7 @@ namespace ngraph
                     auto padding_below = pool->get_padding_below();
                     auto padding_above = pool->get_padding_above();
 
-                    //query scratchpad size
+                    // query scratchpad size
                     auto fwd_pool_desc =
                         mkldnn_emitter
                             .get_max_pooling_forward_desc<ngraph::op::MaxPoolWithIndicesBackprop>(
@@ -1746,7 +1751,8 @@ namespace ngraph
                     mkldnn_emitter.query_scratchpad_max_pooling_with_indices_backward(
                         fwd_pool_desc, bwd_pool_desc);
 
-                    // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace, diff_src
+                    // MaxPoolWithIndicesBackprop needs 4 primitives: diff_dst, fprop_workspace,
+                    // diff_src
                     // and pooling_backward.
                     index = mkldnn_emitter.reserve_primitive_space(4);
                     deps = mkldnn_emitter.get_primitive_deps(index);
@@ -1821,7 +1827,7 @@ namespace ngraph
                         mkldnn_utils::mkldnn_md_matches_format_tag(
                             result_desc.data, mkldnn::memory::format_tag::goihw))
                     {
-                        //becomes a copy
+                        // becomes a copy
                         input_desc = result_desc;
                     }
                     else if ((input_format_is_nchw ||
@@ -2157,7 +2163,8 @@ namespace ngraph
                     auto bwd_desc = mkldnn_emitter.get_sigmoid_backward_desc(node);
                     mkldnn_emitter.query_scratchpad_eltwise_backward(fwd_desc, bwd_desc);
 
-                    // SigmoidBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
+                    // SigmoidBackprop needs 4 primitives: input, delta, result, and
+                    // eltwise_backward.
                     index = mkldnn_emitter.reserve_primitive_space(4);
                     deps = mkldnn_emitter.get_primitive_deps(index);
 
@@ -2368,12 +2375,14 @@ namespace ngraph
 
                     if (has_bias)
                     {
-                        // QuantizedDotBias needs 5 primitives: input, weights, bias, result, and inner_product.
+                        // QuantizedDotBias needs 5 primitives: input, weights, bias, result, and
+                        // inner_product.
                         index = mkldnn_emitter.reserve_primitive_space(5);
                     }
                     else
                     {
-                        // QuantizedDot needs 4 primitives: input, weights, result, and inner_product.
+                        // QuantizedDot needs 4 primitives: input, weights, result, and
+                        // inner_product.
                         index = mkldnn_emitter.reserve_primitive_space(4);
                     }
                     deps = mkldnn_emitter.get_primitive_deps(index);

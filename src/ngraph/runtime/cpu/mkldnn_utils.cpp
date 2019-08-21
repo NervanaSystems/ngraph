@@ -1151,10 +1151,10 @@ std::set<memory::format_tag>& runtime::cpu::mkldnn_utils::get_filter_formats()
         memory::format_tag::IOhw16o16i,
         memory::format_tag::OIhw8o8i,
         memory::format_tag::OIhw16o16i,
-        //memory::format_tag::Oihw8o,
+        // memory::format_tag::Oihw8o,
         memory::format_tag::Oihw16o,
         memory::format_tag::Ohwi8o,
-        //memory::format_tag::OhIw16o4i,
+        // memory::format_tag::OhIw16o4i,
         memory::format_tag::Ohwi16o};
     return s_filter_format_tags;
 }
@@ -1502,7 +1502,7 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& 
 
     if (md1.format_kind != static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::blocked))
     {
-        //mkldnn not implemented yet
+        // mkldnn not implemented yet
         return false;
     }
 
@@ -1587,7 +1587,7 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_md_formats(const mkldnn::memory:
 
     if (md1.format_kind != static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::blocked))
     {
-        //mkldnn not implemented yet
+        // mkldnn not implemented yet
         return false;
     }
 
@@ -1650,7 +1650,7 @@ bool runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(const mkldnn::memo
 
     if (md.format_kind != static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::blocked))
     {
-        //mkldnn not implemented yet
+        // mkldnn not implemented yet
         return false;
     }
 
@@ -1694,7 +1694,7 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_desc_blocked_data_format(
     const mkldnn::memory::desc& desc)
 {
     auto blk = desc.data.format_desc.blocking;
-//TODO for v0.x, we just check if nChw8c or nChw16c, should we do the same here?
+// TODO for v0.x, we just check if nChw8c or nChw16c, should we do the same here?
 #if 0
 	// Check if nChw8c or nChw16c
 	if (desc.data.ndims != 4 || blk.inner_nblks != 1 ||

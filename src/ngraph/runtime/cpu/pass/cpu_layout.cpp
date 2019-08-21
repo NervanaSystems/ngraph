@@ -987,7 +987,7 @@ namespace ngraph
                         o_mds.push_back(deconv_prim_desc.dst_primitive_desc().desc());
 #else
                         i_mds.push_back(
-                            deconv_prim_desc.weights_desc()); //TODO: Find what format this is?
+                            deconv_prim_desc.weights_desc()); // TODO: Find what format this is?
                         i_mds.push_back(deconv_prim_desc.src_desc());
                         i_mds.push_back(deconv_prim_desc.bias_desc());
                         o_mds.push_back(deconv_prim_desc.dst_desc());
@@ -1568,7 +1568,8 @@ namespace ngraph
                             fmt == mkldnn::memory::format_kind::undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                         {
-                            // Cannot pass through layout information for blocked layouts at the moment
+                            // Cannot pass through layout information for blocked layouts at the
+                            // moment
                             set_native_layouts(external_function, node);
                         }
                         else
@@ -1640,7 +1641,8 @@ namespace ngraph
                             fmt == mkldnn::memory::format_kind::undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                         {
-                            // Cannot pass through layout information for blocked layouts at the moment
+                            // Cannot pass through layout information for blocked layouts at the
+                            // moment
                             set_native_layouts(external_function, node);
                         }
                         else
@@ -2374,7 +2376,7 @@ namespace ngraph
                             set_output_layouts(node, o_mds);
                         }
 #else
-                        //TODO Do we need more cases?
+                        // TODO Do we need more cases?
                         mkldnn::memory::format_tag result_format =
                             mkldnn::memory::format_tag::undef;
                         if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(input_md))
