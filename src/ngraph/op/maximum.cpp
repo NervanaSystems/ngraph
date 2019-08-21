@@ -50,10 +50,10 @@ void op::Maximum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = input_value(0);
+    auto y = input_value(1);
     adjoints.add_delta(
-        x, delta * make_shared<op::Convert>(make_shared<op::Greater>(x, y), x->get_element_type()));
+        x, delta * make_shared<op::Convert>(make_shared<op::Greater>(x, y), x.get_element_type()));
     adjoints.add_delta(
-        y, delta * make_shared<op::Convert>(make_shared<op::Greater>(y, x), y->get_element_type()));
+        y, delta * make_shared<op::Convert>(make_shared<op::Greater>(y, x), y.get_element_type()));
 }
