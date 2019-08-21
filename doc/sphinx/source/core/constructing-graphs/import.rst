@@ -39,8 +39,6 @@ outputs.
 Installing ``ngraph_onnx`` with nGraph from scratch
 ====================================================
 
-
-
 To use ONNX models with nGraph, you will also need the companion tool 
 ``ngraph_onnx``, which requires Python 3.4 or higher. If nGraph has not 
 yet been installed to your system, you can follow these steps to install 

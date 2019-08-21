@@ -1,6 +1,8 @@
 .. project/extras/testing_latency.rst:
 
 
+.. _testing_latency:
+
 Testing latency  
 ===============
 

@@ -1,4 +1,4 @@
-.. _update:
+.. _stateful_computations:
 
 Make a stateful computation
 ###########################

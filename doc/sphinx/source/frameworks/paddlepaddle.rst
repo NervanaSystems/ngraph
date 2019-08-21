@@ -152,8 +152,7 @@ nGraph compilation control and trigger method
 
 #. **Trigger Control** -- ``FLAGS_use_ngraph`` triggers nGraph. If this option 
    is set to ``true``, nGraph will be triggered by the PaddlePaddle executor 
-   to convert and execute the supported subgraph. `Examples are provided`_ under    
-   ``paddle/benchmark/fluid/ngraph``. 
+   to convert and execute the supported subgraph.
 
 
 .. _link to ngraph_engine_op header code: https://github.com/PaddlePaddle/Paddle/blob/develop/paddle/fluid/operators/ngraph/ngraph_engine_op.h
@@ -163,4 +162,3 @@ nGraph compilation control and trigger method
 .. _located in the ngraph ops: https://github.com/PaddlePaddle/Paddle/tree/develop/paddle/fluid/operators/ngraph/ops
 .. _link to ngraph_bridge header code: https://github.com/PaddlePaddle/Paddle/blob/develop/paddle/fluid/operators/ngraph/ngraph_bridge.h
 .. _link to ngraph_bridge cpp code: https://github.com/PaddlePaddle/Paddle/blob/develop/paddle/fluid/operators/ngraph/ngraph_bridge.cc
-.. _Examples are provided: https://github.com/PaddlePaddle/Paddle/tree/develop/benchmark/fluid
