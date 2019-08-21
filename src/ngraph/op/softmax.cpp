@@ -31,7 +31,7 @@ using namespace ngraph;
 // *** SOFTMAX OP SET 0 ***
 const string op::Softmax::type_name{"Softmax"};
 
-op::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
+op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     : UnaryElementwiseArithmetic(arg)
     , m_axes(axes)
 {
@@ -58,13 +58,13 @@ op::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     }
 }
 
-shared_ptr<Node> op::Softmax::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Softmax::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Softmax>(new_args.at(0), m_axes);
 }
 
-void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -92,10 +92,10 @@ void op::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
     adjoints.add_delta(x, adjoint);
 }
 
-// *** SOFTMAX OP SET 1 ***
-const string op::set1::Softmax::type_name{"Softmax"};
+// *** SOFTMAX OP SET V1 ***
+const string op::v1::Softmax::type_name{"Softmax"};
 
-op::set1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
+op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
     : UnaryElementwiseArithmetic(arg)
     , m_axis(axis)
 {
@@ -111,13 +111,13 @@ op::set1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
                           ").");
 }
 
-shared_ptr<Node> op::set1::Softmax::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::set1::Softmax>(new_args.at(0), m_axis);
+    return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);
 }
 
-void op::set1::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 

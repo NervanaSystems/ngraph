@@ -22,44 +22,42 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Softmax operation.
-        ///
-        class Softmax : public util::UnaryElementwiseArithmetic
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            Softmax() = default;
-            /// \brief Constructs a softmax operation.
+            /// \brief Softmax operation.
             ///
-            /// \param arg Node that produces the first input tensor.<br>
-            /// `[d0, ...]`
-            /// \param axes The axis positions (0-based) on which to calculate the softmax.
-            ///
-            /// Output `[d0, ...]`
-            ///
-            Softmax(const Output<Node>& arg, const AxisSet& axes);
+            class Softmax : public util::UnaryElementwiseArithmetic
+            {
+            public:
+                NGRAPH_API
+                static const std::string type_name;
+                const std::string& description() const override { return type_name; }
+                Softmax() = default;
+                /// \brief Constructs a softmax operation.
+                ///
+                /// \param arg Node that produces the first input tensor.<br>
+                /// `[d0, ...]`
+                /// \param axes The axis positions (0-based) on which to calculate the softmax.
+                ///
+                /// Output `[d0, ...]`
+                ///
+                Softmax(const Output<Node>& arg, const AxisSet& axes);
 
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
 
-            const AxisSet& get_axes() const { return m_axes; }
-            void set_axes(const AxisSet& axes) { m_axes = axes; }
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                const AxisSet& get_axes() const { return m_axes; }
+                void set_axes(const AxisSet& axes) { m_axes = axes; }
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
 
-        private:
-            AxisSet m_axes;
-        };
-
-        namespace set0
-        {
-            using ngraph::op::Softmax;
+            private:
+                AxisSet m_axes;
+            };
         }
 
-        namespace set1
+        namespace v1
         {
             class Softmax : public util::UnaryElementwiseArithmetic
             {
@@ -95,5 +93,13 @@ namespace ngraph
                 size_t m_axis;
             };
         }
+
+        namespace dev
+        {
+            using v1::Softmax;
+        }
+
+        // latest stable opset version
+        using v0::Softmax;
     }
 }

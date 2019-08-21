@@ -73,7 +73,7 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
     {
     case OP_TYPEID::Softmax:
     {
-        auto tmp = dynamic_cast<const op::set0::Softmax*>(node.get());
+        auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
         AxisSet axes = tmp->get_axes();
 
         if (axes.size() != 1)
@@ -84,7 +84,7 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
         }
 
         auto replacement_node =
-            make_shared<op::set1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);
+            make_shared<op::v1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);
         replace_node(node, replacement_node);
         modified = true;
         break;
