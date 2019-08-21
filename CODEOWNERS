@@ -13,7 +13,6 @@
 /.travis.yml                        @aslepko @postrational
 
 /.clang-format                      @rkimballn1
-
 /.gitattributes                     @rkimballn1
 /.gitignore                         @rkimballn1
 /VERSION.in                         @rkimballn1 @silee2
