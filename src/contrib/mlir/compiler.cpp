@@ -205,10 +205,12 @@ void MLIRCompiler::build_ng_dialect_module()
     dump_mlir_module("nGraph Dialect Dump:");
 }
 
-// Converts nGraph shape \p ng_shape to MLIR shape \p mlir_shape.
-static mlir::Shape get_mlir_shape(ngraph::Shape ng_shape)
+
+template<typename T>
+llvm::SmallVector<int64_t, 4> MLIRCompiler::get_mlir_shape(T ng_shape)
 {
     llvm::SmallVector<int64_t, 4> mlir_shape;
+
     for (auto dim : ng_shape)
     {
         mlir_shape.push_back(dim);
@@ -216,16 +218,13 @@ static mlir::Shape get_mlir_shape(ngraph::Shape ng_shape)
     return mlir_shape;
 }
 
-// Converts nGraph CoordinateDiff \p ng_coord_diff to MLIR shape \p mlir_shape.
-static mlir::Shape get_mlir_shape(ngraph::CoordinateDiff coord_diff)
+template<typename T>
+mlir::ArrayAttr MLIRCompiler::get_shape_as_attr(T ng_shape)
 {
-    llvm::SmallVector<int64_t, 4> mlir_shape;
-    for (auto dim : coord_diff)
-    {
-        mlir_shape.push_back(dim);
-    }
-    return mlir_shape;
+    mlir::Shape shape = get_mlir_shape(ng_shape);
+    return m_builder->getI64ArrayAttr(shape);
 }
+
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
 // element type.
@@ -235,6 +234,7 @@ mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
     return mlir::NGTensorType::get(
         &m_context, get_mlir_type(tensor->get_element_type()), mlir_shape);
 }
+
 
 // Converts an nGraph element type into an MLIR type.
 mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
@@ -611,18 +611,15 @@ namespace ngraph
             {
                 mlir::Operation* op = compiler.create_generic_op<mlir::NGConvolutionOp>(ng_node);
                 auto conv_node = static_cast<const ngraph::op::Convolution*>(ng_node);
-                //mlir::NGConvolutionOp* conv_op = mlir::cast<mlir::NGConvolutionOp>(op);
                 auto conv_op = llvm::cast<mlir::NGConvolutionOp>(op);
-                mlir::Shape shape = get_mlir_shape(conv_node->get_window_movement_strides());
-                mlir::ArrayAttr attr = compiler.m_builder->getI64ArrayAttr(shape);
+                
+                mlir::ArrayAttr attr = compiler.get_shape_as_attr(conv_node->get_window_movement_strides());
                 conv_op.setStrides(attr);
 
-                shape = get_mlir_shape(conv_node->get_padding_below());
-                attr = compiler.m_builder->getI64ArrayAttr(shape);
+                attr = compiler.get_shape_as_attr(conv_node->get_padding_below());
                 conv_op.setPadBelow(attr);
 
-                shape = get_mlir_shape(conv_node->get_padding_above());
-                attr = compiler.m_builder->getI64ArrayAttr(shape);
+                attr = compiler.get_shape_as_attr(conv_node->get_padding_above());
                 conv_op.setPadAbove(attr);
                 return op;
             }

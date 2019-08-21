@@ -797,6 +797,156 @@ namespace
         return matchSuccess();
     }
 
+    REWRITER(NGConvolutionOp)
+    {
+        auto convolOp = cast<NGConvolutionOp>(op);
+        auto loc = convolOp.getLoc();
+        ScopedContext scope(rewriter, loc);
+
+        // Get operands
+        Value* result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in Convolution Op");
+        Value* images = operands[0];
+        Value* filters = operands[1];
+        auto strides = convolOp.strides().getValue();
+        auto padBelow = convolOp.padBelow();
+        auto padAbove = convolOp.padBelow();
+        for (auto value : llvm::zip(padBelow, padAbove))
+        {
+            NGRAPH_CHECK(std::get<0>(value) == 0 && std::get<1>(value) == 0, "No support for padding in convolution op");
+        }
+
+
+        Type elemTy = images->getType().cast<MemRefType>().getElementType();
+
+        // Let Images shape be  [N, C_IN, D_1, ... D_f]
+        // Let Filters shape be [C_OUT, C_IN, F_1, ... F_f]
+        // Output shape will be [N, C_OUT, R_1, ..R_f]
+        //   where R_i = (AdjD_i - AdjF_i + 1) / Strides[i]
+        // AdjD_i is adjusted image spatial dimension after padding and dilation
+        //   AdjD_i = padBelow[i] + (dilation[i] * (D_i - 1) + 1) + padAbove[i]
+        // AdjF_i is adjusted filters spatial dimension after dilation
+        //   AdjF_i = dilation[i] * (F_i - 1) + 1
+        //   If no dilation, dilation[i] is 1
+        //
+        // Generate the following (currently without padding/dilation support)
+        //
+        // for n : 0 -> N
+        //   for k : 0 -> C_OUT
+        //     for c : 0 -> C_IN
+        //       // iterate over output spatial shape
+        //       for <r_1 .. r_f> : <0 .. 0> -> <R_1 ... R_f> // 
+        //         //compute image start inputs indices
+        //         i_1 = r_1 * strides[0];
+        //         ..
+        //         i_f = r_f * strides[f - 1];
+        //         // initialize result to zero
+        //         Output[n, k, r_1, .. r_f] = 0;
+        //         // iterate over kernel spatial shape
+        //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
+        //           Output[n, k, r_1, .. r_f] += 
+        //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
+
+
+        // TODO: With padding, we need to check (using IntegerSets) whether each spatial dim in Images lie within paddings
+        // If yes, we init value to zero, else load from MemRef.
+        // Q: Can this be done using a map from padded tensor to  unpadded one ? Will we load zero if OOB ? 
+
+
+        // Create view to write into result.
+        MemRefView vRes(result), vImages(images), vFilters(filters);
+
+        // Indexed Values
+        IndexedValue iRes(result), iImages(images), iFilers(filters);
+        
+        // Bounds on batch size N
+        ValueHandle batchLb = vImages.lb(0), batchUb = vImages.ub(0);
+        // Bounds on number of filters
+        ValueHandle numFiltersLb = vFilters.lb(0), numFiltersUb = vFilters.ub(0);
+        // Bound on number of channels
+        ValueHandle numChannelsLb = vImages.lb(1), numChannelsUb = vImages.lb(1);
+        // Bounds on result spatial dimensions
+        SmallVector<ValueHandle, 4> resSpatialLbs, resSpatialUbs;
+        SmallVector<ValueHandle, 4> filtersSpatialLbs, filtersSpatialUbs;
+        // Spatial rank
+        unsigned spatialRank = vImages.rank() - 2;
+
+        // Result spatial indices and bounds
+        auto resSpatialIndices = makeIndexHandles(spatialRank);
+        auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
+
+        for (auto i = 0; i < spatialRank; i++)
+        {
+            resSpatialLbs.push_back(vImages.lb(i + 2));
+            resSpatialUbs.push_back(llvm::divideCeil(vImages.ub(i + 2) - vFilters.ub(i + 2) + intrinsics::constant_index(1), (strides[i].cast<IntegerAttr>()).getInt()));
+            resSteps.push_back(vRes.step(i + 2));
+        }
+
+        NGRAPH_CHECK(vImages.rank() == vFilters.rank(), "Images and Filters have unequal ranks");
+        NGRAPH_CHECK(resSpatialLbs.size() == resSpatialUbs.size() && resSpatialLbs.size() == spatialRank , "Results spatial dims mismatches input");
+
+        // Filters spatial indices and bounds
+        auto filtersSpatialIndices = makeIndexHandles(spatialRank);
+        auto filtersSpatialIndicesPtrs = makeIndexHandlePointers(filtersSpatialIndices);
+
+        for (auto i = 0; i < spatialRank; i++)
+        {
+            filtersSpatialLbs.push_back(vFilters.lb(i + 2));
+            filtersSpatialUbs.push_back(vFilters.ub(i + 2));
+            filtersSteps.push_back(vFilters.step(i + 2));
+        }
+
+        // Batch size loop
+        IndexHandle n, k, c;
+        LoopBuilder(&n, batchLb, batchUb, 1)([&] {
+            // Filters loop
+            LoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
+                // Channels loop
+                LoopBuilder(&c, numChannelsLb, numChannelsUb, 1)([&] {
+                    LoopNestBuilder(resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&]{
+                        // Compute image start indices
+                        SmallVector<IndexHandle, 4> imgStartIndices;
+                        for (auto i = 0; i < spatialRank; i++)
+                        {
+                            auto stride = intrinsics::constant_index(strides[i].getInt());
+                            imgStartIndices.push_back(resSpatialIndices[i] * stride);
+                        }
+                        SmallVector<IndexHandle, 4> resIndices;
+                        // Result indices
+                        resIndices.push_back(n);
+                        resIndices.push_back(k);
+                        resIndices.insert(resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
+                        // Initialize result to zero
+                        ValueHandle zero = create_zero_constant(elemTy);
+                        iRes(resIndices) = zero
+
+                        LoopNestBuilder(filtersSpatialIndicesPtrs, filtersSpatialLbs, filtersSpatialUbs, filtersSteps)([&]{
+                            SmallVector<IndexHandle> imgIndices, filtersIndices;
+                            // Image indices
+                            imgIndices.push_back(n);
+                            imgIndices.push_back(c);
+                            for (auto i = 0; i < spatialRank; i++)
+                            {
+                                imgIndices.push_back(imgStartIndices[i] + filterSpatialIndices[i]);
+                            }
+                            // Filter indices
+                            filtersIndices.push_back(k);
+                            filtersIndices.push_back(c);
+                            filtersIndices.insert(filtersIndices.end(), filtersSpatialIndices.begin(), filtersSpatialIndices.end());
+
+                            iRes(resIndices) = iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices))
+                        });
+                    })
+
+
+                });
+            });
+        });
+
+        rewriter.replaceOp(op, {result});
+        return matchSuccess();
+    }
+
     REWRITER(NGReturnOp)
     {
         pass.insertDeallocs(rewriter);
