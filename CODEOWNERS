@@ -12,10 +12,7 @@
 /contrib/docker/                    @aslepko
 /.travis.yml                        @aslepko @postrational
 
-#/.clang-format                      @rkimballn1
-
-# Temporary while we're bikeshedding the comment flow rules.
-.clang-format                       @aprocter
+/.clang-format                      @rkimballn1
 
 /.gitattributes                     @rkimballn1
 /.gitignore                         @rkimballn1
@@ -69,6 +66,9 @@ project/doc-contributor-README.rst  @indie
 
 # Putting this last so it's not overridden by directory rules
 CMakeLists.txt                      @rkimballn1 @silee2
+
+# Temporary megalomaniacal power grab, while we're bikeshedding the comment flow rules.
+.clang-format                       @aprocter
 
 # Putting this last to make sure nothing else overrides.
 /CODEOWNERS                         @diyessi
