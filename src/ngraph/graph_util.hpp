@@ -229,6 +229,12 @@ namespace ngraph
         const std::shared_ptr<Function>& f,
         const std::unordered_map<std::string, std::shared_ptr<Node>>& replacement_map);
 
+    /// \brief Replace multiple nodes in a graph.
+    /// \param replacement_map A mapping from node shared pointers to node shared pointers. For
+    ///                        each pair (k,v) in the map, node k is replaced by node v.
+    void replace_nodes(
+        const std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<Node>>& replacement_map);
+
     NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 
     /// Topological sort of nodes needed to compute root_nodes

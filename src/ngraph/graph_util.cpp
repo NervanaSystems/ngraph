@@ -205,6 +205,20 @@ size_t
     return num_replacements;
 }
 
+void ngraph::replace_nodes(const unordered_map<shared_ptr<Node>, shared_ptr<Node>>& replacement_map)
+{
+    for (auto& kv : replacement_map)
+    {
+        auto& k = kv.first;
+        auto& v = kv.second;
+
+        if (k != v)
+        {
+            replace_node(k, v);
+        }
+    }
+}
+
 // Check if all paths from X to a result go through Y
 bool ngraph::is_post_dominated(Node* X, Node* Y)
 {
