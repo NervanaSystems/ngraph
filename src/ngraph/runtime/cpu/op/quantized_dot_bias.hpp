@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 
 namespace ngraph
 {
@@ -27,7 +28,7 @@ namespace ngraph
         class QuantizedDotBias : public Op
         {
         public:
-            NGRAPH_API
+            CPU_BACKEND_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             QuantizedDotBias() = default;

@@ -19,10 +19,10 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_conv_bias.hpp"
-#include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_relu.hpp"
+#include "ngraph/runtime/cpu/op/quantized_dot_bias.hpp"
 
 namespace ngraph
 {

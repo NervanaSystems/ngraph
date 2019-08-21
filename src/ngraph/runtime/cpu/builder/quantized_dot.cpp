@@ -16,12 +16,12 @@
 
 #include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/kernel/dot.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/op/quantized_dot_bias.hpp"
 
 using namespace std;
 using namespace ngraph;

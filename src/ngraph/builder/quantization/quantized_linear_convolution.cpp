@@ -22,9 +22,9 @@
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/divide.hpp"
-#include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/quantize.hpp"
+#include "ngraph/runtime/cpu/op/quantized_conv_bias.hpp"
 #include "ngraph/type/element_type.hpp"
 
 using namespace std;

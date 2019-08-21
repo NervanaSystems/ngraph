@@ -154,18 +154,12 @@ set (SRC
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
-    op/experimental/quantized_conv_bias.cpp
-    op/experimental/quantized_conv_bias.hpp
-    op/experimental/quantized_conv_relu.cpp
-    op/experimental/quantized_conv_relu.hpp
     op/experimental/range.cpp
     op/experimental/range.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
     op/experimental/tile.cpp
     op/experimental/tile.hpp
-    op/experimental/quantized_dot_bias.cpp
-    op/experimental/quantized_dot_bias.hpp
     op/experimental/compiled_kernel.cpp
     op/experimental/compiled_kernel.hpp
     op/experimental/transpose.cpp
@@ -482,6 +476,12 @@ set (SRC
     runtime/backend_manager.hpp
     runtime/chrome_trace.cpp
     runtime/chrome_trace.hpp
+    runtime/cpu/op/quantized_conv_bias.hpp
+    runtime/cpu/op/quantized_conv_bias.cpp
+    runtime/cpu/op/quantized_conv_relu.hpp
+    runtime/cpu/op/quantized_conv_relu.cpp
+    runtime/cpu/op/quantized_dot_bias.hpp
+    runtime/cpu/op/quantized_dot_bias.cpp
     runtime/executable.cpp
     runtime/executable.hpp
     runtime/host_tensor.cpp
