@@ -79,7 +79,7 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
         if (axes.size() != 1)
         {
             throw ngraph_error(
-                "Unable to convert Softmax:0 to Softmax:1 with more then one axis. " +
+                "Unable to convert Softmax:0 to Softmax:1 with more than one axis. " +
                 node->get_name() + ".");
         }
 
