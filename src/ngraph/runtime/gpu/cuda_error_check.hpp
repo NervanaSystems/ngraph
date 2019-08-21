@@ -27,8 +27,8 @@
 #include <stdint.h>
 #include <string>
 
-//why use "do...while.."
-//https://stackoverflow.com/questions/154136/why-use-apparently-meaningless-do-while-and-if-else-statements-in-macros
+// why use "do...while.."
+// https://stackoverflow.com/questions/154136/why-use-apparently-meaningless-do-while-and-if-else-statements-in-macros
 #define NVRTC_SAFE_CALL_NO_THROW(x)                                                                \
     do                                                                                             \
     {                                                                                              \

@@ -137,7 +137,8 @@ namespace ngraph
                     return m_mkldnn_emitter;
                 }
 
-                // Return the tuple including the string to create mkldnn primitive, the deps and the index in CODEGEN
+                // Return the tuple including the string to create mkldnn primitive, the deps and
+                // the index in CODEGEN
                 const std::tuple<std::string, std::vector<size_t>, size_t>&
                     get_primitive_build_tuple(const Node* node) const
                 {
@@ -161,7 +162,8 @@ namespace ngraph
                 static constexpr size_t s_memory_pool_alignment = 4096;
 
                 std::vector<CPUKernelFunctor>& get_functors() { return functors; }
-                // return an index into the cpu_runtime_context's buffer_data vector to get the tensor
+                // return an index into the cpu_runtime_context's buffer_data vector to get the
+                // tensor
                 size_t get_buffer_index(const std::string& name);
                 size_t get_buffer_size() const { return m_buffer_size; }
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>&
@@ -299,7 +301,8 @@ namespace ngraph
                     enable_nodename_list;
                 std::function<void(CPURuntimeContext*, std::vector<void*>&, std::vector<void*>&)>
                     executor;
-                // name of a tensor and index into the cpu_runtime_context's buffer_data vector to get the tensor
+                // name of a tensor and index into the cpu_runtime_context's buffer_data vector to
+                // get the tensor
                 std::unordered_map<std::string, size_t> m_buffer_indices;
                 std::unordered_map<std::string, bool> tensor_stale;
                 // Each tensor is put into one buffer set.
@@ -332,7 +335,7 @@ namespace ngraph
                 // output index, and offset into the output.
                 // used to calculate the correct address at runtime
                 std::list<std::tuple<size_t, size_t, size_t>> function_output_index_offset;
-                //size of the cpu_runtime_context's buffer_data vector.
+                // size of the cpu_runtime_context's buffer_data vector.
                 size_t m_buffer_size = 0;
                 std::unordered_map<std::string, std::shared_ptr<CPU_ExternalFunction>> callees;
                 bool m_is_built;
@@ -345,7 +348,8 @@ namespace ngraph
                 std::unordered_map<std::string, size_t> subgraph_param_indices;
 #endif
 
-                /// Map each node with mkldnn implementation to its mkldnn primitive creating string, deps, and mkldnn primitive index.
+                /// Map each node with mkldnn implementation to its mkldnn primitive creating
+                /// string, deps, and mkldnn primitive index.
                 std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t>>
                     m_node_primitive_string_deps_index_map;
                 /// Name of the file to store descriptors for mkldnn_primitives

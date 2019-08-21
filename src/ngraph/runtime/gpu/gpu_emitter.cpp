@@ -66,12 +66,9 @@
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"
@@ -105,6 +102,7 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/recv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -959,11 +957,6 @@ std::string runtime::gpu::GPU_Emitter::emit_Quantize(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_QuantizedAvgPool(EMIT_ARGS)
-{
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
-}
-
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedConvolution(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
@@ -995,11 +988,6 @@ std::string runtime::gpu::GPU_Emitter::emit_QuantizedDot(EMIT_ARGS)
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_QuantizedDotBias(EMIT_ARGS)
-{
-    throw unsupported_op("Unsupported op '" + node->description() + "'");
-}
-
-std::string runtime::gpu::GPU_Emitter::emit_QuantizedMaxPool(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
@@ -1055,7 +1043,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
     auto input_order = reshape->get_input_order();
     size_t result_shape_product = shape_size(result_shape);
 
-    //for a zero-size tensor, or change from 1^m shape to 1^n shape, just do a copy
+    // for a zero-size tensor, or change from 1^m shape to 1^n shape, just do a copy
     if (!reshape->get_is_transpose() || result_shape_product < 2)
     {
         auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
@@ -1064,7 +1052,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
         return compiled_function->add_to_runtime(index, function_name, args, out);
     }
 
-    //combine inordered dimensons after reorder in shape, update output shape and input order
+    // combine inordered dimensons after reorder in shape, update output shape and input order
     Shape in_order_map(arg_rank, 0);
     for (int i = 0; i < arg_rank - 1; i++)
     {
@@ -1101,7 +1089,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
         }
     }
 
-    //eleminate dimenson size = 1, update input order and output shape
+    // eleminate dimenson size = 1, update input order and output shape
     Shape new_arg_shape;
     Shape new_result_shape;
     Shape new_idx_map(combine_rank, 0);

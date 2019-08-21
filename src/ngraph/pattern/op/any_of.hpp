@@ -35,7 +35,8 @@ namespace ngraph
             class AnyOf : public Pattern
             {
             public:
-                /// \brief creates a AnyOf node containing a sub-pattern described by \sa type and \sa shape.
+                /// \brief creates a AnyOf node containing a sub-pattern described by \sa type and
+                ///        \sa shape.
                 AnyOf(const element::Type& type,
                       const PartialShape& s,
                       Predicate pred,
@@ -54,7 +55,8 @@ namespace ngraph
                     set_output_type(0, type, s);
                 }
 
-                /// \brief creates a AnyOf node containing a sub-pattern described by the type and shape of \sa node.
+                /// \brief creates a AnyOf node containing a sub-pattern described by the type and
+                ///        shape of \sa node.
                 AnyOf(std::shared_ptr<Node> node, Predicate pred, const NodeVector& wrapped_nodes)
                     : AnyOf(node->get_element_type(),
                             node->get_output_partial_shape(0),

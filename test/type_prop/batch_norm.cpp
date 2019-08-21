@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(type_prop, batchnorm_training_rank_less_than_2)
+TEST(type_prop, batch_norm_training_rank_less_than_2)
 {
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
     try
@@ -40,7 +40,7 @@ TEST(type_prop, batchnorm_training_rank_less_than_2)
     }
 }
 
-TEST(type_prop, batchnorm_training_zero_channel_check)
+TEST(type_prop, batch_norm_training_zero_channel_check)
 {
     auto data_batch = make_shared<op::Parameter>(element::f32, Shape{1, 0, 2, 3});
     auto gamma = make_shared<op::Parameter>(element::f32, Shape{0});
@@ -60,7 +60,7 @@ TEST(type_prop, batchnorm_training_zero_channel_check)
     }
 }
 
-TEST(type_prop, batchnorm_training_et_check)
+TEST(type_prop, batch_norm_training_et_check)
 {
     auto data_batch = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
     auto gamma = make_shared<op::Parameter>(element::f64, Shape{3});
@@ -81,7 +81,7 @@ TEST(type_prop, batchnorm_training_et_check)
     }
 }
 
-TEST(type_prop, batchnorm_training_shape_check)
+TEST(type_prop, batch_norm_training_shape_check)
 {
     auto data_batch = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
     auto gamma = make_shared<op::Parameter>(element::f32, Shape{4});
@@ -102,7 +102,7 @@ TEST(type_prop, batchnorm_training_shape_check)
     }
 }
 
-TEST(type_prop, batchnorm_training_backprop_et_check)
+TEST(type_prop, batch_norm_training_backprop_et_check)
 {
     auto data_batch = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
     auto gamma = make_shared<op::Parameter>(element::f32, Shape{3});
@@ -127,7 +127,7 @@ TEST(type_prop, batchnorm_training_backprop_et_check)
     }
 }
 
-TEST(type_prop, batchnorm_training_backprop_shape_check)
+TEST(type_prop, batch_norm_training_backprop_shape_check)
 {
     auto data_batch = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
     auto gamma = make_shared<op::Parameter>(element::f32, Shape{3});
@@ -153,7 +153,7 @@ TEST(type_prop, batchnorm_training_backprop_shape_check)
     }
 }
 
-TEST(type_prop, batchnorm_training_backprop_delta_check)
+TEST(type_prop, batch_norm_training_backprop_delta_check)
 {
     auto dummy = make_shared<op::Parameter>(element::f32, Shape{3});
     auto dummy2 = make_shared<op::Parameter>(element::f32, Shape{4});
@@ -177,7 +177,7 @@ TEST(type_prop, batchnorm_training_backprop_delta_check)
     }
 }
 
-TEST(type_prop, batchnorm_inference_partial_all_rank_dynamic)
+TEST(type_prop, batch_norm_inference_partial_all_rank_dynamic)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{PartialShape::dynamic()};
@@ -204,7 +204,7 @@ TEST(type_prop, batchnorm_inference_partial_all_rank_dynamic)
     ASSERT_TRUE(bn->get_output_partial_shape(0).rank().is_dynamic());
 }
 
-TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_ok)
+TEST(type_prop, batch_norm_inference_partial_input_rank_static_dynamic_ok)
 {
     PartialShape data_batch_shape{
         64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
@@ -233,7 +233,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_ok)
         PartialShape{64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
 }
 
-TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_zero_channels)
+TEST(type_prop, batch_norm_inference_partial_input_rank_static_dynamic_zero_channels)
 {
     PartialShape data_batch_shape{
         Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
@@ -270,7 +270,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_zero_chann
     }
 }
 
-TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_dynamic_ok)
+TEST(type_prop, batch_norm_inference_partial_input_rank_dynamic_some_rank_static_dynamic_ok)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{Dimension::dynamic()};
@@ -297,7 +297,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_
     ASSERT_TRUE(bn->get_output_partial_shape(0).rank().is_dynamic());
 }
 
-TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_dynamic_wrong_rank)
+TEST(type_prop, batch_norm_inference_partial_input_rank_dynamic_some_rank_static_dynamic_wrong_rank)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{Dimension::dynamic(), Dimension::dynamic()};
@@ -336,7 +336,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_dynamic_some_rank_static_
 }
 
 TEST(type_prop,
-     batchnorm_inference_partial_input_rank_dynamic_some_rank_static_dynamic_inconsistent_rank)
+     batch_norm_inference_partial_input_rank_dynamic_some_rank_static_dynamic_inconsistent_rank)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{3, Dimension::dynamic()};
@@ -374,7 +374,7 @@ TEST(type_prop,
 }
 
 TEST(type_prop,
-     batchnorm_inference_partial_input_rank_dynamic_some_static_inconsistent_channel_count)
+     batch_norm_inference_partial_input_rank_dynamic_some_static_inconsistent_channel_count)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{3};
@@ -411,7 +411,7 @@ TEST(type_prop,
     }
 }
 
-TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_some_static_ok)
+TEST(type_prop, batch_norm_inference_partial_input_rank_static_dynamic_some_static_ok)
 {
     PartialShape data_batch_shape{64, Dimension::dynamic(), Dimension::dynamic(), 224};
     PartialShape gamma_shape{3};
@@ -440,7 +440,7 @@ TEST(type_prop, batchnorm_inference_partial_input_rank_static_dynamic_some_stati
 }
 
 TEST(type_prop,
-     batchnorm_inference_partial_input_rank_static_dynamic_some_static_inconsistent_channel_count)
+     batch_norm_inference_partial_input_rank_static_dynamic_some_static_inconsistent_channel_count)
 {
     PartialShape data_batch_shape{64, 4, Dimension::dynamic(), 224};
     PartialShape gamma_shape{3};
@@ -478,7 +478,7 @@ TEST(type_prop,
     }
 }
 
-TEST(type_prop, batchnorm_training_partial_all_rank_dynamic)
+TEST(type_prop, batch_norm_training_partial_all_rank_dynamic)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{PartialShape::dynamic()};
@@ -503,7 +503,7 @@ TEST(type_prop, batchnorm_training_partial_all_rank_dynamic)
     ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
 }
 
-TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_batch_size_known_ok)
+TEST(type_prop, batch_norm_training_partial_input_rank_static_dynamic_batch_size_known_ok)
 {
     PartialShape data_batch_shape{
         64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
@@ -530,7 +530,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_batch_size_
     ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
 }
 
-TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_channel_count_known_ok)
+TEST(type_prop, batch_norm_training_partial_input_rank_static_dynamic_channel_count_known_ok)
 {
     PartialShape data_batch_shape{
         Dimension::dynamic(), 3, Dimension::dynamic(), Dimension::dynamic()};
@@ -557,7 +557,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_channel_cou
     ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape{3}));
 }
 
-TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_zero_channels)
+TEST(type_prop, batch_norm_training_partial_input_rank_static_dynamic_zero_channels)
 {
     PartialShape data_batch_shape{
         Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
@@ -586,7 +586,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_zero_channe
     }
 }
 
-TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_dynamic_ok)
+TEST(type_prop, batch_norm_training_partial_input_rank_dynamic_some_rank_static_dynamic_ok)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{Dimension::dynamic()};
@@ -611,7 +611,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_d
     ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
 }
 
-TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_dynamic_wrong_rank)
+TEST(type_prop, batch_norm_training_partial_input_rank_dynamic_some_rank_static_dynamic_wrong_rank)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{Dimension::dynamic(), Dimension::dynamic()};
@@ -642,7 +642,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_dynamic_some_rank_static_d
 }
 
 TEST(type_prop,
-     batchnorm_training_partial_input_rank_dynamic_some_rank_static_dynamic_inconsistent_rank)
+     batch_norm_training_partial_input_rank_dynamic_some_rank_static_dynamic_inconsistent_rank)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{3, Dimension::dynamic()};
@@ -672,7 +672,7 @@ TEST(type_prop,
 }
 
 TEST(type_prop,
-     batchnorm_training_partial_input_rank_dynamic_some_static_inconsistent_channel_count)
+     batch_norm_training_partial_input_rank_dynamic_some_static_inconsistent_channel_count)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{3};
@@ -701,7 +701,7 @@ TEST(type_prop,
     }
 }
 
-TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_some_static_ok)
+TEST(type_prop, batch_norm_training_partial_input_rank_static_dynamic_some_static_ok)
 {
     PartialShape data_batch_shape{64, Dimension::dynamic(), Dimension::dynamic(), 224};
     PartialShape gamma_shape{3};
@@ -728,7 +728,7 @@ TEST(type_prop, batchnorm_training_partial_input_rank_static_dynamic_some_static
 }
 
 TEST(type_prop,
-     batchnorm_training_partial_input_rank_static_dynamic_some_static_inconsistent_channel_count)
+     batch_norm_training_partial_input_rank_static_dynamic_some_static_inconsistent_channel_count)
 {
     PartialShape data_batch_shape{64, 4, Dimension::dynamic(), 224};
     PartialShape gamma_shape{3};
@@ -764,7 +764,7 @@ TEST(type_prop,
 ////
 ////
 
-TEST(type_prop, batchnorm_training_backprop_partial_all_rank_dynamic)
+TEST(type_prop, batch_norm_training_backprop_partial_all_rank_dynamic)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{PartialShape::dynamic()};
@@ -799,7 +799,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_all_rank_dynamic)
     ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
 }
 
-TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_ok)
+TEST(type_prop, batch_norm_training_backprop_partial_input_rank_static_dynamic_ok)
 {
     PartialShape data_batch_shape{
         64, Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()};
@@ -836,7 +836,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_ok
     ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
 }
 
-TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_zero_channels)
+TEST(type_prop, batch_norm_training_backprop_partial_input_rank_static_dynamic_zero_channels)
 {
     PartialShape data_batch_shape{
         Dimension::dynamic(), 0, Dimension::dynamic(), Dimension::dynamic()};
@@ -876,7 +876,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_input_rank_static_dynamic_ze
     }
 }
 
-TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ok)
+TEST(type_prop, batch_norm_training_backprop_partial_delta_rank_static_dynamic_ok)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{PartialShape::dynamic()};
@@ -912,7 +912,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ok
     ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape::dynamic(1)));
 }
 
-TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_channels_known)
+TEST(type_prop, batch_norm_training_backprop_partial_delta_rank_static_dynamic_channels_known)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{PartialShape::dynamic()};
@@ -948,7 +948,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ch
     ASSERT_TRUE(bn->get_output_partial_shape(2).same_scheme(PartialShape{5}));
 }
 
-TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_zero_channels)
+TEST(type_prop, batch_norm_training_backprop_partial_delta_rank_static_dynamic_zero_channels)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{PartialShape::dynamic()};
@@ -988,7 +988,7 @@ TEST(type_prop, batchnorm_training_backprop_partial_delta_rank_static_dynamic_ze
 }
 
 TEST(type_prop,
-     batchnorm_training_backprop_partial_input_and_delta_rank_dynamic_some_rank_static_dynamic_ok)
+     batch_norm_training_backprop_partial_input_and_delta_rank_dynamic_some_rank_static_dynamic_ok)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{Dimension::dynamic()};
@@ -1025,7 +1025,7 @@ TEST(type_prop,
 
 TEST(
     type_prop,
-    batchnorm_training_backprop_partial_input_and_delta_rank_dynamic_some_rank_static_dynamic_wrong_rank)
+    batch_norm_training_backprop_partial_input_and_delta_rank_dynamic_some_rank_static_dynamic_wrong_rank)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{Dimension::dynamic(), Dimension::dynamic()};
@@ -1068,7 +1068,7 @@ TEST(
 
 TEST(
     type_prop,
-    batchnorm_training_backprop_partial_input_and_delta_rank_dynamic_some_rank_static_dynamic_inconsistent_rank)
+    batch_norm_training_backprop_partial_input_and_delta_rank_dynamic_some_rank_static_dynamic_inconsistent_rank)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{3, Dimension::dynamic()};
@@ -1110,7 +1110,7 @@ TEST(
 
 TEST(
     type_prop,
-    batchnorm_training_backprop_partial_input_and_delta_rank_dynamic_some_static_inconsistent_channel_count)
+    batch_norm_training_backprop_partial_input_and_delta_rank_dynamic_some_static_inconsistent_channel_count)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};
     PartialShape gamma_shape{3};
@@ -1151,7 +1151,7 @@ TEST(
 }
 
 TEST(type_prop,
-     batchnorm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_ok)
+     batch_norm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_ok)
 {
     PartialShape data_batch_shape{64, Dimension::dynamic(), Dimension::dynamic(), 224};
     PartialShape gamma_shape{3};
@@ -1188,7 +1188,7 @@ TEST(type_prop,
 
 TEST(
     type_prop,
-    batchnorm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_inconsistent_channel_count)
+    batch_norm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_inconsistent_channel_count)
 {
     PartialShape data_batch_shape{64, Dimension::dynamic(), Dimension::dynamic(), 224};
     PartialShape gamma_shape{3};
@@ -1231,7 +1231,7 @@ TEST(
 
 TEST(
     type_prop,
-    batchnorm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_inconsistent_batch_size)
+    batch_norm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_inconsistent_batch_size)
 {
     PartialShape data_batch_shape{64, 3, Dimension::dynamic(), 224};
     PartialShape gamma_shape{3};
@@ -1275,7 +1275,7 @@ TEST(
 
 TEST(
     type_prop,
-    batchnorm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_inconsistent_spatial_dims)
+    batch_norm_training_backprop_partial_input_and_delta_rank_static_dynamic_some_static_inconsistent_spatial_dims)
 {
     PartialShape data_batch_shape{Dimension::dynamic(), 3, Dimension::dynamic(), 224};
     PartialShape gamma_shape{3};
