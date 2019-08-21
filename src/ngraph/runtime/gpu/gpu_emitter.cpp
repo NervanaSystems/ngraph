@@ -1015,7 +1015,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
     auto input_order = reshape->get_input_order();
     size_t result_shape_product = shape_size(result_shape);
 
-    //for a zero-size tensor, or change from 1^m shape to 1^n shape, just do a copy
+    // for a zero-size tensor, or change from 1^m shape to 1^n shape, just do a copy
     if (!reshape->get_is_transpose() || result_shape_product < 2)
     {
         auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
@@ -1024,7 +1024,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
         return compiled_function->add_to_runtime(index, function_name, args, out);
     }
 
-    //combine inordered dimensons after reorder in shape, update output shape and input order
+    // combine inordered dimensons after reorder in shape, update output shape and input order
     Shape in_order_map(arg_rank, 0);
     for (int i = 0; i < arg_rank - 1; i++)
     {
@@ -1061,7 +1061,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Reshape(EMIT_ARGS)
         }
     }
 
-    //eleminate dimenson size = 1, update input order and output shape
+    // eleminate dimenson size = 1, update input order and output shape
     Shape new_arg_shape;
     Shape new_result_shape;
     Shape new_idx_map(combine_rank, 0);

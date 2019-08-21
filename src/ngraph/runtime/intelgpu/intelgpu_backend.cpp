@@ -1817,7 +1817,8 @@ shared_ptr<runtime::Executable>
 
                 if ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1)))
                 {
-                    // symmetric padding case temporally excluded (custom kernel executed) due to stability issues
+                    // symmetric padding case temporally excluded (custom kernel executed) due to
+                    // stability issues
                     const CoordinateDiff& pad_below_for = conv_op->get_padding_below_forward();
                     input_offset_xy = -pad_below_for.at(0);
                 }
