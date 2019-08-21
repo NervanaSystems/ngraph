@@ -49,7 +49,7 @@ using namespace std;
 
 TEST(reshape_sinking, edge_splitting)
 {
-    //checks if Reshapes are pushed through op::Abs, but stopped by Sum
+    // checks if Reshapes are pushed through op::Abs, but stopped by Sum
     Shape shape_nhwc{16, 28, 28, 1};
     Shape shape_nchw{16, 1, 28, 28};
     auto a = make_shared<op::Parameter>(element::i32, shape_nhwc);
@@ -59,7 +59,7 @@ TEST(reshape_sinking, edge_splitting)
     auto sum = make_shared<op::Sum>(reshape, AxisSet{0, 1, 2, 3});
     auto func = make_shared<Function>(NodeVector{absn2, sum}, ParameterVector{a});
     pass::Manager pass_manager;
-    //size_t before_count = count_ops_of_type<op::Reshape>(func);
+    // size_t before_count = count_ops_of_type<op::Reshape>(func);
     pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
@@ -119,13 +119,13 @@ TEST(reshape_sinking, mnist_conv)
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(func);
-    //pass_manager.register_pass<pass::VisualizeTree>("before.png");
+    // pass_manager.register_pass<pass::VisualizeTree>("before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
-    //pass_manager.register_pass<pass::CoreFusion>();
-    //pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
-    //pass_manager.register_pass<pass::VisualizeTree>("after.png");
+    // pass_manager.register_pass<pass::CoreFusion>();
+    // pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
+    // pass_manager.register_pass<pass::VisualizeTree>("after.png");
     pass_manager.run_passes(func);
     size_t before_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_LE(before_after, before_count);

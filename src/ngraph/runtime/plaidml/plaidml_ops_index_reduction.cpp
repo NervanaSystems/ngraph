@@ -75,8 +75,8 @@ namespace ngraph
                                             }
                                         }))
                                 .set(builder::ContractionInput{"I"}.add_indices("d", 0, dim_limit)))
-                        .add( // Compare the input against the (broadcasted) max values, and select the indices
-                            // where the max val occurs
+                        .add( // Compare the input against the (broadcasted) max values, and select
+                              // the indices where the max val occurs
                             builder::Elementwise{"SelValIdxs",
                                                  "I == SelVal ? index(I, " + reduction_axis_str +
                                                      ") : D" + reduction_axis_str})

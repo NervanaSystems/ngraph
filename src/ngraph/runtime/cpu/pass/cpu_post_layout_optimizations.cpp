@@ -178,9 +178,9 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
 // If a transpose is converting a padded format into a generic padded/blocked format, it is better
 // to ConvertLayout first and then do the transpose
 // E.g.,
-// Shape{10, 20, 30, 40} --(Reshape)--> Shape{10, 40, 20, 30} --(ConvertLayout)--> Shape{10, 40, 20, 30}
+// Shape{10, 20, 30, 40} -(Reshape)-> Shape{10, 40, 20, 30} -(ConvertLayout)-> Shape{10, 40, 20, 30}
 // is changed to
-// Shape{10, 20, 30, 40} --(ConvertLayout)--> Shape{10, 20, 30, 40} --(Reshape)--> Shape{10, 40, 20, 30}
+// Shape{10, 20, 30, 40} -(ConvertLayout)-> Shape{10, 20, 30, 40} -(Reshape)-> Shape{10, 40, 20, 30}
 // The new ConvertLayout op computes the desired output layout (out_md) directly from
 // input layout using a rotated out_md
 void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
