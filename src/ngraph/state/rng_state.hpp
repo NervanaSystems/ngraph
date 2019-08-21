@@ -24,7 +24,7 @@
 
 namespace ngraph
 {
-    //can be based on TensorSate to cache values instead of just caching seed
+    // can be based on TensorSate to cache values instead of just caching seed
     class RNGState : public State
     {
     public:

@@ -60,6 +60,7 @@ set(SRC
     input_output_assign.cpp
     main.cpp
     misc.cpp
+    ngraph_api.cpp
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
@@ -110,7 +111,7 @@ set(SRC
     type_prop/gru_cell.cpp
     type_prop/hard_sigmoid.cpp
     type_prop/index_reduction.cpp
-    type_prop/leaky_relu.cpp
+    type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
@@ -119,8 +120,10 @@ set(SRC
     type_prop/pad.cpp
     type_prop/parameter.cpp
     type_prop/prelu.cpp
+    type_prop/proposal.cpp
     type_prop/quantize.cpp
     type_prop/quantized_convolution.cpp
+    type_prop/quantized_dot.cpp
     type_prop/range.cpp
     type_prop/replace_slice.cpp
     type_prop/reshape.cpp
@@ -215,23 +218,33 @@ add_subdirectory(util)
 # such as ${BACKEND_NAME} with their values, such as CPU, GPU, or INTERPRETER.
 set(MULTI_TEST_SRC
     backend/abc.in.cpp
+    backend/abs.in.cpp
+    backend/acos.in.cpp
+    backend/add.in.cpp
     backend/aliased_output.in.cpp
     backend/all.in.cpp
     backend/any.in.cpp
     backend/api.in.cpp
     backend/arg_reduce.in.cpp
+    backend/asin.in.cpp
+    backend/atan.in.cpp
+    backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
     backend/batch_norm.in.cpp
-    backend/binary_elementwise.in.cpp
     backend/broadcast.in.cpp
+    backend/builder_flatten.in.cpp
+    backend/ceiling.in.cpp
     backend/comparison.in.cpp
     backend/computation_reuse.in.cpp
     backend/concat.in.cpp
     backend/constant.in.cpp
     backend/convert.in.cpp
-    backend/convolution.in.cpp
     backend/convolution_reference.in.cpp
+    backend/convolution.in.cpp
+    backend/cos.in.cpp
+    backend/cosh.in.cpp
+    backend/divide.in.cpp
     backend/dot.in.cpp
     backend/dyn_broadcast.in.cpp
     backend/dyn_replace_slice_reference.in.cpp
@@ -239,45 +252,63 @@ set(MULTI_TEST_SRC
     backend/dyn_slice_reference.in.cpp
     backend/dynamic.in.cpp
     backend/embedding_lookup.in.cpp
+    backend/erf.in.cpp
+    backend/exp.in.cpp
+    backend/floor.in.cpp
     backend/function_name.in.cpp
     backend/fused_op.in.cpp
     backend/gather.in.cpp
+    backend/gelu.in.cpp
     backend/generate_mask.in.cpp
+    backend/log.in.cpp
     backend/logical_and.in.cpp
     backend/logical_or.in.cpp
     backend/logical_xor.in.cpp
     backend/lrn.in.cpp
     backend/max.in.cpp
+    backend/maximum.in.cpp
     backend/min.in.cpp
+    backend/minimum.in.cpp
     backend/multiple_backends.in.cpp
     backend/multiple_result.in.cpp
+    backend/multiply.in.cpp
+    backend/negative.in.cpp
     backend/node_name.in.cpp
+    backend/not.in.cpp
     backend/numeric.in.cpp
     backend/one_hot.in.cpp
     backend/pad.in.cpp
     backend/parameter_as_output.in.cpp
     backend/pool.in.cpp
+    backend/power.in.cpp
     backend/product.in.cpp
     backend/quantize_dequantize.in.cpp
     backend/quantized_convolution.in.cpp
+    backend/quantized_dot.in.cpp
     backend/range.in.cpp
     backend/relu.in.cpp
     backend/replace_slice.in.cpp
     backend/reshape.in.cpp
-    backend/reverse.in.cpp
     backend/reverse_sequence.in.cpp
+    backend/reverse.in.cpp
     backend/scatter.in.cpp
     backend/select.in.cpp
     backend/shape_of.in.cpp
     backend/sigmoid.in.cpp
+    backend/sign.in.cpp
+    backend/sin.in.cpp
+    backend/sinh.in.cpp
     backend/slice.in.cpp
     backend/softmax.in.cpp
+    backend/sqrt.in.cpp
+    backend/subtract.in.cpp
     backend/sum.in.cpp
+    backend/tan.in.cpp
+    backend/tanh.in.cpp
     backend/tensorview_custom_mem.in.cpp
     backend/topk.in.cpp
     backend/transpose.in.cpp
     backend/unhandled_op.in.cpp
-    backend/unary_elementwise.in.cpp
     backend/validate_call.in.cpp
     backend/zero_sized.in.cpp
 )
@@ -343,6 +374,7 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
+target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
     target_link_libraries(unit-test PRIVATE libjson)
 endif()
@@ -365,6 +397,7 @@ if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE libmkldnn)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_TOOLS_ENABLE)

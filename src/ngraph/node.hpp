@@ -74,6 +74,7 @@ namespace ngraph
     const NodeVector& check_single_output_args(const NodeVector& args);
 
     OutputVector as_output_vector(const NodeVector& args);
+    NodeVector as_node_vector(const OutputVector& values);
 
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
@@ -131,7 +132,8 @@ namespace ngraph
         Node(const NodeVector& arguments, size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
-        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows on deep networks.
+        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
+        ///        on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
@@ -388,6 +390,9 @@ namespace ngraph
         /// \return A vector containing a handle for each of this node's inputs, in order.
         std::vector<Input<const Node>> inputs() const;
 
+        /// \return A vector containing the values for each input
+        std::vector<Output<Node>> input_values() const;
+
         /// \return A vector containing a handle for each of this node's outputs, in order.
         // TODO: Rename to get_outputs()?
         std::vector<Output<Node>> outputs();
@@ -402,6 +407,8 @@ namespace ngraph
         /// \return A handle to the `input_index`th input of this node.
         /// \throw std::out_of_range if the node does not have at least `input_index+1` inputs.
         Input<const Node> input(size_t input_index) const;
+
+        Output<Node> input_value(size_t input_index) const;
 
         /// \return A handle to the `output_index`th output of this node.
         /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
@@ -628,6 +635,11 @@ namespace ngraph
         return Input<Node>(this, input_index);
     }
 
+    inline Output<Node> Node::input_value(size_t input_index) const
+    {
+        return input(input_index).get_source_output();
+    }
+
     inline Input<const Node> Node::input(size_t input_index) const
     {
         if (input_index >= m_inputs.size())
@@ -699,6 +711,18 @@ namespace ngraph
         for (size_t i = 0; i < get_input_size(); i++)
         {
             result.emplace_back(this, i);
+        }
+
+        return result;
+    }
+
+    inline std::vector<Output<Node>> Node::input_values() const
+    {
+        std::vector<Output<Node>> result;
+
+        for (size_t i = 0; i < get_input_size(); i++)
+        {
+            result.emplace_back(input(i).get_source_output());
         }
 
         return result;

@@ -35,6 +35,7 @@
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 
@@ -43,6 +44,9 @@ using namespace ngraph::op;
 using namespace ngraph::pass;
 
 #define TI(x) std::type_index(typeid(x))
+
+// Maximum depth to check for cycles. If exceeded, we conservatively assume a cycle.
+#define MAX_CYCLE_DEPTH 100
 
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
 
@@ -97,12 +101,15 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
 
 // The sub-graph construction algorithm is as follows
 // For each node, check its predecessors, if
-// - all predecessors in sub-graphs belong to the same sub-graph (graph ID), then extend the sub-graph to include the current node.
+// - all predecessors in sub-graphs belong to the same sub-graph (graph ID), then extend the
+//   sub-graph to include the current node.
 //   Predecessors outside sub-graphs are marked as input to the sub-graph.
-// - predecessors in sub-graphs belong to different sub-graphs, then merge all the sub-graphs into one, and add current node to it.
-//   Predecessors outside sub-graphs are marked as input to the sub-graph.
+// - predecessors in sub-graphs belong to different sub-graphs, then merge all the sub-graphs into
+//   one, and add current node to it. Predecessors outside sub-graphs are marked as input to the
+//   sub-graph.
 //
-// If the node has any external inputs, then it's possible that the input may come from one of the predecessor sub-graphs (cycle).
+// If the node has any external inputs, then it's possible that the input may come from one of the
+// predecessor sub-graphs (cycle).
 // If a cycle is found, always start a new sub-graph.
 //
 // For each sub-graph found build a CompiledKernel(CK) node around it as follows
@@ -157,7 +164,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
             // we have sub-graphs.
             // check if adding this node to the sub-graph will create a cycle in the DAG
             NGRAPH_DEBUG << "[CK Extract] Extending sub-graph. Check for cycles " << std::endl;
-            if (!check_cycles(inputs, subgraph_ids))
+            if (!check_cycles(op, subgraph_ids))
             {
                 NGRAPH_DEBUG << "[CK Extract] Merging subgraphs";
                 // merge sub-graphs if needed
@@ -253,7 +260,10 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
             for (descriptor::Input* in_desc : input_descs)
             {
-                in_desc->replace_output(ck, i);
+                if (nodes.find(in_desc->get_node()) == nodes.end())
+                {
+                    in_desc->replace_output(ck, i);
+                }
             }
         }
     }
@@ -265,6 +275,18 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
 {
+    // Disable any op using boolean type until we have support for i1<->i8 conversion in MLIR.
+    // Otherwise, we would generate code like this:
+    //   %0 = icmp %a, %b : i1
+    //   store %0, %c[%arg1] : i8  // Type error: trying to store an i1 into an i8.
+    for (auto& output : node->get_outputs())
+    {
+        if (output.get_element_type() == element::boolean)
+        {
+            return false;
+        }
+    }
+
     if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
     {
         return true;
@@ -277,6 +299,18 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     }
 
     // check on invariants expected by MLIR backend
+
+    if (TI(ngraph::op::Divide) == TI(*node))
+    {
+        auto* div = static_cast<ngraph::op::Divide*>(node.get());
+        if (div->is_pythondiv())
+        {
+            // Python specific division rounding is not supported yet.
+            return false;
+        }
+
+        return true;
+    }
 
     // Dot is 2D only
     if (TI(ngraph::op::Dot) == TI(*node))
@@ -330,41 +364,44 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         }
     }
 
-    // Relu is supported for integer types only until MLIR adds support for lowering !std.CmpF to LLVM dialect
-    if (TI(ngraph::op::Relu) == TI(*node))
+    if (TI(ngraph::op::Negative) == TI(*node))
     {
-        if (!node->get_element_type().is_integral())
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        return true;
     }
+
     return true;
 }
 
-bool MLIRSubgraphExtractionPass::check_cycles(NodeVector& inputs,
-                                              std::unordered_set<int>& subgraph_ids)
+bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
+                                              std::unordered_set<int>& subgraph_ids,
+                                              bool inside_subgraphs,
+                                              unsigned depth)
 {
-    NodeVector work_list;
-    NGRAPH_DEBUG << "[CK Extract] Inputs size: " << inputs.size() << std::endl;
-    work_list.insert(work_list.end(), inputs.begin(), inputs.end());
-    while (!work_list.empty())
+    // Going too deep, bail out.
+    if (depth >= MAX_CYCLE_DEPTH)
+        return true;
+
+    // root node is always inside merged sub-graphs.
+    if (depth != 0)
     {
-        auto node = work_list.back();
-        work_list.pop_back();
         if (subgraph_ids.find(get_subgraph_id(node)) != subgraph_ids.end())
         {
-            // we hit one of the sub-graphs we want to extend. we have a cycle.
-            NGRAPH_DEBUG << "[CK Extract] Cycle found when trying to add node" << std::endl;
-            return true;
+            // This node is inside a sub-graph. If we are coming from outside the sub-graphs, then
+            // we formed a cycle.
+            if (!inside_subgraphs)
+            {
+                return true;
+            }
         }
-        for (auto pred : node->get_arguments())
+        else
         {
-            work_list.push_back(pred);
+            inside_subgraphs = false;
         }
+    }
+    for (auto& input : node->get_arguments())
+    {
+        if (check_cycles(input, subgraph_ids, inside_subgraphs, ++depth))
+            return true;
     }
     return false;
 }

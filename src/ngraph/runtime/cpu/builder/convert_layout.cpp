@@ -47,7 +47,7 @@ namespace ngraph
                 if (input_desc.data.format == mkldnn_nchw &&
                     result_desc.data.format == mkldnn_goihw)
                 {
-                    //becomes a copy
+                    // becomes a copy
                     input_desc = result_desc;
                 }
                 else if ((input_desc.data.format == mkldnn_nchw ||

@@ -24,6 +24,7 @@ namespace ngraph
     namespace pass
     {
         class ConstantFolding;
+        bool revalidate_and_ensure_static(std::shared_ptr<ngraph::Node> n);
     }
 }
 
@@ -82,8 +83,8 @@ public:
         construct_constant_select();
     }
 
-    //this allows to specify the order in which matchers will be run
-    //and also allows to register the same matcher more than once
+    // this allows to specify the order in which matchers will be run
+    // and also allows to register the same matcher more than once
     ConstantFolding(const std::vector<CFTransformations>& transformations,
                     const ngraph::BuildNodeExecutorMap& cfmap = ngraph::BuildNodeExecutorMap())
         : GraphRewrite()

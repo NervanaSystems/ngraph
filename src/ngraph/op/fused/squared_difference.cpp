@@ -26,16 +26,16 @@ using namespace ngraph;
 
 const string op::SquaredDifference::type_name{"SquaredDifference"};
 
-op::SquaredDifference::SquaredDifference(const shared_ptr<Node>& x1, const shared_ptr<Node>& x2)
-    : FusedOp(check_single_output_args({x1, x2}))
+op::SquaredDifference::SquaredDifference(const Output<Node>& x1, const Output<Node>& x2)
+    : FusedOp({x1, x2})
 {
     constructor_validate_and_infer_types();
 }
 
 NodeVector op::SquaredDifference::decompose_op() const
 {
-    const auto x1 = input(0).get_source_output();
-    const auto x2 = input(1).get_source_output();
+    const auto x1 = input_value(0);
+    const auto x2 = input_value(1);
 
     const auto broadcasted = numpy_style_broadcast_values({x1, x2});
 

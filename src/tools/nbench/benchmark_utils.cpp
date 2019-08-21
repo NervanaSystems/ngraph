@@ -85,7 +85,7 @@ void random_init(shared_ptr<runtime::Tensor> tensor)
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (et.get_type_enum())
+    switch (et)
     {
     case element::Type_t::boolean: init_int_tensor<char>(tensor, 0, 1); break;
     case element::Type_t::f32: init_real_tensor<float>(tensor, -1, 1); break;

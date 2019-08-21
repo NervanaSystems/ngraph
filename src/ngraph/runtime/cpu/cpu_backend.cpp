@@ -52,7 +52,7 @@ runtime::BackendConstructor* runtime::cpu::get_backend_constructor_pointer()
 }
 
 #if !defined(NGRAPH_CPU_STATIC_LIB_ENABLE)
-extern "C" runtime::BackendConstructor* get_backend_constructor_pointer()
+extern "C" CPU_BACKEND_API runtime::BackendConstructor* get_backend_constructor_pointer()
 {
     return runtime::cpu::get_backend_constructor_pointer();
 }
@@ -128,7 +128,8 @@ shared_ptr<runtime::Executable>
 #endif
 
     shared_ptr<runtime::Executable> rc;
-    // we will protect the access to map (m_exec_map) across multiple threads by creating a lock_gaurd
+    // we will protect the access to map (m_exec_map) across multiple threads by creating a
+    // lock_gaurd
     // m_exec_map_mutex will be released once the object `guard` goes out of scope
     {
         std::lock_guard<std::mutex> guard(m_exec_map_mutex);

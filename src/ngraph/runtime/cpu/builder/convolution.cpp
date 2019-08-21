@@ -661,8 +661,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
                     QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
 
-                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst, diff_weights,
-                    // diff_bias, and convolution_backward_weights.
+                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst,
+                    // diff_weights, diff_bias, and convolution_backward_weights.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 

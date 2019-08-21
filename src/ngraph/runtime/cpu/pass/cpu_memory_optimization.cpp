@@ -14,11 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-/// In-place-concat optimization makes the argument nodes of a concatenation node use the concatenation node's memory buffer
-/// for their outputs. As a result, we eliminate memory copies from the memory buffers of the argument nodes to
-/// that of the concatenation node. When there is a chain of in place concatenation nodes, we propagate the
-/// memory buffer starting from the last concatenation node. Not all concatenation nodes can be optimized. This pass
-/// marks all the nodes that can be optimized.
+/// In-place-concat optimization makes the argument nodes of a concatenation node use the
+/// concatenation node's memory buffer for their outputs. As a result, we eliminate memory copies
+/// from the memory buffers of the argument nodes to that of the concatenation node. When there is a
+/// chain of in place concatenation nodes, we propagate the memory buffer starting from the last
+/// concatenation node. Not all concatenation nodes can be optimized. This pass marks all the nodes
+/// that can be optimized.
 ///
 /// Example1:
 /// parameter1 parameter2        parameter3 parameter4        parameter5 parameter6
@@ -27,10 +28,11 @@
 ///           \                           |                            /
 ///                                    concat
 ///
-/// Before optimization: the result of add1 is stored to the memory buffer assigned to add1, same for add2 and add3;
-///                      then those results are copied to the memory buffer assigned to concat.
-/// After optimization: the result of add1 is stored to the memory buffer assigned to concat, same for add2 and add3.
-///                     there is no need to copy those results.
+/// Before optimization: the result of add1 is stored to the memory buffer assigned to add1, same
+///                      for add2 and add3; then those results are copied to the memory buffer
+///                      assigned to concat.
+/// After optimization: the result of add1 is stored to the memory buffer assigned to concat, same
+///                     for add2 and add3. There is no need to copy those results.
 ///
 ///
 /// Example2:
@@ -44,7 +46,8 @@
 ///                       \                 /
 ///                               concat
 ///
-/// After optimization: the result of add1 is stored to the memory buffer assigned to concat, same for add2 and add3.
+/// After optimization: the result of add1 is stored to the memory buffer assigned to concat, same
+/// for add2 and add3.
 
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
 

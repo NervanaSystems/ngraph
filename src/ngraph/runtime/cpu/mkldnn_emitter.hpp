@@ -34,18 +34,16 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
@@ -138,7 +136,8 @@ namespace ngraph
                 const std::vector<char*>& get_mkldnn_workspaces();
                 const std::vector<mkldnn::memory::desc*>& get_mkldnn_scratchpad_mds() const;
 
-                // reserve the space for primitives for each op, different op requires different number of primitives.
+                // reserve the space for primitives for each op, different op requires different
+                // number of primitives.
                 // some ops require a new workspace.
                 size_t reserve_primitive_space(size_t count, bool new_workspace = false);
                 size_t insert_primitive(mkldnn::primitive* primitive);
@@ -181,8 +180,9 @@ namespace ngraph
                 {
                     auto convolution = static_cast<const OP*>(node);
 
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not
+                    // how far apart to space the elements like nGraph. So we have to subtract 1
+                    // from each pos.
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -249,7 +249,8 @@ namespace ngraph
 
                     mkldnn::post_ops ops;
 
-                    if (has_relu<OP>(node))
+                    if (std::is_same<OP, ngraph::op::QuantizedDotBias>() &&
+                        has_relu<ngraph::op::QuantizedDotBias>(node))
                     {
                         const float ops_scale = 1.f;
                         const float ops_alpha = -0.f; // relu negative slope
@@ -608,8 +609,9 @@ namespace ngraph
                     get_convolution_forward_desc(const ngraph::Node* node)
                 {
                     auto convolution = static_cast<const OP*>(node);
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not
+                    // how far apart to space the elements like nGraph. So we have to subtract 1
+                    // from each pos.
                     Strides window_dilation_strides_adjusted;
 
                     mkldnn::algorithm convolution_algo = mkldnn_utils::get_conv_algo();
@@ -737,7 +739,8 @@ namespace ngraph
                 {
                     mkldnn::post_ops ops;
 
-                    if (has_relu<OP>(node))
+                    if (std::is_same<OP, ngraph::op::QuantizedDotBias>() &&
+                        has_relu<ngraph::op::QuantizedDotBias>(node))
                     {
                         const float ops_scale = 1.f;
                         const float ops_alpha = -0.f; // relu negative slope
@@ -764,8 +767,9 @@ namespace ngraph
                     get_deconvolutionbias_forward_data(const ngraph::Node* node)
                 {
                     auto convolution = static_cast<const OP*>(node);
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not
+                    // how far apart to space the elements like nGraph. So we have to subtract 1
+                    // from each pos.
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -806,8 +810,9 @@ namespace ngraph
                     get_convolution_backward_data_desc(const ngraph::Node* node)
                 {
                     auto convolution = static_cast<const OP*>(node);
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not
+                    // how far apart to space the elements like nGraph. So we have to subtract 1
+                    // from each pos.
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -838,8 +843,9 @@ namespace ngraph
                     get_convolution_backward_weights_desc(const ngraph::Node* node)
                 {
                     auto convolution = static_cast<const OP*>(node);
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not
+                    // how far apart to space the elements like nGraph. So we have to subtract 1
+                    // from each pos.
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -885,8 +891,9 @@ namespace ngraph
                     get_convolution_forward_desc_for_backward_op(const ngraph::Node* node)
                 {
                     auto convolution = static_cast<const OP*>(node);
-                    // For dilation, MKLDNN wants to know how many elements to insert between, not how far
-                    // apart to space the elements like nGraph. So we have to subtract 1 from each pos.
+                    // For dilation, MKLDNN wants to know how many elements to insert between, not
+                    // how far apart to space the elements like nGraph. So we have to subtract 1
+                    // from each pos.
                     Strides window_dilation_strides_adjusted;
 
                     for (size_t s : convolution->get_window_dilation_strides_forward())

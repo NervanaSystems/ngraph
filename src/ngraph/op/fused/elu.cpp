@@ -30,21 +30,23 @@ using namespace ngraph;
 
 const string op::Elu::type_name{"Elu"};
 
-op::Elu::Elu(const shared_ptr<Node>& data, const shared_ptr<Node>& alpha)
-    : FusedOp(check_single_output_args({data, alpha}))
+op::Elu::Elu(const Output<Node>& data, const double alpha)
+    : FusedOp({data})
+    , m_alpha{alpha}
 {
     constructor_validate_and_infer_types();
 }
 
 NodeVector op::Elu::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto alpha_node = get_argument(1);
+    auto data = input_value(0);
+    shared_ptr<Node> alpha_node =
+        make_shared<op::Constant>(data.get_element_type(), Shape{}, vector<double>{m_alpha});
 
-    alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data->get_shape());
+    alpha_node = ngraph::op::numpy_style_broadcast(alpha_node, data.get_shape());
 
     shared_ptr<ngraph::Node> zero_node =
-        builder::make_constant(data->get_element_type(), data->get_shape(), 0);
+        builder::make_constant(data.get_element_type(), data.get_shape(), 0);
 
     return {make_shared<ngraph::op::Maximum>(data, zero_node) +
             alpha_node *
@@ -54,9 +56,6 @@ NodeVector op::Elu::decompose_op() const
 
 shared_ptr<Node> op::Elu::copy_with_new_args(const NodeVector& new_args) const
 {
-    if (new_args.size() != 2)
-    {
-        throw ngraph_error("Incorrect number of new arguments");
-    }
-    return make_shared<Elu>(new_args.at(0), new_args.at(1));
+    check_new_args_count(this, new_args);
+    return make_shared<Elu>(new_args.at(0), m_alpha);
 }

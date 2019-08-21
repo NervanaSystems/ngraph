@@ -32,12 +32,10 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -87,7 +85,8 @@ namespace ngraph
 
                     auto src_size = shape_size(arg0_shape);
 
-                    // insert Add as MKLDNN op, only if the src_size is big. this is to avoid MKLDNN overhead
+                    // insert Add as MKLDNN op, only if the src_size is big. this is to avoid MKLDNN
+                    // overhead
                     // for smaller tensor sizes
                     if (node->get_input_element_type(0) == element::f32 &&
                         node->get_input_element_type(1) == element::f32 && arg0_rank == 4 &&
@@ -384,7 +383,9 @@ namespace ngraph
 
                     if (((arg0_rank == 4 && avg_pool->get_window_shape().size() == 2) ||
                          (arg0_rank == 5 && avg_pool->get_window_shape().size() == 3)) &&
-                        node->get_input_element_type(0) == element::f32)
+                        (node->get_input_element_type(0) == element::f32 ||
+                         node->get_input_element_type(0) == element::u8 ||
+                         node->get_input_element_type(0) == element::i8))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -418,7 +419,9 @@ namespace ngraph
 
                     if (((arg0_rank == 4 && max_pool->get_window_shape().size() == 2) ||
                          (arg0_rank == 5 && max_pool->get_window_shape().size() == 3)) &&
-                        node->get_input_element_type(0) == element::f32)
+                        (node->get_input_element_type(0) == element::f32 ||
+                         node->get_input_element_type(0) == element::u8 ||
+                         node->get_input_element_type(0) == element::i8))
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -700,26 +703,6 @@ namespace ngraph
                     auto slice = static_cast<ngraph::op::Slice*>(node);
                     auto strides = slice->get_strides();
                     if (!is_strided(strides) && node->get_input_element_type(0) == element::f32)
-                    {
-                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
-                    }
-                }
-
-                template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedMaxPool)
-                {
-                    if (node->get_input_element_type(0) == element::u8 ||
-                        node->get_input_element_type(0) == element::i8)
-                    {
-                        runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
-                    }
-                }
-
-                template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::QuantizedAvgPool)
-                {
-                    if (node->get_input_element_type(0) == element::u8 ||
-                        node->get_input_element_type(0) == element::i8)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
                     }
@@ -1023,10 +1006,6 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::SigmoidBackprop>},
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Rnn>},
-    {TI(ngraph::op::QuantizedMaxPool),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedMaxPool>},
-    {TI(ngraph::op::QuantizedAvgPool),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Softmax>},
     {TI(ngraph::op::Slice), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Slice>},
     {TI(ngraph::op::ReplaceSlice),
