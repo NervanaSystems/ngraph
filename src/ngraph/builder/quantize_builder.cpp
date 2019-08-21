@@ -16,7 +16,6 @@
 
 #include <memory>
 
-#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/quantize_builder.hpp"
 
 using namespace std;
@@ -37,18 +36,18 @@ namespace ngraph
 
             if (min.get_element_type() != real_type)
             {
-                throw ngraph_error("ScaledQuantize: min must match input type");
+                throw ngraph_error("QuantizeBuilder: min must match input type");
             }
 
             if (max.get_element_type() != real_type)
             {
-                throw ngraph_error("ScaledQuantize: max must match input type");
+                throw ngraph_error("QuantizeBuilder: max must match input type");
             }
 
             auto shape = min.get_shape();
             if (shape != max.get_shape())
             {
-                throw ngraph_error("ScaledQuantize: min and max must have same shape");
+                throw ngraph_error("QuantizeBuilder: min and max must have same shape");
             }
 
             auto zero = make_constant(quant_type, shape, 0);

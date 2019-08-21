@@ -18,8 +18,11 @@
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
 #include "quantization_utils.hpp"
 

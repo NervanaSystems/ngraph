@@ -17,8 +17,6 @@
 #include <memory>
 
 #include "ngraph/builder/quantized_dot_builder.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/quantize.hpp"
 
 using namespace std;
 using namespace ngraph;

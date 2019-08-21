@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/builder/make_constant.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/quantize.hpp"

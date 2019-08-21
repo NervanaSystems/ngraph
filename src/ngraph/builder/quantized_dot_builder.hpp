@@ -18,7 +18,9 @@
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_dot.hpp"
 #include "quantization_utils.hpp"
 

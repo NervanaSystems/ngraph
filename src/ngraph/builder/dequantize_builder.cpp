@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "ngraph/builder/dequantize_builder.hpp"
-#include "ngraph/builder/make_constant.hpp"
 
 using namespace std;
 using namespace ngraph;

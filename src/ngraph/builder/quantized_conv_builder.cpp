@@ -17,9 +17,6 @@
 #include <memory>
 
 #include "ngraph/builder/quantized_conv_builder.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/convert.hpp"
-#include "ngraph/op/quantize.hpp"
 
 using namespace std;
 using namespace ngraph;
