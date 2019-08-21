@@ -57,7 +57,7 @@
 using namespace ngraph;
 void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
 {
-    //construct variance
+    // construct variance
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
     auto neg_input = std::make_shared<op::Negative>(input);
     auto exp_neg_input = std::make_shared<op::Exp>(neg_input);
@@ -69,7 +69,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
     auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
     auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
 
-    //Define a call back that needs to called once the DFG matches the pattern
+    // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
@@ -153,7 +153,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
     auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{10, 100});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
 
-    //ct-1 -> cell state
+    // ct-1 -> cell state
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
     auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
 
@@ -176,7 +176,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
     auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
     auto ht_label = std::make_shared<pattern::op::Label>(ht, nullptr, NodeVector{ht});
 
-    //Define a call back that needs to called once the DFG matches the pattern
+    // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [ct_label,
                      input_xt,
                      weights_i2h,
@@ -211,8 +211,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         RETURN_IF_FALSE(bias_i2h->get_shape().size() == 1 && bias_h2h->get_shape().size() == 1,
                         "Bias should have rank of 1 for Rnn op");
 
-        // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to capture this
-        // reliably in the RNN fusion.
+        // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to
+        // capture this reliably in the RNN fusion.
         std::shared_ptr<op::gpu::Rnn> lstm = nullptr;
         bool intermediate_lstm = false;
         if (std::dynamic_pointer_cast<op::GetOutputElement>(pattern_map[ct_1]))
@@ -411,7 +411,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         if (std::dynamic_pointer_cast<op::Broadcast>(xt_node_array[xt_node_array.size() - 1]) &&
             std::dynamic_pointer_cast<op::Constant>(
                 xt_node_array[xt_node_array.size() - 1]->get_argument(0)))
-        // here xt is determined to be the hidden (recurrent) input data and so ht is the feedforward input
+        // here xt is determined to be the hidden (recurrent) input data and so ht is the
+        // feedforward input
         {
             // concatenate the sequence inputs for a given layer
             std::vector<std::shared_ptr<pattern::op::Label>> src_layer_labels{ht_1};
@@ -425,7 +426,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                      hidden_ht_array[hidden_ht_array.size() - 1]) &&
                  std::dynamic_pointer_cast<op::Constant>(
                      hidden_ht_array[hidden_ht_array.size() - 1]->get_argument(0)))
-        // here ht is determined to be the hidden (recurrent) input data and so xt is the feedforward input
+        // here ht is determined to be the hidden (recurrent) input data and so xt is the
+        // feedforward input
         {
             std::vector<std::shared_ptr<pattern::op::Label>> src_layer_labels{xt};
             src_layer = compute_rnn_args(src_layer_labels, m, true);
@@ -502,10 +504,11 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 1);
         auto layer_rnn_ct = std::make_shared<op::GetOutputElement>(rnn, 2);
 
-        //slice the rnn ht's
+        // slice the rnn ht's
         size_t start_index = 0;
         size_t end_index = batch_size;
-        // capture the slices in the reverse order, so it corrosponds to lstm_goes order captured by the Pattern matcher
+        // capture the slices in the reverse order, so it corrosponds to lstm_goes order captured by
+        // the Pattern matcher
         for (size_t i = 0; i < num_of_lstm_matched; i++)
         {
             ht_slice_per_timestep[i] = (std::make_shared<op::Slice>(
@@ -574,7 +577,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             }
         }
 
-        //now go through the lstm goe_0 consumers and replace them with the slice
+        // now go through the lstm goe_0 consumers and replace them with the slice
         for (auto& node : lstm_goe0_user)
         {
             for (size_t i = 0; i < node->get_input_size(); i++)
