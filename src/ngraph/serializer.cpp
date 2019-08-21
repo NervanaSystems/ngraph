@@ -1843,7 +1843,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             if (opset_version == 1)
             {
                 size_t softmax_axis = node_js.at("softmax_axis");
-                node = make_shared<op::set1::Softmax>(args[0], softmax_axis);
+                node = make_shared<op::v1::Softmax>(args[0], softmax_axis);
             }
             break;
         }
@@ -2903,12 +2903,12 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (opset_version == 0)
         {
-            auto tmp = dynamic_cast<const op::set0::Softmax*>(&n);
+            auto tmp = dynamic_cast<const op::v0::Softmax*>(&n);
             node["softmax_axes"] = serialize_axis_set(tmp->get_axes());
         }
         if (opset_version == 1)
         {
-            auto tmp = dynamic_cast<const op::set1::Softmax*>(&n);
+            auto tmp = dynamic_cast<const op::v1::Softmax*>(&n);
             node["softmax_axis"] = tmp->get_axis();
         }
         break;

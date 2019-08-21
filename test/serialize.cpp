@@ -344,7 +344,7 @@ TEST(serialize, non_zero_node_output)
 TEST(serialize, opset1_softmax)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
-    auto softmax = make_shared<op::set1::Softmax>(arg, 0);
+    auto softmax = make_shared<op::v1::Softmax>(arg, 0);
     auto result = make_shared<op::Result>(softmax);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
     string s = serialize(f);

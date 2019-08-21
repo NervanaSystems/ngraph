@@ -30,7 +30,7 @@ TEST(serialize, opset1_softmax_pass_axis)
     const size_t axis = 2;
     const AxisSet axes{axis};
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto softmax_s0 = make_shared<op::set0::Softmax>(arg, axes);
+    auto softmax_s0 = make_shared<op::v0::Softmax>(arg, axes);
     auto result = make_shared<op::Result>(softmax_s0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
@@ -40,7 +40,7 @@ TEST(serialize, opset1_softmax_pass_axis)
 
     auto softmax_s1_result = f->get_results().at(0);
     auto node = softmax_s1_result->input(0).get_source_output().get_node_shared_ptr();
-    auto softmax_s1_node = static_pointer_cast<op::set1::Softmax>(node);
+    auto softmax_s1_node = static_pointer_cast<op::v1::Softmax>(node);
 
     EXPECT_EQ(softmax_s1_node->get_axis(), axis);
     EXPECT_EQ(softmax_s1_node->description(), "Softmax");
@@ -51,7 +51,7 @@ TEST(serialize, opset1_softmax_pass_axis_exception)
 {
     const AxisSet axes{1, 2};
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto softmax_s0 = make_shared<op::set0::Softmax>(arg, axes);
+    auto softmax_s0 = make_shared<op::v0::Softmax>(arg, axes);
     auto result = make_shared<op::Result>(softmax_s0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
