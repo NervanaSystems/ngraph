@@ -17,35 +17,31 @@
 #include <iostream>
 #include <string>
 
-#include <clang/Basic/DiagnosticOptions.h>
-#include <clang/Basic/TargetInfo.h>
-#include <clang/CodeGen/CodeGenAction.h>
-#include <clang/CodeGen/ObjectFilePCHContainerOperations.h>
-#include <clang/Driver/DriverDiagnostic.h>
-#include <clang/Driver/Options.h>
-#include <clang/Frontend/CompilerInstance.h>
-#include <clang/Frontend/CompilerInvocation.h>
-#include <clang/Frontend/FrontendActions.h>
-#include <clang/Frontend/FrontendDiagnostic.h>
-#include <clang/Frontend/TextDiagnosticBuffer.h>
-#include <clang/Frontend/TextDiagnosticPrinter.h>
-#include <clang/Frontend/Utils.h>
-#include <clang/FrontendTool/Utils.h>
-#include <clang/Lex/Preprocessor.h>
-#include <clang/Lex/PreprocessorOptions.h>
-#include <llvm/ADT/Statistic.h>
-#include <llvm/ExecutionEngine/MCJIT.h> // forces JIT to link in
-#include <llvm/IR/Module.h>
-#include <llvm/LinkAllPasses.h>
-#include <llvm/Option/Arg.h>
-#include <llvm/Option/ArgList.h>
-#include <llvm/Option/OptTable.h>
-#include <llvm/Support/ErrorHandling.h>
-#include <llvm/Support/ManagedStatic.h>
-#include <llvm/Support/Signals.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Support/Timer.h>
-#include <llvm/Support/raw_ostream.h>
+#include "clang/Basic/DiagnosticOptions.h"
+#include "clang/CodeGen/CodeGenAction.h"
+#include "clang/Driver/Compilation.h"
+#include "clang/Driver/Driver.h"
+#include "clang/Driver/Tool.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/CompilerInvocation.h"
+#include "clang/Frontend/FrontendDiagnostic.h"
+#include "clang/Frontend/TextDiagnosticPrinter.h"
+#include "llvm/ADT/SmallString.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/Orc/CompileUtils.h"
+#include "llvm/ExecutionEngine/Orc/IRCompileLayer.h"
+#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+#include "llvm/ExecutionEngine/SectionMemoryManager.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Mangler.h"
+#include "llvm/IR/Module.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Host.h"
+#include "llvm/Support/ManagedStatic.h"
+#include "llvm/Support/Path.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Target/TargetMachine.h"
 
 #include "header_resource.hpp"
 #include "ngraph/codegen/compiler.hpp"
@@ -69,6 +65,7 @@
 #define USE_BUILTIN
 
 using namespace clang;
+using namespace clang::driver;
 using namespace llvm;
 using namespace std;
 using namespace ngraph;
@@ -168,9 +165,8 @@ void codegen::CompilerCore::initialize()
 {
     m_extra_search_path_list.clear();
 
-    InitializeNativeTarget();
-    LLVMInitializeNativeAsmPrinter();
-    LLVMInitializeNativeAsmParser();
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
 
     // Prepare compilation arguments
     vector<const char*> args;
