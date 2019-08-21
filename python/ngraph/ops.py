@@ -86,11 +86,11 @@ def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, s
     The operation is the equivalent with the following transformation of the input tensor
     :code:`data` of shape [N, C, H, W]:
 
-    :code:`data'` = reshape(:code:`data`, [N, group, C / group, H * W])
+    :code:`data_reshaped` = reshape(:code:`data`, [N, group, C / group, H * W])
 
-    :code:`data''` = transpose(:code:`data'`, [0, 2, 1, 3])
+    :code:`data_trnasposed` = transpose(:code:`data_reshaped`, [0, 2, 1, 3])
 
-    :code:`output` = reshape(:code:`data''`, [N, C, H, W])
+    :code:`output` = reshape(:code:`data_trnasposed`, [N, C, H, W])
 
     For example:
 
@@ -121,25 +121,13 @@ def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, s
     :param axis: Channel dimension index in the data tensor.
                  A negative value means that the index should be calculated
                  from the back of the input data shape.
-    :param group: Number of groups the channel dimension specified by axis should be split into.
+    :param group:The channel dimension specified by the axis parameter
+                 should be split into this number of groups.
     :param name: Optional output node name.
-    :return: The new node performing a permutation on data in the channel dimension of the input tensor.
+    :return: The new node performing a permutation on data in the channel dimension
+             of the input tensor.
     """
     return ShuffleChannels(data, axis, groups)
-
-
-@nameable_op
-def squared_difference(x1, x2, name=None):  # type: (Node, Node, str) -> Node
-    """Perform an element-wise squared difference between two tensors.
-
-    .. math:: y[i] = (x_1[i] - x_2[i])^2
-
-    :param x1: The node with first input tensor.
-    :param x2: The node with second input tensor.
-    :param name: Optional new name for output node.
-    :return: The new node performing a squared difference between two tensors.
-    """
-    return SquaredDifference(x1, x2)
 
 
 @nameable_op
@@ -147,9 +135,9 @@ def squeeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
     """Perform squeeze operation on input tensor.
 
     Remove single-dimensional entries from the shape of a tensor.
-    Takes a parameter axes with a list of axes to squeeze.
-    If axes is not provided, all the single dimensions will be removed from the shape.
-    If an axis is selected with shape entry not equal to one, an error is raised.
+    Takes a parameter :code:`axes` with a list of axes to squeeze.
+    If :code:`axes` is not provided, all the single dimensions will be removed from the shape.
+    If an :code:`axis` is selected with shape entry not equal to one, an error is raised.
 
 
     For example:
@@ -617,6 +605,20 @@ def logical_or(left_node, right_node, name=None):  # type: (NodeInput, NodeInput
 def logical_not(node, name=None):  # type: (Node, str) -> Node
     """Return node which applies logical negation to the input node elementwise."""
     return Not(node)
+
+
+@binary_op
+def squared_difference(x1, x2, name=None):  # type: (Node, Node, str) -> Node
+    """Perform an element-wise squared difference between two tensors.
+
+    .. math:: y[i] = (x_1[i] - x_2[i])^2
+
+    :param x1: The node with first input tensor.
+    :param x2: The node with second input tensor.
+    :param name: Optional new name for output node.
+    :return: The new node performing a squared difference between two tensors.
+    """
+    return SquaredDifference(x1, x2)
 
 
 # Extend Node class to support binary operators
