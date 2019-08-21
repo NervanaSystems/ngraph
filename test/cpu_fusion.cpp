@@ -31,7 +31,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -3245,7 +3244,7 @@ TEST(cpu_quant_fusion, qconcat)
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
     // Expect Concat2 -- Concat6 to be fused and not Concat7
-    ASSERT_EQ(count_ops_of_type<op::QuantizedConcat>(cpu_f2), 5);
+    ASSERT_EQ(count_ops_of_type<op::Concat>(cpu_f2), 6);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 

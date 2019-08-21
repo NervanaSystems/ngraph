@@ -41,7 +41,6 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
@@ -2272,7 +2271,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
                       callback);
 }
 
-// {Dequantize}* + Concat -> QuantizedConcat + Dequantize
+// {Dequantize}* + Concat -> Concat + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
 {
     Shape shape{2, 2, 1, 1};
@@ -2304,14 +2303,14 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
             // ensure dequant scales are same
             if (!ngraph::compare_constants(arg->get_argument(1), dq_m->get_argument(1)))
             {
-                NGRAPH_DEBUG << "QuantizedConcat: Dequantize scale must be same";
+                NGRAPH_DEBUG << "Concat: Dequantize scale must be same";
                 return false;
             }
 
             new_args.push_back(arg->get_argument(0));
         }
-        auto concat_n = std::make_shared<ngraph::op::QuantizedConcat>(
-            new_args, concat_m->get_concatenation_axis());
+        auto concat_n =
+            std::make_shared<ngraph::op::Concat>(new_args, concat_m->get_concatenation_axis());
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(concat_n,
                                                              dq_m->get_argument(1),
                                                              dq_m->get_argument(2),

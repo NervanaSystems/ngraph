@@ -34,7 +34,6 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
@@ -2523,23 +2522,6 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConcat)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        vector<memory::desc> i_mds;
-                        vector<memory::desc> o_mds;
-                        ConcatLayout<ngraph::op::QuantizedConcat>(node, i_mds, o_mds);
-                        node = insert_input_conversions(external_function, node, i_mds);
-                        set_output_layouts(node, o_mds);
-                    }
-                    else
-                    {
-                        set_native_layouts(external_function, node);
-                    }
-                }
-
-                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Lstm)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -2708,8 +2690,6 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolutionBias>},
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::DeconvolutionBias>},
-    {TI(ngraph::op::QuantizedConcat),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConcat>},
     {TI(ngraph::op::QuantizedDotBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedDotBias>},
     {TI(ngraph::op::QuantizedMatmul),
