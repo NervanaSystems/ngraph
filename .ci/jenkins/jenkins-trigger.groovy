@@ -25,7 +25,7 @@
 String  PR_URL = CHANGE_URL
 String  PR_COMMIT_AUTHOR = CHANGE_AUTHOR
 String  PR_TARGET = CHANGE_TARGET
-String  PR_LABEL = CHANGE_LABEL
+//String  PR_LABEL = CHANGE_LABEL
 String  JENKINS_BRANCH = "aslepko/ci"
 Integer TIMEOUTTIME = "3600"
 // BRANCH parameter is no loner needed
