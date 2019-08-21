@@ -743,7 +743,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Add:
         {
-            node = make_shared<op::Add>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Add>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::All:
@@ -759,7 +759,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::And:
         {
-            node = make_shared<op::And>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::And>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Any:
@@ -1099,7 +1099,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             bool pythondiv = get_or_default(node_js, "pythondiv", true);
             node = make_shared<op::Divide>(
-                args[0], args[1], pythondiv, read_auto_broadcast(node_js, "autob"));
+                args[0], args[1], pythondiv, read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Dot:
@@ -1180,7 +1180,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Equal:
         {
-            node = make_shared<op::Equal>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Equal>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Erf:
@@ -1252,13 +1252,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Greater:
         {
             node =
-                make_shared<op::Greater>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+                make_shared<op::Greater>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::GreaterEq:
         {
             node =
-                make_shared<op::GreaterEq>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+                make_shared<op::GreaterEq>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::GRN:
@@ -1344,12 +1344,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
         case OP_TYPEID::Less:
         {
-            node = make_shared<op::Less>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Less>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::LessEq:
         {
-            node = make_shared<op::LessEq>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::LessEq>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Log:
@@ -1463,7 +1463,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Maximum:
         {
             node =
-                make_shared<op::Maximum>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+                make_shared<op::Maximum>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Min:
@@ -1475,13 +1475,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Minimum:
         {
             node =
-                make_shared<op::Minimum>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+                make_shared<op::Minimum>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Multiply:
         {
             node =
-                make_shared<op::Multiply>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+                make_shared<op::Multiply>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::MVN:
@@ -1509,7 +1509,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::NotEqual:
         {
             node =
-                make_shared<op::NotEqual>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+                make_shared<op::NotEqual>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Not:
@@ -1526,7 +1526,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Or:
         {
-            node = make_shared<op::Or>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Or>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Pad:
@@ -1576,7 +1576,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Power:
         {
-            node = make_shared<op::Power>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Power>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::PRelu:
@@ -1867,7 +1867,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Subtract:
         {
             node =
-                make_shared<op::Subtract>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+                make_shared<op::Subtract>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Sum:
@@ -1917,7 +1917,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Xor:
         {
-            node = make_shared<op::Xor>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Xor>(args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::UnknownOp:
@@ -2101,7 +2101,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Add*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2132,7 +2132,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::And*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2334,7 +2334,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["pythondiv"] = tmp->is_pythondiv();
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2379,7 +2379,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Equal*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2435,7 +2435,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Greater*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2444,7 +2444,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::GreaterEq*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2502,7 +2502,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Less*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2511,7 +2511,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::LessEq*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2567,7 +2567,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Maximum*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2582,7 +2582,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Minimum*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2591,7 +2591,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Multiply*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2618,7 +2618,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::NotEqual*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2636,7 +2636,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Or*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2686,7 +2686,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Power*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2875,7 +2875,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Subtract*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2915,7 +2915,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Xor*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
