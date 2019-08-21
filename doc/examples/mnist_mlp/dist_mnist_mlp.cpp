@@ -227,11 +227,13 @@ int main(int argc, char* argv[])
     auto t_softmax = make_output_tensor(backend, softmax, 0);
 
     // Train
-    // X, Y, learning_rate, W0, b0, W1, b1 -> loss, softmax, W0_next, b0_next, W1_next, b1_next
+    // X, Y, learning_rate, W0, b0, W1, b1
+    //    -> loss, softmax, W0_next, b0_next, W1_next, b1_next
     NodeMap train_node_map;
     auto train_function = clone_function(
         Function(
-            OutputVector{loss, softmax, W0_next, b0_next, W1_next, b1_next},
+            OutputVector{
+                loss, softmax, W0_next, b0_next, W1_next, b1_next},
             ParameterVector{X, Y, N, learning_rate, W0, b0, W1, b1}),
         train_node_map);
     auto train_exec = backend->compile(train_function);
@@ -239,9 +241,10 @@ int main(int argc, char* argv[])
     // Plain inference
     // X, W0, b0, W1, b1 -> softmax
     NodeMap inference_node_map;
-    auto inference_function = clone_function(
-        Function(OutputVector{softmax}, ParameterVector{X, W0, b0, W1, b1}),
-        inference_node_map);
+    auto inference_function =
+        clone_function(Function(OutputVector{softmax},
+                                ParameterVector{X, W0, b0, W1, b1}),
+                       inference_node_map);
     auto inference_exec = backend->compile(inference_function);
 
     set_scalar(t_learning_rate, .03f);
