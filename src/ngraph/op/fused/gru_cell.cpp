@@ -181,7 +181,8 @@ NodeVector op::GRUCell::decompose_op() const
     // f, g  - are activation functions
     // zt = f(Xt*(Wz^T) + Ht-1*(Rz^T) + Wbz + Rbz)
     // rt = f(Xt*(Wr^T) + Ht-1*(Rr^T) + Wbr + Rbr)
-    // ht = g(Xt*(Wh^T) + (rt (.) Ht-1)*(Rh^T) + Rbh + Wbh) # default, when linear_before_reset := false
+    // ht = g(Xt*(Wh^T) + (rt (.) Ht-1)*(Rh^T) + Rbh + Wbh) # when linear_before_reset := false
+    //                                                      # (default)
     // ht = g(Xt*(Wh^T) + (rt (.) (Ht-1*(Rh^T) + Rbh)) + Wbh) # when linear_before_reset := true
     // Ht = (1 - zt) (.) ht + zt (.) Ht-1
     // -------------------

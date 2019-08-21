@@ -70,7 +70,8 @@ namespace ngraph
             /// \brief      Constructs LSTMCell node.
             ///
             /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W                 The weight tensor with shape: [4*hidden_size, input_size].
+            /// \param[in]  W                 The weight tensor with shape: [4*hidden_size,
+            ///                                                              input_size].
             /// \param[in]  R                 The recurrence weight tensor with shape:
             ///                               [4*hidden_size, hidden_size].
             /// \param[in]  H_t               The hidden state tensor at current time step with
@@ -104,7 +105,8 @@ namespace ngraph
             /// \brief      Constructs LSTMCell node.
             ///
             /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W                 The weight tensor with shape: [4*hidden_size, input_size].
+            /// \param[in]  W                 The weight tensor with shape: [4*hidden_size,
+            ///                                                              input_size].
             /// \param[in]  R                 The recurrence weight tensor with shape:
             ///                               [4*hidden_size, hidden_size].
             /// \param[in]  H_t               The hidden state tensor at current time step with
@@ -112,7 +114,8 @@ namespace ngraph
             /// \param[in]  C_t               The cell state tensor at current time step with
             ///                               shape: [batch_size, hidden_size].
             /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
-            /// \param[in]  B                 The bias tensor for input gate with shape: [8*hidden_size].
+            /// \param[in]  B                 The bias tensor for input gate with shape:
+            ///                               [8*hidden_size].
             /// \param[in]  P                 The weight tensor for peepholes with shape:
             ///                               [3*hidden_size] - 3 equals to only iof gates.
             /// \param[in]  activations       The vector of activation functions used inside
