@@ -63,6 +63,7 @@ namespace ngraph
 {
     namespace test
     {
+        // clang-format off
         /// \brief Determine distance between two f32 numbers
         /// \param a First number to compare
         /// \param b Second number to compare
@@ -83,8 +84,10 @@ namespace ngraph
         ///
         /// This function uses hard-coded value of 8 bit exponent_bits, so it's only valid for
         /// bfloat and f32.
+        // clang-format on
         uint32_t float_distance(float a, float b, float min_signal = 0.0f);
 
+        // clang-format off
         /// \brief Determine distance between two f64 numbers
         /// \param a First number to compare
         /// \param b Second number to compare
@@ -102,8 +105,10 @@ namespace ngraph
         /// double (s1, e11, m52) has 52 + 1 = 53 bits of mantissa or bit_precision
         ///
         /// This function uses hard-coded value of 11 bit exponent_bits, so it's only valid for f64.
+        // clang-format on
         uint64_t float_distance(double a, double b, double min_signal = 0.0);
 
+        // clang-format off
         /// \brief Check if the two f32 numbers are close
         /// \param a First number to compare
         /// \param b Second number to compare
@@ -125,11 +130,13 @@ namespace ngraph
         ///
         /// This function uses hard-coded value of 8 bit exponent_bits, so it's only valid for
         /// bfloat and f32.
+        // clang-format on
         bool close_f(float a,
                      float b,
                      int tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS,
                      float min_signal = 0.0f);
 
+        // clang-format off
         /// \brief Check if the two f64 numbers are close
         /// \param a First number to compare
         /// \param b Second number to compare
@@ -148,6 +155,7 @@ namespace ngraph
         /// double (s1, e11, m52) has 52 + 1 = 53 bits of mantissa or bit_precision
         ///
         /// This function uses hard-coded value of 11 bit exponent_bits, so it's only valid for f64.
+        // clang-format on
         bool close_f(double a,
                      double b,
                      int tolerance_bits = DEFAULT_DOUBLE_TOLERANCE_BITS,

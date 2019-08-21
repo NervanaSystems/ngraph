@@ -93,7 +93,7 @@ namespace ngraph
 
                     if (indices_rank == 0)
                     {
-//TODO Enable this if compiler issue with CODEGEN is fixed or DEX needs it.
+// TODO Enable this if compiler issue with CODEGEN is fixed or DEX needs it.
 #if 0
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -159,7 +159,8 @@ namespace ngraph
                             Eigen::array<Eigen::Index, Rank1> in_extents, in_offsets;
                             Eigen::array<Eigen::Index, Rank2> out_extents, out_offsets;
                             std::vector<int> indices_before_axis(axis);
-                            // indices_before_axis depends on inputs_shape[0,..., axis-1] and i / num_indices.
+                            // indices_before_axis depends on inputs_shape[0,..., axis-1] and i /
+                            // num_indices.
                             // if axis is 0, indices_before_axis is empty.
                             get_indices(inputs_shape, i / num_indices, indices_before_axis, axis);
                             std::vector<int> indices_from_indices_arg(indices_rank);
@@ -195,9 +196,10 @@ namespace ngraph
                             in_offsets[axis] = indices_ptr[k];
 
                             // indices_from_indices_arg depends on indices_shape and k.
-                            // suppose the inputs has shape {3, 3, 3}, indices has shape {2, 2}, and axis is 1,
-                            // the output would have shape {3, 2, 2, 3} and
-                            // indices_from_indices_arg would contain indices at position 1 and 2 for output slice offsets.
+                            // suppose the inputs has shape {3, 3, 3}, indices has shape {2, 2}, and
+                            // axis is 1, the output would have shape {3, 2, 2, 3} and
+                            // indices_from_indices_arg would contain indices at position 1 and 2
+                            // for output slice offsets.
                             get_indices(indices_shape, k, indices_from_indices_arg, indices_rank);
                             for (int j = 0; j < indices_rank; j++)
                             {

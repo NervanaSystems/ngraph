@@ -96,7 +96,7 @@ vector<string> open_for_loops(CodeWriter& writer, const Shape& top, const Shape&
 
     return index_vars;
 }
-//close the for loops created by open_for_loops
+// close the for loops created by open_for_loops
 void close_for_loops(CodeWriter& writer, const vector<string>& index_vars)
 {
     for (size_t i = index_vars.size(); i-- > 0;)
