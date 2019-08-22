@@ -60,7 +60,7 @@ timestamps {
         echo "Calling ngraph-ci-premerge.groovy"
         def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
 
-        ngraphCIPreMerge(PR: 'true',
+        ngraphCIPreMerge(premerge: 'true',
                          prURL: PR_URL,
                          prTitle: PR_TITLE,
                          prTarget: PR_TARGET,
