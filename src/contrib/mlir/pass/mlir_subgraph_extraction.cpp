@@ -47,7 +47,7 @@ using namespace ngraph::pass;
 #define TI(x) std::type_index(typeid(x))
 
 // Maximum depth to check for cycles. If exceeded, we conservatively assume a cycle.
-#define MAX_CYCLE_DEPTH 10
+#define MAX_CYCLE_DEPTH 20
 
 bool check_fwd_cycles(ngraph::Node *root, std::deque<ngraph::Node*>& stack);
 
@@ -315,13 +315,20 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
         NGRAPH_UNREACHABLE("Function contains cycles after subgraph constructions");
     }
 
-    // CK output nodes shouldn't have any users
+    
     for (auto& node : ck_nodes)
     {
         auto ck_node = std::static_pointer_cast<CompiledKernel>(node);
+        auto& node_list = ck_node->get_node_list();
+
+        // CK output nodes shouldn't have any users outside the sub-graph, 
+        // they are all moved to the CK node instead
         for (auto& ck_output : ck_node->get_kernel_outputs())
         {
-            NGRAPH_CHECK(ck_output->get_users().empty(), "CK output nodes shouldn't have any users");
+            for (auto& user : ck_output->get_users())
+            {
+                NGRAPH_CHECK(std::find(node_list.begin(), node_list.end(), user) != node_list.end(), "CK output nodes users should be in the sub-graph");
+            }
         }
         
         // Any input to CK must also have at least one user in the sub-graph body
@@ -330,7 +337,6 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
             bool found = false;
             for (auto& user: arg->get_users())
             {
-                auto& node_list = ck_node->get_node_list();
                 found = (std::find(node_list.begin(), node_list.end(), user) != node_list.end());
                 if (found)
                 {
