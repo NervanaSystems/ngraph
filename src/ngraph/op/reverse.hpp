@@ -22,57 +22,62 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Axis-reverse operation.
-        ///
-        /// Reverses the direction of zero or more axes in a tensor, where "reversing" an axis means that at the output tensor.
-        ///
-        /// ## Parameters
-        ///
-        /// |                 | Description              |
-        /// | --------------- | ------------------------ |
-        /// | `reversed_axes` | The axes to be reversed. |
-        ///
-        /// ## Inputs
-        ///
-        /// |       | Type                              | Description                            |
-        /// | ----- | --------------------------------- | -------------------------------------- |
-        /// | `arg` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any type and shape. |
-        ///
-        /// ## Output
-        ///
-        /// | Type                   | Description                                                                                                                                                               |
-        /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-        /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg}[j_1,\dots,j_n]\f$ and \f$j_k = d_k - i_k - 1\f$ if axis \f$k\f$ is in the reverse set; else \f$j_k = i_k\f$. |
-        class Reverse : public Op
+        namespace v0
         {
-        public:
-            NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
-            Reverse() = default;
-            /// \brief Constructs a reverse operation.
+            /// \brief Axis-reverse operation.
             ///
-            /// \param arg The input tensor, some of whose axes are to be reversed.
-            /// \param reversed_axes The axes to reverse.
-            Reverse(const Output<Node>& arg, const AxisSet& reversed_axes);
-
-            void validate_and_infer_types() override;
-
-            virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
-
-            /// \return The set of axes to reverse.
-            const AxisSet& get_reversed_axes() const { return m_reversed_axes; }
-            void set_reversed_axes(const AxisSet& reversed_axes)
+            /// Reverses the direction of zero or more axes in a tensor, where "reversing" an axis means that at the output tensor.
+            ///
+            /// ## Parameters
+            ///
+            /// |                 | Description              |
+            /// | --------------- | ------------------------ |
+            /// | `reversed_axes` | The axes to be reversed. |
+            ///
+            /// ## Inputs
+            ///
+            /// |       | Type                              | Description                            |
+            /// | ----- | --------------------------------- | -------------------------------------- |
+            /// | `arg` | \f$E[d_1,\dots,d_n]~(n \geq 0)\f$ | An input tensor of any type and shape. |
+            ///
+            /// ## Output
+            ///
+            /// | Type                   | Description                                                                                                                                                               |
+            /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+            /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg}[j_1,\dots,j_n]\f$ and \f$j_k = d_k - i_k - 1\f$ if axis \f$k\f$ is in the reverse set; else \f$j_k = i_k\f$. |
+            class Reverse : public Op
             {
-                m_reversed_axes = reversed_axes;
-            }
+            public:
+                NGRAPH_API
+                static const std::string type_name;
+                const std::string& description() const override { return type_name; }
+                Reverse() = default;
+                /// \brief Constructs a reverse operation.
+                ///
+                /// \param arg The input tensor, some of whose axes are to be reversed.
+                /// \param reversed_axes The axes to reverse.
+                Reverse(const Output<Node>& arg, const AxisSet& reversed_axes);
 
-        protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override;
+                void validate_and_infer_types() override;
 
-            AxisSet m_reversed_axes;
-        };
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The set of axes to reverse.
+                const AxisSet& get_reversed_axes() const { return m_reversed_axes; }
+                void set_reversed_axes(const AxisSet& reversed_axes)
+                {
+                    m_reversed_axes = reversed_axes;
+                }
+
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const NodeVector& deltas) override;
+
+                AxisSet m_reversed_axes;
+            };
+        }
+
+        using ngraph::op::v0::Reverse;
     }
 }
