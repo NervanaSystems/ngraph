@@ -59,7 +59,18 @@ timestamps {
         
         echo "Calling ngraph-ci-premerge.groovy"
         def ngraphCIPreMerge = load("${JENKINS_DIR}/ngraph-ci-premerge.groovy")
-        ngraphCIPreMerge(PR_URL, PR_COMMIT_AUTHOR, JENKINS_BRANCH, TIMEOUTTIME, PR_TARGET, PR_TITLE)
+
+        ngraphCIPreMerge(PR: 'true',
+                         prURL: PR_URL,
+                         prTitle: PR_TITLE,
+                         prTarget: PR_TARGET,
+                         prAuthor: PR_COMMIT_AUTHOR,
+                         jenkinsBranch: JENKINS_BRANCH,
+                         timetoutTime: TIMEOUTTIME,
+                         useMBPipelineSCM: 'true',
+                         checkoutBranch: '-UNDEFINED-BRANCH-'
+                        )
+                         
         echo "ngraph-ci-premerge.groovy completed"
 
     }  // End:  node
