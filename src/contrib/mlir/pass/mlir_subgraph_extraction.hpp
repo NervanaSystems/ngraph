@@ -123,7 +123,10 @@ namespace ngraph
                               unsigned depth = 0);
 
         private:
-            static const std::set<std::type_index> m_supported_ops;
+            void build_subgraphs(std::shared_ptr<Function> func);
+            NodeVector build_ck_nodes(std::shared_ptr<Function> func);
+
+            void sanity_check(std::shared_ptr<Function> func, NodeVector &ck_nodes);
 
         private:
             using IDGraphMap = std::unordered_map<int, MLIRSubgraph>;
@@ -132,6 +135,7 @@ namespace ngraph
             NodeGraphMap m_node_to_graph;
             // Mutex over sub-graph IDs
             std::mutex m_subgraph_mutex;
+            static const std::set<std::type_index> m_supported_ops;
         };
     }
 }

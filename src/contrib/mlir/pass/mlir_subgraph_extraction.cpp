@@ -121,6 +121,18 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
 // - CK will internally have lists record graph nodes, and graph output nodes.
 bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 {
+    build_subgraphs(func);
+    auto ck_nodes = build_ck_nodes(func);
+
+#ifdef NGRAPH_DEBUG_ENABLE
+    sanity_check(func, ck_nodes);
+#endif
+
+    return true;
+}
+
+void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
+{
     NGRAPH_DEBUG << "[CK Extract] Construct sub-graphs" << std::endl;
     for (auto op : func->get_ordered_ops())
     {
@@ -217,8 +229,11 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
                                                             false /* ignore output duplicates */));
         sg.add_outputs(outputs);
     }
+}
 
-    std::vector<std::shared_ptr<CompiledKernel>> ck_nodes;
+ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Function> func)
+{
+    NodeVector ck_nodes;
     NGRAPH_DEBUG << "[CK Extract] Construct CK nodes" << std::endl;
     // attach CK node to each sub-graph.
     for (auto it : m_id_to_graph)
@@ -260,11 +275,12 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
     // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
     // Do this after all CK nodes are constructed since they add new edges in the graph (CK inputs)
-    for (auto ck : ck_nodes)
+    for (auto node : ck_nodes)
     {
-        // nodes.
+        auto ck = std::static_pointer_cast<CompiledKernel>(node);
+
         auto& outputs_vector = ck->get_kernel_outputs();
-        auto& nodes = ck->get_node_list();
+        auto& node_list = ck->get_node_list();
         for (size_t i = 0, end = outputs_vector.size(); i < end; ++i)
         {
             auto& output_descs = outputs_vector[i]->get_outputs();
@@ -276,56 +292,54 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
             for (descriptor::Input* in_desc : input_descs)
             {
-                if (std::find(nodes.begin(), nodes.end(), in_desc->get_node()) == nodes.end())
+                if (std::find(node_list.begin(), node_list.end(), in_desc->get_node()) == node_list.end())
                 {
                     in_desc->replace_output(ck, i);
                 }
             }
         }
     }
-
-    // Check for cycles
-    for (auto node : func->get_parameters())
-    {
-        std::deque<Node*> stack;
-        check_fwd_cycles(node.get(), stack);
-    }
-    
-                
-                //pass::VisualizeTree vt("CK_output.svg");
-                //vt.set_ops_to_details(get_state().get_visualize_tree_ops_map());
-                //std::vector<std::shared_ptr<Function>> vec{func};
-                //vt.run_on_module(vec);
-    return true;
+    return ck_nodes;
 }
 
-
-
-bool check_fwd_cycles(ngraph::Node* root, std::deque<ngraph::Node*> &stack)
+void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, NodeVector &ck_nodes)
 {
-    stack.push_back(root);
-    
-    for (auto& output : root->outputs())
+    NodeVector cycles;
+    if (check_for_cycles(func, cycles))
     {
-        for (auto& input: output.get_target_inputs())
+        NGRAPH_CHECK(cycles.size() != 0, "Empty cycle ?");
+        for (auto& node : cycles)
         {
-            ngraph::Node* node = input.get_node();
-            if (std::find(stack.begin(), stack.end(), node) != stack.end())
+            NGRAPH_DEBUG << node;
+        }
+        NGRAPH_UNREACHABLE("Function contains cycles after subgraph constructions");
+    }
+
+    // CK output nodes shouldn't have any users
+    for (auto& node : ck_nodes)
+    {
+        auto ck_node = std::static_pointer_cast<CompiledKernel>(node);
+        for (auto& ck_output : ck_node->get_kernel_outputs())
+        {
+            NGRAPH_CHECK(ck_output->get_users().empty(), "CK output nodes shouldn't have any users");
+        }
+        
+        // Any input to CK must also have at least one user in the sub-graph body
+        for (auto& arg : ck_node->get_arguments())
+        {
+            bool found = false;
+            for (auto& user: arg->get_users())
             {
-                NGRAPH_DEBUG << "CYCLE FOUND";
-                NGRAPH_DEBUG << *node;
-                for (auto it : stack)
+                auto& node_list = ck_node->get_node_list();
+                found = (std::find(node_list.begin(), node_list.end(), user) != node_list.end());
+                if (found)
                 {
-                    NGRAPH_DEBUG << *it;
+                    break;
                 }
-                return true;
             }
-            if (check_fwd_cycles(node, stack))
-                return true;;
+            NGRAPH_CHECK(found, "CK input is not input to sub-graph");
         }
     }
-    stack.pop_back();
-    return false;
 }
 
 

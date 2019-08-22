@@ -653,3 +653,44 @@ std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
 
     return result;
 }
+
+static bool check_fwd_cycles(std::shared_ptr<ngraph::Node> node, std::deque<std::shared_ptr<ngraph::Node>> &path, 
+                              std::unordered_set<std::shared_ptr<ngraph::Node>> &path_set, ngraph::NodeVector &cycle_nodes)
+{
+    path.push_back(node);
+    path_set.insert(node);
+    for (auto& arg : node->get_users())
+    {
+        if (path_set.find(arg) != path_set.end())
+        {
+            for (auto it : path)
+            {
+                cycle_nodes.push_back(it);
+            }
+            // last node
+            cycle_nodes.push_back(arg);
+            return true;
+        }
+        if (check_fwd_cycles(arg, path, path_set, cycle_nodes))
+        {
+            return true;
+        }
+    }
+    path_set.erase(path.back());
+    path.pop_back();
+    return false;
+}
+
+bool ngraph::check_for_cycles(std::shared_ptr<ngraph::Function> func, ngraph::NodeVector& cycle_nodes)
+{
+    bool result = false;
+    
+    for (auto param : func->get_parameters())
+    {
+        std::deque<std::shared_ptr<Node>> path;
+        // mirror of path stack for faster cycle check
+        std::unordered_set<std::shared_ptr<Node>> path_set;
+        result |= check_fwd_cycles(param, path, path_set, cycle_nodes);
+    }
+    return result;
+}
