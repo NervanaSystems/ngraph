@@ -38,7 +38,8 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
-
+#include "ngraph/pass/visualize_tree.hpp"
+#include <stack>
 using namespace ngraph::descriptor;
 using namespace ngraph::op;
 using namespace ngraph::pass;
@@ -46,7 +47,9 @@ using namespace ngraph::pass;
 #define TI(x) std::type_index(typeid(x))
 
 // Maximum depth to check for cycles. If exceeded, we conservatively assume a cycle.
-#define MAX_CYCLE_DEPTH 100
+#define MAX_CYCLE_DEPTH 50
+
+bool check_fwd_cycles(ngraph::Node *root, std::deque<ngraph::Node*>& stack);
 
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
 
@@ -151,30 +154,33 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         }
         if (subgraph_ids.size() == 0)
         {
-            NGRAPH_DEBUG << "[CK Extract] Start new sub-graph " << std::endl;
+            
             // we couldn't find any predecessor sub-graphs to extend with this node
             // create a new sub-graph
             MLIRSubgraph sg = MLIRSubgraph::create(this);
             sg.add_inputs(inputs);
             sg.add_node(op);
             add_subgraph(sg);
+            NGRAPH_DEBUG << "   [CK Extract] Start new sub-graph " << sg.get_id() << " " << std::endl;
         }
         else
         {
             // we have sub-graphs.
             // check if adding this node to the sub-graph will create a cycle in the DAG
-            NGRAPH_DEBUG << "[CK Extract] Extending sub-graph. Check for cycles " << std::endl;
+            NGRAPH_DEBUG << "   [CK Extract] Extending sub-graph. Check for cycles " << std::endl;
             if (!check_cycles(op, subgraph_ids))
             {
-                NGRAPH_DEBUG << "[CK Extract] Merging subgraphs";
+                NGRAPH_DEBUG << "       [CK Extract] Merging subgraphs ";
                 // merge sub-graphs if needed
                 std::unordered_set<int>::iterator it = subgraph_ids.begin();
                 int sg_id = *it;
                 MLIRSubgraph& first_subgraph = get_subgraph(sg_id);
                 NGRAPH_CHECK(first_subgraph.get_id() == sg_id);
+                NGRAPH_DEBUG << "       Graph ID: " << sg_id;
                 while (++it != subgraph_ids.end())
                 {
                     sg_id = *it;
+                    NGRAPH_DEBUG << "       Graph ID: " << sg_id;
                     MLIRSubgraph& subgraph = get_subgraph(sg_id);
                     NGRAPH_CHECK(subgraph.get_id() == sg_id);
                     first_subgraph.merge(subgraph);
@@ -187,7 +193,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
             {
                 // we have a cycle, start a new sub-graph
                 MLIRSubgraph sg = MLIRSubgraph::create(this);
-                NGRAPH_DEBUG << "[CK Extract] Cycle found. Start a new subgraph";
+                NGRAPH_DEBUG << "       [CK Extract] Cycle found. Start a new subgraph " << sg.get_id();
                 // use all predecessors as graph inputs
                 NodeVector inputs = op->get_arguments();
                 sg.add_inputs(inputs);
@@ -228,23 +234,24 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         NodeVector nodes_vector(nodes_list.begin(), nodes_list.end());
         auto ck = std::make_shared<CompiledKernel>(nodes_vector, outputs_vector, inputs_vector);
 
+        
         NGRAPH_DEBUG << "[CK Extract] Graph ID = " << sg.get_id() << std::endl;
-        NGRAPH_DEBUG << "[CK Extract] Graph Nodes: " << std::endl;
+        NGRAPH_DEBUG << "   [CK Extract] Graph Nodes: " << std::endl;
         for (auto node : nodes)
         {
-            NGRAPH_DEBUG << "[CK Extract] " << *node << std::endl;
+            NGRAPH_DEBUG << "   [CK Extract] " << *node << std::endl;
         }
 
-        NGRAPH_DEBUG << "[CK Extract] Input Nodes: " << std::endl;
+        NGRAPH_DEBUG << "   [CK Extract] Input Nodes: " << std::endl;
         for (auto node : inputs)
         {
-            NGRAPH_DEBUG << "[CK Extract] " << *node << std::endl;
+            NGRAPH_DEBUG << "   [CK Extract] " << *node << std::endl;
         }
 
-        NGRAPH_DEBUG << "[CK Extract] Output Nodes: " << std::endl;
+        NGRAPH_DEBUG << "   [CK Extract] Output Nodes: " << std::endl;
         for (auto node : outputs)
         {
-            NGRAPH_DEBUG << "[CK Extract] " << *node << std::endl;
+            NGRAPH_DEBUG << "   [CK Extract] " << *node << std::endl;
         }
 
         // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
@@ -266,10 +273,51 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
                 }
             }
         }
+        NGRAPH_DEBUG << "   [CK Extract] CK Node = " << *ck << std::endl;
     }
 
+    // Check for cycles
+    for (auto node : func->get_parameters())
+    {
+        std::deque<Node*> stack;
+        check_fwd_cycles(node.get(), stack);
+    }
+    
+                
+                //pass::VisualizeTree vt("CK_output.svg");
+                //vt.set_ops_to_details(get_state().get_visualize_tree_ops_map());
+                //std::vector<std::shared_ptr<Function>> vec{func};
+                //vt.run_on_module(vec);
     return true;
 }
+
+bool check_fwd_cycles(ngraph::Node* root, std::deque<ngraph::Node*> &stack)
+{
+    stack.push_back(root);
+    
+    for (auto& output : root->outputs())
+    {
+        for (auto& input: output.get_target_inputs())
+        {
+            ngraph::Node* node = input.get_node();
+            if (std::find(stack.begin(), stack.end(), node) != stack.end())
+            {
+                NGRAPH_DEBUG << "CYCLE FOUND";
+                NGRAPH_DEBUG << *node;
+                for (auto it : stack)
+                {
+                    NGRAPH_DEBUG << *it;
+                }
+                return true;
+            }
+            if (check_fwd_cycles(node, stack))
+                return true;;
+        }
+    }
+    stack.pop_back();
+    return false;
+}
+
 
 #define TI(x) std::type_index(typeid(x))
 
@@ -398,7 +446,21 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
             inside_subgraphs = false;
         }
     }
-    for (auto& input : node->get_arguments())
+    NodeVector node_inputs;
+    auto subgraph_id = get_subgraph_id(node);
+    // If the node is part of a sub-graph, capture all of sub-graph inputs, else only node's input
+    if (subgraph_id >= 0)
+    {
+        auto subgraph = get_subgraph(subgraph_id);
+        auto subgraph_inputs = subgraph.get_inputs();
+        node_inputs.insert(node_inputs.end(), subgraph_inputs.begin(), subgraph_inputs.end());
+    }
+    else
+    {
+        node_inputs = node->get_arguments();
+    }
+    
+    for (auto& input : node_inputs)
     {
         if (check_cycles(input, subgraph_ids, inside_subgraphs, ++depth))
             return true;

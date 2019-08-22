@@ -299,7 +299,7 @@ namespace ngraph
                 for (size_t i = 0; i < arg_count; ++i)
                 {
                     Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
-                    if (nodes_done.count(dep) == 0)
+                    if (nodes_done.count(dep) == 0 && nodes_to_emit.count(node) != 0)
                     {
                         can_add = false;
                         nodes_to_do.push(dep);
