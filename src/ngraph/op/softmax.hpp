@@ -74,7 +74,7 @@ namespace ngraph
                 ///
                 /// \param arg Node that produces the first input tensor.<br>
                 /// `[d0, ...]`
-                /// \param axis The axis positions (0-based) on which to calculate the softmax.
+                /// \param axis The axis position (0-based) on which to calculate the softmax.
                 ///
                 /// Output `[d0, ...]`
                 ///
