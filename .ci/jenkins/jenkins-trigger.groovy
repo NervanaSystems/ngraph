@@ -66,7 +66,7 @@ timestamps {
                          prTarget: PR_TARGET,
                          prAuthor: PR_COMMIT_AUTHOR,
                          jenkinsBranch: JENKINS_BRANCH,
-                         timetoutTime: TIMEOUTTIME,
+                         timeoutTime: TIMEOUTTIME,
                          useMBPipelineSCM: 'true',
                          checkoutBranch: '-UNDEFINED-BRANCH-'
                         )
