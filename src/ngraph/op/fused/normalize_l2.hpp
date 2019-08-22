@@ -39,9 +39,11 @@ namespace ngraph
             /// \brief      Constructs a Normalize operation.
             ///
             /// \param      data            - Node producing the input tensor
-            /// \param      axes            - Node indicating axes along which reduction is calculated
+            /// \param      axes            - Node indicating axes along which reduction is
+            ///                               calculated
             /// \param      eps             - The epsilon added to L2 norm.
-            /// \param      eps_mode        - Specifies how eps is combined with L2 value calculated before division
+            /// \param      eps_mode        - Specifies how eps is combined with L2 value calculated
+            ///                               before division
             ///
             NormalizeL2(const Output<Node>& data,
                         const Output<Node>& axes,
