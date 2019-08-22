@@ -1,5 +1,5 @@
 diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
-index 99970659..032dadc6 100644
+index 99970659..bf32634b 100644
 --- a/cmake/OpenMP.cmake
 +++ b/cmake/OpenMP.cmake
 @@ -28,7 +28,7 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -11,7 +11,7 @@ index 99970659..032dadc6 100644
  endif()
 
  macro(forbid_link_compiler_omp_rt)
-@@ -45,6 +45,44 @@ macro(forbid_link_compiler_omp_rt)
+@@ -45,6 +45,45 @@ macro(forbid_link_compiler_omp_rt)
      endif()
  endmacro()
 
@@ -27,10 +27,11 @@ index 99970659..032dadc6 100644
 +    # Rationale: Intel MKL comes with Intel OpenMP library which is compatible
 +    # with all libraries shipped with compilers that Intel MKL-DNN supports.
 +    get_filename_component(MKLIOMP5LIB "${MKLIOMP5LIB}" PATH)
++    message("cmake: ${CMAKE_PREFIX_PATH}")
 +    find_library(IOMP5LIB
 +                NAMES "iomp5" "iomp5md" "libiomp5" "libiomp5md"
 +#                HINTS  ${MKLIOMP5LIB} )
-+                HINTS "../../../mkl/src/ext_mkl/lib")
++                PATHS "../../../mkl/src/ext_mkl/lib")
 +    if(IOMP5LIB)
 +        message("found libiomp")
 +        forbid_link_compiler_omp_rt()
@@ -39,7 +40,7 @@ index 99970659..032dadc6 100644
 +            find_file(IOMP5DLL
 +                NAMES "libiomp5.dll" "libiomp5md.dll"
 + #               HINTS ${MKLIOMP5DLL})
-+            HINTS "../../../mkl/src/ext_mkl/lib")
++            PATHS "../../../mkl/src/ext_mkl/lib")
 +        endif()
 +        list(APPEND EXTRA_SHARED_LIBS ${IOMP5LIB})
 +    else()
@@ -56,7 +57,7 @@ index 99970659..032dadc6 100644
  if(WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
      add_definitions(/Qpar)
      add_definitions(/openmp)
-@@ -56,6 +94,7 @@ elseif(MSVC AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+@@ -56,6 +95,7 @@ elseif(MSVC AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
      list(APPEND EXTRA_SHARED_LIBS ${IOMP5LIB})
  else()
      find_package(OpenMP)
@@ -64,7 +65,7 @@ index 99970659..032dadc6 100644
      #newer version for findOpenMP (>= v. 3.9)
      if(CMAKE_VERSION VERSION_LESS "3.9" AND OPENMP_FOUND)
          if(${CMAKE_MAJOR_VERSION} VERSION_LESS "3" AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
-@@ -71,6 +110,7 @@ endif()
+@@ -71,6 +111,7 @@ endif()
 
  if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
      if (OpenMP_CXX_FOUND)
@@ -72,7 +73,7 @@ index 99970659..032dadc6 100644
          set(MKLDNN_CPU_RUNTIME_CURRENT "OMP")
          append(CMAKE_TEST_CCXX_FLAGS "${OpenMP_CXX_FLAGS}")
          append(CMAKE_EXAMPLE_CCXX_FLAGS "${OpenMP_CXX_FLAGS}")
-@@ -78,6 +118,7 @@ if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
+@@ -78,6 +119,7 @@ if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
          message(${_omp_severity} "OpenMP library could not be found. "
              "Proceeding might lead to highly sub-optimal performance.")
      endif()
