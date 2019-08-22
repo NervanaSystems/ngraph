@@ -244,14 +244,17 @@ private:
         const Node& node = *node_wrapper.get_node();
 
         size_t opset_version = node.get_opset_version();
-        if (opset_version != 0)
-        {
-            std::stringstream ss;
-            ss << "Unsupported operator version " << opset_version << " in " << node << "."
-               << std::endl
-               << "INTERPRETER backend currently only supports op set 0.";
-            throw std::runtime_error(ss.str());
-        }
+        bool is_opset_version_supported = opset_version == 0;
+        NGRAPH_CHECK(
+            is_opset_version_supported,
+            static_cast<std::ostringstream&>(
+                std::ostringstream() << "Unsupported operator version " << opset_version << " in "
+                                     << node
+                                     << "."
+                                     << std::endl
+                                     << "INTERPRETER backend currently only supports op set 0.")
+                .str()
+                .c_str());
 
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration

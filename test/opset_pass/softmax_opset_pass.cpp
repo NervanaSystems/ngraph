@@ -67,7 +67,46 @@ TEST(serialize, opset1_softmax_pass_axis_exception)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Unable to convert Softmax:0 to Softmax:1 with more then one axis."));
+            std::string("Unable to convert Softmax:0 to Softmax:1 with more than one axis."));
+    }
+    catch (...)
+    {
+        FAIL() << "Softmax pass failed for unexpected reason";
+    }
+}
+
+namespace fake_v2
+{
+    class FakeSoftmax : public op::v0::Softmax
+    {
+    public:
+        FakeSoftmax(const Output<Node>& arg, const AxisSet& axes)
+            : Softmax{arg, axes}
+        {
+            set_opset_version(2);
+        }
+    };
+}
+
+TEST(serialize, opset1_softmax_pass_incorrect_op_version)
+{
+    const AxisSet axes{2};
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto softmax_s2 = make_shared<fake_v2::FakeSoftmax>(arg, axes);
+    auto result = make_shared<op::Result>(softmax_s2);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<pass::Opset1Transformation>();
+
+    try
+    {
+        pass_manager.run_passes(f);
+        FAIL() << "Opset 1 transformation pass failed for";
+    }
+    catch (const ngraph_error& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Opset 1 transformation pass failed for"));
     }
     catch (...)
     {
