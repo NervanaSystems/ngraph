@@ -21,6 +21,7 @@
 // set these up below as global variables, so we do not need to rewrite the
 // original script -- we only need to provide this new trigger hook.
 //
+
 // Parameters which ngraph-unittest uses:
 String  PR_URL = CHANGE_URL
 String  PR_COMMIT_AUTHOR = CHANGE_AUTHOR
