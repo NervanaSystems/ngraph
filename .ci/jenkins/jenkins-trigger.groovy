@@ -22,8 +22,8 @@
 // original script -- we only need to provide this new trigger hook.
 //
 
-String  JENKINS_BRANCH = "aslepko/ci"
-Integer TIMEOUTTIME = "3600"
+String JENKINS_BRANCH = "aslepko/ci"
+String TIMEOUTTIME = "3600"
 
 // Constants
 JENKINS_DIR = '.'
