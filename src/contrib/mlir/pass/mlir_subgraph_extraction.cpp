@@ -47,7 +47,7 @@ using namespace ngraph::pass;
 #define TI(x) std::type_index(typeid(x))
 
 // Maximum depth to check for cycles. If exceeded, we conservatively assume a cycle.
-#define MAX_CYCLE_DEPTH 50
+#define MAX_CYCLE_DEPTH 10
 
 bool check_fwd_cycles(ngraph::Node *root, std::deque<ngraph::Node*>& stack);
 
@@ -218,6 +218,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         sg.add_outputs(outputs);
     }
 
+    std::vector<std::shared_ptr<CompiledKernel>> ck_nodes;
     NGRAPH_DEBUG << "[CK Extract] Construct CK nodes" << std::endl;
     // attach CK node to each sub-graph.
     for (auto it : m_id_to_graph)
@@ -234,7 +235,8 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         NodeVector nodes_vector(nodes_list.begin(), nodes_list.end());
         auto ck = std::make_shared<CompiledKernel>(nodes_vector, outputs_vector, inputs_vector);
 
-        
+        ck_nodes.push_back(ck);
+
         NGRAPH_DEBUG << "[CK Extract] Graph ID = " << sg.get_id() << std::endl;
         NGRAPH_DEBUG << "   [CK Extract] Graph Nodes: " << std::endl;
         for (auto node : nodes)
@@ -253,9 +255,16 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
         {
             NGRAPH_DEBUG << "   [CK Extract] " << *node << std::endl;
         }
+        NGRAPH_DEBUG << "   [CK Extract] CK Node = " << *ck << std::endl;
+    }
 
-        // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
+    // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
+    // Do this after all CK nodes are constructed since they add new edges in the graph (CK inputs)
+    for (auto ck : ck_nodes)
+    {
         // nodes.
+        auto& outputs_vector = ck->get_kernel_outputs();
+        auto& nodes = ck->get_node_list();
         for (size_t i = 0, end = outputs_vector.size(); i < end; ++i)
         {
             auto& output_descs = outputs_vector[i]->get_outputs();
@@ -267,13 +276,12 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
             for (descriptor::Input* in_desc : input_descs)
             {
-                if (nodes.find(in_desc->get_node()) == nodes.end())
+                if (std::find(nodes.begin(), nodes.end(), in_desc->get_node()) == nodes.end())
                 {
                     in_desc->replace_output(ck, i);
                 }
             }
         }
-        NGRAPH_DEBUG << "   [CK Extract] CK Node = " << *ck << std::endl;
     }
 
     // Check for cycles
@@ -290,6 +298,8 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
                 //vt.run_on_module(vec);
     return true;
 }
+
+
 
 bool check_fwd_cycles(ngraph::Node* root, std::deque<ngraph::Node*> &stack)
 {
