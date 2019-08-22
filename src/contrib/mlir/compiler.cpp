@@ -224,7 +224,7 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     // create builder
-    m_builder = std::make_unique<mlir::OpBuilder>(function.getBody());
+    m_builder = std::unique_ptr<mlir::OpBuilder>(new mlir::OpBuilder(function.getBody()));
     build_ng_dialect();
     m_module->push_back(function);
     if (failed(m_module->verify()))
@@ -397,7 +397,7 @@ void MLIRCompiler::optimize()
     // optimizations. This is a temporary attempt to retrieve some target information by reusing
     // LLVM TTI infra while MLIR does not have target model.
     llvm::LLVMContext llvmContext;
-    auto module = std::make_unique<llvm::Module>("test", llvmContext);
+    auto module = std::unique_ptr<llvm::Module>(new llvm::Module("test", llvmContext));
     module->setDataLayout(target_machine->createDataLayout());
     auto ttiSetupFunc = llvm::cast<llvm::Function>(
         module
