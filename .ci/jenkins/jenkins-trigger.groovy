@@ -38,15 +38,7 @@ timestamps {
         def sleeptime=0
         retry(count: 3) {
             sleep sleeptime; sleeptime = 10
-            sh "git clone -b $jenkinsBranch https://github.intel.com/AIPG/cje-algo"
-        }
-
-        try {
             sh "git clone -b $JENKINS_BRANCH https://github.intel.com/AIPG/cje-algo ."
-        } catch (e) {
-            echo "${e}"
-            println("ERROR: An error occurred during cje-algo script checkout.")
-            throw e
         }
 
         // Call the main job script.
