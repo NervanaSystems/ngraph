@@ -1,5 +1,5 @@
 diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
-index 99970659..86bb5f54 100644
+index 99970659..771c62a8 100644
 --- a/cmake/OpenMP.cmake
 +++ b/cmake/OpenMP.cmake
 @@ -28,7 +28,7 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -11,7 +11,7 @@ index 99970659..86bb5f54 100644
  endif()
 
  macro(forbid_link_compiler_omp_rt)
-@@ -45,6 +45,40 @@ macro(forbid_link_compiler_omp_rt)
+@@ -45,6 +45,42 @@ macro(forbid_link_compiler_omp_rt)
      endif()
  endmacro()
 
@@ -19,6 +19,7 @@ index 99970659..86bb5f54 100644
 +    # fast return
 +    if (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 +        set(MKLDNN_USES_INTEL_OPENMP TRUE)
++        message("fast return")
 +        return()
 +    endif()
 +
@@ -30,6 +31,7 @@ index 99970659..86bb5f54 100644
 +                NAMES "iomp5" "iomp5md" "libiomp5" "libiomp5md"
 +                HINTS  ${MKLIOMP5LIB} )
 +    if(IOMP5LIB)
++        message("found libiomp")
 +        forbid_link_compiler_omp_rt()
 +        if (WIN32)
 +            get_filename_component(MKLIOMP5DLL "${MKLIOMP5DLL}" PATH)
@@ -52,7 +54,23 @@ index 99970659..86bb5f54 100644
  if(WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
      add_definitions(/Qpar)
      add_definitions(/openmp)
-@@ -78,6 +112,7 @@ if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
+@@ -56,6 +92,7 @@ elseif(MSVC AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+     list(APPEND EXTRA_SHARED_LIBS ${IOMP5LIB})
+ else()
+     find_package(OpenMP)
++    message("find package")
+     #newer version for findOpenMP (>= v. 3.9)
+     if(CMAKE_VERSION VERSION_LESS "3.9" AND OPENMP_FOUND)
+         if(${CMAKE_MAJOR_VERSION} VERSION_LESS "3" AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
+@@ -71,6 +108,7 @@ endif()
+
+ if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
+     if (OpenMP_CXX_FOUND)
++        message("found openmp_cxx")
+         set(MKLDNN_CPU_RUNTIME_CURRENT "OMP")
+         append(CMAKE_TEST_CCXX_FLAGS "${OpenMP_CXX_FLAGS}")
+         append(CMAKE_EXAMPLE_CCXX_FLAGS "${OpenMP_CXX_FLAGS}")
+@@ -78,6 +116,7 @@ if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
          message(${_omp_severity} "OpenMP library could not be found. "
              "Proceeding might lead to highly sub-optimal performance.")
      endif()
