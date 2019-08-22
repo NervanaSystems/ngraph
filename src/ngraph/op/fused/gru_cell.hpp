@@ -152,8 +152,8 @@ namespace ngraph
             ///
             /// \brief Control whether or not apply the linear transformation.
             ///
-            /// \note The linear transformation may be applied when computing the output of hidden gate.
-            ///       It's done before multiplying by the output of the reset gate.
+            /// \note The linear transformation may be applied when computing the output of hidden
+            ///       gate. It's done before multiplying by the output of the reset gate.
             ///
             bool m_linear_before_reset;
         };
