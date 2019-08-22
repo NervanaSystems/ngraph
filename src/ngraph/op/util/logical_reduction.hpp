@@ -24,8 +24,9 @@ namespace ngraph
     {
         namespace util
         {
-            /// \brief Abstract base class for logical reduction operations, i.e., operations where chosen axes of the input tensors
-            ///        are eliminated (reduced out) by repeated application of a particular binary logical operation.
+            /// \brief Abstract base class for logical reduction operations, i.e., operations where
+            ///        chosen axes of the input tensors are eliminated (reduced out) by repeated
+            ///        application of a particular binary logical operation.
             class LogicalReduction : public Op
             {
             protected:
