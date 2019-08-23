@@ -306,7 +306,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
             for (auto& old_output: ck->outputs())
             {
                 auto inputs = old_output.get_target_inputs();
-                auto goe_node = old_output.as_single_output_node();
+                auto goe_node = old_output.as_single_output_node(false);
                 auto new_output = goe_node->output(0);
                 for (auto& input : inputs)
                 {
