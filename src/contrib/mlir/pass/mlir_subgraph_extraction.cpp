@@ -130,7 +130,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
 void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
 {
-    NGRAPH_DEBUG << "[CK Extract] Construct sub-graphs" << std::endl;
+    NGRAPH_DEBUG << "[CK Extract] Construct sub-graphs";
     for (auto op : func->get_ordered_ops())
     {
         NodeVector inputs;
@@ -145,7 +145,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
             continue;
         }
 
-        NGRAPH_DEBUG << "[CK Extract] Processing " << *op << std::endl;
+        NGRAPH_DEBUG << "[CK Extract] Processing " << *op;
         // supported op
         for (auto pred : op->get_arguments())
         {
@@ -169,14 +169,13 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
             sg.add_inputs(inputs);
             sg.add_node(op);
             add_subgraph(sg);
-            NGRAPH_DEBUG << "   [CK Extract] Start new sub-graph " << sg.get_id() << " "
-                         << std::endl;
+            NGRAPH_DEBUG << "   [CK Extract] Start new sub-graph " << sg.get_id();
         }
         else
         {
             // we have sub-graphs.
             // check if adding this node to the sub-graph will create a cycle in the DAG
-            NGRAPH_DEBUG << "   [CK Extract] Extending sub-graph. Check for cycles " << std::endl;
+            NGRAPH_DEBUG << "   [CK Extract] Extending sub-graph. Check for cycles";
             if (!check_cycles(op, subgraph_ids))
             {
                 NGRAPH_DEBUG << "       [CK Extract] Merging subgraphs ";
@@ -211,10 +210,10 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                 add_subgraph(sg);
             }
         }
-        NGRAPH_DEBUG << "[CK Extract] Node Processed " << *op << std::endl;
+        NGRAPH_DEBUG << "[CK Extract] Node Processed " << *op;
     }
 
-    NGRAPH_DEBUG << "[CK Extract] Get subgraphs output nodes" << std::endl;
+    NGRAPH_DEBUG << "[CK Extract] Get subgraphs output nodes";
     // get output nodes for each sub-graph. Do this before attaching CK nodes since we will
     // remove output edges from the sub-graphs.
     for (IDGraphMap::iterator it = m_id_to_graph.begin(); it != m_id_to_graph.end(); it++)
@@ -232,7 +231,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
 ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Function> func)
 {
     NodeVector ck_nodes;
-    NGRAPH_DEBUG << "[CK Extract] Construct CK nodes" << std::endl;
+    NGRAPH_DEBUG << "[CK Extract] Construct CK nodes";
     // attach CK node to each sub-graph.
     for (auto it : m_id_to_graph)
     {
@@ -250,25 +249,25 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
 
         ck_nodes.push_back(ck);
 
-        NGRAPH_DEBUG << "[CK Extract] Graph ID = " << sg.get_id() << std::endl;
-        NGRAPH_DEBUG << "   [CK Extract] Graph Nodes: " << std::endl;
+        NGRAPH_DEBUG << "[CK Extract] Graph ID = " << sg.get_id();
+        NGRAPH_DEBUG << "   [CK Extract] Graph Nodes: ";
         for (auto node : nodes)
         {
-            NGRAPH_DEBUG << "   [CK Extract] " << *node << std::endl;
+            NGRAPH_DEBUG << "   [CK Extract] " << *node;
         }
 
-        NGRAPH_DEBUG << "   [CK Extract] Input Nodes: " << std::endl;
+        NGRAPH_DEBUG << "   [CK Extract] Input Nodes: ";
         for (auto node : inputs)
         {
-            NGRAPH_DEBUG << "   [CK Extract] " << *node << std::endl;
+            NGRAPH_DEBUG << "   [CK Extract] " << *node;
         }
 
-        NGRAPH_DEBUG << "   [CK Extract] Output Nodes: " << std::endl;
+        NGRAPH_DEBUG << "   [CK Extract] Output Nodes: ";
         for (auto node : outputs)
         {
-            NGRAPH_DEBUG << "   [CK Extract] " << *node << std::endl;
+            NGRAPH_DEBUG << "   [CK Extract] " << *node;;
         }
-        NGRAPH_DEBUG << "   [CK Extract] CK Node = " << *ck << std::endl;
+        NGRAPH_DEBUG << "   [CK Extract] CK Node = " << *ck;
     }
 
     // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
