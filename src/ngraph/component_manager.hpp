@@ -20,7 +20,7 @@
 
 #include "ngraph/ngraph_visibility.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
-#include "ngraph/runtime/interpreter/int_visibility.hpp"
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/nop/nop_backend_visibility.hpp"
 #include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
 
