@@ -24,7 +24,8 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief DepthToSpace permutes data from the depth dimension of the input blob into spatial dimensions.
+        /// \brief DepthToSpace permutes data from the depth dimension of the input blob into
+        ///        spatial dimensions.
         ///
         /// \note  Values from the depth dimension (assuming NCHW layout) are moved in
         ///        spatial blocks to the height and width dimensions.
