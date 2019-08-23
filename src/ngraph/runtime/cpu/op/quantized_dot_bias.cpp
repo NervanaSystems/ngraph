@@ -17,6 +17,7 @@
 #include <functional>
 
 #include "ngraph/shape.hpp"
+#include "ngraph/util.hpp"
 #include "quantized_dot_bias.hpp"
 
 using namespace std;
