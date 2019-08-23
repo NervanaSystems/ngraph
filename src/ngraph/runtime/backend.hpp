@@ -168,7 +168,8 @@ public:
         return nullptr;
     }
 
-    /// \brief method for each supported backend to determine if the passed pointer is in device pinned memory or not
+    /// \brief method for each supported backend to determine if the passed pointer is in device
+    ///        pinned memory or not
     /// \param ptr pointer to the memory to determine if its in device memory or not
     virtual bool is_device_memory(void* ptr);
 

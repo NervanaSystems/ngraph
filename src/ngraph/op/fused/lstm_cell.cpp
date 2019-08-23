@@ -206,8 +206,8 @@ NodeVector op::LSTMCell::decompose_op() const
     //           Shape: [4*hidden_size, hidden_size].
     // H_t     - The hidden state tensor at current time step. Shape: [batch_size, hidden_size].
     // C_t     - The cell state tensor at current time step. Shape: [batch_size, hidden_size].
-    // bias    - The sum of biases (weight and recurrence) for input, output, forget, and cell gates.
-    //           Shape: [4 * hidden_size]
+    // bias    - The sum of biases (weight and recurrence) for input, output, forget, and cell
+    //           gates. Shape: [4 * hidden_size]
     // p_[iof] - The peephole weight vector for respectively: input, output, and forget gates.
     //           Each peephole has shape [hidden_size].
     //
