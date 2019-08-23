@@ -17,7 +17,6 @@
 #include "ngraph/builder/quantization/quantized_linear_convolution.hpp"
 #include "ngraph/axis_set.hpp"
 #include "ngraph/builder/make_constant.hpp"
-#include "ngraph/builder/quantization.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"

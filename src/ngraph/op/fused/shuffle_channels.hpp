@@ -36,8 +36,11 @@ namespace ngraph
             /// \brief Constructs a ShuffleChannels node.
             ///
             /// \param data - Node producing the input tensor
-            /// \param axis - channel dimension index in the data tensor. A negative value means that the index should be calculated from the back of the input data shape.
-            /// \param groups - number of groups the channel dimension specified by axis should be split into
+            /// \param axis - channel dimension index in the data tensor. A negative value means
+            ///               that the index should be calculated from the back of the input data
+            ///               shape.
+            /// \param groups - number of groups the channel dimension specified by axis should be
+            ///                 split into
             ShuffleChannels(const Output<Node>& data,
                             const int axis = 1,
                             const size_t groups = 1UL);
