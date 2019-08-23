@@ -1563,8 +1563,7 @@ namespace ngraph
                         auto fmt =
                             static_cast<mkldnn::memory::format_kind>(input_md.data.format_kind);
                         // blocked
-                        if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(input_md) ||
-                            fmt == mkldnn::memory::format_kind::undef ||
+                        if (fmt == mkldnn::memory::format_kind::undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                         {
                             // Cannot pass through layout information for blocked layouts at the
@@ -1636,8 +1635,7 @@ namespace ngraph
 #else
                         auto fmt =
                             static_cast<mkldnn::memory::format_kind>(input_md.data.format_kind);
-                        if (mkldnn_utils::is_mkldnn_desc_blocked_data_format(input_md) ||
-                            fmt == mkldnn::memory::format_kind::undef ||
+                        if (fmt == mkldnn::memory::format_kind::undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                         {
                             // Cannot pass through layout information for blocked layouts at the
