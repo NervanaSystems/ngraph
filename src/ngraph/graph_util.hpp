@@ -426,7 +426,8 @@ namespace ngraph
     ///         of `dst`.
     std::vector<Output<Node>> get_outputs_to(Node& src, Node& dst);
 
-    /// Checks the func for cycles starting from parameters going forward. It returns true if a cycle 
+    /// Checks the func for cycles starting from parameters going forward. It returns true if a
+    /// cycle
     /// is found and the nodes on the cyclic path
     bool check_for_cycles(std::shared_ptr<ngraph::Function> func, ngraph::NodeVector& cycle_nodes);
 }

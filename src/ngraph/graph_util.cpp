@@ -654,8 +654,10 @@ std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
     return result;
 }
 
-static bool check_fwd_cycles(std::shared_ptr<ngraph::Node> node, std::deque<std::shared_ptr<ngraph::Node>> &path, 
-                              std::unordered_set<std::shared_ptr<ngraph::Node>> &path_set, ngraph::NodeVector &cycle_nodes)
+static bool check_fwd_cycles(std::shared_ptr<ngraph::Node> node,
+                             std::deque<std::shared_ptr<ngraph::Node>>& path,
+                             std::unordered_set<std::shared_ptr<ngraph::Node>>& path_set,
+                             ngraph::NodeVector& cycle_nodes)
 {
     path.push_back(node);
     path_set.insert(node);
@@ -681,10 +683,11 @@ static bool check_fwd_cycles(std::shared_ptr<ngraph::Node> node, std::deque<std:
     return false;
 }
 
-bool ngraph::check_for_cycles(std::shared_ptr<ngraph::Function> func, ngraph::NodeVector& cycle_nodes)
+bool ngraph::check_for_cycles(std::shared_ptr<ngraph::Function> func,
+                              ngraph::NodeVector& cycle_nodes)
 {
     bool result = false;
-    
+
     for (auto param : func->get_parameters())
     {
         std::deque<std::shared_ptr<Node>> path;

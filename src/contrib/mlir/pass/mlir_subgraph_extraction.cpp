@@ -39,7 +39,6 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
 
-#include <stack>
 using namespace ngraph::descriptor;
 using namespace ngraph::op;
 using namespace ngraph::pass;
@@ -164,14 +163,14 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
         }
         if (subgraph_ids.size() == 0)
         {
-            
             // we couldn't find any predecessor sub-graphs to extend with this node
             // create a new sub-graph
             MLIRSubgraph sg = MLIRSubgraph::create(this);
             sg.add_inputs(inputs);
             sg.add_node(op);
             add_subgraph(sg);
-            NGRAPH_DEBUG << "   [CK Extract] Start new sub-graph " << sg.get_id() << " " << std::endl;
+            NGRAPH_DEBUG << "   [CK Extract] Start new sub-graph " << sg.get_id() << " "
+                         << std::endl;
         }
         else
         {
@@ -203,7 +202,8 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
             {
                 // we have a cycle, start a new sub-graph
                 MLIRSubgraph sg = MLIRSubgraph::create(this);
-                NGRAPH_DEBUG << "       [CK Extract] Cycle found. Start a new subgraph " << sg.get_id();
+                NGRAPH_DEBUG << "       [CK Extract] Cycle found. Start a new subgraph "
+                             << sg.get_id();
                 // use all predecessors as graph inputs
                 NodeVector inputs = op->get_arguments();
                 sg.add_inputs(inputs);
@@ -229,7 +229,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
     }
 }
 
- ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Function> func)
+ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Function> func)
 {
     NodeVector ck_nodes;
     NGRAPH_DEBUG << "[CK Extract] Construct CK nodes" << std::endl;
@@ -273,7 +273,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
 
     // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
     // Do this after all CK nodes are constructed since they add new edges in the graph (CK inputs)
-    for (auto &node : ck_nodes)
+    for (auto& node : ck_nodes)
     {
         auto ck = std::static_pointer_cast<CompiledKernel>(node);
 
@@ -290,20 +290,20 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
 
             for (descriptor::Input* in_desc : input_descs)
             {
-                if (std::find(node_list.begin(), node_list.end(), in_desc->get_node()) == node_list.end())
+                if (std::find(node_list.begin(), node_list.end(), in_desc->get_node()) ==
+                    node_list.end())
                 {
                     in_desc->replace_output(ck, i);
                 }
             }
         }
-
     }
-    for (auto &node : ck_nodes)
+    for (auto& node : ck_nodes)
     {
         auto ck = std::static_pointer_cast<CompiledKernel>(node);
         if (ck->get_output_size() > 1)
         {
-            for (auto& old_output: ck->outputs())
+            for (auto& old_output : ck->outputs())
             {
                 auto inputs = old_output.get_target_inputs();
                 auto goe_node = old_output.as_single_output_node(false);
@@ -313,17 +313,13 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                     input.replace_source_output(new_output);
                 }
             }
-            
-
         }
     }
-
-    
 
     return ck_nodes;
 }
 
-void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, NodeVector &ck_nodes)
+void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes)
 {
     NodeVector cycles;
     if (check_for_cycles(func, cycles))
@@ -336,27 +332,27 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
         NGRAPH_UNREACHABLE("Function contains cycles after subgraph constructions");
     }
 
-    
     for (auto& node : ck_nodes)
     {
         auto ck_node = std::static_pointer_cast<CompiledKernel>(node);
         auto& node_list = ck_node->get_node_list();
 
-        // CK output nodes shouldn't have any users outside the sub-graph, 
+        // CK output nodes shouldn't have any users outside the sub-graph,
         // they are all moved to the CK node instead
         for (auto& ck_output : ck_node->get_kernel_outputs())
         {
             for (auto& user : ck_output->get_users())
             {
-                NGRAPH_CHECK(std::find(node_list.begin(), node_list.end(), user) != node_list.end(), "CK output nodes users should be in the sub-graph");
+                NGRAPH_CHECK(std::find(node_list.begin(), node_list.end(), user) != node_list.end(),
+                             "CK output nodes users should be in the sub-graph");
             }
         }
-        
+
         // Any input to CK must also have at least one user in the sub-graph body
         for (auto& arg : ck_node->get_arguments())
         {
             bool found = false;
-            for (auto& user: arg->get_users())
+            for (auto& user : arg->get_users())
             {
                 found = (std::find(node_list.begin(), node_list.end(), user) != node_list.end());
                 if (found)
@@ -368,7 +364,6 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
         }
     }
 }
-
 
 #define TI(x) std::type_index(typeid(x))
 
@@ -510,7 +505,7 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
     {
         node_inputs = node->get_arguments();
     }
-    
+
     for (auto& input : node_inputs)
     {
         if (check_cycles(input, subgraph_ids, inside_subgraphs, ++depth))

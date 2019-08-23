@@ -126,7 +126,7 @@ namespace ngraph
             void build_subgraphs(std::shared_ptr<Function> func);
             NodeVector build_ck_nodes(std::shared_ptr<Function> func);
 
-            void sanity_check(std::shared_ptr<Function> func, NodeVector &ck_nodes);
+            void sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes);
 
         private:
             using IDGraphMap = std::unordered_map<int, MLIRSubgraph>;
