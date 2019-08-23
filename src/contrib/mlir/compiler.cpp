@@ -58,10 +58,10 @@
 #include <mlir/Conversion/ControlFlowToCFG/ConvertControlFlowToCFG.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
 #include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
-#include <mlir/LLVMIR/LLVMDialect.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
@@ -75,7 +75,6 @@
 
 using llvm::SmallVector;
 using llvm::StringRef;
-using llvm::make_unique;
 using llvm::ArrayRef;
 
 using namespace ngraph;
@@ -225,7 +224,7 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     // create builder
-    m_builder = llvm::make_unique<mlir::OpBuilder>(function.getBody());
+    m_builder = std::unique_ptr<mlir::OpBuilder>(new mlir::OpBuilder(function.getBody()));
     build_ng_dialect();
     m_module->push_back(function);
     if (failed(m_module->verify()))
@@ -398,7 +397,7 @@ void MLIRCompiler::optimize()
     // optimizations. This is a temporary attempt to retrieve some target information by reusing
     // LLVM TTI infra while MLIR does not have target model.
     llvm::LLVMContext llvmContext;
-    auto module = make_unique<llvm::Module>("test", llvmContext);
+    auto module = std::unique_ptr<llvm::Module>(new llvm::Module("test", llvmContext));
     module->setDataLayout(target_machine->createDataLayout());
     auto ttiSetupFunc = llvm::cast<llvm::Function>(
         module
