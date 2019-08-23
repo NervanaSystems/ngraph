@@ -70,17 +70,6 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     endif()
 
     if(WIN32)
-        add_library(libiomp STATIC IMPORTED)
-        set_property(TARGET libiomp PROPERTY IMPORTED_LOCATION ${MKLML_LIB_DIR}/${OMP_IMPLIB})
-    else()
-        add_library(libiomp SHARED IMPORTED)
-        set_property(TARGET libiomp PROPERTY IMPORTED_LOCATION ${MKLML_LIB_DIR}/${OMP_LIB})
-        if(LINUX)
-            set_property(TARGET libiomp PROPERTY IMPORTED_NO_SONAME 1)
-        endif()
-    endif()
-
-    if(WIN32)
         add_library(libmkldnn STATIC IMPORTED)
         set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_IMPLIB})
         set_target_properties(libmkldnn PROPERTIES
@@ -189,16 +178,6 @@ if(WIN32)
 else()
     target_link_libraries(libmkl INTERFACE
         ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
-        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB})
-endif()
-
-add_library(libiomp INTERFACE)
-add_dependencies(libiomp ext_mkl)
-if(WIN32)
-    target_link_libraries(libiomp INTERFACE
-        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${OMP_IMPLIB})
-else()
-    target_link_libraries(libiomp INTERFACE
         ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB})
 endif()
 
@@ -328,13 +307,11 @@ if (WIN32)
     target_link_libraries(libmkldnn INTERFACE
         ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
         libmkl
-        libiomp
     )
 else()
     target_link_libraries(libmkldnn INTERFACE
         ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
         libmkl
-        libiomp
     )
 endif()
 

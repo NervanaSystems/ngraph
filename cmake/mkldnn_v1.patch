@@ -1,5 +1,5 @@
 diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
-index 99970659..6be8da11 100644
+index 99970659..0f8adf2b 100644
 --- a/cmake/OpenMP.cmake
 +++ b/cmake/OpenMP.cmake
 @@ -28,7 +28,7 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -11,7 +11,7 @@ index 99970659..6be8da11 100644
  endif()
 
  macro(forbid_link_compiler_omp_rt)
-@@ -45,6 +45,51 @@ macro(forbid_link_compiler_omp_rt)
+@@ -45,6 +45,55 @@ macro(forbid_link_compiler_omp_rt)
      endif()
  endmacro()
 
@@ -37,7 +37,11 @@ index 99970659..6be8da11 100644
 +                PATHS
 +                    ${MKL_SOURCE_DIR}/lib
 +                    ${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib
-+                    ../../../mkl/src/ext_mkl/lib)
++                    ../../../mkl/src/ext_mkl/lib
++                    ${CMAKE_CURRENT_SOURCE_DIR}/external/mkl/lib
++                    NO_DEFAULT_PATH)
++    message("mkliomp5lib: ${MKLIOMP5LIB}")
++    message("iomp5lib: ${IOMP5LIB}")
 +    if(IOMP5LIB)
 +        message("found libiomp")
 +        forbid_link_compiler_omp_rt()
@@ -63,28 +67,11 @@ index 99970659..6be8da11 100644
  if(WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
      add_definitions(/Qpar)
      add_definitions(/openmp)
-@@ -56,6 +101,7 @@ elseif(MSVC AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-     list(APPEND EXTRA_SHARED_LIBS ${IOMP5LIB})
- else()
-     find_package(OpenMP)
-+    message("find package")
-     #newer version for findOpenMP (>= v. 3.9)
-     if(CMAKE_VERSION VERSION_LESS "3.9" AND OPENMP_FOUND)
-         if(${CMAKE_MAJOR_VERSION} VERSION_LESS "3" AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
-@@ -71,6 +117,7 @@ endif()
-
- if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
-     if (OpenMP_CXX_FOUND)
-+        message("found openmp_cxx")
-         set(MKLDNN_CPU_RUNTIME_CURRENT "OMP")
-         append(CMAKE_TEST_CCXX_FLAGS "${OpenMP_CXX_FLAGS}")
-         append(CMAKE_EXAMPLE_CCXX_FLAGS "${OpenMP_CXX_FLAGS}")
-@@ -78,6 +125,8 @@ if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
+@@ -78,6 +127,7 @@ if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
          message(${_omp_severity} "OpenMP library could not be found. "
              "Proceeding might lead to highly sub-optimal performance.")
      endif()
-+    forbid_link_compiler_omp_rt()
-+    list(APPEND EXTRA_SHARED_LIBS libiomp5.so)
++    use_intel_omp_rt()
  else()
      # Compilation happens with OpenMP to enable `#pragma omp simd`
      # but during linkage OpenMP dependency should be avoided
