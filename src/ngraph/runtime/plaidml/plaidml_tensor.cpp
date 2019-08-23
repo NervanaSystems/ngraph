@@ -28,7 +28,7 @@ ngraph::runtime::plaidml::PlaidML_Tensor::PlaidML_Tensor(Backend* parent,
                                                          const ngraph::Shape& shape,
                                                          const std::string& name,
                                                          void* memory)
-    : Tensor{std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name), parent}
+    : Tensor{std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name)}
     , m_tensor{config->dev->allocate(
           to_plaidml(config->ctx, element_type, shape, ConversionUse::FOR_IO))}
     , m_memory{memory}
