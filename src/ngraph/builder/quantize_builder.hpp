@@ -16,19 +16,21 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/builder/make_constant.hpp"
+#include "ngraph/coordinate_diff.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/quantize.hpp"
+#include "quantization_utils.hpp"
 
-namespace py = pybind11;
-
-void regclass_pyngraph_Type(py::module m);
-void regclass_pyngraph_Bool(py::module m);
-void regclass_pyngraph_Float32(py::module m);
-void regclass_pyngraph_Float64(py::module m);
-void regclass_pyngraph_Int8(py::module m);
-// void regclass_pyngraph_Int16(py::module m);
-void regclass_pyngraph_Int32(py::module m);
-void regclass_pyngraph_Int64(py::module m);
-void regclass_pyngraph_UInt8(py::module m);
-// void regclass_pyngraph_UInt16(py::module m);
-void regclass_pyngraph_UInt32(py::module m);
-void regclass_pyngraph_UInt64(py::module m);
+namespace ngraph
+{
+    namespace builder
+    {
+        std::shared_ptr<Node> QuantizeBuilder(const Output<Node>& input,
+                                              const Output<Node>& min,
+                                              const Output<Node>& max,
+                                              const ngraph::element::Type& quant_type,
+                                              const ngraph::AxisSet& axes,
+                                              op::Quantize::RoundMode round_mode);
+    }
+}

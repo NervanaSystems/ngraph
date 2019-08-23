@@ -116,10 +116,10 @@ if (APPLE)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)
-  #MLIR uses the latest version of LLVM which requires C++14.
-  set(NGRAPH_CXX_STANDARD 14)
+    #MLIR uses the latest version of LLVM which requires C++14.
+    set(NGRAPH_CXX_STANDARD 14)
 else()
-  set(NGRAPH_CXX_STANDARD 11)
+    set(NGRAPH_CXX_STANDARD 11)
 endif()
 set(CMAKE_CXX_STANDARD ${NGRAPH_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

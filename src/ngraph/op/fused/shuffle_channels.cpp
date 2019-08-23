@@ -102,7 +102,8 @@ Shape op::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
     // [0]: ds[0] * ds[1] * ... * ds[m_axis-1] (or 1 if m_axis == 0)
     // [1]: m_groups
     // [2]: ds[axis] / m_groups
-    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem of ds)
+    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem
+    //                                                       of ds)
     Shape res(4, 1);
 
     size_t axis_zb = get_zero_based_axis();

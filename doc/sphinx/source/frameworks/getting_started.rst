@@ -69,7 +69,7 @@ See also nGraph's :doc:`../python_api/index`.
 PlaidML
 =======
 
-See :ref:`ngraph_plaidml_backend` section on how to build the 
+See the :ref:`ngraph_plaidml_backend` section on how to build the 
 nGraph-PlaidML.
 
 
