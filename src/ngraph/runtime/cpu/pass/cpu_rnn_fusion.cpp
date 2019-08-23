@@ -132,7 +132,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 
             auto weights_ifco = std::make_shared<ngraph::op::Concat>(
                 NodeVector{gate_slices[0], gate_slices[2], gate_slices[3], gate_slices[1]}, 0);
-            return weights_ifco;
+            return std::move(weights_ifco);
         };
 
         auto get_bias_ifco_gate_order =
@@ -157,7 +157,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 
             auto new_bias = std::make_shared<ngraph::op::Concat>(
                 NodeVector{gate_slices[0], gate_slices[2], gate_slices[3], gate_slices[1]}, 0);
-            return new_bias;
+            return std::move(new_bias);
         };
 
         auto W_iofc = pattern_map[W];
