@@ -1038,8 +1038,8 @@ namespace
 
 namespace mlir
 {
-    Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler)
+    std::unique_ptr<Pass> createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler)
     {
-        return new DialectLoweringPass(*compiler);
+        return std::make_unique<DialectLoweringPass>(*compiler);
     }
-}
+} // namespace mlir
