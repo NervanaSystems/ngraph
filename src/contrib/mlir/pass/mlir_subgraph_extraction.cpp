@@ -38,7 +38,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
+
 #include <stack>
 using namespace ngraph::descriptor;
 using namespace ngraph::op;
@@ -48,8 +48,6 @@ using namespace ngraph::pass;
 
 // Maximum depth to check for cycles. If exceeded, we conservatively assume a cycle.
 #define MAX_CYCLE_DEPTH 20
-
-bool check_fwd_cycles(ngraph::Node *root, std::deque<ngraph::Node*>& stack);
 
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
 
@@ -275,7 +273,7 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
 
     // Connect CompiledKernel to output nodes by replacing the output descriptors of the output
     // Do this after all CK nodes are constructed since they add new edges in the graph (CK inputs)
-    for (auto node : ck_nodes)
+    for (auto &node : ck_nodes)
     {
         auto ck = std::static_pointer_cast<CompiledKernel>(node);
 
@@ -298,7 +296,30 @@ void MLIRSubgraphExtractionPass::build_subgraphs(std::shared_ptr<Function> func)
                 }
             }
         }
+
     }
+    for (auto &node : ck_nodes)
+    {
+        auto ck = std::static_pointer_cast<CompiledKernel>(node);
+        if (ck->get_output_size() > 1)
+        {
+            for (auto& old_output: ck->outputs())
+            {
+                auto inputs = old_output.get_target_inputs();
+                auto goe_node = old_output.as_single_output_node();
+                auto new_output = goe_node->output(0);
+                for (auto& input : inputs)
+                {
+                    input.replace_source_output(new_output);
+                }
+            }
+            
+
+        }
+    }
+
+    
+
     return ck_nodes;
 }
 

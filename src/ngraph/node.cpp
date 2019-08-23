@@ -96,7 +96,7 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
             return in.get_node()->shared_from_this();
         }
     }
-    return get_output_element(output(i), true);
+    return get_output_element(output(i), false);
 }
 
 std::shared_ptr<Node>
@@ -107,7 +107,7 @@ std::shared_ptr<Node>
     NodeVector args;
     for (const Output<Node>& input : inputs)
     {
-        args.push_back(get_output_element(input, for_get_output_element));
+        args.push_back(get_output_element(input, for_get_output_element));  
     }
     shared_ptr<Node> clone = copy_with_new_args(args);
     for (auto& cdep : control_dependencies)
