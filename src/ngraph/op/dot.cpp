@@ -179,11 +179,11 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = input_value(0);
+    auto y = input_value(1);
 
-    auto x_shape = x->get_shape();         // shape IJ
-    auto y_shape = y->get_shape();         // shape JK
+    auto x_shape = x.get_shape();          // shape IJ
+    auto y_shape = y.get_shape();          // shape JK
     auto delta_shape = delta->get_shape(); // shape IK
 
     Shape I_shape;

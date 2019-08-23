@@ -31,7 +31,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -87,7 +86,6 @@
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
-#include "util/random.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
 
@@ -621,7 +619,7 @@ static void test_batchnorm_multiply_add_relu(Shape input_shape)
     ASSERT_EQ(bn_relu, 1);
 }
 
-TEST(cpu_fusion, batchnorm_multiply_add_relu)
+TEST(cpu_fusion, MLIR_DISABLE_TEST(batchnorm_multiply_add_relu))
 {
     test_batchnorm_multiply_add_relu(Shape{1, 3, 2, 2});
     test_batchnorm_multiply_add_relu(Shape{1, 2, 2, 2, 2});
@@ -2503,14 +2501,14 @@ static void check_bounded_relu(Shape param_shape, float constant_val)
     EXPECT_TRUE(test::all_close(cpu_results.at(0), int_results.at(0), 1.0e-4f, 1.0e-4f));
 }
 
-TEST(cpu_fusion, fuse_bounded_relu_inter_vs_cpu)
+TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_bounded_relu_inter_vs_cpu))
 {
     check_bounded_relu(Shape{4, 3, 2, 2}, 6.0f);
     check_bounded_relu(Shape{4, 3}, 4.0f);
     check_bounded_relu(Shape{4, 3, 2}, 2.0f);
 }
 
-TEST(cpu_fusion, fuse_dropout)
+TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_dropout))
 {
     auto make_function = [](Shape input_shape,
                             const uint32_t seed_val,
@@ -2538,7 +2536,6 @@ TEST(cpu_fusion, fuse_dropout)
         auto f = make_shared<Function>(NodeVector{pdivide, gen_mask}, ParameterVector{input});
 
         return f;
-
     };
 
     uint32_t seed = rand();
@@ -2583,7 +2580,7 @@ TEST(cpu_fusion, fuse_dropout)
     }
 }
 
-TEST(cpu_fusion, fuse_leaky_relu)
+TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_leaky_relu))
 {
     auto make_function = [](Shape input_shape, vector<float> alpha_val) {
         auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
@@ -2854,7 +2851,6 @@ static std::shared_ptr<Function>
     auto bias = std::make_shared<op::Parameter>(element::f32, Shape{400});
     ParameterVector params{W, bias};
     auto create_graph = [&]() -> std::shared_ptr<Node> {
-
         auto data_param = (data_is_4d)
                               ? std::make_shared<op::Parameter>(element::f32, Shape{2, 5, 1, 50})
                               : std::make_shared<op::Parameter>(element::f32, Shape{10, 1, 50});
@@ -2867,7 +2863,6 @@ static std::shared_ptr<Function>
         auto bias_broadcast = make_shared<op::Broadcast>(bias, dot->get_shape(), AxisSet{0});
         auto add_bias = std::make_shared<op::Add>(dot, bias_broadcast);
         return move(add_bias);
-
     };
 
     NodeVector graph_nodes;
@@ -3174,7 +3169,7 @@ TEST(cpu_quant_fusion, qconcat)
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
     // Expect Concat2 -- Concat6 to be fused and not Concat7
-    ASSERT_EQ(count_ops_of_type<op::QuantizedConcat>(cpu_f2), 5);
+    ASSERT_EQ(count_ops_of_type<op::Concat>(cpu_f2), 6);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
@@ -3818,6 +3813,53 @@ TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
     auto cpu_results = execute(cpu_f, args, "CPU");
+    for (size_t i = 0; i < cpu_results.size(); i++)
+    {
+        EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
+    }
+}
+
+TEST(cpu_fusion, lstm_cell)
+{
+    auto make_function = []() {
+        const size_t batch_size = 3;
+        const size_t input_size = 4;
+        const size_t hidden_size = 4;
+        const size_t gates_count = 4;
+
+        const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+        const auto W =
+            make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        const auto R =
+            make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+        const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+        const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, W, R, H_t, C_t, hidden_size);
+        auto ht = make_shared<op::GetOutputElement>(lstm_cell, 0);
+        auto ct = make_shared<op::GetOutputElement>(lstm_cell, 1);
+
+        auto lstm_function =
+            make_shared<Function>(NodeVector{ht, ct}, ParameterVector{X, W, R, H_t, C_t});
+        return lstm_function;
+    };
+    auto lstm_function_cpu = make_function();
+    auto lstm_function_inter = make_function();
+    test::Uniform<float> rng(-1.0f, 1.0f);
+    vector<vector<float>> args;
+
+    for (shared_ptr<op::Parameter> param : lstm_function_cpu->get_parameters())
+    {
+        vector<float> tensor_val(shape_size(param->get_shape()));
+        rng.initialize(tensor_val);
+        args.push_back(tensor_val);
+    }
+
+    auto int_results = execute(lstm_function_inter, args, "INTERPRETER");
+    auto cpu_results = execute(lstm_function_cpu, args, "CPU");
+    size_t lstm_op_count = count_ops_of_type<op::LSTMCell>(lstm_function_cpu);
+
+    EXPECT_EQ(lstm_op_count, 0);
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));

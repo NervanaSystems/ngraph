@@ -206,8 +206,8 @@ NodeVector op::LSTMCell::decompose_op() const
     //           Shape: [4*hidden_size, hidden_size].
     // H_t     - The hidden state tensor at current time step. Shape: [batch_size, hidden_size].
     // C_t     - The cell state tensor at current time step. Shape: [batch_size, hidden_size].
-    // bias    - The sum of biases (weight and recurrence) for input, output, forget, and cell gates.
-    //           Shape: [4 * hidden_size]
+    // bias    - The sum of biases (weight and recurrence) for input, output, forget, and cell
+    //           gates. Shape: [4 * hidden_size]
     // p_[iof] - The peephole weight vector for respectively: input, output, and forget gates.
     //           Each peephole has shape [hidden_size].
     //
@@ -224,11 +224,11 @@ NodeVector op::LSTMCell::decompose_op() const
     // Ht = ot (.) h(Ct)
     // --------------------
 
-    Output<Node> X = input(0).get_source_output();
-    Output<Node> W = input(1).get_source_output();
-    Output<Node> R = input(2).get_source_output();
-    Output<Node> H_t = input(3).get_source_output();
-    Output<Node> C_t = input(4).get_source_output();
+    Output<Node> X = input_value(0);
+    Output<Node> W = input_value(1);
+    Output<Node> R = input_value(2);
+    Output<Node> H_t = input_value(3);
+    Output<Node> C_t = input_value(4);
     Output<Node> bias = get_bias();
     NodeVector p_iof = get_peephole_weights();
 
@@ -278,7 +278,7 @@ Output<Node> op::LSTMCell::get_bias() const
 {
     Output<Node> bias;
     // Split B onto Wb an Rb and add them.
-    NodeVector b_W_R = builder::split(input(5).get_source_output(), 2);
+    NodeVector b_W_R = builder::split(input_value(5), 2);
     bias = b_W_R.at(0) + b_W_R.at(1);
     return bias;
 }
@@ -286,7 +286,7 @@ Output<Node> op::LSTMCell::get_bias() const
 NodeVector op::LSTMCell::get_peephole_weights() const
 {
     Output<Node> P;
-    P = input(6).get_source_output();
+    P = input_value(6);
     return builder::split(P, s_peepholes_count);
 }
 

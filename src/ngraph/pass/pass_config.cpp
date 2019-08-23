@@ -53,8 +53,10 @@ pass::PassConfig::PassConfig()
     //
     //  Parses the semi-colon separated environment string passed through NGRAPH_PASS_ATTRIBUTES
     //  and returns the pass attributes and whether they should be enabled or disabled in the
-    //  provided unordered_map. Naming of pass attributes is up to the backends
-    //  E.g., NGRAPH_PASS_ATTRIBUTES="OptimizeForMemory=0;MemoryAssignment::ReuseMemory=1;UseDefaultLayouts"
+    //  provided unordered_map. Naming of pass attributes is up to the backends.
+    //
+    //  For example:
+    //  NGRAPH_PASS_ATTRIBUTES="OptimizeForMemory=0;MemoryAssignment::ReuseMemory=1;UseDefaultLayouts"
     //  would set false on "OptimizeForMemory", true on "MemoryAssignment::ReuseMemory" and true on
     //  "UseDefaultLayouts"
     //

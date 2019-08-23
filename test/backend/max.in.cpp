@@ -494,7 +494,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_3d_eliminate_zero_dim)
     copy_data(a, vector<float>{});
     auto result = backend->create_tensor(element::f32, shape_rt);
 
-    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the
+    // right value.
     copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
 
     float mi = -std::numeric_limits<float>::infinity();

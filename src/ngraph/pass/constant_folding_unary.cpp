@@ -51,7 +51,7 @@ shared_ptr<op::Constant> fold_constant_unary(shared_ptr<op::Constant> constant,
                                              shared_ptr<Node> unary,
                                              NodeExecutorTy func)
 {
-    //check sqrt arg
+    // check sqrt arg
     if (std::dynamic_pointer_cast<op::Sqrt>(unary))
     {
         std::vector<T> values{constant->get_vector<T>()};

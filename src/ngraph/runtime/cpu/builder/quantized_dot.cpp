@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/experimental/quantized_dot.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
@@ -124,42 +124,139 @@ namespace ngraph
                 auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
                 auto arg2_buffer_index = external_function->get_buffer_index(args[2].get_name());
+                auto arg3_buffer_index = external_function->get_buffer_index(args[3].get_name());
+                auto arg4_buffer_index = external_function->get_buffer_index(args[4].get_name());
+                auto arg5_buffer_index = external_function->get_buffer_index(args[5].get_name());
+                auto arg6_buffer_index = external_function->get_buffer_index(args[6].get_name());
+                auto arg7_buffer_index = external_function->get_buffer_index(args[7].get_name());
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                if (shape_size(args[2].get_shape()) != 1)
+                if (args[0].get_element_type() == element::u8 &&
+                    args[1].get_element_type() == element::u8 &&
+                    out[0].get_element_type() == element::u8)
                 {
-                    throw ngraph_error("Scale size should be 1 for QuantizedDot");
+                    std::function<decltype(
+                        runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>)>
+                        kernel;
+
+                    kernel = runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>;
+
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    arg3_buffer_index,
+                                    arg4_buffer_index,
+                                    arg5_buffer_index,
+                                    arg6_buffer_index,
+                                    arg7_buffer_index,
+                                    out0_buffer_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* ectx) {
+
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               1,
+                               ctx->buffer_data[arg2_buffer_index],
+                               ctx->buffer_data[arg3_buffer_index],
+                               ctx->buffer_data[arg4_buffer_index],
+                               ctx->buffer_data[arg5_buffer_index],
+                               ctx->buffer_data[arg6_buffer_index],
+                               ctx->buffer_data[arg7_buffer_index]);
+                    };
+                    functors.emplace_back(functor);
                 }
+                else if (args[0].get_element_type() == element::u8 &&
+                         args[1].get_element_type() == element::i8 &&
+                         out[0].get_element_type() == element::i8)
+                {
+                    std::function<decltype(
+                        runtime::cpu::kernel::dot_ref<uint8_t, int8_t, int8_t, int32_t>)>
+                        kernel;
 
-                std::function<decltype(
-                    runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>)>
-                    kernel;
+                    kernel = runtime::cpu::kernel::dot_ref<uint8_t, int8_t, int8_t, int32_t>;
 
-                kernel = runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, uint8_t, int32_t>;
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    arg3_buffer_index,
+                                    arg4_buffer_index,
+                                    arg5_buffer_index,
+                                    arg6_buffer_index,
+                                    arg7_buffer_index,
+                                    out0_buffer_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* ectx) {
 
-                auto functor = [&,
-                                kernel,
-                                arg0_shape,
-                                arg1_shape,
-                                result_shape,
-                                arg0_buffer_index,
-                                arg1_buffer_index,
-                                arg2_buffer_index,
-                                out0_buffer_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               1,
+                               ctx->buffer_data[arg2_buffer_index],
+                               ctx->buffer_data[arg3_buffer_index],
+                               ctx->buffer_data[arg4_buffer_index],
+                               ctx->buffer_data[arg5_buffer_index],
+                               ctx->buffer_data[arg6_buffer_index],
+                               ctx->buffer_data[arg7_buffer_index]);
+                    };
+                    functors.emplace_back(functor);
+                }
+                else if (args[0].get_element_type() == element::u8 &&
+                         args[1].get_element_type() == element::u8 &&
+                         out[0].get_element_type() == element::i32)
+                {
+                    std::function<decltype(
+                        runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, int32_t, int32_t>)>
+                        kernel;
 
-                    float dyn_scale = *(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]));
+                    kernel = runtime::cpu::kernel::dot_ref<uint8_t, uint8_t, int32_t, int32_t>;
 
-                    kernel(ctx->buffer_data[arg0_buffer_index],
-                           ctx->buffer_data[arg1_buffer_index],
-                           ctx->buffer_data[out0_buffer_index],
-                           arg0_shape,
-                           arg1_shape,
-                           result_shape,
-                           1,
-                           dyn_scale);
-                };
-                functors.emplace_back(functor);
+                    auto functor = [&,
+                                    kernel,
+                                    arg0_shape,
+                                    arg1_shape,
+                                    result_shape,
+                                    arg0_buffer_index,
+                                    arg1_buffer_index,
+                                    arg2_buffer_index,
+                                    arg3_buffer_index,
+                                    arg4_buffer_index,
+                                    arg5_buffer_index,
+                                    arg6_buffer_index,
+                                    arg7_buffer_index,
+                                    out0_buffer_index](CPURuntimeContext* ctx,
+                                                       CPUExecutionContext* ectx) {
+
+                        kernel(ctx->buffer_data[arg0_buffer_index],
+                               ctx->buffer_data[arg1_buffer_index],
+                               ctx->buffer_data[out0_buffer_index],
+                               arg0_shape,
+                               arg1_shape,
+                               result_shape,
+                               1,
+                               ctx->buffer_data[arg2_buffer_index],
+                               ctx->buffer_data[arg3_buffer_index],
+                               ctx->buffer_data[arg4_buffer_index],
+                               ctx->buffer_data[arg5_buffer_index],
+                               ctx->buffer_data[arg6_buffer_index],
+                               ctx->buffer_data[arg7_buffer_index]);
+                    };
+                    functors.emplace_back(functor);
+                }
             }
             REGISTER_OP_BUILDER(QuantizedDotBias);
             REGISTER_OP_BUILDER(QuantizedDot);

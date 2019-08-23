@@ -40,8 +40,8 @@ namespace ngraph
                      op::PadMode pad_mode)
             {
                 Coordinate input_start(arg0_shape.size(), 0); // start at (0,0,...,0)
-                Coordinate input_end =
-                    out_shape; // end at (d'0,d'1,...,d'n), the outer corner of the post-padding shape
+                Coordinate input_end = out_shape; // end at (d'0,d'1,...,d'n), the outer corner of
+                                                  // the post-padding shape
 
                 Strides input_strides(arg0_shape.size(), 1);
 
@@ -103,6 +103,7 @@ namespace ngraph
                     }
                     case op::PadMode::REFLECT:
                     {
+                        // clang-format off
                         // The algorithm here is a bit complicated because if the padding is
                         // bigger than the tensor, we may reflect multiple times.
                         //
@@ -127,6 +128,7 @@ namespace ngraph
                         //
                         // Note that this algorithm works because REFLECT padding only makes sense
                         // if each dim is >= 2.
+                        // clang-format on
                         Coordinate c = in_coord; // have to copy because in_coord is const
 
                         for (size_t i = 0; i < c.size(); i++)

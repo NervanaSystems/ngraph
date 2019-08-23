@@ -116,14 +116,19 @@ namespace ngraph
                     //
                     //   (N,0,s_1*i_1,s_2*i_2,...,s_n*i_n) ->
                     //
-                    //     (N+1,chans_in_count,s_1*i_1 + l_1*filter_dims_1,...,s_n*i_n + l_n*filter_dims_n)
+                    //     (N+1,
+                    //      chans_in_count,
+                    //      s_1*i_1+ l_1*filter_dims_1,
+                    ///       ...,
+                    ///     s_n*i_n +l_n*filter_dims_n)
                     //
                     // with strides:
                     //
                     //   (1,l_1,...,l_n).
                     //
-                    // Note that we are iterating within the *padded* and *dilated* in batch, so further
-                    // down we must check the current coordinate is in the pad or dilation gap.
+                    // Note that we are iterating within the *padded* and *dilated* in batch, so
+                    // further down we must check the current coordinate is in the pad or dilation
+                    // gap.
 
                     size_t n_spatial_dimensions = in_shape.size() - 2;
                     size_t n_in_channels = in_shape[in_channel_axis];
@@ -171,13 +176,19 @@ namespace ngraph
                                                      in_transform_pad_above,
                                                      in_transform_dilation_strides);
 
-                    // Simultaneously with iterating I, for the filter we need to iterate the coordinate:
+                    // Simultaneously with iterating I, for the filter we need to iterate the
+                    // coordinate:
                     //
                     //   F
                     //
                     // over the range (noninclusive on the right):
                     //
-                    //   (chan_out,0,0,...,0) -> (chan_out+1,chans_in_count,filter_dims_1,...,filter_dims_n)
+                    //   (chan_out,0,0,...,0) ->
+                    //     (chan_out+1,
+                    //      chans_in_count,
+                    //      filter_dims_1,
+                    //        ...,
+                    //      filter_dims_n)
                     //
                     // with unit stride.
 

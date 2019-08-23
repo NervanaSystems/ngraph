@@ -38,6 +38,8 @@ topk_2d_min_partial                     # No plans to implement TopK
 topk_2d_min_one                         # No plans to implement TopK
 topk_int64                              # No plans to implement TopK
 topk_5d_max_partial                     # No plans to implement TopK
+topk_1d_i32_max_all                     # No plans to implement TopK
+
 
 # Tests that PlaidML might be able to run at some point.
 backwards_maxpool_n2_c1_hw5_3x3_str2_max_pad1x2_2x3
@@ -147,7 +149,7 @@ logical_or
 batch_norm_inference_parameters_duplication
 batch_norm_fprop_b1c2h2w2
 batch_norm_fprop_b2c2h2w1
-batchnorm_fprop_b2c2d2h1w1
+batch_norm_fprop_b2c2d2h1w1
 batch_norm_fprop_inference_b2c2h2w1
 argmax_3D_axis_0
 argmax_3D_axis_1
@@ -180,10 +182,11 @@ conv_bias_bprop_2d
 conv_bias_add_2d
 space_to_depth
 depth_to_space
-normalize_across_chw_scalar_scale_4d
-normalize_across_chw_scalar_scale_3d
-normalize_across_chw_scalar_scale_2d
-normalize_across_chw_w_scale
+normalize_across_chw_4d
+normalize_across_chw_4d_max_bias
+normalize_across_chw_3d
+normalize_across_chw_2d
+normalize_across_hw_4d
 gemm
 fused_clamp
 mvn_mean_normalization
@@ -230,8 +233,19 @@ backwards_softmax_underflow
 backwards_softmax_3d
 batch_mat_mul_forward
 dot_matrix_2x0_0x2
+max_pool_uint8
+max_pool_int8
+avg_pool_uint8
+avg_pool_int8
+
+# Need erf
 gelu_f32
 gelu_f64
+gelu_backprop_factor_f32
+gelu_backprop_factor_f64
+backwards_gelu_f32
+backwards_gelu_f64
+
 # From onnx tests
 model_quant_conv_linear_2d
 model_quant_conv_linear_3d
@@ -288,12 +302,21 @@ model_quant_conv_linear
 model_conv_integer_no_zero_point
 model_matmul_integer_no_zero_point
 model_matmul_integer_4d_no_zero_point
+model_qlinear_matmul
+model_qlinear_matmul_3d
+model_matmul_integer
+model_matmul_integer_zero_point_zero
+model_matmul_integer_scalar
+model_matmul_integer_4d
+model_matmul_integer_4d_zero_point
 model_top_k
 model_erf
 model_erf_int32
 model_hardmax
 quantized_convolution
 quantized_conv_int32_output
+quantized_dot_u8u8
+quantized_dot_int32_output
 
 # unsupported op: `ReverseSequence`
 model_lstm_bdir_short_input_seq

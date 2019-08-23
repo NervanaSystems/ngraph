@@ -27,11 +27,8 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -63,9 +60,9 @@ MKLDNNEmitter::~MKLDNNEmitter()
     for (auto p : m_mkldnn_primitives)
         delete p;
 #ifndef _WIN32
-    //To avoid memory leak in mkldnn, release any buffers that are not free'd yet.
-    //https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
-    //mkl_free_buffers() is not exposed at this point, hence using mkl_serv_free_buffers()
+    // To avoid memory leak in mkldnn, release any buffers that are not free'd yet.
+    // https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
+    // mkl_free_buffers() is not exposed at this point, hence using mkl_serv_free_buffers()
     mkldnn_utils::mkl_serv_free_buffers();
 #endif
 }
@@ -485,9 +482,8 @@ void MKLDNNEmitter::build_max_pooling_backward(std::vector<mkldnn::primitive*>& 
     mkldnn_primitives[fwd_pool_index] = new mkldnn::pooling_forward(
         fwd_pd,
         *mkldnn_primitives[fprop_src_index],
-        *mkldnn_primitives
-            [diff_src_index], // HACK - Uses diff_src buffer. Safe since diff_src > fprop_dst
-        *mkldnn_primitives[ws_index]);
+        *mkldnn_primitives[diff_src_index], // HACK - Uses diff_src buffer. Safe since diff_src >
+        *mkldnn_primitives[ws_index]);      //        fprop_dst
 
     mkldnn_primitives[bwd_pool_index] =
         new mkldnn::pooling_backward({bwd_pool_desc, executor::global_cpu_engine, fwd_pd},
