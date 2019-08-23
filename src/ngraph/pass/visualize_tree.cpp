@@ -20,11 +20,11 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/op/experimental/compiled_kernel.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -218,17 +218,17 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         size_t fake_node_ctr = 0;
 
         traverse_nodes(f, [&](shared_ptr<Node> node) {
-            
+
             if (auto ck = dynamic_pointer_cast<ngraph::op::CompiledKernel>(node))
             {
                 // print sub-graph
                 auto nodes_list = ck->get_node_list();
-                // all edgs to the CK node
+                // all edges to the CK node
                 for (auto& arg : ck->get_arguments())
                 {
                     m_ss << "    " << arg->get_name() << " -> " << ck->get_name();
                 }
-                // all nodes inside the CK s ub-graph
+                // all nodes inside the CK sub-graph
                 for (auto& ck_node : nodes_list)
                 {
                     m_ss << add_attributes(ck_node);
