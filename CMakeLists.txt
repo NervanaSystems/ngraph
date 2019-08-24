@@ -184,7 +184,6 @@ option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
 option(NGRAPH_PLAIDML_ENABLE "Enable the PlaidML backend" ${PLAIDML_FOUND})
-option(NGRAPH_DISTRIBUTED_ENABLE "Enable distributed training using MLSL/OpenMPI" OFF)
 option(NGRAPH_FAST_MATH_ENABLE "Enable fast math" ON)
 option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
 option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph static library" FALSE)
@@ -204,24 +203,6 @@ if (NGRAPH_MLIR_ENABLE AND (NOT NGRAPH_DEX_ONLY))
     #disable code-gen due to sym collision with LLVM
     message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON.\n"
                         "Use -DNGRAPH_DEX_ONLY=ON and try again. \n")
-endif()
-
-if (NGRAPH_DISTRIBUTED_ENABLE)
-    if ("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL "MLSL")
-        if (NGRAPH_INTEL_CPU_ONLY_ENABLE)
-            set(NGRAPH_DISTRIBUTED_MLSL_ENABLE TRUE)
-        else()
-            message(FATAL_ERROR
-                    "-DNGRAPH_DISTRIBUTED_ENABLE=MLSL to be used, if Intel CPU is the only backend enabled.\n"
-                    "Use -DNGRAPH_DISTRIBUTED_ENABLE=OMPI for all other situations.\n")
-        endif()
-    elseif("${NGRAPH_DISTRIBUTED_ENABLE}" STREQUAL  "OMPI")
-        set(NGRAPH_DISTRIBUTED_OMPI_ENABLE TRUE)
-    else()
-        message(FATAL_ERROR
-                    "Invalid arguments passed to NGRAPH_DISTRIBUTED_ENABLE, must select  one of  MLSL, OMPI or OFF.\n"
-                    "If using Intel CPU only backend, recommend Intel MLSL by setting -DNGRAPH_DISTRIBUTED_ENABLE=MLSL .\n")
-    endif()
 endif()
 
 if (NGRAPH_GPUH_ENABLE)
@@ -292,7 +273,6 @@ message(STATUS "NGRAPH_LIB_VERSIONING_ENABLE:         ${NGRAPH_LIB_VERSIONING_EN
 message(STATUS "NGRAPH_PYTHON_BUILD_ENABLE:           ${NGRAPH_PYTHON_BUILD_ENABLE}")
 message(STATUS "NGRAPH_USE_PREBUILT_LLVM:             ${NGRAPH_USE_PREBUILT_LLVM}")
 message(STATUS "NGRAPH_PLAIDML_ENABLE:                ${NGRAPH_PLAIDML_ENABLE}")
-message(STATUS "NGRAPH_DISTRIBUTED_ENABLE:            ${NGRAPH_DISTRIBUTED_ENABLE}")
 message(STATUS "NGRAPH_JSON_ENABLE:                   ${NGRAPH_JSON_ENABLE}")
 message(STATUS "NGRAPH_STATIC_LIB_ENABLE:             ${NGRAPH_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_INTERPRETER_STATIC_LIB_ENABLE: ${NGRAPH_INTERPRETER_STATIC_LIB_ENABLE}")
@@ -422,15 +402,6 @@ if (NGRAPH_PLAIDML_ENABLE)
     endif()
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_PlaidML_ENABLE")
-endif()
-
-if (NGRAPH_DISTRIBUTED_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_ENABLE")
-    if (NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_MLSL_ENABLE")
-    elseif (NGRAPH_DISTRIBUTED_OMPI_ENABLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DISTRIBUTED_OMPI_ENABLE")
-    endif()
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
@@ -576,10 +547,6 @@ if(NGRAPH_TBB_ENABLE)
     else()
         include(cmake/external_tbb.cmake)
     endif()
-endif()
-
-if (NGRAPH_DISTRIBUTED_MLSL_ENABLE)
-    include(cmake/external_mlsl.cmake)
 endif()
 
 if (NGRAPH_HALIDE)
