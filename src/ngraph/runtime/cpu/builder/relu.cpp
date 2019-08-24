@@ -132,11 +132,11 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Relu);
-            REGISTER_OP_BUILDER(ReluBackprop);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_relu_cpp() {}
-#endif
+            void register_builders_relu_cpp()
+            {
+                REGISTER_OP_BUILDER(Relu);
+                REGISTER_OP_BUILDER(ReluBackprop);
+            }
         }
     }
 }
