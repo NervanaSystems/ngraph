@@ -110,6 +110,9 @@ using namespace std;
 // be careful to avoid splitting the components. I have some rough ideas on how this could be
 // dealt with, but have not had time to implement them yet. --amprocte
 //
+
+const int ngraph::pass::VisualizeTree::max_jump_distance = 20;
+
 class HeightMap
 {
 public:
@@ -213,7 +216,6 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         }
 
         // TODO(amprocte): Maybe find a way to make this tunable.
-        const int max_jump_distance = 20;
 
         size_t fake_node_ctr = 0;
 
@@ -223,27 +225,20 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
             {
                 // print sub-graph
                 auto nodes_list = ck->get_node_list();
-                // all edges to the CK node
-                for (auto& arg : ck->get_arguments())
-                {
-                    m_ss << "    " << arg->get_name() << " -> " << ck->get_name();
-                }
-                // all nodes inside the CK sub-graph
+
+                // all nodes inside the CK s ub-graph
                 for (auto& ck_node : nodes_list)
                 {
                     m_ss << add_attributes(ck_node);
                 }
                 // all edges to each node in the sub-graph
-                for (auto& ck_node : nodes_list)
+                for (auto& subgraph_node : nodes_list)
                 {
-                    for (auto& arg : ck_node->get_arguments())
-                    {
-                        m_ss << "    " << arg->get_name() << " -> " << ck_node->get_name();
-                    }
+                    add_node_arguments(subgraph_node, height_maps, fake_node_ctr);
                 }
-                return;
             }
-
+            add_node_arguments(node, height_maps, fake_node_ctr);
+#if 0
             size_t arg_index = 0;
             for (auto arg : node->get_arguments())
             {
@@ -289,6 +284,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                 }
                 arg_index++;
             }
+#endif
         });
     }
 
@@ -302,6 +298,53 @@ pass::VisualizeTree::VisualizeTree(const string& file_name, node_modifiers_t nm,
     , m_node_modifiers{nm}
     , m_dot_only(dot_only)
 {
+}
+
+void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
+                                             unordered_map<Node*, HeightMap>& height_maps,
+                                             size_t& fake_node_ctr)
+{
+    size_t arg_index = 0;
+    for (auto arg : node->get_arguments())
+    {
+        size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
+        if (arg->description() == "Constant" || arg->description() == "Parameter")
+        {
+            auto clone_name = "CLONE_" + to_string(fake_node_ctr);
+            auto color = (arg->description() == "Parameter" ? "blue" : "black");
+            m_ss << "    " << clone_name << "[shape=\"box\" style=\"dashed,filled\" color=\""
+                 << color << "\" fillcolor=\"white\" label=\"" << get_node_name(arg) << "\"]\n";
+            m_ss << "    " << clone_name << " -> " << node->get_name()
+                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+            fake_node_ctr++;
+        }
+        else if (jump_distance > max_jump_distance)
+        {
+            m_ss << add_attributes(arg);
+            m_ss << add_attributes(node);
+            auto recv_node_name = "RECV_" + to_string(fake_node_ctr);
+            auto send_node_name = "SEND_" + to_string(fake_node_ctr);
+            m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
+                                                "fillcolor=\"#ffcccc\" label=\"Receive["
+                 << arg->get_name() << "]\"]\n";
+            m_ss << "    " << send_node_name << "[shape=\"box\" style=\"solid,filled\" "
+                                                "fillcolor=\"#ccffcc\" label=\"Send["
+                 << node->get_name() << "]\"]\n";
+            m_ss << "    " << arg->get_name() << " -> " << send_node_name
+                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+            m_ss << "    " << recv_node_name << " -> " << node->get_name()
+                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+            fake_node_ctr++;
+        }
+        else
+        {
+            m_ss << add_attributes(arg);
+            m_ss << add_attributes(node);
+            m_ss << "    " << arg->get_name() << " -> " << node->get_name()
+                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+        }
+        arg_index++;
+    }
 }
 
 string pass::VisualizeTree::add_attributes(shared_ptr<Node> node)
