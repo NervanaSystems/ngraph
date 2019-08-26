@@ -20,7 +20,7 @@ set(LLVM_CMAKE_PATH "${MLIR_BUILD_DIR}/lib/cmake/llvm"
     CACHE PATH "Path to LLVM cmake modules")
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_PATH}")
 
-# Enable use of the lit tool that we are building from MLIR repo.
+# Enable use of the lit tool that we build from MLIR repo.
 set(LLVM_DEFAULT_EXTERNAL_LIT ${MLIR_TOOLS_DIR}/llvm-lit)
 
 include(AddLLVM)
@@ -32,13 +32,9 @@ configure_lit_site_cfg(
     ${CMAKE_CURRENT_SOURCE_DIR}/lit.cfg.py
     )
 
-set(NGRAPH_MLIR_TEST_DEPENDS
-# TODO
-#    FileCheck count not
-#    mlir-opt
-#    mlir-translate
-#    mlir-tblgen
-    )
+#set(NGRAPH_MLIR_TEST_DEPENDS
+#    ngraph-opt
+#    )
 
 add_lit_testsuite(check-mlir "Running the nGraph MLIR regression tests"
     ${CMAKE_CURRENT_BINARY_DIR}
