@@ -78,6 +78,52 @@ namespace ngraph
             };
         }
 
+        namespace v1
+        {
+            class Reverse : public Op
+            {
+            public:
+                NGRAPH_API
+                static const std::string type_name;
+                const std::string& description() const override { return type_name; }
+                Reverse() = default;
+                /// \brief Constructs a reverse operation.
+                ///
+                /// \param data The input tensor, some of whose axes are to be reversed.
+                /// \param reversed_axes The axes to reverse in a form of a set of indices or boolean mask.
+                /// \param mode The way reversed_axes should be interpreted - a set or a mask.
+                Reverse(const Output<Node>& data, const Output<Node>& reversed_axes,
+                const std::string& mode);
+
+                void validate_and_infer_types() override;
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                /// \return The set of axes to reverse.
+                const std::string& get_mode() const { return m_mode; }
+                void set_mode(const std::string& mode)
+                {
+                    m_mode = mode;
+                }
+
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                            const NodeVector& deltas) override;
+
+                /// \brief Indicates how the values from the second input should be interpreted.
+                ///
+                /// The second input can contain a set of indices pointing to axes in the data tensor shape.
+                /// Alternatively it can contain a boolean mask that indicates which axes should be reversed.
+                std::string m_mode;
+            };
+        }
+
+        namespace dev
+        {
+            using v1::Reverse;
+        }
+
         using ngraph::op::v0::Reverse;
     }
 }

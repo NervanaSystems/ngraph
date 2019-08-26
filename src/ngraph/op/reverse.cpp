@@ -34,8 +34,8 @@ op::v0::Reverse::Reverse(const Output<Node>& arg, const AxisSet& reversed_axes)
 
 void op::v0::Reverse::validate_and_infer_types()
 {
-    auto input_shape = get_input_partial_shape(0);
-    Dimension input_rank = input_shape.rank();
+    const auto input_shape = get_input_partial_shape(0);
+    const Dimension input_rank = input_shape.rank();
 
     if (input_rank.is_static())
     {
@@ -68,4 +68,54 @@ void op::v0::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const Node
     auto x = input(0).get_source_output();
 
     adjoints.add_delta(x, make_shared<op::v0::Reverse>(delta, m_reversed_axes));
+}
+
+
+const string op::v1::Reverse::type_name{"Reverse"};
+
+op::v1::Reverse::Reverse(const Output<Node>& data, const Output<Node>& reversed_axes, const std::string& mode)
+    : Op({data, reversed_axes}), m_mode{mode}
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::v1::Reverse::validate_and_infer_types()
+{
+    const auto input_shape = get_input_partial_shape(0);
+    const auto input_rank = input_shape.rank();
+
+    const auto rev_axes_shape = get_input_partial_shape(0);
+    const auto rev_axes_rank = input_shape.rank();
+
+    if (input_rank.is_static() && rev_axes_rank.is_static())
+    {
+        NODE_VALIDATION_CHECK(this,
+                                (size_t)rev_axes_rank <= (size_t)input_rank,
+                                "The reversed_axes input rank (",
+                                rev_axes_rank,
+                                ") is greater than the data tensor rank (",
+                                input_rank,
+                                ").");
+    }
+
+    //TODO: validation of modes
+    //TODO: validation of reversed_axes if mode == "mask"
+
+    set_output_type(0, get_input_element_type(0), input_shape);
+}
+
+shared_ptr<Node> op::v1::Reverse::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<Reverse>(new_args.at(0), new_args.at(1), m_mode);
+}
+
+void op::v1::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    const auto delta = deltas.at(0);
+
+    const auto x = input(0).get_source_output();
+    const auto reversed_axes = input(1).get_source_output();
+
+    adjoints.add_delta(x, make_shared<op::v1::Reverse>(delta, reversed_axes, m_mode));
 }
