@@ -20,8 +20,10 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/util.hpp"
@@ -238,53 +240,6 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                 }
             }
             add_node_arguments(node, height_maps, fake_node_ctr);
-#if 0
-            size_t arg_index = 0;
-            for (auto arg : node->get_arguments())
-            {
-                size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
-
-                if (arg->description() == "Constant" || arg->description() == "Parameter")
-                {
-                    auto clone_name = "CLONE_" + to_string(fake_node_ctr);
-                    auto color = (arg->description() == "Parameter" ? "blue" : "black");
-                    m_ss << "    " << clone_name
-                         << "[shape=\"box\" style=\"dashed,filled\" color=\"" << color
-                         << "\" fillcolor=\"white\" label=\"" << get_node_name(arg) << "\"]\n";
-                    m_ss << "    " << clone_name << " -> " << node->get_name()
-                         << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                    fake_node_ctr++;
-                }
-                else if (jump_distance > max_jump_distance)
-                {
-                    m_ss << add_attributes(arg);
-                    m_ss << add_attributes(node);
-                    auto recv_node_name = "RECV_" + to_string(fake_node_ctr);
-                    auto send_node_name = "SEND_" + to_string(fake_node_ctr);
-
-                    m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
-                                                        "fillcolor=\"#ffcccc\" label=\"Receive["
-                         << arg->get_name() << "]\"]\n";
-                    m_ss << "    " << send_node_name << "[shape=\"box\" style=\"solid,filled\" "
-                                                        "fillcolor=\"#ccffcc\" label=\"Send["
-                         << node->get_name() << "]\"]\n";
-
-                    m_ss << "    " << arg->get_name() << " -> " << send_node_name
-                         << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                    m_ss << "    " << recv_node_name << " -> " << node->get_name()
-                         << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                    fake_node_ctr++;
-                }
-                else
-                {
-                    m_ss << add_attributes(arg);
-                    m_ss << add_attributes(node);
-                    m_ss << "    " << arg->get_name() << " -> " << node->get_name()
-                         << label_edge(arg, node, arg_index, jump_distance) << "\n";
-                }
-                arg_index++;
-            }
-#endif
         });
     }
 
@@ -308,7 +263,8 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
     for (auto arg : node->get_arguments())
     {
         size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
-        if (arg->description() == "Constant" || arg->description() == "Parameter")
+        if (arg->description() == ngraph::op::Constant::type_name ||
+            arg->description() == ngraph::op::Parameter::type_name)
         {
             auto clone_name = "CLONE_" + to_string(fake_node_ctr);
             auto color = (arg->description() == "Parameter" ? "blue" : "black");
