@@ -40,7 +40,7 @@ class ngraph::runtime::plaidml::op::Convolution final : public ngraph::op::Op
 {
 public:
     static const std::string type_name;
-    const std::string& description() const override { return type_name; }
+    std::string description() const override { return type_name; }
     Convolution(std::shared_ptr<ngraph::op::Convolution> src,
                 const OutputVector& args,
                 AxisVector data_axes,
@@ -66,7 +66,7 @@ class ngraph::runtime::plaidml::op::ConvolutionBackpropData final : public ngrap
 {
 public:
     static const std::string type_name;
-    const std::string& description() const override { return type_name; }
+    std::string description() const override { return type_name; }
     ConvolutionBackpropData(std::shared_ptr<ngraph::op::ConvolutionBackpropData> src,
                             const OutputVector& args,
                             AxisVector filters_axes,
@@ -92,7 +92,7 @@ class ngraph::runtime::plaidml::op::ConvolutionBackpropFilters final : public ng
 {
 public:
     static const std::string type_name;
-    const std::string& description() const override { return type_name; }
+    std::string description() const override { return type_name; }
     ConvolutionBackpropFilters(std::shared_ptr<ngraph::op::ConvolutionBackpropFilters> src,
                                const OutputVector& args,
                                AxisVector data_axes,

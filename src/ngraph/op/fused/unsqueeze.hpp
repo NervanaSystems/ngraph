@@ -32,7 +32,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             Unsqueeze() = default;
             Unsqueeze(const Output<Node>& data, const Output<Node>& axes);
 

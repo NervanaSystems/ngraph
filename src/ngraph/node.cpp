@@ -272,7 +272,7 @@ bool Node::is_constant() const
     return false;
 }
 
-const std::string& Node::description() const
+std::string Node::description() const
 {
     return m_node_type;
 }

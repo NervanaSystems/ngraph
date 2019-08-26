@@ -53,7 +53,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a tensor slice update operation.
             ///
             /// \param arg0 The tensor to overwrite into.

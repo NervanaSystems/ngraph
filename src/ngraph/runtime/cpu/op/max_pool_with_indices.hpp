@@ -33,7 +33,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             CPU_BACKEND_API MaxPoolWithIndices(const Output<Node>& arg,
                                                const Shape& window_shape,
                                                const Strides& window_movement_strides,
@@ -68,7 +68,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             CPU_BACKEND_API MaxPoolWithIndicesBackprop(const Output<Node>& arg_forward,
                                                        const Output<Node>& delta,
                                                        const Output<Node>& indices,

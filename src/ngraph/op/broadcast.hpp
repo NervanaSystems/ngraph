@@ -29,7 +29,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a broadcast operation.
             Broadcast() = default;
             /// \brief Constructs a broadcast operation.
@@ -70,7 +70,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Broadcast arg to the same shape as like_arg.
             BroadcastLike() = default;
             /// \brief Broadcast arg to the same shape as like_arg.

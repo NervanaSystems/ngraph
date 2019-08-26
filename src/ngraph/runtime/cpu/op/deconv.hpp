@@ -28,7 +28,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a batched-convolution data batch-backprop operation.
             ///
             /// \param data_batch_shape The shape of the data batch from forward-prop.

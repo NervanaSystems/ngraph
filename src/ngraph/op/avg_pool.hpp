@@ -31,7 +31,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a batched average pooling operation.
             AvgPool() = default;
 
@@ -175,7 +175,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             AvgPoolBackprop() = default;
             AvgPoolBackprop(const Shape& forward_arg_shape,
                             const std::shared_ptr<Node>& delta,

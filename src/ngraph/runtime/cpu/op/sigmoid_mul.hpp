@@ -31,7 +31,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// Defines valid function types
             enum class FunctionType
             {
@@ -70,7 +70,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             typedef SigmoidMultiply::FunctionType FunctionType;
             /// \brief Constructs a SigmoidMultiplyBackprop operation.
             ///

@@ -27,7 +27,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             Dropout(const Output<Node>& input,
                     const Output<Node>& gm_const,
                     const Output<Node>& use_seed,

@@ -30,7 +30,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             Sigmoid(const Output<Node>& arg);
             Sigmoid() = default;
             virtual std::shared_ptr<Node>
@@ -46,7 +46,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             SigmoidBackprop() = default;
             /// \brief Constructs a SigmoidBackprop operation.
             ///

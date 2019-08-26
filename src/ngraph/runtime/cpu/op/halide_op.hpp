@@ -33,7 +33,7 @@ namespace ngraph
                 {
                 public:
                     static const std::string type_name;
-                    const std::string& description() const override { return type_name; }
+                    std::string description() const override { return type_name; }
                     HalideOp(const OutputVector& args,
                              const std::list<Output<Node>>& ops,
                              const element::Type& out_type,

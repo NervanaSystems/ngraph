@@ -28,7 +28,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             // INPUTS:
             // [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size,
             //       feature_size}

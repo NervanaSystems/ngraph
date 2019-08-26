@@ -29,7 +29,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             QuantizedConvolutionBias() = default;
             QuantizedConvolutionBias(const Output<Node>& data_batch,
                                      const Output<Node>& filters,
@@ -68,7 +68,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             QuantizedConvolutionBiasAdd(const Output<Node>& data_batch,
                                         const Output<Node>& filters,
                                         const Output<Node>& bias,
@@ -108,7 +108,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             QuantizedConvolutionBiasSignedAdd(const Output<Node>& data_batch,
                                               const Output<Node>& filters,
                                               const Output<Node>& bias,

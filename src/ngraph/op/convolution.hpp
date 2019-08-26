@@ -32,7 +32,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a batched convolution operation.
             Convolution() = default;
             /// \brief Constructs a batched convolution operation.
@@ -193,7 +193,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a batched-convolution data batch-backprop operation.
             ConvolutionBackpropData() = default;
             /// \brief Constructs a batched-convolution data batch-backprop operation.
@@ -292,7 +292,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a batched-convolution filter-backprop operation.
             ConvolutionBackpropFilters() = default;
             /// \brief Constructs a batched-convolution filter-backprop operation.

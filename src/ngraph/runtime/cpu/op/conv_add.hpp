@@ -27,7 +27,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
                            const Output<Node>& sum_input,
                            bool with_relu);

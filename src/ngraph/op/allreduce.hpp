@@ -28,7 +28,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             AllReduce() = default;
             AllReduce(const Output<Node>& arg, reduction::Type reduce_type = reduction::Type::SUM);
 

@@ -31,7 +31,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a CPULeakyRelu operation.
             ///
             /// \param arg Node input to the Relu.

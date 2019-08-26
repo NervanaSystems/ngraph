@@ -55,7 +55,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
                                 const Output<Node>& src_iter,
                                 const Output<Node>& weights_layer,

@@ -39,7 +39,7 @@ class ngraph::runtime::plaidml::op::Winograd final : public ngraph::op::Op
 {
 public:
     static const std::string type_name;
-    const std::string& description() const override { return type_name; }
+    std::string description() const override { return type_name; }
     Winograd(std::shared_ptr<Convolution> conv, const OutputVector& args);
 
     void validate_and_infer_types() final;

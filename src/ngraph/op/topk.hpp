@@ -42,7 +42,7 @@ namespace ngraph
 
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a TopK operation
             TopK() = default;
             /// \brief Constructs a TopK operation.

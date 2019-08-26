@@ -29,7 +29,7 @@ namespace ngraph
         {
         public:
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             CPU_BACKEND_API ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv);
 
             CPU_BACKEND_API ConvolutionRelu(const Output<Node>& data_batch,

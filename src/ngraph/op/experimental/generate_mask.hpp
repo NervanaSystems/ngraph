@@ -31,7 +31,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a GenerateMask node with a given shape, seed,
             /// probability and training/inference mode
             GenerateMask() = default;

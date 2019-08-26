@@ -30,7 +30,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             ConvolutionBias() = default;
             ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
                             const Output<Node>& bias,
@@ -85,7 +85,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             ConvolutionBiasBackpropFiltersBias() = default;
             ConvolutionBiasBackpropFiltersBias(const Output<Node>& data_batch,
                                                const Shape& filters_shape,
@@ -179,7 +179,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             ConvolutionBiasAdd() = default;
             ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
                                const Output<Node>& sum_input,

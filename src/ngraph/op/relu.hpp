@@ -35,7 +35,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             Relu() = default;
             /// \brief Constructs a Relu operation.
             ///
@@ -56,7 +56,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a ReluBackprop operation.
             ///
             /// \param arg Node that produces the relu forward input tensor.

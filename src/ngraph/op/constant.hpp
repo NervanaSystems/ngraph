@@ -36,7 +36,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -351,7 +351,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             std::shared_ptr<op::Constant> as_constant() const;
 
         protected:

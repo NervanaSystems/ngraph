@@ -47,7 +47,7 @@ namespace ngraph
             const std::string& op_type() const;
             const std::string& name() const;
 
-            const std::string& description() const;
+            std::string description() const;
             const std::vector<std::reference_wrapper<const std::string>>& get_output_names() const;
             const std::string& output(int index) const;
             std::size_t get_outputs_size() const;

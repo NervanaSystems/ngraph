@@ -33,7 +33,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             BatchNormTraining() = default;
             /// \param input Must have rank >= 2, [., C, ...]
             /// \param gamma gamma scaling for normalized value. [C]
@@ -94,7 +94,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             BatchNormInference() = default;
             /// \param input [., C, ...]
             /// \param gamma gamma scaling for normalized value. [C]
@@ -164,7 +164,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             BatchNormTrainingBackprop() = default;
             BatchNormTrainingBackprop(const Output<Node>& input,
                                       const Output<Node>& gamma,

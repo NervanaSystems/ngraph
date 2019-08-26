@@ -42,7 +42,7 @@ class ngraph::runtime::plaidml::op::ImplicitBroadcast final : public ngraph::op:
 {
 public:
     static const std::string type_name;
-    const std::string& description() const override { return type_name; }
+    std::string description() const override { return type_name; }
     ImplicitBroadcast(const Output<Node>& input, const Shape& shape);
 
     void validate_and_infer_types() final;

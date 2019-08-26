@@ -76,7 +76,7 @@ namespace ngraph
         public:
             NGRAPH_API
             static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            std::string description() const override { return type_name; }
             /// \brief Constructs a summation operation.
             Sum() = default;
             /// \brief Constructs a summation operation.

@@ -54,7 +54,7 @@ namespace ngraph
                 {
                 }
 
-                const std::string& description() const override
+                std::string description() const override
                 {
                     static std::string desc = "Any";
                     return desc;
