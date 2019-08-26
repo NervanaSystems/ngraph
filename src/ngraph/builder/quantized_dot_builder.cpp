@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "ngraph/builder/quantized_dot_builder.hpp"
-#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -64,6 +63,46 @@ namespace ngraph
                                                  input0_axes,
                                                  input1_axes,
                                                  output_axes);
+        }
+
+        shared_ptr<Node> QuantizedDotBiasBuilder(const Output<Node>& input,
+                                                 const Output<Node>& filters,
+                                                 const Output<Node>& bias,
+                                                 const Output<Node>& min_input,
+                                                 const Output<Node>& max_input,
+                                                 const Output<Node>& min_filter,
+                                                 const Output<Node>& max_filter,
+                                                 const Output<Node>& min_output,
+                                                 const Output<Node>& max_output,
+                                                 const bool requantize,
+                                                 const bool with_relu)
+        {
+            auto requantization_scale =
+                quantization_utils::get_dot_scale(min_input,
+                                                  max_input,
+                                                  min_filter,
+                                                  max_filter,
+                                                  min_output,
+                                                  max_output,
+                                                  input.get_element_type(),
+                                                  with_relu ? element::u8 : element::i8,
+                                                  requantize);
+
+            auto mybias = bias;
+            if (bias.get_element_type() != element::i32)
+            {
+                auto zero = make_constant(element::i32, min_input.get_shape(), 0);
+                AxisSet quantization_axes;
+                auto bias_scale = quantization_utils::get_bias_scale(
+                    min_input, max_input, min_filter, max_filter);
+                op::Quantize::RoundMode round_mode =
+                    op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+
+                mybias = make_shared<op::Quantize>(
+                    bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
+            }
+            return make_shared<op::QuantizedDotBias>(
+                input, filters, mybias, requantization_scale, requantize, with_relu);
         }
     }
 }

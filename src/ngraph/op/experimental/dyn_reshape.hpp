@@ -35,16 +35,17 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             DynReshape() = default;
-            /// \brief Constructs a dynamic reshape operation. This operation does not perform transpose.
+            /// \brief Constructs a dynamic reshape operation. This operation does not perform
+            ///        transpose.
             ///
             /// \param arg The tensor to be reshaped.
             /// \param pattern The node that defines output shape pattern.
             ///        If the input shape is \f$(a_0,\dots,a_{k-1})\f$ then the output shape must
             ///        be of the form \f$(b_0,\dots,b_{j-1})\f$ where \f$\Pi(a_i) = \Pi(b_i)\f$.
-            ///        A value of -1 is allowed for at most one dimension, in which case the dimension
-            ///        size is inferred based on element count of input tensor.
-            /// \param zero_flag Treats zeros in `pattern` as wildcard flags indicating a copy from input
-            ///                  shape at the same index.
+            ///        A value of -1 is allowed for at most one dimension, in which case the
+            ///        dimension size is inferred based on element count of input tensor.
+            /// \param zero_flag Treats zeros in `pattern` as wildcard flags indicating a copy from
+            ///                  input shape at the same index.
             DynReshape(const Output<Node>& arg,
                        const Output<Node>& pattern,
                        bool zero_flag = false);

@@ -24,7 +24,8 @@ namespace ngraph
     {
         namespace util
         {
-            /// \brief Abstract base class for fused ops, i.e ops that can be broken down into core ngraph ops
+            /// \brief Abstract base class for fused ops, i.e ops that can be broken down into core
+            ///        ngraph ops
             ///
             class FusedOp : public Op
             {

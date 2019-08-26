@@ -14,28 +14,23 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
-
 #pragma once
 
-#include "contrib/mlir/compiler.hpp"
-
-#include <mlir/Pass/Pass.h>
+#include "ngraph/builder/make_constant.hpp"
+#include "ngraph/coordinate_diff.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/quantize.hpp"
+#include "quantization_utils.hpp"
 
 namespace ngraph
 {
-    namespace runtime
+    namespace builder
     {
-        namespace ngmlir
-        {
-            class MLIRCompiler;
-        }
+        std::shared_ptr<Node> QuantizeBuilder(const Output<Node>& input,
+                                              const Output<Node>& min,
+                                              const Output<Node>& max,
+                                              const ngraph::element::Type& quant_type,
+                                              const ngraph::AxisSet& axes,
+                                              op::Quantize::RoundMode round_mode);
     }
-}
-
-namespace mlir
-{
-    std::unique_ptr<Pass>
-        createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
 }

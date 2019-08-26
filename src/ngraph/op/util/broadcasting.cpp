@@ -60,9 +60,9 @@ static ngraph::Shape calculate_broadcast_shape(ngraph::Shape left_shape, ngraph:
 /// \brief Calculate the output shape of numpy-style broadcast operation for all input shapes.
 ///
 /// This function finds the maximum tensor shape that will be the result of element-wise operation
-/// that will be applied to the input shapes vector. The function also prepares the shape of each input
-/// for the element-wise operation by left-padding those shapes so that their rank is equal to
-/// the left_shape's rank.
+/// that will be applied to the input shapes vector. The function also prepares the shape of each
+/// input for the element-wise operation by left-padding those shapes so that their rank is equal
+/// to the left_shape's rank.
 ///
 /// \param input_shapes A vector of input shapes for which a common shape should be found
 /// \return A pair that contains the target shape as its first object and a vector of padded
@@ -421,7 +421,8 @@ namespace ngraph
         {
             std::vector<std::size_t> result(output_shape.size() - input_shape.size());
             // Populate the result vector with monotonic increasing series from 0 until
-            // output_shape_size, excluding values in range [start_match_axis, start_match_axis + input_shape.size()
+            // output_shape_size, excluding values in range:
+            // [start_match_axis, start_match_axis + input_shape.size()]
             std::iota(std::begin(result), std::begin(result) + start_match_axis, 0);
             std::iota(std::begin(result) + start_match_axis,
                       std::end(result),

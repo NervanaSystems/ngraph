@@ -297,7 +297,10 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     // Window movement strides      q                     p_f
     // Window dilation strides      p_f                   q
     // Padding below                a_x                   a_x
-    // Padding above                b_x                   b_x - (a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q
+    // Padding above                b_x                   b_x -
+    //                                                      (a_x + (S_x - 1)p_x + b_x -
+    //                                                        (S_f - 1)p_f)
+    //                                                       % q
     // Data dilation strides        p_x                   p_x
 
     for (size_t i = 0; i < filters_shape.size() - 2; i++)
