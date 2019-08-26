@@ -30,8 +30,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static const char* type_name;
+            const char* get_type_name() const override { return type_name; }
             /// \brief Constructs an unitialized addition operation
             Add() = default;
 

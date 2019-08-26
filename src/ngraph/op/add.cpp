@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Add::type_name{"Add"};
+const char* op::Add::type_name{"Add"};
 
 op::Add::Add(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
     : BinaryElementwiseArithmetic(arg0, arg1, autob)

@@ -137,6 +137,30 @@ namespace ngraph
     public:
         virtual ~Node();
 
+        template <typename NodeType>
+        bool has_type() const
+        {
+            return std::strcmp(get_type_name(), NodeType::type_name);
+        }
+
+        template <typename NodeType>
+        std::shared_ptr<NodeType> as_type()
+        {
+            return has_type<NodeType>() ? shared_from_this() : std::shared_ptr<NodeType>();
+        }
+
+        template <typename NodeType>
+        std::shared_ptr<const NodeType> as_type() const
+        {
+            return has_type<NodeType>() ? shared_from_this() : std::shared_ptr<NodeType>();
+        }
+
+        virtual const char* get_type_name() const
+        {
+            // Transitional definition
+            return description().c_str();
+        }
+
         /// Sets/replaces the arguments with new arguments.
         void set_arguments(const NodeVector& arguments);
         /// Sets/replaces the arguments with new arguments.
@@ -417,7 +441,7 @@ namespace ngraph
 
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
-        const std::string m_node_type;
+        std::string m_node_type;
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
         std::string m_unique_name;
