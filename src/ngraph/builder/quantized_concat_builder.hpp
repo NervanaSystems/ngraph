@@ -16,19 +16,24 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/builder/make_constant.hpp"
+#include "ngraph/coordinate_diff.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/concat.hpp"
+#include "ngraph/op/dequantize.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/quantize.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "quantization_utils.hpp"
 
-namespace py = pybind11;
-
-void regclass_pyngraph_Type(py::module m);
-void regclass_pyngraph_Bool(py::module m);
-void regclass_pyngraph_Float32(py::module m);
-void regclass_pyngraph_Float64(py::module m);
-void regclass_pyngraph_Int8(py::module m);
-// void regclass_pyngraph_Int16(py::module m);
-void regclass_pyngraph_Int32(py::module m);
-void regclass_pyngraph_Int64(py::module m);
-void regclass_pyngraph_UInt8(py::module m);
-// void regclass_pyngraph_UInt16(py::module m);
-void regclass_pyngraph_UInt32(py::module m);
-void regclass_pyngraph_UInt64(py::module m);
+namespace ngraph
+{
+    namespace builder
+    {
+        std::shared_ptr<Node> QuantizedConcatBuilder(const NodeVector& args,
+                                                     size_t concatenation_axis,
+                                                     const NodeVector& mins,
+                                                     const NodeVector& maxs);
+    }
+}
