@@ -17,6 +17,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstring>
 #include <deque>
 #include <iostream>
 #include <memory>
@@ -140,7 +141,7 @@ namespace ngraph
         template <typename NodeType>
         bool has_type() const
         {
-            return std::strcmp(get_type_name(), NodeType::type_name);
+            return 0 == std::strcmp(get_type_name(), NodeType::type_name);
         }
 
         template <typename NodeType>
