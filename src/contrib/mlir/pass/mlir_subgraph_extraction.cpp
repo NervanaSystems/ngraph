@@ -265,7 +265,8 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
         NGRAPH_DEBUG << "   [CK Extract] Output Nodes: ";
         for (auto node : outputs)
         {
-            NGRAPH_DEBUG << "   [CK Extract] " << *node;;
+            NGRAPH_DEBUG << "   [CK Extract] " << *node;
+            ;
         }
         NGRAPH_DEBUG << "   [CK Extract] CK Node = " << *ck;
     }
