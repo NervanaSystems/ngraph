@@ -112,7 +112,7 @@ TEST(cpu_test, trivial_in_place_relu)
 }
 
 #ifndef NGRAPH_HALIDE
-TEST(cpu_test, trivial_in_place_relu_fail)
+TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
@@ -349,7 +349,7 @@ TEST(cpu_test, reshape_layout_optimizations3)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations4)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations4))
 {
     // Squeeze and expand dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -398,7 +398,7 @@ TEST(cpu_test, reshape_layout_optimizations4)
     EXPECT_LE(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 4);
 }
 
-TEST(cpu_test, reshape_layout_optimizations5)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations5))
 {
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 8});
