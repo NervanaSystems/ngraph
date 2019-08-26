@@ -146,7 +146,8 @@ public:
                     << "\n";
                 msg << get_results_str(ref_data_vector, bk_isolated_data_vector);
 
-                // When testing with isolated graph dependencies test w/ default (tight) f64 tolerance
+                // When testing with isolated graph dependencies test w/ default (tight) f64
+                // tolerance
                 ::testing::AssertionResult all_close_isolated =
                     test::all_close_f(ref_data_vector, bk_isolated_data_vector);
                 if (!all_close_graph || !all_close_isolated)
@@ -436,7 +437,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     // Now create isolated function for backend being tested where each node of the
     // original graph is tested with inputs copied from reference backend rather
     // than original dependencies.
-    //auto bk_isolated_func = clone_function(Function(isolated_results, isolated_parameters));
+    // auto bk_isolated_func = clone_function(Function(isolated_results, isolated_parameters));
     auto bk_isolated_func = make_shared<Function>(isolated_results, isolated_parameters);
 
     // We'll leverage the bk_args we already used above (for same original parameter data values)

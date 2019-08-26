@@ -128,7 +128,8 @@ shared_ptr<runtime::Executable>
 #endif
 
     shared_ptr<runtime::Executable> rc;
-    // we will protect the access to map (m_exec_map) across multiple threads by creating a lock_gaurd
+    // we will protect the access to map (m_exec_map) across multiple threads by creating a
+    // lock_gaurd
     // m_exec_map_mutex will be released once the object `guard` goes out of scope
     {
         std::lock_guard<std::mutex> guard(m_exec_map_mutex);
