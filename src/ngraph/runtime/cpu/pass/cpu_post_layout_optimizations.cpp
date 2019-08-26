@@ -379,9 +379,10 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     }
 
     // build mkldnn primitive and execute
-    mkldnn::memory in{{input_desc, runtime::cpu::executor::global_cpu_engine},
+    mkldnn::memory in{input_desc,
+                      runtime::cpu::executor::global_cpu_engine,
                       const_cast<void*>(input->get_data_ptr())};
-    mkldnn::memory out{{result_desc, runtime::cpu::executor::global_cpu_engine}, result_vec.data()};
+    mkldnn::memory out{result_desc, runtime::cpu::executor::global_cpu_engine, result_vec.data()};
     mkldnn::reorder reorder{in, out};
     mkldnn::stream s(mkldnn::stream::kind::eager);
 
