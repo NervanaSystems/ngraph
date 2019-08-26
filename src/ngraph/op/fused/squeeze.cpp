@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Squeeze::type_name{"Squeeze"};
+constexpr NodeTypeInfo op::Squeeze::type_info;
 
 op::Squeeze::Squeeze(const Output<Node>& data, const Output<Node>& axes)
     : FusedOp({data, axes})

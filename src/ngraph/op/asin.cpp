@@ -31,7 +31,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Asin::type_name{"Asin"};
+constexpr NodeTypeInfo op::Asin::type_info;
 
 op::Asin::Asin(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

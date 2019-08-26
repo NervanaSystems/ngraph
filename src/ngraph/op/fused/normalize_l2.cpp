@@ -27,7 +27,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::NormalizeL2::type_name{"NormalizeL2"};
+constexpr NodeTypeInfo op::NormalizeL2::type_info;
 
 op::NormalizeL2::NormalizeL2(const Output<Node>& data,
                              const Output<Node>& axes,

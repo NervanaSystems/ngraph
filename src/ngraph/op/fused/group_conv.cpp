@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::GroupConvolution::type_name{"GroupConvolution"};
+constexpr NodeTypeInfo op::GroupConvolution::type_info;
 
 op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
                                        const Output<Node>& filters,

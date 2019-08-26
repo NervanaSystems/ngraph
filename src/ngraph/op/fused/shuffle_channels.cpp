@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ShuffleChannels::type_name{"ShuffleChannels"};
+constexpr NodeTypeInfo op::ShuffleChannels::type_info;
 
 op::ShuffleChannels::ShuffleChannels(const Output<Node>& data, const int axis, const size_t groups)
     : FusedOp({data})

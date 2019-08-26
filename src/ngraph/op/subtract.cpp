@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Subtract::type_name{"Subtract"};
+constexpr NodeTypeInfo op::Subtract::type_info;
 
 op::Subtract::Subtract(const Output<Node>& arg0,
                        const Output<Node>& arg1,

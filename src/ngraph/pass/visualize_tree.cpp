@@ -263,8 +263,7 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
     for (auto arg : node->get_arguments())
     {
         size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
-        if (arg->description() == ngraph::op::Constant::type_name ||
-            arg->description() == ngraph::op::Parameter::type_name)
+        if (arg->has_type<ngraph::op::Constant>() || arg->has_type<ngraph::op::Parameter>())
         {
             auto clone_name = "CLONE_" + to_string(fake_node_ctr);
             auto color = (arg->description() == "Parameter" ? "blue" : "black");

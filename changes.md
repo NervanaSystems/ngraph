@@ -1,5 +1,10 @@
 # API Changes
 
+## Op Definition
+* Every Op class must declare a `static constexpr NodeTypeInfo type_info{name, version}` in the class definition and define it in the .cpp file. See any op definition for an example.
+* The boolean node method `has_type<T>` is for testing if a node is the op `T`.
+* `T as_type<T>()` will upcast `Node` to an explicit op class if it is of class `T`, or `nullptr` if it is not.
+
 ## Passes
 * `LikeReplacement` pass must be run by all transformers.
 * `ngraph::pass::FusionType` is now an enum class. Constant values defined by `FusionType` are created for backward compatibility and will be removed in future releases.

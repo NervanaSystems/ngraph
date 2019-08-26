@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::AvgPool::type_name{"AvgPool"};
+constexpr NodeTypeInfo op::AvgPool::type_info;
 
 op::AvgPool::AvgPool(const Output<Node>& arg,
                      const Shape& window_shape,
@@ -224,7 +224,7 @@ shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_ceil_mode);
 }
 
-const string op::AvgPoolBackprop::type_name("AvgPoolBackprop");
+constexpr NodeTypeInfo op::AvgPoolBackprop::type_info;
 
 op::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
                                      const shared_ptr<Node>& delta,

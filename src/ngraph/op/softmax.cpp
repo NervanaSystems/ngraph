@@ -28,7 +28,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Softmax::type_name{"Softmax"};
+constexpr NodeTypeInfo op::Softmax::type_info;
 
 op::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     : UnaryElementwiseArithmetic(arg)
