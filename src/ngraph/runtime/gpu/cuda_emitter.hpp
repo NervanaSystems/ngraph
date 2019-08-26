@@ -228,9 +228,11 @@ namespace ngraph
                                               NVShape input_shape,
                                               const char* op,
                                               const char* kernel);
-                /// \brief This is the preprocess for reduce to scalar if the data size is large than a number.
+                /// \brief This is the preprocess for reduce to scalar if the data size is large
+                ///        than a number.
                 /// The number can be tuned based on hardware.
-                /// This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
+                /// This cuda kernel will accumulate reduction to a certain number of bins depends
+                /// on hardware.
                 size_t build_reduce_to_scalar_acc(const std::vector<element::Type>& dtypes,
                                                   NVShape input_shape,
                                                   NVShape output_shape,
@@ -239,7 +241,8 @@ namespace ngraph
                                                   const char* kernel);
                 /// \brief Simplifed reduce shape and reduce axis, remove dimsion size 1,
                 /// combine two or more adjacent reduce/nonreduce axis.
-                /// the simplified reduce shape and reduce axis will make index caculation simplier in cuda kernel.
+                /// the simplified reduce shape and reduce axis will make index caculation simplier
+                /// in cuda kernel.
                 /// example:
                 /// {1 1 2 2} with reduce axis {3} simplifiy to: {2 2} with reduce_axis {1};
                 /// {2 3 4} with reduce axis {0 1} simplify to {6 4} with reduce_axis {0};
@@ -248,13 +251,15 @@ namespace ngraph
                                            NVShape reduce_axis,
                                            NVShape& simplified_shape,
                                            NVShape& simplified_reduce_axis);
-                /// \brief Seperate input_shape to reduced_shape and non_reduce_shape, and calcuate strides for them
-                ///        and strides in input. This help caculate input index and output index for cuda kernel.
+                /// \brief Seperate input_shape to reduced_shape and non_reduce_shape, and calcuate
+                ///        strides for them and strides in input. This help caculate input index and
+                ///        output index for cuda kernel.
                 /// example:
                 /// input_shape {2 3 4 5} with reduce_axis {0 2}:
                 /// input_strides: {60, 20, 5, 1}
                 /// reduce_shape {2 4}, reduce_strides {4 1}, reduce_strides_in_input {60 5}
-                /// non_reduce_shape {3 5}, non_reduce_strides {5 1}, non_reduce_strides_in_input {20 1}
+                /// non_reduce_shape {3 5}, non_reduce_strides {5 1}, non_reduce_strides_in_input
+                /// {20 1}
                 void get_reduce_strides(NVShape input_shape,
                                         NVShape reduce_axis,
                                         NVShape& non_reduce_shape,
@@ -264,8 +269,8 @@ namespace ngraph
                                         NVShape& reduce_strides,
                                         NVShape& reduce_strides_in_input);
 
-                /// \brief Calculate magic and shift part of an shape vector (denomitor), change divide to multiply
-                ///        in cuda kernel.
+                /// \brief Calculate magic and shift part of an shape vector (denomitor), change
+                ///        divide to multiply in cuda kernel.
                 void div_to_mul(const NVShape& shape,
                                 std::vector<int>& magic,
                                 std::vector<int>& shift);

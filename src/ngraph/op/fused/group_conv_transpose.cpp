@@ -267,8 +267,8 @@ Shape op::GroupConvolutionTranspose::get_data_batch_shape() const
 
 NodeVector op::GroupConvolutionTranspose::decompose_op() const
 {
-    auto data = input(0).get_source_output();
-    auto filters = input(1).get_source_output();
+    auto data = input_value(0);
+    auto filters = input_value(1);
 
     const Shape data_batch_shape = get_data_batch_shape();
     const size_t num_spatial_dims = data.get_shape().size() - 2;

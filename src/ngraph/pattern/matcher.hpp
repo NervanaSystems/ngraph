@@ -190,11 +190,13 @@ namespace ngraph
         {
         public:
             /// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match
-            /// repeating patterns (e.g. RNN, LSTM, GRU cells)
+            ///        repeating patterns (e.g. RNN, LSTM, GRU cells)
             ///
             /// \param pattern is a pattern sub graph describing an individual cell
-            /// \param rpattern is a (recurring) label to denote which node the next match should start at
-            /// \param correlated_patterns is a set of labels whose bound nodes must remain the same across all cells
+            /// \param rpattern is a (recurring) label to denote which node the next match should
+            ///                 start at
+            /// \param correlated_patterns is a set of labels whose bound nodes must remain the same
+            ///                            across all cells
             RecurrentMatcher(std::shared_ptr<Node> pattern,
                              std::shared_ptr<op::Label> rpattern,
                              const std::set<std::shared_ptr<op::Label>>& correlated_patterns)

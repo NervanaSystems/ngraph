@@ -59,12 +59,9 @@
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"
@@ -84,7 +81,7 @@
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
@@ -121,6 +118,7 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/recv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -145,6 +143,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
@@ -1170,7 +1169,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Elu:
         {
-            node = make_shared<op::Elu>(args[0], args[1]);
+            auto alpha = node_js.at("alpha").get<double>();
+            node = make_shared<op::Elu>(args[0], alpha);
             break;
         }
         case OP_TYPEID::EmbeddingLookup:
@@ -1219,6 +1219,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Gelu:
         {
             node = make_shared<op::Gelu>(args[0]);
+            break;
+        }
+        case OP_TYPEID::GeluBackpropFactor:
+        {
+            node = make_shared<op::GeluBackpropFactor>(args[0]);
             break;
         }
         case OP_TYPEID::Gemm:
@@ -1363,7 +1368,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto beta = node_js.at("beta").get<double>();
             auto bias = node_js.at("bias").get<double>();
             auto nsize = node_js.at("nsize").get<size_t>();
-            node = make_shared<op::LRN>(args[0], alpha, beta, bias, nsize);
+            node = make_shared<op::LRN>(args[0], args[1], alpha, beta, bias, nsize);
             break;
         }
         case OP_TYPEID::LSTMCell:
@@ -1497,13 +1502,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Negative>(args[0]);
             break;
         }
-        case OP_TYPEID::Normalize:
+        case OP_TYPEID::NormalizeL2:
         {
-            bool across_spatial = node_js.at("across_spatial").get<bool>();
-            bool channel_shared = node_js.at("channel_shared").get<bool>();
             float eps = node_js.at("eps").get<float>();
-            node =
-                make_shared<op::Normalize>(args[0], args[1], across_spatial, channel_shared, eps);
+            auto eps_mode = node_js.at("eps_mode").get<op::EpsMode>();
+            node = make_shared<op::NormalizeL2>(args[0], args[1], eps, eps_mode);
             break;
         }
         case OP_TYPEID::NotEqual:
@@ -1598,23 +1601,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Quantize>(args[0], args[1], args[2], type, axes, round_mode);
             break;
         }
-        case OP_TYPEID::QuantizedAvgPool:
-        {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            auto include_padding_in_avg_computation =
-                node_js.at("include_padding_in_avg_computation").get<bool>();
-            node = make_shared<op::QuantizedAvgPool>(args[0],
-                                                     window_shape,
-                                                     window_movement_strides,
-                                                     padding_below,
-                                                     padding_above,
-                                                     include_padding_in_avg_computation);
-            break;
-        }
         case OP_TYPEID::QuantizedConvolutionBias: { break;
         }
         case OP_TYPEID::QuantizedConvolutionBiasAdd: { break;
@@ -1659,21 +1645,27 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::QuantizedDotBias: { break;
         }
-        case OP_TYPEID::QuantizedDot: { break;
-        }
-        case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::QuantizedDot:
         {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            // For backwards compatibility, both (but not just one) of the padding_ fields may be
-            // omitted.
-            auto padding_below_maybe = get_or_default(node_js, "padding_below", json{});
-            auto padding_above_maybe = get_or_default(node_js, "padding_above", json{});
-            auto padding_below = padding_below_maybe.get<vector<size_t>>();
-            auto padding_above = padding_above_maybe.get<vector<size_t>>();
-            node = make_shared<op::QuantizedMaxPool>(
-                args[0], window_shape, window_movement_strides, padding_below, padding_above);
+            size_t reduction_axes_count = node_js["reduction_axes_count"].get<size_t>();
+            auto output_type = read_element_type(node_js.at("output_type"));
+            auto input0_axes = node_js.at("input0_axes").get<set<size_t>>();
+            auto input1_axes = node_js.at("input1_axes").get<set<size_t>>();
+            auto output_axes = node_js.at("output_axes").get<set<size_t>>();
+
+            node = make_shared<op::QuantizedDot>(args[0],
+                                                 args[1],
+                                                 reduction_axes_count,
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 args[5],
+                                                 args[6],
+                                                 args[7],
+                                                 output_type,
+                                                 input0_axes,
+                                                 input1_axes,
+                                                 output_axes);
 
             break;
         }
@@ -2370,7 +2362,11 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
-    case OP_TYPEID::Elu: { break;
+    case OP_TYPEID::Elu:
+    {
+        auto tmp = dynamic_cast<const op::Elu*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        break;
     }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
@@ -2410,6 +2406,8 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Gelu: { break;
+    }
+    case OP_TYPEID::GeluBackpropFactor: { break;
     }
     case OP_TYPEID::Gemm:
     {
@@ -2605,12 +2603,11 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Negative: { break;
     }
-    case OP_TYPEID::Normalize:
+    case OP_TYPEID::NormalizeL2:
     {
-        auto tmp = dynamic_cast<const op::Normalize*>(&n);
-        node["across_spatial"] = tmp->get_across_spatial();
-        node["channel_shared"] = tmp->get_channel_shared();
+        auto tmp = dynamic_cast<const op::NormalizeL2*>(&n);
         node["eps"] = tmp->get_eps();
+        node["eps_mode"] = tmp->get_eps_mode();
         break;
     }
     case OP_TYPEID::NotEqual:
@@ -2698,16 +2695,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["round_mode"] = tmp->get_round_mode();
         break;
     }
-    case OP_TYPEID::QuantizedAvgPool:
-    {
-        auto tmp = dynamic_cast<const op::QuantizedAvgPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
-        break;
-    }
     case OP_TYPEID::QuantizedConvolutionBias: { break;
     }
     case OP_TYPEID::QuantizedConvolutionBiasAdd: { break;
@@ -2732,15 +2719,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::QuantizedDotBias: { break;
     }
-    case OP_TYPEID::QuantizedDot: { break;
-    }
-    case OP_TYPEID::QuantizedMaxPool:
+    case OP_TYPEID::QuantizedDot:
     {
-        auto tmp = dynamic_cast<const op::QuantizedMaxPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
+        auto tmp = dynamic_cast<const op::QuantizedDot*>(&n);
+        node["reduction_axes_count"] = tmp->get_reduction_axes_count();
+        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["input0_axes"] = tmp->get_input0_axes();
+        node["input1_axes"] = tmp->get_input1_axes();
+        node["output_axes"] = tmp->get_output_axes();
         break;
     }
     case OP_TYPEID::Recv:

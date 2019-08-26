@@ -21,7 +21,7 @@ namespace ngraph
     class State
     {
     public:
-        //TODO: add name and id
+        // TODO: add name and id
         State() {}
         virtual void activate() = 0;
         virtual void deactivate() = 0;

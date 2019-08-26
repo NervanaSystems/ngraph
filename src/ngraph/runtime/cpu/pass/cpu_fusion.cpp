@@ -41,12 +41,8 @@
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -59,6 +55,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -728,7 +725,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 //      \      \|           /                      /
 //            BatchNormInferenceRelu
 //
-// Multiply1, Multiply2, and newAdd operate on vectors while Multiply an Add operate on multi-dimensional matrices.
+// Multiply1, Multiply2, and newAdd operate on vectors while Multiply an Add operate on
+// multi-dimensional matrices.
 // Multiply1, Multiply2, and newAdd may be folded away with constant folding pass later.
 void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with_multiply_add()
 {
@@ -1909,7 +1907,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
 void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_folding_relu()
 {
     Shape data_batch_shape{100, 512, 4, 4};
-    Shape filters_shape{512, 64, 4, 4}; //Note: the weights are in o,i,h,w
+    Shape filters_shape{512, 64, 4, 4}; // Note: the weights are in o,i,h,w
     auto data_label = std::make_shared<pattern::op::Label>(element::f32, data_batch_shape);
     auto filters = std::make_shared<pattern::op::Label>(element::f32, filters_shape);
     Shape conv_out_shape{100, 64, 1, 1};
@@ -2195,7 +2193,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
     this->add_matcher(m, callback);
 }
 
-// Dequantize + AvgPool -> QuantizedAvgPool + Dequantize
+// Dequantize + AvgPool -> AvgPool + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
 {
     Shape shape{2, 2, 1, 1};
@@ -2213,7 +2211,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
         auto avg_pool_m = std::static_pointer_cast<ngraph::op::AvgPool>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(avg_pool_m->get_argument(0));
 
-        auto qavg_pool_n = std::make_shared<ngraph::op::QuantizedAvgPool>(
+        auto qavg_pool_n = std::make_shared<ngraph::op::AvgPool>(
             dq_m->get_argument(0),
             avg_pool_m->get_window_shape(),
             avg_pool_m->get_window_movement_strides(),
@@ -2233,7 +2231,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
                       callback);
 }
 
-// Dequantize + Maxpool -> QuantizedMaxpool + Dequantize
+// Dequantize + Maxpool -> Maxpool + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
 {
     Shape shape{2, 2, 1, 1};
@@ -2251,12 +2249,12 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
         auto max_pool_m = std::static_pointer_cast<ngraph::op::MaxPool>(m.get_match_root());
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(max_pool_m->get_argument(0));
 
-        auto qmax_pool_n = std::make_shared<ngraph::op::QuantizedMaxPool>(
-            dq_m->get_argument(0),
-            max_pool_m->get_window_shape(),
-            max_pool_m->get_window_movement_strides(),
-            max_pool_m->get_padding_below(),
-            max_pool_m->get_padding_above());
+        auto qmax_pool_n =
+            std::make_shared<ngraph::op::MaxPool>(dq_m->get_argument(0),
+                                                  max_pool_m->get_window_shape(),
+                                                  max_pool_m->get_window_movement_strides(),
+                                                  max_pool_m->get_padding_below(),
+                                                  max_pool_m->get_padding_above());
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(qmax_pool_n,
                                                              dq_m->get_argument(1),
                                                              dq_m->get_argument(2),
@@ -2270,7 +2268,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
                       callback);
 }
 
-// {Dequantize}* + Concat -> QuantizedConcat + Dequantize
+// {Dequantize}* + Concat -> Concat + Dequantize
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
 {
     Shape shape{2, 2, 1, 1};
@@ -2302,14 +2300,14 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
             // ensure dequant scales are same
             if (!ngraph::compare_constants(arg->get_argument(1), dq_m->get_argument(1)))
             {
-                NGRAPH_DEBUG << "QuantizedConcat: Dequantize scale must be same";
+                NGRAPH_DEBUG << "Concat: Dequantize scale must be same";
                 return false;
             }
 
             new_args.push_back(arg->get_argument(0));
         }
-        auto concat_n = std::make_shared<ngraph::op::QuantizedConcat>(
-            new_args, concat_m->get_concatenation_axis());
+        auto concat_n =
+            std::make_shared<ngraph::op::Concat>(new_args, concat_m->get_concatenation_axis());
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(concat_n,
                                                              dq_m->get_argument(1),
                                                              dq_m->get_argument(2),
@@ -2414,7 +2412,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
     auto skipb_l = std::make_shared<pattern::op::Skip>(
         skipr_l, [](std::shared_ptr<Node> n) { return n->description() == "Broadcast"; });
 
-    //Right Graph
+    // Right Graph
     auto summand = std::make_shared<pattern::op::Label>(element::i8, qconvb->get_shape());
     auto dq_r = std::make_shared<ngraph::op::Dequantize>(
         summand, dq_scale2, dq_zp2, element::f32, AxisSet{});
@@ -2424,7 +2422,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
     auto skipb_r = std::make_shared<pattern::op::Skip>(
         skipr_r, [](std::shared_ptr<Node> n) { return n->description() == "Broadcast"; });
 
-    //Add left + right
+    // Add left + right
     auto add = skipb_l + skipb_r;
     auto prelu = std::make_shared<ngraph::op::Relu>(add);
 
@@ -2569,18 +2567,43 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
     Shape shape_input1{3, 4};
     auto input0 = std::make_shared<pattern::op::Label>(element::u8, shape_input0);
     auto input1 = std::make_shared<pattern::op::Label>(element::i8, shape_input1);
-    auto scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto input0_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto input1_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
+    auto output_scale = std::make_shared<pattern::op::Label>(element::f32, Shape{});
 
-    auto q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0, input1, scale);
-    auto callback = [input0, input1, scale](pattern::Matcher& m) {
+    auto int8_zero = op::Constant::create(element::i8, Shape{}, {0});
+    auto uint8_zero = op::Constant::create(element::u8, Shape{}, {0});
+
+    auto q_dot = std::make_shared<ngraph::op::QuantizedDot>(input0,
+                                                            input1,
+                                                            1,
+                                                            input0_scale,
+                                                            uint8_zero,
+                                                            input1_scale,
+                                                            int8_zero,
+                                                            output_scale,
+                                                            int8_zero,
+                                                            element::i8,
+                                                            AxisSet{},
+                                                            AxisSet{},
+                                                            AxisSet{});
+    auto callback = [input0, input1, input0_scale, input1_scale, output_scale](
+        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for Qdot against node = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         auto qdot = std::static_pointer_cast<ngraph::op::QuantizedDot>(m.get_match_root());
         auto input_0 = pattern_map[input0];
         auto input_1 = pattern_map[input1];
-        auto scale_new = pattern_map[scale];
+        auto input_0_scale = pattern_map[input0_scale];
+        auto input_1_scale = pattern_map[input1_scale];
+        auto scale_output = pattern_map[output_scale];
+        auto scale_new = input_0_scale * input_1_scale / scale_output;
 
+        if (input_0->get_shape().size() != 2 || input_1->get_shape().size() != 2)
+        {
+            return false;
+        }
         if (input_0->get_element_type() == element::u8 &&
             input_1->get_element_type() == element::u8)
         {
@@ -2588,9 +2611,9 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
         }
 
         auto reshape_input1 = std::make_shared<op::Reshape>(
-            input_1, AxisVector{0, 1}, Shape{input_1->get_shape()[1], input_1->get_shape()[0]});
+            input_1, AxisVector{1, 0}, Shape{input_1->get_shape()[1], input_1->get_shape()[0]});
         auto qmatmul = std::make_shared<ngraph::op::QuantizedMatmul>(
-            input_0, reshape_input1, scale_new, qdot->requantize(), qdot->with_relu());
+            input_0, reshape_input1, scale_new, qdot->get_output_type());
 
         ngraph::replace_node(m.get_match_root(), qmatmul);
         return true;

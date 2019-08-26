@@ -34,7 +34,8 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
     {
         if (auto bnbp = std::dynamic_pointer_cast<op::BatchNormTrainingBackprop>(n))
         {
-            // batch norm bprop annotations are used to indicate if variance is in inverse stddev format
+            // batch norm bprop annotations are used to indicate if variance is in inverse stddev
+            // format
             auto op_annotations =
                 std::make_shared<ngraph::runtime::gpu::BatchNormBackpropAnnotations>();
 

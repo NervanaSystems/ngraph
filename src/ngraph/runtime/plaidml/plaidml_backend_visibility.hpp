@@ -32,13 +32,16 @@
 #endif
 #endif
 
-// Now we use the generic helper definitions above to define PLAIDML_BACKEND_API and PLAIDML_BACKEND_LOCAL.
+// Now we use the generic helper definitions above to define PLAIDML_BACKEND_API and
+// PLAIDML_BACKEND_LOCAL.
+//
 // PLAIDML_BACKEND_API is used for the public API symbols. It either DLL imports or DLL exports
 //    (or does nothing for static build)
 // PLAIDML_BACKEND_LOCAL is used for non-api symbols.
 
 // #ifdef PLAIDML_BACKEND_DLL         // defined if PLAIDML_BACKEND is compiled as a DLL
-#ifdef PLAIDML_BACKEND_DLL_EXPORTS // defined if we are building the PLAIDML_BACKEND DLL (instead of using it)
+#ifdef PLAIDML_BACKEND_DLL_EXPORTS // defined if we are building the PLAIDML_BACKEND DLL (instead of
+                                   // using it)
 #define PLAIDML_BACKEND_API PLAIDML_BACKEND_HELPER_DLL_EXPORT
 #else
 #define PLAIDML_BACKEND_API PLAIDML_BACKEND_HELPER_DLL_IMPORT

@@ -59,10 +59,10 @@
 #include <mlir/Conversion/ControlFlowToCFG/ConvertControlFlowToCFG.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
 #include <mlir/ExecutionEngine/MemRefUtils.h>
 #include <mlir/ExecutionEngine/OptUtils.h>
-#include <mlir/LLVMIR/LLVMDialect.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
@@ -76,7 +76,6 @@
 
 using llvm::SmallVector;
 using llvm::StringRef;
-using llvm::make_unique;
 using llvm::ArrayRef;
 
 using namespace ngraph;
@@ -111,6 +110,31 @@ static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
 // Default optimization level.
 unsigned MLIRCompiler::mlir_opt_level = 2;
 
+// Target machine will be properly initialized by `init_mlir`.
+std::unique_ptr<llvm::TargetMachine> MLIRCompiler::target_machine;
+
+/// Creates target machine for current host.
+static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
+    createDefaultTargetMachine(unsigned opt_level)
+{
+    auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
+    if (!machineBuilder)
+    {
+        return machineBuilder.takeError();
+    }
+
+    // Relocation model and code model are kept to default values. CodeGen optimization level
+    // matches LLVM recommendations, i.e.:
+    // enum Level {
+    //   None,        // -O0
+    //   Less,        // -O1
+    //   Default,     // -O2, -Os
+    //   Aggressive   // -O3
+    // };
+    machineBuilder->setCodeGenOptLevel((llvm::CodeGenOpt::Level)opt_level);
+    return machineBuilder->createTargetMachine();
+}
+
 void MLIRCompiler::init_mlir()
 {
     // Mutex to safely initialize MLIR.
@@ -131,6 +155,13 @@ void MLIRCompiler::init_mlir()
             mlir_opt_level = std::stoi(opt_level_str);
             NGRAPH_CHECK(mlir_opt_level >= 0 && mlir_opt_level <= 3, "Invalid optimization level");
         }
+
+        // Initialize LLVM targets and target machine for current host.
+        llvm::InitializeNativeTarget();
+        llvm::InitializeNativeTargetAsmPrinter();
+        auto expected_target_machine = createDefaultTargetMachine(mlir_opt_level);
+        NGRAPH_CHECK(expected_target_machine, "Invalid target machine");
+        target_machine = std::move(*expected_target_machine);
 
         initialized = true;
     }
@@ -194,7 +225,7 @@ void MLIRCompiler::build_ng_dialect_module()
     }
 
     // create builder
-    m_builder = llvm::make_unique<mlir::OpBuilder>(function.getBody());
+    m_builder = std::unique_ptr<mlir::OpBuilder>(new mlir::OpBuilder(function.getBody()));
     build_ng_dialect();
     m_module->push_back(function);
     if (failed(m_module->verify()))
@@ -332,52 +363,14 @@ void MLIRCompiler::lower_ng_dialect()
 
     dump_mlir_module("LLVM-IR Dialect Dump:");
 
-    // Initialize LLVM targets.
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer created with
     // the default or user-provided optimization level.
     auto llvm_transformer =
-        mlir::makeOptimizingTransformer(mlir_opt_level, /*sizeLevel=*/0, /*targetMachine*/ nullptr);
+        mlir::makeOptimizingTransformer(mlir_opt_level, /*sizeLevel=*/0, target_machine.get());
     auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
-}
-
-/// Creates target machine for current host.
-static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
-    createDefaultTargetMachine(unsigned opt_level)
-{
-    auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
-    if (!machineBuilder)
-    {
-        return machineBuilder.takeError();
-    }
-
-    // Retrieve host CPU sub-target features.
-    llvm::SubtargetFeatures subtargetFeatures;
-    llvm::StringMap<bool> featureMap;
-    llvm::sys::getHostCPUFeatures(featureMap);
-    for (auto& feature : featureMap)
-    {
-        subtargetFeatures.AddFeature(feature.first(), feature.second);
-    }
-
-    // Relocation model and code model are kept to default values. CodeGen optimization level
-    // matches LLVM recommendations, i.e.:
-    // enum Level {
-    //   None,        // -O0
-    //   Less,        // -O1
-    //   Default,     // -O2, -Os
-    //   Aggressive   // -O3
-    // };
-    machineBuilder->setCPU(llvm::sys::getHostCPUName());
-    machineBuilder->setCodeGenOptLevel((llvm::CodeGenOpt::Level)opt_level);
-    machineBuilder->addFeatures(subtargetFeatures.getFeatures());
-
-    return machineBuilder->createTargetMachine();
 }
 
 /// Returns the cache level size from `targetInfo` for the `cacheLevel` provided. If `userCacheSize`
@@ -413,25 +406,18 @@ static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
 // standard dialect only ops.
 void MLIRCompiler::optimize()
 {
-    // Create target machine with all the current host features.
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-    auto expectedTargetMachine = createDefaultTargetMachine(mlir_opt_level);
-    NGRAPH_CHECK(expectedTargetMachine, "Invalid target machine");
-    auto targetMachine = std::move(*expectedTargetMachine);
-
     // Create target transform info to obtain some target information to be used in MLIR
     // optimizations. This is a temporary attempt to retrieve some target information by reusing
     // LLVM TTI infra while MLIR does not have target model.
     llvm::LLVMContext llvmContext;
-    auto module = make_unique<llvm::Module>("test", llvmContext);
-    module->setDataLayout(targetMachine->createDataLayout());
+    auto module = std::unique_ptr<llvm::Module>(new llvm::Module("test", llvmContext));
+    module->setDataLayout(target_machine->createDataLayout());
     auto ttiSetupFunc = llvm::cast<llvm::Function>(
         module
             ->getOrInsertFunction("__ngraph_tti_setup",
                                   llvm::FunctionType::get(llvm::Type::getVoidTy(llvmContext), {}))
             .getCallee());
-    auto targetInfo = targetMachine->getTargetTransformInfo(*ttiSetupFunc);
+    auto targetInfo = target_machine->getTargetTransformInfo(*ttiSetupFunc);
 
     // Run Affine dialect optimizations.
     mlir::PassManager pm_opts;

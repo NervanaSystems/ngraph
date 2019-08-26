@@ -48,9 +48,10 @@ namespace ngraph
             /// \param[in]  dilations       The dilations along each feature axis.
             /// \param[in]  padding_begin   The padding added at the beggining of each feature axis.
             /// \param[in]  padding_end     The padding added at the end of each feature axis.
-            /// \param[in]  output_padding  The zero-padding (adjustment) added to one side of the output.
-            /// \param[in]  groups          The number of groups the input channels and output channels
-            ///                             are divided into.
+            /// \param[in]  output_padding  The zero-padding (adjustment) added to one side of the
+            ///                             output.
+            /// \param[in]  groups          The number of groups the input channels and output
+            ///                             channels are divided into.
             /// \param[in]  pad_type        The provided padding type.
             /// \param[in]  output_shape    The output shape. When provided padding values are
             ///                             automatically inferred.
@@ -85,11 +86,12 @@ namespace ngraph
             /// \param[in]  filters         The node producing filters data.
             /// \param[in]  strides         The strides along each feature axis.
             /// \param[in]  dilations       The dilations along each feature axis.
-            /// \param[in]  output_padding  The zero-padding (adjustment) added to one side of the output.
+            /// \param[in]  output_padding  The zero-padding (adjustment) added to one side of the
+            ///                             output.
             /// \param[in]  output_shape    The output shape. When provided padding values are
             ///                             automatically inferred.
-            /// \param[in]  groups          The number of groups the input channels and output channels
-            ///                             are divided into.
+            /// \param[in]  groups          The number of groups the input channels and output
+            ///                             channels are divided into.
             ///
             GroupConvolutionTranspose(const Output<Node>& data,
                                       const Output<Node>& filters,
@@ -106,16 +108,16 @@ namespace ngraph
             /// \param[in]  filters         The node producing filters data.
             /// \param[in]  output_shape    The output shape. When provided padding values are
             ///                             automatically inferred.
-            /// \param[in]  groups          The number of groups the input channels and output channels
-            ///                             are divided into.
+            /// \param[in]  groups          The number of groups the input channels and output
+            ///                             channels are divided into.
             ///
             GroupConvolutionTranspose(const Output<Node>& data,
                                       const Output<Node>& filters,
                                       const Shape& output_shape,
                                       const std::size_t groups = 1UL);
 
-            Output<Node> get_data() { return input(0).get_source_output(); }
-            Output<Node> get_filters() { return input(1).get_source_output(); }
+            Output<Node> get_data() { return input_value(0); }
+            Output<Node> get_filters() { return input_value(1); }
             const Strides& get_strides() const { return m_strides; }
             const Strides& get_dilations() const { return m_dilations; }
             const CoordinateDiff& get_padding_begin() const { return m_padding_begin; }
