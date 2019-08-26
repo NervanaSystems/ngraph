@@ -20,6 +20,9 @@ set(LLVM_CMAKE_PATH "${MLIR_BUILD_DIR}/lib/cmake/llvm"
     CACHE PATH "Path to LLVM cmake modules")
 list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_PATH}")
 
+# Enable use of the lit tool that we are building from MLIR repo.
+set(LLVM_DEFAULT_EXTERNAL_LIT ${MLIR_TOOLS_DIR}/llvm-lit)
+
 include(AddLLVM)
 
 configure_lit_site_cfg(
