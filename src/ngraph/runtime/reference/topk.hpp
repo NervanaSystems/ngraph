@@ -21,6 +21,7 @@
 #include <numeric>
 
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/runtime/chrome_trace.hpp"
 
 namespace ngraph
 {
@@ -65,6 +66,7 @@ namespace ngraph
                       size_t k,
                       bool compute_max)
             {
+                runtime::event::Duration t1("overall", "topk")
                 using namespace std;
                 // reorder source axis visit order and make "axis" inner most
                 size_t ndim = static_cast<size_t>(in_shape.size());
@@ -87,6 +89,7 @@ namespace ngraph
                 vector<size_t> out_strides = ngraph::row_major_strides(out_shape);
                 auto in_axis_stride = in_strides[axis];
                 auto out_axis_stride = out_strides[axis];
+                runtime::event::Duration t2("loop", "topk")
                 for (const Coordinate& coord : input_transform)
                 {
                     auto arg_index = input_transform.index(coord);
