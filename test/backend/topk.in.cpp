@@ -35,6 +35,25 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
+NGRAPH_TEST(${BACKEND_NAME}, topk_2d_resnet50)
+{
+    Shape shape{128, 102};
+    Shape rshape{128, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true);
+    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>(shape_size(shape)));
+    auto result = backend->create_tensor(element::f32, rshape);
+
+    auto exec = backend->compile(f0);
+    exec->call_with_validate({result}, {a});
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_all)
 {
     Shape shape{6};
