@@ -228,7 +228,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
                 // print sub-graph
                 auto nodes_list = ck->get_node_list();
 
-                // all nodes inside the CK s ub-graph
+                // all nodes inside the CK sub-graph
                 for (auto& ck_node : nodes_list)
                 {
                     m_ss << add_attributes(ck_node);
