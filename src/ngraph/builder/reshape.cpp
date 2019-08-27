@@ -154,14 +154,11 @@ shared_ptr<Node>
                                             1UL,
                                             multiplies<size_t>());
 
-    // row_dims_prod := [Product(row_dims, axis=0)]
-    // col_dims_prod := [Product(col_dims, axis=0)]
     Shape output_shape{collapsed_axis_size};
     output_shape.insert(end(output_shape), next(begin(shape), end_axis + 1), end(shape));
     return builder::reshape(value, output_shape);
 }
 
-// flattened_dims := Concat({row_dims_prod, col_dims_prod})
 shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
 {
     Shape output_shape(value.get_shape());
