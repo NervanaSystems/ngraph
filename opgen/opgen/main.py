@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # ******************************************************************************
 # Copyright 2017-2019 Intel Corporation
 #
@@ -14,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
-#
-# This is a crude, hacky prototype of a class generator.
+"""Op class generator for nGraph"""
+
 
 import json
 import sys
@@ -520,9 +519,8 @@ class ClassWriter():
 
         f.close()
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser('class_gen')
+def main(args=sys.argv):
+    parser = argparse.ArgumentParser('opgen')
     parser.add_argument('--defn', metavar='filename.json', type=argparse.FileType('r'),
                         nargs=1, action='store', required=True, help='Source class definition file')
     parser.add_argument('--outdir', metavar='/path/to/ngraph/src', type=str,
@@ -537,3 +535,7 @@ if __name__ == "__main__":
     generator = ClassWriter(json_file)
     generator.gen_hpp_file(outdir_name)
     generator.gen_cpp_file(outdir_name)
+
+
+if __name__ == "__main__":
+    main()
