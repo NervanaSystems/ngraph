@@ -24,7 +24,8 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Generalized dot product operation, including scalar-tensor product, matrix-vector product, and matrix multiplication.
+        /// \brief Generalized dot product operation, including scalar-tensor product, matrix-vector
+        ///        product, and matrix multiplication.
         class Dot : public Op
         {
         public:
@@ -43,13 +44,15 @@ namespace ngraph
                 size_t reduction_axes_count,
                 bool has_reduction_axes_count = true);
 
-            /// \brief Constructs a dot product operation with default dot-axis selection depending on the inputs.
+            /// \brief Constructs a dot product operation with default dot-axis selection depending
+            ///        on the inputs.
             ///
             /// If `arg0` or `arg1` is a scalar, there are no dot-axes. Else, there is one dot-axis.
             ///
-            /// (Note that in particular, this results in scalar-tensor products where one or the other argument is
-            /// a scalar, a matrix-vector products where `arg0` is a matrix and `arg1` is a vector, and a
-            /// matrix multiplication where `arg0` and `arg1` are both matrices.)
+            /// (Note that in particular, this results in scalar-tensor products where one or the
+            /// other argument is a scalar, a matrix-vector products where `arg0` is a matrix and
+            /// `arg1` is a vector, and a matrix multiplication where `arg0` and `arg1` are both
+            /// matrices.)
             ///
             /// \param arg0 The node producing the first argument.
             /// \param arg1 The node producing the second argument.
