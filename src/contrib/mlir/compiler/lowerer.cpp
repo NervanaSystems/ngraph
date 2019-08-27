@@ -768,16 +768,6 @@ namespace
         auto padBelow = convolOp.padBelow().getValue();
         auto padAbove = convolOp.padBelow().getValue();
 
-        for (auto value : llvm::zip(padBelow, padAbove))
-        {
-            auto padAttr = std::get<0>(value);
-            NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0,
-                         "No support for padding in convolution op");
-            padAttr = std::get<1>(value);
-            NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0,
-                         "No support for padding in convolution op");
-        }
-
         Type elemTy = images->getType().cast<MemRefType>().getElementType();
 
         // Let Images shape be  [N, C_IN, D_1, ... D_f]
@@ -817,11 +807,9 @@ namespace
         //           Output[n, k, r_1, .. r_f] +=
         //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
 
-        // TODO: With padding, we need to check (using IntegerSets) whether each spatial dim in
-        // Images lie within paddings
+
+        // With padding, we check (using IntegerSets) whether each spatial dim in Images lie within paddings
         // If yes, we init value to zero, else load from MemRef.
-        // Q: Can this be done using a map from padded tensor to  unpadded one ? Will we load zero
-        // if OOB ?
 
         // Create view to write into result.
         MemRefView vRes(result), vImages(images), vFilters(filters);
@@ -872,6 +860,36 @@ namespace
             filtersSpatialUbs.push_back(vFilters.ub(i + 2));
             filtersSteps.push_back(vFilters.step(i + 2));
         }
+
+       // Create affine expressions and IntegerSet
+        // IntegerSet (d0, d1, .. d_N-1)[LB_0, LB_1, .. LB_N-1, UB_0, UB_1, .. UB_N-1], where for each dim:
+        //   (d_dim - padBelow[dim] - LB_dim >= 0), 
+        //   (padAbove[dim] - UB_dim - d_dim >= 0)
+        SmallVector<AffineExpr, 4> affineExprs;
+        SmallVector<bool, 4> isEq;
+        for (unsigned dim = 0; dim < spatialRank; dim++)
+        {
+            // i_dim
+            auto dimExpr = rewriter.getAffineDimExpr(dim);
+            auto imgLbExpr = rewriter.getAffineSymbolExpr(dim);
+            // expr1 : i_dim - padBelow[dim] - imgLB >= 0
+            IntegerAttr iAttr = padBelow[dim].cast<IntegerAttr>();
+            auto padBelowExpr = rewriter.getAffineConstantExpr(iAttr.getInt());
+            affineExprs.push_back(dimExpr - padBelowExpr - imgLbExpr);
+            isEq.push_back(false);
+            // expr2: padAbove + imgUB - i_dim -1 >= 0
+            
+            auto imgUbExpr = rewriter.getAffineSymbolExpr(spatialRank + dim);
+            iAttr = padAbove[dim].cast<IntegerAttr>();
+            auto padAboveExpr = rewriter.getAffineConstantExpr(iAttr.getInt());
+            auto oneExpr = rewriter.getAffineConstantExpr(1);
+            affineExprs.push_back(padAboveExpr + imgUbExpr - dimExpr - oneExpr);
+            isEq.push_back(false);
+        }
+        
+        NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank, "Invalid number of expressions in the IntegerSet");
+        auto nonPaddingRange = rewriter.getIntegerSet(spatialRank, 2*spatialRank, affineExprs, isEq);
+
 
         // Initialize output to zero
         {
@@ -941,8 +959,20 @@ namespace
                                                   filtersSpatialIndices.begin(),
                                                   filtersSpatialIndices.end());
 
-                            iRes(resIndices) =
-                                iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices));
+                            // if args : img dims, img lbs, img ubs
+                            SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
+                            it++; it++;
+                            SmallVector<Value*, 4> affineIfArgs(it, imgIndices.end());
+                            affineIfArgs.insert(affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
+                            affineIfArgs.insert(affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
+
+                            auto affineIfOp = rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(), affineIfArgs, false);
+                            affineIfOp.setIntegerSet(nonPaddingRange);
+                            {
+                                auto rewriter = affineIfOp.getThenBodyBuilder();
+                                ScopedContext scope(rewriter, loc);
+                                iRes(resIndices) = iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices));
+                            }
                         });
                     });
                 });
