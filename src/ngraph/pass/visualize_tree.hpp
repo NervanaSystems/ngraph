@@ -36,6 +36,8 @@ namespace ngraph
     }
 }
 
+class HeightMap;
+
 class ngraph::pass::VisualizeTree : public ModulePass
 {
 public:
@@ -48,6 +50,9 @@ public:
 
     void set_ops_to_details(const visualize_tree_ops_map_t& ops_map) { m_ops_to_details = ops_map; }
 private:
+    void add_node_arguments(std::shared_ptr<Node> node,
+                            std::unordered_map<Node*, HeightMap>& height_maps,
+                            size_t& fake_node_ctr);
     std::string add_attributes(std::shared_ptr<Node> node);
     std::string get_attributes(std::shared_ptr<Node> node);
     std::string get_node_name(std::shared_ptr<Node> node);
@@ -60,4 +65,5 @@ private:
         m_ops_to_details;
     node_modifiers_t m_node_modifiers = nullptr;
     bool m_dot_only;
+    static const int max_jump_distance;
 };
