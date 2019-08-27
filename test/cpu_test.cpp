@@ -63,7 +63,12 @@ public:
         : Abs(arg)
     {
     }
+
+    static const char* type_name;
+    const char* get_type_name() const override { return type_name; }
 };
+
+const char* UnhandledOp::type_name{"UnhandledOp"};
 
 static void compare_backends(const std::shared_ptr<Function>& f1,
                              const std::shared_ptr<Function>& f2,
