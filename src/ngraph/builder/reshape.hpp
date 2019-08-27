@@ -72,6 +72,7 @@ namespace ngraph
         /// \brief      Remove empty axes from input tensor.
         ///
         /// \param[in]  value  The value to be squeezed.
+        /// \param[in]  axes   The vector defining indexes of axes to be removed.
         ///
         /// \return     The squeezed node.
         ///
@@ -82,6 +83,7 @@ namespace ngraph
         ///
         /// \note       Collapsed axes create a continuous range starting from outermost axis.
         ///
+        /// \param[in]  value       The value to be reshaped.
         /// \param[in]  start_axis  The start axis index.
         /// \param[in]  end_axis    The end axis (inclusive) index.
         ///
@@ -91,8 +93,11 @@ namespace ngraph
                                        const std::size_t start_axis,
                                        const std::size_t end_axis);
 
+        /// \brief      Expands node tensor shape with empty axis at
+        ///             specified position.
         ///
         /// \param[in]  value  The value to be expanded.
+        /// \param[in]  axis   The position in the expanded axes where the
         ///                    new axis is placed.
         ///
         /// \return     The node with added empty axis.

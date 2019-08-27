@@ -165,6 +165,7 @@ shared_ptr<Node>
 shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
 {
     Shape output_shape(value.get_shape());
+    // Add empty axis at specified position.
     auto empty_axis_it = begin(output_shape);
     advance(empty_axis_it, axis);
     output_shape.insert(empty_axis_it, 1);
