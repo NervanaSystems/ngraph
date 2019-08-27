@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cfenv>
 #include <cmath>
 #include <numeric>
 #include <stdexcept>
@@ -131,6 +132,8 @@ namespace ngraph
                           const Shape& padding_above,
                           bool include_padding_in_avg_computation)
             {
+                auto old_mode = std::fegetround();
+                std::fesetround(FE_TONEAREST);
                 // At the outermost level we will walk over every output coordinate O.
                 CoordinateTransform output_transform(out_shape);
 
@@ -155,7 +158,8 @@ namespace ngraph
                     //
                     // with unit stride.
                     //
-                    // We iterate this over the *padded* data, so below we will need to check for coordinates that fall in the padding area.
+                    // We iterate this over the *padded* data, so below we will need to check for
+                    // coordinates that fall in the padding area.
 
                     size_t n_spatial_dimensions = arg_shape.size() - 2;
 
@@ -231,7 +235,16 @@ namespace ngraph
                         throw std::runtime_error("AvgPool elements == 0, must be non-zero");
                     }
 
-                    out[output_transform.index(out_coord)] = result / n_elements;
+                    if (std::is_same<T, int8_t>::value || std::is_same<T, uint8_t>::value)
+                    {
+                        out[output_transform.index(out_coord)] =
+                            static_cast<T>(std::nearbyint(static_cast<float>(result) / n_elements));
+                    }
+                    else
+                    {
+                        out[output_transform.index(out_coord)] = result / n_elements;
+                    }
+                    std::fesetround(old_mode);
                 }
             }
         }

@@ -38,7 +38,8 @@
 // INTERPRETER_LOCAL is used for non-api symbols.
 
 // #ifdef INTERPRETER_DLL         // defined if INTERPRETER is compiled as a DLL
-#ifdef INTERPRETER_DLL_EXPORTS // defined if we are building the INTERPRETER DLL (instead of using it)
+#ifdef INTERPRETER_DLL_EXPORTS // defined if we are building the INTERPRETER DLL (instead of using
+                               // it)
 #define INTERPRETER_API INTERPRETER_HELPER_DLL_EXPORT
 #else
 #define INTERPRETER_API INTERPRETER_HELPER_DLL_IMPORT

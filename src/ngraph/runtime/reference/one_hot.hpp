@@ -42,8 +42,8 @@ namespace ngraph
                     out[output_transform.index(output_coord)] = 0;
                 }
 
-                // Step 2: Write ones at needed positions, throwing exceptions when invalid conditions
-                // are encountered.
+                // Step 2: Write ones at needed positions, throwing exceptions when invalid
+                // conditions are encountered.
                 CoordinateTransform input_transform(in_shape);
 
                 for (const Coordinate& input_coord : input_transform)

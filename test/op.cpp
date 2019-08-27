@@ -69,7 +69,8 @@ TEST(op, provenance_replace_node)
     class MockOp: public op::Op
     {
         MOCK_CONST_METHOD1(copy_with_new_args, std::shared_ptr<Node>(const NodeVector& new_args));
-        MOCK_CONST_METHOD1(get_users, NodeVector (bool check_is_used)); // This can't be mocked as it's non-virtual
+        MOCK_CONST_METHOD1(get_users, NodeVector (bool check_is_used)); // This can't be mocked as
+                                                                        // it's non-virtual
     };
 
     ::testing::NiceMock<MockOp> mock_op;

@@ -101,12 +101,15 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
 
 // The sub-graph construction algorithm is as follows
 // For each node, check its predecessors, if
-// - all predecessors in sub-graphs belong to the same sub-graph (graph ID), then extend the sub-graph to include the current node.
+// - all predecessors in sub-graphs belong to the same sub-graph (graph ID), then extend the
+//   sub-graph to include the current node.
 //   Predecessors outside sub-graphs are marked as input to the sub-graph.
-// - predecessors in sub-graphs belong to different sub-graphs, then merge all the sub-graphs into one, and add current node to it.
-//   Predecessors outside sub-graphs are marked as input to the sub-graph.
+// - predecessors in sub-graphs belong to different sub-graphs, then merge all the sub-graphs into
+//   one, and add current node to it. Predecessors outside sub-graphs are marked as input to the
+//   sub-graph.
 //
-// If the node has any external inputs, then it's possible that the input may come from one of the predecessor sub-graphs (cycle).
+// If the node has any external inputs, then it's possible that the input may come from one of the
+// predecessor sub-graphs (cycle).
 // If a cycle is found, always start a new sub-graph.
 //
 // For each sub-graph found build a CompiledKernel(CK) node around it as follows
@@ -272,6 +275,18 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 
 bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node)
 {
+    // Disable any op using boolean type until we have support for i1<->i8 conversion in MLIR.
+    // Otherwise, we would generate code like this:
+    //   %0 = icmp %a, %b : i1
+    //   store %0, %c[%arg1] : i8  // Type error: trying to store an i1 into an i8.
+    for (auto& output : node->get_outputs())
+    {
+        if (output.get_element_type() == element::boolean)
+        {
+            return false;
+        }
+    }
+
     if (TI(Parameter) == TI(*node) || TI(Result) == TI(*node))
     {
         return true;
@@ -371,7 +386,8 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
     {
         if (subgraph_ids.find(get_subgraph_id(node)) != subgraph_ids.end())
         {
-            // This node is inside a sub-graph. If we are coming from outside the sub-graphs, then we formed a cycle.
+            // This node is inside a sub-graph. If we are coming from outside the sub-graphs, then
+            // we formed a cycle.
             if (!inside_subgraphs)
             {
                 return true;

@@ -289,7 +289,7 @@ static CustomKernels::krnl_info do_create_variance_back(const string& output_nam
     writer.block_begin();
     { // Main function body
 
-        gws.push_back(1); //input_shape.at(0));
+        gws.push_back(1); // input_shape.at(0));
         // Channel axis loop
         writer << "\nconst uint i" << channel_axis << " = get_global_id(" << channel_axis
                << "); /* channel_axis trip count " << input_shape.at(channel_axis) << "*/\n";

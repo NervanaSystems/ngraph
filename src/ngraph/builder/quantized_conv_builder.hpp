@@ -18,6 +18,11 @@
 
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/experimental/quantized_conv_bias.hpp"
+#include "ngraph/op/experimental/quantized_conv_relu.hpp"
+#include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
 #include "quantization_utils.hpp"
 
@@ -43,5 +48,77 @@ namespace ngraph
                                         const ngraph::AxisSet& input_axes = ngraph::AxisSet{},
                                         const ngraph::AxisSet& filter_axes = ngraph::AxisSet{},
                                         const ngraph::AxisSet& output_axes = ngraph::AxisSet{});
+
+        std::shared_ptr<Node>
+            QuantizedConvolutionBiasBuilder(const Output<Node>& input,
+                                            const Output<Node>& filters,
+                                            const Output<Node>& bias,
+                                            const Strides& window_movement_strides,
+                                            const Strides& window_dilation_strides,
+                                            const CoordinateDiff& padding_below,
+                                            const CoordinateDiff& padding_above,
+                                            const Strides& data_dilation_strides,
+                                            const Output<Node>& min_input,
+                                            const Output<Node>& max_input,
+                                            const Output<Node>& min_filter,
+                                            const Output<Node>& max_filter,
+                                            const Output<Node>& min_output,
+                                            const Output<Node>& max_output,
+                                            const bool with_relu = false);
+
+        std::shared_ptr<Node>
+            QuantizedConvolutionReluBuilder(const Output<Node>& input,
+                                            const Output<Node>& filters,
+                                            const Strides& window_movement_strides,
+                                            const Strides& window_dilation_strides,
+                                            const CoordinateDiff& padding_below,
+                                            const CoordinateDiff& padding_above,
+                                            const Strides& data_dilation_strides,
+                                            const Output<Node>& min_input,
+                                            const Output<Node>& max_input,
+                                            const Output<Node>& min_filter,
+                                            const Output<Node>& max_filter,
+                                            const Output<Node>& min_output,
+                                            const Output<Node>& max_output);
+
+        std::shared_ptr<Node>
+            QuantizedConvolutionBiasAddBuilder(const Output<Node>& input,
+                                               const Output<Node>& filters,
+                                               const Output<Node>& bias,
+                                               const Output<Node>& sum_input,
+                                               const Strides& window_movement_strides,
+                                               const Strides& window_dilation_strides,
+                                               const CoordinateDiff& padding_below,
+                                               const CoordinateDiff& padding_above,
+                                               const Strides& data_dilation_strides,
+                                               const Output<Node>& min_input,
+                                               const Output<Node>& max_input,
+                                               const Output<Node>& min_filter,
+                                               const Output<Node>& max_filter,
+                                               const Output<Node>& min_output,
+                                               const Output<Node>& max_output,
+                                               const Output<Node>& min_sum_input,
+                                               const Output<Node>& max_sum_input,
+                                               const bool with_relu = false);
+
+        std::shared_ptr<Node>
+            QuantizedConvolutionBiasSignedAddBuilder(const Output<Node>& input,
+                                                     const Output<Node>& filters,
+                                                     const Output<Node>& bias,
+                                                     const Output<Node>& sum_input,
+                                                     const Strides& window_movement_strides,
+                                                     const Strides& window_dilation_strides,
+                                                     const CoordinateDiff& padding_below,
+                                                     const CoordinateDiff& padding_above,
+                                                     const Strides& data_dilation_strides,
+                                                     const Output<Node>& min_input,
+                                                     const Output<Node>& max_input,
+                                                     const Output<Node>& min_filter,
+                                                     const Output<Node>& max_filter,
+                                                     const Output<Node>& min_output,
+                                                     const Output<Node>& max_output,
+                                                     const Output<Node>& min_sum_input,
+                                                     const Output<Node>& max_sum_input,
+                                                     const bool with_relu = false);
     }
 }

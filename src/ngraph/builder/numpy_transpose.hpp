@@ -23,6 +23,7 @@ namespace ngraph
 {
     namespace builder
     {
+        // clang-format off
         /// \brief Implement's Numpy's multidimensional transpose op. Doubles as DimShuffle.
         ///
         /// If `order` is empty, the vector is transposed by reversing it's axes, i.e.
@@ -30,8 +31,8 @@ namespace ngraph
         /// shape [1,2,4] becomes shape [4,2,1]
         ///
         /// If `order` is provided, it should be a vector of unique axis positions ranging
-        /// from 0 to N-1, when N is the length of the input shape.  In this case, numpy_transpose acts
-        /// like dimshuffle, so
+        /// from 0 to N-1, when N is the length of the input shape.  In this case, numpy_transpose
+        /// acts like dimshuffle, so
         ///
         /// shape [1,2,4] with order [1,2,0] becomes shape [2,4,1]
         ///
@@ -45,6 +46,7 @@ namespace ngraph
         /// | Type                                                                         | Description                                                                                                      |
         /// | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_{n-1},\dots,d_0)]\textit{ or }E[d_{order[0]},\dots,d_{order[n-1]}]\f$ | The tensor \f$T\f$, where \f$T\f$ is the input tensor with the axes reordered via Numpy Transpose rules          |
+        // clang-format on
         std::shared_ptr<Node> numpy_transpose(const Output<Node>& value, AxisVector order = {});
     } // namespace builder
 } // namespace ngraph

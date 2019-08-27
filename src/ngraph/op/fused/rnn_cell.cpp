@@ -152,7 +152,8 @@ NodeVector op::RNNCell::decompose_op() const
     // W   - The weight tensor for input gate. Shape: [hidden_size, input_size].
     // R   - The recurrence weight tensor for input gate. Shape: [hidden_size, hidden_size].
     // H_t - The hidden state tensor at current time step. Shape: [batch_size, hidden_size].
-    // B   - The bias tensor for the input gate. Shape: [2 * hidden_size] Concatenation of `[Wb, Rb]`.
+    // B   - The bias tensor for the input gate. Shape: [2 * hidden_size].
+    //       Concatenation of `[Wb, Rb]`.
     // Wb  - W bias vectors for input gate.
     // Rb  - R bias vectors for input gate.
     // ------ VARIABLE NAMES ------
