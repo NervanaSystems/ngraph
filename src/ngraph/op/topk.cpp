@@ -95,14 +95,12 @@ void op::TopK::validate_and_infer_types()
     PartialShape output_shape{input_shape};
     size_t k = get_k();
 
-    if(input_rank.is_static())
+    if (input_rank.is_static())
     {
         int64_t i_rank = static_cast<int64_t>(input_rank);
         int64_t k_axis = m_top_k_axis >= 0 ? m_top_k_axis : i_rank + m_top_k_axis;
 
-        NODE_VALIDATION_CHECK(this,
-                              i_rank > 0,
-                              "Argument rank must be greater than 0.");
+        NODE_VALIDATION_CHECK(this, i_rank > 0, "Argument rank must be greater than 0.");
 
         NODE_VALIDATION_CHECK(this,
                               k_axis >= 0 && k_axis < i_rank,
