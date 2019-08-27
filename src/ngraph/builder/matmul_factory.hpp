@@ -24,8 +24,10 @@ namespace ngraph
     {
         /// \brief  Factory class which generates an nGraph sub-graph performing MatMul operation.
         ///
-        /// This default implementation `MatmulFactory` creates a `MatMul` operation for floating-point data.
-        /// Subclasses: `QLinearMatmulFactory` and `MatmulIntegerFactory` implement quantized versions.
+        /// This default implementation `MatmulFactory` creates a `MatMul` operation for
+        /// floating-point data.
+        /// Subclasses: `QLinearMatmulFactory` and `MatmulIntegerFactory` implement quantized
+        /// versions.
         class MatmulFactory
         {
         public:
@@ -54,7 +56,8 @@ namespace ngraph
             const OutputVector m_inputs;
         };
 
-        /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX QLinearMatMul operation.
+        /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX QLinearMatMul
+        /// operation.
         class QLinearMatmulFactory : public MatmulFactory
         {
         public:
@@ -68,7 +71,8 @@ namespace ngraph
             Output<Node> make_dot(const Output<Node>& left, const Output<Node>& right) override;
         };
 
-        /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX MatMulInteger operation.
+        /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX MatMulInteger
+        /// operation.
         class MatmulIntegerFactory : public MatmulFactory
         {
         public:

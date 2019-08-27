@@ -222,7 +222,8 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq_bool)
     copy_data(b, vector<char>{0, 0, 0, 0, 0, 0, 0, 0});
     auto result = backend->create_tensor(element::boolean, shape);
 
-    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the
+    // right value.
     copy_data(result, vector<char>{1, 1, 1, 1, 1, 1, 1, 1});
 
     auto handle = backend->compile(f);

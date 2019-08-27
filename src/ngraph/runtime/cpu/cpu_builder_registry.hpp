@@ -54,7 +54,6 @@ namespace ngraph
             void register_builders_pad_cpp();
             void register_builders_product_cpp();
             void register_builders_quantization_cpp();
-            void register_builders_quantized_avg_pool_cpp();
             void register_builders_quantized_conv_cpp();
             void register_builders_quantized_dot_cpp();
             void register_builders_quantized_matmul_cpp();
@@ -76,8 +75,6 @@ namespace ngraph
             void register_builders_tile_cpp();
             void register_builders_topk_cpp();
             void register_builders_update_slice_cpp();
-            void register_builders_quantized_concat_cpp();
-            void register_builders_quantized_max_pool_cpp();
         }
     }
 }

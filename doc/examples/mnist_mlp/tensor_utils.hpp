@@ -87,7 +87,8 @@ std::ostream& operator<<(std::ostream& s, const ngraph::Shape& shape)
     return s;
 }
 
-// A debug class that supports various ways to dump information about a tensor.
+// A debug class that supports various ways to dump information about a
+// tensor.
 class TensorDumper
 {
 protected:

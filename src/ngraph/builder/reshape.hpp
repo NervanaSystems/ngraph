@@ -52,7 +52,7 @@ namespace ngraph
         /// \return: Value with reversed dimensions.
         std::shared_ptr<Node> transpose(const Output<Node>& value);
 
-        /// \brief Flatten a value into a 2D matrix.
+        /// \brief Flatten a value into a 2D matrix, with a static dividing axis.
         ///
         /// \param value The tensor to be flattened.
         /// \param axis  The axis dividing shape.
@@ -60,10 +60,18 @@ namespace ngraph
         /// \return The new value will be a 2D matrix representing the flattened input node.
         std::shared_ptr<Node> flatten(const Output<Node>& value, int axis);
 
+        /// \brief Flatten a value into a 2D matrix, with a dynamic dividing axis.
+        ///
+        /// \param value The tensor to be flattened.
+        /// \param axis The tensor representing the axis dividing the shape. Must be reshapeable
+        ///             to the shape (1,).
+        ///
+        /// \return The new value will be a 2D matrix representing the flattened input node.
+        std::shared_ptr<Node> flatten(const Output<Node>& value, const Output<Node>& axis);
+
         /// \brief      Remove empty axes from input tensor.
         ///
         /// \param[in]  value  The value to be squeezed.
-        /// \param[in]  axes   The vector defining indexes of axes to be removed.
         ///
         /// \return     The squeezed node.
         ///
@@ -74,7 +82,6 @@ namespace ngraph
         ///
         /// \note       Collapsed axes create a continuous range starting from outermost axis.
         ///
-        /// \param[in]  value       The value to be reshaped.
         /// \param[in]  start_axis  The start axis index.
         /// \param[in]  end_axis    The end axis (inclusive) index.
         ///
@@ -84,11 +91,8 @@ namespace ngraph
                                        const std::size_t start_axis,
                                        const std::size_t end_axis);
 
-        /// \brief      Expands node tensor shape with empty axis at
-        ///             specified position.
         ///
         /// \param[in]  value  The value to be expanded.
-        /// \param[in]  axis   The position in the expanded axes where the
         ///                    new axis is placed.
         ///
         /// \return     The node with added empty axis.

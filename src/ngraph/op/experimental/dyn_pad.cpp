@@ -40,7 +40,7 @@ void op::DynPad::validate_and_infer_types()
         this, arg_t.compatible(padding_value_t), "Padding value and arg type mismatch");
 
     // shape node should have integer data type. For now we only allow i64
-    //TODO: potenially make the type more flexible to include other integer types
+    // TODO: potenially make the type more flexible to include other integer types
     auto padding_below_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
                           padding_below_et.compatible(element::Type_t::i64),

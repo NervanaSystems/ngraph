@@ -20,10 +20,10 @@
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/matmul_factory.hpp"
-#include "ngraph/builder/quantization/quantized_linear_matmul.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
@@ -161,33 +161,76 @@ Output<Node> builder::QLinearMatmulFactory::get_right()
 Output<Node> builder::QLinearMatmulFactory::make_dot(const Output<Node>& left,
                                                      const Output<Node>& right)
 {
-    return builder::quantization::QuantizedLinearMatmul(left,
-                                                        right,
-                                                        m_inputs.at(1),
-                                                        m_inputs.at(2),
-                                                        m_inputs.at(4),
-                                                        m_inputs.at(5),
-                                                        m_inputs.at(6),
-                                                        m_inputs.at(7));
+    ngraph::element::Type output_type;
+
+    if (left.get_element_type() == ngraph::element::u8 &&
+        right.get_element_type() == ngraph::element::i8)
+    {
+        output_type = ngraph::element::i8;
+    }
+    else if (left.get_element_type() == ngraph::element::u8 &&
+             right.get_element_type() == ngraph::element::u8)
+    {
+        output_type = ngraph::element::u8;
+    }
+
+    return std::make_shared<ngraph::op::QuantizedDot>(left,
+                                                      right,
+                                                      1,
+                                                      m_inputs.at(1),
+                                                      m_inputs.at(2),
+                                                      m_inputs.at(4),
+                                                      m_inputs.at(5),
+                                                      m_inputs.at(6),
+                                                      m_inputs.at(7),
+                                                      output_type,
+                                                      ngraph::AxisSet{},
+                                                      ngraph::AxisSet{},
+                                                      ngraph::AxisSet{});
 }
 
 Output<Node> builder::MatmulIntegerFactory::make_dot(const Output<Node>& left,
                                                      const Output<Node>& right)
 {
     auto num_inputs = m_inputs.size();
-
+    auto scale_one = ngraph::builder::make_constant(ngraph::element::f32, Shape{}, 1);
+    auto output_zero_point = ngraph::builder::make_constant(ngraph::element::i32, Shape{}, 0);
+    auto left_zero_point = ngraph::builder::make_constant(left.get_element_type(), Shape{}, 0);
+    auto right_zero_point = ngraph::builder::make_constant(right.get_element_type(), Shape{}, 0);
     if (num_inputs == 2)
     {
-        return builder::quantization::QuantizedLinearMatmulInteger(left, right);
+        return std::make_shared<ngraph::op::QuantizedDot>(left,
+                                                          right,
+                                                          1,
+                                                          scale_one,
+                                                          left_zero_point,
+                                                          scale_one,
+                                                          right_zero_point,
+                                                          scale_one,
+                                                          output_zero_point,
+                                                          ngraph::element::i32,
+                                                          ngraph::AxisSet{},
+                                                          ngraph::AxisSet{},
+                                                          ngraph::AxisSet{});
     }
 
-    auto left_zero_point = m_inputs.at(2);
-    auto right_zero_point = builder::make_constant(right.get_element_type(), Shape{}, 0);
+    left_zero_point = m_inputs.at(2).get_node_shared_ptr();
     if (num_inputs == 4)
     {
         right_zero_point = m_inputs.at(3).get_node_shared_ptr();
     }
 
-    return builder::quantization::QuantizedLinearMatmulInteger(
-        left, right, left_zero_point, right_zero_point);
+    return std::make_shared<ngraph::op::QuantizedDot>(left,
+                                                      right,
+                                                      1,
+                                                      scale_one,
+                                                      left_zero_point,
+                                                      scale_one,
+                                                      right_zero_point,
+                                                      scale_one,
+                                                      output_zero_point,
+                                                      ngraph::element::i32,
+                                                      ngraph::AxisSet{},
+                                                      ngraph::AxisSet{},
+                                                      ngraph::AxisSet{});
 }

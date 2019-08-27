@@ -29,11 +29,9 @@ const string op::QuantizedMatmul::type_name{"QuantizedMatmul"};
 op::QuantizedMatmul::QuantizedMatmul(const Output<Node>& data,
                                      const Output<Node>& weights,
                                      const Output<Node>& scale,
-                                     bool requantize,
-                                     bool with_relu)
+                                     const element::Type& output_type)
     : Op({data, weights, scale})
-    , m_requantize(requantize)
-    , m_with_relu(with_relu)
+    , m_output_type(output_type)
 {
     constructor_validate_and_infer_types();
 
@@ -48,6 +46,5 @@ op::QuantizedMatmul::QuantizedMatmul(const Output<Node>& data,
                           " weights shape ",
                           weights_shape);
 
-    auto output_et = requantize ? (with_relu ? element::u8 : element::i8) : element::i32;
-    set_output_type(0, output_et, Shape{data_shape[0], weights_shape[0]});
+    set_output_type(0, output_type, Shape{data_shape[0], weights_shape[0]});
 }
