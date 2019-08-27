@@ -13,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
-"""Op class generator for nGraph"""
+"""Exception class"""
 
 
-from opgen import main
-from opgen import exception
-from opgen import writer
+class ClassReadError(Exception):
+    pass
