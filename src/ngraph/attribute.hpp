@@ -76,6 +76,7 @@ namespace ngraph
 
     LEGALIZE_ATTRIBUTE_TYPE(op::PadMode);
     LEGALIZE_ATTRIBUTE_TYPE(op::PadType);
+    LEGALIZE_ATTRIBUTE_TYPE(op::EpsMode);
     LEGALIZE_ATTRIBUTE_TYPE(op::AutoBroadcastSpec);
     LEGALIZE_ATTRIBUTE_TYPE(op::RoundMode);
     LEGALIZE_ATTRIBUTE_TYPE(op::SortType);

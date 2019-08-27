@@ -37,9 +37,7 @@ std::string runtime::Backend::s_backend_shared_library_search_directory;
 // This finds the full path of the containing shared library
 static string find_my_pathname()
 {
-#ifdef NGRAPH_STATIC_LIB_ENABLE
-    return "";
-#else
+#ifdef NGRAPH_DYNAMIC_COMPONENTS_ENABLE
 #ifdef _WIN32
     HMODULE hModule = GetModuleHandleW(L"ngraph.dll");
     WCHAR wpath[MAX_PATH];
@@ -55,6 +53,8 @@ static string find_my_pathname()
     dladdr(reinterpret_cast<void*>(find_my_pathname), &dl_info);
     return dl_info.dli_fname;
 #endif
+#else
+    return "";
 #endif
 }
 
@@ -169,5 +169,6 @@ bool runtime::Backend::executable_can_create_tensors()
     catch (...)
     {
     }
+    remove_compiled_function(exec);
     return exec_can_create_tensors;
 }

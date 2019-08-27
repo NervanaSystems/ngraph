@@ -31,14 +31,18 @@ namespace ngraph
             class Label : public Pattern
             {
             public:
-                /// \brief creates a Label node containing a sub-pattern described by \sa type and \sa shape.
+                /// \brief creates a Label node containing a sub-pattern described by \sa type and
+                ///        \sa shape.
                 ///
                 /// this Label node can be bound only to the nodes in the input graph
                 /// that match the pattern specified by \sa wrapped_nodes
                 /// Example:
                 /// \code{.cpp}
                 /// auto add = a + b; // a and b are op::Parameter in this example
-                /// auto label = std::make_shared<pattern::op::Label>(element::f32, Shape{2,2} , nullptr, NodeVector{add});
+                /// auto label = std::make_shared<pattern::op::Label>(element::f32,
+                ///                                                   Shape{2,2},
+                ///                                                   nullptr,
+                ///                                                   NodeVector{add});
                 /// \endcode
                 Label(const element::Type& type,
                       const PartialShape& s,
@@ -49,14 +53,17 @@ namespace ngraph
                     set_output_type(0, type, s);
                 }
 
-                /// \brief creates a Label node containing a sub-pattern described by the type and shape of \sa node.
+                /// \brief creates a Label node containing a sub-pattern described by the type and
+                ///        shape of \sa node.
                 ///
                 /// this Label node can be bound only to the nodes in the input graph
                 /// that match the pattern specified by \sa wrapped_nodes
                 /// Example:
                 /// \code{.cpp}
                 /// auto add = a + b; // a and b are op::Parameter in this example
-                /// auto label = std::make_shared<pattern::op::Label>(add, nullptr, NodeVector{add});
+                /// auto label = std::make_shared<pattern::op::Label>(add,
+                ///                                                   nullptr,
+                ///                                                   NodeVector{add});
                 /// \endcode
                 Label(std::shared_ptr<Node> node,
                       Predicate pred = nullptr,

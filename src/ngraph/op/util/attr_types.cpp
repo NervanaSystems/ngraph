@@ -57,6 +57,17 @@ std::ostream& op::operator<<(std::ostream& str, const op::AutoBroadcastType& aut
     NGRAPH_UNREACHABLE("Unexpected value for enum op::AutoBroadcastType");
 }
 
+std::ostream& op::operator<<(std::ostream& str, const op::EpsMode& eps_mode)
+{
+    switch (eps_mode)
+    {
+    case op::EpsMode::ADD: return (str << "EpsMode::ADD");
+    case op::EpsMode::MAX: return (str << "EpsMode::MAX");
+    }
+
+    NGRAPH_UNREACHABLE("Unexpected value for enum op::EpsMode");
+}
+
 std::ostream& op::operator<<(std::ostream& str, const op::AutoBroadcastSpec& autobroadcast_spec)
 {
     // NOTE: m_axis will only be relevant for autobroadcast types that are

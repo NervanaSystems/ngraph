@@ -27,7 +27,8 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Cast shape of all input nodes for an element-wise operation that requires shape-compatibility
+        /// \brief Cast shape of all input nodes for an element-wise operation that requires
+        ///        shape-compatibility
         ///
         /// \param inputs Original list of inputs
         ///
@@ -35,14 +36,16 @@ namespace ngraph
         NodeVector numpy_style_broadcast(const NodeVector& inputs)
             NGRAPH_DEPRECATED("Replace with numpy_style_broadcast_values");
 
-        /// \brief Cast shape of all input nodes for an element-wise operation that requires shape-compatibility
+        /// \brief Cast shape of all input nodes for an element-wise operation that requires
+        ///        shape-compatibility
         ///
         /// \param values Original list of inputs
         ///
         /// \return Numpy-style broadcasted list of nodes.
         OutputVector numpy_style_broadcast_values(const OutputVector& values);
 
-        /// \brief Cast shape of an output to the requested output shape using NumPy's broadcasting rules
+        /// \brief Cast shape of an output to the requested output shape using NumPy's broadcasting
+        ///        rules
         ///
         /// \param value original value
         /// \param shape requested output shape
@@ -50,7 +53,8 @@ namespace ngraph
         /// \return Broadcast output.
         std::shared_ptr<Node> numpy_style_broadcast(const Output<Node>& value, const Shape& shape);
 
-        /// \brief Cast shape of two outputs to make them compatible for an element-wise binary operation.
+        /// \brief Cast shape of two outputs to make them compatible for an element-wise binary
+        ///        operation.
         ///
         /// If necessary the right-hand-side argument will be broadcast to match the shape
         /// of left-hand-side argument. The starting of the mutually equal shape is
@@ -70,7 +74,8 @@ namespace ngraph
                                                                size_t start_match_axis)
             NGRAPH_DEPRECATED("Replace with legacy_style_broadcast_values_for_binary_operation");
 
-        /// \brief Cast shape of two outputs to make them compatible for an element-wise binary operation.
+        /// \brief Cast shape of two outputs to make them compatible for an element-wise binary
+        ///        operation.
         ///
         /// If necessary the right-hand-side argument will be broadcast to match the shape
         /// of left-hand-side argument. The starting of the mutually equal shape is
@@ -89,15 +94,19 @@ namespace ngraph
                                                                         const Output<Node>& right,
                                                                         size_t start_match_axis);
 
-        /// \brief      Broadcast shape of two nodes to make them compatible for a matrix multiplication.
+        /// \brief      Broadcast shape of two nodes to make them compatible for a matrix
+        ///             multiplication.
         ///
-        /// \note       This function is reflecting broadcasting behaviour of NumPy's `matmul` operation
-        ///             (https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html)
-        ///             This mean that only \"stack of matrices\" axes are bidirectionally broadcasted.
-        ///             The last two dimension are left untouched.
+        /// \note       This function is reflecting broadcasting behaviour of NumPy's `matmul`
+        ///             operation.
+        ///             (https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html).
+        ///             This mean that only \"stack of matrices\" axes are bidirectionally
+        ///             broadcasted. The last two dimension are left untouched.
         ///
-        /// \param[in]  left   The Node providing data for the left-hand side of matrix multiplication.
-        /// \param[in]  right  The Node providing data for the right-hand side of matrix multiplication.
+        /// \param[in]  left   The Node providing data for the left-hand side of matrix
+        ///                    multiplication.
+        /// \param[in]  right  The Node providing data for the right-hand side of matrix
+        ///                    multiplication.
         ///
         /// \return     The vector containing both nodes broadcasted.
         ///
@@ -105,15 +114,19 @@ namespace ngraph
                                                               const std::shared_ptr<Node>& right)
             NGRAPH_DEPRECATED("Replace with numpy_style_broadcast_values_for_matmul_operation.");
 
-        /// \brief      Broadcast shape of two nodes to make them compatible for a matrix multiplication.
+        /// \brief      Broadcast shape of two nodes to make them compatible for a matrix
+        ///             multiplication.
         ///
-        /// \note       This function is reflecting broadcasting behaviour of NumPy's `matmul` operation
+        /// \note       This function is reflecting broadcasting behaviour of NumPy's `matmul`
+        ///             operation.
         ///             (https://docs.scipy.org/doc/numpy/reference/generated/numpy.matmul.html)
-        ///             This mean that only \"stack of matrices\" axes are bidirectionally broadcasted.
-        ///             The last two dimension are left untouched.
+        ///             This mean that only \"stack of matrices\" axes are bidirectionally
+        ///             broadcasted. The last two dimension are left untouched.
         ///
-        /// \param[in]  left   The Node providing data for the left-hand side of matrix multiplication.
-        /// \param[in]  right  The Node providing data for the right-hand side of matrix multiplication.
+        /// \param[in]  left   The Node providing data for the left-hand side of matrix
+        ///                    multiplication.
+        /// \param[in]  right  The Node providing data for the right-hand side of matrix
+        ///                    multiplication.
         ///
         /// \return     The vector containing both outputs broadcasted.
         ///

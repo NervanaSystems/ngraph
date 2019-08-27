@@ -88,6 +88,17 @@ namespace ngraph
 
         std::ostream& operator<<(std::ostream& str, const AutoBroadcastType& autobroadcast_type);
 
+        /// \brief Specifies how eps is combined with L2 value
+        enum class EpsMode
+        {
+            // Add bias to norm
+            ADD,
+            // Calculate max of norm and bias
+            MAX
+        };
+
+        std::ostream& operator<<(std::ostream& str, const EpsMode& autobroadcast_type);
+
         /// \brief Implicit broadcast specification
         struct AutoBroadcastSpec
         {

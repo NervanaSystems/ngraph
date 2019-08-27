@@ -106,7 +106,8 @@ namespace ngraph
                                                            params_outer_strides,
                                                            params_outer_axis_order);
 
-                // Create a CoordinateTransform for "indices" that visits only the first element along inner most axis
+                // Create a CoordinateTransform for "indices" that visits only the first element
+                // along inner most axis
                 Coordinate indices_outer_start_corner(indices_ndim, 0);
                 Coordinate indices_outer_end_corner(indices_shape);
                 if (indices_ndim > 0)
