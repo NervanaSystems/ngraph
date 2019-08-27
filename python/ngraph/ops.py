@@ -177,7 +177,7 @@ def quantize(data, scale, zero_point, new_type, axes, round_mode, name=None):
 
     Computes quantize on the input tensor:
 
-    .. math:: output = ROUND((input /scale) + zero\_point)
+    .. math:: output = ROUND((input / scale) + zero\_point)
 
     :param data: The node with data tensor.
     :param scale: Scale used for mapping.
