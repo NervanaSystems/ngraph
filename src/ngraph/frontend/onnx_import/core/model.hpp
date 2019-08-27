@@ -53,8 +53,10 @@ namespace ngraph
             /// \param name       type name of the operator object,
             /// \param domain     domain name of the operator object.
             /// \return Reference to the operator object.
-            /// \throw error::UnknownDomain    there is no operator set defined for the given domain,
-            /// \throw error::UnknownOperator  the given operator type name does not exist in operator set.
+            /// \throw error::UnknownDomain    there is no operator set defined for the given
+            ///                                domain,
+            /// \throw error::UnknownOperator  the given operator type name does not exist in
+            ///                                operator set.
             const Operator& get_operator(const std::string& name, const std::string& domain) const;
 
             /// \brief Check availability of operator base on NodeProto.
