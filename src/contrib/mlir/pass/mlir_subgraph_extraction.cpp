@@ -279,6 +279,8 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
 
         auto& outputs_vector = ck->get_kernel_outputs();
         auto& node_list = ck->get_node_list();
+        std::unordered_set<std::shared_ptr<Node>> node_set(node_list.begin(), node_list.end());
+
         for (size_t i = 0, end = outputs_vector.size(); i < end; ++i)
         {
             auto& output_descs = outputs_vector[i]->get_outputs();
@@ -290,8 +292,7 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
 
             for (descriptor::Input* in_desc : input_descs)
             {
-                if (std::find(node_list.begin(), node_list.end(), in_desc->get_node()) ==
-                    node_list.end())
+                if (node_set.find(in_desc->get_node()) == node_set.end())
                 {
                     in_desc->replace_output(ck, i);
                 }
@@ -319,6 +320,10 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
     return ck_nodes;
 }
 
+// Do a sanity check on graph invariants
+//  - no cycles
+//  - inputs to sub-graph are inputs to CK
+//  - no outputs out of subgraph for output nodes
 void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes)
 {
     NodeVector cycles;
@@ -336,14 +341,14 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
     {
         auto ck_node = std::static_pointer_cast<CompiledKernel>(node);
         auto& node_list = ck_node->get_node_list();
-
+        std::unordered_set<std::shared_ptr<Node>> node_set(node_list.begin(), node_list.end());
         // CK output nodes shouldn't have any users outside the sub-graph,
         // they are all moved to the CK node instead
         for (auto& ck_output : ck_node->get_kernel_outputs())
         {
             for (auto& user : ck_output->get_users())
             {
-                NGRAPH_CHECK(std::find(node_list.begin(), node_list.end(), user) != node_list.end(),
+                NGRAPH_CHECK(node_set.find(user) != node_set.end(),
                              "CK output nodes users should be in the sub-graph");
             }
         }
@@ -354,7 +359,7 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
             bool found = false;
             for (auto& user : arg->get_users())
             {
-                found = (std::find(node_list.begin(), node_list.end(), user) != node_list.end());
+                found = (node_set.find(user) != node_set.end());
                 if (found)
                 {
                     break;
