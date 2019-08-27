@@ -93,7 +93,7 @@ to improve it:
 [framework integration guides]: https://ngraph.ai/documentation/frameworks/overview
 [release notes]: https://www.ngraph.ai/documentation/project/release-notes
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
-[contrib guide]: https://ngraph.ai/documentation/contributing/guide
+[contrib guide]: https://www.ngraph.ai/documentation/contributing/guide
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
 [how to import]: https://www.ngraph.ai/tutorials/onnx-tutorial#import-a-model-with-onnx-and-ngraph
 [ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/ngpipelines.png "nGraph wireframe"
