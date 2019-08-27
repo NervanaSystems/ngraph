@@ -803,7 +803,10 @@ namespace
         auto padAbove = convolOp.padBelow();
         for (auto value : llvm::zip(padBelow, padAbove))
         {
-            NGRAPH_CHECK(std::get<0>(value) == 0 && std::get<1>(value) == 0, "No support for padding in convolution op");
+            auto padAttr = std::get<0>(value);
+            NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0, "No support for padding in convolution op");
+            padAttr = std::get<1>(value);
+            NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0, "No support for padding in convolution op");
         }
 
 
@@ -813,10 +816,14 @@ namespace
         // Let Filters shape be [C_OUT, C_IN, F_1, ... F_f]
         // Output shape will be [N, C_OUT, R_1, ..R_f]
         //   where R_i = (AdjD_i - AdjF_i + 1) / Strides[i]
+        //
         // AdjD_i is adjusted image spatial dimension after padding and dilation
         //   AdjD_i = padBelow[i] + (dilation[i] * (D_i - 1) + 1) + padAbove[i]
+        //
         // AdjF_i is adjusted filters spatial dimension after dilation
         //   AdjF_i = dilation[i] * (F_i - 1) + 1
+        //
+        //   If no padding, padAbove/Below[i] = 0
         //   If no dilation, dilation[i] is 1
         //
         // Generate the following (currently without padding/dilation support)
@@ -847,14 +854,14 @@ namespace
         MemRefView vRes(result), vImages(images), vFilters(filters);
 
         // Indexed Values
-        IndexedValue iRes(result), iImages(images), iFilers(filters);
+        IndexedValue iRes(result), iImages(images), iFilters(filters);
         
         // Bounds on batch size N
         ValueHandle batchLb = vImages.lb(0), batchUb = vImages.ub(0);
         // Bounds on number of filters
         ValueHandle numFiltersLb = vFilters.lb(0), numFiltersUb = vFilters.ub(0);
         // Bound on number of channels
-        ValueHandle numChannelsLb = vImages.lb(1), numChannelsUb = vImages.lb(1);
+        ValueHandle numChannelsLb = vImages.lb(1), numChannelsUb = vImages.ub(1);
         // Bounds on result spatial dimensions
         SmallVector<ValueHandle, 4> resSpatialLbs, resSpatialUbs;
         SmallVector<ValueHandle, 4> filtersSpatialLbs, filtersSpatialUbs;
@@ -864,11 +871,11 @@ namespace
         // Result spatial indices and bounds
         auto resSpatialIndices = makeIndexHandles(spatialRank);
         auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
-
+        SmallVector<int64_t, 4> resSteps, filtersSteps;
         for (auto i = 0; i < spatialRank; i++)
         {
             resSpatialLbs.push_back(vImages.lb(i + 2));
-            resSpatialUbs.push_back(llvm::divideCeil(vImages.ub(i + 2) - vFilters.ub(i + 2) + intrinsics::constant_index(1), (strides[i].cast<IntegerAttr>()).getInt()));
+            resSpatialUbs.push_back(vRes.ub(i + 2));
             resSteps.push_back(vRes.step(i + 2));
         }
 
@@ -898,8 +905,9 @@ namespace
                         SmallVector<IndexHandle, 4> imgStartIndices;
                         for (auto i = 0; i < spatialRank; i++)
                         {
-                            auto stride = intrinsics::constant_index(strides[i].getInt());
-                            imgStartIndices.push_back(resSpatialIndices[i] * stride);
+                            IntegerAttr iAttr = strides[i].cast<IntegerAttr>();
+                            auto stride = intrinsics::constant_index(iAttr.getInt());
+                            imgStartIndices.push_back(IndexHandle(resSpatialIndices[i] * stride));
                         }
                         SmallVector<IndexHandle, 4> resIndices;
                         // Result indices
@@ -907,28 +915,26 @@ namespace
                         resIndices.push_back(k);
                         resIndices.insert(resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
                         // Initialize result to zero
-                        ValueHandle zero = create_zero_constant(elemTy);
-                        iRes(resIndices) = zero
+                        ValueHandle zero = createZeroConstant(elemTy);
+                        iRes(resIndices) = zero;
 
                         LoopNestBuilder(filtersSpatialIndicesPtrs, filtersSpatialLbs, filtersSpatialUbs, filtersSteps)([&]{
-                            SmallVector<IndexHandle> imgIndices, filtersIndices;
+                            SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
                             // Image indices
                             imgIndices.push_back(n);
                             imgIndices.push_back(c);
                             for (auto i = 0; i < spatialRank; i++)
                             {
-                                imgIndices.push_back(imgStartIndices[i] + filterSpatialIndices[i]);
+                                imgIndices.push_back(IndexHandle(imgStartIndices[i] + filtersSpatialIndices[i]));
                             }
                             // Filter indices
                             filtersIndices.push_back(k);
                             filtersIndices.push_back(c);
                             filtersIndices.insert(filtersIndices.end(), filtersSpatialIndices.begin(), filtersSpatialIndices.end());
 
-                            iRes(resIndices) = iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices))
+                            iRes(resIndices) = iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices));
                         });
-                    })
-
-
+                    });
                 });
             });
         });
