@@ -41,7 +41,8 @@ namespace ngraph
                 /// \brief      Constructs a RNNCellBase class.
                 ///
                 /// \param[in]  hidden_size        The number of hidden units for recurrent cell.
-                /// \param[in]  clip               The value defining clipping range [-clip, clip] on
+                /// \param[in]  clip               The value defining clipping range [-clip, clip]
+                /// on
                 ///                                input of activation functions.
                 /// \param[in]  activations        The vector of activation functions used inside
                 ///                                recurrent cell.

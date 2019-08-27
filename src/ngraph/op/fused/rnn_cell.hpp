@@ -64,8 +64,10 @@ namespace ngraph
             ///
             /// \brief      Constructs RNNCell node.
             ///
-            /// \param[in]  X                  The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W                 The weight tensor with shape: [hidden_size, input_size].
+            /// \param[in]  X                  The input tensor with shape: [batch_size,
+            /// input_size].
+            /// \param[in]  W                 The weight tensor with shape: [hidden_size,
+            /// input_size].
             ///                                                              input_size].
             /// \param[in]  R                  The recurrence weight tensor with shape:
             ///                                [hidden_size, hidden_size].
@@ -76,7 +78,8 @@ namespace ngraph
             ///                                recurrent cell.
             /// \param[in]  activations_alpha  The vector of alpha parameters for activation
             ///                                functions in order respective to activation list.
-            /// \param[in]  activations_beta   The vector of beta parameters for activation functions
+            /// \param[in]  activations_beta   The vector of beta parameters for activation
+            /// functions
             ///                                in order respective to activation list.
             /// \param[in]  clip               The value defining clipping range [-clip, clip] on
             ///                                input of activation functions.
