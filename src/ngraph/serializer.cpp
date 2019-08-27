@@ -1885,11 +1885,26 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::TopK:
         {
-            auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
-            auto k = node_js.at("k").get<size_t>();
             auto compute_max = node_js.at("compute_max").get<bool>();
             auto target_type = read_element_type(node_js.at("index_element_type"));
-            node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+            if (has_key(node_js, "top_k_axis"))
+            {
+                auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
+                if (has_key(node_js, "k"))
+                {
+                    auto k = node_js.at("k").get<size_t>();
+                    node = make_shared<op::TopK>(args[0], top_k_axis, target_type, k, compute_max);
+                }
+                else
+                {
+                    node = make_shared<op::TopK>(
+                        args[0], args[1], top_k_axis, target_type, compute_max);
+                }
+            }
+            else
+            {
+                node = make_shared<op::TopK>(args[0], args[1], args[2], target_type, compute_max);
+            }
             break;
         }
         case OP_TYPEID::Transpose:
@@ -2886,9 +2901,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::TopK:
     {
         auto tmp = dynamic_cast<const op::TopK*>(&n);
-        node["top_k_axis"] = tmp->get_top_k_axis();
         node["index_element_type"] = write_element_type(tmp->get_index_element_type());
-        node["k"] = tmp->get_k();
         node["compute_max"] = tmp->get_compute_max();
         break;
     }
