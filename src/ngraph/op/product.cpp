@@ -19,22 +19,47 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Product::type_name{"Product"};
+const string op::v0::Product::type_name{"Product"};
 
-op::Product::Product(const Output<Node>& arg, const AxisSet& reduction_axes)
+op::v0::Product::Product(const Output<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
+    set_opset_version(0);
     constructor_validate_and_infer_types();
 }
 
-op::Product::Product(const Output<Node>& arg, const Output<Node>& reduction_axes)
+op::v0::Product::Product(const Output<Node>& arg, const Output<Node>& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
+    set_opset_version(0);
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Product::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Product::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Product>(new_args.at(0), get_reduction_axes());
+}
+
+
+const string op::v1::ReduceProd::type_name{"ReduceProd"};
+
+op::v1::ReduceProd::ReduceProd(const Output<Node>& arg, const AxisSet& reduction_axes, int keep_dims)
+    : ArithmeticReduction(arg, reduction_axes), m_keep_dims{keep_dims}
+{
+    set_opset_version(1);
+    constructor_validate_and_infer_types();
+}
+
+op::v1::ReduceProd::ReduceProd(const Output<Node>& arg, const Output<Node>& reduction_axes, int keep_dims)
+    : ArithmeticReduction(arg, reduction_axes), m_keep_dims{keep_dims}
+{
+    set_opset_version(1);
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::ReduceProd::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<ReduceProd>(new_args.at(0), get_reduction_axes(), m_keep_dims);
 }
