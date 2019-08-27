@@ -1,5 +1,12 @@
 {
     "name": "Convolution",
+    "dialect": "core",
+    "versions": [
+        2,
+        3,
+        4,
+        5
+    ],
     "description": "Batched convolution operation",
     "zdte_implemented": true,
     "arguments": [
