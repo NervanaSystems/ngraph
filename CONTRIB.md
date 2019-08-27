@@ -3,6 +3,10 @@ Contributor Guidelines
 
 The latest version of this file can be found at: 
 
+https://www.ngraph.ai/documentation/contributing/guide
+
+or 
+
 https://ngraph.nervanasys.com/docs/latest/project/contribution-guide.html
 
 
@@ -240,5 +244,3 @@ merge conflicts.
         int y;
         int* z;
         ```
-
-
