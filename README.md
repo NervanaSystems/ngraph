@@ -3,7 +3,7 @@
 
 <div align="left">
   <h4>
-    <a href="./ABOUT.md">Architecture &amp; features</a> | <a href="./ecosystem-overview.md" >Ecosystem</a> | <a href="https://ngraph.ai/documentation/project/release-notes.html">Release notes</a><span> | </span> <a href="https://www.ngraph.ai/documentation">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contribution guide</a>
+    <a href="./ABOUT.md">Architecture &amp; features</a> | <a href="./ecosystem-overview.md" >Ecosystem</a> | <a href="https://www.ngraph.ai/documentation/project/release-notes.html">Release notes</a><span> | </span> <a href="https://www.ngraph.ai/documentation">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contribution guide</a>
  </h4>
 </div>
 
@@ -13,7 +13,7 @@ To begin using nGraph with popular frameworks, please refer to the links below.
 
 |  Framework (Version)       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
-| TensorFlow*                | [Pip install](https://www.ngraph.ai/tutorials/tensorflow-tutorial#use-pre-built-packages) or [Build from source](https://ngraph.ai/tutorials/tensorflow-tutorial#build-from-source) | 20 [Validated workloads]   
+| TensorFlow*                | [Pip install](https://www.ngraph.ai/tutorials/tensorflow-tutorial#use-pre-built-packages) or [Build from source](https://www.ngraph.ai/tutorials/tensorflow-tutorial#build-from-source) | 20 [Validated workloads]   
 | ONNX 1.5                   | [Pip install](https://www.ngraph.ai/tutorials/onnx-tutorial#use-pre-built-packages)                          | 17 [Validated workloads] 
 
 
