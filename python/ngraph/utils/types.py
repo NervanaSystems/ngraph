@@ -22,7 +22,7 @@ import numpy as np
 
 from ngraph.impl import Type as NgraphType
 from ngraph.impl import Node, Shape
-from ngraph.impl.op import Constant
+from ngraph.impl.op import Constant, Quantize
 
 from ngraph.exceptions import NgraphTypeError
 

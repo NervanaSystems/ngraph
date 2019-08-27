@@ -49,6 +49,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Cos(m_op);
     regclass_pyngraph_op_Cosh(m_op);
     regclass_pyngraph_op_DepthToSpace(m_op);
+    regclass_pyngraph_op_Dequantize(m_op);
     regclass_pyngraph_op_Divide(m_op);
     regclass_pyngraph_op_Dot(m_op);
     regclass_pyngraph_op_Elu(m_op);
@@ -86,6 +87,9 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Power(m_op);
     regclass_pyngraph_op_PRelu(m_op);
     regclass_pyngraph_op_Product(m_op);
+    regclass_pyngraph_op_Quantize(m_op);
+    regclass_pyngraph_op_QuantizedConvolution(m_op);
+    regclass_pyngraph_op_QuantizedDot(m_op);
     regclass_pyngraph_op_Relu(m_op);
     regclass_pyngraph_op_ReluBackprop(m_op);
     regclass_pyngraph_op_ReplaceSlice(m_op);
