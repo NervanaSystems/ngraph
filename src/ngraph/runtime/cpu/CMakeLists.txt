@@ -73,7 +73,6 @@ set(SRC
     builder/replace_slice.cpp
     builder/quantization.cpp
     builder/quantized_conv.cpp
-    builder/quantized_concat.cpp
     builder/quantized_dot.cpp
     builder/quantized_matmul.cpp
     builder/reshape.cpp

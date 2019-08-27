@@ -65,7 +65,8 @@ namespace ngraph
             /// \brief      Constructs RNNCell node.
             ///
             /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W                 The weight tensor with shape: [hidden_size, input_size].
+            /// \param[in]  W                 The weight tensor with shape: [hidden_size,
+            ///                                                              input_size].
             /// \param[in]  R                 The recurrence weight tensor with shape:
             ///                               [hidden_size, hidden_size].
             /// \param[in]  H_t               The hidden state tensor at current time step with
@@ -94,13 +95,15 @@ namespace ngraph
             /// \brief      Constructs RNNCell node.
             ///
             /// \param[in]  X                 The input tensor with shape: [batch_size, input_size].
-            /// \param[in]  W                 The weight tensor with shape: [hidden_size, input_size].
+            /// \param[in]  W                 The weight tensor with shape: [hidden_size,
+            ///                                                              input_size].
             /// \param[in]  R                 The recurrence weight tensor with shape:
             ///                               [hidden_size, hidden_size].
             /// \param[in]  H_t               The hidden state tensor at current time step with
             ///                               shape: [batch_size, hidden_size].
             /// \param[in]  hidden_size       The number of hidden units for recurrent cell.
-            /// \param[in]  B                 The bias tensor for input gate with shape: [2*hidden_size].
+            /// \param[in]  B                 The bias tensor for input gate with shape:
+            ///                               [2*hidden_size].
             /// \param[in]  activations       The vector of activation functions used inside
             ///                               recurrent cell.
             /// \param[in]  activation_alpha  The vector of alpha parameters for activation
