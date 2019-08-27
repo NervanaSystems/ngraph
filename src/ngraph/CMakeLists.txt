@@ -24,20 +24,23 @@ set (SRC
     axis_vector.hpp
     builder/autobroadcast.cpp
     builder/autobroadcast.hpp
+    builder/dequantize_builder.cpp
+    builder/dequantize_builder.hpp
     builder/make_constant.hpp
     builder/norm.cpp
     builder/norm.hpp
     builder/numpy_transpose.cpp
     builder/numpy_transpose.hpp
-    builder/quantization.cpp
-    builder/quantization.hpp
+    builder/quantize_builder.cpp
+    builder/quantize_builder.hpp
+    builder/quantized_concat_builder.cpp
+    builder/quantized_concat_builder.hpp
     builder/quantized_conv_builder.cpp
     builder/quantized_conv_builder.hpp
     builder/quantized_dot_builder.cpp
     builder/quantized_dot_builder.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization_util.hpp
     builder/quantization_utils.hpp
     builder/quantization_utils.cpp
     builder/reduce_ops.cpp
