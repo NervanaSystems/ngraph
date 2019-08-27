@@ -342,7 +342,7 @@ TEST(serialize, non_zero_node_output)
 }
 
 struct OpSet1SerializationTester {
-    OpSet1Tester(std::string op_name)
+    OpSet1SerializationTester(std::string op_name)
     : m_op_name{std::move(op_name)}
     {}
 
@@ -367,25 +367,18 @@ struct OpSet1SerializationTester {
 
 TEST(serialize, opset1_softmax)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
-    auto softmax = make_shared<op::v1::Softmax>(arg, 0);
-    auto result = make_shared<op::Result>(softmax);
-    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
-    string s = serialize(f);
+    const auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
+    const auto softmax = make_shared<op::v1::Softmax>(arg, 0);
+    OpSet1SerializationTester tester{"Softmax"};
 
-    shared_ptr<Function> g = deserialize(s);
-    auto g_result = g->get_results().at(0);
-    auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-    EXPECT_EQ(g_softmax->description(), "Softmax");
-    EXPECT_EQ(g_softmax->get_op_version(), 1);
+    tester.test(softmax, arg);
 }
 
 TEST(serialize, opset1_reverse)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto rev_axes = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto rev_v1 = make_shared<op::v1::Reverse>(data, rev_axes, "index");
+    const auto rev_v1 = make_shared<op::v1::Reverse>(data, rev_axes, "index");
 
     OpSet1SerializationTester tester{"Reverse"};
 
