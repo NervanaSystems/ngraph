@@ -1726,9 +1726,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Reverse:
         {
-            auto reversed_axes = deserialize_axis_set(node_js.at("reversed_axes"));
-            node = make_shared<op::Reverse>(args[0], reversed_axes);
-            break;
+            if (opset_version == 0)
+            {
+                const auto reversed_axes = deserialize_axis_set(node_js.at("reversed_axes"));
+                node = make_shared<op::Reverse>(args[0], reversed_axes);
+                break;
+            }
+            else if (opset_version == 1)
+            {
+                const auto mode = node_js.at("mode");
+                node = make_shared<op::v1::Reverse>(args[0], args[1], mode);
+                break;
+            }
         }
         case OP_TYPEID::ReverseSequence:
         {
@@ -2792,9 +2801,18 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Reverse:
     {
-        auto tmp = dynamic_cast<const op::Reverse*>(&n);
-        node["reversed_axes"] = serialize_axis_set(tmp->get_reversed_axes());
-        break;
+        if (opset_version == 0)
+        {
+            const auto tmp = dynamic_cast<const op::Reverse*>(&n);
+            node["reversed_axes"] = serialize_axis_set(tmp->get_reversed_axes());
+            break;
+        }
+        else if (opset_version == 1)
+        {
+            const auto tmp = dynamic_cast<const op::v1::Reverse*>(&n);
+            node["mode"] = tmp->get_mode();
+            break;
+        }
     }
     case OP_TYPEID::ReverseSequence:
     {
