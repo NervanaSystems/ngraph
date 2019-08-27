@@ -85,21 +85,38 @@ void op::v1::Reverse::validate_and_infer_types()
     const auto input_rank = input_shape.rank();
 
     const auto rev_axes_shape = get_input_partial_shape(0);
-    const auto rev_axes_rank = input_shape.rank();
+    const auto rev_axes_rank = rev_axes_shape.rank();
 
     if (input_rank.is_static() && rev_axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                                (size_t)rev_axes_rank <= (size_t)input_rank,
+                                static_cast<size_t>(rev_axes_rank) <= static_cast<size_t>(input_rank),
                                 "The reversed_axes input rank (",
                                 rev_axes_rank,
                                 ") is greater than the data tensor rank (",
                                 input_rank,
                                 ").");
+
+        if (m_mode == "mask")
+        {
+            NODE_VALIDATION_CHECK(this, static_cast<size_t>(rev_axes_rank) == 1,
+                "The reversed_axes input rank needs to be equal to 1 in 'mask' mode.");
+
+            const auto rev_axes_mask_elems_count = static_cast<size_t>(rev_axes_shape[0]);
+            NODE_VALIDATION_CHECK(this, rev_axes_mask_elems_count == static_cast<size_t>(input_rank),
+                "The number of elements in reversed_axes (",
+                rev_axes_mask_elems_count,
+                ") must match the data tensor rank (",
+                static_cast<size_t>(input_rank),
+                ")");
+        }
     }
 
-    //TODO: validation of modes
-    //TODO: validation of reversed_axes if mode == "mask"
+    NODE_VALIDATION_CHECK(this,
+                                m_mode == "index" || m_mode == "mask",
+                                "The provided value of mask attribute (",
+                                m_mode,
+                                ") is invalid. Allowed values: 'index' or 'mask'.");
 
     set_output_type(0, get_input_element_type(0), input_shape);
 }
