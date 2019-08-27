@@ -31,6 +31,8 @@
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/IR/StandardTypes.h>
 #include <mlir/Transforms/DialectConversion.h>
+#include <mlir/IR/AffineExpr.h>
+#include <mlir/IR/IntegerSet.h>
 
 #include <map>
 
@@ -799,8 +801,10 @@ namespace
         Value* images = operands[0];
         Value* filters = operands[1];
         auto strides = convolOp.strides().getValue();
-        auto padBelow = convolOp.padBelow();
-        auto padAbove = convolOp.padBelow();
+        auto padBelow = convolOp.padBelow().getValue();
+        auto padAbove = convolOp.padBelow().getValue();
+
+        #if 0
         for (auto value : llvm::zip(padBelow, padAbove))
         {
             auto padAttr = std::get<0>(value);
@@ -808,6 +812,7 @@ namespace
             padAttr = std::get<1>(value);
             NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0, "No support for padding in convolution op");
         }
+        #endif
 
 
         Type elemTy = images->getType().cast<MemRefType>().getElementType();
@@ -828,6 +833,13 @@ namespace
         //
         // Generate the following (currently without padding/dilation support)
         //
+        //
+        // for n : 0 -> N
+        //   for k : 0 -> C_OUT
+        //     for <r_1 .. r_f> : <0 .. 0> -> <R_1 ... R_f> 
+        //       //initialize result to zero
+        //       Output[n, k, r_1, .. r_f] = 0;
+        //
         // for n : 0 -> N
         //   for k : 0 -> C_OUT
         //     for c : 0 -> C_IN
@@ -837,8 +849,6 @@ namespace
         //         i_1 = r_1 * strides[0];
         //         ..
         //         i_f = r_f * strides[f - 1];
-        //         // initialize result to zero
-        //         Output[n, k, r_1, .. r_f] = 0;
         //         // iterate over kernel spatial shape
         //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
         //           Output[n, k, r_1, .. r_f] += 
@@ -864,6 +874,7 @@ namespace
         ValueHandle numChannelsLb = vImages.lb(1), numChannelsUb = vImages.ub(1);
         // Bounds on result spatial dimensions
         SmallVector<ValueHandle, 4> resSpatialLbs, resSpatialUbs;
+        SmallVector<ValueHandle, 4> imgSpatialLbs, imgSpatialUbs;
         SmallVector<ValueHandle, 4> filtersSpatialLbs, filtersSpatialUbs;
         // Spatial rank
         unsigned spatialRank = vImages.rank() - 2;
@@ -874,10 +885,16 @@ namespace
         SmallVector<int64_t, 4> resSteps, filtersSteps;
         for (auto i = 0; i < spatialRank; i++)
         {
-            resSpatialLbs.push_back(vImages.lb(i + 2));
+            // result spatial bounds and steps
+            resSpatialLbs.push_back(vRes.lb(i + 2));
             resSpatialUbs.push_back(vRes.ub(i + 2));
             resSteps.push_back(vRes.step(i + 2));
+            // image spatial bounds
+            imgSpatialLbs.push_back(vImages.lb(i + 2));
+            imgSpatialUbs.push_back(vImages.ub(i + 2));
         }
+
+        
 
         NGRAPH_CHECK(vImages.rank() == vFilters.rank(), "Images and Filters have unequal ranks");
         NGRAPH_CHECK(resSpatialLbs.size() == resSpatialUbs.size() && resSpatialLbs.size() == spatialRank , "Results spatial dims mismatches input");
@@ -893,8 +910,57 @@ namespace
             filtersSteps.push_back(vFilters.step(i + 2));
         }
 
-        // Batch size loop
+        // Create affine expressions and IntegerSet
+        // IntegerSet (d0, d1, .. d_N-1)[LB_0, LB_1, .. LB_N-1, UB_0, UB_1, .. UB_N-1], where for each dim:
+        //   (d_dim - padBelow[dim] - LB_dim >= 0), 
+        //   (padAbove[dim] - UB_dim - d_dim >= 0)
+        SmallVector<AffineExpr, 4> affineExprs;
+        SmallVector<bool, 4> isEq;
+        for (unsigned dim = 0; dim < spatialRank; dim++)
+        {
+            // i_dim
+            auto dimExpr = rewriter.getAffineDimExpr(dim);
+            auto imgLbExpr = rewriter.getAffineSymbolExpr(dim);
+            // expr1 : i_dim - padBelow[dim] - imgLB >= 0
+            IntegerAttr iAttr = padBelow[dim].cast<IntegerAttr>();
+            auto padBelowExpr = rewriter.getAffineConstantExpr(iAttr.getInt());
+            affineExprs.push_back(dimExpr - padBelowExpr - imgLbExpr);
+            isEq.push_back(false);
+            // expr2: padAbove + imgUB - i_dim -1 >= 0
+            
+            auto imgUbExpr = rewriter.getAffineSymbolExpr(spatialRank + dim);
+            iAttr = padAbove[dim].cast<IntegerAttr>();
+            auto padAboveExpr = rewriter.getAffineConstantExpr(iAttr.getInt());
+            auto oneExpr = rewriter.getAffineConstantExpr(1);
+            affineExprs.push_back(padAboveExpr + imgUbExpr - dimExpr - oneExpr);
+            isEq.push_back(false);
+        }
+        
+        NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank, "Invalid number of expressions in the IntegerSet");
+        auto nonPaddingRange = rewriter.getIntegerSet(spatialRank, 2*spatialRank, affineExprs, isEq);
+
+        {
+            IndexHandle n, k, c;
+            auto resSpatialIndices = makeIndexHandles(spatialRank);
+            auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);    
+            // Initialize output to zero
+            LoopBuilder(&n, batchLb, batchUb, 1)([&] {
+                LoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
+                    LoopNestBuilder(resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&]{
+                        SmallVector<IndexHandle, 4> resIndices;
+                        // Result indices
+                        resIndices.push_back(n);
+                        resIndices.push_back(k);
+                        resIndices.insert(resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
+                        ValueHandle zero = createZeroConstant(elemTy);
+                        iRes(resIndices) = zero;
+                    });
+                });
+            });
+        }
+
         IndexHandle n, k, c;
+        // Convolution loop
         LoopBuilder(&n, batchLb, batchUb, 1)([&] {
             // Filters loop
             LoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
@@ -914,9 +980,6 @@ namespace
                         resIndices.push_back(n);
                         resIndices.push_back(k);
                         resIndices.insert(resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
-                        // Initialize result to zero
-                        ValueHandle zero = createZeroConstant(elemTy);
-                        iRes(resIndices) = zero;
 
                         LoopNestBuilder(filtersSpatialIndicesPtrs, filtersSpatialLbs, filtersSpatialUbs, filtersSteps)([&]{
                             SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
@@ -932,7 +995,20 @@ namespace
                             filtersIndices.push_back(c);
                             filtersIndices.insert(filtersIndices.end(), filtersSpatialIndices.begin(), filtersSpatialIndices.end());
 
-                            iRes(resIndices) = iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices));
+                            // if args : img dims, img lbs, img ubs
+                            SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
+                            it++; it++;
+                            SmallVector<Value*, 4> affineIfArgs(it, imgIndices.end());
+                            affineIfArgs.insert(affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
+                            affineIfArgs.insert(affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
+
+                            auto affineIfOp = rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(), affineIfArgs, false);
+                            affineIfOp.setIntegerSet(nonPaddingRange);
+                            {
+                                auto rewriter = affineIfOp.getThenBodyBuilder();
+                                ScopedContext scope(rewriter, loc);
+                                iRes(resIndices) = iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices));
+                            }
                         });
                     });
                 });
