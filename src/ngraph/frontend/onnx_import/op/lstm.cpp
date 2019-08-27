@@ -77,9 +77,11 @@ namespace ngraph
                         // ----- Mandatory inputs ------
                         // Packed input sequences. Shape: [seq_length, batch_size, input_size]
                         m_map[LSTMInput::LSTM_INPUT_X] = ng_inputs.at(0);
-                        // Weight tensor for the gates. Shape: [num_directions, 4*hidden_size, input_size]
+                        // Weight tensor for the gates.
+                        // Shape: [num_directions, 4*hidden_size, input_size]
                         m_map[LSTMInput::LSTM_INPUT_W] = ng_inputs.at(1);
-                        // The recurrence weight tensor. Shape: [num_directions, 4*hidden_size, hidden_size]
+                        // The recurrence weight tensor.
+                        // Shape: [num_directions, 4*hidden_size, hidden_size]
                         m_map[LSTMInput::LSTM_INPUT_R] = ng_inputs.at(2);
 
                         const std::size_t hidden_size =
@@ -116,7 +118,8 @@ namespace ngraph
                                 std::vector<std::int32_t>(
                                     batch_size, m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(0)));
                         }
-                        // The initial value of the hidden. Shape [num_directions, batch_size, hidden_size]
+                        // The initial value of the hidden.
+                        // Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() > 5 && !ng_inputs.at(5)->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_INIT_H] = ng_inputs.at(5);
@@ -128,7 +131,8 @@ namespace ngraph
                                 Shape{num_directions, batch_size, hidden_size},
                                 std::vector<float>(num_directions * batch_size * hidden_size, 0.f));
                         }
-                        // The initial value of the cell. Shape [num_directions, batch_size, hidden_size]
+                        // The initial value of the cell.
+                        // Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() > 6 && !ng_inputs.at(6)->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_INIT_C] = ng_inputs.at(6);
@@ -237,8 +241,8 @@ namespace ngraph
                                          const std::shared_ptr<ngraph::Node>& initial_c,
                                          const std::shared_ptr<ngraph::Node>& seq_lengths,
                                          const LSTMAttributes& attributes)
-                        : m_X{X}
-                        // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
+                        : m_X{X} // Since we have forward LSTM we can squeeze `num_directions` axis
+                                 // from inputs.
                         , m_W(reshape::squeeze(W))
                         , m_R(reshape::squeeze(R))
                         , m_B(reshape::squeeze(B))
@@ -258,7 +262,8 @@ namespace ngraph
                         // ------ INPUTS ------
                         // X - The input tensor. [seq_length, batch_size, input_size]
                         // W - The weight tensor. [num_directions, 4*hidden_size, input_size]
-                        // R - The recurrence weight tensor. [num_directions, 4*hidden_size, hidden_size]
+                        // R - The recurrence weight tensor. [num_directions, 4*hidden_size,
+                        //                                    hidden_size]
                         // B - The bias tensor for input gate. [num_directions, 8*hidden_size]
                         // P - The weight tensor for peepholes. [num_directions, 3*hidde_size]
                         // ------ ACRONYMS ------
@@ -452,7 +457,8 @@ namespace ngraph
                     }
                     if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
                     {
-                        // In bidirectional mode weights are stacked together, so we must split them.
+                        // In bidirectional mode weights are stacked together, so we must split
+                        // them.
                         NodeVector W{
                             ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_W), 2)};
                         NodeVector R{
@@ -502,7 +508,7 @@ namespace ngraph
                 }
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 
