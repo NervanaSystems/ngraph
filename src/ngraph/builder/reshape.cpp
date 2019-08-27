@@ -132,7 +132,6 @@ shared_ptr<Node> builder::squeeze(const Output<Node>& value, vector<size_t> axes
     for (size_t idx = 0; idx < axes.size(); ++idx)
     {
         in_shape.at(idx) = 0;
-        // unit_strides := Constant(i64, Shape{1}, [1])
     }
     Shape output_shape;
     for (auto axis : in_shape)
