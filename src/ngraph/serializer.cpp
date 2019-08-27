@@ -1885,7 +1885,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::TopK:
         {
-            auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
+            auto top_k_axis = node_js.at("top_k_axis").get<int64_t>();
             auto k = node_js.at("k").get<size_t>();
             auto compute_max = node_js.at("compute_max").get<bool>();
             auto target_type = read_element_type(node_js.at("index_element_type"));

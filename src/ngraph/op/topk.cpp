@@ -27,7 +27,7 @@ using namespace ngraph;
 const string op::TopK::type_name{"TopK"};
 
 op::TopK::TopK(const Output<Node>& arg,
-               size_t top_k_axis,
+               int64_t top_k_axis,
                const element::Type& index_element_type,
                size_t k,
                bool compute_max,
@@ -43,7 +43,7 @@ op::TopK::TopK(const Output<Node>& arg,
 
 op::TopK::TopK(const Output<Node>& arg,
                const Output<Node>& k,
-               size_t top_k_axis,
+               int64_t top_k_axis,
                const element::Type& index_element_type,
                bool compute_max,
                SortType sort)
@@ -92,35 +92,40 @@ void op::TopK::validate_and_infer_types()
                           m_index_element_type,
                           ").");
 
-    NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || static_cast<size_t>(input_rank) > 0,
-                          "Argument rank must be greater than 0.");
-
-    NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || m_top_k_axis < static_cast<size_t>(input_rank),
-                          "TopK axis (",
-                          m_top_k_axis,
-                          ") is out of bounds.");
-
-    size_t k = get_k();
-    NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || input_shape[m_top_k_axis].is_dynamic() ||
-                              k <= static_cast<size_t>(input_shape[m_top_k_axis]),
-                          "K (",
-                          k,
-                          ") exceeds the dimension (",
-                          (input_rank.is_static() ? input_shape[m_top_k_axis] : 0),
-                          ") of the TopK axis (axis ",
-                          m_top_k_axis,
-                          ").");
-
     PartialShape output_shape{input_shape};
+    size_t k = get_k();
 
-    if (input_rank.is_static() && k != 0)
+    if(input_rank.is_static())
     {
-        output_shape[m_top_k_axis] = k;
-    }
+        int64_t i_rank = static_cast<int64_t>(input_rank);
+        int64_t k_axis = m_top_k_axis >= 0 ? m_top_k_axis : i_rank + m_top_k_axis;
 
+        NODE_VALIDATION_CHECK(this,
+                              i_rank > 0,
+                              "Argument rank must be greater than 0.");
+
+        NODE_VALIDATION_CHECK(this,
+                              k_axis >= 0 && k_axis < i_rank,
+                              "TopK axis (",
+                              m_top_k_axis,
+                              ") is out of bounds.");
+
+        NODE_VALIDATION_CHECK(this,
+                              input_shape[k_axis].is_dynamic() ||
+                                  k <= static_cast<size_t>(input_shape[k_axis]),
+                              "K (",
+                              k,
+                              ") exceeds the dimension (",
+                              input_shape[k_axis],
+                              ") of the TopK axis (axis ",
+                              m_top_k_axis,
+                              ").");
+
+        if (k != 0)
+        {
+            output_shape[k_axis] = k;
+        }
+    }
     set_output_size(2);
     set_output_type(0, m_index_element_type, output_shape);
     set_output_type(1, input_element_type, output_shape);

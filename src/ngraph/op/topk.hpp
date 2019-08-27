@@ -54,7 +54,7 @@ namespace ngraph
             /// \param compute_max Compute top k max or top k min?
             /// \param sort SortType for sorting results, default - NONE
             TopK(const Output<Node>& arg,
-                 size_t top_k_axis,
+                 int64_t top_k_axis,
                  const element::Type& index_element_type,
                  size_t k = 0,
                  bool compute_max = true,
@@ -69,7 +69,7 @@ namespace ngraph
             /// \param sort SortType for sorting results, default - NONE
             TopK(const Output<Node>& arg,
                  const Output<Node>& k,
-                 size_t top_k_axis,
+                 int64_t top_k_axis,
                  const element::Type& index_element_type,
                  bool compute_max = true,
                  SortType sort = SortType::NONE);
@@ -82,12 +82,12 @@ namespace ngraph
             size_t get_k() const;
             void set_k(size_t k);
 
-            size_t get_top_k_axis() const { return m_top_k_axis; }
+            int64_t get_top_k_axis() const { return m_top_k_axis; }
             element::Type get_index_element_type() const { return m_index_element_type; }
             bool get_compute_max() const { return m_compute_max; }
             SortType get_sort() const { return m_sort; }
         protected:
-            size_t m_top_k_axis{0};
+            int64_t m_top_k_axis{-1};
             element::Type m_index_element_type;
             bool m_compute_max{false};
             SortType m_sort{SortType::NONE};
