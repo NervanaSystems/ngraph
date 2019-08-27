@@ -593,11 +593,6 @@ add_subdirectory(src)
 
 add_subdirectory(test)
 
-if (NGRAPH_MLIR_ENABLE)
-    add_subdirectory(test/lit)
-    message(STATUS "LIT tests enabled")
-endif()
-
 if (NGRAPH_DOC_BUILD_ENABLE)
     add_subdirectory(doc)
 endif()
