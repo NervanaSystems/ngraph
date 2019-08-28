@@ -199,7 +199,7 @@ mlir::LogicalResult verifyOp(NGGatherOp* op)
     NGTensorType resType = r0.cast<NGTensorType>();
 
     // ensure result is compatible with input
-    if (!resType.getRank() == inputType.getRank() + indicesType.getRank() - 1)
+    if (resType.getRank() != inputType.getRank() + indicesType.getRank() - 1)
         return op->emitOpError("Incompatible result shape and/or type");
 
     return mlir::success();

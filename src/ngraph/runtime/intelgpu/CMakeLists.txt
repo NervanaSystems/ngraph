@@ -32,6 +32,7 @@ set(SRC
 if (NGRAPH_INTELGPU_ENABLE)
     add_library(intelgpu_backend SHARED ${SRC})
     target_link_libraries(intelgpu_backend PUBLIC ngraph libcldnn)
+    target_compile_definitions(intelgpu_backend PRIVATE INTELGPU_BACKEND_DLL_EXPORTS)
 
     if (NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(intelgpu_backend
