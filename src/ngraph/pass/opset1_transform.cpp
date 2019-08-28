@@ -16,6 +16,8 @@
 #include "ngraph/pass/opset1_transform.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "ngraph/op/softmax.hpp"
 
 using namespace std;
@@ -71,6 +73,24 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
 
     switch (get_typeid(node))
     {
+    case OP_TYPEID::Reverse:
+    {
+        // creates a Constant node from the v0::Reverse reversed_axes attribute
+        // and uses it as the second input of v1::Reverse
+        const auto reverse_v0 = dynamic_cast<const op::v0::Reverse*>(node.get());
+        const auto reversed_axes = reverse_v0->get_reversed_axes();
+
+        const auto reversed_axes_constant = op::Constant::create(element::i64,
+            Shape{reversed_axes.size()}, reversed_axes.to_vector());
+
+        const auto reverse_v1 = make_shared<op::v1::Reverse>(
+            node->input(0).get_source_output(), reversed_axes_constant, "index");
+
+        replace_node(node, reverse_v1);
+        modified = true;
+
+        break;
+    }
     case OP_TYPEID::Softmax:
     {
         auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
