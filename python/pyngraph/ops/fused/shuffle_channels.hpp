@@ -14,30 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstring>
+#pragma once
 
-#include "ngraph/op/max.hpp"
-#include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/reduce_max.hpp"
+#include <pybind11/pybind11.h>
 
-#include "reduction.hpp"
+namespace py = pybind11;
 
-using namespace std;
-using namespace ngraph;
-
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace cpu
-        {
-            template <>
-            void Builder::BUILDER_DECL(ngraph::op::Max)
-            {
-                BUILD_REDUCTION_FUNCTOR(Max, max);
-            }
-
-            void register_builders_max_cpp() { REGISTER_OP_BUILDER(Max); }
-        }
-    }
-}
+void regclass_pyngraph_op_ShuffleChannels(py::module m);

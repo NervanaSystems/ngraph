@@ -14,30 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstring>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include "ngraph/op/max.hpp"
-#include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/reduce_max.hpp"
+#include "ngraph/op/fused/squared_difference.hpp"
+#include "pyngraph/ops/fused/squared_difference.hpp"
 
-#include "reduction.hpp"
+namespace py = pybind11;
 
-using namespace std;
-using namespace ngraph;
-
-namespace ngraph
+void regclass_pyngraph_op_SquaredDifference(py::module m)
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            template <>
-            void Builder::BUILDER_DECL(ngraph::op::Max)
-            {
-                BUILD_REDUCTION_FUNCTOR(Max, max);
-            }
-
-            void register_builders_max_cpp() { REGISTER_OP_BUILDER(Max); }
-        }
-    }
+    py::class_<ngraph::op::SquaredDifference,
+               std::shared_ptr<ngraph::op::SquaredDifference>,
+               ngraph::op::Op>
+        squareddifference(m, "SquaredDifference");
+    squareddifference.doc() =
+        "ngraph.impl.op.SquaredDifference wraps ngraph::op::SquaredDifference";
+    squareddifference.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }
