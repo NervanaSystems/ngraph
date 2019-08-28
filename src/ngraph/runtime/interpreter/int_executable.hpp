@@ -245,16 +245,13 @@ private:
 
         size_t op_version = node.get_op_version();
         bool is_op_version_supported = op_version == 0;
-        NGRAPH_CHECK(
-            is_op_version_supported,
-            static_cast<std::ostringstream&>(
-                std::ostringstream() << "Unsupported operator version " << op_version << " in "
-                                     << node
-                                     << "."
-                                     << std::endl
-                                     << "INTERPRETER backend currently only supports op version 0.")
-                .str()
-                .c_str());
+        NGRAPH_CHECK(is_op_version_supported,
+                     "Unsupported operator version ",
+                     op_version,
+                     " in ",
+                     node,
+                     ".\n",
+                     "INTERPRETER backend currently only supports op in version 0.");
 
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration

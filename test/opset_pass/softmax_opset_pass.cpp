@@ -67,7 +67,8 @@ TEST(serialize, opset1_softmax_pass_axis_exception)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Unable to convert Softmax:0 to Softmax:1 with more than one axis."));
+            std::string(
+                "Unable to convert Softmax:0 to Softmax:1 with zero or more than one axis."));
     }
     catch (...)
     {
