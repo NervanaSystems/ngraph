@@ -76,12 +76,10 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
         auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
         AxisSet axes = tmp->get_axes();
 
-        if (axes.size() != 1)
-        {
-            throw ngraph_error(
-                "Unable to convert Softmax:0 to Softmax:1 with more than one axis. " +
-                node->get_name() + ".");
-        }
+        NGRAPH_CHECK(
+            axes.size() == 1,
+            "Unable to convert Softmax:0 to Softmax:1 with zero or more than one axis. Node: ",
+            *node);
 
         auto replacement_node =
             make_shared<op::v1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);

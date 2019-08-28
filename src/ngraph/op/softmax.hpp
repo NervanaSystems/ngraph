@@ -94,12 +94,7 @@ namespace ngraph
             };
         }
 
-        namespace dev
-        {
-            using v1::Softmax;
-        }
-
-        // latest stable opset version
+        // default opset version
         using v0::Softmax;
     }
 }
