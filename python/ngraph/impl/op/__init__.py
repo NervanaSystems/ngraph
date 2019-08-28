@@ -113,6 +113,7 @@ from _pyngraph.op import Reshape
 from _pyngraph.op import Reverse
 from _pyngraph.op import ScaleShift
 from _pyngraph.op import Select
+from _pyngraph.op import ShuffleChannels
 from _pyngraph.op import Sign
 from _pyngraph.op import Sin
 from _pyngraph.op import Sinh
@@ -120,6 +121,8 @@ from _pyngraph.op import Slice
 from _pyngraph.op import Softmax
 from _pyngraph.op import SpaceToDepth
 from _pyngraph.op import Sqrt
+from _pyngraph.op import SquaredDifference
+from _pyngraph.op import Squeeze
 from _pyngraph.op import Subtract
 from _pyngraph.op import Sum
 from _pyngraph.op import Tan
