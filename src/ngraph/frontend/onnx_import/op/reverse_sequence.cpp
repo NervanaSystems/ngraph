@@ -35,7 +35,7 @@ namespace ngraph
                     const auto data = node.get_ng_inputs().at(0);
 
                     const auto sequence_lengths = node.get_ng_inputs().at(1);
-                    //nGraph supports only int32 type of sequence_lengths
+                    // nGraph supports only int32 type of sequence_lengths
                     const auto sequence_lengths_i32 = std::make_shared<ngraph::op::Convert>(
                         node.get_ng_inputs().at(1), element::i32);
 
@@ -48,7 +48,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

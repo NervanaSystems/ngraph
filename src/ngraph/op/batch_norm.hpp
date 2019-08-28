@@ -122,8 +122,8 @@ namespace ngraph
             /// SHAPE DETAILS:
             ///   gamma:    must have rank 1, with the same span as input's channel axis.
             ///   beta:     must have rank 1, with the same span as input's channel axis.
-            ///   input:    must have rank >= 2. The second dimension represents the channel axis and
-            ///             must have a span of at least 1.
+            ///   input:    must have rank >= 2. The second dimension represents the channel axis
+            ///             and must have a span of at least 1.
             ///   mean:     must have rank 1, with the same span as input's channel axis.
             ///   variance: must have rank 1, with the same span as input's channel axis.
             ///   output:   shall have the same shape as 'input'.

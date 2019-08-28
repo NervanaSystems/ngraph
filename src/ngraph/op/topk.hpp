@@ -26,7 +26,8 @@ namespace ngraph
 {
     namespace op
     {
-        //brief Computes indices of top k maximum/minimum index along a specified axis for a given tensor
+        // \brief Computes indices of top k maximum/minimum index along a specified axis for a
+        //        given tensor
         class TopK : public Op
         {
         public:
@@ -49,7 +50,8 @@ namespace ngraph
             ///
             /// \param arg The input tensor
             /// \param top_k_axis The axis along which to compute top k indices
-            /// \param index_element_type produce indices. Currently, only int64 or int32 are supported
+            /// \param index_element_type produce indices. Currently, only int64 or int32 are
+            ///                           supported
             /// \param k Number of top indices to compute. Compute all indices if k = 0
             /// \param compute_max Compute top k max or top k min?
             /// \param sort SortType for sorting results, default - NONE
@@ -64,7 +66,8 @@ namespace ngraph
             /// \param arg The input tensor
             /// \param k Number of top indices to compute. Compute all indices if k = 0
             /// \param top_k_axis The axis along which to compute top k indices
-            /// \param index_element_type produce indices. Currently, only int64 or int32 are supported
+            /// \param index_element_type produce indices. Currently, only int64 or int32 are
+            ///                           supported
             /// \param compute_max Compute top k max or top k min?
             /// \param sort SortType for sorting results, default - NONE
             TopK(const Output<Node>& arg,
