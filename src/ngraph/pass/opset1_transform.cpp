@@ -77,7 +77,7 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
     {
         // creates a Constant node from the v0::Reverse reversed_axes attribute
         // and uses it as the second input of v1::Reverse
-        const auto reverse_v0 = dynamic_cast<const op::v0::Reverse*>(node.get());
+        const auto reverse_v0 = dynamic_cast<const op::Reverse*>(node.get());
         const auto reversed_axes = reverse_v0->get_reversed_axes();
 
         const auto reversed_axes_constant = op::Constant::create(element::i64,

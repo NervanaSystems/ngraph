@@ -23,16 +23,16 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::v0::Reverse::type_name{"Reverse"};
+const string op::Reverse::type_name{"Reverse"};
 
-op::v0::Reverse::Reverse(const Output<Node>& arg, const AxisSet& reversed_axes)
+op::Reverse::Reverse(const Output<Node>& arg, const AxisSet& reversed_axes)
     : Op({arg})
     , m_reversed_axes(reversed_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-void op::v0::Reverse::validate_and_infer_types()
+void op::Reverse::validate_and_infer_types()
 {
     const auto input_shape = get_input_partial_shape(0);
     const Dimension input_rank = input_shape.rank();
@@ -55,19 +55,19 @@ void op::v0::Reverse::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), input_shape);
 }
 
-shared_ptr<Node> op::v0::Reverse::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Reverse::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Reverse>(new_args.at(0), m_reversed_axes);
 }
 
-void op::v0::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 
     auto x = input(0).get_source_output();
 
-    adjoints.add_delta(x, make_shared<op::v0::Reverse>(delta, m_reversed_axes));
+    adjoints.add_delta(x, make_shared<op::Reverse>(delta, m_reversed_axes));
 }
 
 
