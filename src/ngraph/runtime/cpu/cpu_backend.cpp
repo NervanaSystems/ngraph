@@ -17,9 +17,11 @@
 #include <tbb/tbb_stddef.h>
 
 #include "cpu_backend_visibility.h"
+
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
@@ -40,8 +42,13 @@ runtime::BackendConstructor* runtime::cpu::get_backend_constructor_pointer()
     public:
         std::shared_ptr<runtime::Backend> create(const std::string& config) override
         {
-            // Force TBB to link to the backend
-            tbb::TBB_runtime_interface_version();
+            static bool s_is_initialized = false;
+            if (!s_is_initialized)
+            {
+                s_is_initialized = true;
+                tbb::TBB_runtime_interface_version();
+                ngraph::runtime::cpu::register_builders();
+            }
             return make_shared<runtime::cpu::CPU_Backend>();
         }
     };
@@ -86,7 +93,6 @@ runtime::cpu::CPU_Backend::~CPU_Backend()
 {
     m_exec_map.clear();
 }
-
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
     ngraph::pass::PassConfig& pass_config,
@@ -239,7 +245,6 @@ bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
 {
     return true;
 }
-
 bool runtime::cpu::CPU_Backend::is_supported_property(const Property prop) const
 {
     if (prop == Property::memory_attach)
