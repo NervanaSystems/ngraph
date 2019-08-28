@@ -50,6 +50,9 @@ class OpArgument():
     def description(self, val):
         self._description = val
 
+    def __repr__(self):
+        return('opgen.spec.OpArgument(name=%s, description=%s)' % (repr(self.name), repr(self.description)))
+
 
 class OpResult():
     def __init__(self, fields):
@@ -81,6 +84,9 @@ class OpResult():
     @description.setter
     def description(self, val):
         self._description = val
+
+    def __repr__(self):
+        return('opgen.spec.OpResult(name=%s, description=%s)' % (repr(self.name), repr(self.description)))
 
 
 class OpAttribute():
@@ -126,6 +132,9 @@ class OpAttribute():
     @description.setter
     def description(self, val):
         self._description = val
+
+    def __repr__(self):
+        return('opgen.spec.OpAttribute(name=%s, type=%s, description=%s)' % (repr(self.name), repr(self.type), repr(self.description)))
 
 
 class OpClass():
@@ -259,3 +268,6 @@ class OpClass():
     @attributes.setter
     def attributes(self, val):
         self._attributes = val
+
+    def __repr__(self):
+        return('opgen.spec.OpClass(name=%s, dialect=%s, description=%s, arguments=%s, results=%s, attributes=%s)' % (repr(self.name), repr(self.dialect), repr(self.description), repr(self.arguments), repr(self.results), repr(self.attributes)))
