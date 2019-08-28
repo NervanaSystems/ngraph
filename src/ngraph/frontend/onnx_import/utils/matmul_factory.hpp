@@ -24,15 +24,17 @@ namespace ngraph
     {
         namespace matmul
         {
-            /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX MatMul operation.
+            /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX MatMul
+            ///         operation.
             ///
             /// \note
             /// The sub-graph is needed to adjust nGraph's Dot operation semantics to semantics
             /// expected by ONNX, which are modeled on NumPy's "stacks of arrays" approach.
             /// Differences are apparent with matrices of rank > 2.
             ///
-            /// This default implementation `MatmulFactory` creates a `MatMul` operation for floating-point data.
-            /// Subclasses: `QLinearMatmulFactory` and `MatmulIntegerFactory` implement quantized versions.
+            /// This default implementation `MatmulFactory` creates a `MatMul` operation for
+            /// floating-point data. Subclasses: `QLinearMatmulFactory` and `MatmulIntegerFactory`
+            /// implement quantized versions.
             class MatmulFactory
             {
             public:
@@ -65,7 +67,8 @@ namespace ngraph
                 const NodeVector m_inputs;
             };
 
-            /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX QLinearMatMul operation.
+            /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX
+            ///         QLinearMatMul operation.
             class QLinearMatmulFactory : public MatmulFactory
             {
             public:
@@ -80,7 +83,8 @@ namespace ngraph
                              const std::shared_ptr<ngraph::Node>& right) override;
             };
 
-            /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX MatMulInteger operation.
+            /// \brief  Factory class which generates an nGraph sub-graph based on an ONNX
+            ///         MatMulInteger operation.
             class MatmulIntegerFactory : public MatmulFactory
             {
             public:
