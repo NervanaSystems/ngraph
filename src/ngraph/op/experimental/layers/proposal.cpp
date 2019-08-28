@@ -76,11 +76,11 @@ void op::Proposal::validate_and_infer_types()
             ").");
 
         auto batch_size = class_probs_shape[0];
-        set_output_type(0, element::f32, Shape{batch_size * m_attrs.post_nms_topn, 5});
+        set_output_type(0, get_input_element_type(0), Shape{batch_size * m_attrs.post_nms_topn, 5});
     }
     else
     {
-        set_output_type(0, element::f32, PartialShape::dynamic());
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
     }
 }
 
