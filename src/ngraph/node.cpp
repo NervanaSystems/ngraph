@@ -298,16 +298,6 @@ void Node::set_friendly_name(const string& name)
     m_friendly_name = name;
 }
 
-size_t Node::get_opset_version() const
-{
-    return m_opset_version;
-}
-
-void Node::set_opset_version(const size_t opset_version)
-{
-    m_opset_version = opset_version;
-}
-
 Placement Node::get_placement() const
 {
     return m_placement;

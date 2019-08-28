@@ -44,7 +44,7 @@ TEST(serialize, opset1_softmax_pass_axis)
 
     EXPECT_EQ(softmax_s1_node->get_axis(), axis);
     EXPECT_EQ(softmax_s1_node->description(), "Softmax");
-    EXPECT_EQ(softmax_s1_node->get_opset_version(), 1);
+    EXPECT_EQ(softmax_s1_node->get_op_version(), 1);
 }
 
 TEST(serialize, opset1_softmax_pass_axis_exception)
@@ -83,8 +83,8 @@ namespace fake_v2
         FakeSoftmax(const Output<Node>& arg, const AxisSet& axes)
             : Softmax{arg, axes}
         {
-            set_opset_version(2);
         }
+        size_t get_op_version() const override { return 2; }
     };
 }
 
@@ -106,7 +106,8 @@ TEST(serialize, opset1_softmax_pass_incorrect_op_version)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), std::string("Opset 1 transformation pass failed for"));
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Op version 1 transformation pass failed for"));
     }
     catch (...)
     {

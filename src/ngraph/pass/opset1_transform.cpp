@@ -55,18 +55,18 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 
-    size_t opset_version = node->get_opset_version();
+    size_t op_version = node->get_op_version();
 
-    if (opset_version == 1)
+    if (op_version == 1)
     {
         return modified;
     }
 
-    if (opset_version != 0)
+    if (op_version != 0)
     {
-        throw ngraph_error("Opset 1 transformation pass failed for " + node->get_name() +
-                           ", only opset 0 operations expected. Opset " + to_string(opset_version) +
-                           " found.");
+        throw ngraph_error("Op version 1 transformation pass failed for " + node->get_name() +
+                           ", only op version 0 operations expected. Op version " +
+                           to_string(op_version) + " found.");
     }
 
     switch (get_typeid(node))
@@ -89,12 +89,7 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
         modified = true;
         break;
     }
-    default:
-    {
-        node->set_opset_version(1);
-        modified = true;
-        break;
-    }
+    default: break;
     }
 
     return modified;
