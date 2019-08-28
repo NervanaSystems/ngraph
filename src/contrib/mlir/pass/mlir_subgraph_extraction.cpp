@@ -45,9 +45,6 @@ using namespace ngraph::pass;
 
 #define TI(x) std::type_index(typeid(x))
 
-// Maximum depth to check for cycles. If exceeded, we conservatively assume a cycle.
-#define MAX_CYCLE_DEPTH 20
-
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
 
 template <typename T>
@@ -97,6 +94,15 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::merge(MLIRSubgraph& sg2)
 
     // Remove sub-graph from map
     m_pass.m_id_to_graph.erase(sg2.get_id());
+}
+
+MLIRSubgraphExtractionPass::MLIRSubgraphExtractionPass()
+    : m_max_cycle_depth(20)
+{
+    if (char* max_cycle_depth = std::getenv("NGRAPH_MLIR_MAX_CYCLE_DEPTH"))
+    {
+        m_max_cycle_depth = std::stoi(max_cycle_depth);
+    }
 }
 
 // The sub-graph construction algorithm is as follows
@@ -327,14 +333,20 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
 void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes)
 {
     NodeVector cycles;
-    if (check_for_cycles(func, cycles))
+    bool is_bkwd_cycle;
+    if (check_for_cycles(func.get(), cycles, is_bkwd_cycle))
     {
         NGRAPH_CHECK(cycles.size() != 0, "Empty cycle ?");
+        if (is_bkwd_cycle)
+        {
+            NGRAPH_DEBUG << "Backward cycle:";
+        }
         for (auto& node : cycles)
         {
             NGRAPH_DEBUG << node;
         }
-        NGRAPH_UNREACHABLE("Function contains cycles after subgraph constructions");
+
+        NGRAPH_UNREACHABLE("Function contains cycle after subgraph constructions");
     }
 
     for (auto& node : ck_nodes)
@@ -477,7 +489,7 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
                                               unsigned depth)
 {
     // Going too deep, bail out.
-    if (depth >= MAX_CYCLE_DEPTH)
+    if (depth >= m_max_cycle_depth)
         return true;
 
     // root node is always inside merged sub-graphs.

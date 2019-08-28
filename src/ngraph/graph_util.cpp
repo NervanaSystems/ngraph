@@ -654,10 +654,10 @@ std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
     return result;
 }
 
-static bool check_for_cycles_inner(std::shared_ptr<ngraph::Node> node,
-                                   std::deque<std::shared_ptr<ngraph::Node>>& path,
-                                   std::unordered_set<std::shared_ptr<ngraph::Node>>& path_set,
-                                   ngraph::NodeVector& cycle_nodes)
+static bool check_for_cycles_bkwd(std::shared_ptr<ngraph::Node> node,
+                                  std::deque<std::shared_ptr<ngraph::Node>>& path,
+                                  std::unordered_set<std::shared_ptr<ngraph::Node>>& path_set,
+                                  ngraph::NodeVector& cycle_nodes)
 {
     path.push_back(node);
     path_set.insert(node);
@@ -674,7 +674,7 @@ static bool check_for_cycles_inner(std::shared_ptr<ngraph::Node> node,
             cycle_nodes.push_back(arg);
             return true;
         }
-        if (check_for_cycles_inner(arg, path, path_set, cycle_nodes))
+        if (check_for_cycles_bkwd(arg, path, path_set, cycle_nodes))
         {
             return true;
         }
@@ -684,17 +684,62 @@ static bool check_for_cycles_inner(std::shared_ptr<ngraph::Node> node,
     return false;
 }
 
-bool ngraph::check_for_cycles(std::shared_ptr<ngraph::Function> func,
-                              ngraph::NodeVector& cycle_nodes)
+static bool check_for_cycles_fwd(std::shared_ptr<ngraph::Node> node,
+                                 std::deque<std::shared_ptr<ngraph::Node>>& path,
+                                 std::unordered_set<std::shared_ptr<ngraph::Node>>& path_set,
+                                 ngraph::NodeVector& cycle_nodes)
 {
-    bool result = false;
+    path.push_back(node);
+    path_set.insert(node);
+    for (auto& arg : node->get_users())
+    {
+        if (path_set.find(arg) != path_set.end())
+        {
+            for (auto it : path)
+            {
+                cycle_nodes.push_back(it);
+            }
+            // last node
+            cycle_nodes.push_back(arg);
+            return true;
+        }
+        if (check_for_cycles_fwd(arg, path, path_set, cycle_nodes))
+        {
+            return true;
+        }
+    }
+    path_set.erase(path.back());
+    path.pop_back();
+    return false;
+}
 
+bool ngraph::check_for_cycles(const ngraph::Function* func,
+                              ngraph::NodeVector& cycle_nodes,
+                              bool& is_bkwd_cycle)
+{
     for (auto res : func->get_results())
     {
         std::deque<std::shared_ptr<Node>> path;
         // mirror of path stack for faster cycle check
         std::unordered_set<std::shared_ptr<Node>> path_set;
-        result |= check_for_cycles_inner(res, path, path_set, cycle_nodes);
+        if (check_for_cycles_bkwd(res, path, path_set, cycle_nodes))
+        {
+            is_bkwd_cycle = true;
+            return true;
+        };
     }
-    return result;
+
+    for (auto param : func->get_parameters())
+    {
+        std::deque<std::shared_ptr<Node>> path;
+        // mirror of path stack for faster cycle check
+        std::unordered_set<std::shared_ptr<Node>> path_set;
+        if (check_for_cycles_fwd(param, path, path_set, cycle_nodes))
+        {
+            is_bkwd_cycle = false;
+            return true;
+        };
+    }
+    // no cycles
+    return false;
 }
