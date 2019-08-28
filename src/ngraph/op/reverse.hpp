@@ -107,6 +107,8 @@ namespace ngraph
                     m_mode = mode;
                 }
 
+                virtual size_t get_op_version() const override { return 1; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                             const NodeVector& deltas) override;

@@ -76,7 +76,6 @@ const string op::v1::Reverse::type_name{"Reverse"};
 op::v1::Reverse::Reverse(const Output<Node>& data, const Output<Node>& reversed_axes, const std::string& mode)
     : Op({data, reversed_axes}), m_mode{mode}
 {
-    set_opset_version(1);
     constructor_validate_and_infer_types();
 }
 
