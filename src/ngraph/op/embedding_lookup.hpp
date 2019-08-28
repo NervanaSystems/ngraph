@@ -35,8 +35,8 @@ namespace ngraph
             EmbeddingLookup() = default;
             /// \brief Constructs a EmbeddingLookup operation.
             ///
-            /// EmbeddingLookup constructs an output tensor by replacing every index in a given input tensor
-            /// with a row (from the weights matrix) at that index
+            /// EmbeddingLookup constructs an output tensor by replacing every index in a given
+            /// input tensor with a row (from the weights matrix) at that index
             ///
             /// \param data The input indices for tokens to be translated into embeddings
             /// \param weights is a dense matrix [N,M] where each row 0..N
