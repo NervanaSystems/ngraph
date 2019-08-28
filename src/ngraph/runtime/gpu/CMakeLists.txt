@@ -145,6 +145,7 @@ if (NGRAPH_GPU_ENABLE)
     endif()
 
     add_library(gpu_backend SHARED ${SRC} ${CUDA_OBJ})
+    target_compile_definitions(gpu_backend PRIVATE GPU_BACKEND_EXPORTS)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(gpu_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

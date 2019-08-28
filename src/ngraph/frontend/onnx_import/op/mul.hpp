@@ -56,7 +56,7 @@ namespace ngraph
 
             } // namespace set_7
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

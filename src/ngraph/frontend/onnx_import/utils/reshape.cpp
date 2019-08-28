@@ -52,9 +52,9 @@ namespace ngraph
                     }
                 }
 
-                // Check whether there are dimensions equal to -1 in output_shape. There may be at most
-                // one such case. Its value is then inferred from the size of the tensor and the
-                // remaining dimensions.
+                // Check whether there are dimensions equal to -1 in output_shape. There may be at
+                // most one such case. Its value is then inferred from the size of the tensor and
+                // the remaining dimensions.
                 auto neg_value_it =
                     std::find(std::begin(inferred_dims), std::end(inferred_dims), -1);
                 if (neg_value_it != std::end(inferred_dims))

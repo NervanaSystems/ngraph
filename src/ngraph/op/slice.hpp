@@ -24,7 +24,8 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a bounding box, optionally with stride.
+        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a
+        ///        bounding box, optionally with stride.
         class Slice : public Op
         {
         public:
@@ -44,7 +45,8 @@ namespace ngraph
                   const Coordinate& lower_bounds,
                   const Coordinate& upper_bounds,
                   const Strides& strides);
-            /// \brief Constructs a tensor slice operation with unit strides; i.e., every element inside the bounding box will be copied to the output slice.
+            /// \brief Constructs a tensor slice operation with unit strides; i.e., every element
+            ///        inside the bounding box will be copied to the output slice.
             ///
             /// \param arg The tensor to be sliced.
             /// \param lower_bounds The axiswise lower bounds of the slice (inclusive).

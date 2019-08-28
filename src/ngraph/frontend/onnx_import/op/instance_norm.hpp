@@ -27,7 +27,8 @@ namespace ngraph
         {
             namespace set_1
             {
-                /// \brief      Creates nGraph node representing ONNX InstanceNormalization operator.
+                /// \brief      Creates nGraph node representing ONNX InstanceNormalization
+                ///             operator.
                 ///
                 /// \note       The resulting node represents following equation:
                 ///             y = scale * (x - mean) / sqrt(variance + epsilon) + B
@@ -40,7 +41,7 @@ namespace ngraph
                 NodeVector instance_norm(const Node& node);
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 
