@@ -3121,7 +3121,7 @@ TEST(cpu_quant_fusion, qmax_pool)
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
-TEST(cpu_quant_fusion, qconcat)
+TEST(cpu_quant_fusion, MLIR_DISABLE_TEST(qconcat))
 {
     auto make_function = []() {
         auto get_input_slice = [](std::shared_ptr<op::Parameter>& input) {
@@ -3888,7 +3888,7 @@ TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
     }
 }
 
-TEST(cpu_fusion, validate_fuse_gru_inputs)
+TEST(cpu_fusion, MLIR_DISABLE_TEST(validate_fuse_gru_inputs))
 {
     const std::string file_name("mxnet/gru_debug.json");
     auto cpu_func = make_function_from_file(file_name);
