@@ -251,7 +251,10 @@ void op::ConvolutionBackpropData::validate_and_infer_types()
     // Window movement strides  q_x       p_x
     // Window dilation strides  p_f       p_f
     // Padding below            a_x       (S_f - 1)p_f - a_x
-    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q_x) - b_x
+    // Padding above            b_x       (S_f - 1)p_f +
+    //                                      + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f)
+    //                                         % q_x)
+    //                                      - b_x
     // Data dilation strides    p_x       q_x
     // Output shape             S_o       S_x
     //
@@ -737,7 +740,8 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
         ").");
 
     //
-    // Extract input item shape Di and make sure all dimensions are larger than 0 after padding and dilation.
+    // Extract input item shape Di and make sure all dimensions are larger than 0 after padding and
+    // dilation.
     //
     std::vector<ptrdiff_t> input_item_virtual_shape_signed;
 
@@ -785,8 +789,9 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
     }
 
     //
-    // Extract the physical shape Wp of the convolution window, *not* including dilation, from the filter dimensions.
-    // At the same time, make sure window shape dimensions are all larger than 0.
+    // Extract the physical shape Wp of the convolution window, *not* including dilation, from the
+    // filter dimensions. At the same time, make sure window shape dimensions are all larger than
+    // 0.
     //
     Shape window_physical_shape;
 
@@ -804,8 +809,9 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
     }
 
     //
-    // Compute virtual shape Wp of the convolution window, *including* dilation. At the same time, make sure all
-    // window dilation strides are larger than 0, and that the dilated filter fits within the spatial dimensions.
+    // Compute virtual shape Wp of the convolution window, *including* dilation. At the same time,
+    // make sure all window dilation strides are larger than 0, and that the dilated filter fits
+    // within the spatial dimensions.
     //
     Shape window_virtual_shape;
 
