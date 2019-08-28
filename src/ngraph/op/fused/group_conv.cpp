@@ -18,6 +18,7 @@
 
 #include "group_conv.hpp"
 
+#include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/slice.hpp"
@@ -141,28 +142,15 @@ NodeVector op::GroupConvolution::decompose_op() const
     std::size_t filters_group_size{n_filters_channels / m_groups};
     NodeVector convolution_nodes;
 
-    // initial bounds for splice
-    std::vector<std::size_t> data_lower_bounds(data.get_shape().size());
-    std::vector<std::size_t> data_upper_bounds{data.get_shape()};
-    std::vector<std::size_t> filters_lower_bounds(filters.get_shape().size());
-    std::vector<std::size_t> filters_upper_bounds{filters.get_shape()};
-
+    // slice data
+    auto sliced_data = builder::split(data, m_groups, 1);
+    // slice filters
+    auto sliced_filters = builder::split(filters, m_groups, 0);
     for (std::size_t group{0}; group < m_groups; ++group)
     {
-        // slice data
-        data_lower_bounds[1] = group * data_group_size;
-        data_upper_bounds[1] = (group + 1) * data_group_size;
-        auto sliced_data =
-            std::make_shared<ngraph::op::Slice>(data, data_lower_bounds, data_upper_bounds);
-        // slice filters
-        filters_lower_bounds[0] = group * filters_group_size;
-        filters_upper_bounds[0] = (group + 1) * filters_group_size;
-        auto sliced_filters = std::make_shared<ngraph::op::Slice>(
-            filters, filters_lower_bounds, filters_upper_bounds);
-
         convolution_nodes.push_back(
-            std::make_shared<ngraph::op::Convolution>(sliced_data,
-                                                      sliced_filters,
+            std::make_shared<ngraph::op::Convolution>(sliced_data[group],
+                                                      sliced_filters[group],
                                                       m_window_movement_strides,
                                                       m_window_dilation_strides,
                                                       m_padding_below,
