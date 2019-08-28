@@ -16,8 +16,8 @@
 
 #include "ngraph/visibility.hpp"
 
-#ifdef CPU_BACKEND_DLL_EXPORTS // defined if we are building the CPU_BACKEND
-#define CPU_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
+#ifdef INTELGPU_BACKEND_EXPORTS // defined if we are building the INTELGPU_BACKEND
+#define INTELGPU_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
 #else
-#define CPU_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
+#define INTELGPU_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
 #endif

@@ -16,6 +16,7 @@
 
 if (NGRAPH_NOP_ENABLE)
     add_library(nop_backend SHARED nop_backend.cpp)
+    target_compile_definitions(nop_backend PRIVATE NOP_BACKEND_EXPORTS)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(nop_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}

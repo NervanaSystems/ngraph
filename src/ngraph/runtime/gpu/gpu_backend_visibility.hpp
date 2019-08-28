@@ -16,8 +16,12 @@
 
 #include "ngraph/visibility.hpp"
 
-#ifdef CPU_BACKEND_DLL_EXPORTS // defined if we are building the CPU_BACKEND
-#define CPU_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
+// Now we use the generic helper definitions above to define GPU_BACKEND_API
+// GPU_BACKEND_API is used for the public API symbols. It either DLL imports or DLL exports
+//    (or does nothing for static build)
+
+#ifdef GPU_BACKEND_EXPORTS // defined if we are building the GPU_BACKEND
+#define GPU_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
 #else
-#define CPU_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
+#define GPU_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
 #endif
