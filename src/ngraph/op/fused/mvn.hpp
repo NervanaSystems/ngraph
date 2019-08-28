@@ -36,9 +36,11 @@ namespace ngraph
             /// \brief Constructs an MVN operation.
             ///
             /// \param data Input tensor with data
-            /// \param normalize_variance flag that denotes whether to perform variance normalization.
+            /// \param normalize_variance flag that denotes whether to perform variance
+            ///                           normalization.
             /// \param across_channels flag that denotes if mean values are shared across channels.
-            /// \param eps the number to be added to the variance to avoid division by zero when normalizing the value
+            /// \param eps the number to be added to the variance to avoid division by zero when
+            ///            normalizing the value
             ///
             MVN(const Output<Node>& data,
                 bool across_channels = true,
@@ -49,8 +51,10 @@ namespace ngraph
             ///
             /// \param data Input tensor with data
             /// \param reduction_axes A list of axes, along which to reduce.
-            /// \param normalize_variance flag that denotes whether to perform variance normalization.
-            /// \param eps the number to be added to the variance to avoid division by zero when normalizing the value
+            /// \param normalize_variance flag that denotes whether to perform variance
+            ///                           normalization.
+            /// \param eps the number to be added to the variance to avoid division by zero when
+            ///            normalizing the value
             ///
             MVN(const Output<Node>& data,
                 AxisSet reduction_axes,

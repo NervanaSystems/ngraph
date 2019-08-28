@@ -62,9 +62,14 @@ namespace ngraph
 ///        recipes, for example auto-broadcast.
 
 #include "ngraph/builder/autobroadcast.hpp"
+#include "ngraph/builder/dequantize_builder.hpp"
 #include "ngraph/builder/numpy_transpose.hpp"
+#include "ngraph/builder/quantize_builder.hpp"
+#include "ngraph/builder/quantized_concat_builder.hpp"
 #include "ngraph/builder/quantized_conv_builder.hpp"
+#include "ngraph/builder/quantized_dot_builder.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/tensor_mask.hpp"
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/descriptor/input.hpp"
@@ -168,6 +173,7 @@ namespace ngraph
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/recv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"

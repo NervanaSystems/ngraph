@@ -41,7 +41,8 @@ namespace ngraph
         {
             namespace set_1
             {
-                /// \brief      Compute the log sum of the input tensor's elements along the provided axes.
+                /// \brief      Compute the log sum of the input tensor's elements along the
+                ///             provided axes.
                 ///
                 /// \par Overview
                 ///     The output tensor has the same rank as the input if Node attribute keepdims
@@ -63,7 +64,8 @@ namespace ngraph
                     return {std::make_shared<ngraph::op::Log>(sum_node)};
                 }
 
-                /// \brief      Compute the log sum exponent of the input tensor's elements along the provided axes.
+                /// \brief      Compute the log sum exponent of the input tensor's elements along
+                ///             the provided axes.
                 ///
                 /// \par Overview
                 ///     The output tensor has the same rank as the input if Node attribute keepdims
@@ -86,7 +88,8 @@ namespace ngraph
                     return {std::make_shared<ngraph::op::Log>(sum_node)};
                 }
 
-                /// \brief      Compute the L1 norm of the input tensor's element along the provided axes.
+                /// \brief      Compute the L1 norm of the input tensor's element along the provided
+                ///             axes.
                 ///
                 /// \par Overview
                 ///     The output tensor has the same rank as the input if Node attribute keepdims
@@ -107,7 +110,8 @@ namespace ngraph
                         node, node.get_ng_inputs().at(0), l1_norm_reduction)};
                 }
 
-                /// \brief      Compute the L2 norm of the input tensor's element along the provided axes.
+                /// \brief      Compute the L2 norm of the input tensor's element along the provided
+                ///             axes.
                 ///
                 /// \par Overview
                 ///     The output tensor has the same rank as the input if Node attribute keepdims
@@ -129,7 +133,8 @@ namespace ngraph
                         node, node.get_ng_inputs().at(0), l2_norm_reduction)};
                 }
 
-                /// \brief      Compute the maximum value of the input tensor's elements along the provided axes.
+                /// \brief      Compute the maximum value of the input tensor's elements along the
+                ///             provided axes.
                 ///
                 /// \par Overview
                 ///     The output tensor has the same rank as the input if Node attribute keepdims
@@ -150,7 +155,8 @@ namespace ngraph
                                          const ngraph::AxisSet&>)};
                 }
 
-                /// \brief      Compute the mean value of the input tensor's elements along the provided axes.
+                /// \brief      Compute the mean value of the input tensor's elements along the
+                ///             provided axes.
                 ///
                 /// \par Overview
                 ///     The output tensor has the same rank as the input if Node attribute keepdims
@@ -163,7 +169,8 @@ namespace ngraph
                 ///
                 NodeVector reduce_mean(const Node& node);
 
-                /// \brief      Compute the minimum value of the input tensor's elements along the provided axes.
+                /// \brief      Compute the minimum value of the input tensor's elements along the
+                ///             provided axes.
                 ///
                 /// \par Overview
                 ///     The output tensor has the same rank as the input if Node attribute keepdims
@@ -184,7 +191,8 @@ namespace ngraph
                                          const ngraph::AxisSet&>)};
                 }
 
-                /// \brief      Compute the product of the input tensor's elements along the provided axes.
+                /// \brief      Compute the product of the input tensor's elements along the
+                ///             provided axes.
                 ///
                 /// \par Overview
                 ///     The output tensor has the same rank as the input if Node attribute keepdims
@@ -205,7 +213,8 @@ namespace ngraph
                                          const ngraph::AxisSet&>)};
                 }
 
-                /// \brief      Compute the sum of the input tensor's elements along the provided axes.
+                /// \brief      Compute the sum of the input tensor's elements along the provided
+                ///             axes.
                 ///
                 /// \par Overview
                 ///     The output tensor has the same rank as the input if Node attribute keepdims
@@ -226,7 +235,8 @@ namespace ngraph
                                          const ngraph::AxisSet&>)};
                 }
 
-                /// \brief      Compute the sum square of the input tensor's element along the provided axes.
+                /// \brief      Compute the sum square of the input tensor's element along the
+                ///             provided axes.
                 ///
                 /// \par Overview
                 ///     The output tensor has the same rank as the input if Node attribute keepdims
@@ -251,7 +261,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 
