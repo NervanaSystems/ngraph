@@ -32,7 +32,8 @@ namespace ngraph
                 ///             Suppose A contains spatial dimensions of input tensor, then
                 ///             for matrix A we have p-norm defined as following double sum over
                 ///             all elements:
-                ///             ||A||_p = ||vec(A)||_p = [sum_{i=1}^m sum_{j=1}^n abs(a_{i,j})^p]^{1/p}
+                ///             ||A||_p = ||vec(A)||_p =
+                ///                  [sum_{i=1}^m sum_{j=1}^n abs(a_{i,j})^p]^{1/p}
                 ///
                 /// \param[in]  node  The input ONNX node representing this operation.
                 ///
@@ -41,7 +42,7 @@ namespace ngraph
                 NodeVector lp_norm(const Node& node);
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 
