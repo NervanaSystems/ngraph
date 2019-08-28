@@ -369,6 +369,48 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     {
         return true;
     }
+    
+    if (TI(ngraph::op::Convolution) == TI(*node))
+    {
+        // No padding for now
+        auto conv_node = static_cast<ngraph::op::Convolution*>(node.get());
+        auto pad_below = conv_node->get_padding_below();
+        for (auto it = pad_below.begin(); it != pad_below.end(); it++)
+        {
+            if (*it != 0)
+            {
+                return false;
+            }
+        }
+
+        auto pad_above = conv_node->get_padding_above();
+        for (auto it = pad_above.begin(); it != pad_above.end(); it++)
+        {
+            if (*it != 0)
+            {
+                return false;
+            }
+        }
+
+        auto dilation = conv_node->get_data_dilation_strides();
+        for (auto it = dilation.begin(); it != dilation.end(); it++)
+        {
+            if (*it != 1)
+            {
+                return false;
+            }
+        }
+
+        dilation = conv_node->get_window_dilation_strides();
+        for (auto it = dilation.begin(); it != dilation.end(); it++)
+        {
+            if (*it != 1)
+            {
+                return false;
+            }
+        }
+
+    }
 
     return true;
 }
