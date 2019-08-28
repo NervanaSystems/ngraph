@@ -22,9 +22,7 @@
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -39,9 +37,9 @@ op::PRelu::PRelu(const Output<Node>& data, const Output<Node>& slope)
 
 NodeVector op::PRelu::decompose_op() const
 {
-    auto data = input(0).get_source_output();
+    auto data = input_value(0);
     auto data_shape = data.get_shape();
-    auto slope = input(1).get_source_output();
+    auto slope = input_value(1);
     auto slope_shape = slope.get_shape();
 
     if ((slope_shape.size() == 1) && (slope_shape.at(0) != 1))

@@ -135,7 +135,7 @@ void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector
 {
     auto delta = deltas.at(0);
 
-    auto x = input(0).get_source_output();
+    auto x = input_value(0);
 
     adjoints.add_delta_to_slice(x, delta, m_lower_bounds, m_upper_bounds, m_strides);
 }

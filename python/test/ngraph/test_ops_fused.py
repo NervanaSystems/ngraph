@@ -19,25 +19,6 @@ import ngraph as ng
 from test.ngraph.util import get_runtime
 
 
-def test_elu_operator_with_parameters():
-    runtime = get_runtime()
-
-    data_shape = [2, 2]
-    alpha_shape = [2]
-    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
-    parameter_alpha = ng.parameter(alpha_shape, name='Alpha', dtype=np.float32)
-
-    model = ng.elu(parameter_data, parameter_alpha)
-    computation = runtime.computation(model, parameter_data, parameter_alpha)
-
-    value_data = np.array([[-5, 1], [-2, 3]], dtype=np.float32)
-    value_alpha = np.array([3, 3], dtype=np.float32)
-
-    result = computation(value_data, value_alpha)
-    expected = np.array([[-2.9797862, 1.], [-2.5939941, 3.]], dtype=np.float32)
-    assert np.allclose(result, expected)
-
-
 def test_elu_operator_with_scalar_and_array():
     runtime = get_runtime()
 
@@ -66,6 +47,52 @@ def test_elu_operator_with_scalar():
 
     result = computation(data_value)
     expected = np.array([[-2.9797862, 1.], [-2.5939941, 3.]], dtype=np.float32)
+    assert np.allclose(result, expected)
+
+
+def test_fake_quantize():
+    runtime = get_runtime()
+
+    data_value = np.arange(24.0, dtype=np.float32).reshape(1, 2, 3, 4)
+    input_low_value = np.float32(0)
+    input_high_value = np.float32(23)
+    output_low_value = np.float32(2)
+    output_high_value = np.float32(16)
+    levels = np.float32(4)
+
+    data_shape = [1, 2, 3, 4]
+    bound_shape = []
+    parameter_data = ng.parameter(data_shape, name='data', dtype=np.float32)
+    parameter_input_low = ng.parameter(bound_shape, name='input_low', dtype=np.float32)
+    parameter_input_high = ng.parameter(bound_shape, name='input_high', dtype=np.float32)
+    parameter_output_low = ng.parameter(bound_shape, name='output_low', dtype=np.float32)
+    parameter_output_high = ng.parameter(bound_shape, name='output_high', dtype=np.float32)
+
+    model = ng.fake_quantize(parameter_data,
+                             parameter_input_low,
+                             parameter_input_high,
+                             parameter_output_low,
+                             parameter_output_high,
+                             levels)
+    computation = runtime.computation(model,
+                                      parameter_data,
+                                      parameter_input_low,
+                                      parameter_input_high,
+                                      parameter_output_low,
+                                      parameter_output_high)
+
+    result = computation(data_value,
+                         input_low_value,
+                         input_high_value,
+                         output_low_value,
+                         output_high_value)
+
+    expected = np.array([[[[[2., 2., 2., 2.],
+                            [6.6666669, 6.6666669, 6.6666669, 6.6666669],
+                            [6.6666669, 6.6666669, 6.6666669, 6.6666669]],
+                        [[11.33333301, 11.33333301, 11.33333301, 11.33333301],
+                            [11.33333301, 11.33333301, 11.33333301, 11.33333301],
+                            [16., 16., 16., 16.]]]]], dtype=np.float32)
     assert np.allclose(result, expected)
 
 
@@ -199,6 +226,21 @@ def test_clamp_operator_with_array():
     assert np.allclose(result, expected)
 
 
+def test_unsqueeze():
+    runtime = get_runtime()
+
+    data_shape = [3, 4, 5]
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    data_value = np.arange(60., dtype=np.float32).reshape(3, 4, 5)
+    axes = [0, 4]
+    model = ng.unsqueeze(parameter_data, axes)
+    computation = runtime.computation(model, parameter_data)
+
+    result = computation(data_value)
+    expected = np.arange(60., dtype=np.float32).reshape(1, 3, 4, 5, 1)
+    assert np.allclose(result, expected)
+
+
 def test_grn_operator():
     runtime = get_runtime()
 
@@ -219,4 +261,122 @@ def test_grn_operator():
                           [[0.9970545, 0.98994946, 0.9805807, 0.97014254],
                            [0.9593655, 0.9486833, 0.9383431, 0.9284767],
                            [0.91914505, 0.9103665, 0.9021342, 0.8944272]]]], dtype=np.float32)
+
+    assert np.allclose(result, expected)
+
+
+def test_prelu_operator():
+    runtime = get_runtime()
+
+    data_shape = [1, 2, 3, 4]
+    slope_shape = [2, 3, 1]
+
+    data_value = np.arange(start=1.0, stop=25.0, dtype=np.float32).reshape(data_shape)
+    slope_value = np.arange(start=-10.0, stop=-4.0, dtype=np.float32).reshape(slope_shape)\
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    parameter_slope = ng.parameter(slope_shape, name='Slope', dtype=np.float32)
+
+    model = ng.prelu(parameter_data, parameter_slope)
+    computation = runtime.computation(model, parameter_data, parameter_slope)
+
+    result = computation(data_value, slope_value)
+    expected = np.clip(data_value, 0, np.inf) + np.clip(data_value, -np.inf, 0) * slope_value
+    assert np.allclose(result, expected)
+
+
+def test_hard_sigmoid_operator():
+    runtime = get_runtime()
+
+    data_shape = [3]
+    alpha = np.float32(0.5)
+    beta = np.float32(0.6)
+
+    data_value = np.array([-1, 0, 1], dtype=np.float32)
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+
+    model = ng.hard_sigmoid(parameter_data, alpha, beta)
+    computation = runtime.computation(model, parameter_data)
+
+    result = computation(data_value)
+    expected = [0.1, 0.6, 1.]
+    assert np.allclose(result, expected)
+
+
+def test_mvn_operator():
+    runtime = get_runtime()
+
+    data_shape = [3, 3, 3, 1]
+    axis = [0, 2, 3]
+    normalize_variance = True
+    eps = np.float32(1e-9)
+
+    data_value = np.array([[[[0.8439683], [0.5665144], [0.05836735]],
+                            [[0.02916367], [0.12964272], [0.5060197]],
+                            [[0.79538304], [0.9411346], [0.9546573]]],
+                           [[[0.17730942], [0.46192095], [0.26480448]],
+                            [[0.6746842], [0.01665257], [0.62473077]],
+                            [[0.9240844], [0.9722341], [0.11965699]]],
+                           [[[0.41356155], [0.9129373], [0.59330076]],
+                            [[0.81929934], [0.7862604], [0.11799799]],
+                            [[0.69248444], [0.54119414], [0.07513223]]]], dtype=np.float32)
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+
+    model = ng.mvn(parameter_data, axis, normalize_variance, eps)
+    computation = runtime.computation(model, parameter_data)
+
+    result = computation(data_value)
+
+    data_mean = np.mean(data_value, axis=(0, 2, 3), keepdims=1)
+    data_mean_squared = np.power(data_mean, 2)
+    data_squared = np.power(data_value, 2)
+    data_squared_mean = np.mean(data_squared, axis=(0, 2, 3), keepdims=1)
+    std = np.sqrt(data_squared_mean - data_mean_squared)
+    expected = (data_value - data_mean) / (std + 1e-9)
+
+    assert np.allclose(result, expected)
+
+
+def test_scale_shift_operator():
+    runtime = get_runtime()
+
+    data_shape = [3, 6]
+    scale_shape = [3, 6]
+    shift_shape = [1]
+
+    data_value = np.arange(start=19.0, stop=1.0, step=-1.0, dtype=np.float32).reshape(data_shape)
+    scale_value = np.arange(start=19.0, stop=1.0, step=-1.0, dtype=np.float32).reshape(scale_shape)
+    shift_value = [2.0]
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    parameter_scale = ng.parameter(scale_shape, name='Scale', dtype=np.float32)
+    parameter_shift = ng.parameter(shift_shape, name='Shift', dtype=np.float32)
+
+    model = ng.scale_shift(parameter_data, parameter_scale, parameter_shift)
+    computation = runtime.computation(model, parameter_data, parameter_scale, parameter_shift)
+
+    result = computation(data_value, scale_value, shift_value)
+    expected = np.add(np.multiply(data_value, scale_value), shift_value)
+    assert np.allclose(result, expected)
+
+
+def test_space_to_depth_operator():
+    runtime = get_runtime()
+
+    data_shape = [1, 2, 4, 4]
+    data_value = np.arange(start=0, stop=32, step=1.0, dtype=np.float32).reshape(data_shape)
+    block_size = 2
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+
+    model = ng.space_to_depth(parameter_data, block_size)
+    computation = runtime.computation(model, parameter_data)
+
+    result = computation(data_value)
+    expected = np.array([0, 2, 8, 10, 16, 18, 24, 26,
+                        1, 3, 9, 11, 17, 19, 25, 27,
+                        4, 6, 12, 14, 20, 22, 28, 30,
+                        5, 7, 13, 15, 21, 23, 29, 31], dtype=np.float32).reshape(1, 8, 2, 2)
     assert np.allclose(result, expected)

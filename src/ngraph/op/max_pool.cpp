@@ -15,11 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/op/max_pool.hpp"
-#include "ngraph/function.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/greater.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -259,7 +256,7 @@ void op::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 
     auto delta = deltas.at(0);
 
-    auto operand = input(0).get_source_output();
+    auto operand = input_value(0);
     auto backprop =
         make_shared<op::MaxPoolBackprop>(operand,
                                          delta,

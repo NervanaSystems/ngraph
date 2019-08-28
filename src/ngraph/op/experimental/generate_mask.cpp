@@ -21,11 +21,6 @@ using namespace ngraph;
 
 const string op::GenerateMask::type_name{"GenerateMask"};
 
-op::GenerateMask::GenerateMask()
-    : Op()
-{
-}
-
 #if 0
 // Not supported until all transformers use nodes instead of attributes
 op::GenerateMask::GenerateMask(const Output<Node>& training,

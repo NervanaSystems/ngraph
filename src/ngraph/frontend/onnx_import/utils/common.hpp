@@ -92,8 +92,8 @@ namespace ngraph
 
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that
-            ///       the matrix can be created with elements equal to 1 not only in the main diagonal.
-            ///       Shifting adds an offset and moves the diagonal up or down
+            ///       the matrix can be created with elements equal to 1 not only in the main
+            ///       diagonal. Shifting adds an offset and moves the diagonal up or down
             ///
             /// \param[in] output_shape Shape of the resulting matrix.
             /// \param[in] output_type Element type of the resulting matrix.

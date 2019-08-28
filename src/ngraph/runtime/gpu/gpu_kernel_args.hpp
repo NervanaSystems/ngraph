@@ -43,7 +43,8 @@ namespace ngraph
                 GPUKernelArgs(const GPUKernelArgs& args);
 
                 //
-                // Add a placeholder parameter for a tensor pointer which will be resolved at runtime.
+                // Add a placeholder parameter for a tensor pointer which will be resolved at
+                // runtime.
                 //
                 GPUKernelArgs& add_placeholder(const std::string& type, const std::string& name);
 
