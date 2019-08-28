@@ -23,7 +23,7 @@
 /doc/*/*/backends/plaidml-ng-api/   @flaub @brianretford @dgkutnic
 /doc/*/*/inspection/                @aproctor
 /doc/examples/onnx/                 @arogowie-intel @tsocha
-/README.md                          @adstraw
+/README.md                          @indie
 project/introduction.rst            @adstraw
 project/governance.rst              @adstraw
 /changes.md                         @indie @diyessi

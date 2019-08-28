@@ -54,7 +54,6 @@ runtime::cpu::CPU_Backend::~CPU_Backend()
 {
     m_exec_map.clear();
 }
-
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
     ngraph::pass::PassConfig& pass_config,
@@ -207,7 +206,6 @@ bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
 {
     return true;
 }
-
 bool runtime::cpu::CPU_Backend::is_supported_property(const Property prop) const
 {
     if (prop == Property::memory_attach)
