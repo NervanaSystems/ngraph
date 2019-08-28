@@ -243,16 +243,16 @@ private:
     {
         const Node& node = *node_wrapper.get_node();
 
-        size_t opset_version = node.get_opset_version();
-        bool is_opset_version_supported = opset_version == 0;
+        size_t op_version = node.get_op_version();
+        bool is_op_version_supported = op_version == 0;
         NGRAPH_CHECK(
-            is_opset_version_supported,
+            is_op_version_supported,
             static_cast<std::ostringstream&>(
-                std::ostringstream() << "Unsupported operator version " << opset_version << " in "
+                std::ostringstream() << "Unsupported operator version " << op_version << " in "
                                      << node
                                      << "."
                                      << std::endl
-                                     << "INTERPRETER backend currently only supports op set 0.")
+                                     << "INTERPRETER backend currently only supports op version 0.")
                 .str()
                 .c_str());
 

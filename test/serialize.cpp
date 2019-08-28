@@ -354,5 +354,5 @@ TEST(serialize, opset1_softmax)
     auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
 
     EXPECT_EQ(g_softmax->description(), "Softmax");
-    EXPECT_EQ(g_softmax->get_opset_version(), 1);
+    EXPECT_EQ(g_softmax->get_op_version(), 1);
 }

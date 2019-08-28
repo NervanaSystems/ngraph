@@ -99,7 +99,6 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
     : UnaryElementwiseArithmetic(arg)
     , m_axis(axis)
 {
-    set_opset_version(1);
     constructor_validate_and_infer_types();
 
     NODE_VALIDATION_CHECK(this,

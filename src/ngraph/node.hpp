@@ -379,12 +379,8 @@ namespace ngraph
         /// Get all the nodes that uses the current node
         NodeVector get_users(bool check_is_used = false) const;
 
-        /// Return which operation set defines the operation associated with this node
-        virtual size_t get_opset_version() const;
-
-        /// Set the operation set associated with this node
-        virtual void set_opset_version(const size_t);
-
+        /// \return Version of this node
+        virtual size_t get_op_version() const { return 0; };
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
@@ -443,7 +439,6 @@ namespace ngraph
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
         Placement m_placement = Placement::DEFAULT;
         size_t m_placement_index = placement_invalid;
-        size_t m_opset_version = 0;
     };
 
     /// \brief A handle for one of a node's inputs.
