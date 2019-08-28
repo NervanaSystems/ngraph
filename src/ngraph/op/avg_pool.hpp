@@ -107,7 +107,8 @@ namespace ngraph
                     const Shape& padding_above,
                     bool include_padding_in_avg_computation = false);
 
-            /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding shapes are set to 0).
+            /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding
+            ///        shapes are set to 0).
             ///
             /// \param arg The output producing the input data batch tensor.<br>
             /// `[d1, ..., dn]`
@@ -119,7 +120,8 @@ namespace ngraph
                     const Shape& window_shape,
                     const Strides& window_movement_strides);
 
-            /// \brief Constructs an unstrided batched convolution operation (i.e., all window movement strides are 1 and all padding shapes are set to 0).
+            /// \brief Constructs an unstrided batched convolution operation (i.e., all window
+            ///        movement strides are 1 and all padding shapes are set to 0).
             ///
             /// \param arg The output producing the input data batch tensor.<br>
             /// `[d1, ..., dn]`

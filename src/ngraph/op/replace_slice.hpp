@@ -24,8 +24,10 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Takes two input tensors of identical rank, with the second tensor no larger than the first in any dimension, and returns a copy of
-        ///        the first input tensor with the specified slice overwritten by the second input tensor.
+        // clang-format off
+        /// \brief Takes two input tensors of identical rank, with the second tensor no larger than
+        ///        the first in any dimension, and returns a copy of the first input tensor with
+        ///        the specified slice overwritten by the second input tensor.
         ///
         /// ## Parameters
         ///
@@ -47,6 +49,7 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                                                                                 |
         /// | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$ where \f$T[i_1,\dots,i_n] = \texttt{arg1}[j_1,\dots,j_n]\f$ if \f$j_1,\dots,j_n\f$ is in bounds for `arg1` and for all \f$m\f$, \f$i_m = l_m + j_m s_m\f$, otherwise \f$\texttt{arg0}[i_1,\dots,i_n]\f$. |
+        // clang-format on
         class ReplaceSlice : public Op
         {
         public:
@@ -69,7 +72,8 @@ namespace ngraph
                          const Coordinate& upper_bounds,
                          const Strides& strides);
 
-            /// \brief Constructs a tensor slice replacement operation with unit strides; i.e., every element inside the bounding box will be overwritten.
+            /// \brief Constructs a tensor slice replacement operation with unit strides; i.e.,
+            ///        every element inside the bounding box will be overwritten.
             ///
             /// \param arg0 The tensor to overwrite into.
             /// \param arg1 The tensor to write into `arg0`.

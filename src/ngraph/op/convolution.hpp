@@ -65,7 +65,8 @@ namespace ngraph
                         const Strides& data_dilation_strides,
                         const PadType& pad_type = PadType::EXPLICIT);
 
-            /// \brief Constructs a batched convolution operation with no data dilation (i.e., all data dilation strides are 1).
+            /// \brief Constructs a batched convolution operation with no data dilation (i.e., all
+            ///        data dilation strides are 1).
             ///
             /// \param data_batch The node producing the input data batch tensor.<br>
             /// `[N, C_IN, D1, ... Df]`
@@ -89,7 +90,9 @@ namespace ngraph
                         const CoordinateDiff& padding_below,
                         const CoordinateDiff& padding_above);
 
-            /// \brief Constructs a batched convolution operation with no padding or data dilation (i.e., padding above and below are 0 everywhere, and all data dilation strides are 1).
+            /// \brief Constructs a batched convolution operation with no padding or data dilation
+            ///        (i.e., padding above and below are 0 everywhere, and all data dilation
+            ///        strides are 1).
             ///
             /// \param data_batch The node producing the input data batch tensor.<br>
             /// `[N, C_IN, D1, ... Df]`
@@ -107,7 +110,9 @@ namespace ngraph
                         const Strides& window_movement_strides,
                         const Strides& window_dilation_strides);
 
-            /// \brief Constructs a batched convolution operation with no window dilation, padding, or data dilation (i.e., padding above and below are 0 everywhere, and all window/data dilation strides are 1).
+            /// \brief Constructs a batched convolution operation with no window dilation, padding,
+            ///        or data dilation (i.e., padding above and below are 0 everywhere, and all
+            ///        window/data dilation strides are 1).
             ///
             /// \param data_batch The node producing the input data batch tensor.<br>
             /// `[N, C_IN, D1, ... Df]`
@@ -122,7 +127,9 @@ namespace ngraph
                         const Output<Node>& filters,
                         const Strides& window_movement_strides);
 
-            /// \brief Constructs a batched convolution operation with no window dilation or movement stride (i.e., padding above and below are 0 everywhere, and all window/data dilation strides and window movement strides are 1).
+            /// \brief Constructs a batched convolution operation with no window dilation or
+            ///        movement stride (i.e., padding above and below are 0 everywhere, and all
+            ///        window/data dilation strides and window movement strides are 1).
             ///
             /// \param data_batch The node producing the input data batch tensor.<br>
             /// `[N, C_IN, D1, ... Df]`
@@ -201,8 +208,10 @@ namespace ngraph
             /// \param data_batch_shape The shape of the data batch from forward-prop.
             /// \param filters The node producing the filters from forward-prop.
             /// \param output_delta The node producing output delta.
-            /// \param window_movement_strides_forward The window movement strides from forward-prop.
-            /// \param window_dilation_strides_forward The window dilation strides from forward-prop.
+            /// \param window_movement_strides_forward The window movement strides from
+            ///                                        forward-prop.
+            /// \param window_dilation_strides_forward The window dilation strides from
+            ///                                        forward-prop.
             /// \param padding_below_forward The padding-below sizes from forward-prop.
             /// \param padding_above_forward The padding-above sizes from forward-prop.
             /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
@@ -300,8 +309,10 @@ namespace ngraph
             /// \param data_batch The tensor producing the data batch from forward-prop.
             /// \param filters_shape The shape of the filters from forward-prop.
             /// \param output_delta The node producing output delta.
-            /// \param window_movement_strides_forward The window movement strides from forward-prop.
-            /// \param window_dilation_strides_forward The window dilation strides from forward-prop.
+            /// \param window_movement_strides_forward The window movement strides from
+            ///                                        forward-prop.
+            /// \param window_dilation_strides_forward The window dilation strides from
+            ///                                        forward-prop.
             /// \param padding_below_forward The padding-below sizes from forward-prop.
             /// \param padding_above_forward The padding-above sizes from forward-prop.
             /// \param data_dilation_strides_forward The data dilation strides from forward-prop.

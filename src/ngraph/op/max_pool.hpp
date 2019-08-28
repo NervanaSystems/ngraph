@@ -81,7 +81,8 @@ namespace ngraph
 
             void validate_and_infer_types() override;
 
-            /// \brief Constructs a batched, unpadded max pooling operation (i.e., all padding shapes are set to 0).
+            /// \brief Constructs a batched, unpadded max pooling operation (i.e., all padding
+            ///        shapes are set to 0).
             ///
             /// \param arg The node producing the input data batch tensor.
             /// \param window_shape The window shape.
@@ -90,7 +91,8 @@ namespace ngraph
                     const Shape& window_shape,
                     const Strides& window_movement_strides);
 
-            /// \brief Constructs an unstrided batched max pooling operation (i.e., all window movement strides are 1 and all padding shapes are set to 0).
+            /// \brief Constructs an unstrided batched max pooling operation (i.e., all window
+            ///        movement strides are 1 and all padding shapes are set to 0).
             ///
             /// \param arg The node producing the input data batch tensor.
             /// \param window_shape The window shape.
