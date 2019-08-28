@@ -374,48 +374,24 @@
     return functor;
 
 #define REGISTER_OP_BUILDER(OP)                                                                    \
-    static struct __register_##OP##_builder                                                        \
-    {                                                                                              \
-        __register_##OP##_builder()                                                                \
-        {                                                                                          \
-            GetGlobalBuildDispatcher().insert({type_index(typeid(ngraph::op::OP)),                 \
-                                               &runtime::cpu::Builder::build<ngraph::op::OP>});    \
-        }                                                                                          \
-    } __register_##OP##_builder_instance;
+    GetGlobalBuildDispatcher().insert(                                                             \
+        {type_index(typeid(ngraph::op::OP)), &runtime::cpu::Builder::build<ngraph::op::OP>})
 
 #define REGISTER_CPU_OP_BUILDER(OP)                                                                \
-    static struct __register_##OP##_builder                                                        \
-    {                                                                                              \
-        __register_##OP##_builder()                                                                \
-        {                                                                                          \
-            GetGlobalBuildDispatcher().insert(                                                     \
-                {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                 \
-                 &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::OP>});                    \
-        }                                                                                          \
-    } __register_##OP##_builder_instance;
+    GetGlobalBuildDispatcher().insert(                                                             \
+        {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                         \
+         &runtime::cpu::Builder::build<ngraph::runtime::cpu::op::OP>})
 
 #define BUILDER_CF_DECL(op_name) CFbuild<op_name>(const ngraph::Node* node)
 
 #define REGISTER_CF_BUILDER(OP)                                                                    \
-    static struct __register_##OP##_cf_builder                                                     \
-    {                                                                                              \
-        __register_##OP##_cf_builder()                                                             \
-        {                                                                                          \
-            GetGlobalCFDispatcherCPU().insert({type_index(typeid(ngraph::op::OP)),                 \
-                                               &runtime::cpu::Builder::CFbuild<ngraph::op::OP>});  \
-        }                                                                                          \
-    } __register_##OP##_cf_builder_instance;
+    GetGlobalCFDispatcherCPU().insert(                                                             \
+        {type_index(typeid(ngraph::op::OP)), &runtime::cpu::Builder::CFbuild<ngraph::op::OP>})
 
 #define REGISTER_CPU_CF_BUILDER(OP)                                                                \
-    static struct __register_##OP##_cf_builder                                                     \
-    {                                                                                              \
-        __register_##OP##_cf_builder()                                                             \
-        {                                                                                          \
-            GetGlobalCFDispatcherCPU().insert(                                                     \
-                {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                 \
-                 &runtime::cpu::Builder::CFbuild<ngraph::runtime::cpu::op::OP>});                  \
-        }                                                                                          \
-    } __register_##OP##_cf_builder_instance;
+    GetGlobalCFDispatcherCPU().insert(                                                             \
+        {type_index(typeid(ngraph::runtime::cpu::op::OP)),                                         \
+         &runtime::cpu::Builder::CFbuild<ngraph::runtime::cpu::op::OP>})
 
 namespace ngraph
 {

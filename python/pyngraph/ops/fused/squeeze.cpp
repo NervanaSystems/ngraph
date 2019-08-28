@@ -14,30 +14,19 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cstring>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include "ngraph/op/max.hpp"
-#include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/reduce_max.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
+#include "pyngraph/ops/fused/squeeze.hpp"
 
-#include "reduction.hpp"
+namespace py = pybind11;
 
-using namespace std;
-using namespace ngraph;
-
-namespace ngraph
+void regclass_pyngraph_op_Squeeze(py::module m)
 {
-    namespace runtime
-    {
-        namespace cpu
-        {
-            template <>
-            void Builder::BUILDER_DECL(ngraph::op::Max)
-            {
-                BUILD_REDUCTION_FUNCTOR(Max, max);
-            }
-
-            void register_builders_max_cpp() { REGISTER_OP_BUILDER(Max); }
-        }
-    }
+    py::class_<ngraph::op::Squeeze, std::shared_ptr<ngraph::op::Squeeze>, ngraph::op::Op> squeeze(
+        m, "Squeeze");
+    squeeze.doc() = "ngraph.impl.op.Squeeze wraps ngraph::op::Squeeze";
+    squeeze.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }
