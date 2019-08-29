@@ -32,21 +32,27 @@ using namespace ngraph;
 const string op::Softmax::type_name{"Softmax"};
 
 op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
-    : UnaryElementwiseArithmetic(arg)
+    : Op({arg})
     , m_axes(axes)
 {
     constructor_validate_and_infer_types();
 
+    const PartialShape& input_shape = get_input_partial_shape(0);
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_CHECK(this,
-                              axis < get_shape().size(),
+                              axis < static_cast<size_t>(input_shape.rank()),
                               "Reduction axis (",
                               axis,
                               ") is out of bounds (argument shape: ",
-                              get_shape(),
+                              input_shape,
                               ").");
     }
+
+    if (input_shape.is_static())
+        set_output_type(0, get_input_element_type(0), input_shape.to_shape());
+    else
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 
     // empty axes == all axes
     if (m_axes.size() == 0)
@@ -101,13 +107,19 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
 {
     constructor_validate_and_infer_types();
 
+    const PartialShape& input_shape = get_input_partial_shape(0);
     NODE_VALIDATION_CHECK(this,
-                          axis >= 0 && axis < arg.get_shape().size(),
+                          axis >= 0 && axis < static_cast<size_t>(input_shape.rank()),
                           "Reduction axis (",
                           axis,
                           ") is out of bounds (argument shape: ",
-                          arg.get_shape(),
+                          input_shape,
                           ").");
+
+    if (input_shape.is_static())
+        set_output_type(0, get_input_element_type(0), input_shape.to_shape());
+    else
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }
 
 shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args) const
