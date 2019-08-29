@@ -251,29 +251,28 @@ void MLIRCompiler::build_ng_dialect_module()
 }
 
 template <typename T>
-llvm::SmallVector<int64_t, 4> MLIRCompiler::get_mlir_shape(T ng_shape)
+void MLIRCompiler::get_mlir_shape(T ng_shape, llvm::SmallVectorImpl<int64_t>& mlir_shape)
 {
-    llvm::SmallVector<int64_t, 4> mlir_shape;
-
     for (auto dim : ng_shape)
     {
         mlir_shape.push_back(dim);
     }
-    return mlir_shape;
 }
 
 template <typename T>
 mlir::ArrayAttr MLIRCompiler::get_shape_as_attr(T ng_shape)
 {
-    mlir::Shape shape = get_mlir_shape(ng_shape);
-    return m_builder->getI64ArrayAttr(shape);
+    SmallVector<int64_t, 4> mlir_shape;
+    get_mlir_shape(ng_shape, mlir_shape);
+    return m_builder->getI64ArrayAttr(mlir_shape);
 }
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
 // element type.
 mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
 {
-    llvm::SmallVector<int64_t, 4> mlir_shape = get_mlir_shape(tensor->get_shape());
+    llvm::SmallVector<int64_t, 4> mlir_shape;
+    get_mlir_shape(tensor->get_shape(), mlir_shape);
     return mlir::NGTensorType::get(
         &m_context, get_mlir_type(tensor->get_element_type()), mlir_shape);
 }

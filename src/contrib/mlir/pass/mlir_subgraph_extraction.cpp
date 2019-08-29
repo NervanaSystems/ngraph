@@ -375,40 +375,17 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         // No padding for now
         auto conv_node = static_cast<ngraph::op::Convolution*>(node.get());
         auto pad_below = conv_node->get_padding_below();
-        for (auto it = pad_below.begin(); it != pad_below.end(); it++)
-        {
-            if (*it != 0)
-            {
-                return false;
-            }
-        }
-
         auto pad_above = conv_node->get_padding_above();
-        for (auto it = pad_above.begin(); it != pad_above.end(); it++)
-        {
-            if (*it != 0)
-            {
-                return false;
-            }
-        }
+        auto data_dilation = conv_node->get_data_dilation_strides();
+        auto window_dilation = conv_node->get_window_dilation_strides();
 
-        auto dilation = conv_node->get_data_dilation_strides();
-        for (auto it = dilation.begin(); it != dilation.end(); it++)
-        {
-            if (*it != 1)
-            {
-                return false;
-            }
-        }
+        auto is_zero = [](size_t s) { return s == 0; };
+        auto is_one = [](size_t s) { return s == 1; };
 
-        dilation = conv_node->get_window_dilation_strides();
-        for (auto it = dilation.begin(); it != dilation.end(); it++)
-        {
-            if (*it != 1)
-            {
-                return false;
-            }
-        }
+        return std::all_of(pad_below.begin(), pad_below.end(), is_zero) &&
+               std::all_of(pad_above.begin(), pad_above.end(), is_zero) &&
+               std::all_of(data_dilation.begin(), data_dilation.end(), is_one) &&
+               std::all_of(window_dilation.begin(), window_dilation.end(), is_one);
     }
 
     return true;

@@ -137,7 +137,7 @@ namespace ngraph
 
                 /// Converts nGraph shape-like types \p ng_shape to MLIR shape \p mlir_shape.
                 template <typename T>
-                llvm::SmallVector<int64_t, 4> get_mlir_shape(T ng_shape);
+                void get_mlir_shape(T ng_shape, llvm::SmallVectorImpl<int64_t>& mlir_shape);
 
                 /// Converts an ngraph shape to an I64 array attribute
                 template <typename T>

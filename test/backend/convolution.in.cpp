@@ -88,12 +88,12 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_simple)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f});
+    copy_data(a, vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f});
     auto b = backend->create_tensor(element::f32, shape_b);
-    copy_data(b, vector<float>{1.0f, 1.0f, 1.0f, 1.0f});
+    copy_data(b, vector<float>{3.0f, 3.0f, 3.0f, 3.0f});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    vector<float> expected_result{2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
+    vector<float> expected_result{18.0f, 24.0f, 30.0f, 36.0f, 18.0f, 24.0f, 30.0f, 36.0f};
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
