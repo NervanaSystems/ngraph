@@ -130,6 +130,9 @@ shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args)
 
 void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    throw ngraph_error("NYI");
+
+    /* This might work, but as of this writing we have no way to test it, so we are being careful
     auto delta = deltas.at(0);
 
     auto z = delta * shared_from_this();
@@ -159,4 +162,5 @@ void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 
     auto x = input(0).get_source_output();
     adjoints.add_delta(x, adjoint);
+    */
 }
