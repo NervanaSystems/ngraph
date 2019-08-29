@@ -209,10 +209,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(ArgMin);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_argmin_cpp() {}
-#endif
+            void register_builders_argmin_cpp() { REGISTER_OP_BUILDER(ArgMin); }
         }
     }
 }

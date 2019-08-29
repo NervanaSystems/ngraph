@@ -186,7 +186,6 @@ namespace ngraph
                 }
                 return functor;
             }
-            REGISTER_CF_BUILDER(Broadcast);
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Broadcast)
@@ -231,10 +230,11 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Broadcast);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_broadcast_cpp() {}
-#endif
+            void register_builders_broadcast_cpp()
+            {
+                REGISTER_CF_BUILDER(Broadcast);
+                REGISTER_OP_BUILDER(Broadcast);
+            }
         }
     }
 }

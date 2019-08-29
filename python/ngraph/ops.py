@@ -26,8 +26,8 @@ from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgP
     Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, HardSigmoid, Less, \
     LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, MVN, Negative, Not, NotEqual, \
     OneHot, Or, Pad, Parameter, Product, Power, PRelu, Relu, ReplaceSlice, Reshape, Reverse, \
-    ScaleShift, Select, Sign, Sin, Sinh, Slice, Softmax, SpaceToDepth, Sqrt, Subtract, Sum, Tan, \
-    Tanh, TopK, Unsqueeze
+    ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, Softmax, SpaceToDepth, Sqrt, \
+    SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
 
 from typing import Callable, Iterable, List, Set, Union
 
@@ -80,6 +80,81 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NumericType, str) -> Node
 
 
 @nameable_op
+def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, str) -> Node
+    """Perform permutation on data in the channel dimension of the input tensor.
+
+    The operation is the equivalent with the following transformation of the input tensor
+    :code:`data` of shape [N, C, H, W]:
+
+    :code:`data_reshaped` = reshape(:code:`data`, [N, group, C / group, H * W])
+
+    :code:`data_trnasposed` = transpose(:code:`data_reshaped`, [0, 2, 1, 3])
+
+    :code:`output` = reshape(:code:`data_trnasposed`, [N, C, H, W])
+
+    For example:
+
+    .. code-block:: python
+
+        Inputs: tensor of shape [1, 6, 2, 2]
+
+                data = [[[[ 0.,  1.], [ 2.,  3.]],
+                         [[ 4.,  5.], [ 6.,  7.]],
+                         [[ 8.,  9.], [10., 11.]],
+                         [[12., 13.], [14., 15.]],
+                         [[16., 17.], [18., 19.]],
+                         [[20., 21.], [22., 23.]]]]
+
+                axis = 1
+                groups = 3
+
+        Output: tensor of shape [1, 6, 2, 2]
+
+                output = [[[[ 0.,  1.], [ 2.,  3.]],
+                           [[ 8.,  9.], [10., 11.]],
+                           [[16., 17.], [18., 19.]],
+                           [[ 4.,  5.], [ 6.,  7.]],
+                           [[12., 13.], [14., 15.]],
+                           [[20., 21.], [22., 23.]]]]
+
+    :param data: The node with input tensor.
+    :param axis: Channel dimension index in the data tensor.
+                 A negative value means that the index should be calculated
+                 from the back of the input data shape.
+    :param group:The channel dimension specified by the axis parameter
+                 should be split into this number of groups.
+    :param name: Optional output node name.
+    :return: The new node performing a permutation on data in the channel dimension
+             of the input tensor.
+    """
+    return ShuffleChannels(data, axis, groups)
+
+
+@nameable_op
+def squeeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
+    """Perform squeeze operation on input tensor.
+
+    Remove single-dimensional entries from the shape of a tensor.
+    Takes a parameter :code:`axes` with a list of axes to squeeze.
+    If :code:`axes` is not provided, all the single dimensions will be removed from the shape.
+    If an :code:`axis` is selected with shape entry not equal to one, an error is raised.
+
+
+    For example:
+
+       Inputs: tensor with shape [1, 2, 1, 3, 1, 1], axes=[2, 4]
+
+       Result: tensor with shape [1, 2, 3, 1]
+
+    :param data: The node with data tensor.
+    :param axes: List of non-negative integers, indicate the dimensions to squeeze.
+                  One of: input node or array.
+    :param name: Optional new name for output node.
+    :return: The new node performing a squeeze operation on input tensor.
+    """
+    return Squeeze(data, as_node(axes))
+
+
 def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
     """Perform unsqueeze operation on input tensor.
 
@@ -530,6 +605,20 @@ def logical_or(left_node, right_node, name=None):  # type: (NodeInput, NodeInput
 def logical_not(node, name=None):  # type: (Node, str) -> Node
     """Return node which applies logical negation to the input node elementwise."""
     return Not(node)
+
+
+@binary_op
+def squared_difference(x1, x2, name=None):  # type: (Node, Node, str) -> Node
+    """Perform an element-wise squared difference between two tensors.
+
+    .. math:: y[i] = (x_1[i] - x_2[i])^2
+
+    :param x1: The node with first input tensor.
+    :param x2: The node with second input tensor.
+    :param name: Optional new name for output node.
+    :return: The new node performing a squared difference between two tensors.
+    """
+    return SquaredDifference(x1, x2)
 
 
 # Extend Node class to support binary operators
