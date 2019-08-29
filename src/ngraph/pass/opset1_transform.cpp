@@ -21,7 +21,6 @@
 using namespace std;
 using namespace ngraph;
 
-// @TODO: Shouldn't this be moved to a common utility class? This mapping to OP_TYPEID gets repeated many times.
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
@@ -62,12 +61,12 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
         return modified;
     }
 
-    if (op_version != 0)
-    {
-        throw ngraph_error("Op version 1 transformation pass failed for " + node->get_name() +
-                           ", only op version 0 operations expected. Op version " +
-                           to_string(op_version) + " found.");
-    }
+    NGRAPH_CHECK(op_version == 0,
+                 "Op version 1 transformation pass failed for ",
+                 *node,
+                 ", only op version 0 operations expected. Op version ",
+                 op_version,
+                 " found.");
 
     switch (get_typeid(node))
     {

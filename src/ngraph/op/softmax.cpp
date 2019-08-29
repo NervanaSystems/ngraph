@@ -96,17 +96,17 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 const string op::v1::Softmax::type_name{"Softmax"};
 
 op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
-    : UnaryElementwiseArithmetic(arg)
+    : Op({arg})
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();
 
     NODE_VALIDATION_CHECK(this,
-                          axis >= 0 && axis < get_shape().size(),
+                          axis >= 0 && axis < arg.get_shape().size(),
                           "Reduction axis (",
                           axis,
                           ") is out of bounds (argument shape: ",
-                          get_shape(),
+                          arg.get_shape(),
                           ").");
 }
 
