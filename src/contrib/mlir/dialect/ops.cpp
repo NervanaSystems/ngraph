@@ -230,7 +230,7 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
     unsigned imagesRank = imagesShape.size();
     unsigned filtersRank = filtersShape.size();
     unsigned resultRank = resultShape.size();
-    unsigned imageSpatialRank =  imagesRank - 2;
+    unsigned imageSpatialRank = imagesRank - 2;
     unsigned filtersSpatialRank = filtersRank - 2;
     unsigned stridesRank = strides.size();
     unsigned padBelowRank = padBelow.size();
@@ -250,7 +250,8 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
     }
 
     // Verify strides and pads shapes
-    if (imageSpatialRank != stridesRank || imageSpatialRank != padBelowRank || imageSpatialRank != padAboveRank)
+    if (imageSpatialRank != stridesRank || imageSpatialRank != padBelowRank ||
+        imageSpatialRank != padAboveRank)
     {
         return op->emitOpError("Image spatial rank mismatches strides and/or padding ranks");
     }
@@ -261,7 +262,8 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
     }
 
     // Batch size is non-zero, and identical non-zero channel depth
-    if (imagesShape[0] <= 0 || filtersShape[0] <= 0 || imagesShape[1] != filtersShape[1] || imagesShape[1] <= 0)
+    if (imagesShape[0] <= 0 || filtersShape[0] <= 0 || imagesShape[1] != filtersShape[1] ||
+        imagesShape[1] <= 0)
     {
         return op->emitOpError("Image and filters have invalid shapes");
     }
@@ -285,15 +287,16 @@ mlir::LogicalResult verifyOp(NGConvolutionOp* op)
     }
 
     // Check output shape
-    if (resultRank != imagesRank || resultShape[0] != imagesShape[0] || resultShape[1] != filtersShape[0])
+    if (resultRank != imagesRank || resultShape[0] != imagesShape[0] ||
+        resultShape[1] != filtersShape[0])
     {
         return op->emitOpError("Invalid result shape");
     }
     for (unsigned i = 0; i < resultRank - 2; i++)
     {
-        unsigned resDim = llvm::divideCeil(
-            padBelowVal[i] + padAboveVal[i] + imagesShape[2 + i] - filtersShape[2 + i] + 1
-            , stridesVal[i]);
+        unsigned resDim = llvm::divideCeil(padBelowVal[i] + padAboveVal[i] + imagesShape[2 + i] -
+                                               filtersShape[2 + i] + 1,
+                                           stridesVal[i]);
         if (resultShape[i] != resDim)
         {
             return op->emitOpError("Invalid result spatial shape");

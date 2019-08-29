@@ -369,7 +369,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     {
         return true;
     }
-    
+
     if (TI(ngraph::op::Convolution) == TI(*node))
     {
         // No padding for now
@@ -409,7 +409,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
                 return false;
             }
         }
-
     }
 
     return true;

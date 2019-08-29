@@ -236,8 +236,7 @@ void MLIRCompiler::build_ng_dialect_module()
     dump_mlir_module("nGraph Dialect Dump:");
 }
 
-
-template<typename T>
+template <typename T>
 llvm::SmallVector<int64_t, 4> MLIRCompiler::get_mlir_shape(T ng_shape)
 {
     llvm::SmallVector<int64_t, 4> mlir_shape;
@@ -249,13 +248,12 @@ llvm::SmallVector<int64_t, 4> MLIRCompiler::get_mlir_shape(T ng_shape)
     return mlir_shape;
 }
 
-template<typename T>
+template <typename T>
 mlir::ArrayAttr MLIRCompiler::get_shape_as_attr(T ng_shape)
 {
     mlir::Shape shape = get_mlir_shape(ng_shape);
     return m_builder->getI64ArrayAttr(shape);
 }
-
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
 // element type.
@@ -265,7 +263,6 @@ mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
     return mlir::NGTensorType::get(
         &m_context, get_mlir_type(tensor->get_element_type()), mlir_shape);
 }
-
 
 // Converts an nGraph element type into an MLIR type.
 mlir::Type MLIRCompiler::get_mlir_type(const element::Type& type)
@@ -592,14 +589,15 @@ namespace ngraph
                 return compiler.create_generic_op<mlir::NGNegOp>(ng_node);
             }
 
-            template<>
+            template <>
             mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Convolution)
             {
                 mlir::Operation* op = compiler.create_generic_op<mlir::NGConvolutionOp>(ng_node);
                 auto conv_node = static_cast<const ngraph::op::Convolution*>(ng_node);
                 auto conv_op = llvm::cast<mlir::NGConvolutionOp>(op);
-                
-                mlir::ArrayAttr attr = compiler.get_shape_as_attr(conv_node->get_window_movement_strides());
+
+                mlir::ArrayAttr attr =
+                    compiler.get_shape_as_attr(conv_node->get_window_movement_strides());
                 conv_op.setStrides(attr);
 
                 attr = compiler.get_shape_as_attr(conv_node->get_padding_below());

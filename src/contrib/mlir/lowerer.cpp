@@ -28,11 +28,11 @@
 #include <mlir/EDSC/Builders.h>
 #include <mlir/EDSC/Helpers.h>
 #include <mlir/EDSC/Intrinsics.h>
+#include <mlir/IR/AffineExpr.h>
+#include <mlir/IR/IntegerSet.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/IR/StandardTypes.h>
 #include <mlir/Transforms/DialectConversion.h>
-#include <mlir/IR/AffineExpr.h>
-#include <mlir/IR/IntegerSet.h>
 
 #include <map>
 
@@ -804,13 +804,14 @@ namespace
         auto padBelow = convolOp.padBelow().getValue();
         auto padAbove = convolOp.padBelow().getValue();
 
-
         for (auto value : llvm::zip(padBelow, padAbove))
         {
             auto padAttr = std::get<0>(value);
-            NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0, "No support for padding in convolution op");
+            NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0,
+                         "No support for padding in convolution op");
             padAttr = std::get<1>(value);
-            NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0, "No support for padding in convolution op");
+            NGRAPH_CHECK(padAttr.cast<IntegerAttr>().getInt() == 0,
+                         "No support for padding in convolution op");
         }
 
         Type elemTy = images->getType().cast<MemRefType>().getElementType();
@@ -834,7 +835,7 @@ namespace
         //
         // for n : 0 -> N
         //   for k : 0 -> C_OUT
-        //     for <r_1 .. r_f> : <0 .. 0> -> <R_1 ... R_f> 
+        //     for <r_1 .. r_f> : <0 .. 0> -> <R_1 ... R_f>
         //       //initialize result to zero
         //       Output[n, k, r_1, .. r_f] = 0;
         //
@@ -842,28 +843,28 @@ namespace
         //   for k : 0 -> C_OUT
         //     for c : 0 -> C_IN
         //       // iterate over output spatial shape
-        //       for <r_1 .. r_f> : <0 .. 0> -> <R_1 ... R_f> // 
+        //       for <r_1 .. r_f> : <0 .. 0> -> <R_1 ... R_f> //
         //         //compute image start inputs indices
         //         i_1 = r_1 * strides[0];
         //         ..
         //         i_f = r_f * strides[f - 1];
         //         // iterate over kernel spatial shape
         //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
-        //           Output[n, k, r_1, .. r_f] += 
+        //           Output[n, k, r_1, .. r_f] +=
         //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
 
-
-        // TODO: With padding, we need to check (using IntegerSets) whether each spatial dim in Images lie within paddings
+        // TODO: With padding, we need to check (using IntegerSets) whether each spatial dim in
+        // Images lie within paddings
         // If yes, we init value to zero, else load from MemRef.
-        // Q: Can this be done using a map from padded tensor to  unpadded one ? Will we load zero if OOB ? 
-
+        // Q: Can this be done using a map from padded tensor to  unpadded one ? Will we load zero
+        // if OOB ?
 
         // Create view to write into result.
         MemRefView vRes(result), vImages(images), vFilters(filters);
 
         // Indexed Values
         IndexedValue iRes(result), iImages(images), iFilters(filters);
-        
+
         // Bounds on batch size N
         ValueHandle batchLb = vImages.lb(0), batchUb = vImages.ub(0);
         // Bounds on number of filters
@@ -892,10 +893,10 @@ namespace
             imgSpatialUbs.push_back(vImages.ub(i + 2));
         }
 
-        
-
         NGRAPH_CHECK(vImages.rank() == vFilters.rank(), "Images and Filters have unequal ranks");
-        NGRAPH_CHECK(resSpatialLbs.size() == resSpatialUbs.size() && resSpatialLbs.size() == spatialRank , "Results spatial dims mismatches input");
+        NGRAPH_CHECK(resSpatialLbs.size() == resSpatialUbs.size() &&
+                         resSpatialLbs.size() == spatialRank,
+                     "Results spatial dims mismatches input");
 
         // Filters spatial indices and bounds
         auto filtersSpatialIndices = makeIndexHandles(spatialRank);
@@ -908,19 +909,22 @@ namespace
             filtersSteps.push_back(vFilters.step(i + 2));
         }
 
+        // Initialize output to zero
         {
             IndexHandle n, k, c;
             auto resSpatialIndices = makeIndexHandles(spatialRank);
-            auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);    
-            // Initialize output to zero
+            auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
+
             LoopBuilder(&n, batchLb, batchUb, 1)([&] {
                 LoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
-                    LoopNestBuilder(resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&]{
+                    LoopNestBuilder(
+                        resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
                         SmallVector<IndexHandle, 4> resIndices;
                         // Result indices
                         resIndices.push_back(n);
                         resIndices.push_back(k);
-                        resIndices.insert(resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
+                        resIndices.insert(
+                            resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
                         ValueHandle zero = createZeroConstant(elemTy);
                         iRes(resIndices) = zero;
                     });
@@ -931,11 +935,13 @@ namespace
         IndexHandle n, k, c;
         // Convolution loop
         LoopBuilder(&n, batchLb, batchUb, 1)([&] {
-            // Filters loop
+            // Number of filters loop
             LoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
                 // Channels loop
                 LoopBuilder(&c, numChannelsLb, numChannelsUb, 1)([&] {
-                    LoopNestBuilder(resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&]{
+                    // Results loop
+                    LoopNestBuilder(
+                        resSpatialIndicesPtrs, resSpatialLbs, resSpatialUbs, resSteps)([&] {
                         // Compute image start indices
                         SmallVector<IndexHandle, 4> imgStartIndices;
                         for (auto i = 0; i < spatialRank; i++)
@@ -948,23 +954,31 @@ namespace
                         // Result indices
                         resIndices.push_back(n);
                         resIndices.push_back(k);
-                        resIndices.insert(resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
-
-                        LoopNestBuilder(filtersSpatialIndicesPtrs, filtersSpatialLbs, filtersSpatialUbs, filtersSteps)([&]{
+                        resIndices.insert(
+                            resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
+                        // Filters spatial loop
+                        LoopNestBuilder(filtersSpatialIndicesPtrs,
+                                        filtersSpatialLbs,
+                                        filtersSpatialUbs,
+                                        filtersSteps)([&] {
                             SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
                             // Image indices
                             imgIndices.push_back(n);
                             imgIndices.push_back(c);
                             for (auto i = 0; i < spatialRank; i++)
                             {
-                                imgIndices.push_back(IndexHandle(imgStartIndices[i] + filtersSpatialIndices[i]));
+                                imgIndices.push_back(
+                                    IndexHandle(imgStartIndices[i] + filtersSpatialIndices[i]));
                             }
                             // Filter indices
                             filtersIndices.push_back(k);
                             filtersIndices.push_back(c);
-                            filtersIndices.insert(filtersIndices.end(), filtersSpatialIndices.begin(), filtersSpatialIndices.end());
+                            filtersIndices.insert(filtersIndices.end(),
+                                                  filtersSpatialIndices.begin(),
+                                                  filtersSpatialIndices.end());
 
-                            iRes(resIndices) = iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices));
+                            iRes(resIndices) =
+                                iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices));
                         });
                     });
                 });

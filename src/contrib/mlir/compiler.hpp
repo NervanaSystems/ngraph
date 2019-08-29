@@ -136,11 +136,11 @@ namespace ngraph
                 void dump_mlir_module(const std::string msg);
 
                 /// Converts nGraph shape-like types \p ng_shape to MLIR shape \p mlir_shape.
-                template<typename T>
+                template <typename T>
                 llvm::SmallVector<int64_t, 4> get_mlir_shape(T ng_shape);
 
                 /// Converts an ngraph shape to an I64 array attribute
-                template<typename T>
+                template <typename T>
                 mlir::ArrayAttr get_shape_as_attr(T ng_shape);
 
             private:
