@@ -34,7 +34,7 @@ namespace ngraph
     /// \li Dynamic rank. (Informal notation: `?`)
     /// \li Static rank, but dynamic dimensions on some or all axes.
     ///     (Informal notation examples: `{1,2,?,4}`, `{?,?,?}`)
-    /// \li Static rank, and dynamic dimensions on all axes.
+    /// \li Static rank, and static dimensions on all axes.
     ///     (Informal notation examples: `{1,2,3,4}`, `{6}`, `{}`)
     class PartialShape
     {

@@ -23,10 +23,10 @@ using namespace ngraph;
 
 const string op::PriorBoxClustered::type_name{"PriorBoxClustered"};
 
-op::PriorBoxClustered::PriorBoxClustered(const shared_ptr<Node>& layer_shape,
-                                         const shared_ptr<Node>& image_shape,
+op::PriorBoxClustered::PriorBoxClustered(const Output<Node>& layer_shape,
+                                         const Output<Node>& image_shape,
                                          const PriorBoxClusteredAttrs& attrs)
-    : Op(check_single_output_args({layer_shape, image_shape}))
+    : Op({layer_shape, image_shape})
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
