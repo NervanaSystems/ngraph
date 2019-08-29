@@ -382,3 +382,13 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_012)
         read_vector<float>(result),
         MIN_FLOAT_TOLERANCE_BITS));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, reverse_v1_incorrect_rev_axes_rank)
+{
+    const auto Data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
+    const auto Rev_Axes = make_shared<op::Parameter>(element::i64, Shape{5}); // correct: <= 3
+
+    EXPECT_THROW(make_shared<Function>(make_shared<op::v1::Reverse>(Data, Rev_Axes, "index"),
+                                       ParameterVector{Data, Rev_Axes}),
+                 ngraph::NodeValidationFailure);
+}
