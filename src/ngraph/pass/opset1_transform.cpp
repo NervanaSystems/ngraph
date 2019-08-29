@@ -68,6 +68,11 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
                  op_version,
                  " found.");
 
+// Not all enumeration values not explicitly handled in switch
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch"
+#endif
     switch (get_typeid(node))
     {
     case OP_TYPEID::Softmax:
