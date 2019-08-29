@@ -437,8 +437,8 @@ set (SRC
     pass/nop_elimination.hpp
     pass/pass.cpp
     pass/pass.hpp
-    pass/opset1_transform.cpp
-    pass/opset1_transform.hpp
+    pass/opset1_upgrade.cpp
+    pass/opset1_upgrade.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
     pass/propagate_cacheability.cpp

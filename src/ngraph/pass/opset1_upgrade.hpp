@@ -22,7 +22,7 @@ namespace ngraph
 {
     namespace pass
     {
-        class Opset1Transformation : public NodePass
+        class Opset1Upgrade : public NodePass
         {
         public:
             ///
@@ -32,7 +32,7 @@ namespace ngraph
             /// opset version 0 ops
             ///           to their opset version 1 equivalents. All ops in the final graph have
             ///           opset version 1.
-            Opset1Transformation() = default;
+            Opset1Upgrade() = default;
             bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
         };
     }

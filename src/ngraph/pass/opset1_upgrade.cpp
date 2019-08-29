@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/pass/opset1_transform.hpp"
+#include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/softmax.hpp"
@@ -50,7 +50,7 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 }
 // END mapping to OP_TYPEID
 
-bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
+bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 
