@@ -88,7 +88,7 @@ void op::GroupConvolution::pre_validate_and_infer_types()
 
         // Input Filters
         NODE_VALIDATION_CHECK(this,
-                              (filters_shape.to_shape()[have_groups_in_filters() ? 2 : 1] *
+                              (filters_shape.to_shape()[has_groups_in_filters_shape() ? 2 : 1] *
                                m_groups) == data_shape.to_shape()[1],
                               "Incorrect number of channels per filter");
     }
@@ -122,7 +122,7 @@ Shape op::GroupConvolution::get_weights_dimensions() const
     auto data_shape = get_input_shape(0);
     auto weights_shape = get_input_shape(1);
     // check if weights already includes groups
-    if (have_groups_in_filters())
+    if (has_groups_in_filters_shape())
     {
         return weights_shape;
     }
@@ -181,7 +181,7 @@ NodeVector op::GroupConvolution::decompose_op() const
     for (std::size_t group{0}; group < m_groups; ++group)
     {
         auto sliced_filter = sliced_filters[group];
-        if (have_groups_in_filters())
+        if (has_groups_in_filters_shape())
         {
             // Remove group dimmension after slicing
             sliced_filter = builder::reshape(
