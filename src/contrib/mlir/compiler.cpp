@@ -261,7 +261,7 @@ mlir::ArrayAttr MLIRCompiler::get_shape_as_attr(T ng_shape)
 // element type.
 mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
 {
-    mlir::Shape mlir_shape = get_mlir_shape(tensor->get_shape());
+    llvm::SmallVector<int64_t, 4> mlir_shape = get_mlir_shape(tensor->get_shape());
     return mlir::NGTensorType::get(
         &m_context, get_mlir_type(tensor->get_element_type()), mlir_shape);
 }
