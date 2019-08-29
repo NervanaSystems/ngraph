@@ -95,7 +95,8 @@ namespace ngraph
                     ", expected ",
                     shape_size(m_shape),
                     ".");
-
+                if(values.size())
+                {
                 if (type.is_integral())
                 {
                     if (type.is_signed())
@@ -125,6 +126,7 @@ namespace ngraph
                         dvalues = std::vector<double>(shape_size(m_shape), dvalues[0]);
                     }
                     write_values(dvalues);
+                }
                 }
                 constructor_validate_and_infer_types();
             }
