@@ -81,6 +81,14 @@ namespace ngraph
             Strides m_data_dilation_strides;
             size_t m_groups{0};
             PadType m_pad_type{PadType::NOTSET};
+
+        private:
+            bool have_groups_in_filters() const
+            {
+                // If filters_rank is (data_rank + 1), then filters are divided by groups on first
+                // dim.
+                return ((get_input_shape(0).size() + 1) == get_input_shape(1).size());
+            }
         };
     }
 }
