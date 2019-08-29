@@ -59,7 +59,7 @@ namespace ngraph
 
         namespace v1
         {
-            class Softmax : public util::UnaryElementwiseArithmetic
+            class Softmax : public Op
             {
             public:
                 NGRAPH_API
