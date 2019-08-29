@@ -15,7 +15,6 @@
 //*****************************************************************************
 #include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
 namespace ngraph
 {
     namespace runtime
@@ -76,8 +75,8 @@ namespace ngraph
                 register_builders_tile_cpp();
                 register_builders_topk_cpp();
                 register_builders_update_slice_cpp();
+                register_cpu_builders();
             }
         }
     }
 }
-#endif

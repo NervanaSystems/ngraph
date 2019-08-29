@@ -43,10 +43,11 @@ namespace ngraph
                 };
                 functors.emplace_back(functor);
             }
-            REGISTER_OP_BUILDER(BroadcastDistributed);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_broadcast_distributed_cpp() {}
-#endif
+
+            void register_builders_broadcast_distributed_cpp()
+            {
+                REGISTER_OP_BUILDER(BroadcastDistributed);
+            }
         }
     }
 }

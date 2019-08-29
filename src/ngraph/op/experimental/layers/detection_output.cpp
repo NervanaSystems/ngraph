@@ -21,14 +21,13 @@ using namespace ngraph;
 
 const string op::DetectionOutput::type_name{"DetectionOutput"};
 
-op::DetectionOutput::DetectionOutput(const std::shared_ptr<Node>& box_logits,
-                                     const std::shared_ptr<Node>& class_preds,
-                                     const std::shared_ptr<Node>& proposals,
-                                     const std::shared_ptr<Node>& aux_class_preds,
-                                     const std::shared_ptr<Node>& aux_box_preds,
+op::DetectionOutput::DetectionOutput(const Output<Node>& box_logits,
+                                     const Output<Node>& class_preds,
+                                     const Output<Node>& proposals,
+                                     const Output<Node>& aux_class_preds,
+                                     const Output<Node>& aux_box_preds,
                                      const DetectionOutputAttrs& attrs)
-    : Op(check_single_output_args(
-          {box_logits, class_preds, proposals, aux_class_preds, aux_box_preds}))
+    : Op({box_logits, class_preds, proposals, aux_class_preds, aux_box_preds})
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
