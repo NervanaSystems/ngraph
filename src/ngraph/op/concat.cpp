@@ -111,9 +111,9 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
 
     size_t pos = 0;
 
-    for (auto input : inputs())
+    for (auto value : input_values())
     {
-        auto arg_shape = input.get_shape();
+        auto arg_shape = value.get_shape();
 
         auto slice_width = arg_shape[m_concatenation_axis];
 
@@ -123,7 +123,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVecto
         arg_delta_slice_upper[m_concatenation_axis] = next_pos;
 
         adjoints.add_delta(
-            input.get_source_output(),
+            value,
             make_shared<op::Slice>(
                 delta, arg_delta_slice_lower, arg_delta_slice_upper, arg_delta_slice_strides));
 

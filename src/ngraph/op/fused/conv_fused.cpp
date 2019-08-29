@@ -14,8 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <numeric>
-
 #include "conv_fused.hpp"
 
 #include "ngraph/op/add.hpp"
@@ -24,7 +22,6 @@
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -94,8 +91,8 @@ op::ConvolutionBias::ConvolutionBias(const Output<Node>& data_batch,
 op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
                                      const Output<Node>& bias,
                                      const bool with_relu)
-    : ConvolutionBias(conv->input(0).get_source_output(),
-                      conv->input(1).get_source_output(),
+    : ConvolutionBias(conv->input_value(0),
+                      conv->input_value(1),
                       bias,
                       conv->get_window_movement_strides(),
                       conv->get_window_dilation_strides(),
@@ -204,8 +201,8 @@ shared_ptr<Node> op::ConvolutionBias::copy_with_new_args(const NodeVector& new_a
 
 NodeVector op::ConvolutionBias::decompose_op() const
 {
-    auto conv = make_shared<op::Convolution>(input(0).get_source_output(),
-                                             input(1).get_source_output(),
+    auto conv = make_shared<op::Convolution>(input_value(0),
+                                             input_value(1),
                                              m_window_movement_strides,
                                              m_window_dilation_strides,
                                              m_padding_below,
@@ -219,8 +216,7 @@ NodeVector op::ConvolutionBias::decompose_op() const
     }
 
     auto conv_bias = make_shared<op::Add>(
-        conv,
-        make_shared<op::Broadcast>(input(2).get_source_output(), conv->get_shape(), bcast_axes));
+        conv, make_shared<op::Broadcast>(input_value(2), conv->get_shape(), bcast_axes));
     if (m_with_relu)
     {
         return {make_shared<op::Relu>(conv_bias)};
@@ -239,13 +235,13 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints, const 
         delta = make_shared<op::ReluBackprop>(shared_from_this(), delta);
     }
 
-    auto data = input(0).get_source_output();
+    auto data = input_value(0);
     const auto data_shape = data.get_shape();
 
-    auto filter = input(1).get_source_output();
+    auto filter = input_value(1);
     const auto filter_shape = filter.get_shape();
 
-    auto bias = input(2).get_source_output();
+    auto bias = input_value(2);
     const auto bias_shape = bias.get_shape();
 
     // using regular convolution backprop for data
@@ -301,7 +297,10 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     // Window movement strides      q                     p_f
     // Window dilation strides      p_f                   q
     // Padding below                a_x                   a_x
-    // Padding above                b_x                   b_x - (a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q
+    // Padding above                b_x                   b_x -
+    //                                                      (a_x + (S_x - 1)p_x + b_x -
+    //                                                        (S_f - 1)p_f)
+    //                                                       % q
     // Data dilation strides        p_x                   p_x
 
     for (size_t i = 0; i < filters_shape.size() - 2; i++)
@@ -342,9 +341,9 @@ shared_ptr<Node>
 
 NodeVector op::ConvolutionBiasBackpropFiltersBias::decompose_op() const
 {
-    auto conv_bprop = make_shared<op::ConvolutionBackpropFilters>(input(0).get_source_output(),
+    auto conv_bprop = make_shared<op::ConvolutionBackpropFilters>(input_value(0),
                                                                   m_filters_shape,
-                                                                  input(1).get_source_output(),
+                                                                  input_value(1),
                                                                   m_window_movement_strides_forward,
                                                                   m_window_dilation_strides_forward,
                                                                   m_padding_below_forward,
@@ -358,7 +357,7 @@ NodeVector op::ConvolutionBiasBackpropFiltersBias::decompose_op() const
         reduce_axes.insert(i);
     }
 
-    auto bias_bprop = make_shared<op::Sum>(input(1).get_source_output(), reduce_axes);
+    auto bias_bprop = make_shared<op::Sum>(input_value(1), reduce_axes);
 
     return {conv_bprop, bias_bprop};
 }
@@ -387,9 +386,9 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const Output<Node>& data_batch,
 op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
                                            const Output<Node>& add_input,
                                            bool with_relu)
-    : ConvolutionBiasAdd(conv->input(0).get_source_output(),
-                         conv->input(1).get_source_output(),
-                         conv->input(2).get_source_output(),
+    : ConvolutionBiasAdd(conv->input_value(0),
+                         conv->input_value(1),
+                         conv->input_value(2),
                          add_input,
                          conv->get_window_movement_strides(),
                          conv->get_window_dilation_strides(),
@@ -460,8 +459,8 @@ std::shared_ptr<Node> op::ConvolutionBiasAdd::copy_with_new_args(const NodeVecto
 
 NodeVector op::ConvolutionBiasAdd::decompose_op() const
 {
-    auto conv = make_shared<op::Convolution>(input(0).get_source_output(),
-                                             input(1).get_source_output(),
+    auto conv = make_shared<op::Convolution>(input_value(0),
+                                             input_value(1),
                                              m_window_movement_strides,
                                              m_window_dilation_strides,
                                              m_padding_below,
@@ -475,14 +474,13 @@ NodeVector op::ConvolutionBiasAdd::decompose_op() const
     }
 
     auto conv_bias = make_shared<op::Add>(
-        conv,
-        make_shared<op::Broadcast>(input(2).get_source_output(), conv->get_shape(), bcast_axes));
+        conv, make_shared<op::Broadcast>(input_value(2), conv->get_shape(), bcast_axes));
     if (m_with_relu)
     {
-        return {make_shared<op::Relu>(conv_bias + input(3).get_source_output())};
+        return {make_shared<op::Relu>(conv_bias + input_value(3))};
     }
     else
     {
-        return {conv_bias + input(3).get_source_output()};
+        return {conv_bias + input_value(3)};
     }
 }

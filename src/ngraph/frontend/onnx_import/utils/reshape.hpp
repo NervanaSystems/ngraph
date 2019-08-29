@@ -34,10 +34,11 @@ namespace ngraph
             /// \brief      Infer `output_shape` dimension values.
             ///
             /// \par Inferention rules
-            ///     \li         The input_shape may consist at most on -1 value. In this case the value
-            ///                 is inferred from the size of the tensor and the remaining dimensions.
-            ///     \li         If a dimension value is equal to 0, then its output value is going to
-            ///                 be copied from the input_shape argument.
+            ///     \li         The input_shape may consist at most on -1 value. In this case the
+            ///                 value is inferred from the size of the tensor and the remaining
+            ///                 dimensions.
+            ///     \li         If a dimension value is equal to 0, then its output value is going
+            ///                 to be copied from the input_shape argument.
             ///
             /// \param[in]  node_name     The node name.
             /// \param[in]  input_shape   The input node shape.

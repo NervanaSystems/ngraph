@@ -16,7 +16,6 @@
 
 #include "ngraph/op/fused/shuffle_channels.hpp"
 #include "ngraph/builder/reshape.hpp"
-#include "ngraph/op/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -75,7 +74,7 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
 
 NodeVector op::ShuffleChannels::decompose_op() const
 {
-    const auto data = input(0).get_source_output();
+    const auto data = input_value(0);
     const auto& data_shape = data.get_shape();
 
     const auto reshaped = builder::reshape(data, get_pre_shuffle_shape(data_shape));
@@ -103,7 +102,8 @@ Shape op::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
     // [0]: ds[0] * ds[1] * ... * ds[m_axis-1] (or 1 if m_axis == 0)
     // [1]: m_groups
     // [2]: ds[axis] / m_groups
-    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem of ds)
+    // [3]: ds[axis+1] * ds[axis+2] * ... * ds[ds.size()-1] (or 1 if m_axis points to the last elem
+    //                                                       of ds)
     Shape res(4, 1);
 
     size_t axis_zb = get_zero_based_axis();

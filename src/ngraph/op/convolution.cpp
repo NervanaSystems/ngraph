@@ -14,11 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <numeric>
-
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/util.hpp"
@@ -186,11 +184,11 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    const auto x_shape = x->get_shape();
+    auto x = input_value(0);
+    const auto x_shape = x.get_shape();
 
-    auto f = get_argument(1);
-    const auto f_shape = f->get_shape();
+    auto f = input_value(1);
+    const auto f_shape = f.get_shape();
 
     adjoints.add_delta(x,
                        make_shared<op::ConvolutionBackpropData>(x_shape,
@@ -253,7 +251,10 @@ void op::ConvolutionBackpropData::validate_and_infer_types()
     // Window movement strides  q_x       p_x
     // Window dilation strides  p_f       p_f
     // Padding below            a_x       (S_f - 1)p_f - a_x
-    // Padding above            b_x       (S_f - 1)p_f + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f) % q_x) - b_x
+    // Padding above            b_x       (S_f - 1)p_f +
+    //                                      + ((a_x + (S_x - 1)p_x + b_x - (S_f - 1)p_f)
+    //                                         % q_x)
+    //                                      - b_x
     // Data dilation strides    p_x       q_x
     // Output shape             S_o       S_x
     //
@@ -302,11 +303,11 @@ void op::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(1);
-    const auto x_shape = x->get_shape();
+    auto x = input_value(1);
+    const auto x_shape = x.get_shape();
 
-    auto f = get_argument(0);
-    const auto f_shape = f->get_shape();
+    auto f = input_value(0);
+    const auto f_shape = f.get_shape();
 
     auto data_conv = make_shared<op::Convolution>(delta,
                                                   f,
@@ -739,7 +740,8 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
         ").");
 
     //
-    // Extract input item shape Di and make sure all dimensions are larger than 0 after padding and dilation.
+    // Extract input item shape Di and make sure all dimensions are larger than 0 after padding and
+    // dilation.
     //
     std::vector<ptrdiff_t> input_item_virtual_shape_signed;
 
@@ -787,8 +789,9 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
     }
 
     //
-    // Extract the physical shape Wp of the convolution window, *not* including dilation, from the filter dimensions.
-    // At the same time, make sure window shape dimensions are all larger than 0.
+    // Extract the physical shape Wp of the convolution window, *not* including dilation, from the
+    // filter dimensions. At the same time, make sure window shape dimensions are all larger than
+    // 0.
     //
     Shape window_physical_shape;
 
@@ -806,8 +809,9 @@ Shape op::util::infer_convolution_output_shape(const Node* node,
     }
 
     //
-    // Compute virtual shape Wp of the convolution window, *including* dilation. At the same time, make sure all
-    // window dilation strides are larger than 0, and that the dilated filter fits within the spatial dimensions.
+    // Compute virtual shape Wp of the convolution window, *including* dilation. At the same time,
+    // make sure all window dilation strides are larger than 0, and that the dilated filter fits
+    // within the spatial dimensions.
     //
     Shape window_virtual_shape;
 

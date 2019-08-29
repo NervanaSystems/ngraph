@@ -145,38 +145,38 @@ namespace ngraph
         extern NGRAPH_API const Type u64;
 
         template <typename T>
-        const Type& from()
+        Type from()
         {
             throw std::invalid_argument("Unknown type");
         }
         template <>
-        const Type& from<char>();
+        Type from<char>();
         template <>
-        const Type& from<bool>();
+        Type from<bool>();
         template <>
-        const Type& from<float>();
+        Type from<float>();
         template <>
-        const Type& from<double>();
+        Type from<double>();
         template <>
-        const Type& from<int8_t>();
+        Type from<int8_t>();
         template <>
-        const Type& from<int16_t>();
+        Type from<int16_t>();
         template <>
-        const Type& from<int32_t>();
+        Type from<int32_t>();
         template <>
-        const Type& from<int64_t>();
+        Type from<int64_t>();
         template <>
-        const Type& from<uint8_t>();
+        Type from<uint8_t>();
         template <>
-        const Type& from<uint16_t>();
+        Type from<uint16_t>();
         template <>
-        const Type& from<uint32_t>();
+        Type from<uint32_t>();
         template <>
-        const Type& from<uint64_t>();
+        Type from<uint64_t>();
         template <>
-        const Type& from<ngraph::bfloat16>();
+        Type from<ngraph::bfloat16>();
         template <>
-        const Type& from<ngraph::float16>();
+        Type from<ngraph::float16>();
 
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }

@@ -603,8 +603,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
                     auto fwd_desc = mkldnn_emitter->get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
-                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst, diff_weights,
-                    // diff_bias, and convolution_backward_weights.
+                    // ConvolutionBackpropFiltersBias needs 5 primitives: src, diff_dst,
+                    // diff_weights, diff_bias, and convolution_backward_weights.
                     auto conv_index = mkldnn_emitter->reserve_primitive_space(5);
                     auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
 
@@ -821,21 +821,20 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Convolution);
-            REGISTER_OP_BUILDER(ConvolutionRelu);
-            REGISTER_OP_BUILDER(ConvolutionBias);
-            REGISTER_OP_BUILDER(ConvolutionBiasAdd);
-            REGISTER_OP_BUILDER(ConvolutionBackpropData);
-            REGISTER_OP_BUILDER(ConvolutionBackpropFilters);
-            REGISTER_OP_BUILDER(ConvolutionBiasBackpropFiltersBias);
-            REGISTER_OP_BUILDER(GroupConvolution);
-            REGISTER_OP_BUILDER(ConvolutionAdd);
-            REGISTER_OP_BUILDER(GroupConvolutionBias);
-            REGISTER_OP_BUILDER(DeconvolutionBias)
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_convolution_cpp() {}
-#endif
-
+            void register_builders_convolution_cpp()
+            {
+                REGISTER_OP_BUILDER(Convolution);
+                REGISTER_OP_BUILDER(ConvolutionRelu);
+                REGISTER_OP_BUILDER(ConvolutionBias);
+                REGISTER_OP_BUILDER(ConvolutionBiasAdd);
+                REGISTER_OP_BUILDER(ConvolutionBackpropData);
+                REGISTER_OP_BUILDER(ConvolutionBackpropFilters);
+                REGISTER_OP_BUILDER(ConvolutionBiasBackpropFiltersBias);
+                REGISTER_OP_BUILDER(GroupConvolution);
+                REGISTER_OP_BUILDER(ConvolutionAdd);
+                REGISTER_OP_BUILDER(GroupConvolutionBias);
+                REGISTER_OP_BUILDER(DeconvolutionBias);
+            }
         } // namespace cpu
     }     // namespace runtime
 } // namespace ngraph

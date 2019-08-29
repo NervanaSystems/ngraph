@@ -22,13 +22,14 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, Equal, Exp, \
-    Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, Less, LessEq, Log, LRN, Max, \
-    Maximum, MaxPool, Min, Minimum, Multiply, Negative, Not, NotEqual, OneHot, Or, Pad, \
-    Parameter, Product, Power, Relu, ReplaceSlice, Reshape, Reverse, Select, Sign, Sin, Sinh, \
-    Slice, Softmax, Sqrt, Subtract, Sum, Tan, Tanh, TopK
+    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, FakeQuantize, \
+    Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, HardSigmoid, Less, \
+    LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, MVN, Negative, Not, NotEqual, \
+    OneHot, Or, Pad, Parameter, Product, Power, PRelu, Relu, ReplaceSlice, Reshape, Reverse, \
+    ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, Softmax, SpaceToDepth, Sqrt, \
+    SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
 
-from typing import Callable, Iterable, List, Union
+from typing import Callable, Iterable, List, Set, Union
 
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import nameable_op, binary_op, unary_op
@@ -61,7 +62,7 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
 
 
 @nameable_op
-def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def elu(data, alpha, name=None):  # type: (NodeInput, NumericType, str) -> Node
     """Perform Exponential Linear Unit operation element-wise on data from input node.
 
     Computes exponential linear: alpha * (exp(data) - 1) if < 0, data otherwise.
@@ -71,14 +72,107 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NodeInput, str) -> Node
     <http://arxiv.org/abs/1511.07289>`_
 
     :param data: Input tensor. One of: input node, array or scalar.
-    :param alpha: Multiplier for negative values. One of: input node or scalar value.
+    :param alpha: Scalar multiplier for negative values.
     :param name: Optional output node name.
     :return: The new node performing an ELU operation on its input data element-wise.
     """
-    return Elu(as_node(data), as_node(alpha))
+    return Elu(as_node(data), alpha)
 
 
 @nameable_op
+def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, str) -> Node
+    """Perform permutation on data in the channel dimension of the input tensor.
+
+    The operation is the equivalent with the following transformation of the input tensor
+    :code:`data` of shape [N, C, H, W]:
+
+    :code:`data_reshaped` = reshape(:code:`data`, [N, group, C / group, H * W])
+
+    :code:`data_trnasposed` = transpose(:code:`data_reshaped`, [0, 2, 1, 3])
+
+    :code:`output` = reshape(:code:`data_trnasposed`, [N, C, H, W])
+
+    For example:
+
+    .. code-block:: python
+
+        Inputs: tensor of shape [1, 6, 2, 2]
+
+                data = [[[[ 0.,  1.], [ 2.,  3.]],
+                         [[ 4.,  5.], [ 6.,  7.]],
+                         [[ 8.,  9.], [10., 11.]],
+                         [[12., 13.], [14., 15.]],
+                         [[16., 17.], [18., 19.]],
+                         [[20., 21.], [22., 23.]]]]
+
+                axis = 1
+                groups = 3
+
+        Output: tensor of shape [1, 6, 2, 2]
+
+                output = [[[[ 0.,  1.], [ 2.,  3.]],
+                           [[ 8.,  9.], [10., 11.]],
+                           [[16., 17.], [18., 19.]],
+                           [[ 4.,  5.], [ 6.,  7.]],
+                           [[12., 13.], [14., 15.]],
+                           [[20., 21.], [22., 23.]]]]
+
+    :param data: The node with input tensor.
+    :param axis: Channel dimension index in the data tensor.
+                 A negative value means that the index should be calculated
+                 from the back of the input data shape.
+    :param group:The channel dimension specified by the axis parameter
+                 should be split into this number of groups.
+    :param name: Optional output node name.
+    :return: The new node performing a permutation on data in the channel dimension
+             of the input tensor.
+    """
+    return ShuffleChannels(data, axis, groups)
+
+
+@nameable_op
+def squeeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
+    """Perform squeeze operation on input tensor.
+
+    Remove single-dimensional entries from the shape of a tensor.
+    Takes a parameter :code:`axes` with a list of axes to squeeze.
+    If :code:`axes` is not provided, all the single dimensions will be removed from the shape.
+    If an :code:`axis` is selected with shape entry not equal to one, an error is raised.
+
+
+    For example:
+
+       Inputs: tensor with shape [1, 2, 1, 3, 1, 1], axes=[2, 4]
+
+       Result: tensor with shape [1, 2, 3, 1]
+
+    :param data: The node with data tensor.
+    :param axes: List of non-negative integers, indicate the dimensions to squeeze.
+                  One of: input node or array.
+    :param name: Optional new name for output node.
+    :return: The new node performing a squeeze operation on input tensor.
+    """
+    return Squeeze(data, as_node(axes))
+
+
+def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
+    """Perform unsqueeze operation on input tensor.
+
+    Insert single-dimensional entries to the shape of a tensor. Takes one required argument axes,
+    a list of dimensions that will be inserted.
+    Dimension indices in axes are as seen in the output tensor.
+
+    For example: Inputs: tensor with shape [3, 4, 5], axes=[0, 4]
+                 Result: tensor with shape [1, 3, 4, 5, 1]
+
+    :param data: The node with data tensor.
+    :param axes: List of non-negative integers, indicate the dimensions to be inserted.
+                  One of: input node or array.
+    :return: The new node performing an unsqueeze operation on input tensor.
+    """
+    return Unsqueeze(data, as_node(axes))
+
+
 def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
     r"""Perform Global Response Normalization with L2 norm (across channels only).
 
@@ -92,6 +186,61 @@ def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
     :return: The new node performing a GRN operation on tensor's channels.
     """
     return GRN(data, bias)
+
+
+@nameable_op
+def scale_shift(data, scale, shift, name=None):  # type: (Node, Node, Node, str) -> Node
+    r"""Perform ScaleShift transformation on input node.
+
+    Computes ScaleShift:
+
+    .. math:: Y = scale\cdot data + shift
+
+
+    :param data: The node with data tensor.
+    :param scale: The node with data tensor that scale input data.
+    :param shift: The node with data tensor that shift input data.
+    :param name: Optional output node name.spa
+    :return: The new node performing a ScaleShift operation on input tensor.
+    """
+    return ScaleShift(data, scale, shift)
+
+
+@nameable_op
+def space_to_depth(data, block_size, name=None):  # type: (Node, int, str) -> Node
+    """Perform SpaceToDepth operation on the input tensor.
+
+    SpaceToDepth rearranges blocks of spatial data into depth.
+    The operator returns a copy of the input tensor where values from the height
+    and width dimensions are moved to the depth dimension.
+
+    :param data: The node with data tensor.
+    :param block_size: The size of the block of values to be moved. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a SpaceToDepth operation on input tensor.
+    """
+    return SpaceToDepth(data, block_size)
+
+
+@nameable_op
+def mvn(data, axes, normalize_variance, eps, name=None):
+    # type: (Node, Set[int], bool, float, str) -> Node
+    r"""Perform Mean Variance Normalization operation on data from input node.
+
+    Computes MVN on the input tensor :code:`data` (called `X`) using formula:
+
+    .. math:: Y = \dfrac{X-EX}{\sqrt{E(X-EX)^2}}
+
+    :param data: The node with data tensor.
+    :param axes: A list of axes, along which to reduce. Array of integers.
+    :param normalize_variance: Flag that denotes if mean values are shared across channels.
+                               Boolen value.
+    :param eps: The number added to the variance to avoid division by zero
+               when normalizing the value. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a MVN operation on input tensor.
+    """
+    return MVN(data, AxisSet(axes), normalize_variance, eps)
 
 
 # Unary ops
@@ -458,6 +607,20 @@ def logical_not(node, name=None):  # type: (Node, str) -> Node
     return Not(node)
 
 
+@binary_op
+def squared_difference(x1, x2, name=None):  # type: (Node, Node, str) -> Node
+    """Perform an element-wise squared difference between two tensors.
+
+    .. math:: y[i] = (x_1[i] - x_2[i])^2
+
+    :param x1: The node with first input tensor.
+    :param x2: The node with second input tensor.
+    :param name: Optional new name for output node.
+    :return: The new node performing a squared difference between two tensors.
+    """
+    return SquaredDifference(x1, x2)
+
+
 # Extend Node class to support binary operators
 Node.__add__ = add
 Node.__sub__ = subtract
@@ -537,6 +700,38 @@ def broadcast_to(node, new_shape, axis=None, name=None):
 
 
 @nameable_op
+def fake_quantize(data, input_low, input_high, output_low, output_high, levels, name=None):
+    # type: (Node, Node, Node, Node, Node, int, str) -> Node
+    r"""Perform an element-wise linear quantization on input data.
+
+    Input floating point values are quantized into a discrete set of floating point values.
+
+    .. code-block:: python
+
+        if x <= input_low:
+            output = output_low
+        if x > input_high:
+            output = output_high
+        else:
+            output = fake_quantize(output)
+
+    Fake quantize uses the following logic:
+
+    .. math:: output =
+            \dfrac{round( \dfrac{data - input\_low}{(input\_high - input\_low)\cdot (levels-1)})}
+            {(levels-1)\cdot (output\_high - output\_low)} + output\_low
+
+    :param data:         The node with data tensor.
+    :param input_low:    The node with the minimum for input values.
+    :param input_high:   The node with the maximum for input values.
+    :param output_low:   The node with the minimum quantized value.
+    :param output_high:  The node with the maximum quantized value.
+    :param levels:       The number of quantization levels. Integer value.
+    :return: New node with quantized value.
+    """
+    return FakeQuantize(data, input_low, input_high, output_low, output_high, levels)
+
+
 def gemm(A,                      # type: Node
          B,                      # type: Node
          C,                      # type: Node
@@ -877,6 +1072,46 @@ def min(node, reduction_axes=None, name=None):
     :param name: Optional name for output node.
     """
     return Min(node, AxisSet(get_reduction_axes(node, reduction_axes)))
+
+
+@nameable_op
+def prelu(data, slope, name=None):  # type: (Node, Node, str) -> Node
+    """Perform Parametrized Relu operation element-wise on data from input node.
+
+    PRelu uses the following logic:
+
+    .. code-block:: python
+
+        if data < 0:
+            data = data * slope
+        elif data >= 0:
+            data = data
+
+    :param data: The node with data tensor.
+    :param slope: The node with the multipliers for negative values.
+    :param name: Optional output node name.
+    :return: The new node performing a PRelu operation on tensor's channels.
+    """
+    return PRelu(data, slope)
+
+
+@nameable_op
+def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, float, float, str) -> Node
+    """Perform Hard Sigmoid operation element-wise on data from input node.
+
+    Hard Sigmoid uses the following logic:
+
+    .. code-block:: python
+
+        y = max(0, min(1, alpha * data + beta))
+
+    :param data: The node with data tensor.
+    :param alpha: Alpha parameter. Scalar value.
+    :param beta: Beta parameter. Scalar value.
+    :param name: Optional output node name.
+    :return: The new node performing a Hard Sigmoid element-wise on input tensor.
+    """
+    return HardSigmoid(data, alpha, beta)
 
 
 @nameable_op

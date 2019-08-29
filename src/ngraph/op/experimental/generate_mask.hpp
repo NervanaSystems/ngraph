@@ -34,7 +34,7 @@ namespace ngraph
             const std::string& description() const override { return type_name; }
             /// \brief Constructs a GenerateMask node with a given shape, seed,
             /// probability and training/inference mode
-            GenerateMask();
+            GenerateMask() = default;
 
 #if 0
             /// Switch to dynamic arguments when all transformers have switched to using the node values

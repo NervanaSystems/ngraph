@@ -511,15 +511,14 @@ namespace ngraph
                     external_function, node, args, out, true, false);
             }
 
-            REGISTER_OP_BUILDER(BatchNormTraining);
-            REGISTER_OP_BUILDER(BatchNormInference);
-            REGISTER_OP_BUILDER(BatchNormTrainingRelu);
-            REGISTER_OP_BUILDER(BatchNormInferenceRelu);
-            REGISTER_OP_BUILDER(BatchNormTrainingBackprop);
-
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_batch_norm_cpp() {}
-#endif
+            void register_builders_batch_norm_cpp()
+            {
+                REGISTER_OP_BUILDER(BatchNormTraining);
+                REGISTER_OP_BUILDER(BatchNormInference);
+                REGISTER_OP_BUILDER(BatchNormTrainingRelu);
+                REGISTER_OP_BUILDER(BatchNormInferenceRelu);
+                REGISTER_OP_BUILDER(BatchNormTrainingBackprop);
+            }
         }
     }
 }

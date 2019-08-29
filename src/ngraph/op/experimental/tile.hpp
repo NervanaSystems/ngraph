@@ -30,11 +30,12 @@ namespace ngraph
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+            Tile() = default;
             /// \brief Perform dynamic padding of a tensor
             ///
             /// \param arg The node producing input tensor to be padded.
             /// \param repeats The node producing the per-dimension replication factor
-            Tile(const std::shared_ptr<Node>& arg, const std::shared_ptr<Node>& repeats);
+            Tile(const Output<Node>& arg, const Output<Node>& repeats);
 
             void validate_and_infer_types() override;
 

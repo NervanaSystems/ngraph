@@ -30,13 +30,12 @@ namespace ngraph
         namespace ngmlir
         {
             class MLIRCompiler;
-
-            using OwningRewritePatternList = std::vector<std::unique_ptr<mlir::RewritePattern>>;
         }
     }
 }
 
 namespace mlir
 {
-    mlir::Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
+    std::unique_ptr<Pass>
+        createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
 }

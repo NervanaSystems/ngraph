@@ -65,7 +65,7 @@ void op::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 {
     auto delta = deltas.at(0);
 
-    auto x = input(0).get_source_output();
+    auto x = input_value(0);
 
     adjoints.add_delta(x, make_shared<op::Reverse>(delta, m_reversed_axes));
 }

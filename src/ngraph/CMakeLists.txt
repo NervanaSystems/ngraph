@@ -24,20 +24,23 @@ set (SRC
     axis_vector.hpp
     builder/autobroadcast.cpp
     builder/autobroadcast.hpp
+    builder/dequantize_builder.cpp
+    builder/dequantize_builder.hpp
     builder/make_constant.hpp
     builder/norm.cpp
     builder/norm.hpp
     builder/numpy_transpose.cpp
     builder/numpy_transpose.hpp
-    builder/quantization.cpp
-    builder/quantization.hpp
+    builder/quantize_builder.cpp
+    builder/quantize_builder.hpp
+    builder/quantized_concat_builder.cpp
+    builder/quantized_concat_builder.hpp
     builder/quantized_conv_builder.cpp
     builder/quantized_conv_builder.hpp
+    builder/quantized_dot_builder.cpp
+    builder/quantized_dot_builder.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization/quantized_linear_matmul.cpp
-    builder/quantization/quantized_linear_matmul.hpp
-    builder/quantization_util.hpp
     builder/quantization_utils.hpp
     builder/quantization_utils.cpp
     builder/reduce_ops.cpp
@@ -154,24 +157,16 @@ set (SRC
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
-    op/experimental/quantized_avg_pool.cpp
-    op/experimental/quantized_avg_pool.hpp
-    op/experimental/quantized_concat.cpp
-    op/experimental/quantized_concat.hpp
     op/experimental/quantized_conv_bias.cpp
     op/experimental/quantized_conv_bias.hpp
     op/experimental/quantized_conv_relu.cpp
     op/experimental/quantized_conv_relu.hpp
-    op/experimental/quantized_max_pool.cpp
-    op/experimental/quantized_max_pool.hpp
     op/experimental/range.cpp
     op/experimental/range.hpp
     op/experimental/shape_of.cpp
     op/experimental/shape_of.hpp
     op/experimental/tile.cpp
     op/experimental/tile.hpp
-    op/experimental/quantized_dot.cpp
-    op/experimental/quantized_dot.hpp
     op/experimental/quantized_dot_bias.cpp
     op/experimental/quantized_dot_bias.hpp
     op/experimental/compiled_kernel.cpp
@@ -256,6 +251,8 @@ set (SRC
     op/quantize.hpp
     op/quantized_convolution.cpp
     op/quantized_convolution.hpp
+    op/quantized_dot.cpp
+    op/quantized_dot.hpp
     op/recv.cpp
     op/recv.hpp
     op/relu.cpp
@@ -334,8 +331,8 @@ set (SRC
     op/fused/lstm_cell.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
-    op/fused/normalize.cpp
-    op/fused/normalize.hpp
+    op/fused/normalize_l2.cpp
+    op/fused/normalize_l2.hpp
     op/fused/prelu.cpp
     op/fused/prelu.hpp
     op/fused/rnn_cell.cpp
@@ -387,6 +384,27 @@ set (SRC
     pass/batch_fusion.cpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
+    pass/constant_folding_arithmetic_reduction.cpp
+    pass/constant_folding_binary.cpp
+    pass/constant_folding_broadcast.cpp
+    pass/constant_folding_concat.cpp
+    pass/constant_folding_convert.cpp
+    pass/constant_folding_dequantize.cpp
+    pass/constant_folding_dyn_broadcast.cpp
+    pass/constant_folding_dyn_reshape.cpp
+    pass/constant_folding_dyn_slice.cpp
+    pass/constant_folding_gather.cpp
+    pass/constant_folding_logical_reduction.cpp
+    pass/constant_folding_pad.cpp
+    pass/constant_folding_quantize.cpp
+    pass/constant_folding_range.cpp
+    pass/constant_folding_reshape.cpp
+    pass/constant_folding_reverse.cpp
+    pass/constant_folding_select.cpp
+    pass/constant_folding_shape_of.cpp
+    pass/constant_folding_slice.cpp
+    pass/constant_folding_transpose.cpp
+    pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp
@@ -519,6 +537,14 @@ endif()
 
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
+endif()
+
+if(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+endif()
+
+if(NGRAPH_CPU_STATIC_LIB_ENABLE)
+    target_compile_definitions(ngraph PUBLIC NGRAPH_CPU_STATIC_LIB_ENABLE)
 endif()
 
 if(NGRAPH_DISTRIBUTED_ENABLE)

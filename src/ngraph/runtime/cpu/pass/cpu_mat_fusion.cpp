@@ -48,7 +48,7 @@ struct Type
     };
 };
 
-//constructs (x*W + bias)
+// constructs (x*W + bias)
 static std::shared_ptr<pattern::Matcher>
     construct_rnn_input_linear_transformation(std::shared_ptr<pattern::op::Label> labels[])
 {
@@ -217,7 +217,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto weights = it.first.first;
             auto bias = it.first.second;
 
-            //if there's just one data node skip the optimization
+            // if there's just one data node skip the optimization
             if (it.second.size() < 2)
             {
                 return;
@@ -298,7 +298,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     auto callback_matcher_v1 = [&]() -> void {
 
         // Expecting input data shape D=[x, y, z], weights W=[u, v], bias B = [w]
-        // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to D'=[x*y, z], then we have dot(D',W), result
+        // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to
+        // D'=[x*y, z], then we have dot(D',W), result
         // in R=[x*y, v], then add(R,B). We need to slice the result by strided by time steps.
         // iterate each unique set of parameters, replace original operations
         for (auto& p : param_list)
@@ -360,7 +361,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             for (size_t i = 0, start_index = 0; i < op_nodes.size(); i++, start_index += batch_size)
             {
                 // calculate the lower and upper bounds for the slice of the new fused node
-                // ((<x0 | x1..|xt>*W)+b), which will used to replace the nodes matched in the pattern
+                // ((<x0 | x1..|xt>*W)+b), which will used to replace the nodes matched in the
+                // pattern
                 const Coordinate lower_bounds{start_index, 0};
                 const Coordinate upper_bounds{start_index + batch_size, feature_size};
 

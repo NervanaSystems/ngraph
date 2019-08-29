@@ -37,7 +37,7 @@ void op::Negative::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
 {
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
+    auto x = input_value(0);
 
     adjoints.add_delta(x, -delta);
 }

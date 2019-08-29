@@ -45,7 +45,7 @@ namespace ngraph
 
             } // namespace set_8
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

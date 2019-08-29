@@ -17,7 +17,6 @@
 #include "ngraph/op/softmax.hpp"
 
 #include <algorithm>
-#include <numeric>
 
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -89,7 +88,7 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 
     auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
 
-    auto x = input(0).get_source_output();
+    auto x = input_value(0);
     adjoints.add_delta(x, adjoint);
 }
 

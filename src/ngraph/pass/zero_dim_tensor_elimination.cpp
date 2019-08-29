@@ -81,8 +81,8 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
 {
     bool replaced = false;
     auto cvals = vector<string>(0);
-    // we need to go over all nodes since we could have sum or any other 0-length-tensor-to scalar op
-    // as an internal node (i.e. a node that isn't an argument to `op::Result`)
+    // we need to go over all nodes since we could have sum or any other 0-length-tensor-to scalar
+    // op as an internal node (i.e. a node that isn't an argument to `op::Result`)
     for (auto n : f->get_ordered_ops())
     {
         // don't try to replace `op::Result`
