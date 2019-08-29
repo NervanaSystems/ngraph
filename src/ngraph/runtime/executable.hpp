@@ -50,7 +50,7 @@ public:
     /// \returns true if iteration is successful, false otherwise
     virtual bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                       const std::vector<std::shared_ptr<runtime::Tensor>>& inputs,
-                      int32_t priority)
+                      int64_t priority)
     {
         return call(outputs, inputs);
     }
