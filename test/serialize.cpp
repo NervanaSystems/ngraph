@@ -341,16 +341,19 @@ TEST(serialize, non_zero_node_output)
     EXPECT_EQ(topk_out.get_node()->description(), "TopK");
 }
 
-struct OpSet1SerializationTester {
+struct OpSet1SerializationTester
+{
     OpSet1SerializationTester(std::string op_name)
-    : m_op_name{std::move(op_name)}
-    {}
+        : m_op_name{std::move(op_name)}
+    {
+    }
 
-    template<typename ...Args>
+    template <typename... Args>
     void test(const std::shared_ptr<op::Op> op_instance, Args&&... args)
     {
         auto result = make_shared<op::Result>(op_instance);
-        auto f = make_shared<Function>(ResultVector{result}, ParameterVector{std::forward<Args>(args)...});
+        auto f = make_shared<Function>(ResultVector{result},
+                                       ParameterVector{std::forward<Args>(args)...});
         string s = serialize(f);
 
         shared_ptr<Function> g = deserialize(s);

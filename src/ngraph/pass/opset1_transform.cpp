@@ -15,8 +15,8 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_transform.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/softmax.hpp"
 
@@ -80,8 +80,8 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
         const auto reverse_v0 = dynamic_cast<const op::Reverse*>(node.get());
         const auto reversed_axes = reverse_v0->get_reversed_axes();
 
-        const auto reversed_axes_constant = op::Constant::create(element::i64,
-            Shape{reversed_axes.size()}, reversed_axes.to_vector());
+        const auto reversed_axes_constant = op::Constant::create(
+            element::i64, Shape{reversed_axes.size()}, reversed_axes.to_vector());
 
         const auto reverse_v1 = make_shared<op::v1::Reverse>(
             node->input(0).get_source_output(), reversed_axes_constant, "index");
