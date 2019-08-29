@@ -1374,11 +1374,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             "enabled due to concurrent graph execution");
     }
 
-// reference all the builders for static library
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-    ngraph::runtime::cpu::register_builders();
-#endif
-
     // stream writer to dump the debug manifest for the DEX
     static const string s_debug_dir = "cpu_codegen";
     static StaticInitializers s_static_initializers(s_debug_dir);
