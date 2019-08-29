@@ -210,10 +210,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(TopK);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_topk_cpp() {}
-#endif
+            void register_builders_topk_cpp() { REGISTER_OP_BUILDER(TopK); }
         }
     }
 }

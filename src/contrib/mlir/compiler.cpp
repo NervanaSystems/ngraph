@@ -81,6 +81,17 @@ using llvm::ArrayRef;
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
+// *** Debug flags ***
+
+static llvm::cl::opt<bool> clPrintIRAfterAll(
+    "print-ngraph-ir-after-all",
+    llvm::cl::init(false),
+    llvm::cl::desc(
+        "Print IR after transformation that are not implemented as passes in the MLIRCompiler. It "
+        "complements MLIR -print-ir-after-all and LLVM -print-after-all flags"));
+
+// *** Optimization flags ***
+
 static llvm::cl::opt<bool>
     clEnableAffineLoopFusion("affine-loop-fusion",
                              llvm::cl::init(false),
@@ -146,7 +157,10 @@ void MLIRCompiler::init_mlir()
     if (!initialized)
     {
         mlir::registerDialect<mlir::NGraphOpsDialect>();
-        // Register any LLVM command line options
+
+        // Register MLIR command line options in the pool of supported flags and and process flags
+        // from environment variable to be used by nGraph, MLIR and LLVM.
+        mlir::registerPassManagerCLOptions();
         llvm::cl::ParseEnvironmentOptions("ngraph", "NGRAPH_MLIR_OPTIONS", "");
 
         // Override default optimization level with macro value.
@@ -233,7 +247,7 @@ void MLIRCompiler::build_ng_dialect_module()
         NGRAPH_CHECK(false, "Invalid module after lowering to NG dialect");
     }
 
-    dump_mlir_module("nGraph Dialect Dump:");
+    dump_mlir_module("nGraph Dialect Construction");
 }
 
 template <typename T>
@@ -331,14 +345,15 @@ void MLIRCompiler::lower_ng_dialect()
     pm.addPass(mlir::createDialectLoweringPass(this));
     pm.addPass(mlir::createCanonicalizerPass());
 
+    // Apply any generic pass manager command line options.
+    mlir::applyPassManagerCLOptions(pm);
+
     pm.run(m_module.get());
 
     if (failed(m_module->verify()))
     {
         NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
-
-    dump_mlir_module("Affine Dialect Dump (Pre-Optimizations):");
 
     optimize();
 
@@ -358,7 +373,7 @@ void MLIRCompiler::lower_ng_dialect()
     auto result = applyFullConversion(*m_module, target, std::move(patterns), &llvm_converter);
     NGRAPH_CHECK(succeeded(result), "Standard to LLVM dialect conversion failed");
 
-    dump_mlir_module("LLVM-IR Dialect Dump:");
+    dump_mlir_module("LLVM-IR Dialect Conversion");
 
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer created with
@@ -416,11 +431,11 @@ void MLIRCompiler::optimize()
             .getCallee());
     auto targetInfo = target_machine->getTargetTransformInfo(*ttiSetupFunc);
 
-    // Run Affine dialect optimizations.
-    mlir::PassManager pm_opts;
+    // Populate pass manager with affine dialect optimizations.
+    mlir::PassManager pm;
     if (clEnableAffineLoopFusion)
     {
-        pm_opts.addPass(mlir::createLoopFusionPass());
+        pm.addPass(mlir::createLoopFusionPass());
     }
 
     if (clEnableAffineLoopTiling)
@@ -432,19 +447,18 @@ void MLIRCompiler::optimize()
                                 << ": "
                                 << cacheLevelSize
                                 << " bytes.\n");
-        pm_opts.addPass(mlir::createLoopTilingPass(cacheLevelSize));
+        pm.addPass(mlir::createLoopTilingPass(cacheLevelSize));
     }
 
-    auto opt_res = pm_opts.run(m_module.get());
-    NGRAPH_CHECK(succeeded(opt_res), "Affine optimizations failed");
-    dump_mlir_module("Affine Dialect Dump (Post-Optimizations):");
+    // Populate pass manager with affine dialect to Std dialect conversion.
+    pm.addPass(mlir::createLowerAffinePass());
 
-    // Run Affine dialect to Std dialect conversion.
-    mlir::PassManager pm_lowering;
-    pm_lowering.addPass(mlir::createLowerAffinePass());
-    auto lowering_res = pm_lowering.run(m_module.get());
-    NGRAPH_CHECK(succeeded(lowering_res), "Affine convertion to Std dialect failed");
-    dump_mlir_module("Standard Dialect Dump:");
+    // Apply any generic pass manager command line options.
+    mlir::applyPassManagerCLOptions(pm);
+
+    // Run pass manager passes.
+    auto result = pm.run(m_module.get());
+    NGRAPH_CHECK(succeeded(result), "Affine optimizaitons and convertion to Std dialect failed");
 
     // Run Std dialect optimizations.
     // TODO
@@ -760,9 +774,9 @@ mlir::StaticFloatMemRef* MLIRCompiler::allocate_memref_descriptor()
 
 void MLIRCompiler::dump_mlir_module(const std::string msg)
 {
-    if (std::getenv("NGRAPH_MLIR_DUMP_ALL") != nullptr)
+    if (clPrintIRAfterAll)
     {
-        llvm::dbgs() << "*** " << msg << " ***\n";
+        llvm::dbgs() << "*** IR Dump After " << msg << " ***\n";
         m_module->dump();
         llvm::dbgs() << "\n\n";
     }
