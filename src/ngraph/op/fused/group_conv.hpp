@@ -43,6 +43,15 @@ namespace ngraph
                              const size_t groups,
                              const PadType& pad_type = PadType::EXPLICIT);
 
+            // constructor which accept groups included in filters shape.
+            GroupConvolution(const Output<Node>& data_batch,
+                             const Output<Node>& filters,
+                             const Strides& window_movement_strides,
+                             const Strides& window_dilation_strides,
+                             const CoordinateDiff& padding_below,
+                             const CoordinateDiff& padding_above,
+                             const Strides& data_dilation_strides,
+                             const PadType& pad_type = PadType::EXPLICIT);
             Shape get_weights_dimensions() const;
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Strides& get_window_dilation_strides() const { return m_window_dilation_strides; }

@@ -18,6 +18,7 @@
 
 #include "group_conv.hpp"
 
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
@@ -50,6 +51,26 @@ op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 }
 
+op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
+                                       const Output<Node>& filters,
+                                       const Strides& window_movement_strides,
+                                       const Strides& window_dilation_strides,
+                                       const CoordinateDiff& padding_below,
+                                       const CoordinateDiff& padding_above,
+                                       const Strides& data_dilation_strides,
+                                       const PadType& pad_type)
+    : FusedOp({data_batch, filters})
+    , m_window_movement_strides(window_movement_strides)
+    , m_window_dilation_strides(window_dilation_strides)
+    , m_padding_below(padding_below)
+    , m_padding_above(padding_above)
+    , m_data_dilation_strides(data_dilation_strides)
+    , m_groups(get_input_shape(1).at(0))
+    , m_pad_type(pad_type)
+{
+    constructor_validate_and_infer_types();
+}
+
 void op::GroupConvolution::pre_validate_and_infer_types()
 {
     auto data_shape = get_input_partial_shape(0);
@@ -64,9 +85,13 @@ void op::GroupConvolution::pre_validate_and_infer_types()
         NODE_VALIDATION_CHECK(this,
                               filters_shape.to_shape()[0] % m_groups == 0,
                               "# Filters not a multiple of group size");
+
         // Input Filters
+        bool groups_included_in_shape =
+            (data_shape.to_shape().size() + 1) == filters_shape.to_shape().size();
         NODE_VALIDATION_CHECK(this,
-                              filters_shape.to_shape()[1] * m_groups == data_shape.to_shape()[1],
+                              (filters_shape.to_shape()[groups_included_in_shape ? 2 : 1] *
+                               m_groups) == data_shape.to_shape()[1],
                               "Incorrect number of channels per filter");
     }
 }
@@ -96,15 +121,22 @@ void op::GroupConvolution::post_validate_and_infer_types()
 
 Shape op::GroupConvolution::get_weights_dimensions() const
 {
+    auto data_shape = get_input_shape(0);
+    auto weights_shape = get_input_shape(1);
+    // check if weights already includes groups
+    if (weights_shape.size() == (data_shape.size() + 1))
+    {
+        return weights_shape;
+    }
     // reshape weights into 5d tensors that includes groups
     const size_t OC = 0;
     const size_t OC_IN_OUTPUT = 1;
     const size_t IC = 1;
-    Shape weights_shape_groups{get_input_shape(1)};
+    Shape weights_shape_groups{weights_shape};
     // adjust output and channel given a number of groups
 
     weights_shape_groups.at(OC) = get_shape().at(OC_IN_OUTPUT) / get_groups();
-    weights_shape_groups.at(IC) = get_input_shape(0).at(IC) / get_groups();
+    weights_shape_groups.at(IC) = data_shape.at(IC) / get_groups();
     // push_front the number of groups
     weights_shape_groups.insert(weights_shape_groups.begin(), get_groups());
     return weights_shape_groups;
@@ -131,7 +163,9 @@ shared_ptr<Node> op::GroupConvolution::copy_with_new_args(const NodeVector& new_
 NodeVector op::GroupConvolution::decompose_op() const
 {
     auto data = input_value(0);
+    auto data_shape = get_input_shape(0);
     auto filters = input_value(1);
+    auto filters_shape = get_input_shape(1);
     // Split one convolution op to N ops where N is the number of groups
     // and concat results after computation.
     // reference:
@@ -148,9 +182,17 @@ NodeVector op::GroupConvolution::decompose_op() const
     auto sliced_filters = builder::split(filters, m_groups, 0);
     for (std::size_t group{0}; group < m_groups; ++group)
     {
+        auto sliced_filter = sliced_filters[group];
+        if ((data_shape.size() + 1) == filters_shape.size())
+        {
+            // Remove group dimmension after slicing
+            sliced_filter = builder::reshape(
+                sliced_filters[group],
+                Shape(std::next(std::begin(filters_shape), 1), std::end(filters_shape)));
+        }
         convolution_nodes.push_back(
             std::make_shared<ngraph::op::Convolution>(sliced_data[group],
-                                                      sliced_filters[group],
+                                                      sliced_filter,
                                                       m_window_movement_strides,
                                                       m_window_dilation_strides,
                                                       m_padding_below,
