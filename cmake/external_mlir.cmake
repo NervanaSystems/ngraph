@@ -20,12 +20,17 @@ set(MLIR_LLVM_REPO_URL https://github.com/llvm/llvm-project.git)
 set(MLIR_REPO_URL https://github.com/tensorflow/mlir.git)
 
 # Change these commit IDs to move to latest stable versions
-set(MLIR_LLVM_COMMIT_ID 3caf9af)
-set(MLIR_COMMIT_ID c636f12)
+set(MLIR_LLVM_COMMIT_ID 3b9a27b)
+set(MLIR_COMMIT_ID 0cdb20a)
+
+# MLIR environment variables. Some of them are used by LIT tool.
 set(MLIR_PROJECT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/mlir_project)
 set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-projects)
 set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm/projects/mlir)
 set(MLIR_BUILD_DIR ${MLIR_LLVM_ROOT}/build)
+set(MLIR_TOOLS_DIR ${MLIR_BUILD_DIR}/bin)
+set(NGRAPH_LIT_TEST_SRC_DIR ${CMAKE_SOURCE_DIR}/test/mlir)
+set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
 
 # MLIR has to be pre-built before ngraph build starts
 # this will clone and build MLIR during cmake config instead

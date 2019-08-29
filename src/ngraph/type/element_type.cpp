@@ -157,74 +157,74 @@ namespace ngraph
     namespace element
     {
         template <>
-        const Type& from<char>()
+        Type from<char>()
         {
-            return element::boolean;
+            return Type_t::boolean;
         }
         template <>
-        const Type& from<bool>()
+        Type from<bool>()
         {
-            return boolean;
+            return Type_t::boolean;
         }
         template <>
-        const Type& from<ngraph::float16>()
+        Type from<ngraph::float16>()
         {
-            return f16;
+            return Type_t::f16;
         }
         template <>
-        const Type& from<float>()
+        Type from<float>()
         {
-            return f32;
+            return Type_t::f32;
         }
         template <>
-        const Type& from<double>()
+        Type from<double>()
         {
-            return f64;
+            return Type_t::f64;
         }
         template <>
-        const Type& from<int8_t>()
+        Type from<int8_t>()
         {
-            return i8;
+            return Type_t::i8;
         }
         template <>
-        const Type& from<int16_t>()
+        Type from<int16_t>()
         {
-            return i16;
+            return Type_t::i16;
         }
         template <>
-        const Type& from<int32_t>()
+        Type from<int32_t>()
         {
-            return i32;
+            return Type_t::i32;
         }
         template <>
-        const Type& from<int64_t>()
+        Type from<int64_t>()
         {
-            return i64;
+            return Type_t::i64;
         }
         template <>
-        const Type& from<uint8_t>()
+        Type from<uint8_t>()
         {
-            return u8;
+            return Type_t::u8;
         }
         template <>
-        const Type& from<uint16_t>()
+        Type from<uint16_t>()
         {
-            return u16;
+            return Type_t::u16;
         }
         template <>
-        const Type& from<uint32_t>()
+        Type from<uint32_t>()
         {
-            return u32;
+            return Type_t::u32;
         }
         template <>
-        const Type& from<uint64_t>()
+        Type from<uint64_t>()
         {
-            return u64;
+            return Type_t::u64;
         }
         template <>
-        const Type& from<ngraph::bfloat16>()
+        Type from<ngraph::bfloat16>()
         {
-            return bf16;
+            return Type_t::bf16;
         }
     }
 }

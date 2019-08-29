@@ -3196,7 +3196,7 @@ TEST(cpu_quant_fusion, qmax_pool)
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
-TEST(cpu_quant_fusion, qconcat)
+TEST(cpu_quant_fusion, MLIR_DISABLE_TEST(qconcat))
 {
     auto make_function = []() {
         auto get_input_slice = [](std::shared_ptr<op::Parameter>& input) {

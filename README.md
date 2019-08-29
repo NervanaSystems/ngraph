@@ -3,19 +3,18 @@
 
 <div align="left">
   <h4>
-    <a href="./ABOUT.md">Architecture &amp; features</a> | <a href="./ecosystem-overview.md" >Ecosystem</a> | <a href="https://ngraph.ai/documentation/project/release-notes.html">Release notes</a><span> | </span> <a href="https://ngraph.ai/documentation">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contribution guide</a>
+    <a href="./ABOUT.md">Architecture &amp; features</a> | <a href="./ecosystem-overview.md" >Ecosystem</a> | <a href="https://www.ngraph.ai/documentation/project/release-notes">Release notes</a><span> | </span> <a href="https://www.ngraph.ai/documentation">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contribution guide</a>
  </h4>
 </div>
 
 ## Quick start
 
-To begin using nGraph with popular frameworks to accelerate deep learning 
-workloads on CPU for inference, please refer to the links below. 
+To begin using nGraph with popular frameworks, please refer to the links below. 
 
 |  Framework (Version)       | Installation guide                     | Notes  
 |----------------------------|----------------------------------------|-----------------------------------
-| TensorFlow*                | [Pip install](https://ngraph.ai/tutorials/tensorflow-tutorial#use-pre-built-packages) or [Build from source](https://ngraph.ai/tutorials/tensorflow-tutorial#build-from-source) | 20 [Validated workloads]   
-| ONNX 1.5                   | [Pip install](https://ngraph.ai/tutorials/onnx-tutorial#use-pre-built-packages)                          | 17 [Validated workloads] 
+| TensorFlow*                | [Pip install](https://www.ngraph.ai/tutorials/tensorflow-tutorial#use-pre-built-packages) or [Build from source](https://www.ngraph.ai/tutorials/tensorflow-tutorial#build-from-source) | 20 [Validated workloads]   
+| ONNX 1.5                   | [Pip install](https://www.ngraph.ai/tutorials/onnx-tutorial#use-pre-built-packages)                          | 17 [Validated workloads] 
 
 
 #### Python wheels for nGraph 
@@ -92,11 +91,11 @@ to improve it:
 [Functional]: https://github.com/NervanaSystems/ngraph-onnx/ 
 [How to contribute]: How-to-contribute
 [framework integration guides]: https://ngraph.ai/documentation/frameworks/overview
-[release notes]: https://ngraph.ai/documentation/project/release-notes
+[release notes]: https://www.ngraph.ai/documentation/project/release-notes
 [Github issues]: https://github.com/NervanaSystems/ngraph/issues
-[contrib guide]: https://ngraph.ai/documentation/contributing/guide
+[contrib guide]: https://www.ngraph.ai/documentation/contributing/guide
 [pull request]: https://github.com/NervanaSystems/ngraph/pulls
-[how to import]: https://ngraph.ai/tutorials/onnx-tutorial#import-a-model-with-onnx-and-ngraph
+[how to import]: https://www.ngraph.ai/tutorials/onnx-tutorial#import-a-model-with-onnx-and-ngraph
 [ngraph_wireframes_with_notice]: doc/sphinx/source/graphics/ngpipelines.png "nGraph wireframe"
 [build-status]: https://travis-ci.org/NervanaSystems/ngraph/branches
 [build-status-badge]: https://travis-ci.org/NervanaSystems/ngraph.svg?branch=master

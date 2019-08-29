@@ -127,11 +127,6 @@ namespace
         SmallVector<Value*, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);
         Value* createTempTensor(Type type, PatternRewriter& rewriter);
 
-        mlir::FuncOp getCallDecl(StringRef name,
-                                 ArrayRef<Type> args,
-                                 ArrayRef<Type> output,
-                                 PatternRewriter& rewriter);
-
         /// Inserts dealloc Ops for each temporary allocated by AllocOp
         void insertDeallocs(PatternRewriter& rewriter);
 
@@ -143,7 +138,6 @@ namespace
         void findOutputValues();
         void processFakeInstrs();
         void insertNoAliasArgAttrs();
-        Value* insertMemMgrDef(PatternRewriter* rewriter = nullptr);
 
     private:
         NGraphTypeConverter typeConverter;
@@ -228,21 +222,6 @@ namespace
         // to a bug, null pointers are used by the consumer leading to a crash more difficult to
         // root-cause. We should try to change the current approach or introduce verification code.
         loweredOutputValues.resize(outputCount, nullptr);
-    }
-
-    /// Inserts a fake def for Mem Mgr pointer at converted func start
-    Value* DialectLoweringPass::insertMemMgrDef(PatternRewriter* rewriter)
-    {
-        // it would be nice to insert one fake def at the start of the new func
-        // however, due to how DialectConversion framework works, new func is only
-        // materialized after conversion is done (rewriter->getFunction, or even
-        // rewriter->getInsertionBlock()->getFunction() will give you the original func). This
-        // makes it very convoluted to insert instructions at entry block.
-        auto op = rewriter->create<NGFakeInputOp>(rewriter->getUnknownLoc(),
-                                                  IndexType::get(&getContext()));
-        // will be fixed later to read passed arg instead.
-        memMgrDefs.push_back(op.getResult());
-        return op.getResult();
     }
 
     SmallVector<Value*, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
@@ -366,21 +345,6 @@ namespace
         {
             rewriter.create<DeallocOp>(rewriter.getUnknownLoc(), value);
         }
-    }
-
-    mlir::FuncOp DialectLoweringPass::getCallDecl(StringRef name,
-                                                  ArrayRef<Type> args,
-                                                  ArrayRef<Type> output,
-                                                  PatternRewriter& rewriter)
-    {
-        auto callBackFunc = getModule().lookupSymbol<mlir::FuncOp>(name);
-        if (!callBackFunc)
-        {
-            auto callBackType = rewriter.getFunctionType(args, output);
-            auto callBackFunc = mlir::FuncOp::create(rewriter.getUnknownLoc(), name, callBackType);
-            getModule().push_back(callBackFunc);
-        }
-        return callBackFunc;
     }
 
     // NGDialect converters
@@ -1038,8 +1002,8 @@ namespace
 
 namespace mlir
 {
-    Pass* createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler)
+    std::unique_ptr<Pass> createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler)
     {
-        return new DialectLoweringPass(*compiler);
+        return std::make_unique<DialectLoweringPass>(*compiler);
     }
-}
+} // namespace mlir
