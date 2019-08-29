@@ -168,10 +168,6 @@ NodeVector op::GroupConvolution::decompose_op() const
     // and concat results after computation.
     // reference:
     // https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
-    std::size_t n_data_channels{data.get_shape().at(1)};
-    std::size_t n_filters_channels{filters.get_shape().at(0)};
-    std::size_t data_group_size{n_data_channels / m_groups};
-    std::size_t filters_group_size{n_filters_channels / m_groups};
     NodeVector convolution_nodes;
 
     // slice data
