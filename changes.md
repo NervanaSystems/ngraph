@@ -1,7 +1,7 @@
 # API Changes
 
 ## Backend library interface
-* Each backend `BACKEND` needs to define the macro `${BACKEND}_API` appopriately to import symbols
+* Each backend `BACKEND` needs to define the macro `${BACKEND}_API` appropriately to import symbols
   referenced from outside the library and to export them from within the library. See any
   of the `${backend}_backend_visibility.hpp` files for an example. 
 * The `CMakeLists.txt` file for a backend defines `${BACKEND}_BACKEND_DLL_EXPORTS`.
