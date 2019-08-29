@@ -383,12 +383,22 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_3d_012)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, reverse_v1_incorrect_rev_axes_rank)
+NGRAPH_TEST(${BACKEND_NAME}, reverse_v1_incorrect_rev_axes_rank_index_mode)
 {
     const auto Data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto Rev_Axes = make_shared<op::Parameter>(element::i64, Shape{5}); // correct: <= 3
 
     EXPECT_THROW(make_shared<Function>(make_shared<op::v1::Reverse>(Data, Rev_Axes, "index"),
+                                       ParameterVector{Data, Rev_Axes}),
+                 ngraph::NodeValidationFailure);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, reverse_v1_incorrect_rev_axes_elems_mask_mode)
+{
+    const auto Data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
+    const auto Rev_Axes = make_shared<op::Parameter>(element::boolean, Shape{2}); // correct: 3
+
+    EXPECT_THROW(make_shared<Function>(make_shared<op::v1::Reverse>(Data, Rev_Axes, "mask"),
                                        ParameterVector{Data, Rev_Axes}),
                  ngraph::NodeValidationFailure);
 }
