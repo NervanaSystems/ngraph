@@ -119,7 +119,7 @@ void op::v1::Reverse::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           m_mode == "index" || m_mode == "mask",
-                          "The provided value of mask attribute (",
+                          "The provided value of the 'mode' attribute (",
                           m_mode,
                           ") is invalid. Allowed values: 'index' or 'mask'.");
 

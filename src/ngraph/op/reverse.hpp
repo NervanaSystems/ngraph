@@ -101,7 +101,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
-                /// \return The set of axes to reverse.
+                /// \return The second input data interpretation mode.
                 const std::string& get_mode() const { return m_mode; }
                 void set_mode(const std::string& mode) { m_mode = mode; }
                 virtual size_t get_op_version() const override { return 1; }
