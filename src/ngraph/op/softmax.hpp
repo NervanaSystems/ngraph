@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
@@ -26,7 +26,7 @@ namespace ngraph
         {
             /// \brief Softmax operation.
             ///
-            class Softmax : public util::UnaryElementwiseArithmetic
+            class Softmax : public Op
             {
             public:
                 NGRAPH_API
