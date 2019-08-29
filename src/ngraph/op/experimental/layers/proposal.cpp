@@ -23,11 +23,11 @@ using namespace ngraph;
 
 const string op::Proposal::type_name{"Proposal"};
 
-op::Proposal::Proposal(const std::shared_ptr<Node>& class_probs,
-                       const std::shared_ptr<Node>& class_logits,
-                       const std::shared_ptr<Node>& image_shape,
+op::Proposal::Proposal(const Output<Node>& class_probs,
+                       const Output<Node>& class_logits,
+                       const Output<Node>& image_shape,
                        const ProposalAttrs& attrs)
-    : Op(check_single_output_args({class_probs, class_logits, image_shape}))
+    : Op({class_probs, class_logits, image_shape})
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
