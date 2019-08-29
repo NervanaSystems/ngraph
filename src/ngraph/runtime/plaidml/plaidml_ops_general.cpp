@@ -163,7 +163,9 @@ void ngraph::runtime::plaidml::ImplConstant::Apply()
         case PLAIDML_DATA_FLOAT64:
             set_output(static_cast<double>(*static_cast<const double*>(op().get_data_ptr())));
             return;
-        default: break;
+        case PLAIDML_DATA_INVALID:
+        case PLAIDML_DATA_PRNG:
+        case PLAIDML_DATA_INT128: return;
         }
     }
 

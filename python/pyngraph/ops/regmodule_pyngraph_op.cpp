@@ -93,6 +93,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Reverse(m_op);
     regclass_pyngraph_op_ScaleShift(m_op);
     regclass_pyngraph_op_Select(m_op);
+    regclass_pyngraph_op_ShuffleChannels(m_op);
     regclass_pyngraph_op_Sign(m_op);
     regclass_pyngraph_op_Sin(m_op);
     regclass_pyngraph_op_Sinh(m_op);
@@ -100,6 +101,8 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Softmax(m_op);
     regclass_pyngraph_op_SpaceToDepth(m_op);
     regclass_pyngraph_op_Sqrt(m_op);
+    regclass_pyngraph_op_SquaredDifference(m_op);
+    regclass_pyngraph_op_Squeeze(m_op);
     regclass_pyngraph_op_Subtract(m_op);
     regclass_pyngraph_op_Sum(m_op);
     regclass_pyngraph_op_Tan(m_op);

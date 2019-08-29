@@ -46,8 +46,6 @@ namespace ngraph
                     external_function->get_buffer_index(args[2].get_name()); // scale
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                auto scales_size = shape_size(args[2].get_shape());
-
                 if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
@@ -62,7 +60,6 @@ namespace ngraph
                     auto& deps = mkldnn_emitter->get_primitive_deps(ip_index);
 
                     auto functor = [&,
-                                    scales_size,
                                     ip_desc,
                                     ip_attr,
                                     deps,
@@ -101,10 +98,8 @@ namespace ngraph
                     throw ngraph_error("Unsupported QuantizedMatmul");
                 }
             }
-            REGISTER_OP_BUILDER(QuantizedMatmul);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_quantized_matmul_cpp() {}
-#endif
+
+            void register_builders_quantized_matmul_cpp() { REGISTER_OP_BUILDER(QuantizedMatmul); }
         }
     }
 }
