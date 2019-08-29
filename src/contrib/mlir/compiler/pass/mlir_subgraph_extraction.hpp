@@ -83,7 +83,7 @@ namespace ngraph
             friend class MLIRSubgraph;
 
         public:
-            MLIRSubgraphExtractionPass() {}
+            MLIRSubgraphExtractionPass();
             bool run_on_function(std::shared_ptr<Function> func) override;
             /// Checks if an ngraph node is supported by MLIR backend
             bool is_supported_mlir_op(std::shared_ptr<Node> node);
@@ -123,7 +123,10 @@ namespace ngraph
                               unsigned depth = 0);
 
         private:
-            static const std::set<std::type_index> m_supported_ops;
+            void build_subgraphs(std::shared_ptr<Function> func);
+            NodeVector build_ck_nodes(std::shared_ptr<Function> func);
+
+            void sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes);
 
         private:
             using IDGraphMap = std::unordered_map<int, MLIRSubgraph>;
@@ -132,6 +135,10 @@ namespace ngraph
             NodeGraphMap m_node_to_graph;
             // Mutex over sub-graph IDs
             std::mutex m_subgraph_mutex;
+            static const std::set<std::type_index> m_supported_ops;
+            // Maximum depth to check for cycles during merging of sub-graphs.
+            // If exceeded, we conservatively assume a cycle.
+            int m_max_cycle_depth;
         };
     }
 }

@@ -299,7 +299,7 @@ namespace ngraph
                 for (size_t i = 0; i < arg_count; ++i)
                 {
                     Node* dep = node->input(arg_count - i - 1).get_source_output().get_node();
-                    if (nodes_done.count(dep) == 0)
+                    if (nodes_done.count(dep) == 0 && nodes_to_emit.count(node) != 0)
                     {
                         can_add = false;
                         nodes_to_do.push(dep);
@@ -425,4 +425,11 @@ namespace ngraph
     /// \return A vector containing a handle for each output of src that is connected to an input
     ///         of `dst`.
     std::vector<Output<Node>> get_outputs_to(Node& src, Node& dst);
+
+    /// Checks the func for graph cycles starting from results going backwards, then from parameters
+    /// going forward.
+    /// It returns true if a cycle is found and the first cycle encountered.
+    bool check_for_cycles(const ngraph::Function* func,
+                          ngraph::NodeVector& cycle_nodes,
+                          bool& is_bkwd_cycle);
 }
