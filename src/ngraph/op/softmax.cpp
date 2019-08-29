@@ -130,7 +130,7 @@ shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args)
 
 void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    throw ngraph_error("NYI");
+    throw ngraph_error("op::v1::Softmax::generate_adjoints function is not implemented yet");
 
     /* This might work, but as of this writing we have no way to test it, so we are being careful
     auto delta = deltas.at(0);
