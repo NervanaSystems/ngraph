@@ -22,18 +22,6 @@ using namespace ngraph;
 
 const string op::TensorIterator::type_name{"TensorIterator"};
 
-op::TensorIterator::TensorIterator(const OutputVector& body_inputs,
-                                   const ParameterVector& body_parameters,
-                                   const OutputVector& body_outputs,
-                                   const OutputVector& tensor_iterator_outputs)
-    : Op(body_inputs)
-    , m_body_parameters(body_parameters)
-    , m_body_outputs(body_outputs)
-    , m_tensor_iterator_outputs(tensor_iterator_outputs)
-{
-    constructor_validate_and_infer_types();
-}
-
 void op::TensorIterator::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
@@ -133,58 +121,8 @@ void op::TensorIterator::validate_and_infer_types()
     }
 }
 
-const ParameterVector& op::TensorIterator::get_body_parameters() const
-{
-    return m_body_parameters;
-}
-
-ParameterVector& op::TensorIterator::get_body_parameters()
-{
-    return m_body_parameters;
-}
-
-void op::TensorIterator::set_body_parameters(const ParameterVector& body_parameters)
-{
-    m_body_parameters = body_parameters;
-}
-
-const OutputVector& op::TensorIterator::get_body_outputs() const
-{
-    return m_body_outputs;
-}
-
-OutputVector& op::TensorIterator::get_body_outputs()
-{
-    return m_body_outputs;
-}
-
-void op::TensorIterator::set_body_outputs(const OutputVector& body_outputs)
-{
-    m_body_outputs = body_outputs;
-}
-
-const OutputVector& op::TensorIterator::get_tensor_iterator_outputs() const
-{
-    return m_tensor_iterator_outputs;
-}
-
-OutputVector& op::TensorIterator::get_tensor_iterator_outputs()
-{
-    return m_tensor_iterator_outputs;
-}
-
-void op::TensorIterator::set_tensor_iterator_outputs(const OutputVector& tensor_iterator_outputs)
-{
-    m_tensor_iterator_outputs = tensor_iterator_outputs;
-}
-
 std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
 {
-    OutputVector output_vector;
-    for (auto arg : new_args)
-    {
-        output_vector.push_back(arg);
-    }
-    return make_shared<TensorIterator>(
-        output_vector, m_body_parameters, m_body_outputs, m_tensor_iterator_outputs);
+    // This would be used for cloning/splicing, so the new args are replacements for the
+    // args that get set up during body/iteration specification.
 }
