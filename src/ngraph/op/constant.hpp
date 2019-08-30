@@ -264,7 +264,11 @@ namespace ngraph
 
             template <typename T>
             std::vector<T> get_vector() const
-            {if(!m_is_initialized){throw ngraph_error("Constant data uninitialized");}
+            {
+                if (!m_is_initialized)
+                {
+                    throw ngraph_error("Constant data uninitialized");
+                }
                 if (sizeof(T) > m_element_type.size() && shape_size(m_shape) > 0)
                 {
                     throw ngraph_error("Buffer over-read");
@@ -279,7 +283,14 @@ namespace ngraph
                 return rc;
             }
 
-            const void* get_data_ptr() const { if(!m_is_initialized){throw ngraph_error("Constant data uninitialized");}return (m_data ? m_data->get_ptr() : nullptr); }
+            const void* get_data_ptr() const
+            {
+                if (!m_is_initialized)
+                {
+                    throw ngraph_error("Constant data uninitialized");
+                }
+                return (m_data ? m_data->get_ptr() : nullptr);
+            }
             template <typename T>
             const T* get_data_ptr() const
             {
