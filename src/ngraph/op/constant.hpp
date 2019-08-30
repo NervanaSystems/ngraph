@@ -294,6 +294,10 @@ namespace ngraph
             template <typename T>
             const T* get_data_ptr() const
             {
+                if (!m_is_initialized)
+                {
+                    throw ngraph_error("Constant data uninitialized");
+                }
                 return reinterpret_cast<const T*>(get_data_ptr());
             }
 
