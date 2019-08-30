@@ -37,10 +37,7 @@ namespace ngraph
                 BUILD_REDUCTION_FUNCTOR(Product, product);
             }
 
-            REGISTER_OP_BUILDER(Product);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_product_cpp() {}
-#endif
+            void register_builders_product_cpp() { REGISTER_OP_BUILDER(Product); }
         }
     }
 }

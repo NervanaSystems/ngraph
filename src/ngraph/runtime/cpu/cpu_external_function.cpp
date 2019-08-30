@@ -34,7 +34,7 @@
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/pass/mlir_subgraph_extraction.hpp"
+#include "contrib/mlir/compiler/pass/mlir_subgraph_extraction.hpp"
 #endif
 
 #include "ngraph/descriptor/input.hpp"
@@ -75,7 +75,6 @@
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
@@ -441,7 +440,6 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::GroupConvolutionBias>},
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeconvolutionBias>},
-    {TI(ngraph::op::QuantizedConcat), &runtime::cpu::CPU_Emitter::emit<op::QuantizedConcat>},
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
 };
@@ -1375,11 +1373,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             "CPU Backend: Tracing and performance breakdowns might not be accurate with TBB "
             "enabled due to concurrent graph execution");
     }
-
-// reference all the builders for static library
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-    ngraph::runtime::cpu::register_builders();
-#endif
 
     // stream writer to dump the debug manifest for the DEX
     static const string s_debug_dir = "cpu_codegen";

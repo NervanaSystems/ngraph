@@ -21,7 +21,7 @@ using namespace ngraph;
 
 const string op::RegionYolo::type_name{"RegionYolo"};
 
-op::RegionYolo::RegionYolo(const shared_ptr<Node>& input,
+op::RegionYolo::RegionYolo(const Output<Node>& input,
                            const size_t num_coords,
                            const size_t num_classes,
                            const size_t num_regions,
@@ -29,7 +29,7 @@ op::RegionYolo::RegionYolo(const shared_ptr<Node>& input,
                            const vector<int64_t>& mask,
                            const int axis,
                            const int end_axis)
-    : Op(check_single_output_args({input}))
+    : Op({input})
     , m_num_coords(num_coords)
     , m_num_classes(num_classes)
     , m_num_regions(num_regions)

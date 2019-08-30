@@ -542,7 +542,7 @@ ngraph::runtime::plaidml::builder::UnaryContraction
     {
     case OpType::AvgPool: agg_op = "+"; break;
     case OpType::MaxPool: agg_op = ">"; break;
-    default: throw std::runtime_error("Asked for pool contraction for non-pool op");
+    case OpType::Conv: throw std::runtime_error("Asked for pool contraction for non-pool op");
     }
     return builder::UnaryContraction{agg_op}
         .set((m_op == OpType::AvgPool && m_deriv == DerivType::Data) ? I_out_body() : O_out_body())
