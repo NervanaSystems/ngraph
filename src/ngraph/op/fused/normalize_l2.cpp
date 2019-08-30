@@ -71,9 +71,11 @@ NodeVector op::NormalizeL2::decompose_op() const
     const Shape input_shape{data.get_shape()};
 
     // Reshape to 4D tensor.
+    size_t axes_shift = 0;
     if (input_shape.size() != 4)
     {
-        Shape data_shape(4 - input_shape.size(), 1);
+        axes_shift = 4 - input_shape.size();
+        Shape data_shape(axes_shift, 1);
         copy(begin(input_shape), end(input_shape), back_inserter(data_shape));
         data = builder::reshape(data, data_shape);
     }
@@ -86,6 +88,9 @@ NodeVector op::NormalizeL2::decompose_op() const
     // Calculate norm over axes indicated by axes input param
     auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
     auto axes_vector = axes_constant->get_vector<size_t>();
+    for (auto & it: axes_vector) {
+        it += axes_shift;
+    }
     AxisSet reduction_axes{axes_vector};
 
     // Calculate l2 norm across axes determined by axes input
