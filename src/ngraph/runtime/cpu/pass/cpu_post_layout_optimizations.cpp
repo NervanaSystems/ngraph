@@ -286,7 +286,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
 #if MKLDNN_VERSION_MAJOR < 1
     if (input_desc.data.format == mkldnn_nchw && result_desc.data.format == mkldnn_goihw)
     {
-        //becomes a copy
+        // becomes a copy
         input_desc = result_desc;
     }
     else if ((input_desc.data.format == mkldnn_nchw || input_desc.data.format == mkldnn_nhwc) &&
@@ -338,7 +338,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     if (input_format_is_nchw && mkldnn_utils::mkldnn_md_matches_format_tag(
                                     result_desc.data, mkldnn::memory::format_tag::goihw))
     {
-        //becomes a copy
+        // becomes a copy
         input_desc = result_desc;
     }
     else if ((input_format_is_nchw || mkldnn_utils::mkldnn_md_matches_format_tag(
