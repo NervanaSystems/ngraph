@@ -65,7 +65,7 @@ op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
-    , m_groups(get_input_shape(1).at(0))
+    , m_groups(NOT_INITIALIZED_GROUPS)
     , m_pad_type(pad_type)
 {
     constructor_validate_and_infer_types();
@@ -75,6 +75,14 @@ void op::GroupConvolution::pre_validate_and_infer_types()
 {
     auto data_shape = get_input_partial_shape(0);
     auto filters_shape = get_input_partial_shape(1);
+
+    if (has_groups_in_filters_shape())
+    {
+        NODE_VALIDATION_CHECK(
+            this, filters_shape[0].is_static(), "Groups stored in filters_shape must be static");
+        m_groups = static_cast<size_t>(filters_shape[0]);
+    }
+
     if (data_shape.is_static() && filters_shape.is_static())
     {
         // Data channels

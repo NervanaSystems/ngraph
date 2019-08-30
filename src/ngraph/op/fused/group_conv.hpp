@@ -83,6 +83,8 @@ namespace ngraph
             PadType m_pad_type{PadType::NOTSET};
 
         private:
+            static const size_t NOT_INITIALIZED_GROUPS = 0;
+
             bool has_groups_in_filters_shape() const
             {
                 // If filters_rank is (data_rank + 1), then filters are divided by groups on first
