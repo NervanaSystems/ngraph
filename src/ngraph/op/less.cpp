@@ -21,8 +21,10 @@ using namespace ngraph;
 
 const string op::Less::type_name{"Less"};
 
-op::Less::Less(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
-    : BinaryElementwiseComparison(arg0, arg1, autob)
+op::Less::Less(const Output<Node>& arg0,
+               const Output<Node>& arg1,
+               const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
