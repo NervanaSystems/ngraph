@@ -19,7 +19,7 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset1_transform.hpp"
+#include "ngraph/pass/opset1_upgrade.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -35,7 +35,7 @@ TEST(serialize, opset1_softmax_pass_axis)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Transformation>();
+    pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
     auto softmax_s1_result = f->get_results().at(0);
@@ -56,18 +56,19 @@ TEST(serialize, opset1_softmax_pass_axis_exception)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Transformation>();
+    pass_manager.register_pass<pass::Opset1Upgrade>();
 
     try
     {
         pass_manager.run_passes(f);
-        FAIL() << "Exception after Opset1Transformation pass was not thrown.";
+        FAIL() << "Exception after Opset1Upgrade pass was not thrown.";
     }
     catch (const ngraph_error& error)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            std::string("Unable to convert Softmax:0 to Softmax:1 with more than one axis."));
+            std::string(
+                "Unable to convert Softmax:0 to Softmax:1 with zero or more than one axis."));
     }
     catch (...)
     {
@@ -97,7 +98,7 @@ TEST(serialize, opset1_softmax_pass_incorrect_op_version)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Transformation>();
+    pass_manager.register_pass<pass::Opset1Upgrade>();
 
     try
     {

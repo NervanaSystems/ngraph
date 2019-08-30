@@ -554,7 +554,7 @@ json JSONSerializer::serialize_function(const Function& f)
 template <typename T>
 T get_value(json js, const string& key)
 {
-    T rc;
+    T rc = {};
     auto it = js.find(key);
     if (it != js.end())
     {
@@ -719,7 +719,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         string node_name = node_js.at("name").get<string>();
         string node_op = node_js.at("op").get<string>();
         string friendly_name = get_value<string>(node_js, "friendly_name");
-        size_t op_version = node_js.at("op_version").get<size_t>();
+        size_t op_version = get_value<size_t>(node_js, "op_version");
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));

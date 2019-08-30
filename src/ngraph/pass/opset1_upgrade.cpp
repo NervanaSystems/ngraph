@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/pass/opset1_transform.hpp"
+#include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -23,7 +23,6 @@
 using namespace std;
 using namespace ngraph;
 
-// @TODO: Shouldn't this be moved to a common utility class? This mapping to OP_TYPEID gets repeated many times.
 #define NGRAPH_OP(a, b) a,
 enum class OP_TYPEID
 {
@@ -53,7 +52,7 @@ static OP_TYPEID get_typeid(shared_ptr<Node> node)
 }
 // END mapping to OP_TYPEID
 
-bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
+bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 
@@ -64,13 +63,18 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
         return modified;
     }
 
-    if (op_version != 0)
-    {
-        throw ngraph_error("Op version 1 transformation pass failed for " + node->get_name() +
-                           ", only op version 0 operations expected. Op version " +
-                           to_string(op_version) + " found.");
-    }
+    NGRAPH_CHECK(op_version == 0,
+                 "Op version 1 transformation pass failed for ",
+                 *node,
+                 ", only op version 0 operations expected. Op version ",
+                 op_version,
+                 " found.");
 
+// Not all enumeration values explicitly handled in switch
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
     switch (get_typeid(node))
     {
     case OP_TYPEID::Reverse:
@@ -96,12 +100,10 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
         auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
         AxisSet axes = tmp->get_axes();
 
-        if (axes.size() != 1)
-        {
-            throw ngraph_error(
-                "Unable to convert Softmax:0 to Softmax:1 with more than one axis. " +
-                node->get_name() + ".");
-        }
+        NGRAPH_CHECK(
+            axes.size() == 1,
+            "Unable to convert Softmax:0 to Softmax:1 with zero or more than one axis. Node: ",
+            *node);
 
         auto replacement_node =
             make_shared<op::v1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);
@@ -111,6 +113,9 @@ bool pass::Opset1Transformation::run_on_node(shared_ptr<Node> node)
     }
     default: break;
     }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
     return modified;
 }

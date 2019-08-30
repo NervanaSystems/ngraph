@@ -32,21 +32,27 @@ using namespace ngraph;
 const string op::Softmax::type_name{"Softmax"};
 
 op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
-    : UnaryElementwiseArithmetic(arg)
+    : Op({arg})
     , m_axes(axes)
 {
     constructor_validate_and_infer_types();
 
+    const PartialShape& input_shape = get_input_partial_shape(0);
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_CHECK(this,
-                              axis < get_shape().size(),
+                              axis < static_cast<size_t>(input_shape.rank()),
                               "Reduction axis (",
                               axis,
                               ") is out of bounds (argument shape: ",
-                              get_shape(),
+                              input_shape,
                               ").");
     }
+
+    if (input_shape.is_static())
+        set_output_type(0, get_input_element_type(0), input_shape.to_shape());
+    else
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 
     // empty axes == all axes
     if (m_axes.size() == 0)
@@ -96,18 +102,24 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 const string op::v1::Softmax::type_name{"Softmax"};
 
 op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
-    : UnaryElementwiseArithmetic(arg)
+    : Op({arg})
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();
 
+    const PartialShape& input_shape = get_input_partial_shape(0);
     NODE_VALIDATION_CHECK(this,
-                          axis >= 0 && axis < get_shape().size(),
+                          axis >= 0 && axis < static_cast<size_t>(input_shape.rank()),
                           "Reduction axis (",
                           axis,
                           ") is out of bounds (argument shape: ",
-                          get_shape(),
+                          input_shape,
                           ").");
+
+    if (input_shape.is_static())
+        set_output_type(0, get_input_element_type(0), input_shape.to_shape());
+    else
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }
 
 shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args) const
@@ -118,6 +130,9 @@ shared_ptr<Node> op::v1::Softmax::copy_with_new_args(const NodeVector& new_args)
 
 void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
+    throw ngraph_error("op::v1::Softmax::generate_adjoints function is not implemented yet");
+
+    /* This might work, but as of this writing we have no way to test it, so we are being careful
     auto delta = deltas.at(0);
 
     auto z = delta * shared_from_this();
@@ -147,4 +162,5 @@ void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 
     auto x = input(0).get_source_output();
     adjoints.add_delta(x, adjoint);
+    */
 }
