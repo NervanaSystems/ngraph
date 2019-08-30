@@ -998,6 +998,7 @@ private:
         {
             const op::LRN* lrn = static_cast<const op::LRN*>(&node);
             reference::lrn<T>(args[0]->get_data_ptr<const T>(),
+                              lrn->get_reduction_axes(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
                               lrn->get_alpha(),

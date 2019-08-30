@@ -14,28 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#pragma once
+#include "ngraph/op/fused/squared_difference.hpp"
+#include "pyngraph/ops/fused/squared_difference.hpp"
 
-#include "contrib/mlir/compiler.hpp"
+namespace py = pybind11;
 
-#include <mlir/Pass/Pass.h>
-
-namespace ngraph
+void regclass_pyngraph_op_SquaredDifference(py::module m)
 {
-    namespace runtime
-    {
-        namespace ngmlir
-        {
-            class MLIRCompiler;
-        }
-    }
-}
-
-namespace mlir
-{
-    std::unique_ptr<Pass>
-        createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
+    py::class_<ngraph::op::SquaredDifference,
+               std::shared_ptr<ngraph::op::SquaredDifference>,
+               ngraph::op::Op>
+        squareddifference(m, "SquaredDifference");
+    squareddifference.doc() =
+        "ngraph.impl.op.SquaredDifference wraps ngraph::op::SquaredDifference";
+    squareddifference.def(
+        py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
 }
