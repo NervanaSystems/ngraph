@@ -33,7 +33,8 @@ namespace ngraph
         namespace pooling
         {
             ///
-            /// \brief      Factory class which generates sub-graphs for ONNX 'regular' pooling operators.
+            /// \brief      Factory class which generates sub-graphs for ONNX 'regular' pooling
+            ///             operators.
             ///
             /// \note       This factory is intended for creating pooling operations like:
             ///             - AveragePool
@@ -52,7 +53,8 @@ namespace ngraph
                 ///
                 /// \brief      Creates a sub-graph representing appropriate ONNX operation.
                 ///
-                /// \tparam     NgraphOperator  nGraph operator class type used to build ONNX operation.
+                /// \tparam     NgraphOperator  nGraph operator class type used to build ONNX
+                ///                             operation.
                 ///
                 /// \return     Vector of output nodes.
                 ///
@@ -83,7 +85,8 @@ namespace ngraph
             NodeVector PoolingFactory::make_pooling_op<ngraph::op::AvgPool>() const;
 
             ///
-            /// \brief      Factory class which generates sub-graphs for ONNX 'global' pooling operators.
+            /// \brief      Factory class which generates sub-graphs for ONNX 'global' pooling
+            ///             operators.
             ///
             class GlobalPoolingFactory : public PoolingFactory
             {
