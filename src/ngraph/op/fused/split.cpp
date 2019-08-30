@@ -84,7 +84,7 @@ void op::Split::pre_validate_and_infer_types()
 
 NodeVector op::Split::decompose_op() const
 {
-    return builder::split(input(0).get_source_output(), m_splits, m_axis);
+    return builder::split(input_value(0), m_splits, m_axis);
 }
 
 shared_ptr<Node> op::Split::copy_with_new_args(const NodeVector& new_args) const

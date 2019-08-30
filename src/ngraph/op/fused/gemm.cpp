@@ -45,9 +45,9 @@ op::Gemm::Gemm(const Output<Node>& A,
 
 NodeVector op::Gemm::decompose_op() const
 {
-    auto A = input(0).get_source_output();
-    auto B = input(1).get_source_output();
-    auto C = input(2).get_source_output();
+    auto A = input_value(0);
+    auto B = input_value(1);
+    auto C = input_value(2);
 
     if (m_transA)
     {
