@@ -57,8 +57,8 @@ namespace ngraph
             /// \param layer_shape    Shape of layer for which prior boxes are computed
             /// \param image_shape    Shape of image to which prior boxes are scaled
             /// \param attrs          PriorBox attributes
-            PriorBox(const std::shared_ptr<Node>& layer_shape,
-                     const std::shared_ptr<Node>& image_shape,
+            PriorBox(const Output<Node>& layer_shape,
+                     const Output<Node>& image_shape,
                      const PriorBoxAttrs& attrs);
 
             void validate_and_infer_types() override;

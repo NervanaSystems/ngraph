@@ -21,8 +21,10 @@ using namespace ngraph;
 
 const string op::And::type_name{"And"};
 
-op::And::And(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
-    : BinaryElementwiseLogical(arg0, arg1, autob)
+op::And::And(const Output<Node>& arg0,
+             const Output<Node>& arg1,
+             const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }

@@ -89,6 +89,7 @@ from ngraph.ops import reverse
 from ngraph.ops import rnn_cell
 from ngraph.ops import scale_shift
 from ngraph.ops import select
+from ngraph.ops import shuffle_channels
 from ngraph.ops import sign
 from ngraph.ops import sin
 from ngraph.ops import sinh
@@ -96,6 +97,8 @@ from ngraph.ops import slice
 from ngraph.ops import softmax
 from ngraph.ops import space_to_depth
 from ngraph.ops import sqrt
+from ngraph.ops import squared_difference
+from ngraph.ops import squeeze
 from ngraph.ops import subtract
 from ngraph.ops import sum
 from ngraph.ops import tan

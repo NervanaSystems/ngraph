@@ -76,6 +76,7 @@ ngraph.ops
       RNNCell
       scale_shift
       select
+      shuffle_channels
       sign
       sin
       sinh
@@ -83,6 +84,8 @@ ngraph.ops
       softmax
       space_to_depth
       sqrt
+      squared_difference
+      squeeze
       subtract
       sum
       tan

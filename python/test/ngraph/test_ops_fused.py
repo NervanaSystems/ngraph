@@ -226,6 +226,67 @@ def test_clamp_operator_with_array():
     assert np.allclose(result, expected)
 
 
+def test_squeeze_operator():
+    runtime = get_runtime()
+
+    data_shape = [1, 2, 1, 3, 1, 1]
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    data_value = np.arange(6., dtype=np.float32).reshape(1, 2, 1, 3, 1, 1)
+    axes = [2, 4]
+    model = ng.squeeze(parameter_data, axes)
+    computation = runtime.computation(model, parameter_data)
+
+    result = computation(data_value)
+    expected = np.arange(6., dtype=np.float32).reshape(1, 2, 3, 1)
+    assert np.allclose(result, expected)
+
+
+def test_squared_difference_operator():
+    runtime = get_runtime()
+
+    x1_shape = [1, 2, 3, 4]
+    x2_shape = [2, 3, 4]
+
+    parameter_x1 = ng.parameter(x1_shape, name='x1', dtype=np.float32)
+    parameter_x2 = ng.parameter(x2_shape, name='x2', dtype=np.float32)
+
+    x1_value = np.arange(24., dtype=np.float32).reshape(x1_shape)
+    x2_value = np.arange(start=4., stop=28., step=1.0, dtype=np.float32).reshape(x2_shape)
+
+    model = ng.squared_difference(parameter_x1, parameter_x2)
+    computation = runtime.computation(model, parameter_x1, parameter_x2)
+
+    result = computation(x1_value, x2_value)
+    expected = np.square(np.subtract(x1_value, x2_value))
+    assert np.allclose(result, expected)
+
+
+def test_shuffle_channels_operator():
+    runtime = get_runtime()
+
+    data_shape = [1, 15, 2, 2]
+    axis = 1
+    groups = 5
+
+    parameter = ng.parameter(data_shape, name='Data', dtype=np.float32)
+
+    data_value = np.arange(60., dtype=np.float32).reshape(data_shape)
+
+    model = ng.shuffle_channels(parameter, axis, groups)
+    computation = runtime.computation(model, parameter)
+
+    result = computation(data_value)
+    expected = np.array([[[[0., 1.], [2., 3.]], [[12., 13.], [14., 15.]],
+                          [[24., 25.], [26., 27.]], [[36., 37.], [38., 39.]],
+                          [[48., 49.], [50., 51.]], [[4., 5.], [6., 7.]],
+                          [[16., 17.], [18., 19.]], [[28., 29.], [30., 31.]],
+                          [[40., 41.], [42., 43.]], [[52., 53.], [54., 55.]],
+                          [[8., 9.], [10., 11.]], [[20., 21.], [22., 23.]],
+                          [[32., 33.], [34., 35.]], [[44., 45.], [46., 47.]],
+                          [[56., 57.], [58., 59.]]]], dtype=np.float32)
+    assert np.allclose(result, expected)
+
+
 def test_unsqueeze():
     runtime = get_runtime()
 
