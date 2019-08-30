@@ -1,5 +1,7 @@
 .. project/release-notes.rst:
 
+:orphan:
+
 Release Notes
 #############
 
@@ -11,21 +13,13 @@ https://github.com/NervanaSystems/ngraph/releases.
 
 This page includes additional documentation updates.
 
-We are pleased to announce the release of version |version|-doc.
+We are pleased to announce the release of version |version|.
 
 
 Core updates for |version|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ Better PlaidML support
-+ Double-buffering support
-+ Constant folding
-+ Support for static linking
-+ Additional ops
+--------------------------
 
-.. Latest doc updates
-.. ~~~~~~~~~~~~~~~~~~
-
-.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
+Allow DLLs that link nGraph statically to load backends
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
@@ -33,6 +27,23 @@ Core updates for |version|
 
 Changelog on Previous Releases
 ==============================
+
+
+0.25.0
+------
+
++ Better PlaidML support
++ Double-buffering support
++ Constant folding
++ Support for static linking
++ Additional ops
++ Preliminary static linking support
++ Known issue: No PlaidML training support
++ Doc: Add instructions how to build NGRAPH_PLAIDML backend
++ Published interim version of doc navigation for updates at ngraph.ai
++ GPU validations: added 5 functional TensorFlow workloads and 4 functional 
+  ONNX workloads
+
 
 0.24
 ----
@@ -44,7 +55,6 @@ Changelog on Previous Releases
 + Graph visualization improvements
 + Preserve control dependencies in more places
 + GetOutputElement has single input
-.. + Add instructions how to build ``NGRAPH_PLAIDML`` backend.
 
 
 0.23
@@ -89,7 +99,7 @@ Changelog on Previous Releases
 + offset arg for tensor creation is deprecated
 + static linking support
 + Initial test of 0.21-doc
-+ Updated :doc:`doc-contributor-README` for new community-based contributions. 
++ Updated ``doc-contributor-README`` for new community-based contributions. 
 + Added instructions on how to test or display the installed nGraph version.
 + Added instructions on building nGraph bridge (ngraph-bridge).
 + Updated Backend Developer Guides and ToC structure.

@@ -38,7 +38,8 @@ namespace ngraph
                            const Shape& out_shape)
             {
                 using namespace std;
-                // Create a CoordinateTransform for "indices" that visits only the first element along inner most axis
+                // Create a CoordinateTransform for "indices" that visits only the first element
+                // along inner most axis
                 size_t indices_ndim = static_cast<size_t>(indices_shape.size());
                 Coordinate indices_outer_start_corner(indices_ndim, 0);
                 Coordinate indices_outer_end_corner(indices_shape);
@@ -53,7 +54,8 @@ namespace ngraph
                                                             indices_strides,
                                                             indices_axis_order);
 
-                // Create a matching CoordinateTransform for "out" that visits the same outer coordinates
+                // Create a matching CoordinateTransform for "out" that visits the same outer
+                // coordinates
                 size_t out_ndim = static_cast<size_t>(out_shape.size());
                 Coordinate out_start_corner(out_ndim, 0);
                 Coordinate out_end_corner(out_shape);

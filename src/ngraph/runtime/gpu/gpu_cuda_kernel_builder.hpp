@@ -95,9 +95,11 @@ namespace ngraph
                                                 size_t non_reduce_rank,
                                                 size_t reduce_rank);
 
-                /// \brief This is the preprocess to reduce to scalar if the input data size is large than a number.
+                /// \brief This is the preprocess to reduce to scalar if the input data size is
+                ///        large than a number.
                 /// The number can be tuned based on hardware.
-                /// This cuda kernel will accumulate reduction to a certain number of bins depends on hardware.
+                /// This cuda kernel will accumulate reduction to a certain number of bins depends
+                /// on hardware.
                 /// stable kahan sum is been used for float point sum.
                 /// no initial value needed since we load one input value as initial
                 /// not support 0 sized input
@@ -221,8 +223,9 @@ namespace ngraph
                                                             size_t rank,
                                                             bool register_arguments = false);
 
-                /// \brief Given kernel input variables i_* produce register variables o_coordinates{i}
-                ///        of the non-reduced tensor and return the string name of integer index into reduced tensor
+                /// \brief Given kernel input variables i_* produce register variables
+                ///        o_coordinates{i} of the non-reduced tensor and return the string name of
+                ///        integer index into reduced tensor
                 static std::string
                     collective_coordinate_transform_helper(CodeWriter& writer,
                                                            std::string i_thread_index,

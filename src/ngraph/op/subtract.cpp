@@ -24,8 +24,8 @@ const string op::Subtract::type_name{"Subtract"};
 
 op::Subtract::Subtract(const Output<Node>& arg0,
                        const Output<Node>& arg1,
-                       const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic(arg0, arg1, autob)
+                       const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
@@ -45,8 +45,8 @@ void op::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVec
 
     auto delta = deltas.at(0);
 
-    auto x = input(0).get_source_output();
-    auto y = input(1).get_source_output();
+    auto x = input_value(0);
+    auto y = input_value(1);
 
     adjoints.add_delta(x, delta);
     adjoints.add_delta(y, -delta);

@@ -29,8 +29,8 @@ const string op::Minimum::type_name{"Minimum"};
 
 op::Minimum::Minimum(const Output<Node>& arg0,
                      const Output<Node>& arg1,
-                     const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic(arg0, arg1, autob)
+                     const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
@@ -50,11 +50,11 @@ void op::Minimum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 
     auto delta = deltas.at(0);
 
-    auto x = get_argument(0);
-    auto y = get_argument(1);
+    auto x = input_value(0);
+    auto y = input_value(1);
 
     adjoints.add_delta(
-        x, delta * make_shared<op::Convert>(make_shared<op::Less>(x, y), x->get_element_type()));
+        x, delta * make_shared<op::Convert>(make_shared<op::Less>(x, y), x.get_element_type()));
     adjoints.add_delta(
-        y, delta * make_shared<op::Convert>(make_shared<op::Less>(y, x), y->get_element_type()));
+        y, delta * make_shared<op::Convert>(make_shared<op::Less>(y, x), y.get_element_type()));
 }

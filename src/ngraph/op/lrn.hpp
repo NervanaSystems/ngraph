@@ -16,26 +16,28 @@
 
 #pragma once
 
-#include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
+#include "ngraph/op/op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
+        // clang-format off
         /// \brief Elementwise Local Response Normalization (LRN) operation.
         ///
         /// ## Inputs
         ///
-        /// |       | Type                              | Description                                     |
-        /// | ----- | --------------------------------- | ----------------------------------------------- |
+        /// |       | Type                                    | Description                                     |
+        /// | ----- | --------------------------------------- | ----------------------------------------------- |
         /// | `arg` | \f$N[n, c, d_1,\dots,d_n]~(n \geq 0)\f$ | A tensor of any shape and numeric element type. |
         ///
         /// ## Output
         ///
-        /// | Type                   | Description                                                                          |
-        /// | ---------------------- | ------------------------------------------------------------------------------------ |
+        /// | Type                         | Description                                                                                                                                                                                  |
+        /// | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[n, c, d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[n, c, d_1,\dots,d_n] = \frac{N[n,i,d_1,\dots,d_n]}{ (bias + alpha * (\sum_{i=max(0,(nsize-1)/2)}^{min(C, (nsize-1)/2)+1} N[n,i,d_1,\dots,d_n]^{2}) ^ {2})}\f$ |
-        class LRN : public util::UnaryElementwiseArithmetic
+        // clang-format on
+        class LRN : public Op
         {
         public:
             NGRAPH_API
@@ -47,6 +49,13 @@ namespace ngraph
             ///
             /// \param arg Node that produces the input tensor.
             LRN(const Output<Node>& arg, double alpha, double beta, double bias, size_t size);
+
+            LRN(const Output<Node>& arg,
+                const Output<Node>& axes,
+                double alpha,
+                double beta,
+                double bias,
+                size_t size);
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -60,6 +69,8 @@ namespace ngraph
             void set_bias(double bias) { m_bias = bias; }
             size_t get_nsize() const { return m_size; }
             void set_nsize(size_t size) { m_size = size; }
+            AxisSet get_reduction_axes() const;
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;

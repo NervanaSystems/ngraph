@@ -23,7 +23,8 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a bounding box, optionally with stride.
+        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a
+        ///        bounding box, optionally with stride.
         class DynSlice : public Op
         {
         public:

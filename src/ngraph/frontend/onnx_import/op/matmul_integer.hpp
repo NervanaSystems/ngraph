@@ -31,13 +31,13 @@ namespace ngraph
                 ///
                 /// \param node The ONNX node object representing this operation.
                 ///
-                /// \return The vector containing Ngraph nodes producing output of quantized ONNX matrix
-                ///         multiplication operation.
+                /// \return The vector containing Ngraph nodes producing output of quantized ONNX
+                ///         matrix multiplication operation.
                 NodeVector matmul_integer(const Node& node);
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

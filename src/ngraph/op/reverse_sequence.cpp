@@ -102,8 +102,8 @@ shared_ptr<Node> op::ReverseSequence::copy_with_new_args(const NodeVector& new_a
 
 void op::ReverseSequence::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
-    auto x = input(0).get_source_output();
-    auto rs_delta = make_shared<ReverseSequence>(
-        deltas.at(0), input(1).get_source_output(), m_batch_axis, m_seq_axis);
+    auto x = input_value(0);
+    auto rs_delta =
+        make_shared<ReverseSequence>(deltas.at(0), input_value(1), m_batch_axis, m_seq_axis);
     adjoints.add_delta(x, rs_delta);
 }

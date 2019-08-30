@@ -187,10 +187,7 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Slice);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_slice_cpp() {}
-#endif
+            void register_builders_slice_cpp() { REGISTER_OP_BUILDER(Slice); }
         }
     }
 }

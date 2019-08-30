@@ -52,11 +52,11 @@ bool static is_codegen_mode()
 }
 
 // These tests are for DEX mode only.
-TEST(debugger, add_breakpoint)
+TEST(debugger, MLIR_DISABLE_TEST(add_breakpoint))
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is a new release of gtest
+        // TODO change to skip when there is a new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -96,11 +96,11 @@ TEST(debugger, add_breakpoint)
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, stepping)
+TEST(debugger, MLIR_DISABLE_TEST(stepping))
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is a new release of gtest
+        // TODO change to skip when there is a new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -141,11 +141,11 @@ TEST(debugger, stepping)
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, delete_breakpoint)
+TEST(debugger, MLIR_DISABLE_TEST(delete_breakpoint))
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is new release of gtest
+        // TODO change to skip when there is new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -189,11 +189,11 @@ TEST(debugger, delete_breakpoint)
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, while_stepping)
+TEST(debugger, MLIR_DISABLE_TEST(while_stepping))
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is new release of gtest
+        // TODO change to skip when there is new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -235,11 +235,11 @@ TEST(debugger, while_stepping)
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, resume)
+TEST(debugger, MLIR_DISABLE_TEST(resume))
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is new release of gtest
+        // TODO change to skip when there is new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -279,7 +279,7 @@ TEST(debugger, resume)
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(tracer, basic)
+TEST(tracer, MLIR_DISABLE_TEST(basic))
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -319,7 +319,7 @@ TEST(tracer, basic)
     dbg.call({result}, {a, b});
 }
 
-TEST(tracer, count_tracepoint)
+TEST(tracer, MLIR_DISABLE_TEST(count_tracepoint))
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -360,7 +360,7 @@ TEST(tracer, count_tracepoint)
     }
 }
 
-TEST(tracer, conditional_tracepoint)
+TEST(tracer, MLIR_DISABLE_TEST(conditional_tracepoint))
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);

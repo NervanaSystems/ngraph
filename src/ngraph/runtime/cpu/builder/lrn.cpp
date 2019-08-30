@@ -64,11 +64,13 @@ namespace ngraph
                 }
                 else
                 {
+                    AxisSet axes = lrn->get_reduction_axes();
                     double alpha = lrn->get_alpha();
                     double beta = lrn->get_beta();
                     double bias = lrn->get_bias();
                     double nsize = lrn->get_nsize();
                     Shape arg_shape = args[0].get_shape();
+                    Shape axes_shape = args[1].get_shape();
 
                     auto element_type = lrn->get_element_type();
                     if (element_type == element::f32)
@@ -78,12 +80,14 @@ namespace ngraph
                                    beta,
                                    bias,
                                    arg_shape,
+                                   axes_shape,
                                    nsize,
                                    arg_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<float>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
+                                axes,
                                 static_cast<float*>(ctx->buffer_data[out_buffer_index]),
                                 arg_shape,
                                 alpha,
@@ -99,12 +103,14 @@ namespace ngraph
                                    beta,
                                    bias,
                                    arg_shape,
+                                   axes_shape,
                                    nsize,
                                    arg_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
                                                      CPUExecutionContext* ectx) {
                             ngraph::runtime::reference::lrn<double>(
                                 static_cast<double*>(ctx->buffer_data[arg_buffer_index]),
+                                axes,
                                 static_cast<double*>(ctx->buffer_data[out_buffer_index]),
                                 arg_shape,
                                 alpha,
@@ -122,10 +128,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(LRN);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_lrn_cpp() {}
-#endif
+            void register_builders_lrn_cpp() { REGISTER_OP_BUILDER(LRN); }
         }
     }
 }
