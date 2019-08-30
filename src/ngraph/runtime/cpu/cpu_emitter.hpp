@@ -142,7 +142,6 @@ namespace ngraph
         class SigmoidBackprop;
         class SigmoidMultiply;
         class SigmoidMultiplyBackprop;
-        class Softmax;
         class Result;
         class And;
         class Or;
