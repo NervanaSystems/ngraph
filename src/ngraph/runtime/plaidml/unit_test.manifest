@@ -339,3 +339,6 @@ avg_pool_3d_uneven_strided_padded
 rnn_cell_activation_function
 gru_cell_bias_clip
 gru_cell_linear_before_reset
+
+# node validation error: "Applying function, tensor with mismatching dimensionality: F, expected=4, got=5"
+group_conv_groups_included_in_shape
