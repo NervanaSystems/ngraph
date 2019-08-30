@@ -184,11 +184,6 @@ if (NGRAPH_CPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
 endif()
 
-if(NGRAPH_GPU_ENABLE)
-    list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
-endif()
-
 if (NGRAPH_INTELGPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTELGPU)
 endif()
@@ -424,10 +419,6 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
-endif()
-
-if (NGRAPH_GPU_ENABLE)
-    target_link_libraries(unit-test PRIVATE gpu_backend)
 endif()
 
 if (NGRAPH_NOP_ENABLE)
