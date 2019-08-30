@@ -26,5 +26,5 @@ void regclass_pyngraph_op_Elu(py::module m)
 {
     py::class_<ngraph::op::Elu, std::shared_ptr<ngraph::op::Elu>, ngraph::op::Op> elu(m, "Elu");
     elu.doc() = "ngraph.impl.op.Elu wraps ngraph::op::Elu";
-    elu.def(py::init<const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&>());
+    elu.def(py::init<const std::shared_ptr<ngraph::Node>&, const double>());
 }

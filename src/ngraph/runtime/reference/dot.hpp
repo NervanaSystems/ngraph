@@ -42,12 +42,24 @@ namespace ngraph
                      const Shape& arg1_shape,
                      const Shape& out_shape,
                      size_t reduction_axes_count,
-                     const float requant_scale = 1.0f)
+                     const float* input0_scale = nullptr,
+                     const INPUT0* input0_zero_point = nullptr,
+                     const float* input1_scale = nullptr,
+                     const INPUT1* input1_zero_point = nullptr,
+                     const float* output_scale = nullptr,
+                     const OUTPUT* output_zero_point = nullptr)
             {
+                bool is_quantized = false;
+                if (input0_scale && input0_zero_point && input1_scale && input1_zero_point &&
+                    output_scale && output_zero_point)
+                {
+                    is_quantized = true;
+                }
+
                 auto old_mode = std::fegetround();
                 std::fesetround(FE_TONEAREST);
-                // Get the sizes of the dot axes. It's easiest to pull them from arg1 because they're
-                // right up front.
+                // Get the sizes of the dot axes. It's easiest to pull them from arg1 because
+                // they're right up front.
                 Shape dot_axis_sizes(reduction_axes_count);
                 std::copy(arg1_shape.begin(),
                           arg1_shape.begin() + reduction_axes_count,
@@ -82,7 +94,8 @@ namespace ngraph
                 {
                     for (const Coordinate& arg1_projected_coord : arg1_projected_transform)
                     {
-                        // The output coordinate is just the concatenation of the projected coordinates.
+                        // The output coordinate is just the concatenation of the projected
+                        // coordinates.
                         Coordinate out_coord(arg0_projected_coord.size() +
                                              arg1_projected_coord.size());
 
@@ -105,8 +118,9 @@ namespace ngraph
                                                  arg0_coord.begin());
                         for (const Coordinate& dot_axis_positions : dot_axes_transform)
                         {
-                            // In order to find the points to multiply together, we need to inject our current
-                            // positions along the dotted axes back into the projected arg0 and arg1 coordinates.
+                            // In order to find the points to multiply together, we need to inject
+                            // our current positions along the dotted axes back into the projected
+                            // arg0 and arg1 coordinates.
                             std::copy(
                                 dot_axis_positions.begin(), dot_axis_positions.end(), arg0_it);
 
@@ -117,12 +131,30 @@ namespace ngraph
                                 arg1_projected_coord.begin(), arg1_projected_coord.end(), arg1_it);
 
                             // Multiply and add to the sum.
-                            sum += arg0[arg0_transform.index(arg0_coord)] *
-                                   arg1[arg1_transform.index(arg1_coord)];
+                            if (is_quantized)
+                            {
+                                sum +=
+                                    (arg0[arg0_transform.index(arg0_coord)] - *input0_zero_point) *
+                                    (arg1[arg1_transform.index(arg1_coord)] - *input1_zero_point);
+                            }
+                            else
+                            {
+                                sum += arg0[arg0_transform.index(arg0_coord)] *
+                                       arg1[arg1_transform.index(arg1_coord)];
+                            }
                         }
 
-                        // Write the sum back.
-                        out[out_index] = static_cast<OUTPUT>(sum * requant_scale);
+                        if (is_quantized)
+                        {
+                            float scale = *input0_scale * *input1_scale / *output_scale;
+                            // Write the sum back.
+                            out[out_index] = static_cast<OUTPUT>(
+                                std::round(static_cast<float>(sum) * scale) + *output_zero_point);
+                        }
+                        else
+                        {
+                            out[out_index] = sum;
+                        }
                     }
                     std::fesetround(old_mode);
                 }

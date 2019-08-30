@@ -36,7 +36,7 @@ namespace ngraph
                 NodeVector space_to_depth(const Node& node);
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

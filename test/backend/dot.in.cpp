@@ -245,7 +245,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_0_0)
     copy_data(b, vector<float>{});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the
+    // right value.
     copy_data(result, vector<float>{2112});
 
     auto handle = backend->compile(f);
@@ -272,7 +273,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_matrix_2x0_0x2)
     copy_data(b, vector<float>{});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the
+    // right value.
     copy_data(result, vector<float>{2112, 2112, 2112, 2112});
 
     auto handle = backend->compile(f);
@@ -369,7 +371,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dot_2x0_0)
     copy_data(b, vector<float>{});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the
+    // right value.
     copy_data(result, vector<float>{2112, 2112});
 
     auto handle = backend->compile(f);

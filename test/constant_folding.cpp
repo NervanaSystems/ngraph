@@ -245,7 +245,7 @@ TEST(constant_folding, constant_unary_binary)
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(func);
 
-    //expected values
+    // expected values
     vector<int> add_expected{2, 4, 6, 8};
     vector<int> sub_expected{0, 0, 0, 0};
     vector<int> mul_expected{1, 4, 9, 16};

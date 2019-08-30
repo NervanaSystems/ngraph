@@ -30,17 +30,23 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             // INPUTS:
-            // [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size, feature_size}
-            // [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size, feature_size}
-            // [2] - initializer for the input weights matrix, used for the linear transformation of the inputs.
-            // [3] - initializer for the recurrent weights matrix, used for the linear transformation of the recurrent state.
-            // [4] - Initializer for the bias vector w.r.to inputs + hidden state (ibh_bias + hbh_bias)
+            // [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size,
+            //       feature_size}
+            // [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size,
+            //       feature_size}
+            // [2] - initializer for the input weights matrix, used for the linear transformation of
+            //       the inputs.
+            // [3] - initializer for the recurrent weights matrix, used for the linear
+            //       transformation of the recurrent state.
+            // [4] - Initializer for the bias vector w.r.to inputs + hidden state (ibh_bias +
+            //       hbh_bias)
 
             // OUTPUT VALUE: A tuple with the following structure:
             //   [0] - ht, output tensor with shape (sequence_length*batch_size, num_hidden) .
             //   [1] - {ht | ct} output recurrent state tensor with the same shape as states
 
-            // This version of the LSTM op supports MKLDNN emitter code, this can be used standalone for computing RNN
+            // This version of the LSTM op supports MKLDNN emitter code, this can be used standalone
+            // for computing RNN
             // without fusing RNN cell (LSTM)'s across time steps.
             Lstm(const Output<Node>& src_layer,
                  const Output<Node>& src_iter,
