@@ -22,6 +22,7 @@ namespace ngraph
 {
     namespace op
     {
+        // clang-format off
         /// \brief One-hot operator.
         ///
         /// ## Parameters
@@ -42,6 +43,7 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                                                                                                                                |
         /// | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T'\f$, where \f$T'[i_1,\dots,i_{m-1},i_m,i_{m+1},\dots,i_n] = 1\f$ if \f$T[i_1,\dots,i_{m-1},i_{m+1},\dots,i_n] = i_m\f$, else \f$0\f$. However, \f$T'\f$ is undefined if any non-integral value or any out-of-bounds value is detected in the input tensor. |
+        // clang-format on
         class OneHot : public Op
         {
         public:

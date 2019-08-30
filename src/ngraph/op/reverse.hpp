@@ -22,9 +22,11 @@ namespace ngraph
 {
     namespace op
     {
+        // clang-format off
         /// \brief Axis-reverse operation.
         ///
-        /// Reverses the direction of zero or more axes in a tensor, where "reversing" an axis means that at the output tensor.
+        /// Reverses the direction of zero or more axes in a tensor, where "reversing" an axis means
+        /// that at the output tensor.
         ///
         /// ## Parameters
         ///
@@ -43,6 +45,7 @@ namespace ngraph
         /// | Type                   | Description                                                                                                                                                               |
         /// | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
         /// | \f$E[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg}[j_1,\dots,j_n]\f$ and \f$j_k = d_k - i_k - 1\f$ if axis \f$k\f$ is in the reverse set; else \f$j_k = i_k\f$. |
+        // clang-format on
         class Reverse : public Op
         {
         public:
