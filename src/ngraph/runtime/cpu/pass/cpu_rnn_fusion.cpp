@@ -204,10 +204,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 #endif
         // set LSTM cell attributes
         const size_t lstm_n_gates = 4;
-        const size_t batch_size = pattern_map[X]->get_shape()[0];
         const size_t direction = 1;
         const size_t layers = 1;
-        auto dic = pattern_map[R]->get_shape()[0] / (lstm_n_gates * direction * layers);
 
         auto goe_nodes = ngraph::op::get_output_elements(m.get_match_root());
         auto dst_layer = goe_nodes[0];
@@ -215,6 +213,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 // dst_iter of lstm mkldnn output holds the results of both recurrent state
 // tensor outputs. we need to slice the ct.
 #if MKLDNN_VERSION_MAJOR < 1
+        const size_t batch_size = pattern_map[X]->get_shape()[0];
+        auto dic = pattern_map[R]->get_shape()[0] / (lstm_n_gates * direction * layers);
         auto ct_slice = std::make_shared<ngraph::op::Slice>(
             lstm_ht_ct_output, Coordinate{batch_size, 0}, Coordinate{(2 * batch_size), dic});
 #endif
