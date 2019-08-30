@@ -90,7 +90,8 @@ namespace ngraph
                 /// \brief Constructs a reverse operation.
                 ///
                 /// \param data The input tensor, some of whose axes are to be reversed.
-                /// \param reversed_axes The axes to reverse in a form of a set of indices or boolean mask.
+                /// \param reversed_axes The axes to reverse in a form of a set of indices or
+                /// boolean mask.
                 /// \param mode The way reversed_axes should be interpreted - a set or a mask.
                 Reverse(const Output<Node>& data,
                         const Output<Node>& reversed_axes,
@@ -111,8 +112,10 @@ namespace ngraph
 
                 /// \brief Indicates how the values from the second input should be interpreted.
                 ///
-                /// The second input can contain a set of indices pointing to axes in the data tensor shape.
-                /// Alternatively it can contain a boolean mask that indicates which axes should be reversed.
+                /// The second input can contain a set of indices pointing to axes in the data
+                /// tensor shape.
+                /// Alternatively it can contain a boolean mask that indicates which axes should be
+                /// reversed.
                 std::string m_mode;
             };
         }

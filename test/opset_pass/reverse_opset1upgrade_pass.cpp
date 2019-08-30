@@ -38,7 +38,8 @@ TEST(serialize, opset1_reverse_upgrade)
     pass_manager.register_pass<pass::Opset1Upgrade>();
     pass_manager.run_passes(f);
 
-    const auto pass_replacement_node = f->get_result()->input(0).get_source_output().get_node_shared_ptr();
+    const auto pass_replacement_node =
+        f->get_result()->input(0).get_source_output().get_node_shared_ptr();
     const auto reverse_v1 = static_pointer_cast<op::v1::Reverse>(pass_replacement_node);
 
     EXPECT_EQ(reverse_v1->get_mode(), "index");
