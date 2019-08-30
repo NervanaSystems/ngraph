@@ -71,7 +71,7 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 // Not all enumeration values explicitly handled in switch
 #if defined(__clang__)
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch"
+#pragma clang diagnostic ignored "-Wswitch-enum"
 #endif
     switch (get_typeid(node))
     {
@@ -93,6 +93,9 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     }
     default: break;
     }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
     return modified;
 }
