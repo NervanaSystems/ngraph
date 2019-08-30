@@ -78,7 +78,7 @@ target_link_libraries(mlir_backend PUBLIC ngraph)
 
 # table-gen dialect ops
 # include table-gen helpers
-include(${LLVM_CMAKE_PATH}/TableGen.cmake)
+include(${LLVM_DIR}/TableGen.cmake)
 
 function(ngraph_tablegen ofn)
     tablegen(MLIR ${ARGV} "-I${MLIR_SRC_INCLUDE_PATH}" "-I${MLIR_BIN_INCLUDE_PATH}")

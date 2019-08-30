@@ -13,3 +13,11 @@ send_recv_ring
 
 # param not supported in CPU backend
 group_conv_data_dilation
+
+# axes input param not supported
+lrn_across_h
+lrn_across_hw
+lrn_across_all_dims
+lrn_across_nw
+lrn_across_empty
+lrn_6D_across_2_axes

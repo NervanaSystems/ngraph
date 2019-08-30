@@ -102,10 +102,8 @@ namespace ngraph
                 };
                 functors.emplace_back(functor);
             }
-            REGISTER_OP_BUILDER(Rnn);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_rnn_cpp() {}
-#endif
+
+            void register_builders_rnn_cpp() { REGISTER_OP_BUILDER(Rnn); }
         }
     }
 }

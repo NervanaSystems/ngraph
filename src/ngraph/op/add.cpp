@@ -21,8 +21,10 @@ using namespace ngraph;
 
 const string op::Add::type_name{"Add"};
 
-op::Add::Add(const Output<Node>& arg0, const Output<Node>& arg1, const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic(arg0, arg1, autob)
+op::Add::Add(const Output<Node>& arg0,
+             const Output<Node>& arg1,
+             const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
