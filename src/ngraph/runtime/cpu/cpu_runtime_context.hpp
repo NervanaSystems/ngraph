@@ -28,7 +28,7 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler.hpp"
+#include "contrib/mlir/compiler/compiler.hpp"
 #endif
 
 namespace mkldnn

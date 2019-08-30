@@ -1,4 +1,4 @@
-# ******************************************************************************
+#*****************************************************************************
 # Copyright 2017-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ******************************************************************************
+#*****************************************************************************
 
-add_subdirectory(compiler)
+import lit.llvm
+
+config.llvm_tools_dir = "@MLIR_TOOLS_DIR@"
+config.mlir_obj_root = "@MLIR_BUILD_DIR@"
+config.mlir_tools_dir = "@MLIR_TOOLS_DIR@"
+config.suffixes = ['.mlir']
+
+config.ngraph_mlir_test_dir = "@NGRAPH_LIT_TEST_SRC_DIR@"
+
+lit.llvm.initialize(lit_config, config)
+
+# Let the main config do the real work.
+lit_config.load_config(config, "@NGRAPH_LIT_TEST_SRC_DIR@/lit.cfg.py")
