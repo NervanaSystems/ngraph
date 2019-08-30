@@ -213,10 +213,10 @@ TEST(gpu_fusion, lstm_analytic)
     auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{1, 1});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
 
-    //ct-1 -> cell state
+    // ct-1 -> cell state
     auto c_const = op::Constant::create(element::f32, Shape{}, {-1.0});
     auto ct_1 = std::make_shared<op::Broadcast>(c_const, Shape{1, 1}, AxisSet{0, 1});
-    //auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
+    // auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
     auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
 
     // construct input gate
@@ -305,10 +305,10 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{1, 1});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
 
-    //ct-1 -> cell state
+    // ct-1 -> cell state
     auto c_const = op::Constant::create(element::f32, Shape{}, {1.0});
     auto ct_1 = std::make_shared<op::Broadcast>(c_const, Shape{1, 1}, AxisSet{0, 1});
-    //auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
+    // auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
     auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
 
     // construct input gate
@@ -354,10 +354,10 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto input_slice_0_0 = std::make_shared<op::Slice>(X_0, Coordinate{0, 0}, Coordinate{1, 1});
     auto forget_gate_0 = std::make_shared<op::Sigmoid>(input_slice_0_0);
 
-    //ct-1 -> cell state
+    // ct-1 -> cell state
     auto c_const_0 = op::Constant::create(element::f32, Shape{}, {1.0});
     auto ct_1_0 = std::make_shared<op::Broadcast>(c_const_0, Shape{1, 1}, AxisSet{0, 1});
-    //auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
+    // auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
     auto multiply_forget_gate_0_ct_1_0 = std::make_shared<op::Multiply>(forget_gate_0, ct_1_0);
 
     // construct input gate
@@ -406,7 +406,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result_ht, result_ct}, arg_tensors);
-    //EXPECT_EQ(1, count_ops_of_type<op::gpu::Rnn>(f));
+    // EXPECT_EQ(1, count_ops_of_type<op::gpu::Rnn>(f));
 
     auto sig = [](float x) { return 1.0f / (1.0f + std::exp(-x)); };
     float kernel = 4.0f;

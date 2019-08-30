@@ -10,7 +10,7 @@ workloads:
 * :ref:`tensorflow_valid`
 * :ref:`mxnet_valid`
 * :ref:`onnx_valid`
-* :doc:`../../project/extras/testing_latency.rst`
+* :ref:`testing_latency`
 
 .. _tensorflow_valid:
 

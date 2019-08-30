@@ -167,5 +167,5 @@ compile clones of the nodes.
 
 .. literalinclude:: ../../../../examples/mnist_mlp/mnist_mlp.cpp
    :language: cpp
-   :lines: 216-224
+   :lines: 216-226
 

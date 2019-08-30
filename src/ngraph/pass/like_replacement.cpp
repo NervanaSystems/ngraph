@@ -37,7 +37,8 @@ using namespace ngraph;
 
 static bool replace_broadcast_like(const std::shared_ptr<ngraph::Node>& node)
 {
-    // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like" argument
+    // Replace a broadcast like with the broadcast to eliminate the pseudo-dependency on the "like"
+    // argument
     auto broadcast_like = static_pointer_cast<op::BroadcastLike>(node);
     replace_node(node,
                  make_shared<op::Broadcast>(broadcast_like->get_argument(0),

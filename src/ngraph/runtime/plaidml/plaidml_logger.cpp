@@ -43,7 +43,7 @@ namespace
             return;
         case VAI_LOG_SEVERITY_WARNING: NGRAPH_WARN << message; return;
         case VAI_LOG_SEVERITY_ERROR:
-        default: NGRAPH_ERR << message; return;
+        case VAI_LOG_SEVERITY_FATAL: NGRAPH_ERR << message; return;
         }
     }
 }

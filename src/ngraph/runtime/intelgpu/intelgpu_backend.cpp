@@ -90,7 +90,7 @@
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
 #include "ngraph/op/fused/shuffle_channels.hpp"
@@ -1817,7 +1817,8 @@ shared_ptr<runtime::Executable>
 
                 if ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1)))
                 {
-                    // symmetric padding case temporally excluded (custom kernel executed) due to stability issues
+                    // symmetric padding case temporally excluded (custom kernel executed) due to
+                    // stability issues
                     const CoordinateDiff& pad_below_for = conv_op->get_padding_below_forward();
                     input_offset_xy = -pad_below_for.at(0);
                 }
@@ -2072,11 +2073,10 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::MVN:
-        case OP_TYPEID::Normalize:
+        case OP_TYPEID::NormalizeL2:
         case OP_TYPEID::PRelu:
         case OP_TYPEID::Passthrough:
         case OP_TYPEID::RNNCell:
-        case OP_TYPEID::QuantizedAvgPool:
         case OP_TYPEID::QuantizedConvolution:
         case OP_TYPEID::QuantizedConvolutionBias:
         case OP_TYPEID::QuantizedConvolutionBiasAdd:
@@ -2084,7 +2084,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::QuantizedConvolutionRelu:
         case OP_TYPEID::QuantizedDot:
         case OP_TYPEID::QuantizedDotBias:
-        case OP_TYPEID::QuantizedMaxPool:
         case OP_TYPEID::Recv:
         case OP_TYPEID::Range:
         case OP_TYPEID::ReplaceSlice:
@@ -2199,7 +2198,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::GRUCell:
     case OP_TYPEID::LSTMCell:
     case OP_TYPEID::MVN:
-    case OP_TYPEID::Normalize:
+    case OP_TYPEID::NormalizeL2:
     case OP_TYPEID::PRelu:
     case OP_TYPEID::RNNCell:
     case OP_TYPEID::ScaleShift:

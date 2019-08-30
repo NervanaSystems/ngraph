@@ -882,7 +882,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
         input_shape_padded =
             runtime::gpu::get_padded_shape(input_shape, padding_below, padding_above, {});
         padded_size = shape_size(input_shape_padded);
-        //currntly we set this to float point only, need to add other datatype support later
+        // currntly we set this to float point only, need to add other datatype support later
         float pad_value = std::numeric_limits<float>::lowest();
         std::vector<float> temp(padded_size, pad_value);
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
@@ -1125,7 +1125,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
                                               sequence_lengths.data(),
                                               pad_value));
 
-    // TO DO: with rnn projection layers the third dimension of the hidden_shape should be recProjSize
+    // TO DO: with rnn projection layers the third dimension of the hidden_shape should be
+    // recProjSize
     cudnnTensorFormat_t format = CUDNN_TENSOR_NCHW;
     uint32_t num_layers = node->get_num_fused_layers() * direction;
     Shape hidden_shape{num_layers, batch_size, hidden_size};

@@ -96,16 +96,16 @@ public:
 
     /// \brief Create a vector of output Tensors
     /// \param output_index The index position in the output Result vector. This would be the same
-    /// order of Results passed into the outputs in the call() method.
-    /// \param pipeline_depth The number of stages in the output pipeline. For double-buffered output
-    /// you would specify pipeline_depth=2
+    ///                     order of Results passed into the outputs in the call() method.
+    /// \param pipeline_depth The number of stages in the output pipeline. For double-buffered
+    ///                       output you would specify pipeline_depth=2
     /// \returns A vector of Tensors, one for each stage of the pipeline
     virtual std::vector<std::shared_ptr<runtime::Tensor>>
         create_output_tensor(size_t output_index, size_t pipeline_depth);
 
 protected:
     /// \brief Called at the end of compile to the values to be returned by get_parameters
-    ///     and get_results
+    ///        and get_results
     /// \param func The function with Results fully resolved.
     void set_parameters_and_results(const Function& func);
 

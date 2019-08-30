@@ -72,11 +72,8 @@ set(SRC
     builder/reduce_function.cpp
     builder/replace_slice.cpp
     builder/quantization.cpp
-    builder/quantized_avg_pool.cpp
     builder/quantized_conv.cpp
-    builder/quantized_concat.cpp
     builder/quantized_dot.cpp
-    builder/quantized_max_pool.cpp
     builder/quantized_matmul.cpp
     builder/reshape.cpp
     builder/reverse.cpp
@@ -232,7 +229,7 @@ if (NGRAPH_CPU_ENABLE)
         # TODO: can we get away without LLVM/MLIR include path. 
         # Currently mlir backend compiler.hpp include LLVM/MLIR files
         get_directory_property(MLIR_LLVM_INCLUDEPATH
-                               DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}
+                               DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}/compiler
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
         
         message(STATUS "Building CPU backend with MLIR")

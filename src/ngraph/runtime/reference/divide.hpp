@@ -26,8 +26,8 @@ namespace ngraph
     {
         namespace reference
         {
-            // NOTE: Execution throws `std::domain_error` if either a non-integral value or an out-of-bounds
-            // value is detected in the input tensor.
+            // NOTE: Execution throws `std::domain_error` if either a non-integral value or an
+            // out-of-bounds value is detected in the input tensor.
 
             // In English: return type is void and T must be an integral type.
             template <typename T>

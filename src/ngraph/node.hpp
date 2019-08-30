@@ -132,7 +132,8 @@ namespace ngraph
         Node(const NodeVector& arguments, size_t output_size = 1);
 
         virtual void generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas) {}
-        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows on deep networks.
+        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
+        ///        on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
@@ -280,7 +281,8 @@ namespace ngraph
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
-        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
+        std::shared_ptr<Node> get_output_as_single_output_node(size_t i,
+                                                               bool for_get_output_element = true);
 
         /// Checks that there is exactly one output and returns its shape
         // TODO: deprecate in favor of node->output(0).get_shape() with a suitable check in the
@@ -564,9 +566,10 @@ namespace ngraph
         std::shared_ptr<NodeType> get_node_shared_ptr() const { return m_node; }
         /// \return A useable shared pointer to this output. If index 0, the node,
         /// otherwise find or create a GOE.
-        std::shared_ptr<Node> as_single_output_node() const NGRAPH_DEPRECATED("Transitional.")
+        std::shared_ptr<Node> as_single_output_node(bool for_get_output_element = true) const
+            NGRAPH_DEPRECATED("Transitional.")
         {
-            return m_node->get_output_as_single_output_node(m_index);
+            return m_node->get_output_as_single_output_node(m_index, for_get_output_element);
         }
 
         /// \return The index of the output referred to by this output handle.
