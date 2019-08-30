@@ -1730,6 +1730,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 node = make_shared<op::v1::Reverse>(args[0], args[1], mode);
                 break;
             }
+            break;
         }
         case OP_TYPEID::ReverseSequence:
         {
@@ -2799,6 +2800,7 @@ json JSONSerializer::serialize_node(const Node& n)
             node["mode"] = tmp->get_mode();
             break;
         }
+        break;
     }
     case OP_TYPEID::ReverseSequence:
     {
