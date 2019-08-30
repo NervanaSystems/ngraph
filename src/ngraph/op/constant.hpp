@@ -149,6 +149,47 @@ namespace ngraph
                 constructor_validate_and_infer_types();
             }
 
+            /// \brief Constructs a tensor constant with delayed data initialization.
+            ///
+            /// \param type The element type of the tensor constant.
+            /// \param shape The shape of the tensor constant.
+            /// \param values A vector of literals for initializing the tensor constant. The size
+            ///        of values must match the size of the shape.
+            template <typename T>
+            Constant(const element::Type& type, Shape shape)
+                : m_element_type(type)
+                , m_shape(shape)
+                , m_data(nullptr)
+                , m_is_initialized(false)
+            {
+                constructor_validate_and_infer_types();
+            }
+
+            template <typename T>
+            void value_initialization(const std::vector<T>& values)
+            {
+                NODE_VALIDATION_CHECK(
+                    this,
+                    values.size() == 1 || values.size() == shape_size(m_shape),
+                    "Did not get the expected number of literals for a constant of shape ",
+                    m_shape,
+                    " (got ",
+                    values.size(),
+                    ", expected ",
+                    (shape_size(m_shape) == 1 ? "" : "1 or "),
+                    shape_size(m_shape),
+                    ").");
+
+                if (values.size() == 1)
+                {
+                    write_values(std::vector<T>(shape_size(m_shape), values[0]));
+                }
+                else
+                {
+                    write_values(values);
+                }
+            }
+
             virtual ~Constant() override;
 
             void validate_and_infer_types() override
@@ -223,7 +264,7 @@ namespace ngraph
 
             template <typename T>
             std::vector<T> get_vector() const
-            {
+            {if(!m_is_initialized){throw ngraph_error("Constant data uninitialized");}
                 if (sizeof(T) > m_element_type.size() && shape_size(m_shape) > 0)
                 {
                     throw ngraph_error("Buffer over-read");
@@ -238,7 +279,7 @@ namespace ngraph
                 return rc;
             }
 
-            const void* get_data_ptr() const { return (m_data ? m_data->get_ptr() : nullptr); }
+            const void* get_data_ptr() const { if(!m_is_initialized){throw ngraph_error("Constant data uninitialized");}return (m_data ? m_data->get_ptr() : nullptr); }
             template <typename T>
             const T* get_data_ptr() const
             {
@@ -344,6 +385,7 @@ namespace ngraph
             element::Type m_element_type;
             Shape m_shape{};
             std::unique_ptr<runtime::AlignedBuffer> m_data;
+            bool m_is_initialized = true;
             Constant(const Constant&) = delete;
             Constant operator=(const Constant&) = delete;
         };
