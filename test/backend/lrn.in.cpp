@@ -39,7 +39,7 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_across_c)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_across_channel)
 {
     Shape shape{2, 3, 2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -150,7 +150,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lrn_across_hw)
     EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, lrn_across_nchw)
+NGRAPH_TEST(${BACKEND_NAME}, lrn_across_all_dims)
 {
     Shape shape{2, 3, 2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
