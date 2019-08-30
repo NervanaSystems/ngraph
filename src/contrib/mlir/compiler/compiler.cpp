@@ -31,6 +31,7 @@
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
@@ -249,8 +250,8 @@ void MLIRCompiler::build_ng_dialect_module()
     dump_mlir_module("nGraph Dialect Construction");
 }
 
-// Converts nGraph shape \p ng_shape to MLIR shape \p mlir_shape.
-static void get_mlir_shape(ngraph::Shape ng_shape, llvm::SmallVectorImpl<int64_t>& mlir_shape)
+template <typename T>
+void MLIRCompiler::get_mlir_shape(T ng_shape, llvm::SmallVectorImpl<int64_t>& mlir_shape)
 {
     for (auto dim : ng_shape)
     {
@@ -258,11 +259,19 @@ static void get_mlir_shape(ngraph::Shape ng_shape, llvm::SmallVectorImpl<int64_t
     }
 }
 
+template <typename T>
+mlir::ArrayAttr MLIRCompiler::get_shape_as_attr(T ng_shape)
+{
+    SmallVector<int64_t, 4> mlir_shape;
+    get_mlir_shape(ng_shape, mlir_shape);
+    return m_builder->getI64ArrayAttr(mlir_shape);
+}
+
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion of the Tensor's
 // element type.
 mlir::Type MLIRCompiler::get_mlir_type(const descriptor::Tensor* tensor)
 {
-    SmallVector<int64_t, 4> mlir_shape;
+    llvm::SmallVector<int64_t, 4> mlir_shape;
     get_mlir_shape(tensor->get_shape(), mlir_shape);
     return mlir::NGTensorType::get(
         &m_context, get_mlir_type(tensor->get_element_type()), mlir_shape);
@@ -591,6 +600,25 @@ namespace ngraph
             mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Negative)
             {
                 return compiler.create_generic_op<mlir::NGNegOp>(ng_node);
+            }
+
+            template <>
+            mlir::Operation* MLIRCompiler::COMPILE_OP_DECL(ngraph::op::Convolution)
+            {
+                mlir::Operation* op = compiler.create_generic_op<mlir::NGConvolutionOp>(ng_node);
+                auto conv_node = static_cast<const ngraph::op::Convolution*>(ng_node);
+                auto conv_op = llvm::cast<mlir::NGConvolutionOp>(op);
+
+                mlir::ArrayAttr attr =
+                    compiler.get_shape_as_attr(conv_node->get_window_movement_strides());
+                conv_op.setStrides(attr);
+
+                attr = compiler.get_shape_as_attr(conv_node->get_padding_below());
+                conv_op.setPadBelow(attr);
+
+                attr = compiler.get_shape_as_attr(conv_node->get_padding_above());
+                conv_op.setPadAbove(attr);
+                return op;
             }
         }
     }
