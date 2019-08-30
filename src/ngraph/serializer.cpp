@@ -554,7 +554,7 @@ json JSONSerializer::serialize_function(const Function& f)
 template <typename T>
 T get_value(json js, const string& key)
 {
-    T rc;
+    T rc = {};
     auto it = js.find(key);
     if (it != js.end())
     {
