@@ -164,8 +164,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_none)
         vector<int32_t> act_index;
         for (size_t j = 0; j < rshape[1]; j++)
         {
-            expected_value.push_back(shape[1]-j-1);
-            expected_index.push_back(shape[1]-j-1);
+            expected_value.push_back(shape[1] - j - 1);
+            expected_index.push_back(shape[1] - j - 1);
             act_value.push_back(actual_value[rshape[1] * i + j]);
             act_index.push_back(actual_index[rshape[1] * i + j]);
         }
@@ -264,8 +264,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_value)
     {
         for (size_t j = 0; j < rshape[1]; j++)
         {
-            expected_value.push_back(shape[1]-j-1);
-            expected_index.push_back(shape[1]-j-1);
+            expected_value.push_back(shape[1] - j - 1);
+            expected_index.push_back(shape[1] - j - 1);
         }
     }
     EXPECT_TRUE(test::all_close_f(expected_value, actual_value));
@@ -364,8 +364,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_index)
         vector<int32_t> act_index;
         for (size_t j = 0; j < rshape[1]; j++)
         {
-            expected_value.push_back(shape[1]-j-1);
-            expected_index.push_back(shape[1]-j-1);
+            expected_value.push_back(shape[1] - j - 1);
+            expected_index.push_back(shape[1] - j - 1);
             act_value.push_back(actual_value[rshape[1] * i + j]);
             act_index.push_back(actual_index[rshape[1] * i + j]);
         }
