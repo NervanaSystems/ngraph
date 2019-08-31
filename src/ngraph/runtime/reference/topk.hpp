@@ -21,6 +21,7 @@
 #include <numeric>
 
 #include "ngraph/coordinate_transform.hpp"
+#include "ngraph/op/topk.hpp"
 
 namespace ngraph
 {
