@@ -38,8 +38,8 @@ static string s_manifest = "${MANIFEST}";
 template <typename T>
 bool compare_set(const vector<T>& a, vector<T> b)
 {
-    NGRAPH_INFO << a.size();
-    NGRAPH_INFO << b.size();
+    // NGRAPH_INFO << a.size();
+    // NGRAPH_INFO << b.size();
     NGRAPH_INFO << "{" << join(a) << "}, {" << join(b) << "}";
     for (auto ita = a.begin(); ita != a.end(); ++ita)
     {
@@ -160,19 +160,22 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_none)
     auto actual_value = read_vector<float>(result_value);
     auto actual_index = read_vector<int32_t>(result_index);
 
-    vector<float> expected_value;
-    vector<int32_t> expected_index;
     for (size_t i = 0; i < rshape[0]; i++)
     {
+        vector<float> expected_value;
+        vector<int32_t> expected_index;
+        vector<float> act_value;
+        vector<int32_t> act_index;
         for (size_t j = 0; j < rshape[1]; j++)
         {
-            expected_value.push_back(shape[1] - j - 1);
-            expected_index.push_back(shape[1] - j - 1);
+            expected_value.push_back(shape[1]-j-1);
+            expected_index.push_back(shape[1]-j-1);
+            act_value.push_back(actual_value[rshape[1] * i + j]);
+            act_index.push_back(actual_index[rshape[1] * i + j]);
         }
+        EXPECT_TRUE(compare_set<float>(expected_value, act_value));
+        EXPECT_TRUE(compare_set<int32_t>(expected_index, act_index));
     }
-
-    EXPECT_TRUE(compare_set<float>(expected_value, actual_value));
-    EXPECT_TRUE(compare_set<int32_t>(expected_index, actual_index));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_none)
@@ -208,8 +211,6 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_none)
     auto actual_value = read_vector<float>(result_value);
     auto actual_index = read_vector<int32_t>(result_index);
 
-    NGRAPH_INFO << rshape[0];
-    NGRAPH_INFO << rshape[1];
     for (size_t i = 0; i < rshape[0]; i++)
     {
         vector<float> expected_value;
@@ -225,7 +226,6 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_none)
         }
         EXPECT_TRUE(compare_set<float>(expected_value, act_value));
         EXPECT_TRUE(compare_set<int32_t>(expected_index, act_index));
-        break;
     }
 }
 
