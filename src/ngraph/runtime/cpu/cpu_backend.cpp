@@ -29,7 +29,7 @@
 #include "ngraph/util.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/compiler.hpp"
+#include "contrib/mlir/compiler/compiler.hpp"
 #endif
 
 using namespace ngraph;

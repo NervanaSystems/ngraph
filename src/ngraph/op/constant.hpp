@@ -95,36 +95,38 @@ namespace ngraph
                     ", expected ",
                     shape_size(m_shape),
                     ".");
-
-                if (type.is_integral())
+                if (values.size())
                 {
-                    if (type.is_signed())
+                    if (type.is_integral())
                     {
-                        std::vector<int64_t> dvalues = parse_string<int64_t>(values);
-                        if (values.size() == 1 && shape_size(m_shape) != 1)
+                        if (type.is_signed())
                         {
-                            dvalues = std::vector<int64_t>(shape_size(m_shape), dvalues[0]);
+                            std::vector<int64_t> dvalues = parse_string<int64_t>(values);
+                            if (values.size() == 1 && shape_size(m_shape) != 1)
+                            {
+                                dvalues = std::vector<int64_t>(shape_size(m_shape), dvalues[0]);
+                            }
+                            write_values(dvalues);
                         }
-                        write_values(dvalues);
+                        else
+                        {
+                            std::vector<uint64_t> dvalues = parse_string<uint64_t>(values);
+                            if (values.size() == 1 && shape_size(m_shape) != 1)
+                            {
+                                dvalues = std::vector<uint64_t>(shape_size(m_shape), dvalues[0]);
+                            }
+                            write_values(dvalues);
+                        }
                     }
                     else
                     {
-                        std::vector<uint64_t> dvalues = parse_string<uint64_t>(values);
+                        std::vector<double> dvalues = parse_string<double>(values);
                         if (values.size() == 1 && shape_size(m_shape) != 1)
                         {
-                            dvalues = std::vector<uint64_t>(shape_size(m_shape), dvalues[0]);
+                            dvalues = std::vector<double>(shape_size(m_shape), dvalues[0]);
                         }
                         write_values(dvalues);
                     }
-                }
-                else
-                {
-                    std::vector<double> dvalues = parse_string<double>(values);
-                    if (values.size() == 1 && shape_size(m_shape) != 1)
-                    {
-                        dvalues = std::vector<double>(shape_size(m_shape), dvalues[0]);
-                    }
-                    write_values(dvalues);
                 }
                 constructor_validate_and_infer_types();
             }
