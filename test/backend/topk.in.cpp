@@ -38,13 +38,17 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, topk_benchmark)
 {
     Shape shape{128, 1000};
-    Shape rshape{128, 5};
+    Shape rshape5{128, 5};
+    Shape rshape1{128, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true);
-    auto out_value = make_shared<op::GetOutputElement>(B, 1);
-    auto out_index = make_shared<op::GetOutputElement>(B, 0);
-    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
-    // auto f = make_shared<Function>(out_index, ParameterVector{A});
+    auto C = make_shared<op::TopK>(A, 1, element::i32, 1, true);
+    auto out5_value = make_shared<op::GetOutputElement>(B, 1);
+    auto out5_index = make_shared<op::GetOutputElement>(B, 0);
+    auto out1_value = make_shared<op::GetOutputElement>(C, 1);
+    auto out1_index = make_shared<op::GetOutputElement>(C, 0);
+    auto f = make_shared<Function>(NodeVector{out5_value, out5_index, out1_value, out1_index},
+                                   ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -60,32 +64,49 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_benchmark)
     }
     copy_data(a, data);
 
-    auto result_value = backend->create_tensor(element::f32, rshape);
-    auto result_index = backend->create_tensor(element::i32, rshape);
+    auto result5_value = backend->create_tensor(element::f32, rshape5);
+    auto result5_index = backend->create_tensor(element::i32, rshape5);
+    auto result1_value = backend->create_tensor(element::f32, rshape1);
+    auto result1_index = backend->create_tensor(element::i32, rshape1);
 
     auto exec = backend->compile(f);
     stopwatch timer;
     timer.start();
-    exec->call({result_value, result_index}, {a});
+    exec->call({result5_value, result5_index, result1_value, result1_index}, {a});
     timer.stop();
     NGRAPH_INFO << "time " << timer.get_microseconds() << "us";
 
-    auto actual_value = read_vector<float>(result_value);
-    auto actual_index = read_vector<int32_t>(result_index);
+    auto actual5_value = read_vector<float>(result5_value);
+    auto actual5_index = read_vector<int32_t>(result5_index);
+    auto actual1_value = read_vector<float>(result1_value);
+    auto actual1_index = read_vector<int32_t>(result1_index);
 
-    vector<float> expected_value;
-    vector<int32_t> expected_index;
-    for (size_t i = 0; i < rshape[0]; i++)
+    vector<float> expected5_value;
+    vector<int32_t> expected5_index;
+    for (size_t i = 0; i < rshape5[0]; i++)
     {
-        for (size_t j = 0; j < rshape[1]; j++)
+        for (size_t j = 0; j < rshape5[1]; j++)
         {
-            expected_value.push_back(shape[1] - j - 1);
-            expected_index.push_back(shape[1] - j - 1);
+            expected5_value.push_back(shape[1] - j - 1);
+            expected5_index.push_back(shape[1] - j - 1);
         }
     }
 
-    EXPECT_TRUE(test::all_close_f(expected_value, actual_value));
-    EXPECT_EQ(expected_index, actual_index);
+    vector<float> expected1_value;
+    vector<int32_t> expected1_index;
+    for (size_t i = 0; i < rshape1[0]; i++)
+    {
+        for (size_t j = 0; j < rshape1[1]; j++)
+        {
+            expected1_value.push_back(shape[1] - j - 1);
+            expected1_index.push_back(shape[1] - j - 1);
+        }
+    }
+
+    EXPECT_TRUE(test::all_close_f(expected5_value, actual5_value));
+    EXPECT_EQ(expected5_index, actual5_index);
+    EXPECT_TRUE(test::all_close_f(expected1_value, actual1_value));
+    EXPECT_EQ(expected1_index, actual1_index);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_2d_resnet50)
