@@ -370,6 +370,7 @@ TEST(serialize, tensor_iterator)
 
     auto tensor_iterator = make_shared<op::TensorIterator>();
     // The Xi are the elements of Xseq
+    // start=0, stride=1, part_size=1, end=40, axis=1
     tensor_iterator->set_sliced_input(Xi, X, 0, 1, 1, 40, 1);
     // Hi is Hinit on the first iteration, Ho after that
     tensor_iterator->set_initialized_input(Hi, Hinit, Ho);
@@ -377,6 +378,7 @@ TEST(serialize, tensor_iterator)
     // Output 0 is last Yo
     auto out0 = tensor_iterator->get_iter_value(Yo, -1);
     // Output 1 is concat of hidden states
+    // start=0, stride=1, part_size=1, end=40, axis=1
     auto out1 = tensor_iterator->get_concatenated_slices(Ho, 0, 1, 1, 40, 1);
 
     auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
