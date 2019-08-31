@@ -47,13 +47,26 @@ namespace ngraph
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
-
                 return a > b;
             }
+
             template <typename T, typename U>
             inline bool compare_min(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
             {
                 return a < b;
+            }
+
+            template <typename T, typename U>
+            inline bool sort_indices_descending(const std::tuple<T, U>& a,
+                                                const std::tuple<T, U>& b)
+            {
+                return std::get<1>(a) < std::get<1>(b);
+            }
+
+            template <typename T, typename U>
+            inline bool sort_indices_ascending(const std::tuple<T, U>& a, const std::tuple<T, U>& b)
+            {
+                return std::get<1>(a) > std::get<1>(b);
             }
 
             template <typename T, typename U>
@@ -64,7 +77,8 @@ namespace ngraph
                       const Shape& out_shape,
                       size_t axis,
                       size_t k,
-                      bool compute_max)
+                      bool compute_max,
+                      op::TopK::SortType sort = op::TopK::SortType::NONE)
             {
                 runtime::event::Duration t1("overall", "topk");
                 using namespace std;
@@ -119,6 +133,36 @@ namespace ngraph
                                     compare_min<T, U>);
                     }
                     // Write temp vector to output
+                    if (compute_max)
+                    {
+                        switch (sort)
+                        {
+                        case op::TopK::SortType::NONE: break;
+                        case op::TopK::SortType::SORT_INDICES:
+                            std::sort(workspace.begin(),
+                                      workspace.begin() + k,
+                                      sort_indices_descending<T, U>);
+                            break;
+                        case op::TopK::SortType::SORT_VALUES:
+                            std::sort(workspace.begin(), workspace.begin() + k, compare_max<T, U>);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        switch (sort)
+                        {
+                        case op::TopK::SortType::NONE: break;
+                        case op::TopK::SortType::SORT_INDICES:
+                            std::sort(workspace.begin(),
+                                      workspace.begin() + k,
+                                      sort_indices_ascending<T, U>);
+                            break;
+                        case op::TopK::SortType::SORT_VALUES:
+                            std::sort(workspace.begin(), workspace.begin() + k, compare_min<T, U>);
+                            break;
+                        }
+                    }
                     for (size_t j = 0; j < k; j++)
                     {
                         tuple<T, U> entry = workspace[j];
