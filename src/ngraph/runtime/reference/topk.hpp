@@ -106,11 +106,17 @@ namespace ngraph
                     // Sort the temp vector
                     if (compute_max)
                     {
-                        sort(workspace.begin(), workspace.end(), compare_max<T, U>);
+                        nth_element(workspace.begin(),
+                                    workspace.begin() + k,
+                                    workspace.end(),
+                                    compare_max<T, U>);
                     }
                     else
                     {
-                        sort(workspace.begin(), workspace.end(), compare_min<T, U>);
+                        nth_element(workspace.begin(),
+                                    workspace.begin() + k,
+                                    workspace.end(),
+                                    compare_min<T, U>);
                     }
                     // Write temp vector to output
                     for (size_t j = 0; j < k; j++)
