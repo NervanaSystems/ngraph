@@ -15,7 +15,26 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/axis_set.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/and.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/equal.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/or.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/power.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/xor.hpp"
+#include "ngraph/shape.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;

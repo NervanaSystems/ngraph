@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op//constant.hpp"
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;

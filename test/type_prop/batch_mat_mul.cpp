@@ -14,8 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/axis_set.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/shape.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
