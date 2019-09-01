@@ -27,7 +27,6 @@
 #include "ngraph/builder/quantized_concat_builder.hpp"
 #include "ngraph/builder/quantized_conv_builder.hpp"
 #include "ngraph/builder/quantized_dot_builder.hpp"
-#include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"

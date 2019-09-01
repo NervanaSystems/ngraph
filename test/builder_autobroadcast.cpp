@@ -14,9 +14,15 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <memory>
+
 #include "gtest/gtest.h"
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/select.hpp"
+#include "ngraph/shape.hpp"
 
 using namespace std;
 using namespace ngraph;

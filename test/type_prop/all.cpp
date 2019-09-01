@@ -15,7 +15,10 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+
+#include "ngraph/axis_set.hpp"
+#include "ngraph/op/all.hpp"
+#include "ngraph/shape.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
