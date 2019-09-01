@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/get_output_element.hpp"
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;

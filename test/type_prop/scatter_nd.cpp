@@ -15,7 +15,8 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/scatter_nd_add.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;

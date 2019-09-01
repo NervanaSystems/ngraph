@@ -15,7 +15,9 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;

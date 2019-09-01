@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/quantized_convolution.hpp"
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
