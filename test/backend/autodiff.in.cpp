@@ -25,7 +25,9 @@
 #define AUTODIFF_BACKEND_${BACKEND_NAME}
 // clang-format on
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/negative.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/subtract.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/replace_slice.hpp"
