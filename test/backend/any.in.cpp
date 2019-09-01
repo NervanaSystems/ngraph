@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "util/ndarray.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
