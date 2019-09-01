@@ -53,11 +53,6 @@ namespace ngraph
 
     class Function;
 
-    namespace op
-    {
-        class Constant;
-    } // namespace op
-
     namespace autodiff
     {
         class Adjoints;

@@ -17,6 +17,7 @@
 #include <climits>
 #include <cmath>
 
+#include "test_tools.hpp"
 #include "util/all_close_f.hpp"
 
 using namespace std;

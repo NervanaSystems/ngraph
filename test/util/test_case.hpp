@@ -16,12 +16,14 @@
 
 #pragma once
 
-#include <utility>
+#include <memory>
+#include <string>
 
 #include "all_close.hpp"
 #include "all_close_f.hpp"
 #include "ngraph/function.hpp"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "test_tools.hpp"
 
 namespace ngraph

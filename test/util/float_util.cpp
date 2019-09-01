@@ -14,6 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
+#include <bitset>
+#include <sstream>
+#include <stdexcept>
+
 #include "util/float_util.hpp"
 
 union FloatUnion {
@@ -133,7 +138,7 @@ ngraph::bfloat16 ngraph::test::bits_to_bfloat16(const std::string& s)
 
     if (unformatted.size() != 16)
     {
-        throw ngraph_error("Input length must be 16");
+        throw std::runtime_error("Input length must be 16");
     }
     std::bitset<16> bs(unformatted);
     return bfloat16::from_bits(static_cast<uint16_t>(bs.to_ulong()));
@@ -147,7 +152,7 @@ ngraph::float16 ngraph::test::bits_to_float16(const std::string& s)
 
     if (unformatted.size() != 16)
     {
-        throw ngraph_error("Input length must be 16");
+        throw std::runtime_error("Input length must be 16");
     }
     std::bitset<16> bs(unformatted);
     return float16::from_bits(static_cast<uint16_t>(bs.to_ulong()));
@@ -161,7 +166,7 @@ float ngraph::test::bits_to_float(const std::string& s)
 
     if (unformatted.size() != 32)
     {
-        throw ngraph_error("Input length must be 32");
+        throw std::runtime_error("Input length must be 32");
     }
     std::bitset<32> bs(unformatted);
     FloatUnion fu;
@@ -177,7 +182,7 @@ double ngraph::test::bits_to_double(const std::string& s)
 
     if (unformatted.size() != 64)
     {
-        throw ngraph_error("Input length must be 64");
+        throw std::runtime_error("Input length must be 64");
     }
     std::bitset<64> bs(unformatted);
     DoubleUnion du;
