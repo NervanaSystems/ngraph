@@ -17,7 +17,17 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/file_util.hpp"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/abs.hpp"
+#include "ngraph/op/acos.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/dot.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/split.hpp"
+#include "ngraph/op/relu.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/test_tools.hpp"
 
