@@ -33,7 +33,6 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/op/parameter.hpp"
-#include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
 #include "util/test_control.hpp"
