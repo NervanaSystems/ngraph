@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close_f.hpp"

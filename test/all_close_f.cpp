@@ -22,7 +22,7 @@
 
 #include "gtest/gtest.h"
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "util/all_close_f.hpp"
 #include "util/float_util.hpp"
 
