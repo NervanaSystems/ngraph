@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph

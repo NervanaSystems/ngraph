@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 
@@ -122,7 +123,10 @@ namespace ngraph
             bool get_ceil_mode() const { return m_ceil_mode; }
             void set_ceil_mode(bool ceil_mode) { m_ceil_mode = ceil_mode; }
             /// \return The default value for MaxPool.
-            virtual std::shared_ptr<Node> get_default_value() const override;
+            virtual std::shared_ptr<Node> get_default_value() const override
+            {
+                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+            }
 
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,

@@ -21,6 +21,7 @@
 #include "ngraph/deprecated.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {

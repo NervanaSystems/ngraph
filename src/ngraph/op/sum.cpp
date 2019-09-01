@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/op/sum.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
 
 using namespace std;
@@ -49,9 +48,4 @@ void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& 
     auto& x_shape = x.get_shape();
 
     adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, get_reduction_axes()));
-}
-
-shared_ptr<Node> op::Sum::get_default_value() const
-{
-    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }

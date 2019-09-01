@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;

@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/op/argmin.hpp"
-#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
