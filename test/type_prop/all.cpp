@@ -18,6 +18,7 @@
 
 #include "ngraph/axis_set.hpp"
 #include "ngraph/op/all.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/shape.hpp"
 #include "util/type_prop.hpp"
 

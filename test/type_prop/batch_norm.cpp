@@ -17,6 +17,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "gtest/gtest.h"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/shape.hpp"
 #include "util/type_prop.hpp"
 
