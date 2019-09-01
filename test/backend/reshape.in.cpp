@@ -22,7 +22,8 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"

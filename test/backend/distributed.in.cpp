@@ -21,7 +21,7 @@
 
 #include "ngraph/distributed.hpp"
 #include "ngraph/file_util.hpp"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close_f.hpp"
 #include "util/random.hpp"

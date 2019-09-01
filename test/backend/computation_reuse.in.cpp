@@ -15,7 +15,11 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/convolution.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/known_element_types.hpp"

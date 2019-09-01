@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/runtime/backend.hpp"
 #include "util/test_control.hpp"
 
 using namespace std;

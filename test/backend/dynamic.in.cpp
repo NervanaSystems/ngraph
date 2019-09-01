@@ -15,7 +15,12 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/experimental/dyn_reshape.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/product.hpp"
+#include "ngraph/op/reshape.hpp"
+#include "ngraph/op/reverse.hpp"
 #include "util/all_close_f.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"

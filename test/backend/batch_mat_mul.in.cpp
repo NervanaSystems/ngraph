@@ -15,7 +15,9 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/concat.hpp"
+#include "ngraph/op/experimental/batch_mat_mul.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/known_element_types.hpp"

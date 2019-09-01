@@ -22,7 +22,9 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"

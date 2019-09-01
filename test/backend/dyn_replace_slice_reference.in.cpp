@@ -35,7 +35,8 @@
 
 #include "gtest/gtest.h"
 
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "util/test_tools.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/all_close_f.hpp"

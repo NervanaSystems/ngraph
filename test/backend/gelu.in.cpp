@@ -32,7 +32,8 @@
 // clang-format on
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
+#include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/parameter.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/autodiff/numeric_compare.hpp"
