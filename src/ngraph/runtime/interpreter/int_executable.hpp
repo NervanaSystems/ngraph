@@ -243,7 +243,7 @@ private:
     {
         const Node& node = *node_wrapper.get_node();
 
-        size_t op_version = node.get_op_version();
+        size_t op_version = node.get_version();
         bool is_op_version_supported = op_version == 0;
         NGRAPH_CHECK(is_op_version_supported,
                      "Unsupported operator version ",
@@ -1008,6 +1008,7 @@ private:
         {
             const op::LRN* lrn = static_cast<const op::LRN*>(&node);
             reference::lrn<T>(args[0]->get_data_ptr<const T>(),
+                              lrn->get_reduction_axes(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
                               lrn->get_alpha(),

@@ -14,23 +14,28 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/less.hpp"
+// NOTE: This file follows nGraph format style and MLIR naming convention since it does
+// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
 
-using namespace std;
-using namespace ngraph;
+#pragma once
 
-const string op::Less::type_name{"Less"};
+#include "contrib/mlir/compiler/compiler.hpp"
 
-op::Less::Less(const Output<Node>& arg0,
-               const Output<Node>& arg1,
-               const AutoBroadcastSpec& auto_broadcast)
-    : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
+#include <mlir/Pass/Pass.h>
+
+namespace ngraph
 {
-    constructor_validate_and_infer_types();
+    namespace runtime
+    {
+        namespace ngmlir
+        {
+            class MLIRCompiler;
+        }
+    }
 }
 
-shared_ptr<Node> op::Less::copy_with_new_args(const NodeVector& new_args) const
+namespace mlir
 {
-    check_new_args_count(this, new_args);
-    return make_shared<Less>(new_args.at(0), new_args.at(1), this->get_autob());
+    std::unique_ptr<Pass>
+        createDialectLoweringPass(ngraph::runtime::ngmlir::MLIRCompiler* compiler);
 }
