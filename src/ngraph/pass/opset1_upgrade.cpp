@@ -16,6 +16,7 @@
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/product.hpp"
 #include "ngraph/op/softmax.hpp"
 
 using namespace std;
@@ -87,6 +88,15 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 
         auto replacement_node =
             make_shared<op::v1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Product:
+    {
+        int keep_dims = 0;
+        auto replacement_node = make_shared<op::v1::ReduceProd>(
+            node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
         replace_node(node, replacement_node);
         modified = true;
         break;
