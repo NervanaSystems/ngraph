@@ -28,10 +28,9 @@ namespace ngraph
             ///
             /// \brief    Constructor for the Opset 1 transformation pass.
             ///
-            /// \details  This transformation pass iterates over all nodes in a graph and updates
-            /// opset version 0 ops
-            ///           to their opset version 1 equivalents. All ops in the final graph have
-            ///           opset version 1.
+            /// \details  This transformation pass iterates over all nodes in a graph
+            /// and updates opset version 0 ops to their opset version 1 equivalents.
+            /// All ops in the final graph have opset version 1.
             Opset1Upgrade() = default;
             bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
         };

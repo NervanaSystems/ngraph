@@ -79,7 +79,7 @@ namespace ngraph
                 ///
                 Softmax(const Output<Node>& arg, const size_t axis);
 
-                size_t get_op_version() const override { return 1; }
+                size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 

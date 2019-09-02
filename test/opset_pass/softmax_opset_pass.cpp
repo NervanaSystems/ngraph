@@ -44,7 +44,7 @@ TEST(serialize, opset1_softmax_pass_axis)
 
     EXPECT_EQ(softmax_s1_node->get_axis(), axis);
     EXPECT_EQ(softmax_s1_node->description(), "Softmax");
-    EXPECT_EQ(softmax_s1_node->get_op_version(), 1);
+    EXPECT_EQ(softmax_s1_node->get_version(), 1);
 }
 
 TEST(serialize, opset1_softmax_pass_axis_exception)
@@ -85,7 +85,7 @@ namespace fake_v2
             : Softmax{arg, axes}
         {
         }
-        size_t get_op_version() const override { return 2; }
+        size_t get_version() const override { return 2; }
     };
 }
 
