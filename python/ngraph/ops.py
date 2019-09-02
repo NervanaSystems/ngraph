@@ -172,7 +172,7 @@ def mvn(data, axes, normalize_variance, eps, name=None):
 
 @nameable_op
 def quantize(data, scale, zero_point, new_type, axes, round_mode, name=None):
-    # type: (Node, Node, Node, NumericType, Set[int], int, str) -> Node
+    # type: (Node, Node, Node, NumericType, Set[int], Quantize.RoundMode, str) -> Node
     r"""Perform quantize operation on data from input node.
 
     Computes quantize on the input tensor:
@@ -183,30 +183,30 @@ def quantize(data, scale, zero_point, new_type, axes, round_mode, name=None):
     :param scale: Scale used for mapping.
     :param zero_point: Zero point used for mapping.
     :param new_type: Output element type.
-    :param axes: Number describes how to perform ROUND function.
+    :param round_mode: Number describes how to perform ROUND function.
 
-                 0: Round to nearest integer. In case of two equidistant integers
-                 round away from zero e.g. 2.5 -> 3,  -3.5 -> -4
+                 ROUND_NEAREST_TOWARD_INFINITY: Round to nearest integer. In case of two
+                 equidistant integers round away from zero e.g. 2.5 -> 3,  -3.5 -> -4
 
-                 1: Round to nearest integer. In case of two equidistant integers
-                 round toward zero e.g. 2.5 -> 2,  -3.5 -> -3
+                 ROUND_NEAREST_TOWARD_ZERO: Round to nearest integer. In case of two equidistant
+                 integers round toward zero e.g. 2.5 -> 2,  -3.5 -> -3
 
-                 2: Round to nearest integer. In case of two equidistant integers
-                 round up e.g. 2.5 -> 2,  -3.5 -> -3
+                 ROUND_NEAREST_UPWARD: Round to nearest integer. In case of two equidistant
+                 integers round up e.g. 2.5 -> 2,  -3.5 -> -3
 
-                 3: Round to nearest integer. In case of two equidistant integers
-                 round down e.g. 2.5 -> 2,  -3.5 -> -4
+                 ROUND_NEAREST_DOWNWARD: Round to nearest integer. In case of two equidistant
+                 integers round down e.g. 2.5 -> 2,  -3.5 -> -4
 
-                 4: Round to nearest integer. In case of two equidistant integers
-                 round down e.g. 2.5 -> 2,  -3.5 -> -4
+                 ROUND_NEAREST_TOWARD_EVEN: Round to nearest integer. In case of two equidistant
+                 integers round down e.g. 2.5 -> 2,  -3.5 -> -4
 
-                 5: Round to nearest integer away from zero.
+                 ROUND_TOWARD_INFINITY: Round to nearest integer away from zero.
 
-                 6: Round to nearest integer toward zero.
+                 ROUND_TOWARD_ZERO: Round to nearest integer toward zero.
 
-                 7: Round to nearest integer toward infinity (ceiling).
+                 ROUND_UP: Round to nearest integer toward infinity (ceiling).
 
-                 8: Round to nearest integer toward negative infinity (floor).
+                 ROUND_DOWN: Round to nearest integer toward negative infinity (floor).
 
     :param name: Optional output node name.
     :return: The new node performing a quantize operation on input tensor.
@@ -217,7 +217,7 @@ def quantize(data, scale, zero_point, new_type, axes, round_mode, name=None):
                     zero_point,
                     new_element_type,
                     AxisSet(axes),
-                    Quantize.RoundMode(round_mode))
+                    round_mode)
 
 
 @nameable_op
