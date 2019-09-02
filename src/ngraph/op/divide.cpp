@@ -25,8 +25,8 @@ const string op::Divide::type_name{"Divide"};
 
 op::Divide::Divide(const Output<Node>& arg0,
                    const Output<Node>& arg1,
-                   const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic(arg0, arg1, autob)
+                   const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
@@ -34,8 +34,8 @@ op::Divide::Divide(const Output<Node>& arg0,
 op::Divide::Divide(const Output<Node>& arg0,
                    const Output<Node>& arg1,
                    bool pythondiv,
-                   const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic(arg0, arg1, autob)
+                   const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
     , m_pythondiv(pythondiv)
 {
     constructor_validate_and_infer_types();

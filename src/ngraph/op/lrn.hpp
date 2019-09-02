@@ -69,6 +69,8 @@ namespace ngraph
             void set_bias(double bias) { m_bias = bias; }
             size_t get_nsize() const { return m_size; }
             void set_nsize(size_t size) { m_size = size; }
+            AxisSet get_reduction_axes() const;
+
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
