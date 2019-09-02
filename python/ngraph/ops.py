@@ -22,21 +22,13 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
-<<<<<<< HEAD
     Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, \
     FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
     GroupConvolution, HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, \
     Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, PRelu, \
     Relu, RNNCell, ReplaceSlice, Reshape, Reverse, ScaleShift, Select, Sign, Sin, Sinh, Slice, \
     Softmax, SpaceToDepth, Sqrt, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
-=======
-    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, FakeQuantize, \
-    Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, GroupConvolution, \
-    HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, MVN, \
-    Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, PRelu, Relu, RNNCell, \
-    ReplaceSlice, Reshape, Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, \
-    Softmax, SpaceToDepth, Sqrt, SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
->>>>>>> parent of abd4c046e... [Py] Code formatting.
+
 
 from typing import Callable, Iterable, List, Set, Union
 
