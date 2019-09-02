@@ -14,23 +14,32 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/less.hpp"
+// Add new dialect ops with lowering support to this file
+#ifndef MLIR_OP
+#define MLIR_OP
+#endif
 
-using namespace std;
-using namespace ngraph;
+#ifndef MLIR_LAST_OP
+#define MLIR_LAST_OP(OP) MLIR_OP(OP)
+#endif
 
-const string op::Less::type_name{"Less"};
+MLIR_OP(NGAddOp)
+MLIR_OP(NGArgMaxRedOp)
+MLIR_OP(NGArgMinRedOp)
+MLIR_OP(NGConcatOp)
+MLIR_OP(NGConvolutionOp)
+MLIR_OP(NGDivOp)
+MLIR_OP(NGDotOp)
+MLIR_OP(NGGatherOp)
+MLIR_OP(NGGreaterOp)
+MLIR_OP(NGLessOp)
+MLIR_OP(NGMulOp)
+MLIR_OP(NGMaxOp)
+MLIR_OP(NGMinOp)
+MLIR_OP(NGNegOp)
+MLIR_OP(NGReluOp)
+MLIR_OP(NGSubOp)
+MLIR_LAST_OP(NGReturnOp)
 
-op::Less::Less(const Output<Node>& arg0,
-               const Output<Node>& arg1,
-               const AutoBroadcastSpec& auto_broadcast)
-    : BinaryElementwiseComparison(arg0, arg1, auto_broadcast)
-{
-    constructor_validate_and_infer_types();
-}
-
-shared_ptr<Node> op::Less::copy_with_new_args(const NodeVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<Less>(new_args.at(0), new_args.at(1), this->get_autob());
-}
+#undef MLIR_OP
+#undef MLIR_LAST_OP
