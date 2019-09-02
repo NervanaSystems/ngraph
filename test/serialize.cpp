@@ -371,6 +371,6 @@ TEST(serialize, opset1_product)
     auto g_red_sum = g_result->input(0).get_source_output().get_node_shared_ptr();
 
     EXPECT_EQ(g_red_sum->description(), "Product");
-    EXPECT_EQ(g_red_sum->get_op_version(), 1);
+    EXPECT_EQ(g_red_sum->get_version(), 1);
     EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_sum.get())->get_keep_dims(), 1);
 }
