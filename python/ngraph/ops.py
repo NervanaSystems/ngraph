@@ -26,8 +26,9 @@ from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgP
     FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
     GroupConvolution, HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, \
     Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, PRelu, \
-    Relu, RNNCell, ReplaceSlice, Reshape, Reverse, ScaleShift, Select, Sign, Sin, Sinh, Slice, \
-    Softmax, SpaceToDepth, Sqrt, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
+    Relu, RNNCell, ReplaceSlice, Reshape, Reverse, ScaleShift, Select, ShuffleChannels, Sign, \
+    Sin, Sinh, Slice, Softmax, SpaceToDepth, Sqrt, SquaredDifference, Squeeze, Subtract, Sum, \
+    Tan, Tanh, TopK, Unsqueeze
 
 
 from typing import Callable, Iterable, List, Set, Union
