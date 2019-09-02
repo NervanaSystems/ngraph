@@ -86,7 +86,7 @@ namespace ngraph
                            const Output<Node>& reduction_axes,
                            int keep_dims = 0);
 
-                size_t get_op_version() const override { return 1; }
+                size_t get_version() const override { return 1; }
                 /// \return If set to 1 it holds axes that are used for reduction. For each such
                 /// axis, output dimension is equal to 1.
                 int get_keep_dims() const { return m_keep_dims; }

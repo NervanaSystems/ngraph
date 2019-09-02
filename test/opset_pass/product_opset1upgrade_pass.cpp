@@ -43,5 +43,5 @@ TEST(serialize, opset1_product_upgrade)
     const auto reduce_prod_v1 = static_pointer_cast<op::v1::ReduceProd>(pass_replacement_node);
 
     EXPECT_EQ(reduce_prod_v1->description(), "Product");
-    EXPECT_EQ(reduce_prod_v1->get_op_version(), 1);
+    EXPECT_EQ(reduce_prod_v1->get_version(), 1);
 }
