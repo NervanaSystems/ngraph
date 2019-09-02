@@ -17,6 +17,7 @@ import numpy as np
 
 import ngraph as ng
 from test.ngraph.util import get_runtime
+from ngraph.impl.op import Quantize
 
 
 def test_quantize_operator():
@@ -41,7 +42,7 @@ def test_quantize_operator():
                         parameter_zero_point,
                         new_type,
                         axis_set,
-                        0)
+                        Quantize.RoundMode.ROUND_NEAREST_TOWARD_INFINITY)
     computation = runtime.computation(model,
                                       parameter_data,
                                       parameter_scale,
