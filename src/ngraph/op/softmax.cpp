@@ -50,9 +50,13 @@ op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     }
 
     if (input_shape.is_static())
+    {
         set_output_type(0, get_input_element_type(0), input_shape.to_shape());
+    }
     else
+    {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    }
 
     // empty axes == all axes
     if (m_axes.size() == 0)

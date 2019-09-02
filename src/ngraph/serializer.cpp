@@ -2031,7 +2031,7 @@ json JSONSerializer::serialize_node(const Node& n)
     m_nodes_serialized.insert(&n);
     json node;
     node["name"] = n.get_name();
-    auto op_version = n.get_op_version();
+    auto op_version = n.get_version();
     node["op_version"] = op_version;
 
     if (n.get_name() != n.get_friendly_name())

@@ -54,7 +54,7 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
 
-    size_t op_version = node->get_op_version();
+    size_t op_version = node->get_version();
 
     if (op_version == 1)
     {
