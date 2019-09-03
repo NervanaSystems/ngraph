@@ -58,11 +58,11 @@ namespace ngraph
             /// \param aux_class_preds		Auxilary class predictions
             /// \param aux_box_preds		Auxilary box predictions
             /// \param attrs				Detection Output attributes
-            DetectionOutput(const std::shared_ptr<Node>& box_logits,
-                            const std::shared_ptr<Node>& class_preds,
-                            const std::shared_ptr<Node>& proposals,
-                            const std::shared_ptr<Node>& aux_class_preds,
-                            const std::shared_ptr<Node>& aux_box_preds,
+            DetectionOutput(const Output<Node>& box_logits,
+                            const Output<Node>& class_preds,
+                            const Output<Node>& proposals,
+                            const Output<Node>& aux_class_preds,
+                            const Output<Node>& aux_box_preds,
                             const DetectionOutputAttrs& attrs);
 
             void validate_and_infer_types() override;

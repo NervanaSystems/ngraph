@@ -66,9 +66,9 @@ namespace ngraph
             /// \param class_logits    Class prediction logits
             /// \param image_shape     Shape of image
             /// \param attrs           Proposal op attributes
-            Proposal(const std::shared_ptr<Node>& class_probs,
-                     const std::shared_ptr<Node>& class_logits,
-                     const std::shared_ptr<Node>& image_shape,
+            Proposal(const Output<Node>& class_probs,
+                     const Output<Node>& class_logits,
+                     const Output<Node>& image_shape,
                      const ProposalAttrs& attrs);
 
             void validate_and_infer_types() override;
