@@ -20,27 +20,61 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Sum::type_name{"Sum"};
+const string op::v0::Sum::type_name{"Sum"};
 
-op::Sum::Sum(const Output<Node>& arg, const AxisSet& reduction_axes)
+op::v0::Sum::Sum(const Output<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-op::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
+op::v0::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Sum::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Sum::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Sum>(new_args.at(0), new_args.at(1));
 }
 
-void op::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::v0::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    auto delta = deltas.at(0);
+
+    auto x = input_value(0);
+    auto& x_shape = x.get_shape();
+
+    adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, get_reduction_axes()));
+}
+
+const string op::v1::ReduceSum::type_name{"Sum"};
+
+op::v1::ReduceSum::ReduceSum(const Output<Node>& arg, const AxisSet& reduction_axes, int keep_dims)
+    : ArithmeticReduction(arg, reduction_axes)
+    , m_keep_dims{keep_dims}
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v1::ReduceSum::ReduceSum(const Output<Node>& arg,
+                             const Output<Node>& reduction_axes,
+                             int keep_dims)
+    : ArithmeticReduction(arg, reduction_axes)
+    , m_keep_dims{keep_dims}
+{
+    constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::ReduceSum::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<ReduceSum>(new_args.at(0), new_args.at(1), m_keep_dims);
+}
+
+void op::v1::ReduceSum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     auto delta = deltas.at(0);
 

@@ -75,6 +75,7 @@ namespace ngraph
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                /// \param keep_dims If set to 1 it holds axes that are used for reduction.
                 ReduceProd(const Output<Node>& arg,
                            const AxisSet& reduction_axes,
                            int keep_dims = 0);
@@ -82,13 +83,14 @@ namespace ngraph
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
+                /// \param keep_dims If set to 1 it holds axes that are used for reduction.
                 ReduceProd(const Output<Node>& arg,
                            const Output<Node>& reduction_axes,
                            int keep_dims = 0);
 
                 size_t get_version() const override { return 1; }
-                /// \return If set to 1 it holds axes that are used for reduction. For each such
-                /// axis, output dimension is equal to 1.
+                /// \return If set to 1 it holds axes that are used for reduction.
+                /// For each such axis, output dimension is equal to 1.
                 int get_keep_dims() const { return m_keep_dims; }
                 /// \return The default value for Product.
                 virtual std::shared_ptr<Node> get_default_value() const override

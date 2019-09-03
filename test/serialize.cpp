@@ -368,9 +368,27 @@ TEST(serialize, opset1_product)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
+    auto g_red_prod = g_result->input(0).get_source_output().get_node_shared_ptr();
+
+    EXPECT_EQ(g_red_prod->description(), "Product");
+    EXPECT_EQ(g_red_prod->get_version(), 1);
+    EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_prod.get())->get_keep_dims(), 1);
+}
+
+TEST(serialize, opset1_sum)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto keep_dims = 1;
+    auto reduce_sum = make_shared<op::v1::ReduceSum>(arg, AxisSet{1, 2}, keep_dims);
+    auto result = make_shared<op::Result>(reduce_sum);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
     auto g_red_sum = g_result->input(0).get_source_output().get_node_shared_ptr();
 
-    EXPECT_EQ(g_red_sum->description(), "Product");
+    EXPECT_EQ(g_red_sum->description(), "Sum");
     EXPECT_EQ(g_red_sum->get_version(), 1);
-    EXPECT_EQ(dynamic_cast<const op::v1::ReduceProd*>(g_red_sum.get())->get_keep_dims(), 1);
+    EXPECT_EQ(dynamic_cast<const op::v1::ReduceSum*>(g_red_sum.get())->get_keep_dims(), 1);
 }

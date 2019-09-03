@@ -1891,7 +1891,15 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Sum:
         {
             auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
-            node = make_shared<op::Sum>(args[0], reduction_axes);
+            if (op_version == 0)
+            {
+                node = make_shared<op::Sum>(args[0], reduction_axes);
+            }
+            if (op_version == 1)
+            {
+                auto keep_dims = node_js.at("keep_dims").get<int>();
+                node = make_shared<op::v1::ReduceSum>(args[0], reduction_axes, keep_dims);
+            }
             break;
         }
         case OP_TYPEID::Tan:
@@ -2906,8 +2914,17 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Sum:
     {
-        auto tmp = dynamic_cast<const op::Sum*>(&n);
-        node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::Sum*>(&n);
+            node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::ReduceSum*>(&n);
+            node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
+            node["keep_dims"] = tmp->get_keep_dims();
+        }
         break;
     }
     case OP_TYPEID::Softmax:
