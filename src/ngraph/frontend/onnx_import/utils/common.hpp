@@ -78,13 +78,13 @@ namespace ngraph
 
             /// \brief      Handle negative axes' values in vector.
             ///
-            /// \param[in]  axis        The requested vector of axes.
+            /// \param[in]  axes        The requested vector of axes.
             /// \param[in]  tensor_rank  The corresponding tensor rank.
             ///
             /// \return     If any negative axis in vector, then replace by sum of tensor rank and
             /// axis.
             ///
-            std::vector<std::size_t> convert_negative_axis(std::vector<std::int64_t> axes,
+            std::vector<std::size_t> convert_negative_axes(std::vector<std::int64_t> axes,
                                                            std::size_t tensor_rank);
 
             /// \brief Creates a shifted square identity matrix.

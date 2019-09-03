@@ -33,7 +33,7 @@ namespace ngraph
                 {
                     auto reduction_axes =
                         node.get_attribute_value<std::vector<std::int64_t>>("axes", {});
-                    std::vector<std::size_t> valid_reduction_axes = common::convert_negative_axis(
+                    std::vector<std::size_t> valid_reduction_axes = common::convert_negative_axes(
                         reduction_axes, node.get_ng_inputs().at(0)->get_shape().size());
                     if (reduction_axes.empty())
                     {
