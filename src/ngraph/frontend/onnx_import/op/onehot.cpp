@@ -50,23 +50,12 @@ namespace ngraph
                         std::make_shared<ngraph::op::Slice>(values, Coordinate{0}, Coordinate{1});
                     std::shared_ptr<ngraph::Node> on_value =
                         std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2});
-<<<<<<< HEAD
+
                     auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
 
-                    if (axis < 0)
-                    {
-                        axis += indices_shape.size() + 1;
-                    }
-
-                    ASSERT_VALID_ARGUMENT(
-                        node, (axis >= 0) && (axis <= static_cast<int64_t>(indices_shape.size())))
-                        << "invalid 'axis' attribute: "
-                        << node.get_attribute_value<std::int64_t>("axis", -1);
-=======
-                    auto axis = node.get_attribute_value<std::int64_t>("axis", 0);
+                     // Accepted range for axis is [-r-1, r] where r = rank(indices). Validate against rank+1.
                     std::size_t valid_axis =
-                        common::convert_negative_axis(axis, inputs.at(0)->get_shape().size());
->>>>>>> [ONNX] Added function for converting negative axes.
+                        common::validate_axis(node, axis, indices_shape.size(), -indices_shape.size()-1, indices_shape.size());
 
                     auto constant_depth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
 
@@ -82,8 +71,7 @@ namespace ngraph
                     // axis = 1
                     // depth = 10
                     // output_shape = (2, 10, 2)
-                    output_shape.insert(std::next(std::begin(output_shape), valid_axis),
-                                        depth_value);
+                    output_shape.insert(std::next(std::begin(output_shape), valid_axis), depth_value);
 
                     std::shared_ptr<ngraph::Node> one_hot = std::make_shared<ngraph::op::Convert>(
                         std::make_shared<ngraph::op::OneHot>(indices, output_shape, valid_axis),
@@ -98,7 +86,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } // namespace op
+        } //namespace op
 
     } // namespace  onnx_import
 

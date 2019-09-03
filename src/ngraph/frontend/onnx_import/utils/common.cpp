@@ -55,7 +55,7 @@ namespace ngraph
                 else
                 {
                     std::int64_t new_axis = axis + static_cast<std::int64_t>(tensor_rank);
-                    if (new_axis < 0)
+                    if(new_axis < 0)
                     {
                         throw ngraph_error("Parameter axis out of the tensor rank.");
                     }
@@ -66,15 +66,15 @@ namespace ngraph
                 }
             }
 
-            std::vector<std::size_t> convert_negative_axis(std::vector<std::int64_t> axes,
-                                                           std::size_t tensor_rank)
+            std::vector<std::size_t> convert_negative_axis(std::vector<std::int64_t> axes, std::size_t tensor_rank)
             {
-                std::vector<std::size_t> new_axes(axes.size());
+                std::vector<std::size_t>new_axes;
 
-                for (auto a : axes)
+                for(auto a : axes)
                 {
-                    new_axes.push_back(convert_negative_axis(a, tensor_rank));
+                    new_axes.push_back(convert_negative_axis(a,tensor_rank));
                 }
+
                 return new_axes;
             }
 
