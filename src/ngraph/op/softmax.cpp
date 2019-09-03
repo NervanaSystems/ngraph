@@ -38,21 +38,29 @@ op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     constructor_validate_and_infer_types();
 
     const PartialShape& input_shape = get_input_partial_shape(0);
+    NODE_VALIDATION_CHECK(this,
+                          input_shape.rank().is_static(),
+                          "Input node rank must be static (input_shape=",
+                          input_shape,
+                          ").");
     for (auto axis : m_axes)
     {
         NODE_VALIDATION_CHECK(this,
-                              axis < static_cast<size_t>(input_shape.rank()),
+                              axis >= 0 && axis < static_cast<size_t>(input_shape.rank()),
                               "Reduction axis (",
                               axis,
                               ") is out of bounds (argument shape: ",
                               input_shape,
                               ").");
     }
-
     if (input_shape.is_static())
+    {
         set_output_type(0, get_input_element_type(0), input_shape.to_shape());
+    }
     else
+    {
         set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    }
 
     // empty axes == all axes
     if (m_axes.size() == 0)
@@ -108,6 +116,11 @@ op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
     constructor_validate_and_infer_types();
 
     const PartialShape& input_shape = get_input_partial_shape(0);
+    NODE_VALIDATION_CHECK(this,
+                          input_shape.rank().is_static(),
+                          "Input node rank must be static (input_shape=",
+                          input_shape,
+                          ").");
     NODE_VALIDATION_CHECK(this,
                           axis >= 0 && axis < static_cast<size_t>(input_shape.rank()),
                           "Reduction axis (",
