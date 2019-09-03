@@ -205,6 +205,105 @@ mlir::LogicalResult verifyOp(NGGatherOp* op)
     return mlir::success();
 }
 
+template <>
+mlir::LogicalResult verifyOp(NGConvolutionOp* op)
+{
+    Type ty = op->images()->getType();
+    NGTensorType imagesType = ty.cast<NGTensorType>();
+    Type imagesEt = imagesType.getElementType();
+    Shape imagesShape = imagesType.getShape();
+
+    ty = op->filters()->getType();
+    NGTensorType filtersType = ty.cast<NGTensorType>();
+    Type filtersEt = filtersType.getElementType();
+    Shape filtersShape = filtersType.getShape();
+
+    ty = op->res()->getType();
+    NGTensorType resultType = ty.cast<NGTensorType>();
+    Type resultEt = resultType.getElementType();
+    Shape resultShape = resultType.getShape();
+
+    ArrayAttr strides = op->strides();
+    ArrayAttr padBelow = op->padBelow();
+    ArrayAttr padAbove = op->padAbove();
+
+    unsigned imagesRank = imagesShape.size();
+    unsigned filtersRank = filtersShape.size();
+    unsigned resultRank = resultShape.size();
+    unsigned imageSpatialRank = imagesRank - 2;
+    unsigned filtersSpatialRank = filtersRank - 2;
+    unsigned stridesRank = strides.size();
+    unsigned padBelowRank = padBelow.size();
+    unsigned padAboveRank = padAbove.size();
+
+    SmallVector<int64_t, 4> stridesVal, padAboveVal, padBelowVal;
+    // Identical filters and image element types
+    if (filtersEt != imagesType)
+    {
+        return op->emitOpError("Incompatible image and filters types");
+    }
+
+    // Verify image shape
+    if (imagesRank < 3)
+    {
+        return op->emitOpError("Image shape of rank below 3");
+    }
+
+    // Verify strides and pads shapes
+    if (imageSpatialRank != stridesRank || imageSpatialRank != padBelowRank ||
+        imageSpatialRank != padAboveRank)
+    {
+        return op->emitOpError("Image spatial rank mismatches strides and/or padding ranks");
+    }
+
+    if (imageSpatialRank != filtersSpatialRank)
+    {
+        return op->emitOpError("Image and filters spatial ranks mismatch");
+    }
+
+    // Batch size is non-zero, and identical non-zero channel depth
+    if (imagesShape[0] <= 0 || filtersShape[0] <= 0 || imagesShape[1] != filtersShape[1] ||
+        imagesShape[1] <= 0)
+    {
+        return op->emitOpError("Image and filters have invalid shapes");
+    }
+
+    for (auto attrs : llvm::zip(strides, padBelow, padAbove))
+    {
+        auto s = std::get<0>(attrs).cast<IntegerAttr>().getInt();
+        auto pb = std::get<1>(attrs).cast<IntegerAttr>().getInt();
+        auto pa = std::get<2>(attrs).cast<IntegerAttr>().getInt();
+        if (s <= 0)
+        {
+            return op->emitOpError("Window stride must be non-negative");
+        }
+        if (pb < 0 || pa < 0)
+        {
+            return op->emitOpError("Paddings must be positive");
+        }
+        stridesVal.push_back(s);
+        padBelowVal.push_back(pb);
+        padAboveVal.push_back(pa);
+    }
+
+    // Check output shape
+    if (resultRank != imagesRank || resultShape[0] != imagesShape[0] ||
+        resultShape[1] != filtersShape[0])
+    {
+        return op->emitOpError("Invalid result shape");
+    }
+    for (unsigned i = 0; i < resultRank - 2; i++)
+    {
+        unsigned resDim = llvm::divideCeil(padBelowVal[i] + padAboveVal[i] + imagesShape[2 + i] -
+                                               filtersShape[2 + i] + 1,
+                                           stridesVal[i]);
+        if (resultShape[i] != resDim)
+        {
+            return op->emitOpError("Invalid result spatial shape");
+        }
+    }
+    return mlir::success();
+}
 namespace mlir
 {
 #define GET_OP_CLASSES

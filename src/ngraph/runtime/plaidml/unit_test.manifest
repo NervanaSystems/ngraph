@@ -342,3 +342,11 @@ gru_cell_linear_before_reset
 
 # node validation error: "Applying function, tensor with mismatching dimensionality: F, expected=4, got=5"
 group_conv_groups_included_in_shape
+
+# axes input param not supported
+lrn_across_h
+lrn_across_hw
+lrn_across_all_dims
+lrn_across_nw
+lrn_across_empty
+lrn_6D_across_2_axes
