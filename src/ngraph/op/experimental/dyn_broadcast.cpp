@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <algorithm>
+#include <numeric>
 
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/constant.hpp"
