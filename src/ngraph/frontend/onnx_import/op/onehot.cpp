@@ -71,7 +71,8 @@ namespace ngraph
                     // axis = 1
                     // depth = 10
                     // output_shape = (2, 10, 2)
-                    output_shape.insert(std::next(std::begin(output_shape), valid_axis), depth_value);
+                    output_shape.insert(std::next(std::begin(output_shape), valid_axis),
+                                        depth_value);
 
                     std::shared_ptr<ngraph::Node> one_hot = std::make_shared<ngraph::op::Convert>(
                         std::make_shared<ngraph::op::OneHot>(indices, output_shape, valid_axis),
@@ -86,7 +87,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace  onnx_import
 
