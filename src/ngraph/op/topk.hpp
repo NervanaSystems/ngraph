@@ -96,5 +96,68 @@ namespace ngraph
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
         };
+
+        namespace v1
+        {
+            // \brief Computes indices and values of the k maximum/minimum values
+            //        for each slice along specified axis.
+            class TopK : public Op
+            {
+            public:
+                NGRAPH_API
+                static const std::string type_name;
+                const std::string& description() const override { return type_name; }
+                /// \brief Constructs a TopK operation
+                TopK() = default;
+                /// \brief Constructs a TopK operation with two outputs: values and indices.
+                ///        By default the indices output is described by i32 data type.
+                ///
+                /// \param data The input tensor
+                /// \param k Specifies how many maximum/minimum elements should be computed
+                ///          (note: scalar input tensor)
+                /// \param axis The axis along which to compute top k indices
+                /// \param mode Specifies which operation (min or max) is used to select
+                ///             the biggest element of two.
+                /// \param sort Specifies order of output elements and/or indices
+                ///             Accepted values: none, index, value
+                TopK(const Output<Node>& data,
+                     const Output<Node>& k,
+                     const int64_t axis,
+                     const std::string& mode,
+                     const std::string& sort);
+
+                void validate_and_infer_types() override;
+
+                virtual std::shared_ptr<Node>
+                    copy_with_new_args(const NodeVector& new_args) const override;
+
+                size_t get_axis() const { return m_axis; };
+                void set_axis(const size_t axis) { m_axis = axis; }
+                const std::string& get_mode() const { return m_mode; };
+                void set_mode(std::string mode) { m_mode = std::move(mode); }
+                const std::string& get_sort() const { return m_sort; };
+                void set_sort(std::string sort) { m_sort = std::move(sort); }
+                element::Type get_index_element_type() const { return m_index_element_type; }
+                void set_index_element_type(const element::Type& index_element_type)
+                {
+                    m_index_element_type = index_element_type;
+                }
+
+            protected:
+                int64_t m_axis;
+                std::string m_mode;
+                std::string m_sort;
+                element::Type m_index_element_type;
+
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const NodeVector& deltas) override;
+
+                size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
+                                                 const element::Type& k_element_type);
+
+                template <typename T>
+                size_t validate_and_get_k(const std::shared_ptr<op::Constant>& k_constant) const;
+            };
+        }
     }
 }

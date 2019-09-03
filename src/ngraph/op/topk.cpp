@@ -137,3 +137,124 @@ void op::TopK::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector&
 {
     throw ngraph_error("Forward-propagation-only operation");
 }
+
+const string op::v1::TopK::type_name{"TopK"};
+
+op::v1::TopK::TopK(const Output<Node>& data,
+                   const Output<Node>& k,
+                   const int64_t axis,
+                   const std::string& mode,
+                   const std::string& sort)
+    : Op{{data, k}}
+    , m_axis{axis}
+    , m_mode{mode}
+    , m_sort{sort}
+    , m_index_element_type{element::i32}
+{
+    constructor_validate_and_infer_types();
+}
+
+void op::v1::TopK::validate_and_infer_types()
+{
+    const auto& input_partial_shape = get_input_partial_shape(0);
+    const auto input_rank = input_partial_shape.rank();
+
+    NODE_VALIDATION_CHECK(this,
+                          input_rank.is_dynamic() || static_cast<size_t>(input_rank) > 0,
+                          "Input rank must be greater than 0.");
+
+    const auto& k_partial_shape = get_input_partial_shape(1);
+    NODE_VALIDATION_CHECK(this,
+                          k_partial_shape.is_static() && k_partial_shape.to_shape().size() == 0,
+                          "The 'K' input must be a scalar.");
+
+    size_t k = 0;
+    if (input_value(1).get_node_shared_ptr()->is_constant())
+    {
+        k = read_k_from_constant_node(input_value(1).get_node_shared_ptr(),
+                                      get_input_element_type(1));
+    }
+
+    PartialShape output_shape{input_partial_shape};
+
+    if (output_shape.rank().is_static())
+    {
+        NODE_VALIDATION_CHECK(this,
+                              m_axis < static_cast<size_t>(output_shape.rank()),
+                              "TopK axis (",
+                              m_axis,
+                              ") is out of bounds.");
+
+        if (k != 0)
+        {
+            output_shape[m_axis] = k;
+        }
+    }
+
+    set_output_size(2);
+    set_output_type(0, get_input_element_type(0), output_shape);
+    set_output_type(1, m_index_element_type, output_shape);
+}
+
+size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
+                                               const element::Type& k_element_type)
+{
+    NODE_VALIDATION_CHECK(this,
+                          k_element_type == element::i8 || k_element_type == element::i32 ||
+                              k_element_type == element::i64,
+                          "K input element type must be i8, i32 or i64 (got ",
+                          k_element_type,
+                          ").");
+
+    const auto k_constant = dynamic_pointer_cast<op::Constant>(node);
+
+    size_t k = 0;
+
+    switch (static_cast<element::Type_t>(k_element_type))
+    {
+    case element::Type_t::i8: k = validate_and_get_k<int8_t>(k_constant); break;
+    case element::Type_t::i32: k = validate_and_get_k<int32_t>(k_constant); break;
+    case element::Type_t::i64: k = validate_and_get_k<int64_t>(k_constant); break;
+    default: break;
+    }
+
+    return k;
+}
+
+template <typename T>
+size_t op::v1::TopK::validate_and_get_k(const shared_ptr<op::Constant>& k_constant) const
+{
+    const auto k_const_contents = k_constant->get_vector<T>();
+
+    NODE_VALIDATION_CHECK(this,
+                          k_const_contents.size() == 1,
+                          "Only one value (scalar) should be provided as the 'K' input to TopK",
+                          " (got ",
+                          k_const_contents.size(),
+                          " elements).");
+
+    NODE_VALIDATION_CHECK(this,
+                          k_const_contents[0] > 0,
+                          "The value of 'K' must be a positive number.",
+                          " (got ",
+                          k_const_contents[0],
+                          ").");
+
+    return static_cast<size_t>(k_const_contents[0]);
+}
+
+void op::v1::TopK::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+{
+    throw ngraph_error("Forward-propagation-only operation");
+}
+
+shared_ptr<Node> op::v1::TopK::copy_with_new_args(const NodeVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    auto new_v1_topk =
+        make_shared<v1::TopK>(new_args.at(0), new_args.at(1), m_axis, m_mode, m_sort);
+
+    new_v1_topk->set_index_element_type(m_index_element_type);
+
+    return new_v1_topk;
+}
