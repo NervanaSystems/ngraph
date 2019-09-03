@@ -21,6 +21,7 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/reverse_sequence.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -40,10 +41,13 @@ namespace ngraph
                         node.get_ng_inputs().at(1), element::i32);
 
                     const auto batch_axis = node.get_attribute_value<int64_t>("batch_axis", 1);
+                    std::size_t valid_batch_axis =
+                        common::convert_negative_axis(batch_axis, data->get_shape().size());
                     const auto time_axis = node.get_attribute_value<int64_t>("time_axis", 0);
-
+                    std::size_t valid_time_axis =
+                        common::convert_negative_axis(time_axis, data->get_shape().size());
                     return {std::make_shared<ngraph::op::ReverseSequence>(
-                        data, sequence_lengths_i32, batch_axis, time_axis)};
+                        data, sequence_lengths_i32, valid_batch_axis, valid_time_axis)};
                 }
 
             } // namespace set_1

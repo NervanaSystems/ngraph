@@ -28,6 +28,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "onehot.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -49,16 +50,9 @@ namespace ngraph
                         std::make_shared<ngraph::op::Slice>(values, Coordinate{0}, Coordinate{1});
                     std::shared_ptr<ngraph::Node> on_value =
                         std::make_shared<ngraph::op::Slice>(values, Coordinate{1}, Coordinate{2});
-                    auto axis = node.get_attribute_value<std::int64_t>("axis", -1);
-
-                    if (axis < 0)
-                    {
-                        axis += indices_shape.size() + 1;
-                    }
-
-                    ASSERT_VALID_ARGUMENT(node, (axis >= 0) && (axis <= indices_shape.size()))
-                        << "invalid 'axis' attribute: "
-                        << node.get_attribute_value<std::int64_t>("axis", -1);
+                    auto axis = node.get_attribute_value<std::int64_t>("axis", 0);
+                    std::size_t valid_axis =
+                        common::convert_negative_axis(axis, inputs.at(0)->get_shape().size());
 
                     auto constant_depth = std::dynamic_pointer_cast<ngraph::op::Constant>(depth);
 
@@ -74,10 +68,11 @@ namespace ngraph
                     // axis = 1
                     // depth = 10
                     // output_shape = (2, 10, 2)
-                    output_shape.insert(std::next(std::begin(output_shape), axis), depth_value);
+                    output_shape.insert(std::next(std::begin(output_shape), valid_axis),
+                                        depth_value);
 
                     std::shared_ptr<ngraph::Node> one_hot = std::make_shared<ngraph::op::Convert>(
-                        std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
+                        std::make_shared<ngraph::op::OneHot>(indices, output_shape, valid_axis),
                         values->get_element_type());
                     auto broadcasted_values =
                         ngraph::op::numpy_style_broadcast({one_hot, on_value, off_value});

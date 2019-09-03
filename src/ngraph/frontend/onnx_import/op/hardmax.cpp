@@ -34,13 +34,11 @@ namespace ngraph
                     const auto input = node.get_ng_inputs().at(0);
                     const auto& input_shape = input->get_shape();
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
-
-                    ASSERT_VALID_ARGUMENT(node, axis >= 0 && axis < input_shape.size())
-                        << "The provided axis value " << axis
-                        << " does not match the input tensor dimensions";
+                    auto valid_axis =
+                        common::convert_negative_axis(axis, input->get_shape().size());
 
                     // reshape to 2D - "batch size" x "input feature dimensions" (NxD)
-                    const auto coerced_tensor = ngraph::builder::flatten(input, axis);
+                    const auto coerced_tensor = ngraph::builder::flatten(input, valid_axis);
                     const auto& coerced_shape = coerced_tensor->get_shape();
 
                     const std::shared_ptr<ngraph::Node> argmax_2d =
