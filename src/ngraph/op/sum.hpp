@@ -124,7 +124,6 @@ namespace ngraph
                 /// \param arg The tensor to be summed.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 /// \param keep_dims If set to 1 it holds axes that are used for reduction.
-                /// \param keep_dims If set to 1 it holds axes that are used for reduction.
                 ReduceSum(const Output<Node>& arg, const AxisSet& reduction_axes, int keep_dims = 0);
                 /// \brief Constructs a summation operation.
                 ///
