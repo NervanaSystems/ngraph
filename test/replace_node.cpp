@@ -14,62 +14,38 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
-
 #include "gtest/gtest.h"
 
-#include "ngraph/file_util.hpp"
-#include "ngraph/function.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/visualize_tree.hpp"
-#include "ngraph/serializer.hpp"
-#include "util/all_close.hpp"
-#include "util/autodiff/backprop_function.hpp"
-#include "util/ndarray.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-TEST(replace_node, replace_by_friendly_name)
+TEST(replace_node, replace_nodes)
 {
     auto x = make_shared<op::Parameter>(element::f32, Shape{2});
-    x->set_friendly_name("x");
     auto y = make_shared<op::Parameter>(element::f32, Shape{2});
-    y->set_friendly_name("y");
     auto z = make_shared<op::Parameter>(element::f32, Shape{2});
-    z->set_friendly_name("z");
 
     auto add = x + y;
-    add->set_friendly_name("add");
     auto k = make_shared<op::Constant>(element::f32, Shape{2}, vector<float>{1, 2});
-    k->set_friendly_name("k");
     auto mul = add * k;
-    mul->set_friendly_name("mul");
     auto sub = mul - z;
-    sub->set_friendly_name("sub");
 
     auto f = make_shared<Function>(NodeVector{sub}, ParameterVector{x, y, z});
 
-    unordered_map<string, shared_ptr<Node>> replacement_map;
+    unordered_map<shared_ptr<Node>, shared_ptr<Node>> replacement_map;
 
     auto y_replacement = make_shared<op::Constant>(element::f32, Shape{2}, vector<float>{3, 4});
-    replacement_map["y"] = y_replacement;
+    replacement_map[y] = y_replacement;
 
     auto k_replacement = make_shared<op::Constant>(element::f32, Shape{2}, vector<float>{5, 6});
-    replacement_map["k"] = k_replacement;
+    replacement_map[k] = k_replacement;
 
     auto z_replacement = x + mul;
-    replacement_map["z"] = z_replacement;
+    replacement_map[z] = z_replacement;
 
-    size_t n_replaced = replace_by_friendly_name(f, replacement_map);
-
-    // Should have replaced three nodes.
-    ASSERT_EQ(n_replaced, 3);
+    replace_nodes(replacement_map);
 
     // Should still have three params.
     ASSERT_EQ(f->get_parameters().size(), 3);
@@ -104,15 +80,4 @@ TEST(replace_node, replace_by_friendly_name)
     // z_replacement's arguments should both be x.
     ASSERT_EQ(z_replacement->input(0).get_source_output().get_node_shared_ptr(), x);
     ASSERT_EQ(z_replacement->input(0).get_source_output().get_node_shared_ptr(), x);
-
-    // Replacements should have inherited friendly names from their replacees.
-    ASSERT_EQ(y_replacement->get_friendly_name(), "y");
-    ASSERT_EQ(k_replacement->get_friendly_name(), "k");
-    ASSERT_EQ(z_replacement->get_friendly_name(), "z");
-
-    // Replacees should have friendly names blanked out, which results in them reverting to their
-    // "unfriendly" names.
-    ASSERT_EQ(y->get_friendly_name(), y->get_name());
-    ASSERT_EQ(k->get_friendly_name(), k->get_name());
-    ASSERT_EQ(z->get_friendly_name(), z->get_name());
 }

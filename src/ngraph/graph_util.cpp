@@ -180,31 +180,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     target->clear_control_dependents();
 }
 
-size_t
-    ngraph::replace_by_friendly_name(const shared_ptr<Function>& f,
-                                     const unordered_map<string, shared_ptr<Node>>& replacement_map)
-{
-    size_t num_replacements = 0;
-
-    for (auto& replacee : f->get_ops())
-    {
-        auto& fname = replacee->get_friendly_name();
-        if (replacement_map.count(fname) != 0)
-        {
-            auto& replacement = replacement_map.at(fname);
-            if (replacee != replacement)
-            {
-                replacement->set_friendly_name(replacee->get_friendly_name());
-                replace_node(replacee, replacement);
-                replacee->set_friendly_name("");
-            }
-            num_replacements++;
-        }
-    }
-
-    return num_replacements;
-}
-
 void ngraph::replace_nodes(const unordered_map<shared_ptr<Node>, shared_ptr<Node>>& replacement_map)
 {
     for (auto& kv : replacement_map)
