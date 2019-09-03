@@ -70,25 +70,22 @@ namespace ngraph
             /// \brief      Handle negative axis value.
             ///
             /// \param[in]  axis        The requested axis value.
-            /// \param[in]  tensor_dim  The corresponding tensor dimensionality.
+            /// \param[in]  tensor_rank  The corresponding tensor rank.
             ///
-            /// \tparam     T           Provided axis value type.
+            /// \return     If negative axis, then return sum of tensor rank and axis.
             ///
-            /// \return     If negative axis, then return sum of tensor dimension and axis.
+            std::size_t convert_negative_axis(std::int64_t axis, std::size_t tensor_rank);
+
+            /// \brief      Handle negative axes' values in vector.
             ///
-            template <typename T,
-                      typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-            std::int64_t convert_negative_axis(T axis, std::size_t tensor_dim)
-            {
-                if (axis >= 0)
-                {
-                    return std::min(axis, static_cast<T>(tensor_dim));
-                }
-                else
-                {
-                    return static_cast<std::int64_t>(tensor_dim) + axis;
-                }
-            }
+            /// \param[in]  axis        The requested vector of axes.
+            /// \param[in]  tensor_rank  The corresponding tensor rank.
+            ///
+            /// \return     If any negative axis in vector, then replace by sum of tensor rank and
+            /// axis.
+            ///
+            std::vector<std::size_t> convert_negative_axis(std::vector<std::int64_t> axes,
+                                                           std::size_t tensor_rank);
 
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that

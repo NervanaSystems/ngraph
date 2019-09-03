@@ -46,6 +46,38 @@ namespace ngraph
                                        static_cast<onnx::TensorProto_DataType>(onnx_type)));
             }
 
+            std::size_t convert_negative_axis(std::int64_t axis, std::size_t tensor_rank)
+            {
+                if (axis >= 0)
+                {
+                    return std::min(static_cast<size_t>(axis), tensor_rank);
+                }
+                else
+                {
+                    std::int64_t new_axis = axis + static_cast<std::int64_t>(tensor_rank);
+                    if (new_axis < 0)
+                    {
+                        throw ngraph_error("Parameter axis out of the tensor rank.");
+                    }
+                    else
+                    {
+                        return static_cast<size_t>(new_axis);
+                    }
+                }
+            }
+
+            std::vector<std::size_t> convert_negative_axis(std::vector<std::int64_t> axes,
+                                                           std::size_t tensor_rank)
+            {
+                std::vector<std::size_t> new_axes(axes.size());
+
+                for (auto a : axes)
+                {
+                    new_axes.push_back(convert_negative_axis(a, tensor_rank));
+                }
+                return new_axes;
+            }
+
         } // namespace  common
     }     // namespace onnx_import
 } // namespace ngraph

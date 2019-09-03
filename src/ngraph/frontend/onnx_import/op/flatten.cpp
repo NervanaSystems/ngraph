@@ -19,7 +19,7 @@
 #include "exceptions.hpp"
 #include "flatten.hpp"
 #include "ngraph/builder/reshape.hpp"
-
+#include "utils/common.hpp"
 namespace ngraph
 {
     namespace onnx_import
@@ -33,13 +33,8 @@ namespace ngraph
                     NodeVector inputs{node.get_ng_inputs()};
                     auto data = inputs.at(0);
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
-
-                    ASSERT_VALID_ARGUMENT(
-                        node,
-                        (axis >= 0) && (axis <= static_cast<int64_t>(data->get_shape().size())))
-                        << "provided 'axis' attribute is not valid.";
-
-                    return {ngraph::builder::flatten(data, axis)};
+                    auto valid_axis = common::convert_negative_axis(axis, data->get_shape().size());
+                    return {ngraph::builder::flatten(data, valid_axis)};
                 }
 
             } // namespace set_1
