@@ -22,6 +22,13 @@ using namespace ngraph;
 
 const string op::DynBroadcast::type_name{"DynBroadcast"};
 
+ngraph::op::DynBroadcast::DynBroadcast(const Output<Node>& arg, const Output<Node>& shape)
+    : Op({arg, shape})
+{
+    add_default_broadcast_axes();
+    constructor_validate_and_infer_types();
+}
+
 op::DynBroadcast::DynBroadcast(const Output<Node>& arg,
                                const Output<Node>& shape,
                                const Output<Node>& broadcast_axes)
@@ -133,4 +140,18 @@ shared_ptr<Node> op::DynBroadcast::copy_with_new_args(const NodeVector& new_args
 void op::DynBroadcast::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     throw ngraph_error("generate_adjoints not implemented for DynBroadcast");
+}
+
+void ngraph::op::DynBroadcast::add_default_broadcast_axes()
+{
+    NGRAPH_CHECK(get_input_partial_shape(0).rank().is_static() &&
+                     get_input_partial_shape(1)[0].is_static(),
+                 "Optional parameter broadcast_axes is supported only if rank of input and target "
+                 "shape are static.");
+    auto target_rank = static_cast<size_t>(get_input_partial_shape(1)[0]);
+    auto rank_difference = target_rank - static_cast<size_t>(get_input_partial_shape(0).rank());
+    vector<size_t> broadcast_axes(static_cast<size_t>(rank_difference));
+    iota(broadcast_axes.begin(), broadcast_axes.end(), 0);
+    set_argument(2,
+                 op::Constant::create(element::i64, Shape{broadcast_axes.size()}, broadcast_axes));
 }

@@ -38,6 +38,11 @@ namespace ngraph
             ///
             /// \param arg            Node that produces the input tensor to be broadcast.
             /// \param shape          Node that produces shape of the output tensor.
+            DynBroadcast(const Output<Node>& arg, const Output<Node>& shape);
+            /// \brief Constructs a dynamic broadcast operation.
+            ///
+            /// \param arg            Node that produces the input tensor to be broadcast.
+            /// \param shape          Node that produces shape of the output tensor.
             /// \param broadcast_axes Node that produces the axis positions (0-based) in the result
             ///                       that are being broadcast. The remaining axes in shape must be
             ///                       the same as the shape of arg.
@@ -53,6 +58,8 @@ namespace ngraph
         protected:
             virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                            const NodeVector& deltas) override;
+
+            void add_default_broadcast_axes();
         };
     }
 }

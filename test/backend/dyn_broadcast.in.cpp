@@ -73,3 +73,46 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_broadcast)
         ASSERT_TRUE(test::all_close_f(results, expected_results[i], MIN_FLOAT_TOLERANCE_BITS));
     }
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, dyn_broadcast_default_axes)
+{
+    // Create a graph for
+    //   f(x,shape:i32) = Broadcast(x,Convert<i64>(shape)).
+    auto x = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic()});
+    auto shape = make_shared<op::Parameter>(element::i32, Shape{3});
+    auto shape_i64 = make_shared<op::Convert>(shape, element::i64);
+
+    auto bc = make_shared<op::DynBroadcast>(x, shape_i64);
+
+    auto f = make_shared<Function>(NodeVector{bc}, ParameterVector{x, shape});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto ex = backend->compile(f);
+
+    auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    std::vector<Shape> x_shapes{Shape{2}, Shape{2}, Shape{2}};
+    std::vector<std::vector<int32_t>> shapes{{1, 2, 2}, {2, 2, 2}, {1, 3, 2}};
+    std::vector<std::vector<float>> inputs{{6, 6}, {7, 7}, {10, 11}};
+    std::vector<Shape> expected_result_shapes{Shape{1, 2, 2}, Shape{2, 2, 2}, Shape{1, 3, 2}};
+    std::vector<std::vector<float>> expected_results{
+        {6, 6, 6, 6}, {7, 7, 7, 7, 7, 7, 7, 7}, {10, 11, 10, 11, 10, 11}};
+
+    for (size_t i = 0; i < x_shapes.size(); i++)
+    {
+        auto t_x = backend->create_tensor(element::f32, x_shapes[i]);
+        auto t_shape = backend->create_tensor(element::i32, Shape{shapes[i].size()});
+
+        copy_data(t_x, inputs[i]);
+        copy_data(t_shape, shapes[i]);
+
+        ex->call_with_validate({t_r}, {t_x, t_shape});
+
+        ASSERT_EQ(t_r->get_shape(), expected_result_shapes[i]);
+
+        auto results = read_vector<float>(t_r);
+
+        ASSERT_TRUE(test::all_close_f(results, expected_results[i], MIN_FLOAT_TOLERANCE_BITS));
+    }
+}
