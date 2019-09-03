@@ -130,6 +130,7 @@
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
+#include "ngraph/state/rng_state.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
