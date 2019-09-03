@@ -174,6 +174,8 @@ void op::TopK::validate_and_infer_types()
         output_shape[static_cast<size_t>(top_k_axis)] = k;
     }
 
+    set_input_is_relevant_to_shape(2);
+
     set_output_size(2);
     set_output_type(0, m_index_element_type, output_shape);
     set_output_type(1, input_element_type, output_shape);
