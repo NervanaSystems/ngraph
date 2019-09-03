@@ -66,7 +66,7 @@ namespace ngraph
                 }
             }
 
-            std::vector<std::size_t> convert_negative_axis(std::vector<std::int64_t> axes,
+            std::vector<std::size_t> convert_negative_axes(std::vector<std::int64_t> axes,
                                                            std::size_t tensor_rank)
             {
                 std::vector<std::size_t> new_axes;
