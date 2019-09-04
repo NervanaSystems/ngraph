@@ -91,13 +91,13 @@ namespace
                              DialectLoweringPass& pass);
 
     template <typename OP>
-    void lower_binary_elementwise(Operation* op,
+    void lowerBinaryElementwise(Operation* op,
                                   ArrayRef<Value*> operands,
                                   PatternRewriter& rewriter,
                                   DialectLoweringPass& pass);
 
     template <typename OP>
-    void lower_unary_elementwise(Operation* op,
+    void lowerUnaryElementwise(Operation* op,
                                  ArrayRef<Value*> operands,
                                  PatternRewriter& rewriter,
                                  DialectLoweringPass& pass);
@@ -389,49 +389,49 @@ namespace
 
     REWRITER(NGAddOp)
     {
-        lower_binary_elementwise<mlir::NGAddOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGAddOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGSubOp)
     {
-        lower_binary_elementwise<mlir::NGSubOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGSubOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMulOp)
     {
-        lower_binary_elementwise<mlir::NGMulOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGMulOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGDivOp)
     {
-        lower_binary_elementwise<mlir::NGDivOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGDivOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGGreaterOp)
     {
-        lower_binary_elementwise<mlir::NGGreaterOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGGreaterOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGLessOp)
     {
-        lower_binary_elementwise<mlir::NGLessOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGLessOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMaxOp)
     {
-        lower_binary_elementwise<mlir::NGMaxOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGMaxOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
     REWRITER(NGMinOp)
     {
-        lower_binary_elementwise<mlir::NGMinOp>(op, operands, rewriter, pass);
+        lowerBinaryElementwise<mlir::NGMinOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -490,7 +490,7 @@ namespace
     // Negative
     REWRITER(NGNegOp)
     {
-        lower_unary_elementwise<mlir::NGNegOp>(op, operands, rewriter, pass);
+        lowerUnaryElementwise<mlir::NGNegOp>(op, operands, rewriter, pass);
         return matchSuccess();
     }
 
@@ -963,7 +963,7 @@ namespace
 #undef REWRITER
     /// End of pattern matchers
     template <typename OP>
-    void lower_unary_elementwise(Operation* op,
+    void lowerUnaryElementwise(Operation* op,
                                  ArrayRef<Value*> operands,
                                  PatternRewriter& rewriter,
                                  DialectLoweringPass& pass)
@@ -1012,7 +1012,7 @@ namespace
     }
 
     template <typename OP>
-    void lower_binary_elementwise(Operation* op,
+    void lowerBinaryElementwise(Operation* op,
                                   ArrayRef<Value*> operands,
                                   PatternRewriter& rewriter,
                                   DialectLoweringPass& pass)
