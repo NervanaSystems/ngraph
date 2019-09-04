@@ -169,9 +169,18 @@ void op::TopK::validate_and_infer_types()
 
     PartialShape output_shape{input_shape};
 
-    if (input_rank.is_static() && k != 0 && top_k_axis.is_static())
+    if (input_rank.is_static())
     {
-        output_shape[static_cast<size_t>(top_k_axis)] = k;
+        if (top_k_axis.is_static() && k != 0)
+        {
+            output_shape[static_cast<size_t>(top_k_axis)] = k;
+        }
+        else
+        {
+            // If top_k_axis is not static and k is not 0, then we could be changing any
+            // dimension. So we have to change all dimensions to dynamic.
+            output_shape = PartialShape::dynamic(input_rank);
+        }        
     }
 
     set_input_is_relevant_to_shape(2);
