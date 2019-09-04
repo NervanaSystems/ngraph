@@ -65,7 +65,7 @@ op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
-    , m_groups(NOT_INITIALIZED_GROUPS)
+    , m_groups(filters.get_partial_shape()[0])
     , m_pad_type(pad_type)
 {
     constructor_validate_and_infer_types();
@@ -76,28 +76,21 @@ void op::GroupConvolution::pre_validate_and_infer_types()
     auto data_shape = get_input_partial_shape(0);
     auto filters_shape = get_input_partial_shape(1);
 
-    if (has_groups_in_filters_shape())
-    {
-        NODE_VALIDATION_CHECK(
-            this, filters_shape[0].is_static(), "Groups stored in filters_shape must be static");
-        m_groups = static_cast<size_t>(filters_shape[0]);
-    }
-
     if (data_shape.is_static() && filters_shape.is_static())
     {
         // Data channels
         NODE_VALIDATION_CHECK(this,
-                              data_shape.to_shape()[1] % m_groups == 0,
+                              data_shape.to_shape()[1] % get_groups() == 0,
                               "Data channels not a multiple of group size");
         // Output channels
         NODE_VALIDATION_CHECK(this,
-                              filters_shape.to_shape()[0] % m_groups == 0,
+                              filters_shape.to_shape()[0] % get_groups() == 0,
                               "# Filters not a multiple of group size");
 
         // Input Filters
         NODE_VALIDATION_CHECK(this,
                               (filters_shape.to_shape()[has_groups_in_filters_shape() ? 2 : 1] *
-                               m_groups) == data_shape.to_shape()[1],
+                               get_groups()) == data_shape.to_shape()[1],
                               "Incorrect number of channels per filter");
     }
 }
@@ -148,6 +141,12 @@ Shape op::GroupConvolution::get_weights_dimensions() const
     return weights_shape_groups;
 }
 
+size_t ngraph::op::GroupConvolution::get_groups() const
+{
+    NODE_VALIDATION_CHECK(this, m_groups.is_static(), "Number of groups must be static");
+    return static_cast<size_t>(m_groups);
+}
+
 shared_ptr<Node> op::GroupConvolution::copy_with_new_args(const NodeVector& new_args) const
 {
     if (new_args.size() != 2)
@@ -179,10 +178,10 @@ NodeVector op::GroupConvolution::decompose_op() const
     NodeVector convolution_nodes;
 
     // slice data
-    auto sliced_data = builder::split(data, m_groups, 1);
+    auto sliced_data = builder::split(data, get_groups(), 1);
     // slice filters
-    auto sliced_filters = builder::split(filters, m_groups, 0);
-    for (std::size_t group{0}; group < m_groups; ++group)
+    auto sliced_filters = builder::split(filters, get_groups(), 0);
+    for (std::size_t group{0}; group < get_groups(); ++group)
     {
         auto sliced_filter = sliced_filters[group];
         if (has_groups_in_filters_shape())
@@ -209,4 +208,11 @@ NodeVector op::GroupConvolution::decompose_op() const
 void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
 {
     throw ngraph_error("NYI");
+}
+
+bool ngraph::op::GroupConvolution::has_groups_in_filters_shape() const
+{
+    // If filters_rank is (data_rank + 1), then filters are divided by groups on first
+    // dim.
+    return ((get_input_shape(0).size() + 1) == get_input_shape(1).size());
 }

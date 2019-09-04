@@ -60,7 +60,7 @@ namespace ngraph
             const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
             Output<Node> get_filters() { return input_value(1); }
             Output<Node> get_data_batch() { return input_value(0); }
-            size_t get_groups() const { return m_groups; }
+            size_t get_groups() const;
             const PadType& get_pad_type() const { return m_pad_type; }
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
@@ -79,18 +79,11 @@ namespace ngraph
             CoordinateDiff m_padding_below;
             CoordinateDiff m_padding_above;
             Strides m_data_dilation_strides;
-            size_t m_groups{0};
+            Dimension m_groups;
             PadType m_pad_type{PadType::NOTSET};
 
         private:
-            static const size_t NOT_INITIALIZED_GROUPS = 0;
-
-            bool has_groups_in_filters_shape() const
-            {
-                // If filters_rank is (data_rank + 1), then filters are divided by groups on first
-                // dim.
-                return ((get_input_shape(0).size() + 1) == get_input_shape(1).size());
-            }
+            bool has_groups_in_filters_shape() const;
         };
     }
 }
