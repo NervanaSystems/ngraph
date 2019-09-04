@@ -438,50 +438,6 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         }
     }
 
-    if (TI(ngraph::op::ArgMin) == TI(*node) || TI(ngraph::op::ArgMax) == TI(*node))
-    {
-        // TODO: Remove this when MLIR has float point cmp support
-        if (!node->input(0).get_element_type().is_integral())
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    if (TI(ngraph::op::Maximum) == TI(*node) || TI(ngraph::op::Minimum) == TI(*node))
-    {
-        // TODO: Remove this when MLIR has float point cmp support
-        if (!node->input(0).get_element_type().is_integral())
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    if (TI(ngraph::op::Greater) == TI(*node) || TI(ngraph::op::Less) == TI(*node))
-    {
-        // TODO: Remove this when MLIR has float point cmp support
-        if (!node->input(0).get_element_type().is_integral())
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-    if (TI(ngraph::op::Negative) == TI(*node))
-    {
-        return true;
-    }
-
     if (TI(ngraph::op::Convolution) == TI(*node))
     {
         // No padding for now
