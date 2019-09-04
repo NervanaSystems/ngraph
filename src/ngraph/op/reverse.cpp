@@ -18,6 +18,7 @@
 #include <sstream>
 
 #include "ngraph/function.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/reverse.hpp"
 
 using namespace std;
@@ -83,6 +84,19 @@ op::v1::Reverse::Reverse(const Output<Node>& data,
 
 void op::v1::Reverse::validate_and_infer_types()
 {
+    NODE_VALIDATION_CHECK(this,
+                          m_mode == "index" || m_mode == "mask",
+                          "The provided value of the 'mode' attribute (",
+                          m_mode,
+                          ") is invalid. Allowed values: 'index' or 'mask'.");
+
+    if (m_mode == "mask")
+    {
+        NODE_VALIDATION_CHECK(this,
+                              get_input_element_type(1) == element::boolean,
+                              "In 'mask' mode the second input must contain boolean values.");
+    }
+
     const auto input_shape = get_input_partial_shape(0);
     const auto input_rank = input_shape.rank();
 
@@ -115,17 +129,40 @@ void op::v1::Reverse::validate_and_infer_types()
         }
     }
 
-    NODE_VALIDATION_CHECK(this,
-                          m_mode == "index" || m_mode == "mask",
-                          "The provided value of the 'mode' attribute (",
-                          m_mode,
-                          ") is invalid. Allowed values: 'index' or 'mask'.");
-
-    if (m_mode == "mask")
+    if (input_rank.is_static())
     {
-        NODE_VALIDATION_CHECK(this,
-                              get_input_element_type(1) == element::boolean,
-                              "In 'mask' mode the second input must contain boolean values.");
+        const auto rank = static_cast<size_t>(input_rank);
+        const auto rev_axes_node = input_value(1).get_node_shared_ptr();
+
+        if (rev_axes_node->is_constant())
+        {
+            const auto rev_axes_constant = dynamic_pointer_cast<op::Constant>(rev_axes_node);
+
+            if (m_mode == "index")
+            {
+                const AxisSet rev_axes = rev_axes_constant->get_axis_set_val();
+
+                NODE_VALIDATION_CHECK(this,
+                                      rev_axes.size() < rank,
+                                      "Too many axes(",
+                                      rev_axes,
+                                      ") have been provided for given input shape(",
+                                      input_shape,
+                                      ").");
+
+                bool all_axes_in_range = all_of(rev_axes.begin(),
+                                                rev_axes.end(),
+                                                [&rank](const size_t axis) { return axis < rank; });
+
+                NODE_VALIDATION_CHECK(this,
+                                      all_axes_in_range,
+                                      "Some of the provided axes (",
+                                      rev_axes,
+                                      ") are out of bounds (input rank: ",
+                                      static_cast<size_t>(input_rank),
+                                      ").");
+            }
+        }
     }
 
     set_output_type(0, get_input_element_type(0), input_shape);
