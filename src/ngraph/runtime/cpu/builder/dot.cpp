@@ -67,7 +67,8 @@ namespace ngraph
                 }
 
                 if ((arg0_shape.empty() || arg1_shape.empty()) &&
-                    is_fp_i64(args[0].get_element_type()) && is_fp_i64(args[1].get_element_type()))
+                    is_float_or_integer_64(args[0].get_element_type()) &&
+                    is_float_or_integer_64(args[1].get_element_type()))
                 {
                     auto first = (arg0_shape.empty() ? args[0] : args[1]);
                     auto second = (arg0_shape.empty() ? args[1] : args[0]);
@@ -101,8 +102,9 @@ namespace ngraph
                 }
 
                 if ((arg0_shape.size() == 1) && (arg1_shape.size() == 1) &&
-                    reduction_axes_count == 1 && is_fp_i64(args[0].get_element_type()) &&
-                    is_fp_i64(args[1].get_element_type()))
+                    reduction_axes_count == 1 &&
+                    is_float_or_integer_64(args[0].get_element_type()) &&
+                    is_float_or_integer_64(args[1].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_1d_1d_1rd<float>)> kernel;
 
@@ -131,8 +133,9 @@ namespace ngraph
                 }
 
                 if ((arg0_shape.size() == 2) && (arg1_shape.size() == 1) &&
-                    reduction_axes_count == 1 && is_fp_i64(args[0].get_element_type()) &&
-                    is_fp_i64(args[1].get_element_type()))
+                    reduction_axes_count == 1 &&
+                    is_float_or_integer_64(args[0].get_element_type()) &&
+                    is_float_or_integer_64(args[1].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_2d_1d_1rd<float>)> kernel;
 
@@ -161,8 +164,9 @@ namespace ngraph
                 }
 
                 if ((arg0_shape.size() == 1) && (arg1_shape.size() == 2) &&
-                    reduction_axes_count == 1 && is_fp_i64(args[0].get_element_type()) &&
-                    is_fp_i64(args[1].get_element_type()))
+                    reduction_axes_count == 1 &&
+                    is_float_or_integer_64(args[0].get_element_type()) &&
+                    is_float_or_integer_64(args[1].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::dot_1d_2d_1rd<float>)> kernel;
 

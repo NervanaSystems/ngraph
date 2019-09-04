@@ -69,7 +69,7 @@ namespace ngraph
                     functors.emplace_back(functor);
                     return;
                 }
-                else if (is_fp_i64(args[0].get_element_type()))
+                else if (is_float_or_integer_64(args[0].get_element_type()))
                 {
                     if (axes.size() == arg_shape.size())
                     {

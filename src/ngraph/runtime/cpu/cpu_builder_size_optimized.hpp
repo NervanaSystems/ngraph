@@ -31,7 +31,7 @@
 #define SELECT_BY_2RANKS SELECT_KERNEL_BY_2RANKS
 #endif
 
-static inline bool is_fp_i64(const ngraph::element::Type& et)
+static inline bool is_float_or_integer_64(const ngraph::element::Type& et)
 {
 #if defined(NGRAPH_CPU_ALL_DATA_TYPE_ENABLE)
     return true;

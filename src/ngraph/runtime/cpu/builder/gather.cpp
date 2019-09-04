@@ -58,7 +58,7 @@ namespace ngraph
                              args[0].get_element_type() == element::u8 ||
                              args[0].get_element_type() == element::i8) &&
                             params_shape.size() <= 3 && out_shape.size() <= 5 &&
-                            is_fp_i64(args[0].get_element_type()))
+                            is_float_or_integer_64(args[0].get_element_type()))
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i64<float, 2, 2>)>
                                 kernel;
@@ -119,7 +119,7 @@ namespace ngraph
                              args[0].get_element_type() == element::u8 ||
                              args[0].get_element_type() == element::i8) &&
                             params_shape.size() <= 3 && out_shape.size() <= 5 &&
-                            is_fp_i64(args[0].get_element_type()))
+                            is_float_or_integer_64(args[0].get_element_type()))
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i32<float, 2, 2>)>
                                 kernel;

@@ -60,7 +60,7 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
                 auto element_type = args[0].get_element_type();
 
-                if (is_int64 && is_fp_i64(args[0].get_element_type()))
+                if (is_int64 && is_float_or_integer_64(args[0].get_element_type()))
                 {
                     if (inputs_shape.size() <= 3 && updates_shape.size() <= 5)
                     {
@@ -99,7 +99,7 @@ namespace ngraph
                         throw ngraph_error("Unsupported ranks in CPU Builder for ScatterAdd");
                     }
                 }
-                else if (is_fp_i64(args[0].get_element_type()))
+                else if (is_float_or_integer_64(args[0].get_element_type()))
                 {
                     if (inputs_shape.size() <= 3 && updates_shape.size() <= 5)
                     {

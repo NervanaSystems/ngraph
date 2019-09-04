@@ -72,7 +72,7 @@ namespace ngraph
                     return;
                 }
 
-                if (strided && is_fp_i64(args[0].get_element_type()))
+                if (strided && is_float_or_integer_64(args[0].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::strided_replace_slice<float, 2>)>
                         kernel;
@@ -105,7 +105,7 @@ namespace ngraph
                     };
                     functors.emplace_back(functor);
                 }
-                else if (is_fp_i64(args[0].get_element_type()))
+                else if (is_float_or_integer_64(args[0].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::replace_slice<float, 2>)> kernel;
 

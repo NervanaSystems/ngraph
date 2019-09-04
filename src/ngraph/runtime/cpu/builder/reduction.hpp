@@ -41,7 +41,7 @@
         return;                                                                                    \
     }                                                                                              \
                                                                                                    \
-    if (reduction_axes.size() == arg_rank && is_fp_i64(args[0].get_element_type()))                \
+    if (reduction_axes.size() == arg_rank && is_float_or_integer_64(args[0].get_element_type()))   \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_all<float, 2>)> kernel;          \
         SELECT_BY_RANK(                                                                            \
@@ -58,7 +58,7 @@
         return;                                                                                    \
     }                                                                                              \
                                                                                                    \
-    if (reduction_axes.size() == 1 && is_fp_i64(args[0].get_element_type()))                       \
+    if (reduction_axes.size() == 1 && is_float_or_integer_64(args[0].get_element_type()))          \
     {                                                                                              \
         if (*reduction_axes.begin() == arg_rank - 1)                                               \
         {                                                                                          \
@@ -102,7 +102,8 @@
         return;                                                                                    \
     }                                                                                              \
                                                                                                    \
-    if (reduction_axes.size() == 2 && arg_rank == 3 && is_fp_i64(args[0].get_element_type()))      \
+    if (reduction_axes.size() == 2 && arg_rank == 3 &&                                             \
+        is_float_or_integer_64(args[0].get_element_type()))                                        \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_3d_2rd<float>)> kernel;          \
         SELECT_KERNEL_FOR_LIMITED_ET(                                                              \
@@ -125,7 +126,8 @@
         return;                                                                                    \
     }                                                                                              \
                                                                                                    \
-    if (reduction_axes.size() == 2 && arg_rank == 4 && is_fp_i64(args[0].get_element_type()))      \
+    if (reduction_axes.size() == 2 && arg_rank == 4 &&                                             \
+        is_float_or_integer_64(args[0].get_element_type()))                                        \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_4d_2rd<float>)> kernel;          \
         SELECT_KERNEL_FOR_LIMITED_ET(                                                              \
@@ -148,7 +150,8 @@
         return;                                                                                    \
     }                                                                                              \
                                                                                                    \
-    if (reduction_axes.size() == 2 && arg_rank == 5 && is_fp_i64(args[0].get_element_type()))      \
+    if (reduction_axes.size() == 2 && arg_rank == 5 &&                                             \
+        is_float_or_integer_64(args[0].get_element_type()))                                        \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_5d_2rd<float>)> kernel;          \
         SELECT_KERNEL_FOR_LIMITED_ET(                                                              \

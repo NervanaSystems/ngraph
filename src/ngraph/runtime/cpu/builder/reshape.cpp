@@ -81,22 +81,22 @@ namespace ngraph
                     return;
                 }
 
-                if (arg_rank == 1 && is_fp_i64(result_element_type))
+                if (arg_rank == 1 && is_float_or_integer_64(result_element_type))
                 {
                     SELECT_BY_RANK(
                         kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_1d);
                 }
-                else if (arg_rank == 2 && is_fp_i64(result_element_type))
+                else if (arg_rank == 2 && is_float_or_integer_64(result_element_type))
                 {
                     SELECT_BY_RANK(
                         kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_2d);
                 }
-                else if (arg_rank == 3 && is_fp_i64(result_element_type))
+                else if (arg_rank == 3 && is_float_or_integer_64(result_element_type))
                 {
                     SELECT_BY_RANK(
                         kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_3d);
                 }
-                else if (arg_rank == 4 && is_fp_i64(result_element_type))
+                else if (arg_rank == 4 && is_float_or_integer_64(result_element_type))
                 {
                     SELECT_BY_RANK(
                         kernel, result_element_type, result_rank, runtime::cpu::kernel::reshape_4d);

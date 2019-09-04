@@ -51,7 +51,7 @@ namespace ngraph
                 auto pad_mode = pad->get_pad_mode();
 
                 if (pad_mode == ngraph::op::PadMode::CONSTANT &&
-                    is_fp_i64(args[0].get_element_type()))
+                    is_float_or_integer_64(args[0].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
@@ -127,7 +127,7 @@ namespace ngraph
                 auto pad_mode = pad->get_pad_mode();
 
                 if (pad_mode == ngraph::op::PadMode::CONSTANT &&
-                    is_fp_i64(pad->get_input_element_type(0)))
+                    is_float_or_integer_64(pad->get_input_element_type(0)))
                 {
                     std::function<decltype(runtime::cpu::kernel::pad_and_slice<float, 1>)> kernel;
 
