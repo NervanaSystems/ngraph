@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <numeric>
 
@@ -29,7 +30,42 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
+            static void sum_region_across_axes(const T* arg,
+                                               size_t current_axis_index,
+                                               const std::vector<size_t>& axes,
+                                               Coordinate& sum_coord,
+                                               T& square_sum,
+                                               const std::vector<size_t>& begin_area,
+                                               const std::vector<size_t>& end_area,
+                                               const CoordinateTransform& input_transform)
+            {
+                // all nested axes were visited
+                if (current_axis_index == axes.size())
+                {
+                    square_sum += arg[input_transform.index(sum_coord)] *
+                                  arg[input_transform.index(sum_coord)];
+                    return;
+                }
+                auto current_axis = axes[current_axis_index];
+                for (auto current_axis_coord = begin_area[current_axis];
+                     current_axis_coord < end_area[current_axis];
+                     ++current_axis_coord)
+                {
+                    sum_coord.at(current_axis) = current_axis_coord;
+                    sum_region_across_axes(arg,
+                                           current_axis_index + 1,
+                                           axes,
+                                           sum_coord,
+                                           square_sum,
+                                           begin_area,
+                                           end_area,
+                                           input_transform);
+                }
+            }
+
+            template <typename T>
             void lrn(const T* arg,
+                     const AxisSet& axes,
                      T* out,
                      const Shape& arg_shape,
                      double dalpha,
@@ -41,24 +77,32 @@ namespace ngraph
                 T beta = static_cast<T>(dbeta);
                 T bias = static_cast<T>(dbias);
 
+                std::vector<size_t> begin_area(arg_shape.size());
+                std::vector<size_t> end_area(arg_shape.size());
+
                 CoordinateTransform input_transform(arg_shape);
-                const size_t CHANNEL_DIM = 1;
-                const size_t MAX_C = arg_shape.at(CHANNEL_DIM);
                 for (const Coordinate& in_coord : input_transform)
                 {
-                    size_t c = in_coord.at(CHANNEL_DIM);
-                    T square_sum = 0;
-                    for (size_t i = c; i < c + size; i++)
+                    // area determined by in_coord local neighborhood
+                    for (const auto& axis_coord : axes)
                     {
-                        if (i < (size - 1) / 2)
-                            continue;
-                        if (i >= MAX_C + (size - 1) / 2)
-                            continue;
-                        auto sum_coord = in_coord;
-                        sum_coord.at(CHANNEL_DIM) = i - (size - 1) / 2;
-                        square_sum += arg[input_transform.index(sum_coord)] *
-                                      arg[input_transform.index(sum_coord)];
+                        begin_area[axis_coord] =
+                            std::max<int>(0, in_coord.at(axis_coord) - (size - 1) / 2);
+                        end_area[axis_coord] = std::min<int>(
+                            arg_shape.at(axis_coord), in_coord.at(axis_coord) + (size - 1) / 2 + 1);
                     }
+
+                    T square_sum = 0;
+                    auto sum_coord = in_coord;
+                    auto axes_vec = std::vector<size_t>(axes.begin(), axes.end());
+                    sum_region_across_axes(arg,
+                                           0,
+                                           axes_vec,
+                                           sum_coord,
+                                           square_sum,
+                                           begin_area,
+                                           end_area,
+                                           input_transform);
 
                     T x = arg[input_transform.index(in_coord)];
                     out[input_transform.index(in_coord)] =
