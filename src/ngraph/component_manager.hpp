@@ -28,9 +28,3 @@ extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend();
 extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend();
 extern "C" PLAIDML_BACKEND_API void ngraph_register_plaidml_backend();
 extern "C" NOP_BACKEND_API void ngraph_register_nop_backend();
-
-namespace ngraph
-{
-    NGRAPH_API const char* get_ngraph_version_string();
-    void get_version(size_t& major, size_t& minor, size_t& patch, std::string& extra);
-}
