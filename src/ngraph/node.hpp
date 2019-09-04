@@ -91,7 +91,7 @@ namespace ngraph
     /// or a (possibly empty) tuple of values.
     class Node : public std::enable_shared_from_this<Node>
     {
-        static constexpr NodeTypeInfo type_info{"Node_0", 0};
+        static constexpr NodeTypeInfo type_info{"Node", 0};
 
         // For access to generate_adjoints.
         friend class autodiff::Adjoints;
@@ -150,33 +150,49 @@ namespace ngraph
 
         /// Tests if a node is of op type T
         template <typename NodeType>
-        bool has_type() const
+        bool is_type() const
         {
             return &get_type_info() == &NodeType::type_info;
         }
 
         /// Casts a Node to a shared_ptr<T> if is of type T, nullptr otherwise;
         template <typename NodeType>
-        std::shared_ptr<NodeType> as_type()
+        std::shared_ptr<NodeType> as_type_ptr()
         {
-            return has_type<NodeType>() ? shared_from_this() : std::shared_ptr<NodeType>();
+            return is_type<NodeType>() ? std::static_pointer_cast<NodeType>(shared_from_this())
+                                       : std::shared_ptr<NodeType>();
         }
 
         /// Casts a Node to a shared_ptr<T> if is of type T, nullptr otherwise;
         template <typename NodeType>
-        std::shared_ptr<const NodeType> as_type() const
+        std::shared_ptr<const NodeType> as_type_ptr() const
         {
-            return has_type<NodeType>() ? shared_from_this() : std::shared_ptr<NodeType>();
+            return is_type<NodeType>() ? std::static_pointer_cast<NodeType>(shared_from_this())
+                                       : std::shared_ptr<NodeType>();
+        }
+
+        /// Casts a Node to a T* if is of type T, nullptr otherwise;
+        template <typename NodeType>
+        NodeType* as_type()
+        {
+            return is_type<NodeType>() ? static_cast<NodeType*>(this) : nullptr;
+        }
+
+        /// Casts a Node to a T* if is of type T, nullptr otherwise;
+        template <typename NodeType>
+        const NodeType* as_type() const
+        {
+            return is_type<NodeType>() ? static_cast<const NodeType*>(this) : nullptr;
         }
 
         /// Returns the NodeTypeInfo for the node's class.
-        /// During transition to type_info, return's a dummy type_info for Node if the class
+        /// During transition to type_info, returns a dummy type_info for Node if the class
         /// has not been updated yet.
         virtual const NodeTypeInfo& get_type_info() const { return type_info; }
         virtual const char* get_type_name() const
         {
             auto& info = get_type_info();
-            if (has_type<Node>())
+            if (is_type<Node>())
             {
                 // Transitional definition
                 return description().c_str();

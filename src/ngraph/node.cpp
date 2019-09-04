@@ -93,7 +93,7 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_
 {
     for (auto in : output(i).get_target_inputs())
     {
-        if (in.get_node()->has_type<op::GetOutputElement>())
+        if (in.get_node()->is_type<op::GetOutputElement>())
         {
             return in.get_node()->shared_from_this();
         }
@@ -105,7 +105,7 @@ std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
-    bool for_get_output_element = has_type<op::GetOutputElement>();
+    bool for_get_output_element = is_type<op::GetOutputElement>();
     NodeVector args;
     for (const Output<Node>& input : inputs)
     {
@@ -261,7 +261,7 @@ const std::deque<descriptor::Output>& Node::get_outputs() const
 
 bool Node::is_parameter() const
 {
-    return dynamic_cast<const op::Parameter*>(this) != nullptr;
+    return is_type<op::Parameter>();
 }
 
 bool Node::is_output() const

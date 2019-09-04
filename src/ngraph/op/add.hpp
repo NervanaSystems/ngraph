@@ -32,7 +32,7 @@ namespace ngraph
             NGRAPH_API
             static constexpr NodeTypeInfo type_info{"Add", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            /// \brief Constructs an unitialized addition operation
+            /// \brief Constructs an uninitialized addition operation
             Add() = default;
 
             /// \brief Constructs an addition operation.
