@@ -44,7 +44,7 @@ TEST(serialize, opset1_reverse_upgrade)
 
     EXPECT_EQ(reverse_v1->get_mode(), "index");
     EXPECT_EQ(reverse_v1->description(), "Reverse");
-    EXPECT_EQ(reverse_v1->get_op_version(), 1);
+    EXPECT_EQ(reverse_v1->get_version(), 1);
 
     const auto& rev_axes_input_shape = reverse_v1->get_input_shape(1);
     // should match the number of elements of v0::Reverse reverse_axes attribute

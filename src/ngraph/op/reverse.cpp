@@ -138,7 +138,7 @@ void op::v1::Reverse::validate_and_infer_types()
 shared_ptr<Node> op::v1::Reverse::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Reverse>(new_args.at(0), new_args.at(1), m_mode);
+    return make_shared<op::v1::Reverse>(new_args.at(0), new_args.at(1), m_mode);
 }
 
 void op::v1::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

@@ -361,7 +361,7 @@ struct OpSet1SerializationTester
         auto g_op = g_result->input(0).get_source_output().get_node_shared_ptr();
 
         EXPECT_EQ(g_op->description(), m_op_name);
-        EXPECT_EQ(g_op->get_op_version(), m_expected_op_version);
+        EXPECT_EQ(g_op->get_version(), m_expected_op_version);
     }
 
     const std::string m_op_name;
