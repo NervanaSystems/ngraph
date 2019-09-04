@@ -14,18 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/softmax.hpp"
-#include "pyngraph/ops/softmax.hpp"
+#include "ngraph/pass/pass.hpp"
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_Softmax(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::op::Softmax, std::shared_ptr<ngraph::op::Softmax>, ngraph::op::Op> softmax(
-        m, "Softmax");
-    softmax.doc() = "ngraph.impl.op.Softmax wraps ngraph::op::Softmax";
-    softmax.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
+    namespace pass
+    {
+        class Opset1Upgrade : public NodePass
+        {
+        public:
+            ///
+            /// \brief    Constructor for the Opset 1 transformation pass.
+            ///
+            /// \details  This transformation pass iterates over all nodes in a graph
+            /// and updates opset version 0 ops to their opset version 1 equivalents.
+            /// All ops in the final graph have opset version 1.
+            Opset1Upgrade() = default;
+            bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
+        };
+    }
 }
