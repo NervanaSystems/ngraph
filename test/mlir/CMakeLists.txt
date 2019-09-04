@@ -14,16 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
-# Configuration to enable MLIR LIT testing.
-set(LLVM_LIT ${LLVM_MAIN_SRC_DIR}/utils/lit/lit.py)
-set(LLVM_CMAKE_PATH "${MLIR_BUILD_DIR}/lib/cmake/llvm"
-    CACHE PATH "Path to LLVM cmake modules")
-list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_PATH}")
-
 # Enable use of the lit tool that we build from MLIR repo.
 set(LLVM_DEFAULT_EXTERNAL_LIT ${MLIR_TOOLS_DIR}/llvm-lit)
-
-include(AddLLVM)
 
 configure_lit_site_cfg(
     ${CMAKE_CURRENT_SOURCE_DIR}/lit.site.cfg.py.in
