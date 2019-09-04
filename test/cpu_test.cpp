@@ -231,7 +231,7 @@ TEST(cpu_test, mkldnn_layouts)
     EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, rv));
 }
 
-TEST(cpu_test, reshape_layout_optimizations1)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations1))
 {
     // Squeeze outermost dimension
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -270,7 +270,7 @@ TEST(cpu_test, reshape_layout_optimizations1)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations2)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations2))
 {
     // ExpandDims - inner most and internal dims
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -309,7 +309,7 @@ TEST(cpu_test, reshape_layout_optimizations2)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations3)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations3))
 {
     // Squeeze padded dimension
     auto make_function = []() -> std::shared_ptr<Function> {
