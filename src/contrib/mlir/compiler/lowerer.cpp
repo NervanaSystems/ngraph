@@ -83,6 +83,51 @@ namespace
 
 #include "op_lowerers.inc"
 
+    // FuncOp Conversion pattern
+    class FuncOpSignatureConversion : public ConversionPattern {
+    public: 
+    FuncOpSignatureConversion(MLIRContext *ctx, TypeConverter &converter)
+      : ConversionPattern(FuncOp::getOperationName(), 1, ctx),
+        converter(converter) {}
+
+        /// Hook for derived classes to implement combined matching and rewriting.
+        PatternMatchResult
+        matchAndRewrite(Operation *op, ArrayRef<Value *> operands,
+                        ConversionPatternRewriter &rewriter) const override {
+            auto funcOp = cast<FuncOp>(op);
+            FunctionType type = funcOp.getType();
+
+            // Convert the original function arguments.
+            TypeConverter::SignatureConversion result(type.getNumInputs());
+            for (unsigned i = 0, e = type.getNumInputs(); i != e; ++i)
+              if (failed(converter.convertSignatureArg(i, type.getInput(i), result)))
+                return matchFailure();
+
+            // Convert the original function results.
+            SmallVector<Type, 4> convertedResults;
+            if (failed(converter.convertTypes(type.getResults(), convertedResults)))
+              return matchFailure();
+
+            // Add result types as input args without mapping
+            result.addInputs(convertedResults);
+            
+            // Create a new function with an updated signature.
+            auto newFuncOp = rewriter.cloneWithoutRegions(funcOp);
+            rewriter.inlineRegionBefore(funcOp.getBody(), newFuncOp.getBody(),
+                                        newFuncOp.end());
+            newFuncOp.setType(FunctionType::get(result.getConvertedTypes(),
+                                                {/*void*/}, funcOp.getContext()));
+
+            // Tell the rewriter to convert the region signature.
+            rewriter.applySignatureConversion(&newFuncOp.getBody(), result);
+            rewriter.replaceOp(op, llvm::None);
+            return matchSuccess();
+        }
+
+        /// The type converter to use when rewriting the signature.
+        TypeConverter &converter;
+    };
+
     // Helpers
     template <typename RedOp>
     void lowerIndexReduction(Operation* op,
@@ -143,12 +188,8 @@ namespace
 
     private:
         NGraphTypeConverter typeConverter;
-        // Value holding mem manager passed pointer
-        SmallVector<Value*, 4> memMgrDefs;
         // List of temporary memrefs to deallocate at end of function
         SmallVector<Value*, 4> memRefsToDealloc;
-        // list of results values to add to func signature
-        SmallVector<Value*, 4> loweredOutputValues;
         ngmlir::MLIRCompiler& compiler;
     };
 
@@ -157,9 +198,7 @@ namespace
         // Create type converter and initialize conversion patterns.
         NGraphTypeConverter converter;
         OwningRewritePatternList patterns;
-        // Add default FuncOp type conversion. It replaces the incoming FuncOp with a *new* one
-        // with the converted types.
-        mlir::populateFuncOpTypeConversionPattern(patterns, &getContext(), typeConverter);
+
         populateNGraphToAffineConversionPatterns(patterns);
 
         // Create target that defines legal ops for nGraph dialect to be lowered to.
@@ -167,7 +206,6 @@ namespace
         // TODO: Remove NGFakeInputOp. We need to set NGFakeInputOp as legal op because we generate
         // it as part of the lowering to affine/standard.
         target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
-        target.addLegalOp<ModuleOp, ModuleTerminatorOp, NGFakeInputOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
             // FuncOp is legal only if types have been converted to Std types.
             return typeConverter.isSignatureLegal(op.getType());
@@ -184,7 +222,7 @@ namespace
             signalPassFailure();
         }
 
-        processFakeInstrs();
+        //processFakeInstrs();
         insertNoAliasArgAttrs();
     }
 
@@ -196,6 +234,9 @@ namespace
         patterns.insert<
 #include "op_lowerers.inc"
             >(&getContext(), *this);
+
+        // FuncOp pattern
+        patterns.insert<FuncOpSignatureConversion>(&getContext(), typeConverter);
     }
 
     void DialectLoweringPass::findOutputValues()
@@ -204,26 +245,21 @@ namespace
         auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
         SmallVector<Value*, 4> outputList;
         unsigned outputCount = 0;
-
+        unsigned inputCount = f.getType().getNumInputs();
         // we find out output values by looking at returned values
         // any return should return all outputs of the subgraph
-        f.walk<NGReturnOp>([this, &outputCount](NGReturnOp ret) {
+        f.walk<NGReturnOp>([this, inputCount, &outputCount](NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
                 auto outputValue = ret.getOperand(i);
                 auto op = outputValue->getDefiningOp();
                 op->setAttr("graphOutputIdx",
-                            mlir::IntegerAttr::get(IntegerType::get(8, op->getContext()), i));
+                            mlir::IntegerAttr::get(IntegerType::get(8, op->getContext()), i + inputCount));
             }
             NGRAPH_CHECK(outputCount == 0 || outputCount == ret.getNumOperands(),
                          "Inconsistent returns in function");
             outputCount = ret.getNumOperands();
         });
-        // will be populated with lowered output values later
-        // TODO: This resize is making debugging obscure. When the container is not populated due
-        // to a bug, null pointers are used by the consumer leading to a crash more difficult to
-        // root-cause. We should try to change the current approach or introduce verification code.
-        loweredOutputValues.resize(outputCount, nullptr);
     }
 
     SmallVector<Value*, 4> DialectLoweringPass::buildOutputDefs(Operation* op,
@@ -235,16 +271,10 @@ namespace
             // create output def if this operation produces any sub-graph outputs
             if (IntegerAttr attr = op->getAttrOfType<IntegerAttr>("graphOutputIdx"))
             {
+                auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
+                mlir::Block* entryBlock = &*(f.begin());
                 unsigned argId = (int)attr.getInt();
-                auto fakeOp = rewriter.create<NGFakeInputOp>(
-                    op->getLoc(),
-                    typeConverter.convertType(origResult->getType()) /* convert to lowered type */
-                    );
-                // Fake instrution is short-lived. Verify here.
-                fakeOp.verify();
-                auto newResult = fakeOp.getResult();
-                newResults.push_back(newResult);
-                loweredOutputValues[argId] = newResult;
+                newResults.push_back(entryBlock->getArgument(argId));
             }
             else
             {
@@ -276,52 +306,6 @@ namespace
         // allocator call-back.
 
         return alloc;
-    }
-
-    void DialectLoweringPass::processFakeInstrs()
-    {
-        auto context = getModule().getContext();
-        auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
-        mlir::Block* entryBlock = &*(f.begin());
-        auto oldFuncType = f.getType();
-        ArrayRef<mlir::Type> ipArgs = oldFuncType.getInputs();
-        ArrayRef<mlir::Type> opArgs = oldFuncType.getResults();
-        SmallVector<mlir::Type, 4> allArgs;
-
-        // Move all args as inputs in new type
-        for (auto type : ipArgs)
-        {
-            allArgs.push_back(type);
-        }
-        for (auto type : opArgs)
-        {
-            allArgs.push_back(type);
-            // add new value for result
-            entryBlock->addArgument(type);
-        }
-        // Mem Manager Ptr
-        auto indexType = mlir::IndexType::get(context);
-        allArgs.push_back(indexType);
-        entryBlock->addArgument(indexType);
-        // update type
-        auto newFuncType = mlir::FunctionType::get(allArgs, {}, context);
-        f.setType(newFuncType);
-
-        // RAUW fake outputs with result values
-        unsigned i = 0;
-        for (auto value : loweredOutputValues)
-        {
-            auto op = value->getDefiningOp();
-            NGRAPH_CHECK(isa<NGFakeInputOp>(op), "output value not defined by fake output?");
-            value->replaceAllUsesWith(entryBlock->getArgument(oldFuncType.getNumInputs() + i));
-            op->erase();
-            i++;
-        }
-        for (auto v : memMgrDefs)
-        {
-            v->replaceAllUsesWith(entryBlock->getArgument(compiler.get_mem_mgr_arg_id(f)));
-            v->getDefiningOp()->erase();
-        }
     }
 
     /// Add llvm.noalias attribute to all the memref function arguments. We know that this is safe
