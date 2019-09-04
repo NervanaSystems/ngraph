@@ -20,48 +20,6 @@
 
 using namespace std;
 using namespace ngraph;
-TEST(type_prop, normalize_invalid_input_tensor_rank)
-{
-    Shape data_shape{1, 2, 3, 4, 5};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto axes = make_shared<op::Parameter>(element::u64, Shape{1, 2});
-    float eps{1e-6f};
-    auto eps_mode = op::EpsMode::ADD;
-
-    try
-    {
-        auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input tensor rank.";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-
-    data = make_shared<op::Parameter>(element::f32, Shape{2});
-
-    try
-    {
-        auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
-        // Should have thrown, so fail if it didn't
-        FAIL() << "Invalid input tensor rank.";
-    }
-    catch (const NodeValidationFailure& error)
-    {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("Input tensor rank must be 2, 3 or 4 dimensional"));
-    }
-    catch (...)
-    {
-        FAIL() << "Deduced type check failed for unexpected reason";
-    }
-}
 
 TEST(type_prop, normalize_invalid_axes_rank)
 {

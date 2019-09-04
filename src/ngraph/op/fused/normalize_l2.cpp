@@ -48,16 +48,6 @@ void op::NormalizeL2::pre_validate_and_infer_types()
     NODE_VALIDATION_CHECK(this, data_pshape.is_static(), "Input data must be static.");
     NODE_VALIDATION_CHECK(this, axes_pshape.is_static(), "Input axes must be static.");
 
-    const Shape data_shape{data_pshape.to_shape()};
-
-    // Input data must be 2, 3 or 4D tensor.
-    NODE_VALIDATION_CHECK(this,
-                          (data_shape.size() >= 2 && data_shape.size() <= 4),
-                          "Input tensor rank must be 2, 3 or 4 dimensional (actual input "
-                          "shape: ",
-                          data_shape,
-                          ").");
-
     NODE_VALIDATION_CHECK(this,
                           static_cast<size_t>(axes_pshape.rank()) == 1,
                           "Input axes must have rank equals 1 (axes shape: ",
@@ -71,7 +61,7 @@ NodeVector op::NormalizeL2::decompose_op() const
     const Shape input_shape{data.get_shape()};
 
     // Reshape to 4D tensor.
-    if (input_shape.size() != 4)
+    if (input_shape.size() < 4)
     {
         Shape data_shape(4 - input_shape.size(), 1);
         copy(begin(input_shape), end(input_shape), back_inserter(data_shape));
@@ -92,12 +82,12 @@ NodeVector op::NormalizeL2::decompose_op() const
     auto builder_bias_mode =
         (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
     Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode);
-    norm = make_broadcast_node(norm, data.get_shape(), 0);
+    norm = numpy_style_broadcast(norm, data.get_shape());
 
     data = data / norm;
 
     // get back original input tensor rank
-    if (input_shape.size() != 4)
+    if (input_shape.size() < 4)
     {
         data = builder::reshape(data, input_shape);
     }
