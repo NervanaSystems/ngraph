@@ -341,10 +341,59 @@ TEST(serialize, non_zero_node_output)
     EXPECT_EQ(topk_out.get_node()->description(), "TopK");
 }
 
-TEST(serialize, tensor_iterator)
+TEST(serialize, tensor_iterator_raw)
 {
     // That which we iterate over
     auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+
+    // Common to all cells
+    auto WH = make_shared<op::Parameter>(element::f32, Shape{20, 20});
+    auto WX = make_shared<op::Parameter>(element::f32, Shape{10, 20});
+    auto bH = make_shared<op::Parameter>(element::f32, Shape{20});
+    auto WY = make_shared<op::Parameter>(element::f32, Shape{20, 5});
+    auto bY = make_shared<op::Parameter>(element::f32, Shape{5});
+
+    // Initial values
+    auto Hinit = make_shared<op::Parameter>(element::f32, Shape{20});
+
+    // Set up the cell body, a function from (Hi, Xi) -> (Ho, Yo)
+    // Cell parameters
+    auto Hi = make_shared<op::Parameter>(element::f32, Shape{32, 20});
+    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 10});
+
+    // Body
+    auto Ho = make_shared<op::Relu>(
+        make_shared<op::Dot>(make_shared<op::Reshape>(Xi, AxisVector{0, 1, 2}, Shape{32, 10}), WX) +
+        make_shared<op::Dot>(Hi, WH) + make_shared<op::Broadcast>(bH, Shape{32, 20}, AxisSet{0}));
+    auto Yo = make_shared<op::Relu>(make_shared<op::Dot>(Ho, WY) +
+                                    make_shared<op::Broadcast>(bY, Shape{32, 5}, AxisSet{0}));
+
+    auto tensor_iterator = make_shared<op::TensorIterator>();
+    // The Xi are the elements of Xseq
+    // start=0, stride=1, part_size=1, end=40, axis=1
+    tensor_iterator->set_sliced_input(Xi, X, 0, 1, 1, 40, 1);
+    // Hi is Hinit on the first iteration, Ho after that
+    tensor_iterator->set_initialized_input(Hi, Hinit, Ho);
+
+    // Output 0 is last Yo
+    auto out0 = tensor_iterator->get_iter_value(Yo, -1);
+    // Output 1 is concat of hidden states
+    // start=0, stride=1, part_size=1, end=40, axis=1
+    auto out1 = tensor_iterator->get_concatenated_slices(Ho, 0, 1, 1, 40, 1);
+
+    auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
+    auto f = make_shared<Function>(results, ParameterVector{X, Hinit, WH, WX, bH, WY, bY});
+    string s = serialize(f);
+    shared_ptr<Function> g = deserialize(s);
+}
+
+TEST(serialize, tensor_iterator_lstm)
+{
+    // That which we iterate over
+    const N = 32; // Batch size
+    const L = 10; // Sequence length
+    const V = 8;  // Word vector size
+    auto X = make_shared<op::Parameter>(element::f32, Shape{N, L, V});
 
     // Common to all cells
     auto WH = make_shared<op::Parameter>(element::f32, Shape{20, 20});
