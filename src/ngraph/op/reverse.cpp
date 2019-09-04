@@ -92,13 +92,9 @@ void op::v1::Reverse::validate_and_infer_types()
     if (input_rank.is_static() && rev_axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(rev_axes_rank) == 1 &&
-                                  static_cast<size_t>(rev_axes_shape[0]) <=
-                                      static_cast<size_t>(input_rank),
-                              "The reversed_axes shape (",
-                              rev_axes_shape,
-                              ") is not compatible with the data tensor shape (",
-                              input_shape,
+                              static_cast<size_t>(rev_axes_rank) == 1,
+                              "The reversed_axes input must be a 1D tensor (got ",
+                              static_cast<size_t>(rev_axes_rank),
                               ").");
 
         if (m_mode == "mask")
@@ -111,11 +107,11 @@ void op::v1::Reverse::validate_and_infer_types()
             const auto rev_axes_mask_elems_count = static_cast<size_t>(rev_axes_shape[0]);
             NODE_VALIDATION_CHECK(this,
                                   rev_axes_mask_elems_count == static_cast<size_t>(input_rank),
-                                  "The number of elements in reversed_axes (",
+                                  "The number of elements in the reversed_axes tensor (",
                                   rev_axes_mask_elems_count,
-                                  ") must match the data tensor rank (",
+                                  ") must match the input data tensor rank (",
                                   static_cast<size_t>(input_rank),
-                                  ")");
+                                  ") in 'mask' mode.");
         }
     }
 
