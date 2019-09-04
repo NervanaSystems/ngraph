@@ -47,10 +47,23 @@ execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir_llvm
 execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target ext_mlir
                 WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
-# point find_package to the pre-built libs
-set(LLVM_DIR ${MLIR_LLVM_ROOT}/build/lib/cmake/llvm)
+# Enable modules for LLVM.
+set(LLVM_DIR "${MLIR_BUILD_DIR}/lib/cmake/llvm"
+    CACHE PATH "Path to LLVM cmake modules")
+list(APPEND CMAKE_MODULE_PATH "${LLVM_DIR}")
+include(AddLLVM)
+
+# Enable LLVM package, definitions and env vars.
+find_package(LLVM REQUIRED CONFIG)
+add_definitions(${LLVM_DEFINITIONS})
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using modules in: ${LLVM_DIR}")
+message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
 
 set(MLIR_SRC_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
 set(MLIR_BIN_INCLUDE_PATH ${MLIR_BUILD_DIR}/projects/mlir/include)
-set(MLIR_INCLUDE_PATHS  ${MLIR_SRC_INCLUDE_PATH};${MLIR_BIN_INCLUDE_PATH})
+set(MLIR_INCLUDE_PATHS ${MLIR_SRC_INCLUDE_PATH};${MLIR_BIN_INCLUDE_PATH})
+set(MLIR_LLVM_INCLUDE_PATH ${LLVM_INCLUDE_DIRS})
 
+message(STATUS "MLIR headers at: ${MLIR_INCLUDE_PATHS}")
+message(STATUS "LLVM headers at: ${MLIR_LLVM_INCLUDE_PATH}")
