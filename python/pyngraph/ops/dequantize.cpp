@@ -14,14 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/visibility.hpp"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-// Now we use the generic helper definitions above to define GPU_BACKEND_API
-// GPU_BACKEND_API is used for the public API symbols. It either DLL imports or DLL exports
-//    (or does nothing for static build)
+#include "ngraph/op/dequantize.hpp"
+#include "pyngraph/ops/dequantize.hpp"
 
-#ifdef GPU_BACKEND_EXPORTS // defined if we are building the GPU_BACKEND
-#define GPU_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
-#else
-#define GPU_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
-#endif
+namespace py = pybind11;
+
+void regclass_pyngraph_op_Dequantize(py::module m)
+{
+    py::class_<ngraph::op::Dequantize, std::shared_ptr<ngraph::op::Dequantize>, ngraph::op::Op>
+        dequantize(m, "Dequantize");
+    dequantize.doc() = "ngraph.impl.op.Dequantize wraps ngraph::op::Dequantize";
+    dequantize.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const ngraph::element::Type&,
+                            const ngraph::AxisSet&>());
+}
