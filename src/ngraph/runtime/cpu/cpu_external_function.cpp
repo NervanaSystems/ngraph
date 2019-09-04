@@ -34,7 +34,7 @@
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/pass/mlir_subgraph_extraction.hpp"
+#include "contrib/mlir/compiler/pass/mlir_subgraph_extraction.hpp"
 #endif
 
 #include "ngraph/descriptor/input.hpp"
@@ -1244,6 +1244,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
     REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUConvertLayoutConstantFolding, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
@@ -1373,11 +1374,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             "CPU Backend: Tracing and performance breakdowns might not be accurate with TBB "
             "enabled due to concurrent graph execution");
     }
-
-// reference all the builders for static library
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-    ngraph::runtime::cpu::register_builders();
-#endif
 
     // stream writer to dump the debug manifest for the DEX
     static const string s_debug_dir = "cpu_codegen";

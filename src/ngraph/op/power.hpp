@@ -22,6 +22,7 @@ namespace ngraph
 {
     namespace op
     {
+        // clang-format off
         /// \brief Elementwise exponentiation operation.
         ///
         /// ## Inputs
@@ -36,6 +37,7 @@ namespace ngraph
         /// | Type                   | Description                                                                                                    |
         /// | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
         /// | \f$N[d_1,\dots,d_n]\f$ | The tensor \f$T\f$, where \f$T[i_1,\dots,i_n] = \texttt{arg0}[i_1,\dots,i_n]^{\texttt{arg1}[i_1,\dots,i_n]}\f$ |
+        // clang-format on
         class Power : public util::BinaryElementwiseArithmetic
         {
         public:
@@ -47,10 +49,10 @@ namespace ngraph
             ///
             /// \param arg0 Node that produces the first input tensor.
             /// \param arg1 Node that produces the second input tensor.
-            /// \param autob Auto broadcast specification
+            /// \param auto_broadcast Auto broadcast specification
             Power(const Output<Node>& arg0,
                   const Output<Node>& arg1,
-                  const AutoBroadcastSpec& autob = AutoBroadcastSpec());
+                  const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
