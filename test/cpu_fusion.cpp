@@ -3888,7 +3888,7 @@ TEST(cpu_fusion, rnn_fusion_2rnn_layer_3lstm_cell)
     }
 }
 
-TEST(cpu_fusion, MLIR_DISABLE_TEST(validate_fuse_gru_inputs))
+TEST(cpu_fusion, validate_fuse_gru_inputs)
 {
     const std::string file_name("mxnet/gru_debug.json");
     auto cpu_func = make_function_from_file(file_name);

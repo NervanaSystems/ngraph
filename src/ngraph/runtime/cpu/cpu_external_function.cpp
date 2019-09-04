@@ -34,7 +34,7 @@
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/pass/mlir_subgraph_extraction.hpp"
+#include "contrib/mlir/compiler/pass/mlir_subgraph_extraction.hpp"
 #endif
 
 #include "ngraph/descriptor/input.hpp"
