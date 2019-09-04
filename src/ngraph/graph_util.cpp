@@ -180,16 +180,31 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     target->clear_control_dependents();
 }
 
-void ngraph::replace_nodes(const unordered_map<shared_ptr<Node>, shared_ptr<Node>>& replacement_map)
+void ngraph::replace_nodes(
+    const std::shared_ptr<Function>& f,
+    const unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Parameter>>&
+        parameter_replacement_map,
+    const unordered_map<shared_ptr<Node>, shared_ptr<Node>>& body_replacement_map)
 {
-    for (auto& kv : replacement_map)
+    auto& params = f->get_parameters();
+
+    for (size_t i = 0; i < params.size(); i++)
+    {
+        if (parameter_replacement_map.count(params[i]) != 0 &&
+            parameter_replacement_map.at(params[i]) != params[i])
+        {
+            f->replace_parameter(i, parameter_replacement_map.at(params[i]));
+        }
+    }
+
+    for (auto& kv : body_replacement_map)
     {
         auto& k = kv.first;
         auto& v = kv.second;
 
         if (k != v)
         {
-            replace_node(k, v);
+            f->replace_node(k, v);
         }
     }
 }
