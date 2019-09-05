@@ -178,8 +178,8 @@ void op::v1::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 {
     const auto delta = deltas.at(0);
 
-    const auto x = input(0).get_source_output();
-    const auto reversed_axes = input(1).get_source_output();
+    const auto x = input_value(0);
+    const auto reversed_axes = input_value(1);
 
     adjoints.add_delta(x, make_shared<op::v1::Reverse>(delta, reversed_axes, m_mode));
 }
