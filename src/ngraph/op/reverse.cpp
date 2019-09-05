@@ -103,7 +103,7 @@ void op::v1::Reverse::validate_and_infer_types()
     const auto rev_axes_shape = get_input_partial_shape(1);
     const auto rev_axes_rank = rev_axes_shape.rank();
 
-    if (input_rank.is_static() && rev_axes_rank.is_static())
+    if (rev_axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
                               static_cast<size_t>(rev_axes_rank) == 1,
@@ -118,14 +118,17 @@ void op::v1::Reverse::validate_and_infer_types()
                 static_cast<size_t>(rev_axes_rank) == 1,
                 "The reversed_axes input rank needs to be equal to 1 in 'mask' mode.");
 
-            const auto rev_axes_mask_elems_count = static_cast<size_t>(rev_axes_shape[0]);
-            NODE_VALIDATION_CHECK(this,
-                                  rev_axes_mask_elems_count == static_cast<size_t>(input_rank),
-                                  "The number of elements in the reversed_axes tensor (",
-                                  rev_axes_mask_elems_count,
-                                  ") must match the input data tensor rank (",
-                                  static_cast<size_t>(input_rank),
-                                  ") in 'mask' mode.");
+            if (input_rank.is_static() && rev_axes_shape[0].is_static())
+            {
+                const auto rev_axes_mask_elems_count = static_cast<size_t>(rev_axes_shape[0]);
+                NODE_VALIDATION_CHECK(this,
+                                      rev_axes_mask_elems_count == static_cast<size_t>(input_rank),
+                                      "The number of elements in the reversed_axes tensor (",
+                                      rev_axes_mask_elems_count,
+                                      ") must match the input data tensor rank (",
+                                      static_cast<size_t>(input_rank),
+                                      ") in 'mask' mode.");
+            }
         }
     }
 
