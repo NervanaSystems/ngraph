@@ -104,7 +104,8 @@ namespace ngraph
                 {
                     unknown_operators.emplace(detail::get_op_domain_and_name(node_proto),
                                               node_proto);
-                    // If a node from an unregistered domain is detected, try registering that domain
+                    // If a node from an unregistered domain is detected, try registering that
+                    // domain
                     m_model->enable_opset_domain(detail::get_node_domain(node_proto));
                 }
             }

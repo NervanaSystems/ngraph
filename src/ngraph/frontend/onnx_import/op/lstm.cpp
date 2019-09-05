@@ -26,6 +26,7 @@
 #include "exceptions.hpp"
 #include "lstm.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -77,9 +78,11 @@ namespace ngraph
                         // ----- Mandatory inputs ------
                         // Packed input sequences. Shape: [seq_length, batch_size, input_size]
                         m_map[LSTMInput::LSTM_INPUT_X] = ng_inputs.at(0);
-                        // Weight tensor for the gates. Shape: [num_directions, 4*hidden_size, input_size]
+                        // Weight tensor for the gates.
+                        // Shape: [num_directions, 4*hidden_size, input_size]
                         m_map[LSTMInput::LSTM_INPUT_W] = ng_inputs.at(1);
-                        // The recurrence weight tensor. Shape: [num_directions, 4*hidden_size, hidden_size]
+                        // The recurrence weight tensor.
+                        // Shape: [num_directions, 4*hidden_size, hidden_size]
                         m_map[LSTMInput::LSTM_INPUT_R] = ng_inputs.at(2);
 
                         const std::size_t hidden_size =
@@ -116,7 +119,8 @@ namespace ngraph
                                 std::vector<std::int32_t>(
                                     batch_size, m_map[LSTMInput::LSTM_INPUT_X]->get_shape().at(0)));
                         }
-                        // The initial value of the hidden. Shape [num_directions, batch_size, hidden_size]
+                        // The initial value of the hidden.
+                        // Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() > 5 && !ng_inputs.at(5)->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_INIT_H] = ng_inputs.at(5);
@@ -128,7 +132,8 @@ namespace ngraph
                                 Shape{num_directions, batch_size, hidden_size},
                                 std::vector<float>(num_directions * batch_size * hidden_size, 0.f));
                         }
-                        // The initial value of the cell. Shape [num_directions, batch_size, hidden_size]
+                        // The initial value of the cell.
+                        // Shape [num_directions, batch_size, hidden_size]
                         if (ng_inputs.size() > 6 && !ng_inputs.at(6)->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_INIT_C] = ng_inputs.at(6);
@@ -237,14 +242,14 @@ namespace ngraph
                                          const std::shared_ptr<ngraph::Node>& initial_c,
                                          const std::shared_ptr<ngraph::Node>& seq_lengths,
                                          const LSTMAttributes& attributes)
-                        : m_X{X}
-                        // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
-                        , m_W(reshape::squeeze(W))
-                        , m_R(reshape::squeeze(R))
-                        , m_B(reshape::squeeze(B))
-                        , m_P(reshape::squeeze(P))
-                        , m_initial_h(reshape::squeeze(initial_h))
-                        , m_initial_c(reshape::squeeze(initial_c))
+                        : m_X{X} // Since we have forward LSTM we can squeeze `num_directions` axis
+                                 // from inputs.
+                        , m_W(builder::squeeze(W))
+                        , m_R(builder::squeeze(R))
+                        , m_B(builder::squeeze(B))
+                        , m_P(builder::squeeze(P))
+                        , m_initial_h(builder::squeeze(initial_h))
+                        , m_initial_c(builder::squeeze(initial_c))
                         , m_seq_lengths(seq_lengths)
                         , m_attributes(attributes)
                     {
@@ -258,7 +263,8 @@ namespace ngraph
                         // ------ INPUTS ------
                         // X - The input tensor. [seq_length, batch_size, input_size]
                         // W - The weight tensor. [num_directions, 4*hidden_size, input_size]
-                        // R - The recurrence weight tensor. [num_directions, 4*hidden_size, hidden_size]
+                        // R - The recurrence weight tensor. [num_directions, 4*hidden_size,
+                        //                                    hidden_size]
                         // B - The bias tensor for input gate. [num_directions, 8*hidden_size]
                         // P - The weight tensor for peepholes. [num_directions, 3*hidde_size]
                         // ------ ACRONYMS ------
@@ -295,7 +301,7 @@ namespace ngraph
                         for (auto& in_x : in_seqs)
                         {
                             // remove first empty dim, after above split.
-                            in_x = reshape::squeeze(in_x);
+                            in_x = builder::squeeze(in_x);
                         }
 
                         std::int32_t time_step{1};
@@ -326,7 +332,7 @@ namespace ngraph
                             // This results in zeroing out values in batches with sequence shorter
                             // than current time_step.
                             h_list.push_back(
-                                get_masked_node(reshape::expand_dims(H), time_step, 1));
+                                get_masked_node(builder::expand_dims(H), time_step, 1));
                             // Reference implementation in ONNX Runtime doesn't mask values of Y_h
                             // and Y_c outputs, thus here we make sure that only appropriate batches
                             // (in respect to its sequence length) are updated. Those batches which
@@ -349,12 +355,12 @@ namespace ngraph
 
                         // Expand Y so that it has expected shape:
                         // [seq_length, num_directions, batch_size, hidden_size]
-                        Y = reshape::expand_dims(Y, 1);
+                        Y = builder::expand_dims(Y, 1);
 
                         // expand H_t and C_t so that it has expected shape:
                         // [num_directions, batch_size, hidden_size]
-                        auto Y_h = reshape::expand_dims(H_t);
-                        auto Y_c = reshape::expand_dims(C_t);
+                        auto Y_h = builder::expand_dims(H_t);
+                        auto Y_c = builder::expand_dims(C_t);
                         return {Y, Y_h, Y_c};
                     }
 
@@ -452,7 +458,8 @@ namespace ngraph
                     }
                     if (attributes.m_direction == LSTMDirection::LSTM_DIRECTION_BIDIRECTIONAL)
                     {
-                        // In bidirectional mode weights are stacked together, so we must split them.
+                        // In bidirectional mode weights are stacked together, so we must split
+                        // them.
                         NodeVector W{
                             ngraph::builder::split(input_map.at(LSTMInput::LSTM_INPUT_W), 2)};
                         NodeVector R{
@@ -502,7 +509,7 @@ namespace ngraph
                 }
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

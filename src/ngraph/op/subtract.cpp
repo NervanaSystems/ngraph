@@ -24,8 +24,8 @@ const string op::Subtract::type_name{"Subtract"};
 
 op::Subtract::Subtract(const Output<Node>& arg0,
                        const Output<Node>& arg1,
-                       const AutoBroadcastSpec& autob)
-    : BinaryElementwiseArithmetic(arg0, arg1, autob)
+                       const AutoBroadcastSpec& auto_broadcast)
+    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }

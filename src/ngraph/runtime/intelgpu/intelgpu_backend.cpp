@@ -89,6 +89,7 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
@@ -1817,7 +1818,8 @@ shared_ptr<runtime::Executable>
 
                 if ((pad_below.at(0) == pad_above.at(0)) && (pad_below.at(1) == pad_above.at(1)))
                 {
-                    // symmetric padding case temporally excluded (custom kernel executed) due to stability issues
+                    // symmetric padding case temporally excluded (custom kernel executed) due to
+                    // stability issues
                     const CoordinateDiff& pad_below_for = conv_op->get_padding_below_forward();
                     input_offset_xy = -pad_below_for.at(0);
                 }
@@ -2071,6 +2073,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::GRUCell:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::LSTMCell:
+        case OP_TYPEID::MatMul:
         case OP_TYPEID::MVN:
         case OP_TYPEID::NormalizeL2:
         case OP_TYPEID::PRelu:
@@ -2196,6 +2199,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::GroupConvolutionTranspose:
     case OP_TYPEID::GRUCell:
     case OP_TYPEID::LSTMCell:
+    case OP_TYPEID::MatMul:
     case OP_TYPEID::MVN:
     case OP_TYPEID::NormalizeL2:
     case OP_TYPEID::PRelu:

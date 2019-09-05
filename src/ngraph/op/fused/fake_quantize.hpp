@@ -30,7 +30,9 @@ namespace ngraph
         /// \note       Input floating point values are quantized into a discrete
         ///             set of floating point values.
         ///
-        /// \paragraph Implementation This class creates a node which performs the following operation:
+        /// \paragraph Implementation This class creates a node which performs the following
+        ///            operation:
+        ///
         ///            round((data - input_low) / (input_high - input_low) * (levels-1)) /
         ///                 (levels-1) * (output_high - output_low) + output_low
         ///

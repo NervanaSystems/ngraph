@@ -393,12 +393,12 @@ namespace ngraph
                             cg->get_transpose_arg1());
             }
 
-            REGISTER_OP_BUILDER(MatmulBias);
-            REGISTER_OP_BUILDER(BatchMatMul);
-            REGISTER_OP_BUILDER(BatchMatMulTranspose);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_matmul_bias_cpp() {}
-#endif
+            void register_builders_matmul_bias_cpp()
+            {
+                REGISTER_OP_BUILDER(MatmulBias);
+                REGISTER_OP_BUILDER(BatchMatMul);
+                REGISTER_OP_BUILDER(BatchMatMulTranspose);
+            }
         }
     }
 }

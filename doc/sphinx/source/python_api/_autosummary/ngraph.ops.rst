@@ -32,6 +32,7 @@ ngraph.ops
       cos
       cosh
       depth_to_space
+      dequantize
       divide
       dot
       elu
@@ -68,12 +69,16 @@ ngraph.ops
       power
       prelu
       prod
+      quantize
+      quantized_convolution
+      quantized_dot
       relu
       replace_slice
       reshape
       reverse
       scale_shift
       select
+      shuffle_channels
       sign
       sin
       sinh
@@ -81,6 +86,8 @@ ngraph.ops
       softmax
       space_to_depth
       sqrt
+      squared_difference
+      squeeze
       subtract
       sum
       tan

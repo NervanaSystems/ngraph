@@ -24,20 +24,25 @@ set (SRC
     axis_vector.hpp
     builder/autobroadcast.cpp
     builder/autobroadcast.hpp
+    builder/dequantize_builder.cpp
+    builder/dequantize_builder.hpp
     builder/make_constant.hpp
+    builder/matmul_factory.cpp
+    builder/matmul_factory.hpp
     builder/norm.cpp
     builder/norm.hpp
     builder/numpy_transpose.cpp
     builder/numpy_transpose.hpp
-    builder/quantization.cpp
-    builder/quantization.hpp
+    builder/quantize_builder.cpp
+    builder/quantize_builder.hpp
+    builder/quantized_concat_builder.cpp
+    builder/quantized_concat_builder.hpp
     builder/quantized_conv_builder.cpp
     builder/quantized_conv_builder.hpp
     builder/quantized_dot_builder.cpp
     builder/quantized_dot_builder.hpp
     builder/quantization/quantized_linear_convolution.cpp
     builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization_util.hpp
     builder/quantization_utils.hpp
     builder/quantization_utils.cpp
     builder/reduce_ops.cpp
@@ -154,8 +159,6 @@ set (SRC
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
-    op/experimental/quantized_concat.cpp
-    op/experimental/quantized_concat.hpp
     op/experimental/quantized_conv_bias.cpp
     op/experimental/quantized_conv_bias.hpp
     op/experimental/quantized_conv_relu.cpp
@@ -328,6 +331,8 @@ set (SRC
     op/fused/gru_cell.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
+    op/fused/matmul.cpp
+    op/fused/matmul.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize_l2.cpp
@@ -436,6 +441,8 @@ set (SRC
     pass/nop_elimination.hpp
     pass/pass.cpp
     pass/pass.hpp
+    pass/opset1_upgrade.cpp
+    pass/opset1_upgrade.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
     pass/propagate_cacheability.cpp

@@ -62,10 +62,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Select);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_select_cpp() {}
-#endif
+            void register_builders_select_cpp() { REGISTER_OP_BUILDER(Select); }
         }
     }
 }

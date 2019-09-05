@@ -32,7 +32,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

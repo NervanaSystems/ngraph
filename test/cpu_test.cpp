@@ -112,7 +112,7 @@ TEST(cpu_test, trivial_in_place_relu)
 }
 
 #ifndef NGRAPH_HALIDE
-TEST(cpu_test, trivial_in_place_relu_fail)
+TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
@@ -231,7 +231,7 @@ TEST(cpu_test, mkldnn_layouts)
     EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, rv));
 }
 
-TEST(cpu_test, reshape_layout_optimizations1)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations1))
 {
     // Squeeze outermost dimension
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -270,7 +270,7 @@ TEST(cpu_test, reshape_layout_optimizations1)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations2)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations2))
 {
     // ExpandDims - inner most and internal dims
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -309,7 +309,7 @@ TEST(cpu_test, reshape_layout_optimizations2)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations3)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations3))
 {
     // Squeeze padded dimension
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -349,7 +349,7 @@ TEST(cpu_test, reshape_layout_optimizations3)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations4)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations4))
 {
     // Squeeze and expand dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -398,7 +398,7 @@ TEST(cpu_test, reshape_layout_optimizations4)
     EXPECT_LE(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 4);
 }
 
-TEST(cpu_test, reshape_layout_optimizations5)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations5))
 {
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 8});
@@ -1049,6 +1049,29 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     call3.join();
 
     unset_environment("NGRAPH_CPU_CONCURRENCY");
+}
+
+TEST(cpu_test, constant_convertlayout)
+{
+    Shape data_shape{1, 64, 56, 56};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    Shape weights_shape{64, 64, 3, 3};
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<float> values_in(shape_size(weights_shape));
+    rng.initialize(values_in);
+    auto weights = make_shared<op::Constant>(element::f32, weights_shape, values_in);
+    Shape bias_shape{64};
+    auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
+
+    auto conv = std::make_shared<op::Convolution>(data, weights, Strides{1, 1}, Strides{1, 1});
+    auto convbias = make_shared<op::ConvolutionBias>(conv, bias);
+
+    auto f = make_shared<Function>(convbias, ParameterVector{data, bias});
+    auto backend = runtime::Backend::create("CPU");
+    auto handle = backend->compile(f);
+
+    size_t convert_layout = count_ops_of_type<runtime::cpu::op::ConvertLayout>(f);
+    ASSERT_EQ(convert_layout, 1);
 }
 
 TEST(cpu_test, constant_reshape)
