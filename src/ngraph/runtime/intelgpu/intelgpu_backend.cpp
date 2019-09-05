@@ -2066,6 +2066,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::Gather:
         case OP_TYPEID::GatherND:
         case OP_TYPEID::Gelu:
+        case OP_TYPEID::GeluBackpropFactor:
         case OP_TYPEID::GenerateMask:
         case OP_TYPEID::GRN:
         case OP_TYPEID::GroupConvolutionTranspose:
