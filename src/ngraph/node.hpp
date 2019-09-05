@@ -379,6 +379,8 @@ namespace ngraph
         /// Get all the nodes that uses the current node
         NodeVector get_users(bool check_is_used = false) const;
 
+        /// \return Version of this node
+        virtual size_t get_version() const { return 0; }
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }

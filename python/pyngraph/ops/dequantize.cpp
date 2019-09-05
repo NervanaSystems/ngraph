@@ -17,15 +17,19 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/softmax.hpp"
-#include "pyngraph/ops/softmax.hpp"
+#include "ngraph/op/dequantize.hpp"
+#include "pyngraph/ops/dequantize.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Softmax(py::module m)
+void regclass_pyngraph_op_Dequantize(py::module m)
 {
-    py::class_<ngraph::op::Softmax, std::shared_ptr<ngraph::op::Softmax>, ngraph::op::Op> softmax(
-        m, "Softmax");
-    softmax.doc() = "ngraph.impl.op.Softmax wraps ngraph::op::Softmax";
-    softmax.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
+    py::class_<ngraph::op::Dequantize, std::shared_ptr<ngraph::op::Dequantize>, ngraph::op::Op>
+        dequantize(m, "Dequantize");
+    dequantize.doc() = "ngraph.impl.op.Dequantize wraps ngraph::op::Dequantize";
+    dequantize.def(py::init<const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const std::shared_ptr<ngraph::Node>&,
+                            const ngraph::element::Type&,
+                            const ngraph::AxisSet&>());
 }

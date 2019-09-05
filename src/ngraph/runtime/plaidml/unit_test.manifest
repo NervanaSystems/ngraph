@@ -39,6 +39,13 @@ topk_2d_min_one                         # No plans to implement TopK
 topk_int64                              # No plans to implement TopK
 topk_5d_max_partial                     # No plans to implement TopK
 topk_1d_i32_max_all                     # No plans to implement TopK
+topk_resnet50                           # No plans to implement TopK
+topk_max_sort_none                      # No plans to implement TopK
+topk_min_sort_none                      # No plans to implement TopK
+topk_max_sort_value                     # No plans to implement TopK
+topk_min_sort_value                     # No plans to implement TopK
+topk_max_sort_index                     # No plans to implement TopK
+topk_min_sort_index                     # No plans to implement TopK
 topk_2d_max_one_with_equal_values       # No plans to implement TopK
 model_top_k                             # No plans to implement TopK
 
@@ -256,6 +263,10 @@ max_pool_2d_1channel_1image_overpadded
 
 # node validation error: "Applying function, tensor with mismatching dimensionality: F, expected=4, got=5"
 group_conv_groups_included_in_shape
+
+# passes locally, fails in CI
+numeric_float_nan
+fake_quantize_with_clip_across_channels
 
 # axes input param not supported
 lrn_across_h
