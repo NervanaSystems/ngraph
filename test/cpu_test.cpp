@@ -1051,6 +1051,29 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     unset_environment("NGRAPH_CPU_CONCURRENCY");
 }
 
+TEST(cpu_test, constant_convertlayout)
+{
+    Shape data_shape{1, 64, 56, 56};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    Shape weights_shape{64, 64, 3, 3};
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<float> values_in(shape_size(weights_shape));
+    rng.initialize(values_in);
+    auto weights = make_shared<op::Constant>(element::f32, weights_shape, values_in);
+    Shape bias_shape{64};
+    auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
+
+    auto conv = std::make_shared<op::Convolution>(data, weights, Strides{1, 1}, Strides{1, 1});
+    auto convbias = make_shared<op::ConvolutionBias>(conv, bias);
+
+    auto f = make_shared<Function>(convbias, ParameterVector{data, bias});
+    auto backend = runtime::Backend::create("CPU");
+    auto handle = backend->compile(f);
+
+    size_t convert_layout = count_ops_of_type<runtime::cpu::op::ConvertLayout>(f);
+    ASSERT_EQ(convert_layout, 1);
+}
+
 TEST(cpu_test, constant_reshape)
 {
     Shape shape_in{2, 4};

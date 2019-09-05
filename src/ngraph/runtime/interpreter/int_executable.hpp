@@ -1734,7 +1734,8 @@ private:
                                             node.get_output_shape(0),
                                             topk->get_top_k_axis(),
                                             topk->get_k(),
-                                            topk->get_compute_max());
+                                            topk->get_compute_max(),
+                                            topk->get_sort());
             }
             else if (node.get_output_element_type(0) == element::i32)
             {
@@ -1745,7 +1746,8 @@ private:
                                             node.get_output_shape(0),
                                             topk->get_top_k_axis(),
                                             topk->get_k(),
-                                            topk->get_compute_max());
+                                            topk->get_compute_max(),
+                                            topk->get_sort());
             }
             else
             {
