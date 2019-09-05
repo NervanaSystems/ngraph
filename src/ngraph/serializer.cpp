@@ -1606,7 +1606,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             if (op_version == 1)
             {
-                auto keep_dims = node_js.at("keep_dims").get<int>();
+                auto keep_dims = node_js.at("keep_dims").get<bool>();
                 node = make_shared<op::v1::ReduceProd>(args[0], reduction_axes, keep_dims);
             }
             break;
@@ -1897,7 +1897,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             if (op_version == 1)
             {
-                auto keep_dims = node_js.at("keep_dims").get<int>();
+                auto keep_dims = node_js.at("keep_dims").get<bool>();
                 node = make_shared<op::v1::ReduceSum>(args[0], reduction_axes, keep_dims);
             }
             break;
