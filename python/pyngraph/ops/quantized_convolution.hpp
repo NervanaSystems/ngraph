@@ -14,18 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/softmax.hpp"
-#include "pyngraph/ops/softmax.hpp"
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Softmax(py::module m)
-{
-    py::class_<ngraph::op::Softmax, std::shared_ptr<ngraph::op::Softmax>, ngraph::op::Op> softmax(
-        m, "Softmax");
-    softmax.doc() = "ngraph.impl.op.Softmax wraps ngraph::op::Softmax";
-    softmax.def(py::init<const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&>());
-}
+void regclass_pyngraph_op_QuantizedConvolution(py::module m);
