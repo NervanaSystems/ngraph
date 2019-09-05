@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <mkldnn.hpp>
 #include "ngraph/op/op.hpp"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 #include "ngraph/util.hpp"
@@ -29,22 +30,23 @@ namespace ngraph
         public:
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            // INPUTS:
-            // [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size,
-            //       feature_size}
-            // [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size,
-            //       feature_size}
-            // [2] - initializer for the input weights matrix, used for the linear transformation of
-            //       the inputs.
-            // [3] - initializer for the recurrent weights matrix, used for the linear
-            //       transformation of the recurrent state.
-            // [4] - Initializer for the bias vector w.r.to inputs + hidden state (ibh_bias +
-            //       hbh_bias)
+// INPUTS:
+// [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size,
+//       feature_size}
+// [1] - recurrent state tensors {ht_1 | ct_1} of Shape{sequence length*batch_size,
+//       feature_size}
+// [2] - initializer for the input weights matrix, used for the linear transformation of
+//       the inputs.
+// [3] - initializer for the recurrent weights matrix, used for the linear
+//       transformation of the recurrent state.
+// [4] - Initializer for the bias vector w.r.to inputs + hidden state (ibh_bias +
+//       hbh_bias)
 
-            // OUTPUT VALUE: A tuple with the following structure:
-            //   [0] - ht, output tensor with shape (sequence_length*batch_size, num_hidden) .
-            //   [1] - {ht | ct} output recurrent state tensor with the same shape as states
+// OUTPUT VALUE: A tuple with the following structure:
+//   [0] - ht, output tensor with shape (sequence_length*batch_size, num_hidden) .
+//   [1] - {ht | ct} output recurrent state tensor with the same shape as states
 
+#if MKLDNN_VERSION_MAJOR < 1
             // This version of the LSTM op supports MKLDNN emitter code, this can be used standalone
             // for computing RNN
             // without fusing RNN cell (LSTM)'s across time steps.
@@ -54,6 +56,15 @@ namespace ngraph
                  const Output<Node>& weights_iter,
                  const Output<Node>& bias,
                  ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
+#else
+            Lstm(const Output<Node>& src_layer,
+                 const Output<Node>& src_iter,
+                 const Output<Node>& src_iter_c,
+                 const Output<Node>& weights_layer,
+                 const Output<Node>& weights_iter,
+                 const Output<Node>& bias,
+                 ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
+#endif
             Shape get_output_tensor_shape() const { return m_output_tensor_shape; }
             Shape get_output_cell_shape() const { return m_output_cell_shape; }
             ngraph::runtime::cpu::rnn_utils::rnntype get_rnn_type() const { return m_rnntype; }
