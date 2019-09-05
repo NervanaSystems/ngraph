@@ -123,20 +123,20 @@ namespace ngraph
                 ///
                 /// \param arg The tensor to be summed.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                /// \param keep_dims If set to 1 it holds axes that are used for reduction.
-                ReduceSum(const Output<Node>& arg, const AxisSet& reduction_axes, int keep_dims = 0);
+                /// \param keep_dims If set to true it holds axes that are used for reduction.
+                ReduceSum(const Output<Node>& arg, const AxisSet& reduction_axes, bool keep_dims = false);
                 /// \brief Constructs a summation operation.
                 ///
                 /// \param arg The tensor to be summed.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 /// \param keep_dims If set to 1 it holds axes that are used for reduction.
-                ReduceSum(const Output<Node>& arg, const Output<Node>& reduction_axes, int keep_dims = 0);
+                ReduceSum(const Output<Node>& arg, const Output<Node>& reduction_axes, bool keep_dims = false);
 
                 size_t get_version() const override { return 1; }
 
                 /// \return If set to 1 it holds axes that are used for reduction.
                 /// For each such axis, output dimension is equal to 1.
-                int get_keep_dims() const { return m_keep_dims; }
+                bool get_keep_dims() const { return m_keep_dims; }
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
@@ -151,7 +151,7 @@ namespace ngraph
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                     const NodeVector& deltas) override;
             private:
-                int m_keep_dims;
+                bool m_keep_dims;
             };
         }
 

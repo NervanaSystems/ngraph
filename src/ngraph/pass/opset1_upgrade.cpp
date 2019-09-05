@@ -95,7 +95,7 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::Product:
     {
-        int keep_dims = 0;
+        bool keep_dims = false;
         auto replacement_node = make_shared<op::v1::ReduceProd>(
             node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
         replace_node(node, replacement_node);
@@ -104,7 +104,7 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
     }
     case OP_TYPEID::Sum:
     {
-        int keep_dims = 0;
+        bool keep_dims = false;
         auto replacement_node = make_shared<op::v1::ReduceSum>(
             node->input(0).get_source_output(), node->input(1).get_source_output(), keep_dims);
         replace_node(node, replacement_node);

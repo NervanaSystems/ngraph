@@ -360,7 +360,7 @@ TEST(serialize, opset1_softmax)
 TEST(serialize, opset1_product)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    auto keep_dims = 1;
+    auto keep_dims = true;
     auto reduce_prod = make_shared<op::v1::ReduceProd>(arg, AxisSet{1, 2}, keep_dims);
     auto result = make_shared<op::Result>(reduce_prod);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
@@ -378,7 +378,7 @@ TEST(serialize, opset1_product)
 TEST(serialize, opset1_sum)
 {
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    auto keep_dims = 1;
+    auto keep_dims = true;
     auto reduce_sum = make_shared<op::v1::ReduceSum>(arg, AxisSet{1, 2}, keep_dims);
     auto result = make_shared<op::Result>(reduce_sum);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});

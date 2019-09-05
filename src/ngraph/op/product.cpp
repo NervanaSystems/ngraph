@@ -36,14 +36,14 @@ op::v0::Product::Product(const Output<Node>& arg, const Output<Node>& reduction_
 shared_ptr<Node> op::v0::Product::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Product>(new_args.at(0), get_reduction_axes());
+    return make_shared<op::v0::Product>(new_args.at(0), get_reduction_axes());
 }
 
 const string op::v1::ReduceProd::type_name{"Product"};
 
 op::v1::ReduceProd::ReduceProd(const Output<Node>& arg,
                                const AxisSet& reduction_axes,
-                               int keep_dims)
+                               bool keep_dims)
     : ArithmeticReduction(arg, reduction_axes)
     , m_keep_dims{keep_dims}
 {
@@ -52,7 +52,7 @@ op::v1::ReduceProd::ReduceProd(const Output<Node>& arg,
 
 op::v1::ReduceProd::ReduceProd(const Output<Node>& arg,
                                const Output<Node>& reduction_axes,
-                               int keep_dims)
+                               bool keep_dims)
     : ArithmeticReduction(arg, reduction_axes)
     , m_keep_dims{keep_dims}
 {

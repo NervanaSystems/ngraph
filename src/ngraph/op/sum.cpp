@@ -37,7 +37,7 @@ op::v0::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
 shared_ptr<Node> op::v0::Sum::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<Sum>(new_args.at(0), new_args.at(1));
+    return make_shared<op::v0::Sum>(new_args.at(0), new_args.at(1));
 }
 
 void op::v0::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
@@ -52,7 +52,7 @@ void op::v0::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVect
 
 const string op::v1::ReduceSum::type_name{"Sum"};
 
-op::v1::ReduceSum::ReduceSum(const Output<Node>& arg, const AxisSet& reduction_axes, int keep_dims)
+op::v1::ReduceSum::ReduceSum(const Output<Node>& arg, const AxisSet& reduction_axes, bool keep_dims)
     : ArithmeticReduction(arg, reduction_axes)
     , m_keep_dims{keep_dims}
 {
@@ -61,7 +61,7 @@ op::v1::ReduceSum::ReduceSum(const Output<Node>& arg, const AxisSet& reduction_a
 
 op::v1::ReduceSum::ReduceSum(const Output<Node>& arg,
                              const Output<Node>& reduction_axes,
-                             int keep_dims)
+                             bool keep_dims)
     : ArithmeticReduction(arg, reduction_axes)
     , m_keep_dims{keep_dims}
 {
