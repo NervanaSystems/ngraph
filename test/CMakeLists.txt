@@ -64,6 +64,7 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    opset_pass/softmax_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
@@ -183,11 +184,6 @@ if (NGRAPH_CPU_ENABLE)
         list(APPEND SRC halide.cpp)
     endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
-endif()
-
-if(NGRAPH_GPU_ENABLE)
-    list(APPEND SRC gpu_test.cpp gpu_fusion.cpp)
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GPU)
 endif()
 
 if (NGRAPH_INTELGPU_ENABLE)
@@ -425,10 +421,6 @@ endif()
 if (NGRAPH_INTERPRETER_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
-endif()
-
-if (NGRAPH_GPU_ENABLE)
-    target_link_libraries(unit-test PRIVATE gpu_backend)
 endif()
 
 if (NGRAPH_NOP_ENABLE)
