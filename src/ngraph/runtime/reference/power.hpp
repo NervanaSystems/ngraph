@@ -19,6 +19,9 @@
 #include <cmath>
 #include <cstddef>
 
+#include "ngraph/shape.hpp"
+#include "ngraph/op/util/attr_types.hpp"
+
 namespace ngraph
 {
     namespace runtime
