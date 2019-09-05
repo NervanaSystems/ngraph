@@ -243,6 +243,16 @@ private:
     {
         const Node& node = *node_wrapper.get_node();
 
+        size_t op_version = node.get_version();
+        bool is_op_version_supported = op_version == 0;
+        NGRAPH_CHECK(is_op_version_supported,
+                     "Unsupported operator version ",
+                     op_version,
+                     " in ",
+                     node,
+                     ".\n",
+                     "INTERPRETER backend currently only supports op in version 0.");
+
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
@@ -1724,7 +1734,8 @@ private:
                                             node.get_output_shape(0),
                                             topk->get_top_k_axis(),
                                             topk->get_k(),
-                                            topk->get_compute_max());
+                                            topk->get_compute_max(),
+                                            topk->get_sort());
             }
             else if (node.get_output_element_type(0) == element::i32)
             {
@@ -1735,7 +1746,8 @@ private:
                                             node.get_output_shape(0),
                                             topk->get_top_k_axis(),
                                             topk->get_k(),
-                                            topk->get_compute_max());
+                                            topk->get_compute_max(),
+                                            topk->get_sort());
             }
             else
             {

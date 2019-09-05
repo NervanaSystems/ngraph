@@ -164,8 +164,8 @@ def notifyByEmail() {
                         <tr><td>Pull Request Title:</td> <td>$CHANGE_TITLE</td></tr>
                         <tr><td>Pull Request:</td> <td><a href=$CHANGE_URL>$CHANGE_ID</a> </td></tr>
                         <tr><td>Branch:</td> <td>$CHANGE_BRANCH</td></tr>
-                        <tr><td>Commit Hash:</td> <td>$GIT_COMMIT_SUBJECT</td></tr>
-                        <tr><td>Commit Subject:</td> <td>$GIT_COMMIT_HASH</td></tr>
+                        <tr><td>Commit Hash:</td> <td>$GIT_COMMIT_HASH</td></tr>
+                        <tr><td>Commit Subject:</td> <td>$GIT_COMMIT_SUBJECT</td></tr>
                         <tr><td>Jenkins Build:</td> <td> <a href=$RUN_DISPLAY_URL> ${BUILD_NUMBER} </a> </td></tr>
                         <tr><td>nGraph-ONNX Branch:</td> <td>${ONNX_BRANCH}</td></tr>
                     </table>
