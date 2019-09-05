@@ -18,15 +18,16 @@
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
+#include <numeric>
 #include <random>
 #include <string>
 
 #include "gtest/gtest.h"
-#include "ngraph/ngraph.hpp"
-#include "util/all_close.hpp"
+#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/op/result.hpp"
+#include "ngraph/op/topk.hpp"
 #include "util/all_close_f.hpp"
-#include "util/ndarray.hpp"
-#include "util/random.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
@@ -34,6 +35,396 @@ using namespace std;
 using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
+
+template <typename T>
+bool compare_set(const vector<T>& a, vector<T> b)
+{
+    for (auto ita = a.begin(); ita != a.end(); ++ita)
+    {
+        auto itb = find(b.begin(), b.end(), *ita);
+        if (itb == b.end())
+        {
+            return false;
+        }
+        else
+        {
+            b.erase(itb);
+        }
+    }
+    return true;
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, topk_resnet50)
+{
+    Shape shape{128, 1000};
+    Shape rshape5{128, 5};
+    Shape rshape1{128, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true);
+    auto C = make_shared<op::TopK>(A, 1, element::i32, 1, true);
+    auto out5_value = make_shared<op::GetOutputElement>(B, 1);
+    auto out5_index = make_shared<op::GetOutputElement>(B, 0);
+    auto out1_value = make_shared<op::GetOutputElement>(C, 1);
+    auto out1_index = make_shared<op::GetOutputElement>(C, 0);
+    auto f = make_shared<Function>(NodeVector{out5_value, out5_index, out1_value, out1_index},
+                                   ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    vector<float> data;
+    for (size_t i = 0; i < shape[0]; i++)
+    {
+        for (size_t j = 0; j < shape[1]; j++)
+        {
+            data.push_back(j);
+        }
+    }
+    copy_data(a, data);
+
+    auto result5_value = backend->create_tensor(element::f32, rshape5);
+    auto result5_index = backend->create_tensor(element::i32, rshape5);
+    auto result1_value = backend->create_tensor(element::f32, rshape1);
+    auto result1_index = backend->create_tensor(element::i32, rshape1);
+
+    auto exec = backend->compile(f);
+    exec->call({result5_value, result5_index, result1_value, result1_index}, {a});
+
+    auto actual5_value = read_vector<float>(result5_value);
+    auto actual5_index = read_vector<int32_t>(result5_index);
+    auto actual1_value = read_vector<float>(result1_value);
+    auto actual1_index = read_vector<int32_t>(result1_index);
+
+    vector<float> expected5_value;
+    vector<int32_t> expected5_index;
+    for (size_t i = 0; i < rshape5[0]; i++)
+    {
+        for (size_t j = 0; j < rshape5[1]; j++)
+        {
+            expected5_value.push_back(shape[1] - j - 1);
+            expected5_index.push_back(shape[1] - j - 1);
+        }
+    }
+
+    vector<float> expected1_value;
+    vector<int32_t> expected1_index;
+    for (size_t i = 0; i < rshape1[0]; i++)
+    {
+        for (size_t j = 0; j < rshape1[1]; j++)
+        {
+            expected1_value.push_back(shape[1] - j - 1);
+            expected1_index.push_back(shape[1] - j - 1);
+        }
+    }
+
+    EXPECT_TRUE(compare_set<float>(expected5_value, actual5_value));
+    EXPECT_TRUE(compare_set<int32_t>(expected5_index, actual5_index));
+    EXPECT_TRUE(compare_set<float>(expected1_value, actual1_value));
+    EXPECT_TRUE(compare_set<int32_t>(expected1_index, actual1_index));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_none)
+{
+    Shape shape{128, 1000};
+    Shape rshape{128, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::NONE);
+    auto out_value = make_shared<op::GetOutputElement>(B, 1);
+    auto out_index = make_shared<op::GetOutputElement>(B, 0);
+    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    vector<float> data;
+    for (size_t i = 0; i < shape[0]; i++)
+    {
+        for (size_t j = 0; j < shape[1]; j++)
+        {
+            data.push_back(j);
+        }
+    }
+    copy_data(a, data);
+
+    auto result_value = backend->create_tensor(element::f32, rshape);
+    auto result_index = backend->create_tensor(element::i32, rshape);
+
+    auto exec = backend->compile(f);
+    exec->call({result_value, result_index}, {a});
+
+    auto actual_value = read_vector<float>(result_value);
+    auto actual_index = read_vector<int32_t>(result_index);
+
+    for (size_t i = 0; i < rshape[0]; i++)
+    {
+        vector<float> expected_value;
+        vector<int32_t> expected_index;
+        vector<float> act_value;
+        vector<int32_t> act_index;
+        for (size_t j = 0; j < rshape[1]; j++)
+        {
+            expected_value.push_back(shape[1] - j - 1);
+            expected_index.push_back(shape[1] - j - 1);
+            act_value.push_back(actual_value[rshape[1] * i + j]);
+            act_index.push_back(actual_index[rshape[1] * i + j]);
+        }
+        EXPECT_TRUE(compare_set<float>(expected_value, act_value));
+        EXPECT_TRUE(compare_set<int32_t>(expected_index, act_index));
+    }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_none)
+{
+    Shape shape{128, 1000};
+    Shape rshape{128, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::NONE);
+    auto out_value = make_shared<op::GetOutputElement>(B, 1);
+    auto out_index = make_shared<op::GetOutputElement>(B, 0);
+    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    vector<float> data;
+    for (size_t i = 0; i < shape[0]; i++)
+    {
+        for (size_t j = 0; j < shape[1]; j++)
+        {
+            data.push_back(j);
+        }
+    }
+    copy_data(a, data);
+
+    auto result_value = backend->create_tensor(element::f32, rshape);
+    auto result_index = backend->create_tensor(element::i32, rshape);
+
+    auto exec = backend->compile(f);
+    exec->call({result_value, result_index}, {a});
+
+    auto actual_value = read_vector<float>(result_value);
+    auto actual_index = read_vector<int32_t>(result_index);
+
+    for (size_t i = 0; i < rshape[0]; i++)
+    {
+        vector<float> expected_value;
+        vector<int32_t> expected_index;
+        vector<float> act_value;
+        vector<int32_t> act_index;
+        for (size_t j = 0; j < rshape[1]; j++)
+        {
+            expected_value.push_back(j);
+            expected_index.push_back(j);
+            act_value.push_back(actual_value[rshape[1] * i + j]);
+            act_index.push_back(actual_index[rshape[1] * i + j]);
+        }
+        EXPECT_TRUE(compare_set<float>(expected_value, act_value));
+        EXPECT_TRUE(compare_set<int32_t>(expected_index, act_index));
+    }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_value)
+{
+    Shape shape{128, 1000};
+    Shape rshape{128, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::SORT_VALUES);
+    auto out_value = make_shared<op::GetOutputElement>(B, 1);
+    auto out_index = make_shared<op::GetOutputElement>(B, 0);
+    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    vector<float> data;
+    for (size_t i = 0; i < shape[0]; i++)
+    {
+        for (size_t j = 0; j < shape[1]; j++)
+        {
+            data.push_back(j);
+        }
+    }
+    copy_data(a, data);
+
+    auto result_value = backend->create_tensor(element::f32, rshape);
+    auto result_index = backend->create_tensor(element::i32, rshape);
+
+    auto exec = backend->compile(f);
+    exec->call({result_value, result_index}, {a});
+
+    auto actual_value = read_vector<float>(result_value);
+    auto actual_index = read_vector<int32_t>(result_index);
+
+    vector<float> expected_value;
+    vector<int32_t> expected_index;
+    for (size_t i = 0; i < rshape[0]; i++)
+    {
+        for (size_t j = 0; j < rshape[1]; j++)
+        {
+            expected_value.push_back(shape[1] - j - 1);
+            expected_index.push_back(shape[1] - j - 1);
+        }
+    }
+    EXPECT_TRUE(test::all_close_f(expected_value, actual_value));
+    EXPECT_EQ(expected_index, actual_index);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_value)
+{
+    Shape shape{128, 1000};
+    Shape rshape{128, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::SORT_VALUES);
+    auto out_value = make_shared<op::GetOutputElement>(B, 1);
+    auto out_index = make_shared<op::GetOutputElement>(B, 0);
+    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    vector<float> data;
+    for (size_t i = 0; i < shape[0]; i++)
+    {
+        for (size_t j = 0; j < shape[1]; j++)
+        {
+            data.push_back(j);
+        }
+    }
+    copy_data(a, data);
+
+    auto result_value = backend->create_tensor(element::f32, rshape);
+    auto result_index = backend->create_tensor(element::i32, rshape);
+
+    auto exec = backend->compile(f);
+    exec->call({result_value, result_index}, {a});
+
+    auto actual_value = read_vector<float>(result_value);
+    auto actual_index = read_vector<int32_t>(result_index);
+
+    for (size_t i = 0; i < rshape[0]; i++)
+    {
+        vector<float> expected_value;
+        vector<int32_t> expected_index;
+        vector<float> act_value;
+        vector<int32_t> act_index;
+        for (size_t j = 0; j < rshape[1]; j++)
+        {
+            expected_value.push_back(j);
+            expected_index.push_back(j);
+            act_value.push_back(actual_value[rshape[1] * i + j]);
+            act_index.push_back(actual_index[rshape[1] * i + j]);
+        }
+        EXPECT_TRUE(compare_set<float>(expected_value, act_value));
+        EXPECT_TRUE(compare_set<int32_t>(expected_index, act_index));
+    }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_index)
+{
+    Shape shape{128, 1000};
+    Shape rshape{128, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::SORT_INDICES);
+    auto out_value = make_shared<op::GetOutputElement>(B, 1);
+    auto out_index = make_shared<op::GetOutputElement>(B, 0);
+    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    vector<float> data;
+    for (size_t i = 0; i < shape[0]; i++)
+    {
+        for (size_t j = 0; j < shape[1]; j++)
+        {
+            data.push_back(j);
+        }
+    }
+    copy_data(a, data);
+
+    auto result_value = backend->create_tensor(element::f32, rshape);
+    auto result_index = backend->create_tensor(element::i32, rshape);
+
+    auto exec = backend->compile(f);
+    exec->call({result_value, result_index}, {a});
+
+    auto actual_value = read_vector<float>(result_value);
+    auto actual_index = read_vector<int32_t>(result_index);
+
+    for (size_t i = 0; i < rshape[0]; i++)
+    {
+        vector<float> expected_value;
+        vector<int32_t> expected_index;
+        vector<float> act_value;
+        vector<int32_t> act_index;
+        for (size_t j = 0; j < rshape[1]; j++)
+        {
+            expected_value.push_back(shape[1] - j - 1);
+            expected_index.push_back(shape[1] - j - 1);
+            act_value.push_back(actual_value[rshape[1] * i + j]);
+            act_index.push_back(actual_index[rshape[1] * i + j]);
+        }
+        EXPECT_TRUE(compare_set<float>(expected_value, act_value));
+        EXPECT_TRUE(compare_set<int32_t>(expected_index, act_index));
+    }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_index)
+{
+    Shape shape{128, 1000};
+    Shape rshape{128, 5};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::SORT_INDICES);
+    auto out_value = make_shared<op::GetOutputElement>(B, 1);
+    auto out_index = make_shared<op::GetOutputElement>(B, 0);
+    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    vector<float> data;
+    for (size_t i = 0; i < shape[0]; i++)
+    {
+        for (size_t j = 0; j < shape[1]; j++)
+        {
+            data.push_back(j);
+        }
+    }
+    copy_data(a, data);
+
+    auto result_value = backend->create_tensor(element::f32, rshape);
+    auto result_index = backend->create_tensor(element::i32, rshape);
+
+    auto exec = backend->compile(f);
+    exec->call({result_value, result_index}, {a});
+
+    auto actual_value = read_vector<float>(result_value);
+    auto actual_index = read_vector<int32_t>(result_index);
+
+    for (size_t i = 0; i < rshape[0]; i++)
+    {
+        vector<float> expected_value;
+        vector<int32_t> expected_index;
+        vector<float> act_value;
+        vector<int32_t> act_index;
+        for (size_t j = 0; j < rshape[1]; j++)
+        {
+            expected_value.push_back(j);
+            expected_index.push_back(j);
+            act_value.push_back(actual_value[rshape[1] * i + j]);
+            act_index.push_back(actual_index[rshape[1] * i + j]);
+        }
+        EXPECT_TRUE(compare_set<float>(expected_value, act_value));
+        EXPECT_TRUE(compare_set<int32_t>(expected_index, act_index));
+    }
+}
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_all)
 {
