@@ -18,10 +18,10 @@ set(LIB_LIBS
     MLIRPass
 )
 
-add_library(ngraph_opt
+add_library(ngraph_opt_lib
     ngraph_opt.cpp
 )
-target_link_libraries(ngraph_opt ${LIB_LIBS})
+target_link_libraries(ngraph_opt_lib ${LIB_LIBS})
 
 set(LIBS
     MLIROptMain
@@ -33,6 +33,6 @@ add_executable(ngraph-opt
 )
 
 #whole_archive_link(ngraph-opt ${LIBS})
-target_link_libraries(ngraph-opt PRIVATE ngraph_opt ${LIBS} LLVMSupport)
+target_link_libraries(ngraph-opt PRIVATE ngraph_opt_lib ${LIBS} LLVMSupport)
 
 install(TARGETS ngraph-opt RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})
