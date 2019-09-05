@@ -42,17 +42,51 @@ op::NormalizeL2::NormalizeL2(const Output<Node>& data,
 
 void op::NormalizeL2::pre_validate_and_infer_types()
 {
-    const auto& data_pshape = get_input_partial_shape(0);
+    auto axes_node = input(1).get_source_output().get_node_shared_ptr();
+    const auto& input_pshape = get_input_partial_shape(0);
     const auto& axes_pshape = get_input_partial_shape(1);
-
-    NODE_VALIDATION_CHECK(this, data_pshape.is_static(), "Input data must be static.");
-    NODE_VALIDATION_CHECK(this, axes_pshape.is_static(), "Input axes must be static.");
+    const auto& input_rank = input_pshape.rank();
+    const auto& axes_rank = axes_pshape.rank();
 
     NODE_VALIDATION_CHECK(this,
-                          static_cast<size_t>(axes_pshape.rank()) == 1,
-                          "Input axes must have rank equals 1 (axes shape: ",
-                          axes_pshape,
-                          ").");
+                          axes_node->is_constant(),
+                          "doesn't support 'axes' input of other type than a Constant.");
+
+    if (axes_rank.is_static())
+    {
+        NODE_VALIDATION_CHECK(this,
+                              static_cast<size_t>(axes_pshape.rank()) == 1,
+                              "Input axes must have rank equals 1 (axes shape: ",
+                              axes_pshape,
+                              ").");
+
+        if (input_rank.is_static())
+        {
+            const auto reduction_axes = get_reduction_axes();
+            for (auto axis : reduction_axes)
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      axis < size_t(input_rank),
+                                      "Reduction axis (",
+                                      axis,
+                                      ") is out of bounds ",
+                                      "(argument shape: ",
+                                      input_pshape,
+                                      ")");
+            }
+        }
+    }
+}
+
+AxisSet op::NormalizeL2::get_reduction_axes() const
+{
+    AxisSet axes;
+    auto axes_input_node = input_value(1).get_node_shared_ptr();
+    if (auto const_op = dynamic_pointer_cast<op::Constant>(axes_input_node))
+    {
+        axes = const_op->get_axis_set_val();
+    }
+    return axes;
 }
 
 NodeVector op::NormalizeL2::decompose_op() const
@@ -60,37 +94,14 @@ NodeVector op::NormalizeL2::decompose_op() const
     Output<Node> data{input_value(0)};
     const Shape input_shape{data.get_shape()};
 
-    // Reshape to 4D tensor.
-    if (input_shape.size() < 4)
-    {
-        Shape data_shape(4 - input_shape.size(), 1);
-        copy(begin(input_shape), end(input_shape), back_inserter(data_shape));
-        data = builder::reshape(data, data_shape);
-    }
-
-    auto axes_node = input(1).get_source_output().get_node_shared_ptr();
-    NODE_VALIDATION_CHECK(this,
-                          axes_node->is_constant(),
-                          "doesn't support 'axes' input of other type than a Constant.");
-
-    // Calculate norm over axes indicated by axes input param
-    auto axes_constant = dynamic_pointer_cast<op::Constant>(axes_node);
-    auto axes_vector = axes_constant->get_vector<size_t>();
-    AxisSet reduction_axes{axes_vector};
+    AxisSet reduction_axes = get_reduction_axes();
 
     // Calculate l2 norm across axes determined by axes input
     auto builder_bias_mode =
         (m_eps_mode == EpsMode::MAX) ? builder::BiasMode::MAX : builder::BiasMode::ADD;
     Output<Node> norm = builder::l2_norm(data, reduction_axes, m_eps, builder_bias_mode);
-    norm = numpy_style_broadcast(norm, data.get_shape());
 
-    data = data / norm;
-
-    // get back original input tensor rank
-    if (input_shape.size() < 4)
-    {
-        data = builder::reshape(data, input_shape);
-    }
+    data = make_shared<op::Divide>(data, norm, AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
     return as_node_vector({data});
 }
