@@ -64,6 +64,7 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    opset_pass/softmax_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
@@ -72,6 +73,7 @@ set(SRC
     pass_shape_relevance.cpp
     pattern.cpp
     provenance.cpp
+    replace_node.cpp
     reshape_elimination.cpp
     reshape_sinking.cpp
     shape.cpp
@@ -113,6 +115,7 @@ set(SRC
     type_prop/index_reduction.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
+    type_prop/matmul.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
     type_prop/normalize.cpp
