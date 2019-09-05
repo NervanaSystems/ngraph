@@ -206,6 +206,7 @@ namespace
         // TODO: Remove NGFakeInputOp. We need to set NGFakeInputOp as legal op because we generate
         // it as part of the lowering to affine/standard.
         target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
+        target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
             // FuncOp is legal only if types have been converted to Std types.
             return typeConverter.isSignatureLegal(op.getType());
@@ -222,7 +223,6 @@ namespace
             signalPassFailure();
         }
 
-        //processFakeInstrs();
         insertNoAliasArgAttrs();
     }
 
@@ -251,6 +251,7 @@ namespace
         f.walk<NGReturnOp>([this, inputCount, &outputCount](NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
+                // annotate instructions defining outputs with the arg idx of the output
                 auto outputValue = ret.getOperand(i);
                 auto op = outputValue->getDefiningOp();
                 op->setAttr("graphOutputIdx",
@@ -258,7 +259,6 @@ namespace
             }
             NGRAPH_CHECK(outputCount == 0 || outputCount == ret.getNumOperands(),
                          "Inconsistent returns in function");
-            outputCount = ret.getNumOperands();
         });
     }
 
@@ -268,7 +268,7 @@ namespace
         SmallVector<Value*, 4> newResults;
         for (auto origResult : op->getResults())
         {
-            // create output def if this operation produces any sub-graph outputs
+            // find output arg if this operation produces any sub-graph outputs
             if (IntegerAttr attr = op->getAttrOfType<IntegerAttr>("graphOutputIdx"))
             {
                 auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
