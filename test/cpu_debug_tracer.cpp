@@ -57,7 +57,7 @@ static void open_logs(ifstream& meta, ifstream& bin, const string& trace_log, co
     ASSERT_TRUE(bin.is_open());
 }
 
-TEST(cpu_debug_tracer, check_flow_with_external_function)
+TEST(cpu_debug_tracer, MLIR_DISABLE_TEST(check_flow_with_external_function))
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -82,7 +82,7 @@ TEST(cpu_debug_tracer, check_flow_with_external_function)
     shared_ptr<runtime::Executable> handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
 
-    //open two logs and parse them
+    // open two logs and parse them
     ifstream f_meta;
     ifstream f_bin;
     open_logs(f_meta, f_bin, trace_log_file, bin_log_file);
@@ -94,14 +94,14 @@ TEST(cpu_debug_tracer, check_flow_with_external_function)
     auto mean =
         std::stod(str_mean.substr(str_mean.find("=") + 1, str_mean.find(" ") - str_mean.find("=")));
 
-    //mean value of first tensor - a
+    // mean value of first tensor - a
     EXPECT_EQ(mean, 1.5);
 
     getline(f_meta, line);
     auto str_var = line.substr(line.find("var"));
     auto var = std::stod(str_var.substr(str_var.find("=") + 1));
 
-    //variance value of second tensor - b
+    // variance value of second tensor - b
     EXPECT_EQ(var, 1.25);
 
     getline(f_meta, line);
@@ -109,7 +109,7 @@ TEST(cpu_debug_tracer, check_flow_with_external_function)
     auto bin_offset = std::stod(str_bin_offset.substr(
         str_bin_offset.find("=") + 1, str_bin_offset.find(" ") - str_bin_offset.find("=")));
 
-    //check output tensor from binary data
+    // check output tensor from binary data
     f_bin.seekg(bin_offset);
 
     std::vector<unsigned char> v_c((std::istreambuf_iterator<char>(f_bin)),

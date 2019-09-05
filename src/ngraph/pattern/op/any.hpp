@@ -29,12 +29,13 @@ namespace ngraph
             class Any : public Pattern
             {
             public:
-                /// \brief creates a Any node containing a sub-pattern described by \sa type and \sa shape.
+                /// \brief creates a Any node containing a sub-pattern described by \sa type and \sa
+                ///        shape.
                 Any(const element::Type& type,
                     const PartialShape& s,
                     Predicate pred,
                     const NodeVector& wrapped_nodes)
-                    : Pattern("Any", wrapped_nodes, pred)
+                    : Pattern(wrapped_nodes, pred)
                 {
                     if (!pred)
                     {
@@ -43,13 +44,20 @@ namespace ngraph
                     set_output_type(0, type, s);
                 }
 
-                /// \brief creates a Any node containing a sub-pattern described by the type and shape of \sa node.
+                /// \brief creates a Any node containing a sub-pattern described by the type and
+                ///        shape of \sa node.
                 Any(std::shared_ptr<Node> node, Predicate pred, const NodeVector& wrapped_nodes)
                     : Any(node->get_element_type(),
                           node->get_output_partial_shape(0),
                           pred,
                           wrapped_nodes)
                 {
+                }
+
+                const std::string& description() const override
+                {
+                    static std::string desc = "Any";
+                    return desc;
                 }
             };
         }

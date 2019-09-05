@@ -23,15 +23,10 @@
 #include "ngraph/frontend/onnx_import/exceptions.hpp"
 #include "ngraph/frontend/onnx_import/op/conv.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
-#include "ngraph/op/add.hpp"
-#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/strides.hpp"
 #include "quant_conv.hpp"
 
@@ -87,7 +82,8 @@ namespace ngraph
                         {
                             // Split one convolution op to N ops where N is the number of groups
                             // and concat results after computation.
-                            // reference: https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
+                            // reference:
+                            // https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
                             std::size_t n_data_channels{data->get_shape().at(1)};
                             std::size_t n_filters_channels{filters->get_shape().at(0)};
 
@@ -275,7 +271,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

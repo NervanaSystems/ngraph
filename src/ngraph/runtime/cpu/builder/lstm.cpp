@@ -107,7 +107,8 @@ namespace ngraph
                 };
                 functors.emplace_back(functor);
             }
-            REGISTER_OP_BUILDER(Lstm);
+
+            void register_builders_lstm_cpp() { REGISTER_OP_BUILDER(Lstm); }
         }
     }
 }

@@ -24,6 +24,8 @@ static int INPUTS = 0;
 static int INDICES = 1;
 static int UPDATES = 2;
 
+const string op::ScatterNDAdd::type_name{"ScatterNDAdd"};
+
 shared_ptr<Node> op::ScatterNDAdd::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);

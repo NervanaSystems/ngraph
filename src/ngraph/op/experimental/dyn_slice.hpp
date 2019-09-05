@@ -23,10 +23,15 @@ namespace ngraph
 {
     namespace op
     {
-        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a bounding box, optionally with stride.
+        /// \brief Takes a slice of an input tensor, i.e., the sub-tensor that resides within a
+        ///        bounding box, optionally with stride.
         class DynSlice : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
+            DynSlice() = default;
             /// \brief Constructs a dynamic tensor slice operation.
             ///
             /// \param arg The tensor to be sliced.
@@ -39,10 +44,10 @@ namespace ngraph
             /// \param new_axis          Add dimension one axis at the set positions
             /// \param shrink_axis       Delete dimensions at the set positions
             /// \param ellipsis_mask     Inserts missing dimensions on the set position
-            DynSlice(const std::shared_ptr<Node>& arg,
-                     const std::shared_ptr<Node>& lower_bounds,
-                     const std::shared_ptr<Node>& upper_bounds,
-                     const std::shared_ptr<Node>& strides,
+            DynSlice(const Output<Node>& arg,
+                     const Output<Node>& lower_bounds,
+                     const Output<Node>& upper_bounds,
+                     const Output<Node>& strides,
                      const AxisSet& lower_bounds_mask = AxisSet{},
                      const AxisSet& upper_bounds_mask = AxisSet{},
                      const AxisSet& new_axis = AxisSet{},

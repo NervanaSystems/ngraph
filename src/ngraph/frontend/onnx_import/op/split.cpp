@@ -17,7 +17,6 @@
 #include <cstdint>
 #include <vector>
 
-#include "exceptions.hpp"
 #include "ngraph/op/fused/split.hpp"
 #include "op/split.hpp"
 
@@ -58,7 +57,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

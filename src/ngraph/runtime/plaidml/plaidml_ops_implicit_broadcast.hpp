@@ -28,9 +28,10 @@ namespace ngraph
         {
             namespace op
             {
-                // Implements NumPy-style broadcast semantics by passing its single argument through to its
-                // output and pretending that this changes the shape.  The creator of this node is responsible
-                // for ensuring that the downstream operation will perform a NumPy-style broadcast.
+                // Implements NumPy-style broadcast semantics by passing its single argument through
+                // to its output and pretending that this changes the shape.  The creator of this
+                // node is responsible for ensuring that the downstream operation will perform a
+                // NumPy-style broadcast.
                 class ImplicitBroadcast;
             }
         }
@@ -40,7 +41,9 @@ namespace ngraph
 class ngraph::runtime::plaidml::op::ImplicitBroadcast final : public ngraph::op::Op
 {
 public:
-    ImplicitBroadcast(std::shared_ptr<Node> input, const Shape& shape);
+    static const std::string type_name;
+    const std::string& description() const override { return type_name; }
+    ImplicitBroadcast(const Output<Node>& input, const Shape& shape);
 
     void validate_and_infer_types() final;
 

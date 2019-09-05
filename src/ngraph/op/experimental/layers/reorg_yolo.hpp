@@ -25,11 +25,14 @@ namespace ngraph
         class ReorgYolo : public Op
         {
         public:
+            NGRAPH_API
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a ReorgYolo operation
             ///
             /// \param input          Input
             /// \param strides        Stride to reorganize input by
-            ReorgYolo(const std::shared_ptr<Node>& input, const Strides& strides);
+            ReorgYolo(const Output<Node>& input, const Strides& strides);
 
             void validate_and_infer_types() override;
 

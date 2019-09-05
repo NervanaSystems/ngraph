@@ -85,7 +85,6 @@
 #include "op/not.hpp"
 #include "op/onehot.hpp"
 #include "op/or.hpp"
-#include "op/pad.cpp"
 #include "op/pad.hpp"
 #include "op/pow.hpp"
 #include "op/prelu.hpp"

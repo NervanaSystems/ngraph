@@ -121,7 +121,7 @@ vector<runtime::PerformanceCounter> runtime::Executable::get_performance_data() 
 
 void runtime::Executable::save(std::ostream& output_stream)
 {
-    throw runtime_error("save opertion unimplemented.");
+    throw runtime_error("save operation unimplemented.");
 }
 
 shared_ptr<runtime::Tensor> runtime::Executable::create_input_tensor(size_t input_index)

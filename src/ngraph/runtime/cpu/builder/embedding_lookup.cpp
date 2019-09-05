@@ -244,7 +244,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(EmbeddingLookup);
+            void register_builders_embedding_lookup_cpp() { REGISTER_OP_BUILDER(EmbeddingLookup); }
         }
     }
 }

@@ -195,8 +195,12 @@ namespace ngraph
                     functors.emplace_back(functor);
                 }
             }
-            REGISTER_OP_BUILDER(AvgPool);
-            REGISTER_OP_BUILDER(AvgPoolBackprop);
+
+            void register_builders_avg_pool_cpp()
+            {
+                REGISTER_OP_BUILDER(AvgPool);
+                REGISTER_OP_BUILDER(AvgPoolBackprop);
+            }
         }
     }
 }

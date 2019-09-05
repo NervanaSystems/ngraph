@@ -23,7 +23,7 @@
 /doc/*/*/backends/plaidml-ng-api/   @flaub @brianretford @dgkutnic
 /doc/*/*/inspection/                @aproctor
 /doc/examples/onnx/                 @arogowie-intel @tsocha
-/README.md                          @adstraw
+/README.md                          @indie
 project/introduction.rst            @adstraw
 project/governance.rst              @adstraw
 /changes.md                         @indie @diyessi
@@ -37,7 +37,7 @@ project/doc-contributor-README.rst  @indie
 /src/resource/                      @rkimballn1
 /src/tools/                         @rkimballn1
 /src/ngraph/autodiff/               @diyessi
-/src/ngraph/builder/                @sfvaroglu
+/src/ngraph/builder/                @mbrookhart
 /src/ngraph/codegen/                @rkimballn1
 /src/ngraph/distributed.*           @wenzhe-nrv @diyessi
 /src/ngraph/frontend/               @postrational
@@ -49,13 +49,13 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/runtime/                @rkimballn1
 /src/ngraph/runtime/cpu/            @nmostafa
 /src/contrib/mlir/                  @nmostafa @dcaballe
-/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @nmostafa @avijit-nervana
+/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @nmostafa
 /src/ngraph/runtime/dynamic/        @aprocter
 /src/ngraph/runtime/gpu/            @rkimballn1
 /src/ngraph/runtime/hybrid/         @rkimballn1
 /src/ngraph/runtime/intelgpu/       @dmyershov
 /src/ngraph/runtime/interpreter/    @rkimballn1
-/src/ngraph/runtime/plaidml/        @earhart
+/src/ngraph/runtime/plaidml/        @earhart @dgkutnic
 /src/ngraph/runtime/reference/      @aprocter
 /src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @aprocter
 /src/ngraph/type/                   @diyessi

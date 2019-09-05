@@ -139,7 +139,8 @@ namespace ngraph
                     }
                 }
             }
-            REGISTER_OP_BUILDER(ScatterAdd);
+
+            void register_builders_scatter_add_cpp() { REGISTER_OP_BUILDER(ScatterAdd); }
         }
     }
 }

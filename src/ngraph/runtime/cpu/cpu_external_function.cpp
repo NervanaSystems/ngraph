@@ -34,7 +34,7 @@
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/pass/mlir_subgraph_extraction.hpp"
+#include "contrib/mlir/compiler/pass/mlir_subgraph_extraction.hpp"
 #endif
 
 #include "ngraph/descriptor/input.hpp"
@@ -75,17 +75,14 @@
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -113,6 +110,7 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -122,6 +120,7 @@
 #include "ngraph/op/scatter_add.hpp"
 #include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
+#include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
@@ -133,6 +132,7 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
@@ -155,6 +155,7 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_cse.hpp"
 #include "ngraph/runtime/cpu/cpu_emitter.hpp"
@@ -181,7 +182,6 @@
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
-#include "ngraph/runtime/cpu/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
@@ -394,8 +394,6 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::ConvertLayout>},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool>},
-    {TI(ngraph::op::QuantizedMaxPool), &runtime::cpu::CPU_Emitter::emit<op::QuantizedMaxPool>},
-    {TI(ngraph::op::QuantizedAvgPool), &runtime::cpu::CPU_Emitter::emit<op::QuantizedAvgPool>},
     {TI(ngraph::op::MaxPoolWithIndices), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolWithIndices>},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse>},
     {TI(ngraph::op::ReverseSequence), &runtime::cpu::CPU_Emitter::emit<op::ReverseSequence>},
@@ -430,6 +428,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
     {TI(ngraph::op::And), &runtime::cpu::CPU_Emitter::emit<op::And>},
     {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
+    {TI(ngraph::op::Xor), &runtime::cpu::CPU_Emitter::emit<op::Xor>},
     {TI(ngraph::op::CPULeakyRelu), &runtime::cpu::CPU_Emitter::emit<op::CPULeakyRelu>},
     {TI(ngraph::op::CompiledKernel), &runtime::cpu::CPU_Emitter::emit<op::CompiledKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},
@@ -441,7 +440,6 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::GroupConvolutionBias>},
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeconvolutionBias>},
-    {TI(ngraph::op::QuantizedConcat), &runtime::cpu::CPU_Emitter::emit<op::QuantizedConcat>},
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
 };
@@ -566,6 +564,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
+#include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/state/rng_state.hpp"
 #include "ngraph/strides.hpp"
@@ -676,7 +675,7 @@ using namespace ngraph::runtime;
 
     writer << common_function_string << "\n";
 
-    //initiate mkldnn_primitives for CPURuntimeContextCG
+    // initiate mkldnn_primitives for CPURuntimeContextCG
     writer << "void inline CPURuntimeContextCG::init_mkldnn_primitives()\n";
     writer.block_begin();
     writer << "mkldnn_primitives = std::vector<mkldnn::primitive*>("
@@ -736,7 +735,7 @@ using namespace ngraph::runtime;
     writer << "{\n";
     writer.indent++;
 
-    //deserialize and build mkldnn primitives
+    // deserialize and build mkldnn primitives
     if (m_mkldnn_emitter->get_mkldnn_descriptors_size() > 0)
     {
         writer << "if (ctx->first_iteration)\n";
@@ -1153,6 +1152,27 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     auto dex = is_direct_execution();
     auto is_supported = [dex](const Node& node) {
+
+        // this checks averts the decomposition of LSTMCell
+        // we will map LSTMCell to LSTM CPU op in the later
+        // graph pass
+        if (typeid(ngraph::op::LSTMCell) == typeid(node))
+        {
+            // MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell
+            // has peephole. LSTMCell with no peephole support is constant initialized to zero
+            // TODO (pthoreho) : For MKLDNN > V1.0, change mkldnn kernel integration to compute for
+            // LSTMCell
+            // with peephole as well.
+            if (std::dynamic_pointer_cast<ngraph::op::Constant>(node.get_argument(6)) != nullptr)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         if (dex)
         {
             auto handler = GetGlobalBuildDispatcher().find(type_index(typeid(node)));
@@ -1224,6 +1244,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
     REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUConvertLayoutConstantFolding, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
@@ -1257,7 +1278,7 @@ static void dump_one_kernel_with_type(runtime::cpu::CPU_DebugTracer& debug_trace
                                       const std::string& tensor_name,
                                       const std::string& in_out)
 {
-    switch (t_attrs.m_type_of_element.get_type_enum())
+    switch (t_attrs.m_type_of_element)
     {
     case element::Type_t::f32:
         debug_tracer.dump_one_tensor<float>(kernel_name,
@@ -1631,7 +1652,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             }
         };
 
-        //dump the tensor roles to debug manifest
+        // dump the tensor roles to debug manifest
         for (const auto& tensor_roles : m_tensor_roles)
         {
             strm << tensor_roles.first << ", " << find_role(tensor_roles.second) << "\n";
@@ -1640,8 +1661,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         write_to_file(strm.str(), s_debug_dir, filename);
         strm.str("");
 
-        //dump the op's order of execution along with the address of
-        //tensor_data which holds the base address of each tensor.
+        // dump the op's order of execution along with the address of tensor_data which holds the
+        // base address of each tensor.
         for (shared_ptr<Node> node : m_function->get_ordered_ops())
         {
             std::vector<string> node_inputs;
@@ -1676,7 +1697,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             strm.str("");
         }
     }
-    //This check ensures we have exactly one functor for Op.
+    // This check ensures we have exactly one functor for Op.
     NGRAPH_CHECK(m_op_attrs.size() == functors.size());
 
     executor = [&](CPURuntimeContext* ctx, vector<void*>& inputs, vector<void*>& outputs) {
@@ -1851,7 +1872,8 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                 auto index = profiler_count++;
                 if ((enables.at(ctx->pc))(ctx) || ctx->first_iteration)
                 {
-                    // Each Op will have exactly one functor, start the clock before the exceution of functor
+                    // Each Op will have exactly one functor, start the clock before the exceution
+                    // of functor
                     // and collect the profiler_count once the execution complets
                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
                     {

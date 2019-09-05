@@ -21,17 +21,12 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 const string op::GroupConvolution::type_name{"GroupConvolution"};
-
-op::GroupConvolution::GroupConvolution()
-{
-}
 
 op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
                                        const Output<Node>& filters,
@@ -134,11 +129,12 @@ shared_ptr<Node> op::GroupConvolution::copy_with_new_args(const NodeVector& new_
 
 NodeVector op::GroupConvolution::decompose_op() const
 {
-    auto data = input(0);
-    auto filters = input(1);
+    auto data = input_value(0);
+    auto filters = input_value(1);
     // Split one convolution op to N ops where N is the number of groups
     // and concat results after computation.
-    // reference: https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
+    // reference:
+    // https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
     std::size_t n_data_channels{data.get_shape().at(1)};
     std::size_t n_filters_channels{filters.get_shape().at(0)};
     std::size_t data_group_size{n_data_channels / m_groups};
@@ -156,13 +152,13 @@ NodeVector op::GroupConvolution::decompose_op() const
         // slice data
         data_lower_bounds[1] = group * data_group_size;
         data_upper_bounds[1] = (group + 1) * data_group_size;
-        auto sliced_data = std::make_shared<ngraph::op::Slice>(
-            data.get_source_output(), data_lower_bounds, data_upper_bounds);
+        auto sliced_data =
+            std::make_shared<ngraph::op::Slice>(data, data_lower_bounds, data_upper_bounds);
         // slice filters
         filters_lower_bounds[0] = group * filters_group_size;
         filters_upper_bounds[0] = (group + 1) * filters_group_size;
         auto sliced_filters = std::make_shared<ngraph::op::Slice>(
-            filters.get_source_output(), filters_lower_bounds, filters_upper_bounds);
+            filters, filters_lower_bounds, filters_upper_bounds);
 
         convolution_nodes.push_back(
             std::make_shared<ngraph::op::Convolution>(sliced_data,

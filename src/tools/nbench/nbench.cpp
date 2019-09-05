@@ -16,8 +16,13 @@
 
 // tool to benchmark any ngraph json model with given backend.
 // compile and run with:
-// g++ ./nbench.cpp -std=c++11 -I$HOME/ngraph_dist/include -L$HOME/ngraph_dist/lib -lngraph -o nbench
-// env LD_LIBRARY_PATH=$HOME/ngraph_dist/lib env NGRAPH_INTERPRETER_EMIT_TIMING=1 ./nbench
+// $ g++ ./nbench.cpp
+//             -std=c++11
+//             -I$HOME/ngraph_dist/include
+//             -L$HOME/ngraph_dist/lib
+//             -lngraph
+//             -o nbench
+// $ env LD_LIBRARY_PATH=$HOME/ngraph_dist/lib env NGRAPH_INTERPRETER_EMIT_TIMING=1 ./nbench
 // sample models are under ../../test/models
 
 #include <fstream>
@@ -34,11 +39,21 @@
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
+
+static void configure_static_backends()
+{
+#ifdef NGRAPH_INTERPRETER_STATIC_LIB_ENABLE
+    ngraph::runtime::BackendManager::register_backend(
+        "INTERPRETER", ngraph::runtime::interpreter::get_backend_constructor_pointer());
+#endif
+}
 
 class PerfShape : public ngraph::runtime::PerformanceCounter
 {
@@ -184,6 +199,7 @@ int main(int argc, char** argv)
     bool dot_file = false;
     bool double_buffer = false;
 
+    configure_static_backends();
     for (size_t i = 1; i < argc; i++)
     {
         string arg = argv[i];

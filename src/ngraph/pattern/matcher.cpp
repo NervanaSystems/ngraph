@@ -50,7 +50,8 @@ namespace ngraph
                 is_match = !predicate || predicate(graph_node);
             }
 
-            if (is_match) // in case label was already bound this rebinds it to the same node (harmless; and the logic seems cleaner)
+            if (is_match) // in case label was already bound this rebinds it to the same node
+                          // (harmless; and the logic seems cleaner)
             {
                 auto args = label->get_arguments();
                 if (args.size() > 0)
@@ -208,8 +209,8 @@ namespace ngraph
             }
 
             // This env var allows one to specify node name patterns to abort pattern matching
-            // at particular nodes. The upshot is that one can quickly zero in on an offending fusion by
-            // disabling individual fusions or optimizations that use Matcher.
+            // at particular nodes. The upshot is that one can quickly zero in on an offending
+            // fusion by disabling individual fusions or optimizations that use Matcher.
             static const char* node_skip_cregex = std::getenv("NGRAPH_FAIL_MATCH_AT");
             if (node_skip_cregex)
             {
@@ -298,7 +299,8 @@ namespace ngraph
 
             if (graph_node->is_commutative())
             {
-                // TODO: [nikolayk] we don't really have to use lexicographically-based perms, heap's algo should be faster
+                // TODO: [nikolayk] we don't really have to use lexicographically-based perms,
+                // heap's algo should be faster
                 std::sort(begin(pattern_args),
                           end(pattern_args),
                           [](const std::shared_ptr<ngraph::Node>& n1,
@@ -419,7 +421,8 @@ namespace ngraph
                 {
                     if (m.get_pattern_map().count(cor_pat) != 0)
                     {
-                        // assert that bound nodes from the previous and current matches are the same
+                        // assert that bound nodes from the previous and current matches are the
+                        // same
                         if (previous_matches.count(cor_pat) != 0)
                         {
                             if (previous_matches[cor_pat] != m.get_pattern_map()[cor_pat])

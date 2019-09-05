@@ -28,7 +28,6 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
 #include "onehot.hpp"
-#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -90,7 +89,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace  onnx_import
 

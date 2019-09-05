@@ -81,6 +81,15 @@ namespace ngraph
             NUMPY
         };
 
+        /// \brief Specifies how eps is combined with L2 value
+        enum class EpsMode
+        {
+            // Add bias to norm
+            ADD,
+            // Calculate max of norm and bias
+            MAX
+        };
+
         /// \brief Implicit broadcast specification
         struct AutoBroadcastSpec
         {

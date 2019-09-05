@@ -112,8 +112,6 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Pad);
-
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Pad)
             {
@@ -170,7 +168,12 @@ namespace ngraph
                     return functor;
                 }
             }
-            REGISTER_CF_BUILDER(Pad);
+
+            void register_builders_pad_cpp()
+            {
+                REGISTER_OP_BUILDER(Pad);
+                REGISTER_CF_BUILDER(Pad);
+            }
         }
     }
 }

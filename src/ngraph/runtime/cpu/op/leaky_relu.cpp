@@ -19,8 +19,10 @@
 using namespace std;
 using namespace ngraph;
 
-op::CPULeakyRelu::CPULeakyRelu(shared_ptr<Node> arg, float alpha)
-    : UnaryElementwiseArithmetic("CPULeakyRelu", {arg})
+const std::string op::CPULeakyRelu::type_name{"CPULeakyRelu"};
+
+op::CPULeakyRelu::CPULeakyRelu(const Output<Node>& arg, float alpha)
+    : UnaryElementwiseArithmetic(arg)
     , m_alpha(alpha)
 {
     constructor_validate_and_infer_types();
@@ -28,7 +30,7 @@ op::CPULeakyRelu::CPULeakyRelu(shared_ptr<Node> arg, float alpha)
     {
         throw ngraph_error("Leaky Relu expects non-negative alpha");
     }
-    set_output_type(0, arg->get_element_type(), arg->get_shape());
+    set_output_type(0, arg.get_element_type(), arg.get_shape());
 }
 
 shared_ptr<Node> op::CPULeakyRelu::copy_with_new_args(const NodeVector& new_args) const

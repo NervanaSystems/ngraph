@@ -82,8 +82,11 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Any);
-            REGISTER_OP_BUILDER(All);
+            void register_builders_reduce_function_cpp()
+            {
+                REGISTER_OP_BUILDER(Any);
+                REGISTER_OP_BUILDER(All);
+            }
         }
     }
 }

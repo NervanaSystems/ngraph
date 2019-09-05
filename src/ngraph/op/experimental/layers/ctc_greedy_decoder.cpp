@@ -19,10 +19,12 @@
 using namespace std;
 using namespace ngraph;
 
-op::CTCGreedyDecoder::CTCGreedyDecoder(const shared_ptr<Node>& input,
-                                       const std::shared_ptr<Node>& seq_len,
+const string op::CTCGreedyDecoder::type_name{"CTCGreedyDecoder"};
+
+op::CTCGreedyDecoder::CTCGreedyDecoder(const Output<Node>& input,
+                                       const Output<Node>& seq_len,
                                        const bool ctc_merge_repeated)
-    : Op("CTCGreedyDecoder", check_single_output_args({input, seq_len}))
+    : Op({input, seq_len})
     , m_ctc_merge_repeated(ctc_merge_repeated)
 {
     constructor_validate_and_infer_types();

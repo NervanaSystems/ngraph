@@ -19,8 +19,9 @@
 #include "gtest/gtest.h"
 #include "ngraph/assertion.hpp"
 
-void ngraph::test::NgraphTestCase::run()
+void ngraph::test::NgraphTestCase::run(size_t tolerance_bits)
 {
+    m_tolerance_bits = tolerance_bits;
     const auto& function_results = m_function->get_results();
     NGRAPH_CHECK(m_expected_outputs.size() == function_results.size(),
                  "Expected number of outputs is different from the function's number of results.");
@@ -38,24 +39,18 @@ void ngraph::test::NgraphTestCase::run()
         auto result_shape = result_tensor->get_shape();
         EXPECT_EQ(expected_shape, result_shape);
 
-        if (m_value_comparators.count(element_type.get_type_enum()) == 0)
+        if (m_value_comparators.count(element_type) == 0)
         {
             NGRAPH_FAIL() << "Please add support for " << element_type
                           << " to ngraph::test::NgraphTestCase::run()";
         }
         else
         {
-            auto values_match = m_value_comparators.at(element_type.get_type_enum());
+            auto values_match = m_value_comparators.at(element_type);
 
             EXPECT_TRUE(values_match(expected_result_constant, result_tensor));
         }
     }
-}
-
-ngraph::test::NgraphTestCase& ngraph::test::NgraphTestCase::set_tolerance(int tolerance_bits)
-{
-    m_tolerance_bits = tolerance_bits;
-    return *this;
 }
 
 ngraph::test::NgraphTestCase& ngraph::test::NgraphTestCase::dump_results(bool dump)

@@ -156,7 +156,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(ScatterNDAdd);
+            void register_builders_scatter_nd_add_cpp() { REGISTER_OP_BUILDER(ScatterNDAdd); }
         }
     }
 }

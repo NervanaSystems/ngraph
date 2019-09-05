@@ -14,7 +14,6 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
 
@@ -59,7 +58,7 @@ namespace ngraph
 
             } // namespace set_1
 
-        } //namespace op
+        } // namespace op
 
     } // namespace onnx_import
 

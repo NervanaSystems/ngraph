@@ -112,7 +112,7 @@ TEST(cpu_test, trivial_in_place_relu)
 }
 
 #ifndef NGRAPH_HALIDE
-TEST(cpu_test, trivial_in_place_relu_fail)
+TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
@@ -231,7 +231,7 @@ TEST(cpu_test, mkldnn_layouts)
     EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, rv));
 }
 
-TEST(cpu_test, reshape_layout_optimizations1)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations1))
 {
     // Squeeze outermost dimension
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -270,7 +270,7 @@ TEST(cpu_test, reshape_layout_optimizations1)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations2)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations2))
 {
     // ExpandDims - inner most and internal dims
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -309,7 +309,7 @@ TEST(cpu_test, reshape_layout_optimizations2)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations3)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations3))
 {
     // Squeeze padded dimension
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -349,7 +349,7 @@ TEST(cpu_test, reshape_layout_optimizations3)
     }
 }
 
-TEST(cpu_test, reshape_layout_optimizations4)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations4))
 {
     // Squeeze and expand dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -398,7 +398,7 @@ TEST(cpu_test, reshape_layout_optimizations4)
     EXPECT_LE(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 4);
 }
 
-TEST(cpu_test, reshape_layout_optimizations5)
+TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations5))
 {
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 8});
@@ -976,7 +976,7 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
 {
     if (is_codegen_mode())
     {
-        //TODO change to skip when there is a new release of gtest
+        // TODO change to skip when there is a new release of gtest
         NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
         return;
     }
@@ -1049,6 +1049,29 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     call3.join();
 
     unset_environment("NGRAPH_CPU_CONCURRENCY");
+}
+
+TEST(cpu_test, constant_convertlayout)
+{
+    Shape data_shape{1, 64, 56, 56};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    Shape weights_shape{64, 64, 3, 3};
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<float> values_in(shape_size(weights_shape));
+    rng.initialize(values_in);
+    auto weights = make_shared<op::Constant>(element::f32, weights_shape, values_in);
+    Shape bias_shape{64};
+    auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
+
+    auto conv = std::make_shared<op::Convolution>(data, weights, Strides{1, 1}, Strides{1, 1});
+    auto convbias = make_shared<op::ConvolutionBias>(conv, bias);
+
+    auto f = make_shared<Function>(convbias, ParameterVector{data, bias});
+    auto backend = runtime::Backend::create("CPU");
+    auto handle = backend->compile(f);
+
+    size_t convert_layout = count_ops_of_type<runtime::cpu::op::ConvertLayout>(f);
+    ASSERT_EQ(convert_layout, 1);
 }
 
 TEST(cpu_test, constant_reshape)
@@ -1172,7 +1195,7 @@ static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t po
 
 TEST(cpu_test, constant_unary_binary)
 {
-    Shape shape_in{4};
+    Shape shape_in{2, 2};
     vector<int> values_a{1, 2, 3, 4};
     vector<int> values_b{1, 2, 3, 4};
     vector<int> values_c{-1, -1, -1, -1};
@@ -1184,6 +1207,7 @@ TEST(cpu_test, constant_unary_binary)
     vector<char> values_i{0, 0, 1, 1};
     vector<char> values_j{0, 1, 0, 1};
     vector<float> values_k{-0.1f, 0.0f, -1.5f, 2.6f};
+    vector<int> values_l{1, 2};
     auto a = make_shared<op::Constant>(element::i32, shape_in, values_a);
     auto b = make_shared<op::Constant>(element::i32, shape_in, values_b);
     auto c = make_shared<op::Constant>(element::i32, shape_in, values_c);
@@ -1195,6 +1219,7 @@ TEST(cpu_test, constant_unary_binary)
     auto i = make_shared<op::Constant>(element::boolean, shape_in, values_i);
     auto j = make_shared<op::Constant>(element::boolean, shape_in, values_j);
     auto k = make_shared<op::Constant>(element::f32, shape_in, values_k);
+    auto l = make_shared<op::Constant>(element::i32, Shape{2}, values_l);
 
     auto add = a + b;
     auto sub = a - b;
@@ -1216,13 +1241,21 @@ TEST(cpu_test, constant_unary_binary)
     auto less_eq = make_shared<op::LessEq>(g, h);
     auto logical_and = make_shared<op::And>(i, j);
     auto logical_or = make_shared<op::Or>(i, j);
+    auto logical_xor = make_shared<op::Xor>(i, j);
     auto ceil = make_shared<op::Ceiling>(k);
     auto floor = make_shared<op::Floor>(k);
+    auto logical_not = make_shared<op::Not>(j);
+    // Note: The CPU functors do not actually support autobroadcast yet; instead the pass itself
+    // falls back if autobroadcasting is in use. Putting this check here just to make sure the
+    // fallback works as expected, but if direct support for autobroadcast is added to the CPU
+    // folders we should add more comprehensive tests here. --amprocte
+    auto add_autob_numpy = make_shared<op::Add>(a, l, op::AutoBroadcastType::NUMPY);
 
     auto func = make_shared<Function>(
-        NodeVector{add,        sub,  mul,     divn,        min,        max,       absn,
-                   neg,        sqrt, relu,    sign,        equal,      not_equal, greater,
-                   greater_eq, less, less_eq, logical_and, logical_or, ceil,      floor},
+        NodeVector{add,        sub,         mul,        divn,  min,         max,
+                   absn,       neg,         sqrt,       relu,  sign,        equal,
+                   not_equal,  greater,     greater_eq, less,  less_eq,     logical_and,
+                   logical_or, logical_xor, ceil,       floor, logical_not, add_autob_numpy},
         ParameterVector{});
 
     auto func_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
@@ -1251,10 +1284,12 @@ TEST(cpu_test, constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::LessEq>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::And>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Or>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Xor>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Ceiling>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Floor>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::Not>(func), 0);
 
-    //expected values
+    // expected values
     vector<int> add_expected{2, 4, 6, 8};
     vector<int> sub_expected{0, 0, 0, 0};
     vector<int> mul_expected{1, 4, 9, 16};
@@ -1273,8 +1308,11 @@ TEST(cpu_test, constant_unary_binary)
     vector<char> less_eq_expected{1, 1, 1, 0};
     vector<char> and_expected{0, 0, 0, 1};
     vector<char> or_expected{0, 1, 1, 1};
+    vector<char> xor_expected{0, 1, 1, 0};
     vector<float> ceil_expected{0.0f, 0.0f, -1.0f, 3.0f};
     vector<float> floor_expected{-1.0f, 0.0f, -2.0f, 2.0f};
+    vector<char> not_expected{1, 0, 1, 0};
+    vector<int> add_autob_numpy_expected{2, 4, 4, 6};
 
     ASSERT_EQ(get_result_constant<int>(func, 0), add_expected);
     ASSERT_EQ(get_result_constant<int>(func, 1), sub_expected);
@@ -1295,15 +1333,19 @@ TEST(cpu_test, constant_unary_binary)
     ASSERT_EQ(get_result_constant<char>(func, 16), less_eq_expected);
     ASSERT_EQ(get_result_constant<char>(func, 17), and_expected);
     ASSERT_EQ(get_result_constant<char>(func, 18), or_expected);
+    ASSERT_EQ(get_result_constant<char>(func, 19), xor_expected);
     ASSERT_TRUE(test::all_close_f(
-        get_result_constant<float>(func, 19), ceil_expected, MIN_FLOAT_TOLERANCE_BITS));
+        get_result_constant<float>(func, 20), ceil_expected, MIN_FLOAT_TOLERANCE_BITS));
     ASSERT_TRUE(test::all_close_f(
-        get_result_constant<float>(func, 20), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
+        get_result_constant<float>(func, 21), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
+    ASSERT_EQ(get_result_constant<char>(func, 22), not_expected);
+    ASSERT_EQ(get_result_constant<int>(func, 23), add_autob_numpy_expected);
     ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
 }
 
 TEST(cpu_test, conv_test_winograd)
 {
+    // clang-format off
     // This test checks for the cpu specific graph pass handling for conv_winograd implementation.
     // On SKX with MKLDNN version >= v0.18.0, mkldnn_verbose should match the following
     //
@@ -1316,6 +1358,7 @@ TEST(cpu_test, conv_test_winograd)
     // mkldnn_verbose,exec,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,46.6631
     // mkldnn_verbose,create,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,0.279053
     // mkldnn_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
+    // clang-format on
     auto make_function = []() -> std::shared_ptr<Function> {
         auto input = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
         auto filter = make_shared<op::Parameter>(element::f32, Shape{64, 3, 3, 3});
@@ -2100,7 +2143,8 @@ TEST(cpu_test, tensor_copy_from_same_rotated_layouts)
     auto result2_internal_buffer = reinterpret_cast<uint8_t*>(
         static_pointer_cast<runtime::cpu::CPUTensorView>(result2)->get_data_ptr());
     vector<uint8_t> vec(result2_internal_buffer, result2_internal_buffer + 6);
-    // This check can be removed if the CPU backend stops optimizing reshapes using layout transformations
+    // This check can be removed if the CPU backend stops optimizing reshapes using layout
+    // transformations
     EXPECT_EQ((vector<uint8_t>{1, 2, 3, 4, 5, 6}), vec);
 
     // Check native layout

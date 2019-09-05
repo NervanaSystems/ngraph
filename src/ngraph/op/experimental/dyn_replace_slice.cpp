@@ -24,18 +24,19 @@
 using namespace std;
 using namespace ngraph;
 
-op::DynReplaceSlice::DynReplaceSlice(const shared_ptr<Node>& arg,
-                                     const shared_ptr<Node>& replacement,
-                                     const shared_ptr<Node>& lower_bounds,
-                                     const shared_ptr<Node>& upper_bounds,
-                                     const shared_ptr<Node>& strides,
+const string op::DynReplaceSlice::type_name{"DynReplaceSlice"};
+
+op::DynReplaceSlice::DynReplaceSlice(const Output<Node>& arg,
+                                     const Output<Node>& replacement,
+                                     const Output<Node>& lower_bounds,
+                                     const Output<Node>& upper_bounds,
+                                     const Output<Node>& strides,
                                      const AxisSet& lower_bounds_mask,
                                      const AxisSet& upper_bounds_mask,
                                      const AxisSet& new_axis,
                                      const AxisSet& shrink_axis,
                                      const AxisSet& ellipsis_mask)
-    : Op("DynReplaceSlice",
-         check_single_output_args({arg, replacement, lower_bounds, upper_bounds, strides}))
+    : Op({arg, replacement, lower_bounds, upper_bounds, strides})
     , m_lower_bounds_mask(lower_bounds_mask)
     , m_upper_bounds_mask(upper_bounds_mask)
     , m_new_axis(new_axis)
@@ -106,9 +107,9 @@ void op::DynReplaceSlice::validate_and_infer_types()
     set_input_is_relevant_to_shape(3);
     set_input_is_relevant_to_shape(4);
 
-    auto lower_bounds = dynamic_pointer_cast<op::Constant>(get_argument(2));
-    auto upper_bounds = dynamic_pointer_cast<op::Constant>(get_argument(3));
-    auto strides = dynamic_pointer_cast<op::Constant>(get_argument(4));
+    auto lower_bounds = dynamic_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr());
+    auto upper_bounds = dynamic_pointer_cast<op::Constant>(input_value(3).get_node_shared_ptr());
+    auto strides = dynamic_pointer_cast<op::Constant>(input_value(4).get_node_shared_ptr());
 
     // TODO(amprocte): We can get a bit more information here about the ranks of arg and
     // replacement by inspecting the attributes.

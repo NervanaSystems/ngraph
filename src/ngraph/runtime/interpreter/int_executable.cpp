@@ -24,7 +24,6 @@
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -48,7 +47,6 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>();
-    pass_manager.register_pass<pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
@@ -164,8 +162,10 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
 
         // get op type
         element::Type type;
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch-enum"
+#endif
         switch (type_id)
         {
         case OP_TYPEID::Convert:
@@ -187,7 +187,9 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         case OP_TYPEID::TopK: type = op->get_output_element_type(1); break;
         default: type = op->get_output_element_type(0); break;
         }
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
+#endif
 
         if (m_performance_counters_enabled)
         {
@@ -213,7 +215,7 @@ void runtime::interpreter::INTExecutable::generate_calls(const element::Type& ty
                                                          const vector<shared_ptr<HostTensor>>& in)
 {
     stringstream ss;
-    switch (type.get_type_enum())
+    switch (type)
     {
     case element::Type_t::boolean: op_engine<char>(op, out, in); break;
     case element::Type_t::f32: op_engine<float>(op, out, in); break;

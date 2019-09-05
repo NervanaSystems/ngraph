@@ -209,7 +209,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(ArgMax);
+            void register_builders_argmax_cpp() { REGISTER_OP_BUILDER(ArgMax); }
         }
     }
 }

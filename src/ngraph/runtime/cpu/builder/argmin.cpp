@@ -209,7 +209,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(ArgMin);
+            void register_builders_argmin_cpp() { REGISTER_OP_BUILDER(ArgMin); }
         }
     }
 }

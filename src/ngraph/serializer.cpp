@@ -59,12 +59,9 @@
 #include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/range.hpp"
 #include "ngraph/op/experimental/shape_of.hpp"
 #include "ngraph/op/experimental/tile.hpp"
@@ -82,10 +79,9 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
-#include "ngraph/op/fused/leaky_relu.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/op/fused/normalize.hpp"
+#include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/prelu.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
 #include "ngraph/op/fused/scale_shift.hpp"
@@ -122,6 +118,7 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/recv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
@@ -146,6 +143,8 @@
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
+#include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/op/xor.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -555,7 +554,7 @@ json JSONSerializer::serialize_function(const Function& f)
 template <typename T>
 T get_value(json js, const string& key)
 {
-    T rc;
+    T rc = {};
     auto it = js.find(key);
     if (it != js.end())
     {
@@ -720,15 +719,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         string node_name = node_js.at("name").get<string>();
         string node_op = node_js.at("op").get<string>();
         string friendly_name = get_value<string>(node_js, "friendly_name");
+        size_t op_version = get_value<size_t>(node_js, "op_version");
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
-#if !(defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 8)
+
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
+
         switch (get_typeid(node_op))
         {
         case OP_TYPEID::Abs:
@@ -743,7 +745,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Add:
         {
-            node = make_shared<op::Add>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Add>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::All:
@@ -759,7 +762,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::And:
         {
-            node = make_shared<op::And>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::And>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Any:
@@ -1099,7 +1103,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             bool pythondiv = get_or_default(node_js, "pythondiv", true);
             node = make_shared<op::Divide>(
-                args[0], args[1], pythondiv, read_auto_broadcast(node_js, "autob"));
+                args[0], args[1], pythondiv, read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Dot:
@@ -1170,7 +1174,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Elu:
         {
-            node = make_shared<op::Elu>(args[0], args[1]);
+            auto alpha = node_js.at("alpha").get<double>();
+            node = make_shared<op::Elu>(args[0], alpha);
             break;
         }
         case OP_TYPEID::EmbeddingLookup:
@@ -1180,7 +1185,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Equal:
         {
-            node = make_shared<op::Equal>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Equal>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Erf:
@@ -1221,6 +1227,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Gelu>(args[0]);
             break;
         }
+        case OP_TYPEID::GeluBackpropFactor:
+        {
+            node = make_shared<op::GeluBackpropFactor>(args[0]);
+            break;
+        }
         case OP_TYPEID::Gemm:
         {
             auto alpha = node_js.at("alpha").get<double>();
@@ -1251,14 +1262,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Greater:
         {
-            node =
-                make_shared<op::Greater>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Greater>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::GreaterEq:
         {
-            node =
-                make_shared<op::GreaterEq>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::GreaterEq>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::GRN:
@@ -1342,19 +1353,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             break;
         }
 
-        case OP_TYPEID::LeakyRelu:
-        {
-            node = make_shared<op::LeakyRelu>(args[0], args[1]);
-            break;
-        }
         case OP_TYPEID::Less:
         {
-            node = make_shared<op::Less>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Less>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::LessEq:
         {
-            node = make_shared<op::LessEq>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::LessEq>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Log:
@@ -1368,7 +1376,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto beta = node_js.at("beta").get<double>();
             auto bias = node_js.at("bias").get<double>();
             auto nsize = node_js.at("nsize").get<size_t>();
-            node = make_shared<op::LRN>(args[0], alpha, beta, bias, nsize);
+            node = make_shared<op::LRN>(args[0], args[1], alpha, beta, bias, nsize);
             break;
         }
         case OP_TYPEID::LSTMCell:
@@ -1467,8 +1475,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Maximum:
         {
-            node =
-                make_shared<op::Maximum>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Maximum>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Min:
@@ -1479,14 +1487,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Minimum:
         {
-            node =
-                make_shared<op::Minimum>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Minimum>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Multiply:
         {
-            node =
-                make_shared<op::Multiply>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Multiply>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::MVN:
@@ -1502,19 +1510,17 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Negative>(args[0]);
             break;
         }
-        case OP_TYPEID::Normalize:
+        case OP_TYPEID::NormalizeL2:
         {
-            bool across_spatial = node_js.at("across_spatial").get<bool>();
-            bool channel_shared = node_js.at("channel_shared").get<bool>();
             float eps = node_js.at("eps").get<float>();
-            node =
-                make_shared<op::Normalize>(args[0], args[1], across_spatial, channel_shared, eps);
+            auto eps_mode = node_js.at("eps_mode").get<op::EpsMode>();
+            node = make_shared<op::NormalizeL2>(args[0], args[1], eps, eps_mode);
             break;
         }
         case OP_TYPEID::NotEqual:
         {
-            node =
-                make_shared<op::NotEqual>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::NotEqual>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Not:
@@ -1531,7 +1537,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Or:
         {
-            node = make_shared<op::Or>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Or>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Pad:
@@ -1575,13 +1582,14 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Passthrough>(node_js.at("logical_type"),
                                                 node_js.at("language"),
                                                 node_js.at("function"),
-                                                args,
+                                                static_cast<OutputVector>(args),
                                                 std::move(outputs));
             break;
         }
         case OP_TYPEID::Power:
         {
-            node = make_shared<op::Power>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Power>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::PRelu:
@@ -1601,23 +1609,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto axes = deserialize_axis_set(node_js.at("axes"));
             auto round_mode = node_js.at("round_mode").get<op::Quantize::RoundMode>();
             node = make_shared<op::Quantize>(args[0], args[1], args[2], type, axes, round_mode);
-            break;
-        }
-        case OP_TYPEID::QuantizedAvgPool:
-        {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            auto include_padding_in_avg_computation =
-                node_js.at("include_padding_in_avg_computation").get<bool>();
-            node = make_shared<op::QuantizedAvgPool>(args[0],
-                                                     window_shape,
-                                                     window_movement_strides,
-                                                     padding_below,
-                                                     padding_above,
-                                                     include_padding_in_avg_computation);
             break;
         }
         case OP_TYPEID::QuantizedConvolutionBias: { break;
@@ -1664,21 +1655,27 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::QuantizedDotBias: { break;
         }
-        case OP_TYPEID::QuantizedDot: { break;
-        }
-        case OP_TYPEID::QuantizedMaxPool:
+        case OP_TYPEID::QuantizedDot:
         {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            // For backwards compatibility, both (but not just one) of the padding_ fields may be
-            // omitted.
-            auto padding_below_maybe = get_or_default(node_js, "padding_below", json{});
-            auto padding_above_maybe = get_or_default(node_js, "padding_above", json{});
-            auto padding_below = padding_below_maybe.get<vector<size_t>>();
-            auto padding_above = padding_above_maybe.get<vector<size_t>>();
-            node = make_shared<op::QuantizedMaxPool>(
-                args[0], window_shape, window_movement_strides, padding_below, padding_above);
+            size_t reduction_axes_count = node_js["reduction_axes_count"].get<size_t>();
+            auto output_type = read_element_type(node_js.at("output_type"));
+            auto input0_axes = node_js.at("input0_axes").get<set<size_t>>();
+            auto input1_axes = node_js.at("input1_axes").get<set<size_t>>();
+            auto output_axes = node_js.at("output_axes").get<set<size_t>>();
+
+            node = make_shared<op::QuantizedDot>(args[0],
+                                                 args[1],
+                                                 reduction_axes_count,
+                                                 args[2],
+                                                 args[3],
+                                                 args[4],
+                                                 args[5],
+                                                 args[6],
+                                                 args[7],
+                                                 output_type,
+                                                 input0_axes,
+                                                 input1_axes,
+                                                 output_axes);
 
             break;
         }
@@ -1837,8 +1834,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Softmax:
         {
-            auto softmax_axes = deserialize_axis_set(node_js.at("softmax_axes"));
-            node = make_shared<op::Softmax>(args[0], softmax_axes);
+            if (op_version == 0)
+            {
+                auto softmax_axes = deserialize_axis_set(node_js.at("softmax_axes"));
+                node = make_shared<op::Softmax>(args[0], softmax_axes);
+            }
+            if (op_version == 1)
+            {
+                size_t softmax_axis = node_js.at("softmax_axis");
+                node = make_shared<op::v1::Softmax>(args[0], softmax_axis);
+            }
             break;
         }
         case OP_TYPEID::SpaceToDepth:
@@ -1871,8 +1876,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Subtract:
         {
-            node =
-                make_shared<op::Subtract>(args[0], args[1], read_auto_broadcast(node_js, "autob"));
+            node = make_shared<op::Subtract>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
         case OP_TYPEID::Sum:
@@ -1920,6 +1925,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Unsqueeze>(args[0], args[1]);
             break;
         }
+        case OP_TYPEID::Xor:
+        {
+            node = make_shared<op::Xor>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            break;
+        }
         case OP_TYPEID::UnknownOp:
         {
             stringstream ss;
@@ -1927,7 +1938,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             throw runtime_error(ss.str());
         }
         }
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
+#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
 
@@ -2028,6 +2039,9 @@ json JSONSerializer::serialize_node(const Node& n)
     m_nodes_serialized.insert(&n);
     json node;
     node["name"] = n.get_name();
+    auto op_version = n.get_version();
+    node["op_version"] = op_version;
+
     if (n.get_name() != n.get_friendly_name())
     {
         node["friendly_name"] = n.get_friendly_name();
@@ -2101,7 +2115,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Add*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2132,7 +2146,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::And*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2334,7 +2348,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["pythondiv"] = tmp->is_pythondiv();
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2370,7 +2384,11 @@ json JSONSerializer::serialize_node(const Node& n)
         node["ellipsis_mask"] = tmp->get_ellipsis_mask();
         break;
     }
-    case OP_TYPEID::Elu: { break;
+    case OP_TYPEID::Elu:
+    {
+        auto tmp = dynamic_cast<const op::Elu*>(&n);
+        node["alpha"] = tmp->get_alpha();
+        break;
     }
     case OP_TYPEID::EmbeddingLookup: { break;
     }
@@ -2379,7 +2397,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Equal*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2411,6 +2429,8 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Gelu: { break;
     }
+    case OP_TYPEID::GeluBackpropFactor: { break;
+    }
     case OP_TYPEID::Gemm:
     {
         auto tmp = dynamic_cast<const op::Gemm*>(&n);
@@ -2435,7 +2455,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Greater*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2444,7 +2464,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::GreaterEq*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2497,14 +2517,12 @@ json JSONSerializer::serialize_node(const Node& n)
         node["beta"] = tmp->get_beta();
         break;
     }
-    case OP_TYPEID::LeakyRelu: { break;
-    }
     case OP_TYPEID::Less:
     {
         auto tmp = dynamic_cast<const op::Less*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2513,7 +2531,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::LessEq*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2569,7 +2587,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Maximum*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2584,7 +2602,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Minimum*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2593,7 +2611,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Multiply*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2607,12 +2625,11 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Negative: { break;
     }
-    case OP_TYPEID::Normalize:
+    case OP_TYPEID::NormalizeL2:
     {
-        auto tmp = dynamic_cast<const op::Normalize*>(&n);
-        node["across_spatial"] = tmp->get_across_spatial();
-        node["channel_shared"] = tmp->get_channel_shared();
+        auto tmp = dynamic_cast<const op::NormalizeL2*>(&n);
         node["eps"] = tmp->get_eps();
+        node["eps_mode"] = tmp->get_eps_mode();
         break;
     }
     case OP_TYPEID::NotEqual:
@@ -2620,7 +2637,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::NotEqual*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2638,7 +2655,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Or*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2688,7 +2705,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Power*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2698,16 +2715,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["type"] = write_element_type(tmp->get_element_type());
         node["axes"] = serialize_axis_set(tmp->get_axes());
         node["round_mode"] = tmp->get_round_mode();
-        break;
-    }
-    case OP_TYPEID::QuantizedAvgPool:
-    {
-        auto tmp = dynamic_cast<const op::QuantizedAvgPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
         break;
     }
     case OP_TYPEID::QuantizedConvolutionBias: { break;
@@ -2734,15 +2741,14 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::QuantizedDotBias: { break;
     }
-    case OP_TYPEID::QuantizedDot: { break;
-    }
-    case OP_TYPEID::QuantizedMaxPool:
+    case OP_TYPEID::QuantizedDot:
     {
-        auto tmp = dynamic_cast<const op::QuantizedMaxPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
+        auto tmp = dynamic_cast<const op::QuantizedDot*>(&n);
+        node["reduction_axes_count"] = tmp->get_reduction_axes_count();
+        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["input0_axes"] = tmp->get_input0_axes();
+        node["input1_axes"] = tmp->get_input1_axes();
+        node["output_axes"] = tmp->get_output_axes();
         break;
     }
     case OP_TYPEID::Recv:
@@ -2877,7 +2883,7 @@ json JSONSerializer::serialize_node(const Node& n)
         auto tmp = dynamic_cast<const op::Subtract*>(&n);
         if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            node["autob"] = write_auto_broadcast(tmp->get_autob());
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -2889,8 +2895,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Softmax:
     {
-        auto tmp = dynamic_cast<const op::Softmax*>(&n);
-        node["softmax_axes"] = serialize_axis_set(tmp->get_axes());
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::Softmax*>(&n);
+            node["softmax_axes"] = serialize_axis_set(tmp->get_axes());
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::Softmax*>(&n);
+            node["softmax_axis"] = tmp->get_axis();
+        }
         break;
     }
     case OP_TYPEID::Tan: { break;
@@ -2911,6 +2925,15 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Transpose: { break;
     }
     case OP_TYPEID::Unsqueeze: { break;
+    }
+    case OP_TYPEID::Xor:
+    {
+        auto tmp = dynamic_cast<const op::Xor*>(&n);
+        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
+        {
+            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
+        }
+        break;
     }
     case OP_TYPEID::UnknownOp: { break;
     }

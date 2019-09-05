@@ -333,10 +333,13 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(MaxPool);
-            REGISTER_OP_BUILDER(MaxPoolBackprop);
-            REGISTER_OP_BUILDER(MaxPoolWithIndices);
-            REGISTER_OP_BUILDER(MaxPoolWithIndicesBackprop);
+            void register_builders_max_pool_cpp()
+            {
+                REGISTER_OP_BUILDER(MaxPool);
+                REGISTER_OP_BUILDER(MaxPoolBackprop);
+                REGISTER_OP_BUILDER(MaxPoolWithIndices);
+                REGISTER_OP_BUILDER(MaxPoolWithIndicesBackprop);
+            }
         }
     }
 }

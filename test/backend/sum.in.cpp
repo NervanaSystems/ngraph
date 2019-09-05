@@ -440,7 +440,8 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim)
     copy_data(a, vector<float>{});
     auto result = backend->create_tensor(element::f32, shape_rt);
 
-    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the
+    // right value.
     copy_data(result, vector<float>{2112, 2112, 2112, 2112, 2112, 2112});
 
     auto handle = backend->compile(f);
@@ -462,7 +463,8 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_3d_eliminate_zero_dim_int32)
     copy_data(a, vector<int32_t>{});
     auto result = backend->create_tensor(element::i32, shape_rt);
 
-    // Overwrite the initial result vector to make sure we're not just coincidentally getting the right value.
+    // Overwrite the initial result vector to make sure we're not just coincidentally getting the
+    // right value.
     copy_data(result, vector<int32_t>{2112, 2112, 2112, 2112, 2112, 2112});
 
     auto handle = backend->compile(f);
@@ -739,4 +741,40 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_dynamic)
 
         ASSERT_TRUE(test::all_close_f(results, expected_results[i], MIN_FLOAT_TOLERANCE_BITS));
     }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, sum_inf)
+{
+    Shape shape{7, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::Sum>(A, AxisSet{1}), ParameterVector{A});
+
+    auto infi = std::numeric_limits<float>::infinity();
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a,
+              test::NDArray<float, 2>({{-infi, 0, 0, infi},
+                                       {infi, 100, -100, -infi},
+                                       {infi, 0, 100, infi},
+                                       {-infi, -100, 0, -infi},
+                                       {infi, infi, infi, infi},
+                                       {infi, infi, infi, -infi},
+                                       {infi, std::nanf(""), 42, infi}})
+                  .get_vector());
+    auto result = backend->create_tensor(element::f32, Shape{7});
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    auto r = read_vector<float>(result);
+    ASSERT_EQ(r.size(), 7);
+    EXPECT_TRUE(isnan(r[0]));
+    EXPECT_TRUE(isnan(r[1]));
+    EXPECT_TRUE(r[2] > 0 && isinf(r[2]));
+    EXPECT_TRUE(r[3] < 0 && isinf(r[3]));
+    EXPECT_TRUE(r[4] > 0 && isinf(r[4]));
+    EXPECT_TRUE(isnan(r[5]));
+    EXPECT_TRUE(isnan(r[6]));
 }

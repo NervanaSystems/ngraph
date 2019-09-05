@@ -47,7 +47,10 @@ namespace ngraph
                 return;
             }
 
-            REGISTER_OP_BUILDER(GetOutputElement);
+            void register_builders_get_output_element_cpp()
+            {
+                REGISTER_OP_BUILDER(GetOutputElement);
+            }
         }
     }
 }

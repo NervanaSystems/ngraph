@@ -23,18 +23,20 @@
 using namespace std;
 using namespace ngraph;
 
-op::Dropout::Dropout(const std::shared_ptr<Node>& input,
-                     const std::shared_ptr<Node>& gm_const,
-                     const std::shared_ptr<Node>& use_seed,
-                     const std::shared_ptr<Node>& seed,
-                     const std::shared_ptr<Node>& keep_prob)
-    : Op("Dropout", check_single_output_args({input, gm_const, use_seed, seed, keep_prob}))
+const std::string op::Dropout::type_name{"Dropout"};
+
+op::Dropout::Dropout(const Output<Node>& input,
+                     const Output<Node>& gm_const,
+                     const Output<Node>& use_seed,
+                     const Output<Node>& seed,
+                     const Output<Node>& keep_prob)
+    : Op({input, gm_const, use_seed, seed, keep_prob})
 {
     constructor_validate_and_infer_types();
 
     set_output_size(2);
-    set_output_type(0, get_input_element_type(0), input->get_shape());
-    set_output_type(1, get_input_element_type(0), input->get_shape());
+    set_output_type(0, get_input_element_type(0), input.get_shape());
+    set_output_type(1, get_input_element_type(0), input.get_shape());
 }
 
 shared_ptr<Node> op::Dropout::copy_with_new_args(const NodeVector& new_args) const
@@ -51,7 +53,8 @@ shared_ptr<Node> op::Dropout::copy_with_new_args(const NodeVector& new_args) con
 bool op::Dropout::get_use_seed() const
 {
     bool use_seed = false;
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(2)))
+    if (auto const_op =
+            dynamic_pointer_cast<op::Constant>(input(2).get_source_output().get_node_shared_ptr()))
     {
         auto use_seed_ptr = static_cast<const int32_t*>(const_op->get_data_ptr());
         use_seed = static_cast<const bool>(*use_seed_ptr);
@@ -62,7 +65,8 @@ bool op::Dropout::get_use_seed() const
 uint64_t op::Dropout::get_seed() const
 {
     uint64_t seed = 0;
-    if (auto const_op = dynamic_pointer_cast<op::Constant>(get_argument(3)))
+    if (auto const_op =
+            dynamic_pointer_cast<op::Constant>(input(3).get_source_output().get_node_shared_ptr()))
     {
         auto seed_ptr = static_cast<const uint64_t*>(const_op->get_data_ptr());
         seed = *seed_ptr;

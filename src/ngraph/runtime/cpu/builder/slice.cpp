@@ -187,7 +187,7 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Slice);
+            void register_builders_slice_cpp() { REGISTER_OP_BUILDER(Slice); }
         }
     }
 }

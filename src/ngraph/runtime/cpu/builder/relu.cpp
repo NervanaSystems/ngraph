@@ -132,8 +132,11 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Relu);
-            REGISTER_OP_BUILDER(ReluBackprop);
+            void register_builders_relu_cpp()
+            {
+                REGISTER_OP_BUILDER(Relu);
+                REGISTER_OP_BUILDER(ReluBackprop);
+            }
         }
     }
 }

@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdlib> // llvm 8.1 gets confused about `malloc` otherwise
@@ -29,7 +30,6 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
@@ -165,13 +165,10 @@ namespace ngraph
     template <typename T>
     std::vector<T> parse_string(const std::vector<std::string>& ss)
     {
-        std::vector<T> result;
-
-        for (auto s : ss)
-        {
-            result.push_back(parse_string<T>(s));
-        }
-
+        std::vector<T> result(ss.size());
+        std::transform(ss.begin(), ss.end(), result.begin(), [](const std::string& s) {
+            return parse_string<T>(s);
+        });
         return result;
     }
 
@@ -345,6 +342,20 @@ namespace ngraph
 
         value_type m_value;
     };
+
+    /// \brief Function to query parsed version information of the version of ngraph which
+    /// contains this function. Version information strictly follows Semantic Versioning
+    /// http://semver.org
+    /// \param version The major part of the version
+    /// \param major Returns the major part of the version
+    /// \param minor Returns the minor part of the version
+    /// \param patch Returns the patch part of the version
+    /// \param extra Returns the extra part of the version. This includes everything following
+    /// the patch version number.
+    ///
+    /// \note Throws a runtime_error if there is an error during parsing
+    void parse_version_string(
+        std::string version, size_t& major, size_t& minor, size_t& patch, std::string& extra);
 } // end namespace ngraph
 
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

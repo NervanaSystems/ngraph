@@ -27,22 +27,26 @@ namespace ngraph
         class DeconvolutionBias : public Op
         {
         public:
+            static const std::string type_name;
+            const std::string& description() const override { return type_name; }
             /// \brief Constructs a batched-convolution data batch-backprop operation.
             ///
             /// \param data_batch_shape The shape of the data batch from forward-prop.
             /// \param filters The node producing the filters from forward-prop.
             /// \param output_delta The node producing output delta.
             /// \param bias The node producing bias
-            /// \param window_movement_strides_forward The window movement strides from forward-prop.
-            /// \param window_dilation_strides_forward The window dilation strides from forward-prop.
+            /// \param window_movement_strides_forward The window movement strides from
+            ///        forward-prop.
+            /// \param window_dilation_strides_forward The window dilation strides from
+            ///        forward-prop.
             /// \param padding_below_forward The padding-below sizes from forward-prop.
             /// \param padding_above_forward The padding-above sizes from forward-prop.
             /// \param data_dilation_strides_forward The data dilation strides from forward-prop.
             /// \param with_relu Flag indicating to add relu or not
             DeconvolutionBias(const Shape& data_batch_shape,
-                              const std::shared_ptr<Node>& filters,
-                              const std::shared_ptr<Node>& output_delta,
-                              const std::shared_ptr<Node>& bias,
+                              const Output<Node>& filters,
+                              const Output<Node>& output_delta,
+                              const Output<Node>& bias,
                               const Strides& window_movement_strides_forward,
                               const Strides& window_dilation_strides_forward,
                               const CoordinateDiff& padding_below_forward,

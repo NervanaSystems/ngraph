@@ -34,12 +34,9 @@
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -910,9 +907,9 @@ namespace ngraph
 
                         deconvolution_forward::desc deconv_desc(prop_kind::forward_inference,
                                                                 algorithm::deconvolution_direct,
-                                                                delta_desc,   //src_desc
-                                                                weights_desc, //weights_desc
-                                                                bias_desc,    //bias_desc
+                                                                delta_desc,   // src_desc
+                                                                weights_desc, // weights_desc
+                                                                bias_desc,    // bias_desc
                                                                 result_desc,  // dst_desc
                                                                 mkldnn_filter_strides,
                                                                 mkldnn_dilated_strides,
@@ -926,7 +923,7 @@ namespace ngraph
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
                         i_mds.push_back(deconv_prim_desc.weights_primitive_desc()
-                                            .desc()); //TODO: Find what format this is?
+                                            .desc()); // TODO: Find what format this is?
                         i_mds.push_back(deconv_prim_desc.src_primitive_desc().desc());
                         i_mds.push_back(deconv_prim_desc.bias_primitive_desc().desc());
                         o_mds.push_back(deconv_prim_desc.dst_primitive_desc().desc());
@@ -1430,45 +1427,6 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedMaxPool)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        vector<memory::desc> i_mds;
-                        vector<memory::desc> o_mds;
-
-                        MaxPoolLayout<ngraph::op::QuantizedMaxPool, prop_kind::forward_inference>(
-                            node, i_mds, o_mds);
-
-                        node = insert_input_conversions(external_function, node, i_mds);
-                        set_output_layouts(node, o_mds);
-                    }
-                    else
-                    {
-                        set_native_layouts(external_function, node);
-                    }
-                }
-
-                template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedAvgPool)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        vector<memory::desc> i_mds;
-                        vector<memory::desc> o_mds;
-
-                        AvgPoolLayout<ngraph::op::QuantizedAvgPool>(node, i_mds, o_mds);
-
-                        node = insert_input_conversions(external_function, node, i_mds);
-                        set_output_layouts(node, o_mds);
-                    }
-                    else
-                    {
-                        set_native_layouts(external_function, node);
-                    }
-                }
-
-                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
@@ -1479,7 +1437,8 @@ namespace ngraph
                         if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                         {
-                            // Cannot pass through layout information for blocked layouts at the moment
+                            // Cannot pass through layout information for blocked layouts at the
+                            // moment
                             set_native_layouts(external_function, node);
                         }
                         else
@@ -1514,7 +1473,8 @@ namespace ngraph
                         if (fmt == mkldnn_blocked || fmt == mkldnn_format_undef ||
                             !mkldnn_utils::can_create_mkldnn_md(tv->get_element_type()))
                         {
-                            // Cannot pass through layout information for blocked layouts at the moment
+                            // Cannot pass through layout information for blocked layouts at the
+                            // moment
                             set_native_layouts(external_function, node);
                         }
                         else
@@ -1872,8 +1832,8 @@ namespace ngraph
 
                             auto output_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
                                 node->get_output_tensor_ptr()->get_tensor_layout());
-                            // TODO (jbobba): For now non-MKLDNN layouts are always in row-major format
-                            // Enable this once we support non row-major strided formats
+                            // TODO (jbobba): For now non-MKLDNN layouts are always in row-major
+                            // format. Enable this once we support non row-major strided formats
                             // output_tvl->set_strides(output_strides);
                         }
                         else
@@ -2239,30 +2199,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConcat)
-                {
-                    if (mkldnn_utils::use_mkldnn_kernel(node.get()))
-                    {
-                        vector<memory::desc> i_mds;
-                        vector<memory::desc> o_mds;
-                        ConcatLayout<ngraph::op::QuantizedConcat>(node, i_mds, o_mds);
-                        node = insert_input_conversions(external_function, node, i_mds);
-                        set_output_layouts(node, o_mds);
-                    }
-                    else
-                    {
-                        set_native_layouts(external_function, node);
-                    }
-                }
-
-                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::Lstm)
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
-                        // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
-                        // if the format doesn't matches.
+                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer
+                        // and weights_iter matches to the expected mkldnn format. we need to handle
+                        // a case to insert convert Op's if the format doesn't matches.
                         set_native_layouts(external_function, node, false);
                     }
                     else
@@ -2276,9 +2219,9 @@ namespace ngraph
                 {
                     if (mkldnn_utils::use_mkldnn_kernel(node.get()))
                     {
-                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer and weights_iter
-                        // matches to the expected mkldnn format. we need to handle a case to insert convert Op's
-                        // if the format doesn't matches.
+                        // TODO: for now, framework formats for src_layer, src_iter, weights_layer
+                        // and weights_iter matches to the expected mkldnn format. we need to handle
+                        // a case to insert convert Op's if the format doesn't matches.
                         set_native_layouts(external_function, node, false);
                     }
                     else
@@ -2352,10 +2295,6 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
     {TI(ngraph::op::ConvolutionBackpropFilters),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropFilters>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPool>},
-    {TI(ngraph::op::QuantizedMaxPool),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMaxPool>},
-    {TI(ngraph::op::QuantizedAvgPool),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedAvgPool>},
     {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
     {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
     {TI(ngraph::op::MaxPoolWithIndices),
@@ -2409,8 +2348,6 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolutionBias>},
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::DeconvolutionBias>},
-    {TI(ngraph::op::QuantizedConcat),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConcat>},
     {TI(ngraph::op::QuantizedDotBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedDotBias>},
     {TI(ngraph::op::QuantizedMatmul),

@@ -46,7 +46,7 @@ namespace ngraph
                 if (input_desc.data.format == mkldnn_nchw &&
                     result_desc.data.format == mkldnn_goihw)
                 {
-                    //becomes a copy
+                    // becomes a copy
                     input_desc = result_desc;
                 }
                 else if ((input_desc.data.format == mkldnn_nchw ||
@@ -103,7 +103,8 @@ namespace ngraph
                     };
                 functors.emplace_back(functor);
             }
-            REGISTER_CPU_OP_BUILDER(ConvertLayout);
+
+            void register_builders_convert_layout_cpp() { REGISTER_CPU_OP_BUILDER(ConvertLayout); }
         }
     }
 }

@@ -185,10 +185,13 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            REGISTER_OP_BUILDER(Sigmoid);
-            REGISTER_OP_BUILDER(SigmoidBackprop);
-            REGISTER_OP_BUILDER(SigmoidMultiply);
-            REGISTER_OP_BUILDER(SigmoidMultiplyBackprop);
+            void register_builders_sigmoid_cpp()
+            {
+                REGISTER_OP_BUILDER(Sigmoid);
+                REGISTER_OP_BUILDER(SigmoidBackprop);
+                REGISTER_OP_BUILDER(SigmoidMultiply);
+                REGISTER_OP_BUILDER(SigmoidMultiplyBackprop);
+            }
         }
     }
 }

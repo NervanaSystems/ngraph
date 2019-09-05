@@ -21,22 +21,24 @@
 using namespace std;
 using namespace ngraph;
 
-op::ScaleShift::ScaleShift(const std::shared_ptr<ngraph::Node>& data,
-                           const std::shared_ptr<ngraph::Node>& scale,
-                           const std::shared_ptr<ngraph::Node>& shift)
-    : FusedOp("ScaleShift", {data, scale, shift})
+const string op::ScaleShift::type_name{"ScaleShift"};
+
+op::ScaleShift::ScaleShift(const Output<Node>& data,
+                           const Output<Node>& scale,
+                           const Output<Node>& shift)
+    : FusedOp({data, scale, shift})
 {
     constructor_validate_and_infer_types();
 }
 
 NodeVector op::ScaleShift::decompose_op() const
 {
-    auto data = get_argument(0);
-    auto scale = get_argument(1);
-    auto shift = get_argument(2);
+    auto data = input_value(0);
+    auto scale = input_value(1);
+    auto shift = input_value(2);
 
     // broadcast all data
-    auto broadcasted_nodes = numpy_style_broadcast({data, scale, shift});
+    auto broadcasted_nodes = numpy_style_broadcast_values({data, scale, shift});
     data = broadcasted_nodes[0];
     scale = broadcasted_nodes[1];
     shift = broadcasted_nodes[2];

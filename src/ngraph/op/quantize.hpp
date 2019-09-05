@@ -25,8 +25,8 @@ namespace ngraph
     namespace op
     {
         /// \brief Quantize operation
-        ///        Maps real input (r) to quantized output (q) using scale (s), zero point (z) and round mode:
-        ///        q = ROUND(r / s) + o
+        ///        Maps real input (r) to quantized output (q) using scale (s), zero point (z) and
+        ///        round mode: q = ROUND(r / s) + o
         class Quantize : public ngraph::op::Op
         {
         public:
@@ -91,6 +91,8 @@ namespace ngraph
                      const ngraph::element::Type& type,
                      const ngraph::AxisSet& axes,
                      RoundMode round_mode);
+
+            Quantize() = default;
 
             void validate_and_infer_types() override;
 

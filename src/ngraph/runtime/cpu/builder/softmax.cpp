@@ -195,7 +195,7 @@ namespace ngraph
                 }
             }
 
-            REGISTER_OP_BUILDER(Softmax);
+            void register_builders_softmax_cpp() { REGISTER_OP_BUILDER(Softmax); }
         }
     }
 }

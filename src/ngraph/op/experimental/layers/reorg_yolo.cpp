@@ -16,13 +16,13 @@
 
 #include "reorg_yolo.hpp"
 
-#include "ngraph/op/constant.hpp"
-
 using namespace std;
 using namespace ngraph;
 
-op::ReorgYolo::ReorgYolo(const shared_ptr<Node>& input, const Strides& strides)
-    : Op("ReorgYolo", check_single_output_args({input}))
+const string op::ReorgYolo::type_name{"ReorgYolo"};
+
+op::ReorgYolo::ReorgYolo(const Output<Node>& input, const Strides& strides)
+    : Op({input})
     , m_strides(strides)
 {
     constructor_validate_and_infer_types();

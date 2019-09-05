@@ -102,7 +102,8 @@ namespace ngraph
                 };
                 functors.emplace_back(functor);
             }
-            REGISTER_OP_BUILDER(Rnn);
+
+            void register_builders_rnn_cpp() { REGISTER_OP_BUILDER(Rnn); }
         }
     }
 }
