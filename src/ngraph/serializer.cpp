@@ -80,6 +80,7 @@
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/prelu.hpp"
@@ -1402,6 +1403,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                              input_forget);
             break;
         }
+        case OP_TYPEID::MatMul:
+        {
+            bool transpose_a = node_js.at("transpose_a").get<bool>();
+            bool transpose_b = node_js.at("transpose_b").get<bool>();
+            node = make_shared<op::MatMul>(args[0], args[1], transpose_a, transpose_b);
+            break;
+        }
         case OP_TYPEID::Max:
         {
             auto reduction_axes = deserialize_axis_set(node_js.at("reduction_axes"));
@@ -2555,6 +2563,13 @@ json JSONSerializer::serialize_node(const Node& n)
         node["activation_alpha"] = tmp->get_activation_alpha();
         node["activation_beta"] = tmp->get_activation_beta();
         node["input_forget"] = tmp->get_input_forget();
+        break;
+    }
+    case OP_TYPEID::MatMul:
+    {
+        auto tmp = dynamic_cast<const op::MatMul*>(&n);
+        node["transpose_a"] = tmp->get_transpose_a();
+        node["transpose_b"] = tmp->get_transpose_b();
         break;
     }
     case OP_TYPEID::Max:
