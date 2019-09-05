@@ -67,6 +67,7 @@ set(SRC
     opset_pass/sum_opset1upgrade_pass.cpp
     opset_pass/product_opset1upgrade_pass.cpp
     opset_pass/softmax_opset_pass.cpp
+    opset_pass/softmax_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
