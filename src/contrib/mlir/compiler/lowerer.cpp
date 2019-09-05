@@ -206,7 +206,7 @@ namespace
         // TODO: Remove NGFakeInputOp. We need to set NGFakeInputOp as legal op because we generate
         // it as part of the lowering to affine/standard.
         target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
-        target.addLegalOp<mlir::ModuleOp, mlir::ModuleTerminatorOp>();
+        target.addLegalOp<ModuleOp, ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
             // FuncOp is legal only if types have been converted to Std types.
             return typeConverter.isSignatureLegal(op.getType());
@@ -254,8 +254,9 @@ namespace
                 // annotate instructions defining outputs with the arg idx of the output
                 auto outputValue = ret.getOperand(i);
                 auto op = outputValue->getDefiningOp();
+
                 op->setAttr("graphOutputIdx",
-                            mlir::IntegerAttr::get(IntegerType::get(8, op->getContext()), i + inputCount));
+                            mlir::IntegerAttr::get(IntegerType::get(32, op->getContext()), i + inputCount));
             }
             NGRAPH_CHECK(outputCount == 0 || outputCount == ret.getNumOperands(),
                          "Inconsistent returns in function");
@@ -273,7 +274,7 @@ namespace
             {
                 auto f = getModule().lookupSymbol<mlir::FuncOp>("main");
                 mlir::Block* entryBlock = &*(f.begin());
-                unsigned argId = (int)attr.getInt();
+                unsigned argId = (unsigned)attr.getInt();
                 newResults.push_back(entryBlock->getArgument(argId));
             }
             else

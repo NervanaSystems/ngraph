@@ -704,18 +704,6 @@ void MLIRCompiler::bind_arguments(std::vector<void*>& external_tensors)
     {
         ((mlir::StaticFloatMemRef*)m_invoke_args[i])->data = (float*)(*m_external_tensors)[i];
     }
-
-#if 0
-    // Add pointer to memory manager
-    // malloc here since that's what allocateMemRefArguments use
-    // TODO (nmostafa): Better way of doing this ? Use builder allocator ?
-    MLIRMemMgr** mem_mgr_arg = reinterpret_cast<MLIRMemMgr**>(malloc(sizeof(void*)));
-    NGRAPH_CHECK(mem_mgr_arg != nullptr);
-    *mem_mgr_arg = &get_mem_mgr();
-    // inserting memory manager ptr in right location ?
-    NGRAPH_CHECK(m_invoke_args.size() == get_mem_mgr_arg_id(func));
-    m_invoke_args.push_back(static_cast<void*>(mem_mgr_arg));
-    #endif
 }
 
 // Lowers standard dialect to LLVM dialect and uses the MLIR execution engine to execute the code.
