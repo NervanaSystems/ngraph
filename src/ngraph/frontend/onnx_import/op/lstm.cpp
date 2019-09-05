@@ -26,6 +26,7 @@
 #include "exceptions.hpp"
 #include "lstm.hpp"
 #include "ngraph/axis_set.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -243,12 +244,12 @@ namespace ngraph
                                          const LSTMAttributes& attributes)
                         : m_X{X} // Since we have forward LSTM we can squeeze `num_directions` axis
                                  // from inputs.
-                        , m_W(reshape::squeeze(W))
-                        , m_R(reshape::squeeze(R))
-                        , m_B(reshape::squeeze(B))
-                        , m_P(reshape::squeeze(P))
-                        , m_initial_h(reshape::squeeze(initial_h))
-                        , m_initial_c(reshape::squeeze(initial_c))
+                        , m_W(builder::squeeze(W))
+                        , m_R(builder::squeeze(R))
+                        , m_B(builder::squeeze(B))
+                        , m_P(builder::squeeze(P))
+                        , m_initial_h(builder::squeeze(initial_h))
+                        , m_initial_c(builder::squeeze(initial_c))
                         , m_seq_lengths(seq_lengths)
                         , m_attributes(attributes)
                     {
@@ -300,7 +301,7 @@ namespace ngraph
                         for (auto& in_x : in_seqs)
                         {
                             // remove first empty dim, after above split.
-                            in_x = reshape::squeeze(in_x);
+                            in_x = builder::squeeze(in_x);
                         }
 
                         std::int32_t time_step{1};
@@ -331,7 +332,7 @@ namespace ngraph
                             // This results in zeroing out values in batches with sequence shorter
                             // than current time_step.
                             h_list.push_back(
-                                get_masked_node(reshape::expand_dims(H), time_step, 1));
+                                get_masked_node(builder::expand_dims(H), time_step, 1));
                             // Reference implementation in ONNX Runtime doesn't mask values of Y_h
                             // and Y_c outputs, thus here we make sure that only appropriate batches
                             // (in respect to its sequence length) are updated. Those batches which
@@ -354,12 +355,12 @@ namespace ngraph
 
                         // Expand Y so that it has expected shape:
                         // [seq_length, num_directions, batch_size, hidden_size]
-                        Y = reshape::expand_dims(Y, 1);
+                        Y = builder::expand_dims(Y, 1);
 
                         // expand H_t and C_t so that it has expected shape:
                         // [num_directions, batch_size, hidden_size]
-                        auto Y_h = reshape::expand_dims(H_t);
-                        auto Y_c = reshape::expand_dims(C_t);
+                        auto Y_h = builder::expand_dims(H_t);
+                        auto Y_c = builder::expand_dims(C_t);
                         return {Y, Y_h, Y_c};
                     }
 

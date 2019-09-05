@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <mkldnn.hpp>
 #include "ngraph/op/op.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
@@ -56,6 +57,7 @@ namespace ngraph
         public:
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
+#if MKLDNN_VERSION_MAJOR < 1
             CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
                                 const Output<Node>& src_iter,
                                 const Output<Node>& weights_layer,
@@ -68,6 +70,21 @@ namespace ngraph
                                 size_t direction,
                                 size_t num_fused_layers,
                                 ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
+#else
+            CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
+                                const Output<Node>& src_iter,
+                                const Output<Node>& src_iter_c,
+                                const Output<Node>& weights_layer,
+                                const Output<Node>& weights_iter,
+                                const Output<Node>& bias,
+                                size_t num_timesteps,
+                                size_t num_gates_per_cell,
+                                size_t src_sequence_length,
+                                size_t num_cell_states,
+                                size_t direction,
+                                size_t num_fused_layers,
+                                ngraph::runtime::cpu::rnn_utils::rnntype rnn_type);
+#endif
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 

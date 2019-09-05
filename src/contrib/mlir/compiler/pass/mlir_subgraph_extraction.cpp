@@ -132,6 +132,7 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     sanity_check(func, ck_nodes);
 #endif
 
+    clean_up();
     return true;
 }
 
@@ -504,6 +505,12 @@ bool MLIRSubgraphExtractionPass::check_cycles(std::shared_ptr<Node> node,
             return true;
     }
     return false;
+}
+
+void MLIRSubgraphExtractionPass::clean_up()
+{
+    m_id_to_graph.clear();
+    m_node_to_graph.clear();
 }
 
 const std::set<std::type_index> MLIRSubgraphExtractionPass::m_supported_ops{
