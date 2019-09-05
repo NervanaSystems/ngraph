@@ -27,6 +27,8 @@ set (SRC
     builder/dequantize_builder.cpp
     builder/dequantize_builder.hpp
     builder/make_constant.hpp
+    builder/matmul_factory.cpp
+    builder/matmul_factory.hpp
     builder/norm.cpp
     builder/norm.hpp
     builder/numpy_transpose.cpp
@@ -329,6 +331,8 @@ set (SRC
     op/fused/gru_cell.hpp
     op/fused/lstm_cell.cpp
     op/fused/lstm_cell.hpp
+    op/fused/matmul.cpp
+    op/fused/matmul.hpp
     op/fused/mvn.cpp
     op/fused/mvn.hpp
     op/fused/normalize_l2.cpp
@@ -437,6 +441,8 @@ set (SRC
     pass/nop_elimination.hpp
     pass/pass.cpp
     pass/pass.hpp
+    pass/opset1_upgrade.cpp
+    pass/opset1_upgrade.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
     pass/propagate_cacheability.cpp
