@@ -135,6 +135,7 @@ namespace ngraph
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/hard_sigmoid.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/prelu.hpp"
