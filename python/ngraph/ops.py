@@ -22,10 +22,11 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 
 from ngraph.impl.op import Abs, Acos, Add, And, Asin, ArgMax, ArgMin, Atan, AvgPool, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
-    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Divide, Dot, Elu, FakeQuantize, \
-    Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, HardSigmoid, Less, \
-    LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, MVN, Negative, Not, NotEqual, \
-    OneHot, Or, Pad, Parameter, Product, Power, PRelu, Relu, ReplaceSlice, Reshape, Reverse, \
+    Convolution, ConvolutionBackpropData, Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
+    FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
+    HardSigmoid, Less, LessEq, Log, LRN, Max, Maximum, MaxPool, Min, Minimum, Multiply, MVN, \
+    Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Product, Power, Quantize, \
+    QuantizedConvolution, QuantizedDot, PRelu, Relu, ReplaceSlice, Reshape, Reverse, \
     ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, Softmax, SpaceToDepth, Sqrt, \
     SquaredDifference, Squeeze, Subtract, Sum, Tan, Tanh, TopK, Unsqueeze
 
@@ -241,6 +242,190 @@ def mvn(data, axes, normalize_variance, eps, name=None):
     :return: The new node performing a MVN operation on input tensor.
     """
     return MVN(data, AxisSet(axes), normalize_variance, eps)
+
+
+@nameable_op
+def quantize(data, scale, zero_point, new_type, axes, round_mode, name=None):
+    # type: (Node, Node, Node, NumericType, Set[int], Quantize.RoundMode, str) -> Node
+    r"""Perform quantize operation on data from input node.
+
+    Computes quantize on the input tensor:
+
+    .. math:: output = ROUND((input / scale) + zero\_point)
+
+    :param data: The node with data tensor.
+    :param scale: Scale used for mapping.
+    :param zero_point: Zero point used for mapping.
+    :param new_type: Output element type.
+    :param round_mode: Number describes how to perform ROUND function.
+
+                 ROUND_NEAREST_TOWARD_INFINITY: Round to nearest integer. In case of two
+                 equidistant integers round away from zero e.g. 2.5 -> 3,  -3.5 -> -4
+
+                 ROUND_NEAREST_TOWARD_ZERO: Round to nearest integer. In case of two equidistant
+                 integers round toward zero e.g. 2.5 -> 2,  -3.5 -> -3
+
+                 ROUND_NEAREST_UPWARD: Round to nearest integer. In case of two equidistant
+                 integers round up e.g. 2.5 -> 2,  -3.5 -> -3
+
+                 ROUND_NEAREST_DOWNWARD: Round to nearest integer. In case of two equidistant
+                 integers round down e.g. 2.5 -> 2,  -3.5 -> -4
+
+                 ROUND_NEAREST_TOWARD_EVEN: Round to nearest integer. In case of two equidistant
+                 integers round down e.g. 2.5 -> 2,  -3.5 -> -4
+
+                 ROUND_TOWARD_INFINITY: Round to nearest integer away from zero.
+
+                 ROUND_TOWARD_ZERO: Round to nearest integer toward zero.
+
+                 ROUND_UP: Round to nearest integer toward infinity (ceiling).
+
+                 ROUND_DOWN: Round to nearest integer toward negative infinity (floor).
+
+    :param name: Optional output node name.
+    :return: The new node performing a quantize operation on input tensor.
+    """
+    new_element_type = get_element_type(new_type)
+    return Quantize(data,
+                    scale,
+                    zero_point,
+                    new_element_type,
+                    AxisSet(axes),
+                    round_mode)
+
+
+@nameable_op
+def dequantize(data, scale, zero_point, element_type, axes, name=None):
+    # type: (Node, Node, Node, NumericType, Set[int], str) -> Node
+    r"""Perform dequantize operation on data from input node.
+
+    Computes dequantize on the input tensor:
+
+    .. math:: output = (input - zero\_point) * scale
+
+    :param data: The node with data tensor.
+    :param scale: Scale used for mapping.
+    :param zero_point: Zero point used for mapping.
+    :param element_type: Output element type.
+    :param name: Optional output node name.
+    :return: The new node performing a dequantize operation on input tensor.
+    """
+    new_element_type = get_element_type(element_type)
+    return Dequantize(data, scale, zero_point, new_element_type, AxisSet(axes))
+
+
+@nameable_op
+def quantized_convolution(data,                      # type: Node
+                          filters,                   # type: Node
+                          window_movement_strides,   # type: List[int]
+                          window_dilation_strides,   # type: List[int]
+                          padding_below,             # type: List[int]
+                          padding_above,             # type: List[int]
+                          data_dilation_strides,     # type: List[int]
+                          input_scale,               # type: Node
+                          input_zero_point,          # type: Node
+                          filter_scale,              # type: Node
+                          filter_zero_point,         # type: Node
+                          output_scale,              # type: Node
+                          output_zero_point,         # type: Node
+                          output_type,               # type: NumericType
+                          input_axes,                # type: Set[int]
+                          filter_axes,               # type: Set[int]
+                          output_axes,               # type: Set[int]
+                          name=None,                 # type: str
+                          ):
+    # type: (...) -> Node
+    r"""Perform quantized convolution operation on data from input node.
+
+    :param data: The node producing the input data batch tensor.
+    :param filters: The node producing the filters tensor.
+    :param window_movement_strides: The window movement strides.
+    :param window_dilation_strides: he window dilation strides.
+    :param padding_below: The padding-below sizes.
+    :param padding_above: The padding-above sizes.
+    :param data_dilation_strides: The data dilation strides.
+    :param input_scale: Scale to transform the input.
+    :param input_zero_point: Zero point used for mapping.
+    :param filter_scale: Scale to transform the filters.
+    :param filter_zero_point: Zero point used for mapping.
+    :param output_scale: Scale to transform the output.
+    :param output_zero_point: Zero point used for mapping.
+    :param output_type: Output element type.
+    :param input_axes: Input axes set for channel wise quantization.
+    :param filter_axes: Filter axes set for channel wise quantization.
+    :param output_type: Output axes set for channel wise quantization.
+    :param name: Optional output node name.
+    :return: The new node performing a quantized convolution operation on input tensor.
+    """
+    new_output_type = get_element_type(output_type)
+    return QuantizedConvolution(data,
+                                filters,
+                                Strides(window_movement_strides),
+                                Strides(window_dilation_strides),
+                                CoordinateDiff(padding_below),
+                                CoordinateDiff(padding_above),
+                                Strides(data_dilation_strides),
+                                input_scale,
+                                input_zero_point,
+                                filter_scale,
+                                filter_zero_point,
+                                output_scale,
+                                output_zero_point,
+                                new_output_type,
+                                AxisSet(input_axes),
+                                AxisSet(filter_axes),
+                                AxisSet(output_axes))
+
+
+@nameable_op
+def quantized_dot(input0,                      # type: Node
+                  input1,                      # type: Node
+                  reduction_axes_count,        # type: int
+                  input0_scale,                # type: Node
+                  input0_zero_point,           # type: Node
+                  input1_scale,                # type: Node
+                  input1_zero_point,           # type: Node
+                  output_scale,                # type: Node
+                  output_zero_point,           # type: Node
+                  output_type,                 # type: NumericType
+                  input0_axes,                 # type: Set[int]
+                  input1_axes,                 # type: Set[int]
+                  output_axes,                 # type: Set[int]
+                  name=None,                   # type: str
+                  ):
+    # type: (...) -> Node
+    r"""Perform quantized dot operation on data from input node.
+
+    :param input0: The node producing the input data batch tensor.
+    :param input1: The node producing the filters tensor.
+    :param reduction_axes_count: Number of reduction axes.
+    :param input0_scale: Scale to transform the input.
+    :param input0_zero_point: Zero point used for mapping.
+    :param input1_scale: Scale to transform the filters.
+    :param input1_zero_point: Zero point used for mapping.
+    :param output_scale: Scale to transform the output.
+    :param output_zero_point: Zero point used for mapping.
+    :param output_type: Output element type.
+    :param input0_axes: Input0 axes set for channel wise quantization
+    :param input1_axes: Input1 axes set for channel wise quantization
+    :param output_axes: Output axes set for channel wise quantization
+    :param name: Optional output node name.
+    :return: The new node performing a quantized dot operation on input tensor.
+    """
+    new_output_type = get_element_type(output_type)
+    return QuantizedDot(input0,
+                        input1,
+                        reduction_axes_count,
+                        input0_scale,
+                        input0_zero_point,
+                        input1_scale,
+                        input1_zero_point,
+                        output_scale,
+                        output_zero_point,
+                        new_output_type,
+                        AxisSet(input0_axes),
+                        AxisSet(input1_axes),
+                        AxisSet(output_axes))
 
 
 # Unary ops
