@@ -554,7 +554,7 @@ json JSONSerializer::serialize_function(const Function& f)
 template <typename T>
 T get_value(json js, const string& key)
 {
-    T rc;
+    T rc = {};
     auto it = js.find(key);
     if (it != js.end())
     {
@@ -719,15 +719,18 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         string node_name = node_js.at("name").get<string>();
         string node_op = node_js.at("op").get<string>();
         string friendly_name = get_value<string>(node_js, "friendly_name");
+        size_t op_version = get_value<size_t>(node_js, "op_version");
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
         OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
+
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
+
         switch (get_typeid(node_op))
         {
         case OP_TYPEID::Abs:
@@ -1831,8 +1834,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Softmax:
         {
-            auto softmax_axes = deserialize_axis_set(node_js.at("softmax_axes"));
-            node = make_shared<op::Softmax>(args[0], softmax_axes);
+            if (op_version == 0)
+            {
+                auto softmax_axes = deserialize_axis_set(node_js.at("softmax_axes"));
+                node = make_shared<op::Softmax>(args[0], softmax_axes);
+            }
+            if (op_version == 1)
+            {
+                size_t softmax_axis = node_js.at("softmax_axis");
+                node = make_shared<op::v1::Softmax>(args[0], softmax_axis);
+            }
             break;
         }
         case OP_TYPEID::SpaceToDepth:
@@ -2028,6 +2039,9 @@ json JSONSerializer::serialize_node(const Node& n)
     m_nodes_serialized.insert(&n);
     json node;
     node["name"] = n.get_name();
+    auto op_version = n.get_version();
+    node["op_version"] = op_version;
+
     if (n.get_name() != n.get_friendly_name())
     {
         node["friendly_name"] = n.get_friendly_name();
@@ -2881,8 +2895,16 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::Softmax:
     {
-        auto tmp = dynamic_cast<const op::Softmax*>(&n);
-        node["softmax_axes"] = serialize_axis_set(tmp->get_axes());
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::Softmax*>(&n);
+            node["softmax_axes"] = serialize_axis_set(tmp->get_axes());
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::Softmax*>(&n);
+            node["softmax_axis"] = tmp->get_axis();
+        }
         break;
     }
     case OP_TYPEID::Tan: { break;
