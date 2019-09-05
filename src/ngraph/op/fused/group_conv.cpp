@@ -65,7 +65,8 @@ op::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
     , m_padding_below(padding_below)
     , m_padding_above(padding_above)
     , m_data_dilation_strides(data_dilation_strides)
-    , m_groups(filters.get_partial_shape()[0])
+    , m_groups(filters.get_partial_shape().rank().is_dynamic() ? Dimension::dynamic()
+                                                               : filters.get_partial_shape()[0])
     , m_pad_type(pad_type)
 {
     constructor_validate_and_infer_types();
@@ -143,7 +144,9 @@ Shape op::GroupConvolution::get_weights_dimensions() const
 
 size_t ngraph::op::GroupConvolution::get_groups() const
 {
-    NODE_VALIDATION_CHECK(this, m_groups.is_static(), "Number of groups must be static");
+    NODE_VALIDATION_CHECK(this,
+                          m_groups.is_static(),
+                          "get_groups() can only be called if the number of groups is static.");
     return static_cast<size_t>(m_groups);
 }
 
@@ -168,7 +171,6 @@ shared_ptr<Node> op::GroupConvolution::copy_with_new_args(const NodeVector& new_
 NodeVector op::GroupConvolution::decompose_op() const
 {
     auto data = input_value(0);
-    auto data_shape = get_input_shape(0);
     auto filters = input_value(1);
     auto filters_shape = get_input_shape(1);
     // Split one convolution op to N ops where N is the number of groups
