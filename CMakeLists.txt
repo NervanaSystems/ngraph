@@ -23,10 +23,6 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
 endif()
 
-if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
-    message(FATAL_ERROR "Ninja generator not supported.")
-endif()
-
 if (CMAKE_BUILD_TYPE)
     set(RELEASE_TYPES Debug Release RelWithDebInfo MinSizeRel)
     list(FIND RELEASE_TYPES ${CMAKE_BUILD_TYPE} INDEX_FOUND)
@@ -292,6 +288,14 @@ message(STATUS "NGRAPH_INTERPRETER_STATIC_LIB_ENABLE: ${NGRAPH_INTERPRETER_STATI
 message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
 
+if("${CMAKE_GENERATOR}" STREQUAL "Ninja" AND (NGRAPH_TOOLS_ENABLE OR NGRAPH_CPU_ENABLE OR NGRAPH_MLIR_ENABLE OR
+        NGRAPH_INTELGPU_ENABLE OR NGRAPH_GPU_ENABLE OR NGRAPH_INTERPRETER_ENABLE OR NGRAPH_NOP_ENABLE OR
+        NGRAPH_GPUH_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE OR NGRAPH_ONNX_IMPORT_ENABLE OR NGRAPH_PLAIDML_ENABLE OR
+        NGRAPH_JSON_ENABLE))
+    message(FATAL_ERROR "Ninja generator not supported.")
+endif()
+
+
 #-----------------------------------------------------------------------------------------------
 # Installation logic...
 #-----------------------------------------------------------------------------------------------
@@ -330,7 +334,7 @@ endif()
 #-----------------------------------------------------------------------------------------------
 
 # Compiler-specific logic...
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DIR)
     message( STATUS "Setting clang flags...")
     include( cmake/clang_4_0_flags.cmake )
 endif()
@@ -365,7 +369,7 @@ if (NGRAPH_CODE_COVERAGE_ENABLE)
 endif()
 
 # Enable build target CPU features
-if(NOT WIN32)
+if(NOT WIN32 AND NOT ARM AND NOT AARCH64)
     set(NGRAPH_TARGET_ARCH native CACHE
         STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
 
@@ -494,19 +498,21 @@ message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
 # External projects install directory
 #-----------------------------------------------------------------------------------------------
 
-set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-if(WIN32)
-    set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
-    set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
-    set(NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
-    set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-else()
-    set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
+if (NOT NGRAPH_BUILD_DIR)
+    set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    if(WIN32)
+        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR})
+        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
+        set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+        set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
+        set(NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
+        set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    else()
+        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
+    endif()
 endif()
 
 set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
