@@ -115,6 +115,7 @@ set(SRC
     type_prop/index_reduction.cpp
     type_prop/lrn.cpp
     type_prop/lstm_cell.cpp
+    type_prop/matmul.cpp
     type_prop/max_pool.cpp
     type_prop/mvn.cpp
     type_prop/normalize.cpp
