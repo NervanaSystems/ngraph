@@ -131,6 +131,8 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
+                virtual size_t get_version() const override { return 1; }
+
                 size_t get_axis() const { return m_axis; };
                 void set_axis(const size_t axis) { m_axis = axis; }
                 const std::string& get_mode() const { return m_mode; };
@@ -157,6 +159,9 @@ namespace ngraph
 
                 template <typename T>
                 size_t validate_and_get_k(const std::shared_ptr<op::Constant>& k_constant) const;
+
+                void validate_mode();
+                void validate_sort();
             };
         }
     }

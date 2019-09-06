@@ -156,6 +156,10 @@ op::v1::TopK::TopK(const Output<Node>& data,
 
 void op::v1::TopK::validate_and_infer_types()
 {
+    validate_mode();
+
+    validate_sort();
+
     const auto& input_partial_shape = get_input_partial_shape(0);
     const auto input_rank = input_partial_shape.rank();
 
@@ -257,4 +261,32 @@ shared_ptr<Node> op::v1::TopK::copy_with_new_args(const NodeVector& new_args) co
     new_v1_topk->set_index_element_type(m_index_element_type);
 
     return new_v1_topk;
+}
+
+void op::v1::TopK::validate_mode()
+{
+    if (m_mode.empty())
+    {
+        m_mode = "max";
+    }
+
+    NODE_VALIDATION_CHECK(this,
+                          m_mode == "min" || m_mode == "max",
+                          "The provided value of the 'mode' attribute (",
+                          m_mode,
+                          ") is invalid. Allowed values: 'min' or 'max'.");
+}
+
+void op::v1::TopK::validate_sort()
+{
+    if (m_sort.empty())
+    {
+        m_sort = "none";
+    }
+
+    NODE_VALIDATION_CHECK(this,
+                          m_sort == "none" || m_sort == "value" || m_sort == "index",
+                          "The provided value of the 'sort' attribute (",
+                          m_mode,
+                          ") is invalid. Allowed values: 'none', 'value' or 'index'.");
 }
