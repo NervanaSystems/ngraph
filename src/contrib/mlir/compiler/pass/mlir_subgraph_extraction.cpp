@@ -25,6 +25,7 @@
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
@@ -435,6 +436,24 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         {
             return true;
         }
+    }
+
+    if (TI(ngraph::op::Convolution) == TI(*node))
+    {
+        // No padding for now
+        auto conv_node = static_cast<ngraph::op::Convolution*>(node.get());
+        auto pad_below = conv_node->get_padding_below();
+        auto pad_above = conv_node->get_padding_above();
+        auto data_dilation = conv_node->get_data_dilation_strides();
+        auto window_dilation = conv_node->get_window_dilation_strides();
+
+        auto is_zero = [](size_t s) { return s == 0; };
+        auto is_one = [](size_t s) { return s == 1; };
+
+        return std::all_of(pad_below.begin(), pad_below.end(), is_zero) &&
+               std::all_of(pad_above.begin(), pad_above.end(), is_zero) &&
+               std::all_of(data_dilation.begin(), data_dilation.end(), is_one) &&
+               std::all_of(window_dilation.begin(), window_dilation.end(), is_one);
     }
 
     if (TI(ngraph::op::Convolution) == TI(*node))
