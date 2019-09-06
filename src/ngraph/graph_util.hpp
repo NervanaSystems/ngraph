@@ -212,7 +212,9 @@ namespace ngraph
     ///        auto new_N = N->copy_with_new_args(N->get_arguments());
     ///        shared_ptr<Node> M = make_shared<SomeUnaryOp>(new_N);
     ///        replace_node(N, M);
-    void replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
+    void replace_node(std::shared_ptr<Node> target,
+                      std::shared_ptr<Node> replacement,
+                      bool disable_prov_tag_prop = false);
 
     NodeVector find_common_args(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 

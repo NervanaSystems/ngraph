@@ -132,7 +132,9 @@ NodeVector ngraph::find_common_args(std::shared_ptr<Node> node1, std::shared_ptr
     return common_args;
 }
 
-void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement)
+void ngraph::replace_node(std::shared_ptr<Node> target,
+                          std::shared_ptr<Node> replacement,
+                          bool disable_prov_tag_prop)
 {
     if (target->is_output())
     {
@@ -147,7 +149,7 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
     // Fix input/output descriptors
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
 
-    if (ngraph::get_provenance_enabled())
+    if (ngraph::get_provenance_enabled() && !disable_prov_tag_prop)
     {
         auto common_args = ngraph::find_common_args(target, replacement);
 
