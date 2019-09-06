@@ -135,8 +135,11 @@ namespace ngraph
                     static CPUExecutor cpu_executor(num_thread_pools < 1 ? 1 : num_thread_pools);
                     return cpu_executor;
                 }
-
+#if MKLDNN_VERSION_MAJOR < 1
                 mkldnn::engine global_cpu_engine(mkldnn::engine::cpu, 0);
+#else
+                mkldnn::engine global_cpu_engine(mkldnn::engine::kind::cpu, 0);
+#endif
             }
         }
     }

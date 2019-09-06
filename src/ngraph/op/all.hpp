@@ -16,9 +16,6 @@
 
 #pragma once
 
-#include "ngraph/axis_set.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/logical_reduction.hpp"
 
 namespace ngraph
@@ -48,10 +45,7 @@ namespace ngraph
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
 
             /// \return The default value for All.
-            virtual std::shared_ptr<Node> get_default_value() const override
-            {
-                return ngraph::make_constant_from_string("1", get_element_type(), get_shape());
-            }
+            virtual std::shared_ptr<Node> get_default_value() const override;
         };
     }
 }

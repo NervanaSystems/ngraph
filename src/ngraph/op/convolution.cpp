@@ -211,6 +211,11 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const Node
                                                                    m_data_dilation_strides));
 }
 
+shared_ptr<Node> op::Convolution::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+}
+
 const string op::ConvolutionBackpropData::type_name{"ConvolutionBackpropData"};
 
 op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_shape,
