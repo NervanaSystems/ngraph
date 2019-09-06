@@ -52,6 +52,7 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
                 auto k = topk->get_k();
                 auto compute_max = topk->get_compute_max();
+                auto sort = topk->get_sort();
 
                 auto element_type = args[0].get_element_type();
                 if (element_type == element::f32)
@@ -64,6 +65,7 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
@@ -76,7 +78,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                     else
@@ -87,6 +90,7 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
@@ -99,7 +103,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                 }
@@ -113,6 +118,7 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
@@ -125,7 +131,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                     else
@@ -136,6 +143,7 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
@@ -148,7 +156,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                 }
@@ -162,6 +171,7 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
@@ -174,7 +184,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                     else
@@ -185,6 +196,7 @@ namespace ngraph
                                    axis,
                                    k,
                                    compute_max,
+                                   sort,
                                    arg_buffer_index,
                                    out_indices_buffer_index,
                                    out_values_buffer_index](CPURuntimeContext* ctx,
@@ -197,7 +209,8 @@ namespace ngraph
                                 out_shape,
                                 axis,
                                 k,
-                                compute_max);
+                                compute_max,
+                                sort);
                         };
                     }
                 }
