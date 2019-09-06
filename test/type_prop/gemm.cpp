@@ -14,9 +14,9 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "ngraph/op/fused/gemm.hpp"
 #include "gtest/gtest.h"
 #include "ngraph/op/parameter.hpp"
-#include "ngraph/op/fused/gemm.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;

@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "util/all_close.hpp"
