@@ -357,6 +357,13 @@ static op::PadMode read_pad_mode(json node_js)
                                         : op::PadMode::CONSTANT;
 }
 
+static op::RoundingType read_rounding_type(json node_js)
+{
+    return has_key(node_js, "rounding_type")
+               ? static_cast<op::RoundingType>(node_js.at("rounding_type"))
+               : op::RoundingType::FLOOR;
+}
+
 static json write_element_type(const ngraph::element::Type& n)
 {
     json j;
@@ -799,42 +806,77 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::AvgPool:
         {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            auto include_padding_in_avg_computation =
-                node_js.at("include_padding_in_avg_computation").get<bool>();
-            op::PadType pad_type = read_pad_type(node_js);
-            bool ceil_mode = get_or_default<bool>(node_js, "ceil_mode", false);
-            node = make_shared<op::AvgPool>(args[0],
-                                            window_shape,
-                                            window_movement_strides,
-                                            padding_below,
-                                            padding_above,
-                                            include_padding_in_avg_computation,
-                                            pad_type,
-                                            ceil_mode);
-            break;
-        }
-        case OP_TYPEID::AvgPoolBackprop:
-        {
-            auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            auto include_padding_in_avg_computation =
-                get_or_default<bool>(node_js, "include_padding_in_avg_computation", false);
-            node = make_shared<op::AvgPoolBackprop>(forward_arg_shape,
-                                                    args[0],
+            if (op_version == 0)
+            {
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                auto include_padding_in_avg_computation =
+                    node_js.at("include_padding_in_avg_computation").get<bool>();
+                op::PadType pad_type = read_pad_type(node_js);
+                bool ceil_mode = get_or_default<bool>(node_js, "ceil_mode", false);
+                node = make_shared<op::v0::AvgPool>(args[0],
                                                     window_shape,
                                                     window_movement_strides,
                                                     padding_below,
                                                     padding_above,
-                                                    include_padding_in_avg_computation);
+                                                    include_padding_in_avg_computation,
+                                                    pad_type,
+                                                    ceil_mode);
+            }
+            if (op_version == 1)
+            {
+                auto kernel = node_js.at("kernel").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
+                auto exclude_pad = node_js.at("exclude_pad").get<bool>();
+                op::PadType pad_type = read_pad_type(node_js);
+                op::RoundingType rounding_type = read_rounding_type(node_js);
+                node = make_shared<op::v1::AvgPool>(args[0],
+                                                    strides,
+                                                    pads_begin,
+                                                    pads_end,
+                                                    kernel,
+                                                    exclude_pad,
+                                                    rounding_type,
+                                                    pad_type);
+            }
+            break;
+        }
+        case OP_TYPEID::AvgPoolBackprop:
+        {
+            if (op_version == 0)
+            {
+                auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                auto include_padding_in_avg_computation =
+                    get_or_default<bool>(node_js, "include_padding_in_avg_computation", false);
+                node = make_shared<op::v0::AvgPoolBackprop>(forward_arg_shape,
+                                                            args[0],
+                                                            window_shape,
+                                                            window_movement_strides,
+                                                            padding_below,
+                                                            padding_above,
+                                                            include_padding_in_avg_computation);
+            }
+            if (op_version == 1)
+            {
+                auto forward_arg_shape = node_js.at("forward_arg_shape").get<vector<size_t>>();
+                auto kernel = node_js.at("kernel").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
+                auto exclude_pad = get_or_default<bool>(node_js, "exclude_pad", true);
+                node = make_shared<op::v1::AvgPoolBackprop>(
+                    forward_arg_shape, args[0], strides, pads_begin, pads_end, kernel, exclude_pad);
+            }
             break;
         }
         case OP_TYPEID::BatchMatMul:
@@ -2170,28 +2212,57 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::AvgPool:
     {
-        auto tmp = dynamic_cast<const op::AvgPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
-        node["pad_type"] = tmp->get_pad_type();
-        if (tmp->get_ceil_mode())
+        if (op_version == 0)
         {
-            node["ceil_mode"] = tmp->get_ceil_mode();
+            auto tmp = dynamic_cast<const op::v0::AvgPool*>(&n);
+            node["window_shape"] = tmp->get_window_shape();
+            node["window_movement_strides"] = tmp->get_window_movement_strides();
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+            node["include_padding_in_avg_computation"] =
+                tmp->get_include_padding_in_avg_computation();
+            node["pad_type"] = tmp->get_pad_type();
+            if (tmp->get_ceil_mode())
+            {
+                node["ceil_mode"] = tmp->get_ceil_mode();
+            }
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::AvgPool*>(&n);
+            node["kernel"] = tmp->get_kernel();
+            node["strides"] = tmp->get_strides();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+            node["exclude_pad"] = tmp->get_exclude_pad();
+            node["auto_pad"] = tmp->get_auto_pad();
+            node["rounding_type"] = tmp->get_rounding_type();
         }
         break;
     }
     case OP_TYPEID::AvgPoolBackprop:
     {
-        auto tmp = dynamic_cast<const op::AvgPoolBackprop*>(&n);
-        node["forward_arg_shape"] = tmp->get_forward_arg_shape();
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["include_padding_in_avg_computation"] = tmp->get_include_padding_in_avg_computation();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::AvgPoolBackprop*>(&n);
+            node["forward_arg_shape"] = tmp->get_forward_arg_shape();
+            node["window_shape"] = tmp->get_window_shape();
+            node["window_movement_strides"] = tmp->get_window_movement_strides();
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+            node["include_padding_in_avg_computation"] =
+                tmp->get_include_padding_in_avg_computation();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::AvgPoolBackprop*>(&n);
+            node["forward_arg_shape"] = tmp->get_forward_arg_shape();
+            node["kernel"] = tmp->get_kernel();
+            node["strides"] = tmp->get_strides();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+            node["exclude_pad"] = tmp->get_exclude_pad();
+        }
         break;
     }
     case OP_TYPEID::BatchMatMul: { break;

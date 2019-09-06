@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/softmax.hpp"
 
@@ -75,6 +76,52 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 #endif
     switch (get_typeid(node))
     {
+    case OP_TYPEID::AvgPool:
+    {
+        auto tmp = dynamic_cast<const op::v0::AvgPool*>(node.get());
+
+        auto rounding_type = static_cast<op::RoundingType>(tmp->get_ceil_mode());
+        auto exclude_pad = !tmp->get_include_padding_in_avg_computation();
+        auto auto_pad = tmp->get_pad_type();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node = make_shared<op::v1::AvgPool>(node->input(0).get_source_output(),
+                                                             strides,
+                                                             pads_begin,
+                                                             pads_end,
+                                                             kernel,
+                                                             exclude_pad,
+                                                             rounding_type,
+                                                             auto_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::AvgPoolBackprop:
+    {
+        auto tmp = dynamic_cast<const op::v0::AvgPoolBackprop*>(node.get());
+
+        auto exclude_pad = !tmp->get_include_padding_in_avg_computation();
+        auto pads_begin = tmp->get_padding_below();
+        auto pads_end = tmp->get_padding_above();
+        auto strides = tmp->get_window_movement_strides();
+        auto kernel = tmp->get_window_shape();
+
+        auto replacement_node =
+            make_shared<op::v1::AvgPoolBackprop>(tmp->get_forward_arg_shape(),
+                                                 node->input(0).get_source_output(),
+                                                 strides,
+                                                 pads_begin,
+                                                 pads_end,
+                                                 kernel,
+                                                 exclude_pad);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
     case OP_TYPEID::Softmax:
     {
         auto tmp = dynamic_cast<const op::v0::Softmax*>(node.get());
