@@ -24,6 +24,11 @@ endif()
 
 message(STATUS "unit tests enabled")
 
+if (NGRAPH_MLIR_ENABLE)
+    add_subdirectory(mlir)
+    message(STATUS "MLIR LIT tests enabled")
+endif()
+
 if(LINUX)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 endif()
