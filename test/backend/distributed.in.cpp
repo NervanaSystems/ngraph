@@ -21,7 +21,11 @@
 
 #include "ngraph/distributed.hpp"
 #include "ngraph/file_util.hpp"
+#include "ngraph/op.recv.hpp"
+#include "ngraph/op/all_reduce.hpp"
+#include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/send.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close_f.hpp"
 #include "util/random.hpp"
