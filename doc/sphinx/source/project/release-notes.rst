@@ -19,7 +19,9 @@ We are pleased to announce the release of version |version|.
 Core updates for |version|
 --------------------------
 
-Allow DLLs that link nGraph statically to load backends
++ Allow DLLs that link nGraph statically to load backends
++ Add rank id to trace file name.
++ Allow provenance merging to be disabled
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
