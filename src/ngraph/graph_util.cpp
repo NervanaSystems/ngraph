@@ -28,7 +28,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
-#include "ngraph/op/result.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/provenance.hpp"
@@ -139,10 +138,12 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
         throw ngraph_error("Result nodes cannot be replaced.");
     }
 
-    if (target->get_users().empty())
-    {
-        throw ngraph_error("replacing an unreachable node");
-    }
+    NGRAPH_CHECK(!target->get_users().empty(),
+                 "Attempted to replace unreachable node '",
+                 *target,
+                 "'. Replacement: '",
+                 *replacement,
+                 "'");
 
     // Fix input/output descriptors
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
@@ -177,6 +178,35 @@ void ngraph::replace_node(std::shared_ptr<Node> target, std::shared_ptr<Node> re
 
     replacement->add_node_control_dependents(target);
     target->clear_control_dependents();
+}
+
+void ngraph::replace_nodes(
+    const std::shared_ptr<Function>& f,
+    const unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Parameter>>&
+        parameter_replacement_map,
+    const unordered_map<shared_ptr<Node>, shared_ptr<Node>>& body_replacement_map)
+{
+    auto& params = f->get_parameters();
+
+    for (size_t i = 0; i < params.size(); i++)
+    {
+        if (parameter_replacement_map.count(params[i]) != 0 &&
+            parameter_replacement_map.at(params[i]) != params[i])
+        {
+            f->replace_parameter(i, parameter_replacement_map.at(params[i]));
+        }
+    }
+
+    for (auto& kv : body_replacement_map)
+    {
+        auto& k = kv.first;
+        auto& v = kv.second;
+
+        if (k != v)
+        {
+            f->replace_node(k, v);
+        }
+    }
 }
 
 // Check if all paths from X to a result go through Y
@@ -652,4 +682,94 @@ std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
     }
 
     return result;
+}
+
+static bool check_for_cycles_bkwd(std::shared_ptr<ngraph::Node> node,
+                                  std::deque<std::shared_ptr<ngraph::Node>>& path,
+                                  std::unordered_set<std::shared_ptr<ngraph::Node>>& path_set,
+                                  ngraph::NodeVector& cycle_nodes)
+{
+    path.push_back(node);
+    path_set.insert(node);
+    for (auto& input : node->inputs())
+    {
+        auto arg = input.get_source_output().get_node_shared_ptr();
+        if (path_set.find(arg) != path_set.end())
+        {
+            for (auto it : path)
+            {
+                cycle_nodes.push_back(it);
+            }
+            // last node
+            cycle_nodes.push_back(arg);
+            return true;
+        }
+        if (check_for_cycles_bkwd(arg, path, path_set, cycle_nodes))
+        {
+            return true;
+        }
+    }
+    path_set.erase(path.back());
+    path.pop_back();
+    return false;
+}
+
+static bool check_for_cycles_fwd(std::shared_ptr<ngraph::Node> node,
+                                 std::deque<std::shared_ptr<ngraph::Node>>& path,
+                                 std::unordered_set<std::shared_ptr<ngraph::Node>>& path_set,
+                                 ngraph::NodeVector& cycle_nodes)
+{
+    path.push_back(node);
+    path_set.insert(node);
+    for (auto& arg : node->get_users())
+    {
+        if (path_set.find(arg) != path_set.end())
+        {
+            for (auto it : path)
+            {
+                cycle_nodes.push_back(it);
+            }
+            // last node
+            cycle_nodes.push_back(arg);
+            return true;
+        }
+        if (check_for_cycles_fwd(arg, path, path_set, cycle_nodes))
+        {
+            return true;
+        }
+    }
+    path_set.erase(path.back());
+    path.pop_back();
+    return false;
+}
+
+bool ngraph::check_for_cycles(const ngraph::Function* func,
+                              ngraph::NodeVector& cycle_nodes,
+                              bool& is_bkwd_cycle)
+{
+    for (auto res : func->get_results())
+    {
+        std::deque<std::shared_ptr<Node>> path;
+        // mirror of path stack for faster cycle check
+        std::unordered_set<std::shared_ptr<Node>> path_set;
+        if (check_for_cycles_bkwd(res, path, path_set, cycle_nodes))
+        {
+            is_bkwd_cycle = true;
+            return true;
+        };
+    }
+
+    for (auto param : func->get_parameters())
+    {
+        std::deque<std::shared_ptr<Node>> path;
+        // mirror of path stack for faster cycle check
+        std::unordered_set<std::shared_ptr<Node>> path_set;
+        if (check_for_cycles_fwd(param, path, path_set, cycle_nodes))
+        {
+            is_bkwd_cycle = false;
+            return true;
+        };
+    }
+    // no cycles
+    return false;
 }

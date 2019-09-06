@@ -625,7 +625,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b2c2h2w1)
         test::all_close(expected_variance, read_vector<float>(result_variance), 1e-5f, 1e-6f));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, batchnorm_fprop_b2c2d2h1w1)
+NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b2c2d2h1w1)
 {
     auto input_shape = Shape{2, 2, 2, 1, 1};
     auto input = make_shared<op::Parameter>(element::f32, input_shape);

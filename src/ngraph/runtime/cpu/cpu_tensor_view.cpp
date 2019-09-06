@@ -142,11 +142,20 @@ void runtime::cpu::CPUTensorView::read(void* target, size_t n) const
         auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
             this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
 
+#if MKLDNN_VERSION_MAJOR < 1
         memory input{{input_desc, executor::global_cpu_engine}, aligned_buffer};
         memory output{{output_desc, executor::global_cpu_engine}, target};
         reorder prim{input, output};
         mkldnn::stream s(mkldnn::stream::kind::eager);
         s.submit({prim}).wait();
+#else
+        memory input{input_desc, executor::global_cpu_engine, aligned_buffer};
+        memory output{output_desc, executor::global_cpu_engine, target};
+        reorder prim{input, output};
+        mkldnn::stream s(executor::global_cpu_engine);
+        prim.execute(s, {{MKLDNN_ARG_SRC, input}, {MKLDNN_ARG_DST, output}});
+        s.wait();
+#endif
     }
     else
     {
