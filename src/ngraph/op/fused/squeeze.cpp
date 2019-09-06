@@ -57,7 +57,6 @@ NodeVector op::Squeeze::decompose_op() const
         {
             if (data_shape.at(idx) == 1)
             {
-                // Mark with zero elements to remove;
                 axes_to_squeeze.at(idx) = 1;
             }
             else
@@ -76,7 +75,6 @@ NodeVector op::Squeeze::decompose_op() const
                 (data_shape.at(axis) == 1),
                 "provided axis value is invalid. Only axes of size 1 may be removed.");
 
-            // Mark with zero elements to remove;
             axes_to_squeeze.at(axis) = 1;
         }
     }
