@@ -43,6 +43,8 @@ namespace ngraph
 
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto sigmoid_desc = mkldnn_emitter->get_sigmoid_forward_desc(node, false);
+                QUERY_SCRATCHPAD(eltwise_forward, sigmoid_desc);
+
                 // Sigmoid needs 3 primitives: input, result, and eltwise_forward.
                 auto sigmoid_index = mkldnn_emitter->reserve_primitive_space(3);
                 auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
@@ -52,14 +54,20 @@ namespace ngraph
                         CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_sigmoid_forward(
-                                ctx->mkldnn_primitives, sigmoid_desc, deps, sigmoid_index);
+                            mkldnn_emitter->build_sigmoid_forward(ctx->mkldnn_memories,
+                                                                  ctx->mkldnn_primitives,
+                                                                  ctx->mkldnn_scratchpad_mds,
+                                                                  sigmoid_desc,
+                                                                  deps,
+                                                                  sigmoid_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, sigmoid_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, sigmoid_index, deps, cpu::mkldnn_utils::OpType::SIGMOID);
                     };
                 functors.emplace_back(functor);
             }
@@ -80,6 +88,8 @@ namespace ngraph
                 auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                 auto fwd_desc = mkldnn_emitter->get_sigmoid_forward_desc(node, true);
                 auto bwd_desc = mkldnn_emitter->get_sigmoid_backward_desc(node);
+                QUERY_SCRATCHPAD_2ARGS(eltwise_backward, fwd_desc, bwd_desc);
+
                 // SigmoidBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
                 size_t sigmoid_index = mkldnn_emitter->reserve_primitive_space(4);
                 auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
@@ -94,8 +104,13 @@ namespace ngraph
                                                   CPUExecutionContext* ectx) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->build_sigmoid_backward(
-                            ctx->mkldnn_primitives, bwd_desc, fwd_desc, deps, sigmoid_index);
+                        mkldnn_emitter->build_sigmoid_backward(ctx->mkldnn_memories,
+                                                               ctx->mkldnn_primitives,
+                                                               ctx->mkldnn_scratchpad_mds,
+                                                               bwd_desc,
+                                                               fwd_desc,
+                                                               deps,
+                                                               sigmoid_index);
                     }
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -103,7 +118,9 @@ namespace ngraph
                         ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                     cpu::mkldnn_utils::set_memory_ptr(
                         ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, sigmoid_index);
+
+                    cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        ctx, sigmoid_index, deps, cpu::mkldnn_utils::OpType::SIGMOIDBACKPROP);
                 };
                 functors.emplace_back(functor);
             }

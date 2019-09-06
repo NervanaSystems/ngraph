@@ -24,6 +24,73 @@
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
+#if MKLDNN_VERSION_MAJOR < 1
+#define FORMAT format
+#define FORMAT_KIND format
+#define FORMAT_KIND_UNDEF mkdnn_format_undef
+#define FORMAT_ANY mkldnn_any
+#define FORMAT_UNDEF mkldnn_undef
+#define DATA_UNDEF data_undef
+
+#define CHANGE_FORMAT                                                                              \
+    if (weights_desc.data.format == mkldnn_nchw)                                                   \
+    {                                                                                              \
+        weights_desc.data.format = mkldnn_oihw;                                                    \
+    }                                                                                              \
+    if (weights_desc.data.format == mkldnn_ncdhw)                                                  \
+    {                                                                                              \
+        weights_desc.data.format = mkldnn_oidhw;                                                   \
+    }
+
+#define BN_FLAG_CLASS batch_normalization_flag
+
+#define PADDING , mkldnn::padding_kind::zero
+
+#define SET_ROUND_MODE attr.set_int_output_round_mode(mkldnn::round_mode::round_nearest);
+
+#define QUERY_SCRATCHPAD(op_name, x)
+#define QUERY_SCRATCHPAD_2ARGS(op_name, x, y)
+#define QUERY_SCRATCHPAD_3ARGS(op_name, x, y, z)
+#define QUERY_SCRATCHPAD_4ARGS(op_name, x, y, z, u)
+
+#define MKLDNN_ERROR_MESSAGE e.message
+
+#else
+#define TENSOR_MAX_DIMS MKLDNN_MAX_NDIMS
+#define FORMAT format_tag
+#define FORMAT_KIND format_kind
+#define FORMAT_KIND_UNDEF format_kind::undef
+#define FORMAT_ANY static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::any)
+#define FORMAT_UNDEF format_tag::undef
+#define DATA_UNDEF undef
+
+#define CHANGE_FORMAT
+
+#define BN_FLAG_CLASS normalization_flags
+
+#define PADDING
+
+#define SET_ROUND_MODE
+
+#define QUERY_SCRATCHPAD(op_name, x) mkldnn_emitter->query_scratchpad_##op_name(x)
+#define QUERY_SCRATCHPAD_2ARGS(op_name, x, y) mkldnn_emitter->query_scratchpad_##op_name(x, y)
+#define QUERY_SCRATCHPAD_3ARGS(op_name, x, y, z) mkldnn_emitter->query_scratchpad_##op_name(x, y, z)
+#define QUERY_SCRATCHPAD_4ARGS(op_name, x, y, z, u)                                                \
+    mkldnn_emitter->query_scratchpad_##op_name(x, y, z, u)
+
+#define ATTR_S                                                                                     \
+    mkldnn::primitive_attr attr;                                                                   \
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+
+#define GET_SIZE                                                                                   \
+    mkldnn::memory::desc scratchpad_md = pd.scratchpad_desc();                                     \
+    size_t size = scratchpad_md.get_size();                                                        \
+    m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;
+
+#define MKLDNN_ERROR_MESSAGE std::string(e.message)
+
+#endif
+
 namespace ngraph
 {
     namespace runtime
@@ -36,12 +103,12 @@ namespace ngraph
 #ifndef _WIN32
                 extern "C" void mkl_serv_free_buffers();
 #endif
-                mkldnn::memory::format
+                mkldnn::memory::FORMAT
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
-                mkldnn::memory::format CreateNativeDataFormat(const Shape& shape);
+                mkldnn::memory::FORMAT CreateNativeDataFormat(const Shape& shape);
                 const std::string& get_mkldnn_data_type_string(const ngraph::element::Type& type);
                 mkldnn::memory::data_type get_mkldnn_data_type(const ngraph::element::Type& type);
-                const std::string& get_mkldnn_format_string(mkldnn::memory::format fmt);
+                const std::string& get_mkldnn_format_string(mkldnn::memory::FORMAT fmt);
 
                 const mkldnn::memory::desc& get_input_mkldnn_md(const Node* node, size_t index);
                 const mkldnn::memory::desc& get_output_mkldnn_md(const Node* node, size_t index);
@@ -49,7 +116,7 @@ namespace ngraph
                 mkldnn::memory::desc create_default_mkldnn_md(const Node* node,
                                                               size_t index,
                                                               bool is_output,
-                                                              mkldnn::memory::format format);
+                                                              mkldnn::memory::FORMAT format);
                 bool is_perm_sorted(const Strides& a, const AxisVector& perm);
                 bool can_create_mkldnn_md(const ngraph::element::Type type);
                 bool can_create_mkldnn_md(const Shape& dims,
@@ -58,6 +125,11 @@ namespace ngraph
                 mkldnn::memory::desc create_blocked_mkldnn_md(const Shape& dims,
                                                               const Strides& strides,
                                                               const ngraph::element::Type type);
+                mkldnn::memory::desc
+                    create_blocked_mkldnn_md_helper(const mkldnn::memory::dims& dim,
+                                                    const Strides& strides,
+                                                    const mkldnn::memory::dims& stride,
+                                                    const mkldnn::memory::data_type dtype);
                 mkldnn::memory::desc try_get_named_md(const mkldnn_memory_desc_t& md);
                 mkldnn::memory::desc rotate_blocked_md(const mkldnn::memory::desc& in,
                                                        const AxisVector& axis_order);
@@ -66,13 +138,13 @@ namespace ngraph
                 mkldnn::memory::desc expand_blocked_md(const mkldnn::memory::desc& in,
                                                        AxisVector& axis_list);
 
-                bool compare_mkldnn_formats(mkldnn::memory::format lhs, mkldnn::memory::format rhs);
+                bool compare_mkldnn_formats(mkldnn::memory::FORMAT lhs, mkldnn::memory::FORMAT rhs);
                 bool compare_mkldnn_mds(const mkldnn::memory::desc& lhs,
                                         const mkldnn::memory::desc& rhs);
                 bool is_mkldnn_padded_layout(const mkldnn::memory::desc& in,
                                              const AxisVector& axis_list);
-                bool is_mkldnn_filter_format(mkldnn::memory::format fmt);
-                bool is_mkldnn_blocked_data_format(mkldnn::memory::format fmt);
+                bool is_mkldnn_filter_format(mkldnn::memory::FORMAT fmt);
+                bool is_mkldnn_blocked_data_format(mkldnn::memory::FORMAT fmt);
                 bool can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node);
                 bool can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node);
 
@@ -95,8 +167,8 @@ namespace ngraph
                 std::map<element::Type, const mkldnn::memory::data_type>&
                     get_mkldnn_data_type_map();
                 std::map<element::Type, const std::string>& get_mkldnn_data_type_string_map();
-                std::map<mkldnn::memory::format, const std::string>& get_mkldnn_format_string_map();
-                std::set<mkldnn::memory::format>& get_filter_formats();
+                std::map<mkldnn::memory::FORMAT, const std::string>& get_mkldnn_format_string_map();
+                std::set<mkldnn::memory::FORMAT>& get_filter_formats();
                 template <typename T>
                 bool can_use_mkldnn_conv(ngraph::Node* node)
                 {
@@ -152,6 +224,26 @@ namespace ngraph
                     }
                     return true;
                 }
+
+#if MKLDNN_VERSION_MAJOR >= 1
+                std::map<mkldnn::memory::format_kind, const std::string>&
+                    get_mkldnn_format_kind_string_map();
+                const std::string&
+                    get_mkldnn_format_kind_string(mkldnn::memory::format_kind fmt_kind);
+                bool inline compare_mkldnn_dims(mkldnn_dims_t& arr1,
+                                                mkldnn_dims_t& arr2,
+                                                size_t size);
+                bool compare_mkldnn_strides_order(mkldnn_dims_t& stride1,
+                                                  mkldnn_dims_t& stride2,
+                                                  size_t size);
+                bool compare_mkldnn_md_formats(const mkldnn::memory::desc& lhs,
+                                               const mkldnn::memory::desc& rhs);
+                bool mkldnn_md_matches_format_tag(const mkldnn::memory::desc&,
+                                                  const mkldnn::memory::format_tag&);
+                mkldnn::memory::desc create_default_mkldnn_md_with_strides(
+                    const Node* node, size_t index, mkldnn::memory::dims& strides, bool is_output);
+                bool is_mkldnn_desc_blocked_data_format(const mkldnn::memory::desc& desc);
+#endif
             }
         }
     }
