@@ -47,9 +47,9 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/pass/                   @diyessi
 /src/ngraph/pattern/                @aprocter
 /src/ngraph/runtime/                @rkimballn1
-/src/ngraph/runtime/cpu/            @nmostafa
+/src/ngraph/runtime/cpu/            @jbobba
 /src/contrib/mlir/                  @nmostafa @dcaballe
-/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @nmostafa
+/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv @jbobba
 /src/ngraph/runtime/dynamic/        @aprocter
 /src/ngraph/runtime/gpu/            @rkimballn1
 /src/ngraph/runtime/hybrid/         @rkimballn1

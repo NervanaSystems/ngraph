@@ -16,9 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/op.hpp"
 #include "ngraph/op/util/unary_elementwise_arithmetic.hpp"
-#include "ngraph/util.hpp"
 
 namespace ngraph
 {

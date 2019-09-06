@@ -72,6 +72,7 @@
 #include "ngraph/op/fused/group_conv_transpose.hpp"
 #include "ngraph/op/fused/gru_cell.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/fused/matmul.hpp"
 #include "ngraph/op/fused/mvn.hpp"
 #include "ngraph/op/fused/normalize_l2.hpp"
 #include "ngraph/op/fused/rnn_cell.hpp"
@@ -2080,6 +2081,7 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::GRUCell:
         case OP_TYPEID::HardSigmoid:
         case OP_TYPEID::LSTMCell:
+        case OP_TYPEID::MatMul:
         case OP_TYPEID::MVN:
         case OP_TYPEID::NormalizeL2:
         case OP_TYPEID::PRelu:
@@ -2205,6 +2207,7 @@ bool runtime::intelgpu::IntelGPUBackend::is_supported_impl(const Node& node)
     case OP_TYPEID::GroupConvolutionTranspose:
     case OP_TYPEID::GRUCell:
     case OP_TYPEID::LSTMCell:
+    case OP_TYPEID::MatMul:
     case OP_TYPEID::MVN:
     case OP_TYPEID::NormalizeL2:
     case OP_TYPEID::PRelu:

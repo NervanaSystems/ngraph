@@ -18,6 +18,7 @@
 
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 namespace ngraph
 {
@@ -84,7 +85,9 @@ public:
             construct_conv_add();
             construct_conv_add_relu();
             construct_update_slice();
+#if MKLDNN_VERSION_MAJOR < 1
             construct_fuse_lstm_recurrent_state();
+#endif
             if (std::getenv("NGRAPH_DECONV_FUSE") != nullptr)
             {
                 // Note: enable when the deconv perf is better than convbackpropdata
@@ -119,7 +122,9 @@ private:
     void construct_groupconv_batchnorm_global_stats_folding();
     void construct_groupconv_batchnorm_global_stats_folding_relu();
     void construct_update_slice();
+#if MKLDNN_VERSION_MAJOR < 1
     void construct_fuse_lstm_recurrent_state();
+#endif
     void construct_deconvolution_affine_folding();
     void construct_deconvolution_affine_folding_relu();
     void construct_dropout();
