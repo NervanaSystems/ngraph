@@ -98,6 +98,7 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_Reverse(m_op);
     regclass_pyngraph_op_RNNCell(m_op);
     regclass_pyngraph_op_ScaleShift(m_op)
+    regclass_pyngraph_op_ScaleShift(m_op);
     regclass_pyngraph_op_Select(m_op);
     regclass_pyngraph_op_ShuffleChannels(m_op);
     regclass_pyngraph_op_Sign(m_op);

@@ -135,14 +135,6 @@ namespace ngraph
                 /// Helper to dump MLIR module into llvm::dbgs prepended by the message \p msg.
                 void dump_mlir_module(const std::string msg);
 
-                /// Converts nGraph shape-like types \p ng_shape to MLIR shape \p mlir_shape.
-                template <typename T>
-                void get_mlir_shape(T ng_shape, llvm::SmallVectorImpl<int64_t>& mlir_shape);
-
-                /// Converts an ngraph shape to an I64 array attribute
-                template <typename T>
-                mlir::ArrayAttr get_shape_as_attr(T ng_shape);
-
             private:
                 // Sub-graph to be compiled and executed with MLIR.
                 const ngraph::op::CompiledKernel* m_compiled_kernel;

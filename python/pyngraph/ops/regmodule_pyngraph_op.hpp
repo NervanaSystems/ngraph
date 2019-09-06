@@ -49,6 +49,7 @@
 #include "pyngraph/ops/fused/gelu.hpp"
 #include "pyngraph/ops/fused/gemm.hpp"
 #include "pyngraph/ops/fused/grn.hpp"
+#include "pyngraph/ops/fused/group_conv.hpp"
 #include "pyngraph/ops/fused/hard_sigmoid.hpp"
 #include "pyngraph/ops/fused/mvn.hpp"
 #include "pyngraph/ops/fused/prelu.hpp"

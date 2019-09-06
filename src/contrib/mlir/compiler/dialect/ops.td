@@ -278,35 +278,6 @@ def NGGatherOp :
   let verifier = [{ return verifyOp(this); }];
 }
 
-// Convolution
-def NGConvolutionOp :
-    NG_OneResult_Op<"convolution", [NoSideEffect]>,
-    Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, 
-               I64ArrayAttr:$strides,
-               I64ArrayAttr:$padBelow,
-               I64ArrayAttr:$padAbove)>
-{
-  let summary = "Convolution of a tensor of filters over a tensor of images with padding support";
-  let description = [{
-    Convolution operation with padding and stride support. No dilation supported.
-    images        Input image tensor. Shape is [N, C_IN, D1, ... Df]
-    filters       Set of filters to apply. Shape is [C_OUT, C_IN, F1, ... Ff]
-    strides       Window movement strides. Shape is [f]. Attribute.
-    padBelow      The padding-below sizes. Shape is [f]. Attribute.
-    padAbove      The padding-below sizes. Shape is [f]. Attribute.
-   
-    Output is of shape [N, C_OUT, R1, ... Rf]
-  }];
-
-  let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];
-  let verifier = [{ return verifyOp(this); }];
-  let extraClassDeclaration = [{
-    void setStrides(ArrayAttr& arrayAttr)  { this->setAttr("strides", arrayAttr);  }
-    void setPadBelow(ArrayAttr& arrayAttr) { this->setAttr("padBelow", arrayAttr); }
-    void setPadAbove(ArrayAttr& arrayAttr) { this->setAttr("padAbove", arrayAttr); }
-  }];
-}
-
 // Terminator Ops
 def NGReturnOp : NG_Terminator_Op<"return">;
 
