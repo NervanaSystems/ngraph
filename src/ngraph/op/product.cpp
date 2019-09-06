@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/product.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -37,4 +38,9 @@ shared_ptr<Node> op::Product::copy_with_new_args(const NodeVector& new_args) con
 {
     check_new_args_count(this, new_args);
     return make_shared<Product>(new_args.at(0), get_reduction_axes());
+}
+
+shared_ptr<Node> op::Product::get_default_value() const
+{
+    return ngraph::make_constant_from_string("1", get_element_type(), get_shape());
 }

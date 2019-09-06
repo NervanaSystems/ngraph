@@ -14,8 +14,26 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_executable(serialize_onnx serialize_onnx.cpp)
-add_dependencies(serialize_onnx ngraph)
-target_link_libraries(serialize_onnx ngraph)
+# Enable use of the lit tool that we build from MLIR repo.
+set(LLVM_DEFAULT_EXTERNAL_LIT ${MLIR_TOOLS_DIR}/llvm-lit)
 
-install(TARGETS serialize_onnx RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})
+configure_lit_site_cfg(
+    ${CMAKE_CURRENT_SOURCE_DIR}/lit.site.cfg.py.in
+    ${CMAKE_CURRENT_BINARY_DIR}/lit.site.cfg.py
+    MAIN_CONFIG
+    ${CMAKE_CURRENT_SOURCE_DIR}/lit.cfg.py
+    )
+
+#set(NGRAPH_MLIR_TEST_DEPENDS
+#    ngraph-opt
+#    )
+
+add_lit_testsuite(check-mlir-lit "Running the nGraph MLIR regression tests"
+    ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${NGRAPH_MLIR_TEST_DEPENDS}
+    )
+set_target_properties(check-mlir-lit PROPERTIES FOLDER "Tests")
+
+add_lit_testsuites(NGRAPH_MLIR ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${NGRAPH_MLIR_TEST_DEPS}
+    )
