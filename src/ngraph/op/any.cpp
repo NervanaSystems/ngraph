@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/any.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -37,4 +38,9 @@ shared_ptr<Node> op::Any::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Any>(new_args.at(0), new_args.at(1));
+}
+
+shared_ptr<Node> op::Any::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
