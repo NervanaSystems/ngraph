@@ -144,6 +144,11 @@ shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_ceil_mode);
 }
 
+shared_ptr<Node> op::MaxPool::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+}
+
 const string op::MaxPoolBackprop::type_name{"MaxPoolBackprop"};
 
 op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
