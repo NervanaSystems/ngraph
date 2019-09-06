@@ -341,49 +341,18 @@ TEST(serialize, non_zero_node_output)
     EXPECT_EQ(topk_out.get_node()->description(), "TopK");
 }
 
-struct OpSet1SerializationTester
-{
-    OpSet1SerializationTester(std::string op_name)
-        : m_op_name{std::move(op_name)}
-    {
-    }
-
-    template <typename... Args>
-    void test(const std::shared_ptr<op::Op> op_instance, Args&&... args)
-    {
-        auto result = make_shared<op::Result>(op_instance);
-        auto f = make_shared<Function>(ResultVector{result},
-                                       ParameterVector{std::forward<Args>(args)...});
-        string s = serialize(f);
-
-        shared_ptr<Function> g = deserialize(s);
-        auto g_result = g->get_results().at(0);
-        auto g_op = g_result->input(0).get_source_output().get_node_shared_ptr();
-
-        EXPECT_EQ(g_op->description(), m_op_name);
-        EXPECT_EQ(g_op->get_version(), m_expected_op_version);
-    }
-
-    const std::string m_op_name;
-    const size_t m_expected_op_version = 1;
-};
-
 TEST(serialize, opset1_softmax)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
     const auto softmax = make_shared<op::v1::Softmax>(arg, 0);
-    OpSet1SerializationTester tester{"Softmax"};
+    const auto result = make_shared<op::Result>(softmax);
+    const auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
+    string s = serialize(f);
 
-    tester.test(softmax, arg);
-}
+    shared_ptr<Function> g = deserialize(s);
+    const auto g_result = g->get_results().at(0);
+    const auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
 
-TEST(serialize, opset1_reverse)
-{
-    const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    const auto rev_axes = make_shared<op::Parameter>(element::f32, Shape{1});
-    const auto rev_v1 = make_shared<op::v1::Reverse>(data, rev_axes, "index");
-
-    OpSet1SerializationTester tester{"Reverse"};
-
-    tester.test(rev_v1, data, rev_axes);
+    EXPECT_EQ(g_softmax->description(), "Softmax");
+    EXPECT_EQ(g_softmax->get_version(), 1);
 }
