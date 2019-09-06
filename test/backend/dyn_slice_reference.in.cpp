@@ -32,6 +32,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 
 #include "gtest/gtest.h"
 
