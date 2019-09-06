@@ -402,3 +402,156 @@ TEST(type_prop, pad_partial_data_rank_dynamic_padding_static_attribs_rank_incons
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, pad_v1_arg_pad_value_type_mismatch)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto arg_pad_value = make_shared<op::Parameter>(element::f16, Shape{1});
+
+    try
+    {
+        auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too much negative padding not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Argument element types do not match (input arg element type:"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_v1_arg_pad_value_shape_not_compatible)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{1});
+
+    try
+    {
+        auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too much negative padding not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument for padding value is not a scalar (shape:"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_v1_arg_pads_begin_shape_not_1D)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1, 2});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too much negative padding not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Argument for pads_begin is not 1D (shape:"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_v1_arg_pads_end_shape_not_1D)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1, 2});
+    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too much negative padding not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument for pads_end is not 1D (shape:"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_v1_arg_pads_begin_size_not_correct)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too much negative padding not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             std::string("Number of elements of pads_begin must be >= 0 and <= arg "
+                                         "rank (pads_begin_shape[0]:"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, pad_v1_arg_pads_end_size_not_correct)
+{
+    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
+
+    try
+    {
+        auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Too much negative padding not detected";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string(
+                "Number of elements of pads_end must be >= 0 and <= arg rank (pads_end_shape[0]:"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
