@@ -685,32 +685,48 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                 input_shape_idx++;
             }
             else { // calculating dimension (begin, end, begin_mask, end_mask, stride)
-
-                // apply begin_mask if it set
                 int64_t lb = begin[axis];
-                if (begin_mask.count(axis) == 0)
-                    lb = 0;
-
-                // apply end_mask if it set
                 int64_t ub = end[axis];
-                if (end_mask.count(axis) == 0)
-                    ub = int64_t(input_shape[input_shape_idx]);
-
+//5::-2 lb = 5 ub = 0
                 // convert negative indexes to positive
                 if (lb < 0)
-                    lb = int64_t(input_shape[input_shape_idx]) + lb;
+                    lb = std::max(int64_t(input_shape[input_shape_idx]) + lb, 0l);
                 if (ub < 0)
-                    ub = int64_t(input_shape[input_shape_idx]) + ub;
+                    ub = std::max(int64_t(input_shape[input_shape_idx]) + ub, 0l);
 
-                // calculate real dimension using stride and positive indexes
-                int64_t stride = std::abs(strides[axis]);
-                int64_t range;
+                lb = std::min(int64_t(input_shape[input_shape_idx]), lb);
+                ub = std::min(int64_t(input_shape[input_shape_idx]), ub);
 
+                // convert negative stride to positive
+                int64_t stride = strides[axis];
                 NODE_VALIDATION_CHECK(node, stride != 0, "Stride must be non-zero");
-                if (ub <= lb)
-                    range = 0;
-                else
-                    range = (ub - lb - 1) / stride + 1;
+                int64_t range = 0;
+                if(stride < 0){
+                    // apply masks
+                    if (begin_mask.count(axis))
+                        lb = int64_t(input_shape[input_shape_idx]) - 1;
+                    if (end_mask.count(axis))
+                        ub = -1;
+
+                    lb = std::min(lb, int64_t(input_shape[input_shape_idx]) - 1);
+                    lb -= 1;
+                    std::cout << ub << " " << lb << std::endl;
+                    if (ub <= lb)
+                        range = (ub - lb) / stride + 1;
+                    //stride = std::abs(stride);
+                }
+                else {
+// 0:5:2
+                    // apply masks
+                    if (begin_mask.count(axis))
+                        lb = 0;
+                    if (end_mask.count(axis))
+                        ub = int64_t(input_shape[input_shape_idx]); // include right boundary
+                    lb += 1;// we always get 1st element, so we need decrease range
+                    if (ub >= lb)
+                        range = (ub - lb) / stride + 1;
+                }
+// 1:5:2
 
                 dim.emplace_back(range);
                 input_shape_idx++;
