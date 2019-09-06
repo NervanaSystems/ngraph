@@ -21,6 +21,7 @@
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/pad.hpp"
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_view_wrapper.hpp"
 
@@ -126,7 +127,6 @@ namespace ngraph
         class Reverse;
         class ReverseSequence;
         class AvgPool;
-        class Pad;
         class AvgPoolBackprop;
         class MaxPoolBackprop;
         class MaxPoolWithIndicesBackprop;
