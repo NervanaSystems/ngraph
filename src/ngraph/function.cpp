@@ -306,3 +306,15 @@ bool Function::is_dynamic() const
     }
     return false;
 }
+
+void Function::replace_parameter(size_t parameter_index, const shared_ptr<op::Parameter>& parameter)
+{
+    NGRAPH_CHECK(parameter_index < m_parameters.size(),
+                 "replace_parameter(): Tried to replace parameter at index ",
+                 parameter_index,
+                 " but the function only has ",
+                 m_parameters.size(),
+                 " parameters.");
+    replace_node(m_parameters[parameter_index], parameter);
+    m_parameters[parameter_index] = parameter;
+}
