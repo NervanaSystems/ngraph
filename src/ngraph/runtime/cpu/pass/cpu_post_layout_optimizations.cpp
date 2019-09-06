@@ -224,7 +224,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         }
 
         auto reshape_m_md = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(reshape_m.get(), 0);
-        if (reshape_m_md.data.format != mkldnn_blocked ||
+        if (reshape_m_md.data.FORMAT_KIND != mkldnn_blocked ||
             !runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(
                 reshape_m_md, ngraph::get_default_order(reshape_m->get_shape())))
         {
@@ -333,38 +333,38 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
         throw ngraph_error("Could not run mkdnn primitive " + e.message);
     }
 #else
-    bool input_format_is_nchw = mkldnn_utils::mkldnn_md_matches_format_tag(
+    bool input_format_is_nchw = runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
         input_desc.data, mkldnn::memory::format_tag::nchw);
-    if (input_format_is_nchw && mkldnn_utils::mkldnn_md_matches_format_tag(
+    if (input_format_is_nchw && runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
                                     result_desc.data, mkldnn::memory::format_tag::goihw))
     {
         // becomes a copy
         input_desc = result_desc;
     }
-    else if ((input_format_is_nchw || mkldnn_utils::mkldnn_md_matches_format_tag(
+    else if ((input_format_is_nchw || runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
                                           input_desc.data, mkldnn::memory::format_tag::nhwc)) &&
-             (cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
+             (runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
                   result_desc.data, mkldnn::memory::format_tag::OIhw4i16o4i) &&
               // check if compensation is conv_s8s8(1U)
               result_desc.data.extra.flags & 0x1U))
     {
-        auto arg0_shape = output.get_shape();
-        input_desc =
-            mkldnn::memory::desc(mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
-                                 mkldnn_utils::get_mkldnn_data_type(output.get_element_type()),
-                                 mkldnn::memory::format_tag::oihw);
+        auto arg0_shape = input->get_shape();
+        input_desc = mkldnn::memory::desc(
+            mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
+            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_element_type()),
+            mkldnn::memory::format_tag::oihw);
     }
     else if (input_format_is_nchw && input_desc.data.ndims == 4 && result_desc.data.ndims == 5 &&
-             node->get_users().size() == 1)
+             convertlayout->get_users().size() == 1)
     {
         Shape weights_shape_groups;
-        if (auto gconv =
-                std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(node->get_users()[0]))
+        if (auto gconv = std::dynamic_pointer_cast<ngraph::op::GroupConvolution>(
+                convertlayout->get_users()[0]))
         {
             weights_shape_groups = gconv->get_weights_dimensions();
         }
         else if (auto gconvb = std::dynamic_pointer_cast<ngraph::op::GroupConvolutionBias>(
-                     node->get_users()[0]))
+                     convertlayout->get_users()[0]))
         {
             weights_shape_groups = gconvb->get_weights_dimensions();
         }
@@ -384,11 +384,11 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
                       const_cast<void*>(input->get_data_ptr())};
     mkldnn::memory out{result_desc, runtime::cpu::executor::global_cpu_engine, result_vec.data()};
     mkldnn::reorder reorder{in, out};
-    mkldnn::stream s(mkldnn::stream::kind::eager);
 
-    auto exec_args = {{MKLDNN_ARG_SRC, in}, {MKLDNN_ARG_DST, out}};
+    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, in},
+                                                         {MKLDNN_ARG_DST, out}};
 
-    mkldnn::stream s(ngraph::cpu::executor::global_cpu_engine);
+    mkldnn::stream s(runtime::cpu::executor::global_cpu_engine);
     try
     {
         reorder.execute(s, exec_args);

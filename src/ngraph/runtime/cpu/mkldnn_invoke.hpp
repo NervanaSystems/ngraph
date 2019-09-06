@@ -28,10 +28,61 @@ namespace ngraph
 
             namespace mkldnn_utils
             {
-                extern "C" void
-                    set_memory_ptr(CPURuntimeContext* ctx, size_t primitive_index, void* ptr);
+                enum class OpType
+                {
+                    ADD,
+                    AVGPOOL,
+                    AVGPOOLBACKPROP,
+                    BATCHNORM3ARGS,
+                    BATCHNORM5ARGS,
+                    BATCHNORMBACKPROP,
+                    BOUNDEDRELU,
+                    CONCAT,
+                    CONVERTLAYOUT,
+                    CONVOLUTION,
+                    CONVOLUTIONRELU,
+                    CONVOLUTIONADD,
+                    CONVOLUTIONBIAS,
+                    CONVOLUTIONBIASADD,
+                    CONVOLUTIONBACKPROPDATA,
+                    CONVOLUTIONBACKPROPWEIGHTS,
+                    CONVOLUTIONBACKPROPWEIGHTSBIAS,
+                    GROUPCONVOLUTION,
+                    GROUPCONVOLUTIONBIAS,
+                    DECONVOLUTIONBIAS,
+                    LEAKYRELU,
+                    LRN,
+                    LSTM,
+                    MAXPOOL,
+                    MAXPOOLBACKPROPFORWARD,
+                    MAXPOOLBACKPROPBACKWARD,
+                    MAXPOOLWITHINDICES,
+                    MAXPOOLWITHINDICESBACKPROP,
+                    QUANTIZE,
+                    DEQUANTIZE,
+                    QUANTIZEDAVGPOOL,
+                    QUANTIZEDMAXPOOL,
+                    QUANTIZEDCONCAT,
+                    QUANTIZEDDOTBIAS,
+                    QUANTIZEDMATMUL,
+                    QUANTIZEDCONVOLUTION,
+                    QUANTIZEDCONVOLUTIONBIAS,
+                    QUANTIZEDCONVOLUTIONBIASADD,
+                    QUANTIZEDCONVOLUTIONBIASSIGNEDADD,
+                    QUANTIZEDCONVOLUTIONRELU,
+                    RELU,
+                    RELUBACKPROP,
+                    RNN,
+                    SIGMOID,
+                    SIGMOIDBACKPROP,
+                    SLICE,
+                    SOFTMAX
+                };
+                extern "C" void set_memory_ptr(CPURuntimeContext* ctx, size_t index, void* ptr);
                 extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
-                                                        size_t primitive_index);
+                                                        size_t primitive_index,
+                                                        std::vector<size_t>& deps,
+                                                        OpType type);
             }
         }
     }
