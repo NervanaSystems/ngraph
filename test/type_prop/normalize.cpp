@@ -37,9 +37,7 @@ TEST(type_prop, normalize_axes_input_not_constant)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            std::string("doesn't support 'axes' input of other type than a Constant."));
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Input axes must be Constant type"));
     }
     catch (...)
     {

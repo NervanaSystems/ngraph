@@ -42,22 +42,20 @@ op::NormalizeL2::NormalizeL2(const Output<Node>& data,
 
 void op::NormalizeL2::pre_validate_and_infer_types()
 {
-    auto axes_node = input(1).get_source_output().get_node_shared_ptr();
+    auto axes_node = input_value(1).get_node_shared_ptr();
     const auto& input_pshape = get_input_partial_shape(0);
     const auto& axes_pshape = get_input_partial_shape(1);
     const auto& input_rank = input_pshape.rank();
     const auto& axes_rank = axes_pshape.rank();
 
-    NODE_VALIDATION_CHECK(this,
-                          axes_node->is_constant(),
-                          "doesn't support 'axes' input of other type than a Constant.");
+    NODE_VALIDATION_CHECK(this, axes_node->is_constant(), "Input axes must be Constant type");
 
     if (axes_rank.is_static())
     {
         NODE_VALIDATION_CHECK(this,
-                              static_cast<size_t>(axes_pshape.rank()) == 1,
-                              "Input axes must have rank equals 1 (axes shape: ",
-                              axes_pshape,
+                              static_cast<size_t>(axes_rank) == 1,
+                              "Input axes must have rank equals 1 (axes rank: ",
+                              axes_rank,
                               ").");
 
         if (input_rank.is_static())
