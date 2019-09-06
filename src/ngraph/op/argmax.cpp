@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/argmax.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;

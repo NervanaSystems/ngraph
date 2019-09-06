@@ -204,8 +204,6 @@ add_library(onnx_import STATIC
         utils/common.hpp
         utils/convpool.cpp
         utils/convpool.hpp
-        utils/matmul_factory.cpp
-        utils/matmul_factory.hpp
         utils/pooling_factory.cpp
         utils/pooling_factory.hpp
         utils/reduction.cpp

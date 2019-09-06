@@ -101,6 +101,8 @@ namespace ngraph
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto concat_pd =
                         mkldnn_emitter->get_concat_desc<ngraph::op::Concat>(node, nargs);
+                    QUERY_SCRATCHPAD(concat, concat_pd);
+
                     std::vector<mkldnn::memory::desc> inputs_data_desc;
                     for (size_t i = 0; i < nargs; i++)
                     {
@@ -121,7 +123,9 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_concat(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_concat(ctx->mkldnn_memories,
+                                                         ctx->mkldnn_primitives,
+                                                         ctx->mkldnn_scratchpad_mds,
                                                          concat_pd,
                                                          inputs_data_desc,
                                                          deps,
@@ -134,7 +138,9 @@ namespace ngraph
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[nargs], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, concat_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, concat_index, deps, cpu::mkldnn_utils::OpType::CONCAT);
                     };
 
                     functors.emplace_back(functor);

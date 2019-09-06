@@ -27,6 +27,7 @@ namespace ngraph
             namespace pass
             {
                 class CPUPostLayoutOptimizations;
+                class CPUConvertLayoutConstantFolding;
             }
         }
     }
@@ -46,4 +47,12 @@ public:
     void construct_weight_fusion();
     void construct_slice_convertLayout_fusion();
     void construct_reshape_convertLayout_fusion();
+};
+
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding
+    : public ngraph::pass::FunctionPass
+{
+public:
+    CPUConvertLayoutConstantFolding() {}
+    virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
 };
