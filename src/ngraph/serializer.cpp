@@ -131,15 +131,11 @@
 #include "ngraph/op/scatter_nd_add.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/send.hpp"
-#include "ngraph/op/sequence_push_front.hpp"
-#include "ngraph/op/sequence_repeat.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
 #include "ngraph/op/slice.hpp"
-#include "ngraph/op/slice_input.hpp"
-#include "ngraph/op/slice_output.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/stop_gradient.hpp"
@@ -1800,16 +1796,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Send>(args[0], dest_id);
             break;
         }
-        case OP_TYPEID::SequencePushFront:
-        {
-            node = make_shared<op::SequencePushFront>(args[0], args[1]);
-            break;
-        }
-        case OP_TYPEID::SequenceRepeat:
-        {
-            node = make_shared<op::SequenceRepeat>(args[0]);
-            break;
-        }
         case OP_TYPEID::ShapeOf:
         {
             node = make_shared<op::ShapeOf>(args[0]);
@@ -1855,27 +1841,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::Slice>(args[0], lower_bounds, upper_bounds, strides);
             break;
         }
-        case OP_TYPEID::SliceInput:
-        {
-            auto axis = node_js.at("axis").get<ptrdiff_t>();
-            auto start = node_js.at("start").get<ptrdiff_t>();
-            auto stride = node_js.at("stride").get<ptrdiff_t>();
-            auto part_size = node_js.at("part_size").get<ptrdiff_t>();
-            auto end = node_js.at("end").get<ptrdiff_t>();
-            node = make_shared<op::SliceInput>(args[0], start, stride, part_size, end, axis);
-            break;
-        }
-        case OP_TYPEID::SliceOutput:
-        {
-            auto axis = node_js.at("axis").get<ptrdiff_t>();
-            auto start = node_js.at("start").get<ptrdiff_t>();
-            auto stride = node_js.at("stride").get<ptrdiff_t>();
-            auto part_size = node_js.at("part_size").get<ptrdiff_t>();
-            auto end = node_js.at("end").get<ptrdiff_t>();
-            node = make_shared<op::SliceOutput>(args[0], start, stride, part_size, end, axis);
-            break;
-        }
-
         case OP_TYPEID::Softmax:
         {
             if (op_version == 0)
@@ -1948,8 +1913,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             OutputVector body_outputs = deserialize_output_vector(node_js["body_outputs"]);
             OutputVector tensor_iterator_outputs =
                 deserialize_output_vector(node_js["tensor_iterator_outputs"]);
-            node = make_shared<op::TensorIterator>(
-                tensor_input_args, body_parameters, body_outputs, tensor_iterator_outputs);
+            node = make_shared<op::TensorIterator>();
             break;
         }
 
@@ -2893,10 +2857,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["dest_id"] = tmp->get_dest_id();
         break;
     }
-    case OP_TYPEID::SequencePushFront: { break;
-    }
-    case OP_TYPEID::SequenceRepeat: { break;
-    }
     case OP_TYPEID::ShapeOf: { break;
     }
     case OP_TYPEID::ShuffleChannels:
@@ -2922,26 +2882,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["lower_bounds"] = tmp->get_lower_bounds();
         node["upper_bounds"] = tmp->get_upper_bounds();
         node["strides"] = tmp->get_strides();
-        break;
-    }
-    case OP_TYPEID::SliceInput:
-    {
-        auto tmp = static_cast<const op::SliceInput*>(&n);
-        node["axis"] = tmp->get_axis();
-        node["start"] = tmp->get_start();
-        node["stride"] = tmp->get_stride();
-        node["part_size"] = tmp->get_part_size();
-        node["end"] = tmp->get_end();
-        break;
-    }
-    case OP_TYPEID::SliceOutput:
-    {
-        auto tmp = static_cast<const op::SliceOutput*>(&n);
-        node["axis"] = tmp->get_axis();
-        node["start"] = tmp->get_start();
-        node["stride"] = tmp->get_stride();
-        node["part_size"] = tmp->get_part_size();
-        node["end"] = tmp->get_end();
         break;
     }
     case OP_TYPEID::SpaceToDepth:
@@ -3002,10 +2942,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::TensorIterator:
     {
         auto tmp = dynamic_cast<const op::TensorIterator*>(&n);
-        node["body_parameters"] = serialize_parameter_vector(tmp->get_body_parameters());
-        node["body_outputs"] = serialize_output_vector(tmp->get_body_outputs());
-        node["tensor_iterator_outputs"] =
-            serialize_output_vector(tmp->get_tensor_iterator_outputs());
         break;
     }
     case OP_TYPEID::Tile: { break;

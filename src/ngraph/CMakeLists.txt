@@ -277,10 +277,6 @@ set (SRC
     op/select.hpp
     op/send.cpp
     op/send.hpp
-    op/sequence_push_front.cpp
-    op/sequence_push_front.hpp
-    op/sequence_repeat.cpp
-    op/sequence_repeat.hpp
     op/sigmoid.cpp
     op/sigmoid.hpp
     op/sign.cpp
@@ -291,10 +287,6 @@ set (SRC
     op/sinh.hpp
     op/slice.cpp
     op/slice.hpp
-    op/slice_input.cpp
-    op/slice_input.hpp
-    op/slice_output.cpp
-    op/slice_output.hpp
     op/softmax.cpp
     op/softmax.hpp
     op/sqrt.cpp

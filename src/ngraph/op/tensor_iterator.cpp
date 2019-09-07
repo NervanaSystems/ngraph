@@ -22,6 +22,168 @@ using namespace ngraph;
 
 const string op::TensorIterator::type_name{"TensorIterator"};
 
+op::TensorIterator::InputDescription::InputDescription(
+    uint64_t input_index, const std::shared_ptr<Parameter>& body_parameter)
+    : m_input_index(input_index)
+    , m_body_parameter(body_parameter)
+{
+}
+
+const op::TensorIterator::SliceInputDescription*
+    op::TensorIterator::InputDescription::as_slice() const
+{
+    return nullptr;
+}
+const op::TensorIterator::BodyConnectionInputDescription*
+    op::TensorIterator::InputDescription::as_body_connection() const
+{
+    return nullptr;
+}
+
+op::TensorIterator::SliceInputDescription::SliceInputDescription(
+    uint64_t input_index,
+    const std::shared_ptr<Parameter>& body_parameter,
+    int64_t start,
+    int64_t stride,
+    uint64_t part_size,
+    int64_t end,
+    int64_t axis)
+    : InputDescription(input_index, body_parameter)
+    , m_start(start)
+    , m_stride(stride)
+    , m_part_size(part_size)
+    , m_end(end)
+    , m_axis(axis)
+{
+}
+
+const op::TensorIterator::SliceInputDescription*
+    op::TensorIterator::SliceInputDescription::as_slice() const
+{
+    return this;
+}
+
+op::TensorIterator::BodyConnectionInputDescription::BodyConnectionInputDescription(
+    uint64_t input_index,
+    const std::shared_ptr<Parameter>& body_parameter,
+    const Output<Node>& body_value)
+    : InputDescription(input_index, body_parameter)
+    , m_body_value(body_value)
+{
+}
+
+const op::TensorIterator::BodyConnectionInputDescription*
+    op::TensorIterator::BodyConnectionInputDescription::as_body_connection() const
+{
+    return this;
+}
+
+op::TensorIterator::OutputDescription::OutputDescription(const Output<Node>& body_value,
+                                                         uint64_t output_index)
+    : m_body_value(body_value)
+    , m_output_index(output_index)
+{
+}
+
+const op::TensorIterator::ConcatOutputDescription*
+    op::TensorIterator::OutputDescription::as_concat_output_description() const
+{
+    return nullptr;
+}
+const op::TensorIterator::BodyOutputDescription*
+    op::TensorIterator::OutputDescription::as_body_output_description() const
+{
+    return nullptr;
+}
+
+op::TensorIterator::ConcatOutputDescription::ConcatOutputDescription(const Output<Node>& body_value,
+                                                                     uint64_t output_index,
+                                                                     int64_t start,
+                                                                     int64_t stride,
+                                                                     uint64_t part_size,
+                                                                     int64_t end,
+                                                                     int64_t axis)
+    : OutputDescription(body_value, output_index)
+    , m_start(start)
+    , m_stride(stride)
+    , m_part_size(part_size)
+    , m_end(end)
+    , m_axis(axis)
+{
+}
+
+const op::TensorIterator::ConcatOutputDescription*
+    op::TensorIterator::ConcatOutputDescription::as_concat_output_description() const
+{
+    return this;
+}
+
+op::TensorIterator::BodyOutputDescription::BodyOutputDescription(const Output<Node>& body_value,
+                                                                 uint64_t output_index,
+                                                                 int64_t iteration)
+    : OutputDescription(body_value, output_index)
+    , m_iteration(iteration)
+{
+}
+
+const op::TensorIterator::BodyOutputDescription*
+    op::TensorIterator::BodyOutputDescription::as_body_output_description() const
+{
+    return this;
+}
+
+void op::TensorIterator::set_sliced_input(const std::shared_ptr<op::Parameter>& body_parameter,
+                                          const Output<Node>& value,
+                                          int64_t start,
+                                          int64_t stride,
+                                          int64_t part_size,
+                                          int64_t end,
+                                          int64_t axis)
+{
+    auto input_index = get_input_size();
+    set_argument(input_index, value);
+    m_input_descriptions.push_back(make_shared<SliceInputDescription>(
+        input_index, body_parameter, start, stride, part_size, end, axis));
+}
+
+void op::TensorIterator::set_initialized_input(const std::shared_ptr<Parameter>& body_parameter,
+                                               const Output<Node>& initial_value,
+                                               const Output<Node>& successive_value)
+{
+    auto input_index = get_input_size();
+    set_argument(input_index, initial_value);
+    m_input_descriptions.push_back(
+        make_shared<BodyConnectionInputDescription>(input_index, body_parameter, successive_value));
+}
+
+Output<Node> op::TensorIterator::get_iter_value(const Output<Node>& body_value, int64_t iteration)
+{
+    auto output_index = get_output_size();
+    m_output_descriptions.push_back(
+        make_shared<BodyOutputDescription>(body_value, output_index, iteration));
+    return Output<Node>(shared_from_this(), output_index);
+}
+
+Output<Node> op::TensorIterator::get_concatenated_slices(const Output<Node>& body_value,
+                                                         int64_t start,
+                                                         int64_t stride,
+                                                         int64_t part_size,
+                                                         int64_t end,
+                                                         int64_t axis)
+{
+    auto output_index = get_output_size();
+    m_output_descriptions.push_back(make_shared<ConcatOutputDescription>(
+        body_value, output_index, start, stride, part_size, end, axis));
+    return Output<Node>(shared_from_this(), output_index);
+}
+
+NodeVector op::TensorIterator::decompose_op() const
+{
+    // Stub
+    return NodeVector{};
+}
+
+#if 0
 void op::TensorIterator::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
@@ -120,9 +282,10 @@ void op::TensorIterator::validate_and_infer_types()
         }
     }
 }
-
+#endif
 std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
 {
     // This would be used for cloning/splicing, so the new args are replacements for the
     // args that get set up during body/iteration specification.
+    return nullptr;
 }

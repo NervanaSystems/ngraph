@@ -16,56 +16,160 @@
 
 #pragma once
 
-#include "ngraph/node.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        struct InputSliceDescription
-        {
-            Output<Node> m_value;
-            std::ptrdiff_t m_start;
-            std::ptrdiff_t m_stride;
-            std::ptrdiff_t m_part_size;
-            std::ptrdiff_t m_end;
-            std::ptrdiff_t m_axis;
-        };
-
-        struct BodyConnection
-        {
-            Output<Node> m_initial_value;
-            Output<Node> m_body_value;
-        };
-
-        struct OutputConcatDescription
-        {
-            Output<Node> m_body_value;
-            std::ptrdiff_t m_start;
-            std::ptrdiff_t m_stride;
-            std::ptrdiff_t m_part_size;
-            std::ptrdiff_t m_end;
-            std::ptrdiff_t m_axis;
-        };
-
-        struct OutputSliceDescription
-        {
-            Output<Node> m_body_value;
-            int64_t m_index;
-        };
-
-        /// \brief  Iterate a body over tensors, accumulating into tensors
+        /// \brief  Iterate a body over tensors, accumulating into tensors.
         class TensorIterator : public util::FusedOp
         {
         public:
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-        public:
+            // Forward declarations
+            class SliceInputDescription;
+            class BodyConnectionInputDescription;
+
+            /// \brief Describes a connection between a TensorIterator input and the body.
+            class InputDescription
+            {
+            protected:
+                /// \param input_index Position of the TensorIterator input
+                /// \param body_parameter Body parameter to receive input
+                InputDescription(uint64_t input_index,
+                                 const std::shared_ptr<Parameter>& body_parameter);
+
+            public:
+                virtual ~InputDescription() {}
+                /// \returns If a slice description, return it, else nullptr
+                virtual const SliceInputDescription* as_slice() const;
+                /// \returns If a body connection, return it, else nullptr
+                virtual const BodyConnectionInputDescription* as_body_connection() const;
+
+                uint64_t m_input_index;
+                std::shared_ptr<Parameter> m_body_parameter;
+            };
+
+            /// \brief Describes a body input formed from slices of an input to TensorIterator.
+            class SliceInputDescription : public InputDescription
+            {
+            public:
+                /// \param input_index Position of the TensorIterator input
+                /// \param body_parameter Body parameter to receive input
+                /// \param start First index for slices
+                /// \param stride Step amount for slices
+                /// \param part_size Width of slices
+                /// \param end Last index for slices
+                /// \param axis Axis being sliced
+                SliceInputDescription(uint64_t input_index,
+                                      const std::shared_ptr<Parameter>& body_parameter,
+                                      int64_t start,
+                                      int64_t stride,
+                                      uint64_t part_size,
+                                      int64_t end,
+                                      int64_t axis);
+
+                const SliceInputDescription* as_slice() const override;
+                int64_t m_start;
+                int64_t m_stride;
+                uint64_t m_part_size;
+                int64_t m_end;
+                int64_t m_axis;
+            };
+
+            /// \brief Describes a body input initialized from a TensorIterator input on the first
+            /// iteration, and then a body output thereafter.
+            class BodyConnectionInputDescription : public InputDescription
+            {
+            public:
+                /// \param input_index Position of the TensorIterator input supplying a value to
+                /// body_parameter
+                /// for the initial iteration.
+                /// \param body_parameter Body parameter to receive input.
+                /// \param body_value Body value to supply body_parameter for successive iterations.
+                BodyConnectionInputDescription(uint64_t input_index,
+                                               const std::shared_ptr<Parameter>& body_parameter,
+                                               const Output<Node>& body_value);
+                const BodyConnectionInputDescription* as_body_connection() const override;
+
+            protected:
+                Output<Node> m_body_value;
+            };
+
+            // Forward declarations
+            class ConcatOutputDescription;
+            class BodyOutputDescription;
+
+            /// \brief Describes how a TensorIterator output is produced from the body.
+            class OutputDescription
+            {
+            protected:
+                /// \param body_value A body value that produces the output
+                /// \param output_index The TensorIterator output index
+                OutputDescription(const Output<Node>& body_value, uint64_t output_index);
+
+            public:
+                virtual ~OutputDescription() {}
+                /// \returns If a concat, the concat, else nullptr
+                virtual const ConcatOutputDescription* as_concat_output_description() const;
+                /// \returns If a body output, the body output, else nullptr
+                virtual const BodyOutputDescription* as_body_output_description() const;
+
+                Output<Node> m_body_value;
+                uint64_t m_output_index;
+            };
+
+            /// \brief Produces an output by concatenating an output from each iteration
+            class ConcatOutputDescription : public OutputDescription
+            {
+            public:
+                /// \param body_value A body value that produces the output
+                /// \param output_index The TensorIterator output index
+                /// \param start First index for slices
+                /// \param stride Step amount for slices
+                /// \param part_size Width of slices
+                /// \param end Last index for slices
+                /// \param axis Axis being sliced
+                ConcatOutputDescription(const Output<Node>& body_value,
+                                        uint64_t output_index,
+                                        int64_t start,
+                                        int64_t stride,
+                                        uint64_t part_size,
+                                        int64_t end,
+                                        int64_t axis);
+
+                const ConcatOutputDescription* as_concat_output_description() const override;
+
+                int64_t m_start;
+                int64_t m_stride;
+                uint64_t m_part_size;
+                int64_t m_end;
+                int64_t m_axis;
+            };
+
+            /// \brief Produces an output from a specific iteration
+            class BodyOutputDescription : public OutputDescription
+            {
+            public:
+                /// \param body_value A body value that produces the output
+                /// \param output_index The TensorIterator output index
+                /// \param iteration which iteration (typically -1, final) will supply the value
+                BodyOutputDescription(const Output<Node>& body_value,
+                                      uint64_t output_index,
+                                      int64_t iteration);
+                const BodyOutputDescription* as_body_output_description() const override;
+
+                int64_t m_iteration;
+            };
+
             /// \brief Indicate that a body parameter comes from slices of a value
             /// \param parameter The parameter to receive the slices
-            /// \param value The value to be sliced
+            /// \param value The value to be sliced. This will be added as an input to
+            /// TensorIterator.
             /// \param start First index on axis of the slicing
             /// \param stride Stepping of the slice
             /// \param part_size Size of the slice on axis
@@ -80,15 +184,17 @@ namespace ngraph
                                   int64_t axis);
             /// \brief Indicates that a body parameter has an initial value in the first iteration
             /// and computed value thereafter
-            /// \param initial_value Value for the parameter in first iteration
+            /// \param initial_value Value for the parameter in first iteration. This will be added
+            /// as an input to TensorIterator.
             /// \param successive_value Value for the parameter in successive iterations. The
             /// value is what is active in the most recent completed iteration.
             void set_initialized_input(const std::shared_ptr<Parameter>& body_parameter,
                                        const Output<Node>& initial_value,
                                        const Output<Node>& successive_value);
             /// \brief Gets a value for a particular iteration point
-            /// \param The value
-            /// \param iteration. Negative values are from the last iteration.
+            /// \param body_value The value
+            /// \param iteration The iteration that supplies the value. Negative values are from the
+            /// last iteration.
             Output<Node> get_iter_value(const Output<Node>& body_value, int64_t iteration);
             /// \brief Concatenates slices from all iterations
             /// \param value The value supplying slice values from each iteration.
@@ -104,7 +210,12 @@ namespace ngraph
                                                  int64_t end,
                                                  int64_t axis);
 
+            std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+            NodeVector decompose_op() const override;
+
         private:
+            std::vector<std::shared_ptr<InputDescription>> m_input_descriptions;
+            std::vector<std::shared_ptr<OutputDescription>> m_output_descriptions;
         };
     }
 }
