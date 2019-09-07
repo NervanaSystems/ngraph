@@ -77,7 +77,7 @@ ngraph.ops
       replace_slice
       reshape
       reverse
-      RNNCell
+      rnn_cell
       scale_shift
       select
       shuffle_channels
