@@ -970,22 +970,28 @@ def broadcast_to(node, new_shape, axis=None, name=None):
     return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
 
 
+@nameable_op
 def fake_quantize(data, input_low, input_high, output_low, output_high, levels, name=None):
     # type: (Node, Node, Node, Node, Node, int, str) -> Node
     r"""Perform an element-wise linear quantization on input data.
 
     Input floating point values are quantized into a discrete set of floating point values.
+
     .. code-block:: python
+
         if x <= input_low:
             output = output_low
         if x > input_high:
             output = output_high
         else:
             output = fake_quantize(output)
+
     Fake quantize uses the following logic:
+
     .. math:: output =
             \dfrac{round( \dfrac{data - input\_low}{(input\_high - input\_low)\cdot (levels-1)})}
             {(levels-1)\cdot (output\_high - output\_low)} + output\_low
+
     :param data:         The node with data tensor.
     :param input_low:    The node with the minimum for input values.
     :param input_high:   The node with the maximum for input values.
