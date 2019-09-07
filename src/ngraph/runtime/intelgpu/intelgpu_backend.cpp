@@ -2101,7 +2101,6 @@ shared_ptr<runtime::Executable>
         case OP_TYPEID::SquaredDifference:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::StopGradient:
-        case OP_TYPEID::TensorIterator:
         case OP_TYPEID::Tile:
         case OP_TYPEID::Transpose:
         case OP_TYPEID::Unsqueeze:

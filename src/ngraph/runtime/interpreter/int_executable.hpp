@@ -1722,11 +1722,6 @@ private:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::TensorIterator:
-        {
-            throw unsupported_op("Unsupported op '" + node.description() +
-                                 "' in Interpreter back end.");
-        }
         case OP_TYPEID::TopK:
         {
             const op::TopK* topk = static_cast<const op::TopK*>(&node);
