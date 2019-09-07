@@ -156,6 +156,11 @@ using namespace std;
 using json = nlohmann::json;
 using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
 
+static json write_element_type(const ngraph::element::Type& n);
+static element::Type read_element_type(json j);
+static json write_partial_shape(const PartialShape& s);
+static PartialShape read_partial_shape(json j);
+
 static bool s_serialize_output_shapes_enabled =
     (std::getenv("NGRAPH_SERIALIZER_OUTPUT_SHAPES") != nullptr);
 
@@ -209,7 +214,7 @@ T get_or_default(json j, const std::string& key, const T& default_value)
     return has_key(j, key) ? j.at(key).get<T>() : default_value;
 }
 
-class JSONSerializer
+class JSONSerializer : public AttributeWalker
 {
 public:
     void set_indent(size_t indent) { m_indent = indent; }
@@ -231,6 +236,20 @@ public:
     json serialize_node(const Node& node);
     json serialize_axis_set(const AxisSet& axis_set);
 
+    void on(const std::string& name, std::string* value) override { m_json[name] = *value; }
+    void on(const std::string& name, char** value) override { m_json[name] = *value; }
+    void on(const std::string& name, element::Type* value) override
+    {
+        m_json[name] = write_element_type(*value);
+    }
+    void on(const std::string& name, PartialShape* value) override
+    {
+        m_json[name] = write_partial_shape(*value);
+    }
+    void on(const std::string& name, Shape* value) override { m_json[name] = *value; }
+    void on(const std::string& name, bool* value) override { m_json[name] = *value; }
+    void on(const std::string& name, int64_t* value) override { m_json[name] = *value; }
+    void on(const std::string& name, uint64_t* value) override { m_json[name] = *value; }
 protected:
     size_t m_indent{0};
     bool m_serialize_output_shapes{false};
@@ -238,9 +257,10 @@ protected:
     json m_json_nodes;
     set<const Node*> m_nodes_serialized;
     queue<const Node*> m_nodes_to_serialize;
+    json m_json;
 };
 
-class JSONDeserializer
+class JSONDeserializer : public AttributeWalker
 {
 public:
     void set_const_data_callback(function<const_data_callback_t> const_data_callback)
@@ -256,10 +276,28 @@ public:
     shared_ptr<Node> deserialize_node(json j);
     AxisSet deserialize_axis_set(json j);
 
+    void on(const std::string& name, std::string* value) override { *value = m_json[name]; }
+    void on(const std::string& name, char** value) override
+    {
+        //*value = static_cast<char*>(m_json[name]);
+    }
+    void on(const std::string& name, element::Type* value) override
+    {
+        *value = read_element_type(m_json[name]);
+    }
+    void on(const std::string& name, PartialShape* value) override
+    {
+        *value = read_partial_shape(m_json[name]);
+    }
+    void on(const std::string& name, Shape* value) override { *value = m_json[name]; }
+    void on(const std::string& name, bool* value) override { *value = m_json[name]; }
+    void on(const std::string& name, int64_t* value) override { *value = m_json[name]; }
+    void on(const std::string& name, uint64_t* value) override { *value = m_json[name]; }
 protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
     unordered_map<string, shared_ptr<Function>> m_function_map;
     function<const_data_callback_t> m_const_data_callback;
+    json m_json;
 };
 
 static string
@@ -1570,12 +1608,23 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Parameter:
         {
-            auto type_node_js =
-                has_key(node_js, "element_type") ? node_js : node_js.at("value_type");
-            auto element_type = read_element_type(type_node_js.at("element_type"));
-            auto shape = type_node_js.at("shape");
-            auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
-            node = make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
+            if (has_key(node_js, "value_type"))
+            {
+                auto type_node_js = node_js.at("value_type");
+                auto element_type = read_element_type(type_node_js.at("element_type"));
+                auto shape = type_node_js.at("shape");
+                auto cacheable = get_or_default<bool>(node_js, "cacheable", false);
+                node =
+                    make_shared<op::Parameter>(element_type, read_partial_shape(shape), cacheable);
+            }
+            else
+            {
+                node = make_shared<op::Parameter>();
+                auto old_json = m_json;
+                m_json = node_js;
+                node->walk_attributes(*this, AttributeWalker::Mode::SERIALIZE);
+                m_json = old_json;
+            }
             break;
         }
         case OP_TYPEID::Passthrough:
@@ -2046,6 +2095,8 @@ json JSONSerializer::serialize_node(const Node& n)
 {
     m_nodes_serialized.insert(&n);
     json node;
+    json old_json = m_json;
+    m_json = node;
     node["name"] = n.get_name();
     auto op_version = n.get_version();
     node["op_version"] = op_version;
@@ -2112,6 +2163,12 @@ json JSONSerializer::serialize_node(const Node& n)
 #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
+    if (const_cast<Node*>(&n)->walk_attributes(*this, AttributeWalker::Mode::SERIALIZE))
+    {
+        node = m_json;
+        m_json = old_json;
+        return node;
+    }
     switch (get_typeid(node_op))
     {
     case OP_TYPEID::Abs: { break;
@@ -2956,5 +3013,6 @@ json JSONSerializer::serialize_node(const Node& n)
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
 #endif
+    m_json = old_json;
     return node;
 }

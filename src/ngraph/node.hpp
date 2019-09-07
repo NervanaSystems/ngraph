@@ -47,6 +47,28 @@ namespace ngraph
     template <typename NodeType>
     class Output;
 
+    class PartialShape;
+    class Shape;
+
+    class AttributeWalker
+    {
+    public:
+        enum Mode
+        {
+            SERIALIZE,
+            ALL
+        };
+        virtual ~AttributeWalker() {}
+        virtual void on(const std::string& name, std::string* value) = 0;
+        virtual void on(const std::string& name, char** value) = 0;
+        virtual void on(const std::string& name, element::Type* value) = 0;
+        virtual void on(const std::string& name, PartialShape* value) = 0;
+        virtual void on(const std::string& name, Shape* value) = 0;
+        virtual void on(const std::string& name, bool* value) = 0;
+        virtual void on(const std::string& name, int64_t* value) = 0;
+        virtual void on(const std::string& name, uint64_t* value) = 0;
+    };
+
     class Node;
     using NodeVector = std::vector<std::shared_ptr<Node>>;
     using OutputVector = std::vector<Output<Node>>;
@@ -139,6 +161,11 @@ namespace ngraph
     public:
         virtual ~Node();
 
+        /// Traverses the attributes. Returns false if not supported by the node.
+        virtual bool walk_attributes(AttributeWalker& walker, AttributeWalker::Mode mode)
+        {
+            return false;
+        }
         /// Sets/replaces the arguments with new arguments.
         void set_arguments(const NodeVector& arguments);
         /// Sets/replaces the arguments with new arguments.

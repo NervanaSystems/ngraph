@@ -34,6 +34,18 @@ op::Parameter::Parameter(const element::Type& element_type,
     constructor_validate_and_infer_types();
 }
 
+bool op::Parameter::walk_attributes(AttributeWalker& attribute_walker, AttributeWalker::Mode mode)
+{
+    attribute_walker.on("cacheable", &m_cacheable);
+    attribute_walker.on("partial_shape", &m_partial_shape);
+    attribute_walker.on("element_type", &m_element_type);
+    if (mode == AttributeWalker::Mode::ALL)
+    {
+        attribute_walker.on("is_relevant_to_shapes", &m_is_relevant_to_shapes);
+    }
+    return true;
+}
+
 void op::Parameter::validate_and_infer_types()
 {
     Op::validate_and_infer_types();

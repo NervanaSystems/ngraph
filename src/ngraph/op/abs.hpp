@@ -34,7 +34,11 @@ namespace ngraph
             const std::string& description() const override { return type_name; }
             /// \brief Constructs an absolute value operation.
             Abs() = default;
-
+            bool walk_attributes(AttributeWalker& attribute_walker,
+                                 AttributeWalker::Mode mode) override
+            {
+                return true;
+            }
             /// \brief Constructs an absolute value operation.
             ///
             /// \param arg Output that produces the input tensor.<br>
