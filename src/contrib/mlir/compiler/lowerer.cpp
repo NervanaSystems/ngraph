@@ -966,8 +966,7 @@ namespace
                             affineIfArgs.insert(affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
                             affineIfArgs.insert(affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
 
-                            auto affineIfOp = rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(), affineIfArgs, false);
-                            affineIfOp.setIntegerSet(nonPaddingRange);
+                            auto affineIfOp = rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(), nonPaddingRange, affineIfArgs, /*withElseRegion=*/false);
                             {
                                 auto rewriter = affineIfOp.getThenBodyBuilder();
                                 ScopedContext scope(rewriter, loc);
