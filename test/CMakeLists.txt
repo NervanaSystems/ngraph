@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
+add_definitions("-DNGRAPH_UNIT_TEST_CONTROL_FUNCTION_DEFINED")
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)
     message(STATUS "unit tests disabled")
@@ -64,6 +65,7 @@ set(SRC
     includes.cpp
     input_output_assign.cpp
     main.cpp
+    manifest_control.cpp
     misc.cpp
     ngraph_api.cpp
     node_input_output.cpp

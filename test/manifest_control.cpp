@@ -14,22 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <chrono>
 #include <fstream>
-#include <unordered_map>
-#include <unordered_set>
+#include <iostream>
 
+#include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
-#include "util/test_control.hpp"
 
 using namespace std;
 using namespace ngraph;
-
-#ifdef NGRAPH_UNIT_TEST_CONTROL_FUNCTION_DEFINED
-extern string unit_test_control_function(const string& backend_name,
-                                         const string& test_name,
-                                         const string& manifest);
-#endif
 
 static unordered_set<string>& get_blacklist(const string& backend)
 {
@@ -37,14 +31,11 @@ static unordered_set<string>& get_blacklist(const string& backend)
     return s_blacklists[backend];
 }
 
-string ngraph::prepend_disabled(const string& backend_name,
-                                const string& test_name,
-                                const string& manifest)
+string unit_test_control_function(const string& backend_name,
+                                  const string& test_name,
+                                  const string& manifest)
 {
     string rc = test_name;
-#ifdef NGRAPH_UNIT_TEST_CONTROL_FUNCTION_DEFINED
-    rc = unit_test_control_function(backend_name, test_name, manifest);
-#else
     unordered_set<string>& blacklist = get_blacklist(backend_name);
     if (blacklist.empty() && !manifest.empty())
     {
@@ -67,19 +58,5 @@ string ngraph::prepend_disabled(const string& backend_name,
     {
         rc = "DISABLED_" + test_name;
     }
-#endif
     return rc;
-}
-
-string ngraph::combine_test_backend_and_case(const string& backend_name,
-                                             const string& test_casename)
-{
-    if (backend_name == test_casename)
-    {
-        return backend_name;
-    }
-    else
-    {
-        return backend_name + "/" + test_casename;
-    }
 }
