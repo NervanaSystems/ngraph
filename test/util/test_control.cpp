@@ -37,14 +37,11 @@ static unordered_set<string>& get_blacklist(const string& backend)
     return s_blacklists[backend];
 }
 
-string ngraph::prepend_disabled(const string& backend_name,
-                                const string& test_name,
-                                const string& manifest)
+string default_unit_test_control_function(const string& backend_name,
+                                          const string& test_name,
+                                          const string& manifest)
 {
     string rc = test_name;
-#ifdef NGRAPH_UNIT_TEST_CONTROL_FUNCTION_DEFINED
-    rc = unit_test_control_function(backend_name, test_name, manifest);
-#else
     unordered_set<string>& blacklist = get_blacklist(backend_name);
     if (blacklist.empty() && !manifest.empty())
     {
@@ -67,6 +64,18 @@ string ngraph::prepend_disabled(const string& backend_name,
     {
         rc = "DISABLED_" + test_name;
     }
+    return rc;
+}
+
+string ngraph::prepend_disabled(const string& backend_name,
+                                const string& test_name,
+                                const string& manifest)
+{
+    string rc = test_name;
+#ifdef NGRAPH_UNIT_TEST_CONTROL_FUNCTION_DEFINED
+    rc = unit_test_control_function(backend_name, test_name, manifest);
+#else
+    rc = default_unit_test_control_function(backend_name, test_name, manifest);
 #endif
     return rc;
 }
