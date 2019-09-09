@@ -33,7 +33,8 @@ namespace ngraph
                          const Shape& out_shape,
                          const AxisSet& reversed_axes)
             {
-                // In fact arg_shape == out_shape, but we'll use both for stylistic consistency with other kernels.
+                // In fact arg_shape == out_shape, but we'll use both for stylistic consistency with
+                // other kernels.
                 CoordinateTransform arg_transform(arg_shape);
                 CoordinateTransform output_transform(out_shape);
 

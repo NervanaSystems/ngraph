@@ -34,7 +34,7 @@
 #endif
 
 #ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/pass/mlir_subgraph_extraction.hpp"
+#include "contrib/mlir/compiler/pass/mlir_subgraph_extraction.hpp"
 #endif
 
 #include "ngraph/descriptor/input.hpp"
@@ -75,13 +75,9 @@
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
@@ -114,6 +110,7 @@
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/quantized_convolution.hpp"
+#include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -397,8 +394,6 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::ConvertLayout>},
     {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool>},
-    {TI(ngraph::op::QuantizedMaxPool), &runtime::cpu::CPU_Emitter::emit<op::QuantizedMaxPool>},
-    {TI(ngraph::op::QuantizedAvgPool), &runtime::cpu::CPU_Emitter::emit<op::QuantizedAvgPool>},
     {TI(ngraph::op::MaxPoolWithIndices), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolWithIndices>},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse>},
     {TI(ngraph::op::ReverseSequence), &runtime::cpu::CPU_Emitter::emit<op::ReverseSequence>},
@@ -445,7 +440,6 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::GroupConvolutionBias>},
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::CPU_Emitter::emit<ngraph::op::DeconvolutionBias>},
-    {TI(ngraph::op::QuantizedConcat), &runtime::cpu::CPU_Emitter::emit<op::QuantizedConcat>},
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
 };
@@ -685,7 +679,14 @@ using namespace ngraph::runtime;
     writer << "void inline CPURuntimeContextCG::init_mkldnn_primitives()\n";
     writer.block_begin();
     writer << "mkldnn_primitives = std::vector<mkldnn::primitive*>("
-           << to_string(m_mkldnn_emitter->get_mkldnn_primitives_cg().size()) << ");\n";
+           << to_string(m_mkldnn_emitter->get_mkldnn_primitives().size()) << ");\n";
+    writer << "mkldnn_memories = std::vector<mkldnn::memory*>("
+           << to_string(m_mkldnn_emitter->get_mkldnn_memories().size()) << ");\n";
+    writer << "mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>("
+           << to_string(m_mkldnn_emitter->get_mkldnn_scratchpad_mds().size()) << ");\n";
+    writer << "size_t scratchpad_size = " << m_mkldnn_emitter->get_max_scratchpad_size() << ";\n";
+    writer << "size_t alignment = 4096;\n";
+    writer << "scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment);\n";
     writer.block_end();
     writer << "\n";
 
@@ -748,9 +749,8 @@ using namespace ngraph::runtime;
         writer.block_begin();
         writer << "// read in memory descriptors and build mkldnn primitives\n";
         writer << "std::ifstream desc_file (\"" << m_desc_filename << "\", std::ios::binary);\n";
-        writer << "deserialize_memory_descs_and_build_memory_primitives(" << m_desc_filename
-               << ", cg_ctx, " << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size())
-               << ");\n";
+        writer << "deserialize_memory_descs_and_build_memory(" << m_desc_filename << ", cg_ctx, "
+               << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size()) << ");\n";
         writer.block_end();
     }
 
@@ -1250,6 +1250,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         CommonSubexpressionElimination, true, ngraph::pass, runtime::cpu::get_cse_handlers_map());
     REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass);
+    REGISTER_KNOBBED_PASS(CPUConvertLayoutConstantFolding, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass);
     REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass);
     REGISTER_KNOBBED_PASS_WITH_ARGS(
@@ -1379,11 +1380,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             "CPU Backend: Tracing and performance breakdowns might not be accurate with TBB "
             "enabled due to concurrent graph execution");
     }
-
-// reference all the builders for static library
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-    ngraph::runtime::cpu::register_builders();
-#endif
 
     // stream writer to dump the debug manifest for the DEX
     static const string s_debug_dir = "cpu_codegen";

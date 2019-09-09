@@ -52,9 +52,9 @@ namespace ngraph
                     }
                 }
 
-                // Check whether there are dimensions equal to -1 in output_shape. There may be at most
-                // one such case. Its value is then inferred from the size of the tensor and the
-                // remaining dimensions.
+                // Check whether there are dimensions equal to -1 in output_shape. There may be at
+                // most one such case. Its value is then inferred from the size of the tensor and
+                // the remaining dimensions.
                 auto neg_value_it =
                     std::find(std::begin(inferred_dims), std::end(inferred_dims), -1);
                 if (neg_value_it != std::end(inferred_dims))
@@ -83,60 +83,6 @@ namespace ngraph
                 }
 
                 return inferred_dims;
-            }
-
-            std::shared_ptr<ngraph::Node> squeeze(const std::shared_ptr<ngraph::Node>& node,
-                                                  std::vector<std::size_t> axes)
-            {
-                if (axes.empty())
-                {
-                    return node;
-                }
-
-                Shape in_shape{node->get_shape()};
-                for (std::size_t idx = 0; idx < axes.size(); ++idx)
-                {
-                    in_shape.at(idx) = 0;
-                }
-                Shape output_shape;
-                for (auto axis : in_shape)
-                {
-                    if (axis != 0)
-                    {
-                        output_shape.push_back(axis);
-                    }
-                }
-                return ngraph::builder::reshape(node, output_shape);
-            }
-
-            std::shared_ptr<ngraph::Node> collapse(const std::shared_ptr<ngraph::Node>& node,
-                                                   const std::size_t start_axis,
-                                                   const std::size_t end_axis)
-            {
-                auto shape = node->get_shape();
-                std::size_t collapsed_axis_size =
-                    std::accumulate(std::next(std::begin(shape), start_axis),
-                                    std::next(std::begin(shape), end_axis + 1),
-                                    1UL,
-                                    std::multiplies<std::size_t>());
-
-                Shape output_shape{collapsed_axis_size};
-                output_shape.insert(std::end(output_shape),
-                                    std::next(std::begin(shape), end_axis + 1),
-                                    std::end(shape));
-                return ngraph::builder::reshape(node, output_shape);
-            }
-
-            std::shared_ptr<ngraph::Node> expand_dims(const std::shared_ptr<ngraph::Node>& node,
-                                                      std::size_t axis)
-            {
-                Shape output_shape(node->get_shape());
-                // Add empty axis at specified position.
-                auto empty_axis_it = std::begin(output_shape);
-                std::advance(empty_axis_it, axis);
-                output_shape.insert(empty_axis_it, 1);
-                return std::make_shared<ngraph::op::Reshape>(
-                    node, ngraph::get_default_order(node->get_shape().size()), output_shape);
             }
 
             std::shared_ptr<ngraph::Node>

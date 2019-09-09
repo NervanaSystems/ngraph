@@ -33,14 +33,14 @@ op::DynBroadcast::DynBroadcast(const Output<Node>& arg,
 void op::DynBroadcast::validate_and_infer_types()
 {
     // shape node should have integer data type. For now we only allow i64
-    //TODO: potenially make the type more flexible to include other integer types
+    // TODO: potenially make the type more flexible to include other integer types
     auto shape_et = get_input_element_type(1);
     NODE_VALIDATION_CHECK(this,
                           shape_et.compatible(element::Type_t::i64),
                           "DynBroadcast shape must have element type i64, but has ",
                           shape_et);
 
-    //shape node should produce a one dimensional shape.
+    // shape node should produce a one dimensional shape.
     auto broadcast_shape_rank = get_input_partial_shape(1).rank();
     NODE_VALIDATION_CHECK(this,
                           broadcast_shape_rank.compatible(1),
@@ -48,14 +48,14 @@ void op::DynBroadcast::validate_and_infer_types()
                           broadcast_shape_rank);
 
     // axes node should have integer data type. For now we only allow i64
-    //TODO: potenially make the type more flexible to include other integer types
+    // TODO: potenially make the type more flexible to include other integer types
     auto axes_et = get_input_element_type(2);
     NODE_VALIDATION_CHECK(this,
                           axes_et.compatible(element::Type_t::i64),
                           "DynBroadcast axes must have element type i64, but has ",
                           axes_et);
 
-    //axes node should produce a one dimensional shape.
+    // axes node should produce a one dimensional shape.
     auto axes_shape_rank = get_input_partial_shape(2).rank();
     NODE_VALIDATION_CHECK(this,
                           axes_shape_rank.compatible(1),

@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 
@@ -107,7 +106,8 @@ namespace ngraph
                     const Shape& padding_above,
                     bool include_padding_in_avg_computation = false);
 
-            /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding shapes are set to 0).
+            /// \brief Constructs a batched, unpadded average pooling operation (i.e., all padding
+            ///        shapes are set to 0).
             ///
             /// \param arg The output producing the input data batch tensor.<br>
             /// `[d1, ..., dn]`
@@ -119,7 +119,8 @@ namespace ngraph
                     const Shape& window_shape,
                     const Strides& window_movement_strides);
 
-            /// \brief Constructs an unstrided batched convolution operation (i.e., all window movement strides are 1 and all padding shapes are set to 0).
+            /// \brief Constructs an unstrided batched convolution operation (i.e., all window
+            ///        movement strides are 1 and all padding shapes are set to 0).
             ///
             /// \param arg The output producing the input data batch tensor.<br>
             /// `[d1, ..., dn]`
@@ -155,10 +156,7 @@ namespace ngraph
             bool get_ceil_mode() const;
             void set_ceil_mode(bool ceil_mode);
             /// \return The default value for AvgPool.
-            virtual std::shared_ptr<Node> get_default_value() const override
-            {
-                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
-            }
+            virtual std::shared_ptr<Node> get_default_value() const override;
 
         protected:
             Shape m_window_shape;

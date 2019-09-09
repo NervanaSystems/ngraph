@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -222,6 +223,11 @@ shared_ptr<Node> op::AvgPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_include_padding_in_avg_computation,
                                 m_pad_type,
                                 m_ceil_mode);
+}
+
+shared_ptr<Node> op::AvgPool::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
 
 const string op::AvgPoolBackprop::type_name("AvgPoolBackprop");

@@ -55,13 +55,9 @@
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_avg_pool.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
-#include "ngraph/op/experimental/quantized_dot.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/experimental/quantized_max_pool.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
@@ -134,6 +130,7 @@
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
+#include "ngraph/state/rng_state.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -255,7 +252,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(add_index) << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(add_index)
+                           << ", deps, OpType::ADD);\n";
                 }
                 else
                 {
@@ -597,7 +596,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Lstm)
             {
-                if (args.size() != 5)
+                if (args.size() != 6)
                 {
                     throw ngraph_error(
                         "Lstm op doesnt have the required number of inputs to emit MKLDNN kernel");
@@ -618,13 +617,19 @@ namespace ngraph
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
                        << args[4].get_name() << ");\n";
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[5]) << ", "
-                       << out[0].get_name() << ");\n";
+                       << args[5].get_name() << ");\n";
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[6]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[7]) << ", "
                        << out[1].get_name() << ");\n";
-                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[7])
-                       << ", cg_ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[8]) << ", "
+                       << out[2].get_name() << ");\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[9])
+                       << ", cg_ctx->mkldnn_workspaces[" << deps[10] << "]);\n";
 
-                writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(lstm_index) << ");\n";
+                writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(lstm_index)
+                       << ", deps, OpType::LSTM);\n";
             }
 
             template <>
@@ -645,12 +650,19 @@ namespace ngraph
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
                        << args[4].get_name() << ");\n";
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[5]) << ", "
-                       << out[0].get_name() << ");\n";
+                       << args[5].get_name() << ");\n";
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[6]) << ", "
+                       << out[0].get_name() << ");\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[7]) << ", "
                        << out[1].get_name() << ");\n";
-                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[7])
-                       << ", cg_ctx->mkldnn_workspaces[" << deps[8] << "]);\n";
-                writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(rnn_index) << ");\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[8]) << ", "
+                       << out[2].get_name() << ");\n";
+                writer << "cg_ctx->set_memory_ptr(" << to_string(deps[9])
+                       << ", cg_ctx->mkldnn_workspaces[" << deps[10] << "]);\n";
+
+                writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(rnn_index)
+                       << ", deps, OpType::RNN);\n";
             }
 
             template <typename T>
@@ -689,8 +701,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
                            << out[2].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
-                           << ");\n";
+                           << ", deps, OpType::BATCHNORM3ARGS);\n";
                 }
                 else
                 {
@@ -705,8 +718,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[4]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
-                           << ");\n";
+                           << ", deps, OpType::BATCHNORM5ARGS);\n";
                 }
                 writer.block_end();
             }
@@ -833,8 +847,9 @@ namespace ngraph
                 writer << "cg_ctx->set_memory_ptr(" << to_string(deps[6])
                        << ", bn_dweights.data());\n";
 
+                writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                 writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(batchnorm_index)
-                       << ");\n";
+                       << ", deps, OpType::BATCHNORMBACKPROP);\n";
 
                 writer << "memcpy(" << out[1].get_name() << ", &bn_dweights[0], "
                        << args[0].get_size() * args[0].get_element_type().size() << ");\n";
@@ -1066,8 +1081,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[i]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(concat_index)
-                           << ");\n";
+                           << ", deps, OpType::CONCAT);\n";
                 }
                 else
                 {
@@ -1245,7 +1261,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
 
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(lrn_index) << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(lrn_index)
+                           << ", deps, OpType::LRN);\n";
                 }
                 else
                 {
@@ -1532,8 +1550,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(slice_index)
-                           << ");\n";
+                           << ", deps, OpType::SLICE);\n";
                     writer.block_end();
                     return;
                 }
@@ -2172,7 +2191,10 @@ namespace ngraph
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::CONVOLUTIONRELU);\n";
                 }
             }
 
@@ -2192,7 +2214,10 @@ namespace ngraph
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::QUANTIZEDCONVOLUTIONRELU);\n";
                 }
                 else
                 {
@@ -2216,7 +2241,10 @@ namespace ngraph
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::QUANTIZEDCONVOLUTION);\n";
                 }
                 else
                 {
@@ -2269,7 +2297,10 @@ namespace ngraph
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::GROUPCONVOLUTION);\n";
                 }
                 else
                 {
@@ -2295,7 +2326,10 @@ namespace ngraph
                            << args[2].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::GROUPCONVOLUTIONBIAS);\n";
                 }
                 else
                 {
@@ -2324,7 +2358,10 @@ namespace ngraph
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::CONVOLUTION);\n";
                 }
                 else
                 {
@@ -2370,7 +2407,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::CONVOLUTIONBACKPROPWEIGHTS);\n";
                 }
                 else
                 {
@@ -2417,7 +2456,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                            << out[0].get_name() << ");\n";
 
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::DECONVOLUTIONBIAS);\n";
                 }
                 else
                 {
@@ -2447,7 +2488,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::CONVOLUTIONBACKPROPDATA);\n";
                 }
                 else
                 {
@@ -2490,7 +2533,10 @@ namespace ngraph
                            << args[2].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::QUANTIZEDCONVOLUTIONBIAS);\n";
                 }
                 else
                 {
@@ -2522,7 +2568,10 @@ namespace ngraph
                            << args[2].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::QUANTIZEDCONVOLUTIONBIASADD);\n";
                 }
                 else
                 {
@@ -2555,7 +2604,10 @@ namespace ngraph
                            << args[2].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD);\n";
                 }
                 else
                 {
@@ -2584,7 +2636,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(qip_index) << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(qip_index)
+                           << ", deps, OpType::QUANTIZEDDOTBIAS);\n";
                 }
                 else
                 {
@@ -2595,21 +2649,21 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedDot)
             {
-                if (shape_size(args[2].get_shape()) != 1)
-                {
-                    throw ngraph_error("Scale size should be 1 for QuantizedDot");
-                }
-                writer << "float dyn_scale = *(static_cast<float*>(" << args[2].get_name()
-                       << "));\n";
-
-                writer << "reference::dot(" << args[0].get_name() << ",\n";
+                writer << "reference::dot<" << args[0].get_type() << " , " << args[1].get_type()
+                       << " , " << out[0].get_type() << ", int32_t>(" << args[0].get_name()
+                       << ",\n";
                 writer << "            " << args[1].get_name() << ",\n";
                 writer << "            " << out[0].get_name() << ",\n";
                 writer << "            {" << join(args[0].get_shape()) << "},\n";
                 writer << "            {" << join(args[1].get_shape()) << "},\n";
                 writer << "            {" << join(out[0].get_shape()) << "},\n";
                 writer << "            1,\n";
-                writer << "            dyn_scale);\n";
+                writer << "            " << args[2].get_name() << ",\n";
+                writer << "            " << args[3].get_name() << ",\n";
+                writer << "            " << args[4].get_name() << ",\n";
+                writer << "            " << args[5].get_name() << ",\n";
+                writer << "            " << args[6].get_name() << ",\n";
+                writer << "            " << args[7].get_name() << ");\n";
             }
 
             template <>
@@ -2629,7 +2683,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(qip_index) << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(qip_index)
+                           << ", deps, OpType::QUANTIZEDMATMUL);\n";
                 }
                 else
                 {
@@ -2654,7 +2710,10 @@ namespace ngraph
                            << args[2].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::CONVOLUTIONBIAS);\n";
                 }
                 else
                 {
@@ -2684,7 +2743,10 @@ namespace ngraph
                            << args[2].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::CONVOLUTIONBIASADD);\n";
                 }
                 else
                 {
@@ -2712,7 +2774,10 @@ namespace ngraph
                            << args[1].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::CONVOLUTIONADD);\n";
                 }
                 else
                 {
@@ -2738,7 +2803,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3]) << ", "
                            << out[1].get_name() << ");\n";
 
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index) << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(conv_index)
+                           << ", deps, OpType::CONVOLUTIONBIASBACKPROPWEIGHTSBIAS);\n";
                 }
                 else
                 {
@@ -2773,8 +2840,10 @@ namespace ngraph
                            << args[0].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
-                           << ");\n";
+                           << ", deps, OpType::MAXPOOL);\n";
                 }
                 else
                 {
@@ -2789,50 +2858,6 @@ namespace ngraph
                     writer << "                 {" << join(max_pool->get_padding_below()) << "},\n";
                     writer << "                 {" << join(max_pool->get_padding_above())
                            << "});\n";
-                }
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedMaxPool)
-            {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    size_t max_pool_index;
-                    std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, max_pool_index, deps);
-
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
-                           << args[0].get_name() << ");\n";
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
-                           << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
-                           << ");\n";
-                }
-                else
-                {
-                    throw ngraph_error("unsupported parameters for QuantizedMaxPool");
-                }
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedAvgPool)
-            {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    size_t avg_pool_index;
-                    std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, avg_pool_index, deps);
-
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
-                           << args[0].get_name() << ");\n";
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
-                           << out[0].get_name() << ");\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(avg_pool_index)
-                           << ");\n";
-                }
-                else
-                {
-                    throw ngraph_error("unsupported parameters for QuantizedAvgPool");
                 }
             }
 
@@ -2852,8 +2877,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[1].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
-                           << ");\n";
+                           << ", deps, OpType::MAXPOOLWITHINDICES);\n";
                 }
                 else
                 {
@@ -2971,8 +2997,10 @@ namespace ngraph
                            << args[0].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(avg_pool_index)
-                           << ");\n";
+                           << ", deps, OpType::AVGPOOL);\n";
                 }
                 else
                 {
@@ -3064,8 +3092,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(avg_pool_index)
-                           << ");\n";
+                           << ", deps, OpType::AVGPOOLBACKPROP);\n";
                 }
                 else
                 {
@@ -3107,7 +3136,10 @@ namespace ngraph
                            << out[0].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[3])
                            << ", cg_ctx->mkldnn_workspaces[" << deps[5] << "]);\n";
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(deps[4]) << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(deps[4])
+                           << ",deps, OpType::MAXPOOLBACKPROPFORWARD);\n";
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << args[1].get_name() << ");\n";
@@ -3117,7 +3149,7 @@ namespace ngraph
                            << out[0].get_name() << ");\n";
 
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
-                           << ");\n";
+                           << ", deps, OpType::MAXPOOLBACKPROPBACKWARD);\n";
                 }
                 else
                 {
@@ -3152,8 +3184,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(max_pool_index)
-                           << ");\n";
+                           << ", deps, OpType::MAXPOOLWITHINDICESBACKPROP);\n";
                 }
                 else
                 {
@@ -3257,8 +3290,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(reorder_index)
-                           << ");\n";
+                           << ", deps, OpType::CONVERTLAYOUT);\n";
                 }
                 else
                 {
@@ -3282,7 +3316,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(relu_index) << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(relu_index)
+                           << ", deps, OpType::RELUBACKPROP);\n";
                 }
                 else
                 {
@@ -3309,7 +3345,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
 
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(relu_index) << ");\n";
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
+                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(relu_index)
+                           << ", deps, OpType::RELU);\n";
                 }
                 else
                 {
@@ -3336,8 +3374,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(leaky_relu_index)
-                           << ");\n";
+                           << ", deps, OpType::LEAKYRELU);\n";
                 }
                 else
                 {
@@ -3368,8 +3407,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(bounded_relu_index)
-                           << ");\n";
+                           << ", deps, OpType::BOUNDEDRELU);\n";
                 }
                 else
                 {
@@ -3400,8 +3440,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(sigmoid_index)
-                           << ");\n";
+                           << ", deps, OpType::SIGMOID);\n";
                 }
                 else
                 {
@@ -3425,8 +3466,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[2]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(sigmoid_index)
-                           << ");\n";
+                           << ", deps, OpType::SIGMOIDBACKPROP);\n";
                 }
                 else
                 {
@@ -3602,8 +3644,9 @@ namespace ngraph
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
 
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(softmax_index)
-                           << ");\n";
+                           << ", deps, OpType::SOFTMAX);\n";
                 }
                 else
                 {
@@ -4093,8 +4136,10 @@ namespace ngraph
                            << args[0].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(dequantize_index)
-                           << ");\n";
+                           << ", deps, OpType::DEQUANTIZE);\n";
                 }
                 else
                 {
@@ -4125,8 +4170,10 @@ namespace ngraph
                            << args[0].get_name() << ");\n";
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[1]) << ", "
                            << out[0].get_name() << ");\n";
+
+                    writer << "std::vector<size_t> deps{" << join(deps) << "};\n";
                     writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(quantize_index)
-                           << ");\n";
+                           << ", deps, OpType::QUANTIZE);\n";
                 }
                 else
                 {
@@ -4140,33 +4187,6 @@ namespace ngraph
                     writer << "            {" << join(quantize->get_axes()) << "},\n";
                     writer << "            static_cast<ngraph::op::Quantize::RoundMode>("
                            << static_cast<int>(quantize->get_round_mode()) << "));\n";
-                }
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::QuantizedConcat)
-            {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
-                {
-                    size_t concat_index;
-                    std::vector<std::size_t> deps;
-                    emit_build_primitives(external_function, node, writer, concat_index, deps);
-
-                    size_t i;
-                    for (i = 0; i < args.size(); i++)
-                    {
-                        writer << "cg_ctx->set_memory_ptr(" << to_string(deps[i]) << ", "
-                               << args[i].get_name() << ");\n";
-                    }
-                    writer << "cg_ctx->set_memory_ptr(" << to_string(deps[i]) << ", "
-                           << out[0].get_name() << ");\n";
-
-                    writer << "cg_ctx->mkldnn_invoke_primitive(" << to_string(concat_index)
-                           << ");\n";
-                }
-                else
-                {
-                    throw ngraph_error("unsupported parameters for QuantizedConcat via DEX");
                 }
             }
 

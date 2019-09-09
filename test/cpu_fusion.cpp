@@ -31,7 +31,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/quantized_concat.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/fused/group_conv.hpp"
@@ -1983,6 +1982,7 @@ TEST(batch_fusion, group_convolution)
     EXPECT_TRUE(test::all_close_f(rv, erv));
 }
 
+#if MKLDNN_VERSION_MAJOR < 1
 TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
 {
     auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
@@ -2060,6 +2060,79 @@ TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
     EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
     EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
 }
+#else
+TEST(cpu_fusion, rnn_fprop_1_lstm_cell)
+{
+    auto src_layer = make_shared<op::Parameter>(element::f32, Shape{10, 100});
+    auto src_iter = make_shared<op::Parameter>(element::f32, Shape{10, 100});
+    auto src_iter_c = make_shared<op::Parameter>(element::f32, Shape{10, 100});
+    auto weights_layer = make_shared<op::Parameter>(element::f32, Shape{100, 400});
+    auto weights_iter = make_shared<op::Parameter>(element::f32, Shape{100, 400});
+    auto biases = make_shared<op::Parameter>(element::f32, Shape{400});
+    const int number_of_timesteps = 1;
+    const int number_of_gates_per_cell = 4;
+    const int src_seq_length = 1;
+    const int num_rnn_cell_states = 2;
+    const int rnn_direction = 1;
+    const int num_of_rnn_fused_layer = 1;
+    ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
+        ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
+
+    auto rnn_node = make_shared<op::Rnn>(src_layer,
+                                         src_iter,
+                                         src_iter_c,
+                                         weights_layer,
+                                         weights_iter,
+                                         biases,
+                                         number_of_timesteps,
+                                         number_of_gates_per_cell,
+                                         src_seq_length,
+                                         num_rnn_cell_states,
+                                         rnn_direction,
+                                         num_of_rnn_fused_layer,
+                                         rnn_type);
+
+    auto rnn_ht_output = make_shared<op::GetOutputElement>(rnn_node, 1);
+    auto rnn_ct_output = make_shared<op::GetOutputElement>(rnn_node, 2);
+
+    auto func = make_shared<Function>(
+        NodeVector{rnn_ht_output, rnn_ct_output},
+        ParameterVector{src_layer, src_iter, src_iter_c, weights_layer, weights_iter, biases});
+    auto backend = runtime::Backend::create("CPU");
+
+    shared_ptr<runtime::Tensor> src_layer_t =
+        backend->create_tensor(element::f32, src_layer->get_shape());
+    shared_ptr<runtime::Tensor> src_iter_t =
+        backend->create_tensor(element::f32, src_iter->get_shape());
+    shared_ptr<runtime::Tensor> src_iter_c_t =
+        backend->create_tensor(element::f32, src_iter_c->get_shape());
+    shared_ptr<runtime::Tensor> weights_layer_t =
+        backend->create_tensor(element::f32, weights_layer->get_shape());
+    shared_ptr<runtime::Tensor> weights_iter_t =
+        backend->create_tensor(element::f32, weights_iter->get_shape());
+    shared_ptr<runtime::Tensor> biases_t =
+        backend->create_tensor(element::f32, biases->get_shape());
+    shared_ptr<runtime::Tensor> result_ht = backend->create_tensor(element::f32, {10, 100});
+    shared_ptr<runtime::Tensor> result_ct = backend->create_tensor(element::f32, Shape{10, 100});
+
+    copy_data(src_layer_t, vector<float>(1000, 1));
+    copy_data(src_iter_t, vector<float>(1000, 1));
+    copy_data(src_iter_c_t, vector<float>(1000, 1));
+    copy_data(weights_layer_t, vector<float>(400 * 100, 1));
+    copy_data(weights_iter_t, vector<float>(400 * 100, 1));
+    copy_data(biases_t, vector<float>(400, 1));
+
+    auto handle = backend->compile(func);
+    handle->call_with_validate(
+        {result_ht, result_ct},
+        {src_layer_t, src_iter_t, src_iter_c_t, weights_layer_t, weights_iter_t, biases_t});
+    vector<float> expected_ht(10 * 100, 0.964028f);
+    vector<float> expected_ct(10 * 100, 2.0f);
+
+    EXPECT_TRUE(test::all_close(expected_ht, read_vector<float>(result_ht)));
+    EXPECT_TRUE(test::all_close(expected_ct, read_vector<float>(result_ct)));
+}
+#endif
 
 void sigmoid_multiply_fusion_forward_compute(runtime::Backend* backend,
                                              const ParameterVector& input_params,
@@ -2845,6 +2918,7 @@ TEST(cpu_fusion, dot_batch_forward)
         EXPECT_TRUE(test::all_close(cpu_results.at(i), int_results.at(i), 1.0e-4f, 1.0e-4f));
     }
 }
+
 static std::shared_ptr<Function>
     create_rnn_input_linear_transformation_function(size_t num_timesteps, bool data_is_4d = false)
 {
@@ -3122,7 +3196,7 @@ TEST(cpu_quant_fusion, qmax_pool)
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
-TEST(cpu_quant_fusion, qconcat)
+TEST(cpu_quant_fusion, MLIR_DISABLE_TEST(qconcat))
 {
     auto make_function = []() {
         auto get_input_slice = [](std::shared_ptr<op::Parameter>& input) {
@@ -3170,7 +3244,7 @@ TEST(cpu_quant_fusion, qconcat)
     set_environment("NGRAPH_PASS_ENABLES", "CPUQuantFusion:1", 1);
     auto cpu2_results = execute(cpu_f2, args, "CPU");
     // Expect Concat2 -- Concat6 to be fused and not Concat7
-    ASSERT_EQ(count_ops_of_type<op::QuantizedConcat>(cpu_f2), 5);
+    ASSERT_EQ(count_ops_of_type<op::Concat>(cpu_f2), 6);
     EXPECT_TRUE(test::all_close(cpu1_results.at(0), cpu2_results.at(0)));
 }
 
@@ -3750,7 +3824,9 @@ TEST(cpu_fusion, fuse_2_layer_rnn)
     for (auto& node : rnn_ops)
     {
         EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
+#if MKLDNN_VERSION_MAJOR < 1
         EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
+#endif
     }
 }
 
@@ -3772,7 +3848,9 @@ TEST(cpu_fusion, fuse_1_layer_rnn)
     for (auto& node : rnn_ops)
     {
         EXPECT_EQ(node->get_num_timesteps(), node->get_src_sequence_length());
+#if MKLDNN_VERSION_MAJOR < 1
         EXPECT_EQ(node->get_num_cell_states(), node->get_argument(1)->get_arguments().size());
+#endif
     }
 }
 

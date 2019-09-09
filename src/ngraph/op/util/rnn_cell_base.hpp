@@ -74,7 +74,8 @@ namespace ngraph
                 ///
                 ActivationFunction get_activation_function(std::size_t idx) const;
                 ///
-                /// \brief      Creates node with element-wise add operation with numpy broadcasting.
+                /// \brief      Creates node with element-wise add operation with numpy
+                ///             broadcasting.
                 ///
                 /// \param[in]  lhs   The left hand side argument node.
                 /// \param[in]  rhs   The right hand side argument node.
@@ -83,7 +84,8 @@ namespace ngraph
                 ///
                 static std::shared_ptr<Node> add(const Output<Node>& lhs, const Output<Node>& rhs);
                 ///
-                /// \brief      Creates node with element-wise subtract operation with numpy broadcasting.
+                /// \brief      Creates node with element-wise subtract operation with numpy
+                ///             broadcasting.
                 ///
                 /// \param[in]  lhs   The left hand side argument node.
                 /// \param[in]  rhs   The right hand side argument node.
@@ -92,7 +94,8 @@ namespace ngraph
                 ///
                 static std::shared_ptr<Node> sub(const Output<Node>& lhs, const Output<Node>& rhs);
                 ///
-                /// \brief      Creates node with element-wise multiply operation with numpy broadcasting.
+                /// \brief      Creates node with element-wise multiply operation with numpy
+                ///             broadcasting.
                 ///
                 /// \param[in]  lhs   The left hand side argument node.
                 /// \param[in]  rhs   The right hand side argument node.
@@ -101,7 +104,8 @@ namespace ngraph
                 ///
                 static std::shared_ptr<Node> mul(const Output<Node>& lhs, const Output<Node>& rhs);
                 ///
-                /// \brief      Creates node with element-wise clip operation with numpy broadcasting.
+                /// \brief      Creates node with element-wise clip operation with numpy
+                ///             broadcasting.
                 ///
                 /// \param[in]  data   The input tensor for clipping.
                 ///

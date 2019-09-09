@@ -37,10 +37,7 @@ namespace ngraph
                 BUILD_REDUCTION_FUNCTOR(Sum, sum);
             }
 
-            REGISTER_OP_BUILDER(Sum);
-#ifdef NGRAPH_CPU_STATIC_LIB_ENABLE
-            void register_builders_sum_cpp() {}
-#endif
+            void register_builders_sum_cpp() { REGISTER_OP_BUILDER(Sum); }
         }
     }
 }

@@ -19,25 +19,9 @@ We are pleased to announce the release of version |version|.
 Core updates for |version|
 --------------------------
 
-+ PlaidML support
-+ Double-buffering support
-+ Constant folding
-+ Support for static linking
-+ Additional ops
-+ Preliminary static linking support
-
-Known issues
-~~~~~~~~~~~~
-
-+ No PlaidML training support
-
-
-Latest doc updates |version|-doc
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-+ Instructions how to build ``NGRAPH_PLAIDML`` backend added to :doc:`../buildlb`. 
-+ Publishing interim version of doc navigation for updates at ngraph.ai
-+ GPU validations: added 5 functional TensorFlow workloads and 4 functional ONNX workloads to :doc:`../frameworks/validated/list`.
++ Allow DLLs that link nGraph statically to load backends
++ Add rank id to trace file name.
++ Allow provenance merging to be disabled
 
 
 .. important:: Pre-releases (``-rc-0.*``) have newer features, and are less stable.  
@@ -45,6 +29,23 @@ Latest doc updates |version|-doc
 
 Changelog on Previous Releases
 ==============================
+
+
+0.25.0
+------
+
++ Better PlaidML support
++ Double-buffering support
++ Constant folding
++ Support for static linking
++ Additional ops
++ Preliminary static linking support
++ Known issue: No PlaidML training support
++ Doc: Add instructions how to build NGRAPH_PLAIDML backend
++ Published interim version of doc navigation for updates at ngraph.ai
++ GPU validations: added 5 functional TensorFlow workloads and 4 functional 
+  ONNX workloads
+
 
 0.24
 ----
