@@ -29,10 +29,6 @@ namespace ngraph
     std::string combine_test_backend_and_case(const std::string& backend_name,
                                               const std::string& test_casename);
 
-    using test_control_function = std::function<std::string(const std::string& backend_name,
-                                                            const std::string& test_name,
-                                                            const std::string& manifest)>;
-
     std::string default_unit_test_control_handler(const std::string& backend_name,
                                                   const std::string& test_name,
                                                   const std::string& manifest);
