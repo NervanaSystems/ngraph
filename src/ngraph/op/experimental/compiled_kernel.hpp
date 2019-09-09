@@ -47,9 +47,18 @@ namespace ngraph
 
             const NodeVector& get_node_list() const { return m_node_list; }
             const NodeVector& get_kernel_outputs() const { return m_output_nodes; }
+            const std::vector<std::tuple<std::shared_ptr<Node>, size_t, size_t>>& get_vector() const
+            {
+                return m_node_arg_index_ck_arg_index;
+            }
+            void insert_to_vector(std::shared_ptr<Node>, size_t, size_t);
+
         private:
             NodeVector m_node_list;
             NodeVector m_output_nodes;
+            // Used to store the information of internal nodes that have input coming from outside of CK
+            std::vector<std::tuple<std::shared_ptr<Node>, size_t, size_t>>
+                m_node_arg_index_ck_arg_index;
         };
     }
 }

@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/pattern/op/label.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -45,7 +46,15 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
         OutputVector cur_args;
         for (auto a : n->input_values())
         {
-            cur_args.push_back(a.for_node(nm.at(a.get_node())));
+            if (dynamic_cast<ngraph::pattern::op::Label*>(a.get_node()))
+            {
+                // Label
+                cur_args.push_back(a);
+            }
+            else
+            {
+                cur_args.push_back(a.for_node(nm.at(a.get_node())));
+            }
         }
         auto new_n = n->copy_with_new_inputs(cur_args);
         nm[n.get()] = new_n;
@@ -58,7 +67,14 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
         new_outputs.push_back(nm.at(o.get()));
     }
 
-    return std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
+    auto ck = std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
+    for (auto tuple : m_node_arg_index_ck_arg_index)
+    {
+        ck->m_node_arg_index_ck_arg_index.push_back(
+            std::tuple<std::shared_ptr<Node>, size_t, size_t>(
+                nm[std::get<0>(tuple).get()], std::get<1>(tuple), std::get<2>(tuple)));
+    }
+    return ck;
 }
 
 ngraph::op::CompiledKernel::CompiledKernel(const OutputVector& node_list,
@@ -88,4 +104,12 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
         }
         set_output_type(i, o->get_element_type(), o->get_shape());
     }
+}
+
+void ngraph::op::CompiledKernel::insert_to_vector(std::shared_ptr<Node> node,
+                                                  size_t node_arg_idx,
+                                                  size_t ck_arg_idx)
+{
+    m_node_arg_index_ck_arg_index.push_back(
+        std::tuple<std::shared_ptr<Node>, size_t, size_t>(node, node_arg_idx, ck_arg_idx));
 }

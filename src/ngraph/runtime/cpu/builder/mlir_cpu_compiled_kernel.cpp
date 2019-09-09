@@ -38,6 +38,17 @@ namespace ngraph
             {
                 auto& functors = external_function->get_functors();
 
+                CompiledKernel* compiled_kernel =
+                    static_cast<CompiledKernel*>(const_cast<Node*>(node));
+                // source_output comes from Label, replace it with the output from real arg node
+                auto set = compiled_kernel->get_vector();
+                for (auto tuple : set)
+                {
+                    auto node_input = std::get<0>(tuple)->input(std::get<1>(tuple));
+                    auto ck_input = compiled_kernel->input(std::get<2>(tuple));
+                    node_input.replace_source_output(ck_input.get_source_output());
+                }
+
                 // Tensors haven't been allocated yet so we have to keep a pointer to the pointer
                 // that will hold the future memory address.
                 std::vector<size_t> buffer_indices;

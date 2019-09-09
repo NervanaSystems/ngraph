@@ -127,6 +127,10 @@ namespace ngraph
             NodeVector build_ck_nodes(std::shared_ptr<Function> func);
 
             void sanity_check(std::shared_ptr<Function> func, NodeVector& ck_nodes);
+            // For node B inside CompiledKernel ck such that A->B and A is outside of ck:
+            // replace input to B with a Label Op and add an entry to ck's
+            // m_node_arg_index_ck_arg_indx.
+            void encapsulate_nodes(NodeVector& ck_nodes);
             void clean_up();
 
         private:

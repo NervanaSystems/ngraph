@@ -39,6 +39,7 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
+#include "ngraph/pattern/op/label.hpp"
 
 using namespace ngraph::descriptor;
 using namespace ngraph::op;
@@ -132,7 +133,9 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
     sanity_check(func, ck_nodes);
 #endif
 
+    encapsulate_nodes(ck_nodes);
     clean_up();
+
     return true;
 }
 
@@ -380,6 +383,47 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func, No
                 }
             }
             NGRAPH_CHECK(found, "CK input is not input to sub-graph");
+        }
+    }
+}
+
+void MLIRSubgraphExtractionPass::encapsulate_nodes(NodeVector& ck_nodes)
+{
+    for (auto& node : ck_nodes)
+    {
+        auto ck_node = std::static_pointer_cast<CompiledKernel>(node);
+        auto& node_list = ck_node->get_node_list();
+        std::unordered_set<std::shared_ptr<Node>> node_set(node_list.begin(), node_list.end());
+
+        // Go through each non-CK user of input to CK
+        int ck_arg_idx = 0;
+        for (auto& arg : ck_node->get_arguments())
+        {
+            for (auto& user : arg->get_users())
+            {
+                if (!dynamic_pointer_cast<ngraph::op::CompiledKernel>(user) &&
+                    node_set.find(user) != node_set.end())
+                {
+                    auto user_inputs = user->inputs();
+                    auto user_arg_idx = 0;
+                    for (auto input : user_inputs)
+                    {
+                        auto input_output = input.get_source_output();
+                        if (input.get_source_output().get_node() == arg.get())
+                        {
+                            ck_node->insert_to_vector(user, user_arg_idx, ck_arg_idx);
+                            input.get_source_output().remove_target_input(input);
+                            // Use a label as input for now, will replace later with the correct
+                            // one.
+                            auto temp_input_label = std::make_shared<pattern::op::Label>(
+                                input_output.get_element_type(), input_output.get_partial_shape());
+                            input.replace_source_output(temp_input_label->output(0));
+                        }
+                        user_arg_idx++;
+                    }
+                }
+            }
+            ck_arg_idx++;
         }
     }
 }
