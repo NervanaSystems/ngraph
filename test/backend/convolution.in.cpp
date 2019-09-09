@@ -121,12 +121,12 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_simple_padding)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
-    copy_data(a, vector<float>{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f});
+    copy_data(a, vector<float>{1.0f, 1.0f, 1.0f, 1.0f});
     auto b = backend->create_tensor(element::f32, shape_b);
-    copy_data(b, vector<float>{2.0f, 2.0f, 2.0f, 2.0f});
+    copy_data(b, vector<float>{2.0f});
     auto result = backend->create_tensor(element::f32, shape_r);
 
-    vector<float> expected_result{0.0f, 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    vector<float> expected_result{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 2.0f, 2.0f, 0.0f, 0.0f, 2.0f, 2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});

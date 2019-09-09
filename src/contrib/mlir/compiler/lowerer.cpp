@@ -834,6 +834,9 @@ namespace
         auto resSpatialIndices = makeIndexHandles(spatialRank);
         auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
         SmallVector<int64_t, 4> resSteps, filtersSteps;
+        SmallVector<int, 4> padBelowIntValues, padAboveIntValues;
+        bool withPadding = false;
+
         for (auto i = 0; i < spatialRank; i++)
         {
             // result spatial bounds and steps
@@ -843,6 +846,19 @@ namespace
             // image spatial bounds
             imgSpatialLbs.push_back(vImages.lb(i + 2));
             imgSpatialUbs.push_back(vImages.ub(i + 2));
+
+            // Check if we have any padding and store pad values
+            IntegerAttr iAttr = padBelow[i].cast<IntegerAttr>();
+            int padValue = iAttr.getInt();
+            if (padValue)
+                withPadding = true;
+            padBelowIntValues.push_back(padValue);
+            
+            iAttr = padAbove[i].cast<IntegerAttr>();
+            padValue = iAttr.getInt();
+            if (padValue)
+                withPadding = true;
+            padAboveIntValues.push_back(padValue);
         }
 
         NGRAPH_CHECK(vImages.rank() == vFilters.rank(), "Images and Filters have unequal ranks");
@@ -861,35 +877,38 @@ namespace
             filtersSteps.push_back(vFilters.step(i + 2));
         }
 
-       // Create affine expressions and IntegerSet
-        // IntegerSet (d0, d1, .. d_N-1)[LB_0, LB_1, .. LB_N-1, UB_0, UB_1, .. UB_N-1], where for each dim:
-        //   (d_dim - padBelow[dim] - LB_dim >= 0), 
-        //   (padAbove[dim] - UB_dim - d_dim >= 0)
-        SmallVector<AffineExpr, 4> affineExprs;
-        SmallVector<bool, 4> isEq;
-        for (unsigned dim = 0; dim < spatialRank; dim++)
+        IntegerSet nonPaddedRange;
+        if (withPadding)
         {
-            // i_dim
-            auto dimExpr = rewriter.getAffineDimExpr(dim);
-            auto imgLbExpr = rewriter.getAffineSymbolExpr(dim);
-            // expr1 : i_dim - padBelow[dim] - imgLB >= 0
-            IntegerAttr iAttr = padBelow[dim].cast<IntegerAttr>();
-            auto padBelowExpr = rewriter.getAffineConstantExpr(iAttr.getInt());
-            affineExprs.push_back(dimExpr - padBelowExpr - imgLbExpr);
-            isEq.push_back(false);
-            // expr2: padAbove + imgUB - i_dim -1 >= 0
-            
-            auto imgUbExpr = rewriter.getAffineSymbolExpr(spatialRank + dim);
-            iAttr = padAbove[dim].cast<IntegerAttr>();
-            auto padAboveExpr = rewriter.getAffineConstantExpr(iAttr.getInt());
-            auto oneExpr = rewriter.getAffineConstantExpr(1);
-            affineExprs.push_back(padAboveExpr + imgUbExpr - dimExpr - oneExpr);
-            isEq.push_back(false);
-        }
+            // Create affine expressions and IntegerSet
+            // IntegerSet (d0, d1, .. d_N-1)[LB_0, LB_1, .. LB_N-1, UB_0, UB_1, .. UB_N-1], where for each dim:
+            //   (d_dim - padBelow[dim] - LB_dim >= 0), 
+            //   (padAbove[dim] - UB_dim - d_dim >= 0)
+            SmallVector<AffineExpr, 4> affineExprs;
+            SmallVector<bool, 4> isEq;
         
-        NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank, "Invalid number of expressions in the IntegerSet");
-        auto nonPaddingRange = rewriter.getIntegerSet(spatialRank, 2*spatialRank, affineExprs, isEq);
+            for (unsigned dim = 0; dim < spatialRank; dim++)
+            {
+                // i_dim
+                auto dimExpr = rewriter.getAffineDimExpr(dim);
+                auto imgLbExpr = rewriter.getAffineSymbolExpr(dim);
 
+                // expr1 : i_dim - padBelow[dim] - imgLB >= 0
+                auto padBelowExpr = rewriter.getAffineConstantExpr(padBelowIntValues[dim]);
+                affineExprs.push_back(dimExpr - padBelowExpr - imgLbExpr);
+                isEq.push_back(false);
+
+                // expr2: padAbove + imgUB - i_dim -1 >= 0
+                auto imgUbExpr = rewriter.getAffineSymbolExpr(spatialRank + dim);
+                auto padAboveExpr = rewriter.getAffineConstantExpr(padAboveIntValues[dim]);
+                auto oneExpr = rewriter.getAffineConstantExpr(1);
+                affineExprs.push_back(padAboveExpr + imgUbExpr - dimExpr - oneExpr);
+                isEq.push_back(false);
+            }   
+        
+            NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank, "Invalid number of expressions in the IntegerSet");
+            nonPaddedRange = rewriter.getIntegerSet(spatialRank, 2*spatialRank, affineExprs, isEq);
+        }
 
         // Initialize output to zero
         {
@@ -945,6 +964,8 @@ namespace
                                         filtersSteps)([&] {
                             SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
                             // Image indices
+                            // Here we compute the virtual start index into the padded image. 
+
                             imgIndices.push_back(n);
                             imgIndices.push_back(c);
                             for (auto i = 0; i < spatialRank; i++)
@@ -959,17 +980,32 @@ namespace
                                                   filtersSpatialIndices.begin(),
                                                   filtersSpatialIndices.end());
 
-                            // if args : img dims, img lbs, img ubs
-                            SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
-                            it++; it++;
-                            SmallVector<Value*, 4> affineIfArgs(it, imgIndices.end());
-                            affineIfArgs.insert(affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
-                            affineIfArgs.insert(affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
-
-                            auto affineIfOp = rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(), nonPaddingRange, affineIfArgs, /*withElseRegion=*/false);
+                            if (withPadding)
                             {
-                                auto rewriter = affineIfOp.getThenBodyBuilder();
-                                ScopedContext scope(rewriter, loc);
+                                // if args : img dims, img lbs, img ubs
+                                SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
+                                it++; it++;
+                                SmallVector<Value*, 4> affineIfArgs(it, imgIndices.end());
+                                affineIfArgs.insert(affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
+                                affineIfArgs.insert(affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
+
+                                auto affineIfOp = rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(), nonPaddedRange, affineIfArgs, /*withElseRegion=*/false);
+                                {
+                                    auto rewriter = affineIfOp.getThenBodyBuilder();
+                                    ScopedContext scope(rewriter, loc);
+                                    // We must subtract pad below before img load, since the physical image is not padded
+                                    SmallVector<IndexHandle, 4> adjustedImgIndices;
+                                    adjustedImgIndices.push_back(n);
+                                    adjustedImgIndices.push_back(c);
+                                    for (auto i = 0; i < spatialRank; i++)
+                                    {
+                                        adjustedImgIndices.push_back(IndexHandle(imgIndices[2 + i] - intrinsics::constant_index(padBelowIntValues[i])));
+                                    }
+                                    iRes(resIndices) = iRes(resIndices) + (iImages(adjustedImgIndices) * iFilters(filtersIndices));
+                                }
+                            }
+                            else
+                            {
                                 iRes(resIndices) = iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices));
                             }
                         });
