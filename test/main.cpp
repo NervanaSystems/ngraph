@@ -21,8 +21,16 @@
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/interpreter/int_backend.hpp"
+#include "util/test_control.hpp"
 
 using namespace std;
+
+std::string ngraph::unit_test_control_handler(const std::string& backend_name,
+                                              const std::string& test_name,
+                                              const std::string& manifest)
+{
+    return ngraph::default_unit_test_control_handler(backend_name, test_name, manifest);
+}
 
 static void configure_static_backends()
 {

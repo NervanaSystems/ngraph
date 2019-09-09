@@ -25,21 +25,15 @@
 using namespace std;
 using namespace ngraph;
 
-#ifdef NGRAPH_UNIT_TEST_CONTROL_FUNCTION_DEFINED
-extern string unit_test_control_function(const string& backend_name,
-                                         const string& test_name,
-                                         const string& manifest);
-#endif
-
 static unordered_set<string>& get_blacklist(const string& backend)
 {
     static unordered_map<string, unordered_set<string>> s_blacklists;
     return s_blacklists[backend];
 }
 
-string default_unit_test_control_function(const string& backend_name,
-                                          const string& test_name,
-                                          const string& manifest)
+string ngraph::default_unit_test_control_handler(const string& backend_name,
+                                                 const string& test_name,
+                                                 const string& manifest)
 {
     string rc = test_name;
     unordered_set<string>& blacklist = get_blacklist(backend_name);
@@ -72,11 +66,9 @@ string ngraph::prepend_disabled(const string& backend_name,
                                 const string& manifest)
 {
     string rc = test_name;
-#ifdef NGRAPH_UNIT_TEST_CONTROL_FUNCTION_DEFINED
-    rc = unit_test_control_function(backend_name, test_name, manifest);
-#else
-    rc = default_unit_test_control_function(backend_name, test_name, manifest);
-#endif
+
+    rc = unit_test_control_handler(backend_name, test_name, manifest);
+
     return rc;
 }
 
