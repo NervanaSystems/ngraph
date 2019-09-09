@@ -354,6 +354,7 @@ void MLIRCompiler::lower_ng_dialect()
         NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
 
+    dump_mlir_module("Affine Dialect Conversion");
     optimize();
 
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
