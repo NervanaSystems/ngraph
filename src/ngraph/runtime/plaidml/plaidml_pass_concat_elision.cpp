@@ -108,8 +108,7 @@ ngraph::runtime::plaidml::pass::ConcatElision::ConcatElision()
         }
 
         // Build a replacement concat.
-        auto new_concat =
-            std::make_shared<ngraph::op::Concat>(new_args, concat->get_axis());
+        auto new_concat = std::make_shared<ngraph::op::Concat>(new_args, concat->get_axis());
         replace_node(std::move(concat), std::move(new_concat));
         return true;
     };

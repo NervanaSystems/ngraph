@@ -45,8 +45,7 @@ namespace
     bool check_concat_axis_dim_value(const std::shared_ptr<Node>& concat_op)
     {
         auto input_shape = concat_op->get_input_shape(0);
-        size_t concat_axis =
-            std::static_pointer_cast<op::Concat>(concat_op)->get_axis();
+        size_t concat_axis = std::static_pointer_cast<op::Concat>(concat_op)->get_axis();
 
         return (input_shape[concat_axis] == 1);
     }

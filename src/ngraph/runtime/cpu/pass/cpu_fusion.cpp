@@ -2309,8 +2309,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
 
             new_args.push_back(arg->get_argument(0));
         }
-        auto concat_n =
-            std::make_shared<ngraph::op::Concat>(new_args, concat_m->get_axis());
+        auto concat_n = std::make_shared<ngraph::op::Concat>(new_args, concat_m->get_axis());
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(concat_n,
                                                              dq_m->get_argument(1),
                                                              dq_m->get_argument(2),
