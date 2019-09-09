@@ -54,6 +54,7 @@ namespace ngraph
             EpsMode get_eps_mode() const { return m_eps_mode; }
             virtual NodeVector decompose_op() const override;
             virtual void pre_validate_and_infer_types() override;
+            AxisSet get_reduction_axes() const;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
