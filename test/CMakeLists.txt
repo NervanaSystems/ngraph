@@ -70,7 +70,7 @@ set(SRC
     nop_elimination.cpp
     op.cpp
     opset_pass/softmax_opset_pass.cpp
-    opset_pass/pad_opset1upgrade_pass.cpp
+    opset_pass/pad_opset_pass.cpp
     partial_shape.cpp
     pass.cpp
     pass_liveness.cpp
