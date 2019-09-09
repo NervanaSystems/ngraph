@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/product.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -31,6 +32,11 @@ op::v0::Product::Product(const Output<Node>& arg, const Output<Node>& reduction_
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v0::Product::get_default_value() const
+{
+    return ngraph::make_constant_from_string("1", get_element_type(), get_shape());
 }
 
 shared_ptr<Node> op::v0::Product::copy_with_new_args(const NodeVector& new_args) const
@@ -57,6 +63,11 @@ op::v1::ReduceProd::ReduceProd(const Output<Node>& arg,
     , m_keep_dims{keep_dims}
 {
     constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::ReduceProd::get_default_value() const
+{
+    return ngraph::make_constant_from_string("1", get_element_type(), get_shape());
 }
 
 shared_ptr<Node> op::v1::ReduceProd::copy_with_new_args(const NodeVector& new_args) const

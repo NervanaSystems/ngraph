@@ -16,37 +16,43 @@
 
 #pragma once
 
-#include "ngraph/op/util/logical_reduction.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        /// \brief Logical "any" reduction operation.
-        class Any : public util::LogicalReduction
+        /// \brief Operator performing Matrix Multiplication.
+        class MatMul : public ngraph::op::util::FusedOp
         {
         public:
             NGRAPH_API
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
-            /// \brief Constructs an "any" reduction operation.
-            Any() = default;
-            /// \brief Constructs an "any" reduction operation.
+            MatMul() = default;
+            /// \brief Constructs an ScaleShift operation.
             ///
-            /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Any(const Output<Node>& arg, const AxisSet& reduction_axes);
-            /// \brief Constructs an "any" reduction operation.
-            ///
-            /// \param arg The tensor to be reduced.
-            /// \param reduction_axes The axis positions (0-based) to be eliminated.
-            Any(const Output<Node>& arg, const Output<Node>& reduction_axes);
+            /// \param A Matrix A
+            /// \param B Matrix B
+            /// \param transpose_a If matrix A should be transposed.
+            /// \param transpose_b If matrix B should be transposed.
+            MatMul(const Output<Node>& A,
+                   const Output<Node>& B,
+                   const bool& transpose_a = 0,
+                   const bool& transpose_b = 0);
+
+            virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
 
-            /// \return The default value for Any.
-            virtual std::shared_ptr<Node> get_default_value() const override;
+            bool get_transpose_a() const { return m_transpose_a; }
+            bool get_transpose_b() const { return m_transpose_b; }
+        private:
+            const bool m_transpose_a;
+            const bool m_transpose_b;
         };
-    }
-}
+    } // namespace op
+} // namespace ngraph

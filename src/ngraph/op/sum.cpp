@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/sum.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
 
 using namespace std;
@@ -32,6 +33,11 @@ op::v0::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)
 {
     constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v0::Sum::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
 
 shared_ptr<Node> op::v0::Sum::copy_with_new_args(const NodeVector& new_args) const
@@ -66,6 +72,11 @@ op::v1::ReduceSum::ReduceSum(const Output<Node>& arg,
     , m_keep_dims{keep_dims}
 {
     constructor_validate_and_infer_types();
+}
+
+shared_ptr<Node> op::v1::ReduceSum::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
 
 shared_ptr<Node> op::v1::ReduceSum::copy_with_new_args(const NodeVector& new_args) const

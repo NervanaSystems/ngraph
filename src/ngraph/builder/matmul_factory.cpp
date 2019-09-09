@@ -18,17 +18,18 @@
 #include <iterator>
 #include <memory>
 
-#include "matmul_factory.hpp"
 #include "ngraph/builder/make_constant.hpp"
+#include "ngraph/builder/matmul_factory.hpp"
+#include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/quantized_dot.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/broadcasting.hpp"
-#include "utils/reshape.hpp"
 
-using namespace ngraph::onnx_import::matmul;
+using namespace ngraph;
+using namespace std;
 
 /// \brief      Slice the sub matrix from the input tensor.
 ///
@@ -37,59 +38,49 @@ using namespace ngraph::onnx_import::matmul;
 ///
 /// \return     The node representing sub matrix.
 ///
-static std::shared_ptr<ngraph::Node> get_sub_matrix(const std::shared_ptr<ngraph::Node>& node,
-                                                    std::size_t idx)
+static Output<Node> get_sub_matrix(const Output<Node>& node, size_t idx)
 {
-    const ngraph::Shape& shape{node->get_shape()};
+    const Shape& shape{node.get_shape()};
     if (shape.size() < 3)
     {
-        return node;
+        return node.get_node_shared_ptr();
     }
     // Below bounds defines the sub_matrix through ranges for each input node axis.
-    ngraph::Coordinate lower_bounds(shape.size());
-    ngraph::Coordinate upper_bounds = shape;
+    Coordinate lower_bounds(shape.size());
+    Coordinate upper_bounds = shape;
     // We assume `node` tensor is of rank equal 3, thus we slice the sub-matrix lying in the last
     // two dimensions at index `idx` of first axis.
     lower_bounds.at(0) = idx;
     upper_bounds.at(0) = idx + 1;
 
-    auto sub_matrix = std::shared_ptr<ngraph::Node>{
-        std::make_shared<ngraph::op::Slice>(node, lower_bounds, upper_bounds)};
+    auto sub_matrix = Output<Node>{make_shared<op::Slice>(node, lower_bounds, upper_bounds)};
     // Remove first single entry dim.
-    return ngraph::onnx_import::reshape::squeeze(sub_matrix);
+    return builder::squeeze(sub_matrix);
 }
 
-std::shared_ptr<ngraph::Node> MatmulFactory::get_left()
+Output<Node> builder::MatmulFactory::get_left()
 {
     return m_inputs.at(0);
 }
 
-std::shared_ptr<ngraph::Node> MatmulFactory::get_right()
+Output<Node> builder::MatmulFactory::get_right()
 {
     return m_inputs.at(1);
 }
 
-ngraph::NodeVector MatmulFactory::make_matmul_op()
+NodeVector builder::MatmulFactory::make_matmul_op()
 {
     auto left = get_left();
     auto right = get_right();
 
-    std::size_t left_rank{left->get_shape().size()};
-    std::size_t right_rank{right->get_shape().size()};
-
-    if (left_rank == 0 || right_rank == 0)
-    {
-        NGRAPH_WARN << (m_onnx_node) << " "
-                    << "ONNX standard doesn't allow scalar operands, however nGraph "
-                       "accepts them. Consider use of element-wise multiplication instead "
-                       "to conform with ONNX standard.";
-    }
+    size_t left_rank{left.get_shape().size()};
+    size_t right_rank{right.get_shape().size()};
 
     // First (easy) case that is already internally handled by Ngraph Dot operator.
     // Multiply two tensors where both of them has rank lower equal 2.
     if (left_rank <= 2 && right_rank <= 2)
     {
-        return NodeVector{make_dot(left, right)};
+        return {make_dot(left, right).get_node_shared_ptr()};
     }
 
     // Second case:
@@ -98,37 +89,37 @@ ngraph::NodeVector MatmulFactory::make_matmul_op()
     // Broadcast input arguments only if both of them are not vectors.
     if (left_rank > 1 && right_rank > 1)
     {
-        const NodeVector& broadcasted_nodes =
-            ngraph::op::numpy_style_broadcast_for_matmul_operation(left, right);
+        const NodeVector& broadcasted_nodes = op::numpy_style_broadcast_for_matmul_operation(
+            left.get_node_shared_ptr(), right.get_node_shared_ptr());
 
         left = broadcasted_nodes.at(0);
         right = broadcasted_nodes.at(1);
     }
-    const auto& left_shape = left->get_shape();
-    const auto& right_shape = right->get_shape();
+    const auto& left_shape = left.get_shape();
+    const auto& right_shape = right.get_shape();
 
     // Collapse both tensors _stack of matrices_ axes (all except the last two).
     // This will make easier further dot product calculations.
     if (left_shape.size() > 3)
     {
-        left = onnx_import::reshape::collapse(left, 0, left_shape.size() - 3);
+        left = builder::collapse(left, 0, left_shape.size() - 3);
     }
     if (right_shape.size() > 3)
     {
-        right = onnx_import::reshape::collapse(right, 0, right_shape.size() - 3);
+        right = builder::collapse(right, 0, right_shape.size() - 3);
     }
 
     // Perform multiple small dot products
-    std::size_t groups = left->get_shape().at(0);
+    size_t groups = left.get_shape().at(0);
     // If we haven't broadcast earlier this means that one of the inputs is a vector,
     // thus the number of groups is defined by the shape of the bigger tensor.
-    if (right->get_shape().size() > left->get_shape().size())
+    if (right.get_shape().size() > left.get_shape().size())
     {
-        groups = right->get_shape().at(0);
+        groups = right.get_shape().at(0);
     }
     NodeVector small_dots(groups);
 
-    for (std::size_t g = 0; g < groups; ++g)
+    for (size_t g = 0; g < groups; ++g)
     {
         const auto sliced_left = get_sub_matrix(left, g);
         const auto sliced_right = get_sub_matrix(right, g);
@@ -136,11 +127,11 @@ ngraph::NodeVector MatmulFactory::make_matmul_op()
 
         // Expand sub_dot result with single empty outermost axis, in order to
         // later concatenate sub_dots at this axis.
-        small_dots.at(g) = onnx_import::reshape::expand_dims(sub_dot);
+        small_dots.at(g) = builder::expand_dims(sub_dot);
     }
 
     // Concatenate sub_dots on groups axis.
-    auto result = std::make_shared<ngraph::op::Concat>(small_dots, 0);
+    auto result = make_shared<op::Concat>(small_dots, 0);
 
     if (left_shape.size() <= 3 && right_shape.size() <= 3)
     {
@@ -150,39 +141,35 @@ ngraph::NodeVector MatmulFactory::make_matmul_op()
     else
     {
         const Shape& shape{result->get_shape()};
-        Shape result_shape(std::next(std::begin(shape)), std::end(shape));
-        result_shape.insert(std::begin(result_shape),
-                            std::begin(left_shape),
-                            std::next(std::begin(left_shape), left_shape.size() - 2));
-        return {std::make_shared<ngraph::op::Reshape>(
-            result, ngraph::get_default_order(shape.size()), result_shape)};
+        Shape result_shape(next(begin(shape)), end(shape));
+        result_shape.insert(
+            begin(result_shape), begin(left_shape), next(begin(left_shape), left_shape.size() - 2));
+        return {make_shared<op::Reshape>(result, get_default_order(shape.size()), result_shape)};
     }
 }
 
-std::shared_ptr<ngraph::Node> MatmulFactory::make_dot(const std::shared_ptr<ngraph::Node>& left,
-                                                      const std::shared_ptr<ngraph::Node>& right)
+Output<Node> builder::MatmulFactory::make_dot(const Output<Node>& left, const Output<Node>& right)
 {
-    return std::make_shared<ngraph::op::Dot>(left, right);
+    return make_shared<op::Dot>(left, right);
 }
 
-std::shared_ptr<ngraph::Node> QLinearMatmulFactory::get_right()
+Output<Node> builder::QLinearMatmulFactory::get_right()
 {
     return m_inputs.at(3);
 }
 
-std::shared_ptr<ngraph::Node>
-    QLinearMatmulFactory::make_dot(const std::shared_ptr<ngraph::Node>& left,
-                                   const std::shared_ptr<ngraph::Node>& right)
+Output<Node> builder::QLinearMatmulFactory::make_dot(const Output<Node>& left,
+                                                     const Output<Node>& right)
 {
     ngraph::element::Type output_type;
 
-    if (left->get_element_type() == ngraph::element::u8 &&
-        right->get_element_type() == ngraph::element::i8)
+    if (left.get_element_type() == ngraph::element::u8 &&
+        right.get_element_type() == ngraph::element::i8)
     {
         output_type = ngraph::element::i8;
     }
-    else if (left->get_element_type() == ngraph::element::u8 &&
-             right->get_element_type() == ngraph::element::u8)
+    else if (left.get_element_type() == ngraph::element::u8 &&
+             right.get_element_type() == ngraph::element::u8)
     {
         output_type = ngraph::element::u8;
     }
@@ -202,15 +189,14 @@ std::shared_ptr<ngraph::Node>
                                                       ngraph::AxisSet{});
 }
 
-std::shared_ptr<ngraph::Node>
-    MatmulIntegerFactory::make_dot(const std::shared_ptr<ngraph::Node>& left,
-                                   const std::shared_ptr<ngraph::Node>& right)
+Output<Node> builder::MatmulIntegerFactory::make_dot(const Output<Node>& left,
+                                                     const Output<Node>& right)
 {
     auto num_inputs = m_inputs.size();
     auto scale_one = ngraph::builder::make_constant(ngraph::element::f32, Shape{}, 1);
     auto output_zero_point = ngraph::builder::make_constant(ngraph::element::i32, Shape{}, 0);
-    auto left_zero_point = ngraph::builder::make_constant(left->get_element_type(), Shape{}, 0);
-    auto right_zero_point = ngraph::builder::make_constant(right->get_element_type(), Shape{}, 0);
+    auto left_zero_point = ngraph::builder::make_constant(left.get_element_type(), Shape{}, 0);
+    auto right_zero_point = ngraph::builder::make_constant(right.get_element_type(), Shape{}, 0);
     if (num_inputs == 2)
     {
         return std::make_shared<ngraph::op::QuantizedDot>(left,
@@ -228,10 +214,10 @@ std::shared_ptr<ngraph::Node>
                                                           ngraph::AxisSet{});
     }
 
-    left_zero_point = m_inputs.at(2);
+    left_zero_point = m_inputs.at(2).get_node_shared_ptr();
     if (num_inputs == 4)
     {
-        right_zero_point = m_inputs.at(3);
+        right_zero_point = m_inputs.at(3).get_node_shared_ptr();
     }
 
     return std::make_shared<ngraph::op::QuantizedDot>(left,
