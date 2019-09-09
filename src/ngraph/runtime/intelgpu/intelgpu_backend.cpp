@@ -627,7 +627,7 @@ shared_ptr<runtime::Executable>
             }
 
             const shared_ptr<op::Concat> concat_op = static_pointer_cast<op::Concat>(op);
-            const size_t ngraph_concat_axis = concat_op->get_concatenation_axis();
+            const size_t ngraph_concat_axis = concat_op->get_axis();
 
             if (!shape_size(op->get_output_shape(0)) ||
                 (op->get_input_element_type(0) != element::f32) ||

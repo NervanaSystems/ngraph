@@ -42,7 +42,7 @@ static shared_ptr<op::Constant> fold_constant_concat_helper(const shared_ptr<op:
                                   result_vec.data(),
                                   arg_shapes,
                                   concat->get_shape(),
-                                  concat->get_concatenation_axis());
+                                  concat->get_axis());
 
     return make_shared<op::Constant>(
         concat->get_output_element_type(0), concat->get_output_shape(0), result_vec);

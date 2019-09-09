@@ -46,7 +46,7 @@ namespace
     {
         auto input_shape = concat_op->get_input_shape(0);
         size_t concat_axis =
-            std::static_pointer_cast<op::Concat>(concat_op)->get_concatenation_axis();
+            std::static_pointer_cast<op::Concat>(concat_op)->get_axis();
 
         return (input_shape[concat_axis] == 1);
     }
@@ -82,7 +82,7 @@ namespace
         for (auto iter : bounded_concat_ops)
         {
             auto concat_op = std::static_pointer_cast<op::Concat>(iter);
-            concat_axis_vec.push_back(concat_op->get_concatenation_axis());
+            concat_axis_vec.push_back(concat_op->get_axis());
         }
         return concat_axis_vec;
     }

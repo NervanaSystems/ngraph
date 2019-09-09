@@ -579,7 +579,7 @@ private:
                                  out[0]->get_data_ptr<T>(),
                                  in_shapes,
                                  node.get_output_shape(0),
-                                 concat->get_concatenation_axis());
+                                 concat->get_axis());
             break;
         }
         case OP_TYPEID::Constant:

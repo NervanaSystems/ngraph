@@ -89,7 +89,7 @@ ngraph::runtime::plaidml::pass::ConcatElision::ConcatElision()
                 else
                 {
                     new_args.emplace_back(std::make_shared<plaidml::op::Replicate>(
-                        *run_begin, concat->get_concatenation_axis(), run_end - run_begin));
+                        *run_begin, concat->get_axis(), run_end - run_begin));
                 }
                 if (run_end == args.end())
                 {
@@ -109,7 +109,7 @@ ngraph::runtime::plaidml::pass::ConcatElision::ConcatElision()
 
         // Build a replacement concat.
         auto new_concat =
-            std::make_shared<ngraph::op::Concat>(new_args, concat->get_concatenation_axis());
+            std::make_shared<ngraph::op::Concat>(new_args, concat->get_axis());
         replace_node(std::move(concat), std::move(new_concat));
         return true;
     };
