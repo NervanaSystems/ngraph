@@ -401,7 +401,7 @@ void MLIRSubgraphExtractionPass::encapsulate_nodes(NodeVector& ck_nodes)
         {
             for (auto& user : arg->get_users())
             {
-                if (!dynamic_pointer_cast<ngraph::op::CompiledKernel>(user) &&
+                if (!std::dynamic_pointer_cast<ngraph::op::CompiledKernel>(user) &&
                     node_set.find(user) != node_set.end())
                 {
                     auto user_inputs = user->inputs();
