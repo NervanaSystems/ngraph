@@ -700,7 +700,7 @@ namespace ngraph
                         attr.set_output_scales(0, get_output_scale<OP, float>(node));
                     }
 #if MKLDNN_VERSION_MAJOR >= 1
-                    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+                    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::library);
 #endif
                     return attr;
                 }
@@ -757,7 +757,7 @@ namespace ngraph
                         attr.set_output_scales(0, get_output_scale<OP, float>(node));
                     }
 #if MKLDNN_VERSION_MAJOR >= 1
-                    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+                    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::library);
 #endif
                     return attr;
                 }
@@ -1205,7 +1205,7 @@ namespace ngraph
                     size_t concat_dim = concat->get_concatenation_axis();
 
                     mkldnn::primitive_attr attr;
-                    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+                    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::library);
 
                     // concat primitive descriptor
                     return mkldnn::concat::primitive_desc(result_desc,

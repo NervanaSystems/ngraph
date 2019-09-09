@@ -80,7 +80,7 @@
 
 #define ATTR_S                                                                                     \
     mkldnn::primitive_attr attr;                                                                   \
-    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
+    attr.set_scratchpad_mode(mkldnn::scratchpad_mode::library);
 
 #define GET_SIZE                                                                                   \
     mkldnn::memory::desc scratchpad_md = pd.scratchpad_desc();                                     \
