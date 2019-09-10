@@ -2435,10 +2435,6 @@ json JSONSerializer::serialize_node(const Node& n)
             auto tmp = dynamic_cast<const op::v0::Gather*>(&n);
             node["axis"] = tmp->get_axis();
         }
-        if (op_version == 1)
-        {
-            auto tmp = dynamic_cast<const op::v1::Gather*>(&n);
-        }
         break;
     }
     case OP_TYPEID::GatherND: { break;
