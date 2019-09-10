@@ -67,7 +67,7 @@ string ngraph::prepend_disabled(const string& backend_name,
 {
     string rc = test_name;
 
-    rc = unit_test_control_handler(backend_name, test_name, manifest);
+    rc = ::unit_test_control_handler(backend_name, test_name, manifest);
 
     return rc;
 }

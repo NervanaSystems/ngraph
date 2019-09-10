@@ -20,6 +20,10 @@
 
 // Copied from gtest
 
+extern std::string unit_test_control_handler(const std::string& backend_name,
+                                             const std::string& test_name,
+                                             const std::string& manifest);
+
 namespace ngraph
 {
     std::string prepend_disabled(const std::string& backend_name,
@@ -32,10 +36,6 @@ namespace ngraph
     std::string default_unit_test_control_handler(const std::string& backend_name,
                                                   const std::string& test_name,
                                                   const std::string& manifest);
-
-    extern std::string unit_test_control_handler(const std::string& backend_name,
-                                                 const std::string& test_name,
-                                                 const std::string& manifest);
 }
 
 #define NGRAPH_GTEST_TEST_CLASS_NAME_(backend_name, test_case_name, test_name)                     \
