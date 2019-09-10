@@ -183,7 +183,6 @@ namespace
         void populateNGraphToAffineConversionPatterns(OwningRewritePatternList& patterns);
 
         void findOutputValues();
-        void processFakeInstrs();
         void insertNoAliasArgAttrs();
 
     private:
@@ -203,8 +202,7 @@ namespace
 
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
-        // TODO: Remove NGFakeInputOp. We need to set NGFakeInputOp as legal op because we generate
-        // it as part of the lowering to affine/standard.
+        
         target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
         target.addLegalOp<ModuleOp, ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
