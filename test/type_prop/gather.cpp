@@ -91,3 +91,47 @@ TEST(type_prop, gather_fail_indices_element_type)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TEST(type_prop, gather_v1_incorrect_axis_shape)
+{
+    auto params = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto axis = make_shared<op::Parameter>(element::i64, Shape{2});
+    try
+    {
+        auto G = make_shared<op::v1::Gather>(params, axis, axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(error.what(), std::string("Axes input must have 1 element (shape:"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}
+
+TEST(type_prop, gather_v1_axis_out_of_input_rank)
+{
+    auto params = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto axis = make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{2});
+    try
+    {
+        auto G = make_shared<op::v1::Gather>(params, axis, axis);
+        // Should have thrown, so fail if it didn't
+        FAIL() << "Incorrect indices element type";
+    }
+    catch (const NodeValidationFailure& error)
+    {
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("The absolute value of axis must be less than input rank (input_rank"));
+    }
+    catch (...)
+    {
+        FAIL() << "Deduced type check failed for unexpected reason";
+    }
+}

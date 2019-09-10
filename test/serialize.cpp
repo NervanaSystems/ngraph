@@ -356,3 +356,22 @@ TEST(serialize, opset1_softmax)
     EXPECT_EQ(g_softmax->description(), "Softmax");
     EXPECT_EQ(g_softmax->get_version(), 1);
 }
+
+TEST(serialize, opset1_gather)
+{
+    auto params = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto axis = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto gather_v1 = make_shared<op::v1::Gather>(params, indices, axis);
+
+    auto result = make_shared<op::Result>(gather_v1);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{params, indices, axis});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_gather = g_result->input(0).get_source_output().get_node_shared_ptr();
+
+    EXPECT_EQ(g_gather->description(), "Gather");
+    EXPECT_EQ(g_gather->get_version(), 1);
+}

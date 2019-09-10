@@ -15,6 +15,8 @@
 //*****************************************************************************
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/op/gather.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/softmax.hpp"
 
@@ -87,6 +89,18 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 
         auto replacement_node =
             make_shared<op::v1::Softmax>(node->input(0).get_source_output(), axes.to_vector()[0]);
+        replace_node(node, replacement_node);
+        modified = true;
+        break;
+    }
+    case OP_TYPEID::Gather:
+    {
+        auto tmp = dynamic_cast<const op::v0::Gather*>(node.get());
+        int64_t axis = tmp->get_axis();
+
+        auto axis_node = make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{axis});
+        auto replacement_node = make_shared<op::v1::Gather>(
+            node->input(0).get_source_output(), node->input(1).get_source_output(), axis_node);
         replace_node(node, replacement_node);
         modified = true;
         break;
