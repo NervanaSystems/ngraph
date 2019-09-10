@@ -1537,28 +1537,6 @@ TEST(cpu_test, max_pool_with_indices_2d_2channel_2image)
                                        .get_vector()),
                                   read_vector<float>(result_data),
                                   MIN_FLOAT_TOLERANCE_BITS));
-
-    EXPECT_TRUE(test::all_close((test::NDArray<int, 4>({{{{4, 3, 1}, // img 0 chan 0
-                                                          {1, 0, 0},
-                                                          {0, 4, 5},
-                                                          {0, 3, 2}},
-
-                                                         {{5, 4, 3}, // img 0 chan 1
-                                                          {2, 1, 0},
-                                                          {3, 1, 2},
-                                                          {0, 0, 0}}},
-
-                                                        {{{1, 0, 3}, // img 1 chan 0
-                                                          {2, 1, 5},
-                                                          {3, 5, 2},
-                                                          {0, 2, 1}},
-
-                                                         {{0, 3, 2}, // img 1 chan 1
-                                                          {1, 0, 3},
-                                                          {2, 1, 0},
-                                                          {0, 0, 5}}}})
-                                     .get_vector()),
-                                read_vector<int>(result_indices)));
 }
 
 TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
