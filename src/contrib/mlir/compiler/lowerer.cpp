@@ -807,9 +807,13 @@ namespace
         //           Output[n, k, r_1, .. r_f] +=
         //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
 
-
-        // With padding, we check (using IntegerSets) whether each spatial dim in Images lie within paddings
-        // If yes, we init value to zero, else load from MemRef.
+        // With padding, we check (using IntegerSets) whether each spatial dim in Images lie within
+        // paddings. If true, we perform the computation:
+        //
+        //         for <j_1 .. j_f> : <0 .. 0> -> <F_1 .. F_f>
+        //         if(indices in non-padded region):
+        //           Output[n, k, r_1, .. r_f] +=
+        //             Images[n, c, i_1 + j_1, .. i_f + j_f] * Filters[k, c, j_1, .. j_f]
 
         // Create view to write into result.
         MemRefView vRes(result), vImages(images), vFilters(filters);
@@ -847,17 +851,21 @@ namespace
             imgSpatialLbs.push_back(vImages.lb(i + 2));
             imgSpatialUbs.push_back(vImages.ub(i + 2));
 
-            // Check if we have any padding and store pad values
+            // Check if we have any padding and collect pad values
             IntegerAttr iAttr = padBelow[i].cast<IntegerAttr>();
             int padValue = iAttr.getInt();
             if (padValue)
+            {
                 withPadding = true;
+            }
             padBelowIntValues.push_back(padValue);
-            
+
             iAttr = padAbove[i].cast<IntegerAttr>();
             padValue = iAttr.getInt();
             if (padValue)
+            {
                 withPadding = true;
+            }
             padAboveIntValues.push_back(padValue);
         }
 
@@ -881,12 +889,13 @@ namespace
         if (withPadding)
         {
             // Create affine expressions and IntegerSet
-            // IntegerSet (d0, d1, .. d_N-1)[LB_0, LB_1, .. LB_N-1, UB_0, UB_1, .. UB_N-1], where for each dim:
-            //   (d_dim - padBelow[dim] - LB_dim >= 0), 
-            //   (padAbove[dim] - UB_dim - d_dim >= 0)
+            // IntegerSet (d0, d1, .. d_N-1)[LB_0, LB_1, .. LB_N-1, UB_0, UB_1, .. UB_N-1], where
+            // for each dim:
+            //   (d_dim - padBelow[dim] - LB_dim >= 0),
+            //   (padBelow[dim] + UB_dim - d_dim - 1 >= 0)
             SmallVector<AffineExpr, 4> affineExprs;
             SmallVector<bool, 4> isEq;
-        
+
             for (unsigned dim = 0; dim < spatialRank; dim++)
             {
                 // i_dim
@@ -898,16 +907,17 @@ namespace
                 affineExprs.push_back(dimExpr - padBelowExpr - imgLbExpr);
                 isEq.push_back(false);
 
-                // expr2: padAbove + imgUB - i_dim -1 >= 0
+                // expr2: padBelow[dim] + imgUB - i_dim - 1 >= 0
                 auto imgUbExpr = rewriter.getAffineSymbolExpr(spatialRank + dim);
-                auto padAboveExpr = rewriter.getAffineConstantExpr(padAboveIntValues[dim]);
                 auto oneExpr = rewriter.getAffineConstantExpr(1);
-                affineExprs.push_back(padAboveExpr + imgUbExpr - dimExpr - oneExpr);
+                affineExprs.push_back(padBelowExpr + imgUbExpr - dimExpr - oneExpr);
                 isEq.push_back(false);
-            }   
-        
-            NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank, "Invalid number of expressions in the IntegerSet");
-            nonPaddedRange = rewriter.getIntegerSet(spatialRank, 2*spatialRank, affineExprs, isEq);
+            }
+
+            NGRAPH_CHECK(affineExprs.size() == isEq.size() && isEq.size() == 2 * spatialRank,
+                         "Invalid number of expressions in the IntegerSet");
+            nonPaddedRange =
+                rewriter.getIntegerSet(spatialRank, 2 * spatialRank, affineExprs, isEq);
         }
 
         // Initialize output to zero
@@ -964,7 +974,7 @@ namespace
                                         filtersSteps)([&] {
                             SmallVector<IndexHandle, 4> imgIndices, filtersIndices;
                             // Image indices
-                            // Here we compute the virtual start index into the padded image. 
+                            // Here we compute the virtual start index into the padded image.
 
                             imgIndices.push_back(n);
                             imgIndices.push_back(c);
@@ -984,29 +994,42 @@ namespace
                             {
                                 // if args : img dims, img lbs, img ubs
                                 SmallVector<IndexHandle, 4>::iterator it = imgIndices.begin();
-                                it++; it++;
+                                it++;
+                                it++;
                                 SmallVector<Value*, 4> affineIfArgs(it, imgIndices.end());
-                                affineIfArgs.insert(affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
-                                affineIfArgs.insert(affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
+                                affineIfArgs.insert(
+                                    affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
+                                affineIfArgs.insert(
+                                    affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
 
-                                auto affineIfOp = rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(), nonPaddedRange, affineIfArgs, /*withElseRegion=*/false);
+                                auto affineIfOp =
+                                    rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(),
+                                                                nonPaddedRange,
+                                                                affineIfArgs,
+                                                                /*withElseRegion=*/false);
                                 {
                                     auto rewriter = affineIfOp.getThenBodyBuilder();
                                     ScopedContext scope(rewriter, loc);
-                                    // We must subtract pad below before img load, since the physical image is not padded
+                                    // We must subtract pad below before img load, since the
+                                    // physical image is not padded
                                     SmallVector<IndexHandle, 4> adjustedImgIndices;
                                     adjustedImgIndices.push_back(n);
                                     adjustedImgIndices.push_back(c);
                                     for (auto i = 0; i < spatialRank; i++)
                                     {
-                                        adjustedImgIndices.push_back(IndexHandle(imgIndices[2 + i] - intrinsics::constant_index(padBelowIntValues[i])));
+                                        adjustedImgIndices.push_back(IndexHandle(
+                                            imgIndices[2 + i] -
+                                            intrinsics::constant_index(padBelowIntValues[i])));
                                     }
-                                    iRes(resIndices) = iRes(resIndices) + (iImages(adjustedImgIndices) * iFilters(filtersIndices));
+                                    iRes(resIndices) =
+                                        iRes(resIndices) +
+                                        (iImages(adjustedImgIndices) * iFilters(filtersIndices));
                                 }
                             }
                             else
                             {
-                                iRes(resIndices) = iRes(resIndices) + (iImages(imgIndices) * iFilters(filtersIndices));
+                                iRes(resIndices) = iRes(resIndices) +
+                                                   (iImages(imgIndices) * iFilters(filtersIndices));
                             }
                         });
                     });
