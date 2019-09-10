@@ -50,23 +50,23 @@ namespace ngraph
     class PartialShape;
     class Shape;
 
-    class AttributeWalker
+    /// \brief Visits the attributes of a node.
+    ///
+    /// Attributes are the values set when building a graph which are not
+    /// computed as the graph executes. Values computed from the graph topology and attributes
+    /// during compilation are not attributes.
+    class AttributeVisitor
     {
     public:
-        enum Mode
-        {
-            SERIALIZE,
-            ALL
-        };
-        virtual ~AttributeWalker() {}
-        virtual void on(const std::string& name, std::string* value) = 0;
-        virtual void on(const std::string& name, char** value) = 0;
-        virtual void on(const std::string& name, element::Type* value) = 0;
-        virtual void on(const std::string& name, PartialShape* value) = 0;
-        virtual void on(const std::string& name, Shape* value) = 0;
-        virtual void on(const std::string& name, bool* value) = 0;
-        virtual void on(const std::string& name, int64_t* value) = 0;
-        virtual void on(const std::string& name, uint64_t* value) = 0;
+        virtual ~AttributeVisitor() {}
+        virtual void on(const std::string& name, std::string& value) = 0;
+        virtual void on(const std::string& name, char*& value) = 0;
+        virtual void on(const std::string& name, element::Type& value) = 0;
+        virtual void on(const std::string& name, PartialShape& value) = 0;
+        virtual void on(const std::string& name, Shape& value) = 0;
+        virtual void on(const std::string& name, bool& value) = 0;
+        virtual void on(const std::string& name, int64_t& value) = 0;
+        virtual void on(const std::string& name, uint64_t& value) = 0;
     };
 
     class Node;
@@ -162,10 +162,7 @@ namespace ngraph
         virtual ~Node();
 
         /// Traverses the attributes. Returns false if not supported by the node.
-        virtual bool walk_attributes(AttributeWalker& walker, AttributeWalker::Mode mode)
-        {
-            return false;
-        }
+        virtual bool visit_attributes(AttributeVisitor& visitor) { return false; }
         /// Sets/replaces the arguments with new arguments.
         void set_arguments(const NodeVector& arguments);
         /// Sets/replaces the arguments with new arguments.

@@ -214,7 +214,7 @@ T get_or_default(json j, const std::string& key, const T& default_value)
     return has_key(j, key) ? j.at(key).get<T>() : default_value;
 }
 
-class JSONSerializer : public AttributeWalker
+class JSONSerializer : public AttributeVisitor
 {
 public:
     void set_indent(size_t indent) { m_indent = indent; }
@@ -236,20 +236,20 @@ public:
     json serialize_node(const Node& node);
     json serialize_axis_set(const AxisSet& axis_set);
 
-    void on(const std::string& name, std::string* value) override { m_json[name] = *value; }
-    void on(const std::string& name, char** value) override { m_json[name] = *value; }
-    void on(const std::string& name, element::Type* value) override
+    void on(const std::string& name, std::string& value) override { m_json[name] = value; }
+    void on(const std::string& name, char*& value) override { m_json[name] = value; }
+    void on(const std::string& name, element::Type& value) override
     {
-        m_json[name] = write_element_type(*value);
+        m_json[name] = write_element_type(value);
     }
-    void on(const std::string& name, PartialShape* value) override
+    void on(const std::string& name, PartialShape& value) override
     {
-        m_json[name] = write_partial_shape(*value);
+        m_json[name] = write_partial_shape(value);
     }
-    void on(const std::string& name, Shape* value) override { m_json[name] = *value; }
-    void on(const std::string& name, bool* value) override { m_json[name] = *value; }
-    void on(const std::string& name, int64_t* value) override { m_json[name] = *value; }
-    void on(const std::string& name, uint64_t* value) override { m_json[name] = *value; }
+    void on(const std::string& name, Shape& value) override { m_json[name] = value; }
+    void on(const std::string& name, bool& value) override { m_json[name] = value; }
+    void on(const std::string& name, int64_t& value) override { m_json[name] = value; }
+    void on(const std::string& name, uint64_t& value) override { m_json[name] = value; }
 protected:
     size_t m_indent{0};
     bool m_serialize_output_shapes{false};
@@ -260,7 +260,7 @@ protected:
     json m_json;
 };
 
-class JSONDeserializer : public AttributeWalker
+class JSONDeserializer : public AttributeVisitor
 {
 public:
     void set_const_data_callback(function<const_data_callback_t> const_data_callback)
@@ -276,23 +276,23 @@ public:
     shared_ptr<Node> deserialize_node(json j);
     AxisSet deserialize_axis_set(json j);
 
-    void on(const std::string& name, std::string* value) override { *value = m_json[name]; }
-    void on(const std::string& name, char** value) override
+    void on(const std::string& name, std::string& value) override { value = m_json[name]; }
+    void on(const std::string& name, char*& value) override
     {
         //*value = static_cast<char*>(m_json[name]);
     }
-    void on(const std::string& name, element::Type* value) override
+    void on(const std::string& name, element::Type& value) override
     {
-        *value = read_element_type(m_json[name]);
+        value = read_element_type(m_json[name]);
     }
-    void on(const std::string& name, PartialShape* value) override
+    void on(const std::string& name, PartialShape& value) override
     {
-        *value = read_partial_shape(m_json[name]);
+        value = read_partial_shape(m_json[name]);
     }
-    void on(const std::string& name, Shape* value) override { *value = m_json[name]; }
-    void on(const std::string& name, bool* value) override { *value = m_json[name]; }
-    void on(const std::string& name, int64_t* value) override { *value = m_json[name]; }
-    void on(const std::string& name, uint64_t* value) override { *value = m_json[name]; }
+    void on(const std::string& name, Shape& value) override { value = m_json[name]; }
+    void on(const std::string& name, bool& value) override { value = m_json[name]; }
+    void on(const std::string& name, int64_t& value) override { value = m_json[name]; }
+    void on(const std::string& name, uint64_t& value) override { value = m_json[name]; }
 protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
     unordered_map<string, shared_ptr<Function>> m_function_map;
@@ -1619,10 +1619,11 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             else
             {
-                node = make_shared<op::Parameter>();
                 auto old_json = m_json;
                 m_json = node_js;
-                node->walk_attributes(*this, AttributeWalker::Mode::SERIALIZE);
+                node = make_shared<op::Parameter>();
+                node->visit_attributes(*this);
+                node->delayed_validate_and_infer_types();
                 m_json = old_json;
             }
             break;
@@ -2095,8 +2096,6 @@ json JSONSerializer::serialize_node(const Node& n)
 {
     m_nodes_serialized.insert(&n);
     json node;
-    json old_json = m_json;
-    m_json = node;
     node["name"] = n.get_name();
     auto op_version = n.get_version();
     node["op_version"] = op_version;
@@ -2163,12 +2162,14 @@ json JSONSerializer::serialize_node(const Node& n)
 #pragma GCC diagnostic error "-Wswitch-enum"
 // #pragma GCC diagnostic error "-Wimplicit-fallthrough"
 #endif
-    if (const_cast<Node*>(&n)->walk_attributes(*this, AttributeWalker::Mode::SERIALIZE))
+    json old_json = m_json;
+    m_json = node;
+    if (const_cast<Node*>(&n)->visit_attributes(*this))
     {
-        node = m_json;
         m_json = old_json;
         return node;
     }
+    m_json = old_json;
     switch (get_typeid(node_op))
     {
     case OP_TYPEID::Abs: { break;
@@ -3013,6 +3014,5 @@ json JSONSerializer::serialize_node(const Node& n)
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
 #pragma GCC diagnostic pop
 #endif
-    m_json = old_json;
     return node;
 }

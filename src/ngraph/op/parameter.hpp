@@ -49,8 +49,7 @@ namespace ngraph
                       const PartialShape& pshape,
                       const bool cacheable = false);
 
-            bool walk_attributes(AttributeWalker& attribute_walker,
-                                 AttributeWalker::Mode mode) override;
+            bool visit_attributes(AttributeVisitor& visitor) override;
 
             void validate_and_infer_types() override;
 
