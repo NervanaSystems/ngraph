@@ -1922,11 +1922,16 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             else if (op_version == 1)
             {
                 const auto axis = node_js.at("axis").get<size_t>();
-                const auto mode = node_js.at("mode").get<std::string>();
-                const auto sort = node_js.at("sort").get<std::string>();
+                const auto mode = node_js.at("mode").get<op::v1::TopK::Mode>();
+                const auto sort = node_js.at("sort").get<op::v1::TopK::SortType>();
+                const auto k = node_js.at("k").get<size_t>();
                 const auto index_element_type = read_element_type(node_js.at("index_element_type"));
                 auto topk = make_shared<op::v1::TopK>(args[0], args[1], axis, mode, sort);
                 topk->set_index_element_type(index_element_type);
+                if (k != 0)
+                {
+                    topk->set_k(k);
+                }
                 node = move(topk);
             }
             break;

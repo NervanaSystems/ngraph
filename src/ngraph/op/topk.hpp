@@ -99,11 +99,25 @@ namespace ngraph
 
         namespace v1
         {
-            // \brief Computes indices and values of the k maximum/minimum values
-            //        for each slice along specified axis.
+            /// \brief Computes indices and values of the k maximum/minimum values
+            ///        for each slice along specified axis.
             class TopK : public Op
             {
             public:
+
+                enum class SortType
+                {
+                    NONE,
+                    SORT_INDICES,
+                    SORT_VALUES,
+                };
+
+                enum class Mode
+                {
+                    MAX,
+                    MIN
+                };
+
                 NGRAPH_API
                 static const std::string type_name;
                 const std::string& description() const override { return type_name; }
@@ -126,42 +140,50 @@ namespace ngraph
                      const std::string& mode,
                      const std::string& sort);
 
+                TopK(const Output<Node>& data,
+                     const Output<Node>& k,
+                     const int64_t axis,
+                     const Mode mode,
+                     const SortType sort);
+
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual size_t get_version() const override { return 1; }
-
                 size_t get_axis() const { return m_axis; };
                 void set_axis(const size_t axis) { m_axis = axis; }
-                const std::string& get_mode() const { return m_mode; };
-                void set_mode(std::string mode) { m_mode = std::move(mode); }
-                const std::string& get_sort() const { return m_sort; };
-                void set_sort(std::string sort) { m_sort = std::move(sort); }
+                Mode get_mode() const { return m_mode; };
+                void set_mode(const Mode mode) { m_mode = mode; }
+                SortType get_sort() const { return m_sort; };
+                void set_sort(const SortType sort) { m_sort = sort; }
                 element::Type get_index_element_type() const { return m_index_element_type; }
                 void set_index_element_type(const element::Type& index_element_type)
                 {
                     m_index_element_type = index_element_type;
                 }
 
+                size_t get_k() const;
+                void set_k(size_t k);
+
             protected:
                 int64_t m_axis;
-                std::string m_mode;
-                std::string m_sort;
+                Mode m_mode;
+                SortType m_sort;
                 element::Type m_index_element_type;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
 
                 size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
-                                                 const element::Type& k_element_type);
+                                                 const element::Type& k_element_type) const;
+
+                Mode mode_from_string(const std::string& mode) const;
+                SortType sort_from_string(const std::string& sort) const;
 
                 template <typename T>
                 size_t validate_and_get_k(const std::shared_ptr<op::Constant>& k_constant) const;
-
-                void validate_mode();
-                void validate_sort();
             };
         }
     }

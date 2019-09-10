@@ -147,6 +147,20 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const std::string& sort)
     : Op{{data, k}}
     , m_axis{axis}
+    , m_mode{mode_from_string(mode)}
+    , m_sort{sort_from_string(sort)}
+    , m_index_element_type{element::i32}
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v1::TopK::TopK(const Output<Node>& data,
+                   const Output<Node>& k,
+                   const int64_t axis,
+                   const Mode mode,
+                   const SortType sort)
+    : Op{{data, k}}
+    , m_axis{axis}
     , m_mode{mode}
     , m_sort{sort}
     , m_index_element_type{element::i32}
@@ -156,10 +170,6 @@ op::v1::TopK::TopK(const Output<Node>& data,
 
 void op::v1::TopK::validate_and_infer_types()
 {
-    validate_mode();
-
-    validate_sort();
-
     const auto& input_partial_shape = get_input_partial_shape(0);
     const auto input_rank = input_partial_shape.rank();
 
@@ -201,7 +211,7 @@ void op::v1::TopK::validate_and_infer_types()
 }
 
 size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
-                                               const element::Type& k_element_type)
+                                               const element::Type& k_element_type) const
 {
     NODE_VALIDATION_CHECK(this,
                           k_element_type == element::i8 || k_element_type == element::i32 ||
@@ -263,30 +273,46 @@ shared_ptr<Node> op::v1::TopK::copy_with_new_args(const NodeVector& new_args) co
     return new_v1_topk;
 }
 
-void op::v1::TopK::validate_mode()
+op::v1::TopK::Mode op::v1::TopK::mode_from_string(const std::string& mode) const
 {
-    if (m_mode.empty())
-    {
-        m_mode = "max";
-    }
+    static const std::map<std::string, Mode> allowed_values = {{"max", Mode::MAX},
+                                                               {"min", Mode::MIN}};
 
-    NODE_VALIDATION_CHECK(this,
-                          m_mode == "min" || m_mode == "max",
-                          "The provided value of the 'mode' attribute (",
-                          m_mode,
-                          ") is invalid. Allowed values: 'min' or 'max'.");
+    NODE_VALIDATION_CHECK(this, allowed_values.count(mode) > 0, "Invalid 'mode' value passed in.");
+
+    return allowed_values.at(mode);
 }
 
-void op::v1::TopK::validate_sort()
+op::v1::TopK::SortType op::v1::TopK::sort_from_string(const std::string& sort) const
 {
-    if (m_sort.empty())
+    static const std::map<std::string, SortType> allowed_values = {
+        {"none", SortType::NONE},
+        {"index", SortType::SORT_INDICES},
+        {"value", SortType::SORT_VALUES}};
+
+    NODE_VALIDATION_CHECK(this, allowed_values.count(sort) > 0, "Invalid 'sort' value passed in.");
+
+    return allowed_values.at(sort);
+}
+
+size_t op::v1::TopK::get_k() const
+{
+    size_t k = 0;
+    if (input_value(1).get_node_shared_ptr()->is_constant())
     {
-        m_sort = "none";
+        k = read_k_from_constant_node(input_value(1).get_node_shared_ptr(),
+                                      get_input_element_type(1));
     }
 
-    NODE_VALIDATION_CHECK(this,
-                          m_sort == "none" || m_sort == "value" || m_sort == "index",
-                          "The provided value of the 'sort' attribute (",
-                          m_mode,
-                          ") is invalid. Allowed values: 'none', 'value' or 'index'.");
+    if (k == 0 && get_input_partial_shape(0).is_static())
+    {
+        k = get_input_partial_shape(0).to_shape()[m_axis];
+    }
+    return k;
+}
+
+void op::v1::TopK::set_k(size_t k)
+{
+    this->input(1).replace_source_output(
+        op::Constant::create(element::i64, Shape{1}, {k})->output(0));
 }
