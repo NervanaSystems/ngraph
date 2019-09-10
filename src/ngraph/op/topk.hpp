@@ -19,7 +19,6 @@
 #include <memory>
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 
 namespace ngraph
@@ -54,13 +53,13 @@ namespace ngraph
             ///                           supported
             /// \param k Number of top indices to compute. Compute all indices if k = 0
             /// \param compute_max Compute top k max or top k min?
-            /// \param sort SortType for sorting results, default - NONE
+            /// \param sort SortType for sorting results, default - SORT_VALUES
             TopK(const Output<Node>& arg,
                  size_t top_k_axis,
                  const element::Type& index_element_type,
                  size_t k = 0,
                  bool compute_max = true,
-                 SortType sort = SortType::NONE);
+                 SortType sort = SortType::SORT_VALUES);
             /// \brief Constructs a TopK operation.
             ///
             /// \param arg The input tensor
@@ -69,13 +68,13 @@ namespace ngraph
             /// \param index_element_type produce indices. Currently, only int64 or int32 are
             ///                           supported
             /// \param compute_max Compute top k max or top k min?
-            /// \param sort SortType for sorting results, default - NONE
+            /// \param sort SortType for sorting results, default - SORT_VALUES
             TopK(const Output<Node>& arg,
                  const Output<Node>& k,
                  size_t top_k_axis,
                  const element::Type& index_element_type,
                  bool compute_max = true,
-                 SortType sort = SortType::NONE);
+                 SortType sort = SortType::SORT_VALUES);
 
             void validate_and_infer_types() override;
 

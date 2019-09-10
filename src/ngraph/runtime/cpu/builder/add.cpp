@@ -40,6 +40,8 @@ namespace ngraph
 
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto sum_pd = mkldnn_emitter->get_elementwise_add_desc(node);
+                    QUERY_SCRATCHPAD(sum, sum_pd);
+
                     // Add needs 4 primitives: input0, input1, result, and sum.
                     size_t add_index = mkldnn_emitter->reserve_primitive_space(4);
                     auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
@@ -59,8 +61,12 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_elementwise_add(
-                                ctx->mkldnn_primitives, sum_pd, deps, add_index);
+                            mkldnn_emitter->build_elementwise_add(ctx->mkldnn_memories,
+                                                                  ctx->mkldnn_primitives,
+                                                                  ctx->mkldnn_scratchpad_mds,
+                                                                  sum_pd,
+                                                                  deps,
+                                                                  add_index);
                         }
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -68,7 +74,9 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, add_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, add_index, deps, cpu::mkldnn_utils::OpType::ADD);
                     };
                     functors.emplace_back(functor);
                 }
