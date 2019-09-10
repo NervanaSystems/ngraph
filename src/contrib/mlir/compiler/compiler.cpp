@@ -340,7 +340,7 @@ MLIRCompiler::TensorInfo MLIRCompiler::get_tensor_value(descriptor::Tensor* tens
 void MLIRCompiler::lower_ng_dialect()
 {
     // Lower NG dialect to Affine
-    mlir::PassManager pm;
+    mlir::PassManager pm(&m_context);
     pm.addPass(mlir::createDialectLoweringPass(this));
     pm.addPass(mlir::createCanonicalizerPass());
 
@@ -431,7 +431,7 @@ void MLIRCompiler::optimize()
     auto targetInfo = target_machine->getTargetTransformInfo(*ttiSetupFunc);
 
     // Populate pass manager with affine dialect optimizations.
-    mlir::PassManager pm;
+    mlir::PassManager pm(&m_context);
     if (clEnableAffineLoopFusion)
     {
         pm.addPass(mlir::createLoopFusionPass());
