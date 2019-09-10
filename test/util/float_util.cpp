@@ -184,3 +184,26 @@ double ngraph::test::bits_to_double(const std::string& s)
     du.i = static_cast<uint64_t>(bs.to_ullong());
     return du.d;
 }
+
+void ngraph::test::float_to_bf16(const float* src, void* dst, int size)
+{
+    const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
+    uint16_t* q = reinterpret_cast<uint16_t*>(dst);
+
+    for (; size != 0; p += 2, q++, size--)
+    {
+        *q = p[1];
+    }
+}
+
+void ngraph::test::bf16_to_float(const void* src, float* dst, int size)
+{
+    const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
+    uint16_t* q = reinterpret_cast<uint16_t*>(dst);
+
+    for (; size != 0; p++, q += 2, size--)
+    {
+        q[0] = 0;
+        q[1] = *p;
+    }
+}

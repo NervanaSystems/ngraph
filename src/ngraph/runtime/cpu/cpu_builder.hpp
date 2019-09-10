@@ -74,6 +74,10 @@
     else if (ET == element::u64)                                                                   \
     {                                                                                              \
         KV = K<uint64_t>;                                                                          \
+    }                                                                                              \
+    else if (ET == element::bf16)                                                                  \
+    {                                                                                              \
+        KV = K<uint16_t>;                                                                          \
     }
 
 #define SELECT_KERNEL_3ARGS(KV, ET, K)                                                             \
