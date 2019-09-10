@@ -41,10 +41,10 @@
         return;                                                                                    \
     }                                                                                              \
                                                                                                    \
-    if (reduction_axes.size() == arg_rank && is_float_or_integer_64(args[0].get_element_type()))   \
+    if (reduction_axes.size() == arg_rank && is_optimized_et(args[0].get_element_type()))          \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_all<float, 2>)> kernel;          \
-        SELECT_BY_RANK(                                                                            \
+        SELECT_ETS_AND_RANK7(                                                                      \
             kernel, result_element_type, arg_rank, runtime::cpu::kernel::reduce_##K##_all);        \
         auto functor = [&, kernel, arg_shape, result_shape, arg_buffer_index, out_buffer_index](   \
             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                   \
@@ -58,16 +58,16 @@
         return;                                                                                    \
     }                                                                                              \
                                                                                                    \
-    if (reduction_axes.size() == 1 && is_float_or_integer_64(args[0].get_element_type()))          \
+    if (reduction_axes.size() == 1 && is_optimized_et(args[0].get_element_type()))                 \
     {                                                                                              \
         if (*reduction_axes.begin() == arg_rank - 1)                                               \
         {                                                                                          \
             std::function<decltype(runtime::cpu::kernel::reduce_##K##_innermost_1rd<float, 2>)>    \
                 kernel;                                                                            \
-            SELECT_BY_RANK(kernel,                                                                 \
-                           result_element_type,                                                    \
-                           arg_rank,                                                               \
-                           runtime::cpu::kernel::reduce_##K##_innermost_1rd);                      \
+            SELECT_ETS_AND_RANK7(kernel,                                                           \
+                                 result_element_type,                                              \
+                                 arg_rank,                                                         \
+                                 runtime::cpu::kernel::reduce_##K##_innermost_1rd);                \
             auto functor =                                                                         \
                 [&, kernel, arg_shape, result_shape, arg_buffer_index, out_buffer_index](          \
                     CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                           \
@@ -82,7 +82,7 @@
         }                                                                                          \
                                                                                                    \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_1rd<float, 2>)> kernel;          \
-        SELECT_BY_RANK(                                                                            \
+        SELECT_ETS_AND_RANK7(                                                                      \
             kernel, result_element_type, arg_rank, runtime::cpu::kernel::reduce_##K##_1rd);        \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
@@ -103,11 +103,10 @@
     }                                                                                              \
                                                                                                    \
     if (reduction_axes.size() == 2 && arg_rank == 3 &&                                             \
-        is_float_or_integer_64(args[0].get_element_type()))                                        \
+        is_optimized_et(args[0].get_element_type()))                                               \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_3d_2rd<float>)> kernel;          \
-        SELECT_KERNEL_FOR_LIMITED_ET(                                                              \
-            kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_3d_2rd);               \
+        SELECT_ETS(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_3d_2rd);        \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
                         arg_shape,                                                                 \
@@ -127,11 +126,10 @@
     }                                                                                              \
                                                                                                    \
     if (reduction_axes.size() == 2 && arg_rank == 4 &&                                             \
-        is_float_or_integer_64(args[0].get_element_type()))                                        \
+        is_optimized_et(args[0].get_element_type()))                                               \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_4d_2rd<float>)> kernel;          \
-        SELECT_KERNEL_FOR_LIMITED_ET(                                                              \
-            kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_4d_2rd);               \
+        SELECT_ETS(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_4d_2rd);        \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
                         arg_shape,                                                                 \
@@ -151,11 +149,10 @@
     }                                                                                              \
                                                                                                    \
     if (reduction_axes.size() == 2 && arg_rank == 5 &&                                             \
-        is_float_or_integer_64(args[0].get_element_type()))                                        \
+        is_optimized_et(args[0].get_element_type()))                                               \
     {                                                                                              \
         std::function<decltype(runtime::cpu::kernel::reduce_##K##_5d_2rd<float>)> kernel;          \
-        SELECT_KERNEL_FOR_LIMITED_ET(                                                              \
-            kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_5d_2rd);               \
+        SELECT_ETS(kernel, result_element_type, runtime::cpu::kernel::reduce_##K##_5d_2rd);        \
         auto functor = [&,                                                                         \
                         kernel,                                                                    \
                         arg_shape,                                                                 \

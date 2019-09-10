@@ -127,15 +127,15 @@ namespace ngraph
                 }
                 else
                 {
-                    if (is_strided(strides) && is_float_or_integer_64(args[0].get_element_type()))
+                    if (is_strided(strides) && is_optimized_et(args[0].get_element_type()))
                     {
                         std::function<decltype(runtime::cpu::kernel::strided_slice<float, 2>)>
                             kernel;
 
-                        SELECT_BY_RANK(kernel,
-                                       args[0].get_element_type(),
-                                       arg_shape.size(),
-                                       runtime::cpu::kernel::strided_slice);
+                        SELECT_ETS_AND_RANK7(kernel,
+                                             args[0].get_element_type(),
+                                             arg_shape.size(),
+                                             runtime::cpu::kernel::strided_slice);
 
                         auto functor = [&,
                                         kernel,
@@ -158,14 +158,14 @@ namespace ngraph
                         };
                         functors.emplace_back(functor);
                     }
-                    else if (is_float_or_integer_64(args[0].get_element_type()))
+                    else if (is_optimized_et(args[0].get_element_type()))
                     {
                         std::function<decltype(runtime::cpu::kernel::slice<float, 2>)> kernel;
 
-                        SELECT_BY_RANK(kernel,
-                                       args[0].get_element_type(),
-                                       arg_shape.size(),
-                                       runtime::cpu::kernel::slice);
+                        SELECT_ETS_AND_RANK7(kernel,
+                                             args[0].get_element_type(),
+                                             arg_shape.size(),
+                                             runtime::cpu::kernel::slice);
 
                         auto functor = [&,
                                         kernel,
