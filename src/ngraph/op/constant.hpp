@@ -339,7 +339,7 @@ namespace ngraph
 #endif
             }
 
-            static constexpr size_t host_alignment() { return 64; }
+            static constexpr size_t host_alignment() { return 2 * 1024 * 1024; }
             element::Type m_element_type;
             Shape m_shape{};
             std::unique_ptr<runtime::AlignedBuffer> m_data;
