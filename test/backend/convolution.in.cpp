@@ -125,13 +125,13 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_simple_padding)
     auto b = backend->create_tensor(element::f32, shape_b);
     copy_data(b, vector<float>{2.0f});
     auto result = backend->create_tensor(element::f32, shape_r);
-
+    // clang-format off
     vector<float> expected_result{0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
                                   0.0f, 2.0f, 4.0f, 0.0f, 0.0f,
                                   0.0f, 6.0f, 8.0f, 0.0f, 0.0f,
                                   0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
                                   0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-
+    // clang-format on
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, read_vector<float>(result)));
