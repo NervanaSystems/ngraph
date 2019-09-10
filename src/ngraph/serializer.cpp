@@ -1460,66 +1460,101 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::MaxPool:
         {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            // For backwards compatibility, both (but not just one) of the padding_ fields may be
-            // omitted.
-            auto padding_below_maybe = get_or_default(node_js, "padding_below", json{});
-            auto padding_above_maybe = get_or_default(node_js, "padding_above", json{});
-            op::PadType pad_type = read_pad_type(node_js);
-            if (padding_below_maybe.empty() && !padding_above_maybe.empty())
+            if (op_version == 0)
             {
-                throw runtime_error(
-                    "MaxPool: padding_below is absent but padding_above is present");
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                // For backwards compatibility, both (but not just one) of the padding_ fields may
+                // be omitted.
+                auto padding_below_maybe = get_or_default(node_js, "padding_below", json{});
+                auto padding_above_maybe = get_or_default(node_js, "padding_above", json{});
+                op::PadType pad_type = read_pad_type(node_js);
+                if (padding_below_maybe.empty() && !padding_above_maybe.empty())
+                {
+                    throw runtime_error(
+                        "MaxPool: padding_below is absent but padding_above is present");
+                }
+                else if (!padding_below_maybe.empty() && padding_above_maybe.empty())
+                {
+                    throw runtime_error(
+                        "MaxPool: padding_below is present but padding_above is absent");
+                }
+                else if (!padding_below_maybe.empty() && !padding_above_maybe.empty())
+                {
+                    auto padding_below = padding_below_maybe.get<vector<size_t>>();
+                    auto padding_above = padding_above_maybe.get<vector<size_t>>();
+                    node = make_shared<op::v0::MaxPool>(args[0],
+                                                        window_shape,
+                                                        window_movement_strides,
+                                                        padding_below,
+                                                        padding_above,
+                                                        pad_type);
+                }
+                else
+                {
+                    node = make_shared<op::v0::MaxPool>(
+                        args[0], window_shape, window_movement_strides);
+                }
             }
-            else if (!padding_below_maybe.empty() && padding_above_maybe.empty())
+            if (op_version == 1)
             {
-                throw runtime_error(
-                    "MaxPool: padding_below is present but padding_above is absent");
-            }
-            else if (!padding_below_maybe.empty() && !padding_above_maybe.empty())
-            {
-                auto padding_below = padding_below_maybe.get<vector<size_t>>();
-                auto padding_above = padding_above_maybe.get<vector<size_t>>();
-                node = make_shared<op::MaxPool>(args[0],
-                                                window_shape,
-                                                window_movement_strides,
-                                                padding_below,
-                                                padding_above,
-                                                pad_type);
-            }
-            else
-            {
-                node = make_shared<op::MaxPool>(args[0], window_shape, window_movement_strides);
+                auto kernel = node_js.at("kernel").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
+                auto rounding_type = read_rounding_type(node_js);
+                op::PadType pad_type = read_pad_type(node_js);
+                node = make_shared<op::v1::MaxPool>(
+                    args[0], strides, pads_begin, pads_end, kernel, rounding_type, pad_type);
             }
             break;
         }
         case OP_TYPEID::MaxPoolBackprop:
         {
-            auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
-            auto window_movement_strides =
-                node_js.at("window_movement_strides").get<vector<size_t>>();
-            auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
-            auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
-            if (args.size() == 3)
+            if (op_version == 0)
             {
-                node = make_shared<op::MaxPoolBackprop>(args[0],
-                                                        args[1],
-                                                        args[2],
-                                                        window_shape,
-                                                        window_movement_strides,
-                                                        padding_below,
-                                                        padding_above);
+                auto window_shape = node_js.at("window_shape").get<vector<size_t>>();
+                auto window_movement_strides =
+                    node_js.at("window_movement_strides").get<vector<size_t>>();
+                auto padding_below = node_js.at("padding_below").get<vector<size_t>>();
+                auto padding_above = node_js.at("padding_above").get<vector<size_t>>();
+                if (args.size() == 3)
+                {
+                    node = make_shared<op::v0::MaxPoolBackprop>(args[0],
+                                                                args[1],
+                                                                args[2],
+                                                                window_shape,
+                                                                window_movement_strides,
+                                                                padding_below,
+                                                                padding_above);
+                }
+                else
+                {
+                    node = make_shared<op::v0::MaxPoolBackprop>(args[0],
+                                                                args[1],
+                                                                window_shape,
+                                                                window_movement_strides,
+                                                                padding_below,
+                                                                padding_above);
+                }
             }
-            else
+            if (op_version == 1)
             {
-                node = make_shared<op::MaxPoolBackprop>(args[0],
-                                                        args[1],
-                                                        window_shape,
-                                                        window_movement_strides,
-                                                        padding_below,
-                                                        padding_above);
+                auto kernel = node_js.at("kernel").get<vector<size_t>>();
+                auto strides = node_js.at("strides").get<vector<size_t>>();
+                auto pads_begin = node_js.at("pads_begin").get<vector<size_t>>();
+                auto pads_end = node_js.at("pads_end").get<vector<size_t>>();
+                if (args.size() == 3)
+                {
+                    node = make_shared<op::v1::MaxPoolBackprop>(
+                        args[0], args[1], args[2], kernel, strides, pads_begin, pads_end);
+                }
+                else
+                {
+                    node = make_shared<op::v1::MaxPoolBackprop>(
+                        args[0], args[1], kernel, strides, pads_begin, pads_end);
+                }
             }
             break;
         }
@@ -2651,21 +2686,45 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::MaxPool:
     {
-        auto tmp = dynamic_cast<const op::MaxPool*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
-        node["pad_type"] = tmp->get_pad_type();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::MaxPool*>(&n);
+            node["window_shape"] = tmp->get_window_shape();
+            node["window_movement_strides"] = tmp->get_window_movement_strides();
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+            node["pad_type"] = tmp->get_pad_type();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::MaxPool*>(&n);
+            node["kernel"] = tmp->get_kernel();
+            node["strides"] = tmp->get_strides();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+            node["auto_pad"] = tmp->get_auto_pad();
+            node["rounding_type"] = tmp->get_rounding_mode();
+        }
         break;
     }
     case OP_TYPEID::MaxPoolBackprop:
     {
-        auto tmp = dynamic_cast<const op::MaxPoolBackprop*>(&n);
-        node["window_shape"] = tmp->get_window_shape();
-        node["window_movement_strides"] = tmp->get_window_movement_strides();
-        node["padding_below"] = tmp->get_padding_below();
-        node["padding_above"] = tmp->get_padding_above();
+        if (op_version == 0)
+        {
+            auto tmp = dynamic_cast<const op::v0::MaxPoolBackprop*>(&n);
+            node["window_shape"] = tmp->get_window_shape();
+            node["window_movement_strides"] = tmp->get_window_movement_strides();
+            node["padding_below"] = tmp->get_padding_below();
+            node["padding_above"] = tmp->get_padding_above();
+        }
+        if (op_version == 1)
+        {
+            auto tmp = dynamic_cast<const op::v1::MaxPoolBackprop*>(&n);
+            node["kernel"] = tmp->get_kernel();
+            node["strides"] = tmp->get_strides();
+            node["pads_begin"] = tmp->get_pads_begin();
+            node["pads_end"] = tmp->get_pads_end();
+        }
         break;
     }
     case OP_TYPEID::Maximum:
