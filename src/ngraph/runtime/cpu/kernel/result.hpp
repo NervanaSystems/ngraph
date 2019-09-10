@@ -30,7 +30,7 @@ namespace ngraph
                 template <typename ElementType>
                 void result(const void* arg, void* out, size_t count, int arena)
                 {
-                    if (arg != out)
+                    if (arg != out && count != 0)
                     {
                         memcpy(out, arg, sizeof(ElementType) * count);
                     }
