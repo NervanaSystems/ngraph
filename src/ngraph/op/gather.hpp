@@ -33,12 +33,14 @@ namespace ngraph
             /// \param params The tensor from which slices are gathered
             /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
             /// \param axis Axis in params to gather
-            Gather(const Output<Node>& params, const Output<Node>& indices, size_t axis = 0)
-                : Op({params, indices})
-                , m_axis(axis)
-            {
-                constructor_validate_and_infer_types();
-            }
+            Gather(const Output<Node>& params, const Output<Node>& indices, size_t axis = 0);
+
+            /// \param params The tensor from which slices are gathered
+            /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+            /// \param axis The tensor which determines axis of Gather
+            Gather(const Output<Node>& params,
+                   const Output<Node>& indices,
+                   const Output<Node>& axis);
 
             void validate_and_infer_types() override;
 
@@ -47,13 +49,9 @@ namespace ngraph
                 throw ngraph_error("Not yet implemented");
             }
 
-            size_t get_axis() const { return m_axis; }
-            void set_axis(size_t axis) { m_axis = axis; }
+            size_t get_axis() const;
             virtual std::shared_ptr<Node>
                 copy_with_new_args(const NodeVector& new_args) const override;
-
-        protected:
-            size_t m_axis;
         };
     }
 }
