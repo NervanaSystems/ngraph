@@ -45,5 +45,5 @@ TEST(serialize, opset1_gather_pass)
 
     EXPECT_EQ(gather_v1_node->description(), "Gather");
     EXPECT_EQ(gather_v1_node->get_version(), 1);
-    EXPECT_EQ(gather_v1_node->get_axes(), AxisSet{axis});
+    EXPECT_EQ(gather_v1_node->get_axis(), axis);
 }

@@ -18,7 +18,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/shape.hpp"
 
-#include <cmath>
+#include <limits>
 
 using namespace std;
 using namespace ngraph;
@@ -26,6 +26,8 @@ using namespace ngraph;
 static int PARAMS = 0;
 static int INDICES = 1;
 static int AXIS = 2;
+
+static size_t AXIS_NOT_SET_VALUE = std::numeric_limits<int64_t>::max();
 
 const string op::v0::Gather::type_name{"Gather"};
 
@@ -125,15 +127,14 @@ void op::v1::Gather::validate_and_infer_types()
                               ").");
     }
 
-    auto axes = get_axes();
-    if (input_rank.is_static() && axes.size() == 1)
+    auto axis = get_axis();
+    if (input_rank.is_static() && axis != AXIS_NOT_SET_VALUE)
     {
-        NODE_VALIDATION_CHECK(
-            this,
-            abs(*axes.begin()) < static_cast<size_t>(input_rank),
-            "The absolute value of axis must be less than input rank (input_rank: ",
-            input_rank,
-            ").");
+        NODE_VALIDATION_CHECK(this,
+                              axis >= 0 && axis < static_cast<size_t>(input_rank),
+                              "The axis must => 0 and <= input_rank (axis: ",
+                              axis,
+                              ").");
     }
 
     element::Type result_et = get_input_element_type(PARAMS);
@@ -143,9 +144,9 @@ void op::v1::Gather::validate_and_infer_types()
     const PartialShape& indices_shape = get_input_partial_shape(INDICES);
 
     PartialShape result_shape;
-    if (params_shape.rank().is_static() && indices_shape.rank().is_static() && axes.size() == 1)
+    if (params_shape.rank().is_static() && indices_shape.rank().is_static() &&
+        axis != AXIS_NOT_SET_VALUE)
     {
-        auto axis = *axes.begin();
         std::vector<Dimension> result_dims(static_cast<size_t>(params_shape.rank()) +
                                            static_cast<size_t>(indices_shape.rank()) - 1);
         size_t i = 0;
@@ -173,15 +174,31 @@ void op::v1::Gather::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-AxisSet op::v1::Gather::get_axes() const
+int64_t op::v1::Gather::get_axis() const
 {
-    AxisSet axes;
+    int64_t axis = AXIS_NOT_SET_VALUE;
     auto axes_input_node = input_value(AXIS).get_node_shared_ptr();
     if (auto const_op = dynamic_pointer_cast<op::Constant>(axes_input_node))
     {
-        axes = const_op->get_axis_set_val();
+        axis = const_op->get_vector<int64_t>()[0];
     }
-    return axes;
+    else
+    {
+        axis = AXIS_NOT_SET_VALUE;
+    }
+    if (axis < 0)
+    {
+        const auto& input_rank = get_input_partial_shape(PARAMS).rank();
+        if (input_rank.is_static())
+        {
+            axis += static_cast<size_t>(input_rank);
+        }
+        else
+        {
+            axis = AXIS_NOT_SET_VALUE;
+        }
+    }
+    return axis;
 }
 
 void op::v1::Gather::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
