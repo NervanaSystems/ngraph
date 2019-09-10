@@ -14,13 +14,25 @@
 # limitations under the License.
 # ******************************************************************************
 
-# Common MLIR/LLVM setup for the sub-directories below
-
-include_directories(
-    ${NGRAPH_INCLUDE_PATH}
-    ${MLIR_LLVM_INCLUDE_PATH}
-    ${MLIR_INCLUDE_PATHS}
+set(LIB_LIBS
+    MLIRPass
 )
 
-add_subdirectory(compiler)
-add_subdirectory(tools/ngraph-opt)
+add_library(ngraph_opt_lib
+    ngraph_opt.cpp
+)
+target_link_libraries(ngraph_opt_lib ${LIB_LIBS})
+
+set(LIBS
+    MLIROptMain
+    MLIRParser
+)
+
+add_executable(ngraph-opt
+    ngraph_opt.cpp
+)
+
+#whole_archive_link(ngraph-opt ${LIBS})
+target_link_libraries(ngraph-opt PRIVATE ngraph_opt_lib ${LIBS} LLVMSupport)
+
+install(TARGETS ngraph-opt RUNTIME DESTINATION ${NGRAPH_INSTALL_BIN})

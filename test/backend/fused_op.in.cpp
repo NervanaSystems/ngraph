@@ -582,7 +582,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{3}, vector<int64_t>{1, 2, 3});
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
@@ -603,75 +603,13 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d)
                      0.27142859f, 0.2857143f,  0.30000001f, 0.31428573f, 0.32857144f, 0.34285715f});
 
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_3d)
-{
-    Shape data_shape{2, 3, 4};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{3}, vector<int64_t>{1, 2, 3});
-    float eps{1e-6f};
-    auto eps_mode = op::EpsMode::ADD;
-
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
-    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
-
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
-
-    vector<float> input_data(shape_size(data_shape));
-    iota(begin(input_data), end(input_data), 1);
-
-    test_case.add_input<float>(input_data);
-
-    test_case.add_expected_output<float>(
-        data_shape, {0.01428571f, 0.02857143f, 0.04285714f, 0.05714286f, 0.07142857f, 0.08571429f,
-                     0.1f,        0.11428571f, 0.12857144f, 0.14285715f, 0.15714286f, 0.17142858f,
-                     0.18571429f, 0.2f,        0.21428572f, 0.22857143f, 0.24285714f, 0.25714287f,
-                     0.27142859f, 0.2857143f,  0.30000001f, 0.31428573f, 0.32857144f, 0.34285715f});
-
-    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_2d)
-{
-    Shape data_shape{3, 4};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{3}, vector<int64_t>{1, 2, 3});
-    float eps{1e-6f};
-    auto eps_mode = op::EpsMode::ADD;
-
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
-    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
-
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
-
-    vector<float> input_data(shape_size(data_shape));
-    iota(begin(input_data), end(input_data), 1);
-
-    test_case.add_input<float>(input_data);
-
-    test_case.add_expected_output<float>(data_shape,
-                                         {0.03922323f,
-                                          0.07844646f,
-                                          0.11766968f,
-                                          0.15689291f,
-                                          0.19611613f,
-                                          0.23533936f,
-                                          0.2745626f,
-                                          0.31378582f,
-                                          0.35300905f,
-                                          0.39223227f,
-                                          0.43145549f,
-                                          0.47067872f});
-
-    test_case.run();
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_empty_axes_input)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{0}, vector<int64_t>{});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
@@ -691,11 +629,11 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_empty_axes_input)
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, normalize_across_hw_4d)
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_h_4d)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{2}, vector<int64_t>{2, 3});
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
@@ -710,10 +648,62 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_hw_4d)
     test_case.add_input<float>(input_data);
 
     test_case.add_expected_output<float>(
-        data_shape, {0.03922323f, 0.07844646f, 0.11766968f, 0.15689291f, 0.19611613f, 0.23533936f,
-                     0.2745626f,  0.31378582f, 0.35300905f, 0.39223227f, 0.43145549f, 0.47067872f,
-                     0.1994109f,  0.2147502f,  0.2300895f,  0.2454288f,  0.26076809f, 0.2761074f,
-                     0.29144669f, 0.306786f,   0.32212529f, 0.3374646f,  0.35280389f, 0.3681432f});
+        data_shape, {0.0766965f,  0.14142136f, 0.19611613f, 0.24253564f, 0.28216633f, 0.31622776f,
+                     0.34570536f, 0.37139067f, 0.39391932f, 0.41380295f, 0.43145549f, 0.44721359f,
+                     0.99705452f, 0.98994946f, 0.98058069f, 0.97014254f, 0.95936549f, 0.94868332f,
+                     0.93834311f, 0.92847669f, 0.91914505f, 0.91036648f, 0.90213418f, 0.89442718f});
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_1axis_5d)
+{
+    Shape data_shape{1, 2, 2, 2, 3};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
+    float eps{1e-6f};
+    auto eps_mode = op::EpsMode::ADD;
+
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
+
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+
+    test_case.add_expected_output<float>(
+        data_shape, {0.0766965f,  0.14142136f, 0.19611613f, 0.24253564f, 0.28216633f, 0.31622776f,
+                     0.34570536f, 0.37139067f, 0.39391932f, 0.41380295f, 0.43145549f, 0.44721359f,
+                     0.99705452f, 0.98994946f, 0.98058069f, 0.97014254f, 0.95936549f, 0.94868332f,
+                     0.93834311f, 0.92847669f, 0.91914505f, 0.91036648f, 0.90213418f, 0.89442718f});
+    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, normalize_across_123axes_5d)
+{
+    Shape data_shape{1, 2, 2, 2, 3};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{1, 2, 3});
+    float eps{1e-6f};
+    auto eps_mode = op::EpsMode::ADD;
+
+    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto function = make_shared<Function>(NodeVector{normalize}, ParameterVector{data});
+
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+
+    vector<float> input_data(shape_size(data_shape));
+    iota(begin(input_data), end(input_data), 1);
+
+    test_case.add_input<float>(input_data);
+
+    test_case.add_expected_output<float>(
+        data_shape, {0.02638899f, 0.04956816f, 0.070014f,   0.10555596f, 0.1239204f,  0.140028f,
+                     0.18472293f, 0.19827265f, 0.210042f,   0.26388991f, 0.27262488f, 0.280056f,
+                     0.34305686f, 0.34697714f, 0.35007f,    0.42222384f, 0.42132938f, 0.420084f,
+                     0.50139081f, 0.49568161f, 0.49009803f, 0.58055776f, 0.57003385f, 0.560112f});
     test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
 }
 
@@ -721,7 +711,7 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d_max_bias)
 {
     Shape data_shape{1, 2, 3, 4};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::u64, Shape{3}, vector<int64_t>{1, 2, 3});
+    const auto axes = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{1, 2, 3});
     float eps{5000};
     auto eps_mode = op::EpsMode::MAX;
 
