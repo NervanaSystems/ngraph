@@ -23,6 +23,7 @@
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
 #include "lowerer.hpp"
+#include "pass/memory_optimization.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
@@ -184,6 +185,7 @@ void MLIRCompiler::init_mlir()
 void MLIRCompiler::compile()
 {
     build_ng_dialect_module();
+    optimize_ng_dialect();
     lower_ng_dialect();
 }
 
@@ -344,6 +346,7 @@ void MLIRCompiler::lower_ng_dialect()
     pm.addPass(mlir::createDialectLoweringPass(this));
     pm.addPass(mlir::createCanonicalizerPass());
 
+    
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
 
@@ -354,6 +357,7 @@ void MLIRCompiler::lower_ng_dialect()
         NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
     }
 
+    dump_mlir_module("IR after affine lowering");
     optimize();
 
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
@@ -382,6 +386,8 @@ void MLIRCompiler::lower_ng_dialect()
     auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
+
+
 }
 
 /// Returns the cache level size from `targetInfo` for the `cacheLevel` provided. If `userCacheSize`
@@ -674,6 +680,15 @@ mlir::Operation* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_nod
     op->setAttr("axes", red_axes_attr);
     return op;
 }
+
+void MLIRCompiler::optimize_ng_dialect()
+{
+    mlir::PassManager pm(&m_context);
+    pm.addPass(mlir::createMemoryOptimizationPass());
+    pm.run(m_module.get());
+    dump_mlir_module("IR after ng dialect optimization");
+}
+
 // Binds MLIR function arguments to the proper values. This includes externally allocated tensors
 // helpers to be used inside the function.
 void MLIRCompiler::bind_arguments(std::vector<void*>& external_tensors)

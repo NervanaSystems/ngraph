@@ -93,6 +93,7 @@ namespace ngraph
 
             private:
                 void build_ng_dialect_module();
+                void optimize_ng_dialect();
                 void lower_ng_dialect();
                 void optimize();
                 void bind_arguments(std::vector<void*>& external_tensors);

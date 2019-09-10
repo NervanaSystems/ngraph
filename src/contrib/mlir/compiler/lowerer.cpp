@@ -149,6 +149,10 @@ namespace
         SmallVector<Value*, 4> memRefsToDealloc;
         // list of results values to add to func signature
         SmallVector<Value*, 4> loweredOutputValues;
+        using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
+
+        IdToMemRefMap m_id_to_memref;
+        
         ngmlir::MLIRCompiler& compiler;
     };
 
@@ -249,7 +253,29 @@ namespace
             else
             {
                 auto tensorType = origResult->getType().cast<NGTensorType>();
-                auto newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                Value* newResult;
+                Attribute bufferIdAttr = getBufferId(op);
+                if (!bufferIdAttr)
+                {
+                    // Allocate new memref
+                    newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                }
+                else
+                {
+                    unsigned bufferId = bufferIdAttr.cast<IntegerAttr>().getInt();
+                    // Re-use a memref if it exist, else create a new one and update map
+                    IdToMemRefMap::iterator it = m_id_to_memref.find(bufferId);
+                    if (it == m_id_to_memref.end())
+                    {
+                        // create a new memref
+                        newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                        m_id_to_memref[bufferId] = newResult;
+                    }
+                    else
+                    {
+                        newResult = it->second;
+                    }
+                }
                 newResults.push_back(newResult);
             }
         }
