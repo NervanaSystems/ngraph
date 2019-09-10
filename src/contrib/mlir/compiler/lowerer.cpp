@@ -838,7 +838,7 @@ namespace
         auto resSpatialIndices = makeIndexHandles(spatialRank);
         auto resSpatialIndicesPtrs = makeIndexHandlePointers(resSpatialIndices);
         SmallVector<int64_t, 4> resSteps, filtersSteps;
-        SmallVector<int, 4> padBelowIntValues, padAboveIntValues;
+        SmallVector<int, 4> padBelowIntValues;
         bool withPadding = false;
 
         for (auto i = 0; i < spatialRank; i++)
@@ -866,7 +866,6 @@ namespace
             {
                 withPadding = true;
             }
-            padAboveIntValues.push_back(padValue);
         }
 
         NGRAPH_CHECK(vImages.rank() == vFilters.rank(), "Images and Filters have unequal ranks");
