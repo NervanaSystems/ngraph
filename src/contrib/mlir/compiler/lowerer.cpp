@@ -207,7 +207,7 @@ namespace
 
         // we find out output values by looking at returned values
         // any return should return all outputs of the subgraph
-        f.walk<NGReturnOp>([this, &outputCount](NGReturnOp ret) {
+        f.walk([this, &outputCount](NGReturnOp ret) {
             for (unsigned i = 0; i < ret.getNumOperands(); i++)
             {
                 auto outputValue = ret.getOperand(i);
