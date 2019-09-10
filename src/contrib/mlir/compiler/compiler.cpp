@@ -194,7 +194,6 @@ void MLIRCompiler::run(std::vector<void*>& external_tensors)
     cleanup();
 }
 
-
 // Creates an MLIR module and function with nGraph dialect ops from the input CompiledKernel.
 void MLIRCompiler::build_ng_dialect_module()
 {

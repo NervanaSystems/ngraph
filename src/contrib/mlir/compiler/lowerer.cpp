@@ -84,39 +84,42 @@ namespace
 #include "op_lowerers.inc"
 
     // FuncOp Conversion pattern
-    class FuncOpSignatureConversion : public ConversionPattern {
-    public: 
-    FuncOpSignatureConversion(MLIRContext *ctx, TypeConverter &converter)
-      : ConversionPattern(FuncOp::getOperationName(), 1, ctx),
-        converter(converter) {}
+    class FuncOpSignatureConversion : public ConversionPattern
+    {
+    public:
+        FuncOpSignatureConversion(MLIRContext* ctx, TypeConverter& converter)
+            : ConversionPattern(FuncOp::getOperationName(), 1, ctx)
+            , converter(converter)
+        {
+        }
 
         /// Hook for derived classes to implement combined matching and rewriting.
-        PatternMatchResult
-        matchAndRewrite(Operation *op, ArrayRef<Value *> operands,
-                        ConversionPatternRewriter &rewriter) const override {
+        PatternMatchResult matchAndRewrite(Operation* op,
+                                           ArrayRef<Value*> operands,
+                                           ConversionPatternRewriter& rewriter) const override
+        {
             auto funcOp = cast<FuncOp>(op);
             FunctionType type = funcOp.getType();
 
             // Convert the original function arguments.
             TypeConverter::SignatureConversion result(type.getNumInputs());
             for (unsigned i = 0, e = type.getNumInputs(); i != e; ++i)
-              if (failed(converter.convertSignatureArg(i, type.getInput(i), result)))
-                return matchFailure();
+                if (failed(converter.convertSignatureArg(i, type.getInput(i), result)))
+                    return matchFailure();
 
             // Convert the original function results.
             SmallVector<Type, 4> convertedResults;
             if (failed(converter.convertTypes(type.getResults(), convertedResults)))
-              return matchFailure();
+                return matchFailure();
 
             // Add result types as input args without mapping
             result.addInputs(convertedResults);
-            
+
             // Create a new function with an updated signature.
             auto newFuncOp = rewriter.cloneWithoutRegions(funcOp);
-            rewriter.inlineRegionBefore(funcOp.getBody(), newFuncOp.getBody(),
-                                        newFuncOp.end());
-            newFuncOp.setType(FunctionType::get(result.getConvertedTypes(),
-                                                {/*void*/}, funcOp.getContext()));
+            rewriter.inlineRegionBefore(funcOp.getBody(), newFuncOp.getBody(), newFuncOp.end());
+            newFuncOp.setType(
+                FunctionType::get(result.getConvertedTypes(), {/*void*/}, funcOp.getContext()));
 
             // Tell the rewriter to convert the region signature.
             rewriter.applySignatureConversion(&newFuncOp.getBody(), result);
@@ -125,7 +128,7 @@ namespace
         }
 
         /// The type converter to use when rewriting the signature.
-        TypeConverter &converter;
+        TypeConverter& converter;
     };
 
     // Helpers
@@ -202,7 +205,7 @@ namespace
 
         // Create target that defines legal ops for nGraph dialect to be lowered to.
         ConversionTarget target(getContext());
-        
+
         target.addLegalDialect<AffineOpsDialect, StandardOpsDialect>();
         target.addLegalOp<ModuleOp, ModuleTerminatorOp>();
         target.addDynamicallyLegalOp<FuncOp>([&](FuncOp op) {
@@ -253,8 +256,9 @@ namespace
                 auto outputValue = ret.getOperand(i);
                 auto op = outputValue->getDefiningOp();
 
-                op->setAttr("graphOutputIdx",
-                            mlir::IntegerAttr::get(IntegerType::get(32, op->getContext()), i + inputCount));
+                op->setAttr(
+                    "graphOutputIdx",
+                    mlir::IntegerAttr::get(IntegerType::get(32, op->getContext()), i + inputCount));
             }
             NGRAPH_CHECK(outputCount == 0 || outputCount == ret.getNumOperands(),
                          "Inconsistent returns in function");
