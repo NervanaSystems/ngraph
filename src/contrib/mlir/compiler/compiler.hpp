@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style, and nGraph naming convention for public method names only, 
-// since they are exposed to the rest of nGraph code-base.
+// NOTE: This file follows nGraph naming convention for public APIs names only. 
+// Everything else uses MLIR naming convention and code format style.
 
 #pragma once
 
