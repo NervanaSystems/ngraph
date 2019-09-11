@@ -18,7 +18,6 @@ We are pleased to announce the release of version |version|.
 
 Core updates for |version|
 --------------------------
-
 + All ops support ``Output<Node>`` arguments
 + Additional ops
 

@@ -56,14 +56,22 @@
 using namespace ngraph;
 using namespace std;
 
-class UnhandledOp : public ngraph::op::Abs
+namespace
 {
-public:
-    UnhandledOp(const std::shared_ptr<Node>& arg)
-        : Abs(arg)
+    class UnhandledOp : public ngraph::op::Abs
     {
-    }
-};
+    public:
+        UnhandledOp(const std::shared_ptr<Node>& arg)
+            : Abs(arg)
+        {
+        }
+
+        static constexpr NodeTypeInfo type_info{"UnhandledOp", 0};
+        const NodeTypeInfo& get_type_info() const override { return type_info; }
+    };
+
+    constexpr NodeTypeInfo UnhandledOp::type_info;
+}
 
 static void compare_backends(const std::shared_ptr<Function>& f1,
                              const std::shared_ptr<Function>& f2,
@@ -1051,6 +1059,29 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     unset_environment("NGRAPH_CPU_CONCURRENCY");
 }
 
+TEST(cpu_test, constant_convertlayout)
+{
+    Shape data_shape{1, 64, 56, 56};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    Shape weights_shape{64, 64, 3, 3};
+    test::Uniform<float> rng(-100.0f, 100.0f);
+    vector<float> values_in(shape_size(weights_shape));
+    rng.initialize(values_in);
+    auto weights = make_shared<op::Constant>(element::f32, weights_shape, values_in);
+    Shape bias_shape{64};
+    auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
+
+    auto conv = std::make_shared<op::Convolution>(data, weights, Strides{1, 1}, Strides{1, 1});
+    auto convbias = make_shared<op::ConvolutionBias>(conv, bias);
+
+    auto f = make_shared<Function>(convbias, ParameterVector{data, bias});
+    auto backend = runtime::Backend::create("CPU");
+    auto handle = backend->compile(f);
+
+    size_t convert_layout = count_ops_of_type<runtime::cpu::op::ConvertLayout>(f);
+    ASSERT_EQ(convert_layout, 1);
+}
+
 TEST(cpu_test, constant_reshape)
 {
     Shape shape_in{2, 4};
@@ -1514,28 +1545,6 @@ TEST(cpu_test, max_pool_with_indices_2d_2channel_2image)
                                        .get_vector()),
                                   read_vector<float>(result_data),
                                   MIN_FLOAT_TOLERANCE_BITS));
-
-    EXPECT_TRUE(test::all_close((test::NDArray<int, 4>({{{{4, 3, 1}, // img 0 chan 0
-                                                          {1, 0, 0},
-                                                          {0, 4, 5},
-                                                          {0, 3, 2}},
-
-                                                         {{5, 4, 3}, // img 0 chan 1
-                                                          {2, 1, 0},
-                                                          {3, 1, 2},
-                                                          {0, 0, 0}}},
-
-                                                        {{{1, 0, 3}, // img 1 chan 0
-                                                          {2, 1, 5},
-                                                          {3, 5, 2},
-                                                          {0, 2, 1}},
-
-                                                         {{0, 3, 2}, // img 1 chan 1
-                                                          {1, 0, 3},
-                                                          {2, 1, 0},
-                                                          {0, 0, 5}}}})
-                                     .get_vector()),
-                                read_vector<int>(result_indices)));
 }
 
 TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)

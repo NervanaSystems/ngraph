@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 
 namespace ngraph
@@ -29,8 +28,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"EmbeddingLookup", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a EmbeddingLookup operation.
             EmbeddingLookup() = default;
             /// \brief Constructs a EmbeddingLookup operation.

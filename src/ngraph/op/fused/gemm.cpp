@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Gemm::type_name{"Gemm"};
+constexpr NodeTypeInfo op::Gemm::type_info;
 
 op::Gemm::Gemm(const Output<Node>& A,
                const Output<Node>& B,

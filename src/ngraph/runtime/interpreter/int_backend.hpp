@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
@@ -34,7 +36,6 @@ namespace ngraph
             class INTBackend;
             class INTExecutable;
             class INTBackendConstructor;
-            BackendConstructor* get_backend_constructor_pointer();
         }
     }
 }
