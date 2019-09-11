@@ -629,9 +629,22 @@ mlir::Operation* MLIRCompiler::create_generic_op(const ngraph::Node* ng_node)
 {
     std::vector<mlir::Value*> arg_values;
     std::vector<mlir::Type> res_types;
+    auto input_map = m_compiled_kernel->get_input_map();
+    std::shared_ptr<descriptor::Tensor> arg_tensor;
     for (auto& arg : ng_node->get_arguments())
     {
-        auto arg_tensor = arg->get_output_tensor_ptr();
+        if (std::dynamic_pointer_cast<ngraph::op::Parameter>(arg))
+        {
+            auto it = input_map.find(arg);
+            NGRAPH_CHECK(it != input_map.end(), "Parameter not in CK input map");
+
+            arg_tensor = m_compiled_kernel->get_argument(it->second)->get_output_tensor_ptr();
+        }
+        else
+        {
+            arg_tensor = arg->get_output_tensor_ptr();
+        }
+
         auto arg_v = get_tensor_value(arg_tensor.get()).m_value;
         arg_values.push_back(arg_v);
     }

@@ -18,7 +18,6 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/pattern/op/label.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -46,9 +45,9 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
         OutputVector cur_args;
         for (auto a : n->input_values())
         {
-            if (dynamic_cast<ngraph::pattern::op::Label*>(a.get_node()))
+            if (dynamic_cast<ngraph::op::Parameter*>(a.get_node()))
             {
-                // Label
+                // dummy parameter
                 cur_args.push_back(a);
             }
             else
@@ -68,11 +67,9 @@ shared_ptr<Node> ngraph::op::CompiledKernel::copy_with_new_args(const NodeVector
     }
 
     auto ck = std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
-    for (auto tuple : m_node_arg_index_ck_arg_index)
+    for (auto it : m_input_map)
     {
-        ck->m_node_arg_index_ck_arg_index.push_back(
-            std::tuple<std::shared_ptr<Node>, size_t, size_t>(
-                nm[std::get<0>(tuple).get()], std::get<1>(tuple), std::get<2>(tuple)));
+        ck->insert_to_input_map(it.first, it.second);
     }
     return ck;
 }
@@ -106,10 +103,7 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     }
 }
 
-void ngraph::op::CompiledKernel::insert_to_vector(std::shared_ptr<Node> node,
-                                                  size_t node_arg_idx,
-                                                  size_t ck_arg_idx)
+void ngraph::op::CompiledKernel::insert_to_input_map(std::shared_ptr<Node> node, size_t ck_arg_idx)
 {
-    m_node_arg_index_ck_arg_index.push_back(
-        std::tuple<std::shared_ptr<Node>, size_t, size_t>(node, node_arg_idx, ck_arg_idx));
+    m_input_map.emplace(node, ck_arg_idx);
 }

@@ -39,7 +39,6 @@
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/pattern/op/label.hpp"
 
 using namespace ngraph::descriptor;
 using namespace ngraph::op;
@@ -405,21 +404,19 @@ void MLIRSubgraphExtractionPass::encapsulate_nodes(NodeVector& ck_nodes)
                     node_set.find(user) != node_set.end())
                 {
                     auto user_inputs = user->inputs();
-                    auto user_arg_idx = 0;
                     for (auto input : user_inputs)
                     {
                         auto input_output = input.get_source_output();
                         if (input.get_source_output().get_node() == arg.get())
                         {
-                            ck_node->insert_to_vector(user, user_arg_idx, ck_arg_idx);
                             input.get_source_output().remove_target_input(input);
                             // Use a label as input for now, will replace later with the correct
                             // one.
-                            auto temp_input_label = std::make_shared<pattern::op::Label>(
+                            auto temp_input_param = std::make_shared<ngraph::op::Parameter>(
                                 input_output.get_element_type(), input_output.get_partial_shape());
-                            input.replace_source_output(temp_input_label->output(0));
+                            input.replace_source_output(temp_input_param->output(0));
+                            ck_node->insert_to_input_map(temp_input_param, ck_arg_idx);
                         }
-                        user_arg_idx++;
                     }
                 }
             }
