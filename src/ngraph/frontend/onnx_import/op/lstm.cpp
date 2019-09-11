@@ -197,19 +197,19 @@ namespace ngraph
 
                     return std::make_shared<ngraph::op::LSTMSequence>(
                                input_map.at(LSTMInput::LSTM_INPUT_X),
+                               input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
+                               input_map.at(LSTMInput::LSTM_INPUT_INIT_C),
+                               input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
                                input_map.at(LSTMInput::LSTM_INPUT_W),
                                input_map.at(LSTMInput::LSTM_INPUT_R),
                                input_map.at(LSTMInput::LSTM_INPUT_B),
                                input_map.at(LSTMInput::LSTM_INPUT_P),
-                               input_map.at(LSTMInput::LSTM_INPUT_INIT_H),
-                               input_map.at(LSTMInput::LSTM_INPUT_INIT_C),
-                               input_map.at(LSTMInput::LSTM_INPUT_SEQ_LENGTHS),
+                               attributes.m_hidden_size,
+                               attributes.m_direction,
                                attributes.m_activation_alpha,
                                attributes.m_activation_beta,
                                attributes.m_activations,
                                attributes.m_clip_threshold,
-                               attributes.m_direction,
-                               attributes.m_hidden_size,
                                attributes.m_input_forget)
                         ->decompose_op();
                 }

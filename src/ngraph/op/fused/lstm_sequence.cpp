@@ -59,20 +59,20 @@ NodeVector op::LSTMSequence::decompose_op() const
 shared_ptr<Node> op::LSTMSequence::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<LSTMSequence>(new_args.at(0),
-                                     new_args.at(1),
-                                     new_args.at(2),
-                                     new_args.at(3),
-                                     new_args.at(4),
-                                     new_args.at(5),
-                                     new_args.at(6),
-                                     new_args.at(7),
+    return make_shared<LSTMSequence>(new_args.at(0), // X
+                                     new_args.at(5), // initial_hidden_state
+                                     new_args.at(6), // initial_cell_state
+                                     new_args.at(7), // sequence_lengths
+                                     new_args.at(1), // W
+                                     new_args.at(2), // R
+                                     new_args.at(3), // B
+                                     new_args.at(4), // P
+                                     m_hidden_size,
+                                     m_direction,
                                      m_activations_alpha,
                                      m_activations_beta,
                                      m_activations,
                                      m_clip_threshold,
-                                     m_direction,
-                                     m_hidden_size,
                                      m_input_forget);
 }
 

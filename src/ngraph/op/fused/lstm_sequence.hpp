@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
@@ -42,22 +43,24 @@ namespace ngraph
             static const std::string type_name;
             const std::string& description() const override { return type_name; }
             LSTMSequence() = default;
+
             explicit LSTMSequence(const Output<Node>& X,
+                                  const Output<Node>& initial_hidden_state,
+                                  const Output<Node>& initial_cell_state,
+                                  const Output<Node>& sequence_lengths,
                                   const Output<Node>& W,
                                   const Output<Node>& R,
                                   const Output<Node>& B,
                                   const Output<Node>& P,
-                                  const Output<Node>& initial_h,
-                                  const Output<Node>& initial_c,
-                                  const Output<Node>& seq_lengths,
-                                  const std::vector<float> activations_alpha,
-                                  const std::vector<float> activations_beta,
-                                  const std::vector<std::string> activations,
-                                  const float clip_threshold,
-                                  const std::string direction,
                                   const std::int64_t hidden_size,
-                                  const bool input_forget)
-                : FusedOp({X, W, R, B, P, initial_h, initial_c, seq_lengths})
+                                  const std::string direction,
+                                  const std::vector<float> activations_alpha = {},
+                                  const std::vector<float> activations_beta = {},
+                                  const std::vector<std::string> activations = {},
+                                  const float clip_threshold = 0,
+                                  const bool input_forget = false)
+                : FusedOp(
+                      {X, W, R, B, P, initial_hidden_state, initial_cell_state, sequence_lengths})
                 , m_activations_alpha(activations_alpha)
                 , m_activations_beta(activations_beta)
                 , m_activations(activations)
@@ -65,6 +68,39 @@ namespace ngraph
                 , m_direction(direction)
                 , m_hidden_size(hidden_size)
                 , m_input_forget(input_forget)
+            {
+                validate_and_infer_types();
+            }
+
+            explicit LSTMSequence(const Output<Node>& X,
+                                  const Output<Node>& initial_hidden_state,
+                                  const Output<Node>& initial_cell_state,
+                                  const Output<Node>& sequence_lengths,
+                                  const Output<Node>& W,
+                                  const Output<Node>& R,
+                                  const Output<Node>& B,
+                                  const std::int64_t hidden_size,
+                                  const std::string direction,
+                                  const std::vector<float> activations_alpha = {},
+                                  const std::vector<float> activations_beta = {},
+                                  const std::vector<std::string> activations = {},
+                                  const float clip_threshold = 0,
+                                  const bool input_forget = false)
+                : LSTMSequence(X,
+                               initial_hidden_state,
+                               initial_cell_state,
+                               sequence_lengths,
+                               W,
+                               R,
+                               B,
+                               Constant::create(element::f32, Shape{}, std::vector<float>{0.f}),
+                               hidden_size,
+                               direction,
+                               activations_alpha,
+                               activations_beta,
+                               activations,
+                               clip_threshold,
+                               input_forget)
             {
             }
 
