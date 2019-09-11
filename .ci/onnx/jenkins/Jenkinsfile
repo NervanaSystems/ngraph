@@ -88,7 +88,7 @@ def checkoutSources() {
         retry(3) {
             checkout([$class: 'GitSCM',
                 branches: [[name: "${NGRAPH_BRANCH}"]],
-                doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', timeout: 30]], submoduleCfg: [],
+                doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', timeout: 120]], submoduleCfg: [],
                 userRemoteConfigs: [[credentialsId: "${JENKINS_GITHUB_CREDENTIAL_ID}",
                 url: "${NGRAPH_REPO_ADDRESS}"]]])
         }
@@ -97,7 +97,7 @@ def checkoutSources() {
         retry(3) {
             checkout([$class: 'GitSCM',
                 branches: [[name: "${NGRAPH_ONNX_BRANCH}"]],
-                doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', timeout: 30]], submoduleCfg: [],
+                doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', timeout: 120]], submoduleCfg: [],
                 userRemoteConfigs: [[credentialsId: "${JENKINS_GITHUB_CREDENTIAL_ID}",
                 url: "${NGRAPH_ONNX_REPO_ADDRESS}"]]])
         }
