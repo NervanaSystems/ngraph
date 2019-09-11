@@ -1949,9 +1949,9 @@ div[class^='highlight'] pre {
   left: 0;
   width: 300px;
   color: #FDC939;
+  font-family: monospace;
   background: #1f1d1d;
   border-top: solid 10px #5f5f5f;
-  font-family: "Nunito Sans", "RobotoSlab", "Helvetica Neue", Arial, sans;
   z-index: 400;
 }
 .rst-versions a {
@@ -2020,7 +2020,6 @@ div[class^='highlight'] pre {
   display: inline-block;
   padding: 6px;
   color: #FDC939;
-  font-family: monospace;
 }
 .rst-versions.rst-badge {
   width: auto;
