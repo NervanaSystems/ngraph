@@ -2020,6 +2020,7 @@ div[class^='highlight'] pre {
   display: inline-block;
   padding: 6px;
   color: #FDC939;
+  font-family: monospace;
 }
 .rst-versions.rst-badge {
   width: auto;
@@ -2264,11 +2265,11 @@ div[class^='highlight'] pre {
   display: inline-block;
   margin: 6px 0;
   font-size: 100%;
-    font-family: monospace;
-  line-height: normal;
-  background: white;
-  color: #c38f4a;
-  border-top: solid 0.31em #c38f4a;
+  font-family: monospace;
+  line-height: 1.1em;
+  background-color: #393F4D;
+  border-top: solid 0.31em #ffa400;
+  color: #d9d9d9;
   padding: 6px;
   position: relative;
 }
@@ -2288,12 +2289,15 @@ div[class^='highlight'] pre {
 }
 
 .function {
-    border-right: dashed 0.19em #eac98a;
-    border-bottom: solid 0.23em #c38f4a;
-    border-top: solid 0.27em #c38f4a;
-    background: #f0ece1;
+    border-right: dotted 0.41em #DC700D;
+    border-bottom: solid 0.31em #FFA400;
+    border-top: solid 0.31em #FFA400;
+    background: #fff;
 }
 
+code.descname {
+  color: #009C07;
+}
 
 .rst-content dl:not(.docutils) dt .headerlink {
   color: #7b7064;
