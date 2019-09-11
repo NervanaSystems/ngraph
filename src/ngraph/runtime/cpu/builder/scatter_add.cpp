@@ -60,18 +60,18 @@ namespace ngraph
                 auto out_shape = out[0].get_shape();
                 auto element_type = args[0].get_element_type();
 
-                if (is_int64 && is_float_or_integer_64(args[0].get_element_type()))
+                if (is_int64 && is_optimized_et(args[0].get_element_type()))
                 {
                     if (inputs_shape.size() <= 3 && updates_shape.size() <= 5)
                     {
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i64<float, 2, 2>)>
                             kernel;
 
-                        SELECT_BY_2RANKS(kernel,
-                                         args[0].get_element_type(),
-                                         inputs_shape.size(),
-                                         updates_shape.size(),
-                                         runtime::cpu::kernel::scatter_add_i64);
+                        SELECT_RANK35_ET4(kernel,
+                                          args[0].get_element_type(),
+                                          inputs_shape.size(),
+                                          updates_shape.size(),
+                                          runtime::cpu::kernel::scatter_add_i64);
 
                         auto functor = [&,
                                         kernel,
@@ -99,18 +99,18 @@ namespace ngraph
                         throw ngraph_error("Unsupported ranks in CPU Builder for ScatterAdd");
                     }
                 }
-                else if (is_float_or_integer_64(args[0].get_element_type()))
+                else if (is_optimized_et(args[0].get_element_type()))
                 {
                     if (inputs_shape.size() <= 3 && updates_shape.size() <= 5)
                     {
                         std::function<decltype(runtime::cpu::kernel::scatter_add_i32<float, 2, 2>)>
                             kernel;
 
-                        SELECT_BY_2RANKS(kernel,
-                                         args[0].get_element_type(),
-                                         inputs_shape.size(),
-                                         updates_shape.size(),
-                                         runtime::cpu::kernel::scatter_add_i32);
+                        SELECT_RANK35_ET4(kernel,
+                                          args[0].get_element_type(),
+                                          inputs_shape.size(),
+                                          updates_shape.size(),
+                                          runtime::cpu::kernel::scatter_add_i32);
 
                         auto functor = [&,
                                         kernel,

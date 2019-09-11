@@ -72,15 +72,15 @@ namespace ngraph
                     return;
                 }
 
-                if (strided && is_float_or_integer_64(args[0].get_element_type()))
+                if (strided && is_optimized_et(args[0].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::strided_replace_slice<float, 2>)>
                         kernel;
 
-                    SELECT_BY_RANK(kernel,
-                                   args[0].get_element_type(),
-                                   arg0_shape.size(),
-                                   runtime::cpu::kernel::strided_replace_slice);
+                    SELECT_ETS_AND_RANK7(kernel,
+                                         args[0].get_element_type(),
+                                         arg0_shape.size(),
+                                         runtime::cpu::kernel::strided_replace_slice);
 
                     auto functor = [&,
                                     kernel,
@@ -105,14 +105,14 @@ namespace ngraph
                     };
                     functors.emplace_back(functor);
                 }
-                else if (is_float_or_integer_64(args[0].get_element_type()))
+                else if (is_optimized_et(args[0].get_element_type()))
                 {
                     std::function<decltype(runtime::cpu::kernel::replace_slice<float, 2>)> kernel;
 
-                    SELECT_BY_RANK(kernel,
-                                   args[0].get_element_type(),
-                                   arg0_shape.size(),
-                                   runtime::cpu::kernel::replace_slice);
+                    SELECT_ETS_AND_RANK7(kernel,
+                                         args[0].get_element_type(),
+                                         arg0_shape.size(),
+                                         runtime::cpu::kernel::replace_slice);
 
                     auto functor = [&,
                                     kernel,

@@ -69,16 +69,16 @@ namespace ngraph
                     functors.emplace_back(functor);
                     return;
                 }
-                else if (is_float_or_integer_64(args[0].get_element_type()))
+                else if (is_optimized_et(args[0].get_element_type()))
                 {
                     if (axes.size() == arg_shape.size())
                     {
                         std::function<decltype(runtime::cpu::kernel::softmax_all<float, 1>)> kernel;
 
-                        PARTIAL_SELECT_BY_RANK(kernel,
-                                               args[0].get_element_type(),
-                                               args[0].get_shape().size(),
-                                               runtime::cpu::kernel::softmax_all);
+                        SELECT_ETS_AND_RANK7(kernel,
+                                             args[0].get_element_type(),
+                                             args[0].get_shape().size(),
+                                             runtime::cpu::kernel::softmax_all);
 
                         auto functor = [&, kernel, arg_shape, arg_buffer_index, out_buffer_index](
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
@@ -98,10 +98,10 @@ namespace ngraph
                                 runtime::cpu::kernel::softmax_innermost_1rd<float, 1>)>
                                 kernel;
 
-                            PARTIAL_SELECT_BY_RANK(kernel,
-                                                   args[0].get_element_type(),
-                                                   args[0].get_shape().size(),
-                                                   runtime::cpu::kernel::softmax_innermost_1rd);
+                            SELECT_ETS_AND_RANK7(kernel,
+                                                 args[0].get_element_type(),
+                                                 args[0].get_shape().size(),
+                                                 runtime::cpu::kernel::softmax_innermost_1rd);
 
                             auto functor =
                                 [&, kernel, arg_shape, arg_buffer_index, out_buffer_index](
@@ -119,10 +119,10 @@ namespace ngraph
                             std::function<decltype(runtime::cpu::kernel::softmax_1rd<float, 1>)>
                                 kernel;
 
-                            PARTIAL_SELECT_BY_RANK(kernel,
-                                                   args[0].get_element_type(),
-                                                   args[0].get_shape().size(),
-                                                   runtime::cpu::kernel::softmax_1rd);
+                            SELECT_ETS_AND_RANK7(kernel,
+                                                 args[0].get_element_type(),
+                                                 args[0].get_shape().size(),
+                                                 runtime::cpu::kernel::softmax_1rd);
 
                             auto functor =
                                 [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](
@@ -141,9 +141,9 @@ namespace ngraph
                     {
                         std::function<decltype(runtime::cpu::kernel::softmax_3d_2rd<float>)> kernel;
 
-                        SELECT_KERNEL_FOR_LIMITED_ET(kernel,
-                                                     args[0].get_element_type(),
-                                                     runtime::cpu::kernel::softmax_3d_2rd);
+                        SELECT_ETS(kernel,
+                                   args[0].get_element_type(),
+                                   runtime::cpu::kernel::softmax_3d_2rd);
 
                         auto functor =
                             [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](
@@ -161,9 +161,9 @@ namespace ngraph
                     {
                         std::function<decltype(runtime::cpu::kernel::softmax_4d_3rd<float>)> kernel;
 
-                        SELECT_KERNEL_FOR_LIMITED_ET(kernel,
-                                                     args[0].get_element_type(),
-                                                     runtime::cpu::kernel::softmax_4d_3rd);
+                        SELECT_ETS(kernel,
+                                   args[0].get_element_type(),
+                                   runtime::cpu::kernel::softmax_4d_3rd);
 
                         auto functor =
                             [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](

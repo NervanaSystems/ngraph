@@ -58,16 +58,16 @@ namespace ngraph
                              args[0].get_element_type() == element::u8 ||
                              args[0].get_element_type() == element::i8) &&
                             params_shape.size() <= 3 && out_shape.size() <= 5 &&
-                            is_float_or_integer_64(args[0].get_element_type()))
+                            is_optimized_et(args[0].get_element_type()))
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i64<float, 2, 2>)>
                                 kernel;
 
-                            SELECT_BY_2RANKS(kernel,
-                                             args[0].get_element_type(),
-                                             params_shape.size(),
-                                             out_shape.size(),
-                                             runtime::cpu::kernel::gather_i64);
+                            SELECT_RANK35_ET4(kernel,
+                                              args[0].get_element_type(),
+                                              params_shape.size(),
+                                              out_shape.size(),
+                                              runtime::cpu::kernel::gather_i64);
 
                             return [&,
                                     kernel,
@@ -119,16 +119,16 @@ namespace ngraph
                              args[0].get_element_type() == element::u8 ||
                              args[0].get_element_type() == element::i8) &&
                             params_shape.size() <= 3 && out_shape.size() <= 5 &&
-                            is_float_or_integer_64(args[0].get_element_type()))
+                            is_optimized_et(args[0].get_element_type()))
                         {
                             std::function<decltype(runtime::cpu::kernel::gather_i32<float, 2, 2>)>
                                 kernel;
 
-                            SELECT_BY_2RANKS(kernel,
-                                             args[0].get_element_type(),
-                                             params_shape.size(),
-                                             out_shape.size(),
-                                             runtime::cpu::kernel::gather_i32);
+                            SELECT_RANK35_ET4(kernel,
+                                              args[0].get_element_type(),
+                                              params_shape.size(),
+                                              out_shape.size(),
+                                              runtime::cpu::kernel::gather_i32);
 
                             return [&,
                                     kernel,
