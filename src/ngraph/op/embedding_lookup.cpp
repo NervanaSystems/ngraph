@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::EmbeddingLookup::type_name{"EmbeddingLookup"};
+constexpr NodeTypeInfo op::EmbeddingLookup::type_info;
 
 void op::EmbeddingLookup::validate_and_infer_types()
 {

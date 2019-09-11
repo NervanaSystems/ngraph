@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::TopK::type_name{"TopK"};
+constexpr NodeTypeInfo op::TopK::type_info;
 
 op::TopK::TopK(const Output<Node>& arg,
                size_t top_k_axis,

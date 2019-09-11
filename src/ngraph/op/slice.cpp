@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Slice::type_name{"Slice"};
+constexpr NodeTypeInfo op::Slice::type_info;
 
 op::Slice::Slice(const Output<Node>& arg,
                  const Coordinate& lower_bounds,

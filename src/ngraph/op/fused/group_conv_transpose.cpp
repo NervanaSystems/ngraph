@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::GroupConvolutionTranspose::type_name{"GroupConvolutionTranspose"};
+constexpr NodeTypeInfo op::GroupConvolutionTranspose::type_info;
 
 op::GroupConvolutionTranspose::GroupConvolutionTranspose(const Output<Node>& data,
                                                          const Output<Node>& filters,

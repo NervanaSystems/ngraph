@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::MaxPool::type_name{"MaxPool"};
+constexpr NodeTypeInfo op::MaxPool::type_info;
 
 op::MaxPool::MaxPool(const Output<Node>& arg,
                      const Shape& window_shape,
@@ -144,12 +144,11 @@ shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) con
                                 m_ceil_mode);
 }
 
+constexpr NodeTypeInfo op::MaxPoolBackprop::type_info;
 shared_ptr<Node> op::MaxPool::get_default_value() const
 {
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
-
-const string op::MaxPoolBackprop::type_name{"MaxPoolBackprop"};
 
 op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
                                      const Output<Node>& delta,

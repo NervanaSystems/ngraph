@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Quantize::type_name{"Quantize"};
+constexpr NodeTypeInfo op::Quantize::type_info;
 
 op::Quantize::Quantize(const Output<Node>& input,
                        const Output<Node>& scale,

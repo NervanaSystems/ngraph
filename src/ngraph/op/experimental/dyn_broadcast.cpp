@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DynBroadcast::type_name{"DynBroadcast"};
+constexpr NodeTypeInfo op::DynBroadcast::type_info;
 
 op::DynBroadcast::DynBroadcast(const Output<Node>& arg,
                                const Output<Node>& shape,
