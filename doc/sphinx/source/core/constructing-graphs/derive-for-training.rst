@@ -2,7 +2,7 @@
 
 .. _derive_for_training: 
 
-Derive a trainable model 
+Derive a trainable model
 ########################
 
 Documentation in this section describes one of the possible ways to turn a 
