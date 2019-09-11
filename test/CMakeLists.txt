@@ -153,6 +153,8 @@ set(SRC
     type_prop/squared_difference.cpp
     type_prop/squeeze.cpp
     type_prop/sum.cpp
+    type_prop/reduce_prod.cpp
+    type_prop/reduce_sum.cpp
     type_prop/tile.cpp
     type_prop/top_k.cpp
     type_prop/transpose.cpp

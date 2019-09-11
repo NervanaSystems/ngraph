@@ -44,4 +44,5 @@ TEST(serialize, opset1_product_upgrade)
 
     EXPECT_EQ(reduce_prod_v1->description(), "Product");
     EXPECT_EQ(reduce_prod_v1->get_version(), 1);
+    EXPECT_EQ(reduce_prod_v1->get_keep_dims(), false);
 }

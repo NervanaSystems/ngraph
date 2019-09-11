@@ -44,4 +44,5 @@ TEST(serialize, opset1_sum_upgrade)
 
     EXPECT_EQ(reduce_sum_v1->description(), "Sum");
     EXPECT_EQ(reduce_sum_v1->get_version(), 1);
+    EXPECT_EQ(reduce_sum_v1->get_keep_dims(), false);
 }

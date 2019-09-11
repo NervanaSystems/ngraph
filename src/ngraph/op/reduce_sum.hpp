@@ -30,7 +30,7 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                    static const std::string type_name;
+                static const std::string type_name;
                 const std::string& description() const override { return type_name; }
                 /// \brief Constructs a summation operation.
                 ReduceSum() = default;
@@ -39,20 +39,24 @@ namespace ngraph
                 /// \param arg The tensor to be summed.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 /// \param keep_dims If set to true it holds axes that are used for reduction.
-                ReduceSum(const Output<Node>& arg, const AxisSet& reduction_axes, bool keep_dims = false);
+                ReduceSum(const Output<Node>& arg,
+                          const AxisSet& reduction_axes,
+                          bool keep_dims = false);
                 /// \brief Constructs a summation operation.
                 ///
                 /// \param arg The tensor to be summed.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 /// \param keep_dims If set to 1 it holds axes that are used for reduction.
-                ReduceSum(const Output<Node>& arg, const Output<Node>& reduction_axes, bool keep_dims = false);
+                ReduceSum(const Output<Node>& arg,
+                          const Output<Node>& reduction_axes,
+                          bool keep_dims = false);
+
+                void validate_and_infer_types() override;
 
                 size_t get_version() const override { return 1; }
-
                 /// \return If set to 1 it holds axes that are used for reduction.
                 /// For each such axis, output dimension is equal to 1.
                 bool get_keep_dims() const { return m_keep_dims; }
-
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
@@ -61,7 +65,8 @@ namespace ngraph
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                    const NodeVector& deltas) override;
+                                               const NodeVector& deltas) override;
+
             private:
                 bool m_keep_dims;
             };

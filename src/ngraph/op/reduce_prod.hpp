@@ -32,7 +32,7 @@ namespace ngraph
             {
             public:
                 NGRAPH_API
-                    static const std::string type_name;
+                static const std::string type_name;
                 const std::string& description() const override { return type_name; }
                 /// \brief Constructs a product reduction operation.
                 ReduceProd() = default;
@@ -42,16 +42,18 @@ namespace ngraph
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 /// \param keep_dims If set to true it holds axes that are used for reduction.
                 ReduceProd(const Output<Node>& arg,
-                    const AxisSet& reduction_axes,
-                    bool keep_dims = false);
+                           const AxisSet& reduction_axes,
+                           bool keep_dims = false);
                 /// \brief Constructs a product reduction operation.
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
                 /// \param keep_dims If set to true it holds axes that are used for reduction.
                 ReduceProd(const Output<Node>& arg,
-                    const Output<Node>& reduction_axes,
-                    bool keep_dims = false);
+                           const Output<Node>& reduction_axes,
+                           bool keep_dims = false);
+
+                void validate_and_infer_types() override;
 
                 size_t get_version() const override { return 1; }
                 /// \return If set to 1 it holds axes that are used for reduction.
