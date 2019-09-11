@@ -1,5 +1,7 @@
 .. core/constructing-graphs/index.rst: 
 
+.. _constructing_graphs: 
+
 Constructing graphs
 ###################
 
@@ -10,14 +12,14 @@ How to
    :maxdepth: 1
    :caption: How to 
 
-   execute.rst
-   operator.rst
-   update.rst
-   derive-for-training.rst
-   distribute-train.rst
-   import.rst
-   Using the Python API <../../python_api/index.rst>
-       
+   Execute a computation <execute.rst>
+   Build a graph with operators <operator.rst>
+   Make a stateful computation and Update in nGraph <update.rst>
+   Derive a trainable model <derive-for-training.rst>
+   Distributed training across multiple nGraph backends <distribute-train.rst>
+   Import a model <import.rst>
+   Use the Python API <../../python_api/index.rst>
+   
 
 The "How to" articles in this section explain how to build or construct graphs 
 with nGraph components. The recipes are all framework agnostic; in other words, 
