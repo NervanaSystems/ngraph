@@ -14,38 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/plaidml/plaidml_backend.hpp"
+
+#include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
 
-namespace ngraph
+extern "C" PLAIDML_BACKEND_API void ngraph_register_plaidml_backend()
 {
-    namespace runtime
-    {
-        namespace plaidml
-        {
-            class PlaidML_BackendConstructor;
-        }
-    }
-}
-
-class ngraph::runtime::plaidml::PlaidML_BackendConstructor final
-    : public runtime::BackendConstructor
-{
-public:
-    ~PlaidML_BackendConstructor() final {}
-    std::shared_ptr<Backend> create(const std::string& config) final;
-};
-
-std::shared_ptr<ngraph::runtime::Backend>
-    ngraph::runtime::plaidml::PlaidML_BackendConstructor::create(const std::string& config)
-{
-    return std::make_shared<PlaidML_Backend>(config);
-}
-
-extern "C" PLAIDML_BACKEND_API ngraph::runtime::BackendConstructor*
-    get_backend_constructor_pointer()
-{
-    static ngraph::runtime::plaidml::PlaidML_BackendConstructor backend_constructor;
-    return &backend_constructor;
+    ngraph::runtime::BackendManager::register_backend("PlaidML", [](const std::string& config) {
+        return std::make_shared<ngraph::runtime::plaidml::PlaidML_Backend>(config);
+    });
 }

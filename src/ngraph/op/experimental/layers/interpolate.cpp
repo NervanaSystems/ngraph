@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Interpolate::type_name{"Interpolate"};
+constexpr NodeTypeInfo op::Interpolate::type_info;
 
 op::Interpolate::Interpolate(const Output<Node>& image,
                              const Output<Node>& output_shape,

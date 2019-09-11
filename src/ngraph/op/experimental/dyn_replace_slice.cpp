@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DynReplaceSlice::type_name{"DynReplaceSlice"};
+constexpr NodeTypeInfo op::DynReplaceSlice::type_info;
 
 op::DynReplaceSlice::DynReplaceSlice(const Output<Node>& arg,
                                      const Output<Node>& replacement,

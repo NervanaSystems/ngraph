@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Or::type_name{"Or"};
+constexpr NodeTypeInfo op::Or::type_info;
 
 op::Or::Or(const Output<Node>& arg0,
            const Output<Node>& arg1,

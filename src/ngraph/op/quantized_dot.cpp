@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::QuantizedDot::type_name{"QuantizedDot"};
+constexpr NodeTypeInfo op::QuantizedDot::type_info;
 
 op::QuantizedDot::QuantizedDot(const Output<Node>& input0,
                                const Output<Node>& input1,

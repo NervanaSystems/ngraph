@@ -194,11 +194,6 @@ void MLIRCompiler::run(std::vector<void*>& externalTensors)
     cleanup();
 }
 
-unsigned MLIRCompiler::get_mem_mgr_arg_id(mlir::FuncOp& func)
-{
-    return func.getNumArguments() - 1;
-}
-
 // Creates an MLIR module and function with nGraph dialect ops from the input CompiledKernel.
 void MLIRCompiler::buildNgDialectModule()
 {
@@ -708,16 +703,6 @@ void MLIRCompiler::bindArguments(std::vector<void*>& externalTensors)
     {
         ((mlir::StaticFloatMemRef*)m_invokeArgs[i])->data = (float*)(*m_externalTensors)[i];
     }
-
-    // Add pointer to memory manager
-    // malloc here since that's what allocateMemrefArgs use
-    // TODO (nmostafa): Better way of doing this ? Use builder allocator ?
-    MLIRMemMgr** memMgrArg = reinterpret_cast<MLIRMemMgr**>(malloc(sizeof(void*)));
-    NGRAPH_CHECK(memMgrArg != nullptr);
-    *memMgrArg = &get_mem_mgr();
-    // inserting memory manager ptr in right location ?
-    NGRAPH_CHECK(m_invokeArgs.size() == get_mem_mgr_arg_id(func));
-    m_invokeArgs.push_back(static_cast<void*>(memMgrArg));
 }
 
 // Lowers standard dialect to LLVM dialect and uses the MLIR execution engine to execute the code.
@@ -744,9 +729,6 @@ void MLIRCompiler::cleanup()
     {
         m_builder.reset(nullptr);
     }
-
-    // Free allocated memory for JIT'ed code temps
-    m_memMgr.freeAll();
 }
 
 SmallVector<void*, 8> MLIRCompiler::allocateMemrefArgs()

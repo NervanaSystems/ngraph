@@ -79,11 +79,6 @@ namespace ngraph
                 /// Executes a pre-compiled subgraph
                 void run(std::vector<void*>& externalTensors);
 
-                /// Returns the memory manager used by this sub-graph compiler.
-                MLIRMemMgr& get_mem_mgr() { return m_memMgr; }
-                /// Returns memory manager pointer argument ID in call interface.
-                unsigned get_mem_mgr_arg_id(mlir::FuncOp& func);
-
             private:
                 struct TensorInfo
                 {
@@ -171,9 +166,6 @@ namespace ngraph
                 // use for MLIR dialect gen
                 TensorToInfoMap m_tensorToValueMap;
                 static const MLIRCompOpMap opDispatcher;
-
-                // Memory manager for temp allocations inside JIT'ed code
-                MLIRMemMgr m_memMgr;
 
                 // Optimization level used by MLIR and LLVM compilers.
                 static unsigned mlirOptLevel;

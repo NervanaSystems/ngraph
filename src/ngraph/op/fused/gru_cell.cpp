@@ -28,7 +28,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::GRUCell::type_name{"GRUCell"};
+constexpr NodeTypeInfo op::GRUCell::type_info;
 
 op::GRUCell::GRUCell(const Output<Node>& X,
                      const Output<Node>& W,
