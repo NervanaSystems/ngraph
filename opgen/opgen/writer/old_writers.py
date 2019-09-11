@@ -16,7 +16,8 @@
 """Writer classes"""
 
 
-from opgen.exception import ClassReadError
+from opgen.spec import (OpArgument, OpAttribute, OpResult, OpClass)
+from opgen.spec_parser import SpecParser
 
 import json
 import sys
@@ -28,9 +29,9 @@ import inflection
 
 
 class OpArgumentWriter():
-    def __init__(self, name, description, idx):
-        self._name = name
-        self._description = description
+    def __init__(self, arg, idx):
+        self._name = arg.name
+        self._description = arg.description
         self._idx = idx
 
     def ctor_parameter_proto(self):
@@ -62,9 +63,9 @@ class OpArgumentWriter():
 
 
 class OpResultWriter():
-    def __init__(self, name, description, idx):
-        self._name = name
-        self._description = description
+    def __init__(self, result, idx):
+        self._name = result.name
+        self._description = result.description
         self._idx = idx
 
     def getter_proto(self, is_const):
@@ -90,10 +91,10 @@ class OpResultWriter():
 
 
 class OpAttributeWriter():
-    def __init__(self, name, type, description, idx):
-        self._name = name
-        self._type = type
-        self._description = description
+    def __init__(self, attribute, idx):
+        self._name = attribute.name
+        self._type = attribute.type
+        self._description = attribute.description
         self._idx = idx
 
     def ctor_parameter_proto(self):
@@ -138,57 +139,19 @@ class ClassWriter():
         self._load_op_json(f)
 
     def _load_op_json(self, f):
-        j = json.load(f)
+        k = SpecParser().parse_class(json.load(f))
 
-        if 'name' in j:
-            self._name = j['name']
-        else:
-            raise ClassReadError('Required field \'name\' is missing')
-
-        if 'dialect' in j:
-            self._dialect = j['dialect']
-        else:
-            raise ClassReadError('Required field \'dialect\' is missing')
-
-        self._commutative = 'commutative' in j and j['commutative']
-        self._has_state = 'has_state' in j and j['has_state']
-        self._validation_implemented = 'validation_implemented' in j and j[
-            'validation_implemented']
-        self._adjoints_implemented = 'adjoints_implemented' in j and j['adjoints_implemented']
-        self._zdte_implemented = 'zdte_implemented' in j and j['zdte_implemented']
-
-        if 'description' in j:
-            self._description = j['description']
-        else:
-            self._description = ''
-
-        self._arguments = []
-        if 'arguments' in j:
-            for (idx, arg_j) in enumerate(j['arguments']):
-                self._arguments.append(
-                    OpArgumentWriter(arg_j['name'],
-                                     arg_j['description'],
-                                     idx)
-                )
-
-        self._results = []
-        if 'results' in j:
-            for (idx, arg_j) in enumerate(j['results']):
-                self._results.append(
-                    OpResultWriter(arg_j['name'],
-                                   arg_j['description'],
-                                   idx)
-                )
-
-        self._attributes = []
-        if 'attributes' in j:
-            for (idx, attr_j) in enumerate(j['attributes']):
-                self._attributes.append(
-                    OpAttributeWriter(attr_j['name'],
-                                      attr_j['type'],
-                                      attr_j['description'],
-                                      idx)
-                )
+        self._name = k.name
+        self._dialect = k.dialect
+        self._description = k.description
+        self._commutative = k.commutative
+        self._has_state = k.has_state
+        self._validation_implemented = k.validation_implemented
+        self._adjoints_implemented = k.adjoints_implemented
+        self._zdte_implemented = k.zdte_implemented
+        self._arguments = [OpArgumentWriter(arg,idx) for (idx, arg) in enumerate(k._arguments)]
+        self._results = [OpResultWriter(res,idx) for (idx, res) in enumerate(k._results)]
+        self._attributes = [OpAttributeWriter(attr,idx) for (idx, attr) in enumerate(k._attributes)]
 
         f.close()
 

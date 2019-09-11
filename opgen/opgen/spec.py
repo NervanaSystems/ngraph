@@ -16,23 +16,10 @@
 """Class specifications"""
 
 
-from opgen.exception import ClassReadError
-
-
 class OpArgument():
-    def __init__(self, fields):
-        self._init_from_fields(fields)
-
-    def _init_from_fields(self, fields):
-        if 'name' in fields:
-            self.name = str(fields['name'])
-        else:
-            raise ClassReadError('Required field \'name\' is missing')
-
-        if 'description' in fields:
-            self.description = str(fields['description'])
-        else:
-            self.description = ''
+    def __init__(self, name, description=''):
+        self.name = name
+        self.description = description
 
     @property
     def name(self):
@@ -40,7 +27,7 @@ class OpArgument():
 
     @name.setter
     def name(self, val):
-        self._name = val
+        self._name = str(val)
 
     @property
     def description(self):
@@ -48,26 +35,16 @@ class OpArgument():
 
     @description.setter
     def description(self, val):
-        self._description = val
+        self._description = str(val)
 
     def __repr__(self):
         return('opgen.spec.OpArgument(name=%s, description=%s)' % (repr(self.name), repr(self.description)))
 
 
 class OpResult():
-    def __init__(self, fields):
-        self._init_from_fields(fields)
-
-    def _init_from_fields(self, fields):
-        if 'name' in fields:
-            self.name = str(fields['name'])
-        else:
-            raise ClassReadError('Required field \'name\' is missing')
-
-        if 'description' in fields:
-            self.description = str(fields['description'])
-        else:
-            self.description = ''
+    def __init__(self, name, description=''):
+        self.name = name
+        self.description = description
 
     @property
     def name(self):
@@ -75,7 +52,7 @@ class OpResult():
 
     @name.setter
     def name(self, val):
-        self._name = val
+        self._name = str(val)
 
     @property
     def description(self):
@@ -83,31 +60,17 @@ class OpResult():
 
     @description.setter
     def description(self, val):
-        self._description = val
+        self._description = str(val)
 
     def __repr__(self):
         return('opgen.spec.OpResult(name=%s, description=%s)' % (repr(self.name), repr(self.description)))
 
 
 class OpAttribute():
-    def __init__(self, fields):
-        self._init_from_fields(fields)
-
-    def _init_from_fields(self, fields):
-        if 'name' in fields:
-            self.name = str(fields['name'])
-        else:
-            raise ClassReadError('Required field \'name\' is missing')
-
-        if 'type' in fields:
-            self.type = str(fields['type'])
-        else:
-            raise ClassReadError('Required field \'type\' is missing')
-
-        if 'description' in fields:
-            self.description = str(fields['description'])
-        else:
-            self.description = ''
+    def __init__(self, name, type, description=''):
+        self.name = name
+        self.type = type
+        self.description = description
 
     @property
     def name(self):
@@ -115,7 +78,7 @@ class OpAttribute():
 
     @name.setter
     def name(self, val):
-        self._name = val
+        self._name = str(val)
 
     @property
     def type(self):
@@ -123,7 +86,7 @@ class OpAttribute():
 
     @type.setter
     def type(self, val):
-        self._type = val
+        self._type = str(val)
 
     @property
     def description(self):
@@ -131,55 +94,25 @@ class OpAttribute():
 
     @description.setter
     def description(self, val):
-        self._description = val
+        self._description = str(val)
 
     def __repr__(self):
         return('opgen.spec.OpAttribute(name=%s, type=%s, description=%s)' % (repr(self.name), repr(self.type), repr(self.description)))
 
 
 class OpClass():
-    def __init__(self, fields):
-        self._init_from_fields(fields)
-
-    def _init_from_fields(self, fields):
-        if 'name' in fields:
-            self.name = str(fields['name'])
-        else:
-            raise ClassReadError('Required field \'name\' is missing')
-
-        if 'dialect' in fields:
-            self.dialect = str(fields['dialect'])
-        else:
-            raise ClassReadError('Required field \'dialect\' is missing')
-
-        if 'description' in fields:
-            self.description = str(fields['description'])
-        else:
-            self.description = ''
-
-        self.commutative = 'commutative' in fields and fields['commutative']
-        self.has_state = 'has_state' in fields and fields['has_state']
-        self.validation_implemented = 'validation_implemented' in fields and fields[
-            'validation_implemented']
-        self.adjoints_implemented = 'adjoints_implemented' in fields and fields[
-            'adjoints_implemented']
-        self.zdte_implemented = 'zdte_implemented' in fields and fields[
-            'zdte_implemented']
-
-        self.arguments = []
-        if 'arguments' in fields:
-            for argument in fields['arguments']:
-                self.arguments.append(OpArgument(argument))
-
-        self.results = []
-        if 'results' in fields:
-            for result in fields['results']:
-                self.results.append(OpResult(result))
-
-        self.attributes = []
-        if 'attributes' in fields:
-            for attribute in fields['attributes']:
-                self.attributes.append(OpAttribute(attribute))
+    def __init__(self, name, dialect, description='', arguments=[], results=[], attributes=[], commutative=False, has_state=False, validation_implemented=False, adjoints_implemented=False, zdte_implemented=False):
+        self.name = name
+        self.dialect = dialect
+        self.description = description
+        self.arguments = arguments
+        self.results = results
+        self.attributes = attributes
+        self.commutative = commutative
+        self.has_state = has_state
+        self.validation_implemented = validation_implemented
+        self.adjoints_implemented = adjoints_implemented
+        self.zdte_implemented = zdte_implemented
 
     @property
     def name(self):
@@ -187,7 +120,7 @@ class OpClass():
 
     @name.setter
     def name(self, val):
-        self._name = val
+        self._name = str(val)
 
     @property
     def dialect(self):
@@ -195,7 +128,7 @@ class OpClass():
 
     @dialect.setter
     def dialect(self, val):
-        self._dialect = val
+        self._dialect = str(val)
 
     @property
     def description(self):
@@ -203,7 +136,7 @@ class OpClass():
 
     @description.setter
     def description(self, val):
-        self._description = val
+        self._description = str(val)
 
     @property
     def commutative(self):
@@ -211,7 +144,7 @@ class OpClass():
 
     @commutative.setter
     def commutative(self, val):
-        self._commutative = val
+        self._commutative = bool(val)
 
     @property
     def has_state(self):
@@ -219,7 +152,7 @@ class OpClass():
 
     @has_state.setter
     def has_state(self, val):
-        self._has_state = val
+        self._has_state = bool(val)
 
     @property
     def validation_implemented(self):
@@ -227,7 +160,7 @@ class OpClass():
 
     @validation_implemented.setter
     def validation_implemented(self, val):
-        self._validation_implemented = val
+        self._validation_implemented = bool(val)
 
     @property
     def adjoints_implemented(self):
@@ -235,7 +168,7 @@ class OpClass():
 
     @adjoints_implemented.setter
     def adjoints_implemented(self, val):
-        self._adjoints_implemented = val
+        self._adjoints_implemented = bool(val)
 
     @property
     def zdte_implemented(self):
@@ -243,7 +176,7 @@ class OpClass():
 
     @zdte_implemented.setter
     def zdte_implemented(self, val):
-        self._zdte_implemented = val
+        self._zdte_implemented = bool(val)
 
     @property
     def arguments(self):
@@ -251,6 +184,8 @@ class OpClass():
 
     @arguments.setter
     def arguments(self, val):
+        assert(isinstance(val, list))
+        assert(all(isinstance(arg, OpArgument) for arg in val))
         self._arguments = val
 
     @property
@@ -259,6 +194,8 @@ class OpClass():
 
     @results.setter
     def results(self, val):
+        assert(isinstance(val, list))
+        assert(all(isinstance(res, OpResult) for res in val))
         self._results = val
 
     @property
@@ -267,7 +204,18 @@ class OpClass():
 
     @attributes.setter
     def attributes(self, val):
+        assert(isinstance(val, list))
+        assert(all(isinstance(attr, OpAttribute) for attr in val))
         self._attributes = val
 
     def __repr__(self):
-        return('opgen.spec.OpClass(name=%s, dialect=%s, description=%s, arguments=%s, results=%s, attributes=%s)' % (repr(self.name), repr(self.dialect), repr(self.description), repr(self.arguments), repr(self.results), repr(self.attributes)))
+        return('opgen.spec.OpClass(name=%s, dialect=%s, description=%s,'
+               'arguments=%s, results=%s, attributes=%s,'
+               'commutative=%s, has_state=%s, adjoints_implemented=%s,'
+               'validation_implemented=%s, zdte_implemented=%s)'
+               % (repr(self.name), repr(self.dialect), repr(self.description),
+                  repr(self.arguments), repr(
+                      self.results), repr(self.attributes),
+                  repr(self.commutative), repr(self.has_state), repr(
+                      self.adjoints_implemented),
+                  repr(self.validation_implemented), repr(self.zdte_implemented)))

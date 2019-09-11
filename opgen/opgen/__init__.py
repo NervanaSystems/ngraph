@@ -19,4 +19,5 @@
 from opgen import main
 from opgen import exception
 from opgen import spec
+from opgen import spec_parser
 from opgen import writer
