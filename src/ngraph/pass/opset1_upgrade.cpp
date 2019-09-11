@@ -87,8 +87,9 @@ bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
         const auto reversed_axes_constant = op::Constant::create(
             element::i64, Shape{reversed_axes.size()}, reversed_axes.to_vector());
 
-        const auto reverse_v1 = make_shared<op::v1::Reverse>(
-            node->input(0).get_source_output(), reversed_axes_constant, "index");
+        const auto reverse_v1 = make_shared<op::v1::Reverse>(node->input(0).get_source_output(),
+                                                             reversed_axes_constant,
+                                                             op::v1::Reverse::Mode::INDEX);
 
         replace_node(node, reverse_v1);
         modified = true;

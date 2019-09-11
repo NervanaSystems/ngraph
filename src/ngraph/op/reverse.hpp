@@ -83,6 +83,12 @@ namespace ngraph
             class Reverse : public Op
             {
             public:
+                enum class Mode
+                {
+                    INDEX,
+                    MASK
+                };
+
                 NGRAPH_API
                 static const std::string type_name;
                 const std::string& description() const override { return type_name; }
@@ -97,18 +103,24 @@ namespace ngraph
                         const Output<Node>& reversed_axes,
                         const std::string& mode);
 
+                Reverse(const Output<Node>& data,
+                        const Output<Node>& reversed_axes,
+                        const Mode mode);
+
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 /// \return The second input data interpretation mode.
-                const std::string& get_mode() const { return m_mode; }
-                void set_mode(const std::string& mode) { m_mode = mode; }
+                Mode get_mode() const { return m_mode; }
+                void set_mode(const Mode mode) { m_mode = mode; }
                 virtual size_t get_version() const override { return 1; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const NodeVector& deltas) override;
+
+                Mode mode_from_string(const std::string& mode) const;
 
                 /// \brief Indicates how the values from the second input should be interpreted.
                 ///
@@ -116,7 +128,7 @@ namespace ngraph
                 /// tensor shape.
                 /// Alternatively it can contain a boolean mask that indicates which axes should be
                 /// reversed.
-                std::string m_mode;
+                Mode m_mode;
             };
         }
     }

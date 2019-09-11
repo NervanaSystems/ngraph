@@ -388,8 +388,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_v1_incorrect_rev_axes_rank_index_mode)
     const auto Data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto Rev_Axes = make_shared<op::Parameter>(element::i64, Shape{1, 1}); // correct: 1D
 
-    EXPECT_THROW(make_shared<Function>(make_shared<op::v1::Reverse>(Data, Rev_Axes, "index"),
-                                       ParameterVector{Data, Rev_Axes}),
+    EXPECT_THROW(make_shared<Function>(
+                     make_shared<op::v1::Reverse>(Data, Rev_Axes, op::v1::Reverse::Mode::INDEX),
+                     ParameterVector{Data, Rev_Axes}),
                  ngraph::NodeValidationFailure);
 }
 
@@ -398,8 +399,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_v1_incorrect_rev_axes_elems_mask_mode)
     const auto Data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto Rev_Axes = make_shared<op::Parameter>(element::boolean, Shape{2}); // correct: 3
 
-    EXPECT_THROW(make_shared<Function>(make_shared<op::v1::Reverse>(Data, Rev_Axes, "mask"),
-                                       ParameterVector{Data, Rev_Axes}),
+    EXPECT_THROW(make_shared<op::v1::Reverse>(Data, Rev_Axes, op::v1::Reverse::Mode::MASK),
                  ngraph::NodeValidationFailure);
 }
 
@@ -408,7 +408,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_v1_axes_out_of_bounds)
     const auto Data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto Rev_Axes = op::Constant::create(element::i64, Shape{2}, {1, 10});
 
-    EXPECT_THROW(make_shared<op::v1::Reverse>(Data, Rev_Axes, "index"),
+    EXPECT_THROW(make_shared<op::v1::Reverse>(Data, Rev_Axes, op::v1::Reverse::Mode::INDEX),
                  ngraph::NodeValidationFailure);
 }
 
@@ -417,6 +417,6 @@ NGRAPH_TEST(${BACKEND_NAME}, reverse_v1_too_many_axes)
     const auto Data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
     const auto Rev_Axes = op::Constant::create(element::i64, Shape{4}, {0, 1, 2, 3});
 
-    EXPECT_THROW(make_shared<op::v1::Reverse>(Data, Rev_Axes, "index"),
+    EXPECT_THROW(make_shared<op::v1::Reverse>(Data, Rev_Axes, op::v1::Reverse::Mode::INDEX),
                  ngraph::NodeValidationFailure);
 }

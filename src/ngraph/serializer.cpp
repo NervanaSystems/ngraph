@@ -1741,7 +1741,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             }
             else if (op_version == 1)
             {
-                const auto mode = node_js.at("mode");
+                const auto mode = node_js.at("mode").get<op::v1::Reverse::Mode>();
                 node = make_shared<op::v1::Reverse>(args[0], args[1], mode);
                 break;
             }

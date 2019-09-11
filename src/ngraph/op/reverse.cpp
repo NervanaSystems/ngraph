@@ -77,6 +77,15 @@ op::v1::Reverse::Reverse(const Output<Node>& data,
                          const Output<Node>& reversed_axes,
                          const std::string& mode)
     : Op({data, reversed_axes})
+    , m_mode{mode_from_string(mode)}
+{
+    constructor_validate_and_infer_types();
+}
+
+op::v1::Reverse::Reverse(const Output<Node>& data,
+                         const Output<Node>& reversed_axes,
+                         const Mode mode)
+    : Op({data, reversed_axes})
     , m_mode{mode}
 {
     constructor_validate_and_infer_types();
@@ -84,13 +93,7 @@ op::v1::Reverse::Reverse(const Output<Node>& data,
 
 void op::v1::Reverse::validate_and_infer_types()
 {
-    NODE_VALIDATION_CHECK(this,
-                          m_mode == "index" || m_mode == "mask",
-                          "The provided value of the 'mode' attribute (",
-                          m_mode,
-                          ") is invalid. Allowed values: 'index' or 'mask'.");
-
-    if (m_mode == "mask")
+    if (m_mode == Mode::MASK)
     {
         NODE_VALIDATION_CHECK(this,
                               get_input_element_type(1) == element::boolean,
@@ -111,7 +114,7 @@ void op::v1::Reverse::validate_and_infer_types()
                               static_cast<size_t>(rev_axes_rank),
                               ").");
 
-        if (m_mode == "mask")
+        if (m_mode == Mode::MASK)
         {
             NODE_VALIDATION_CHECK(
                 this,
@@ -141,7 +144,7 @@ void op::v1::Reverse::validate_and_infer_types()
         {
             const auto rev_axes_constant = dynamic_pointer_cast<op::Constant>(rev_axes_node);
 
-            if (m_mode == "index")
+            if (m_mode == Mode::INDEX)
             {
                 const AxisSet rev_axes = rev_axes_constant->get_axis_set_val();
 
@@ -185,4 +188,14 @@ void op::v1::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const Node
     const auto reversed_axes = input_value(1);
 
     adjoints.add_delta(x, make_shared<op::v1::Reverse>(delta, reversed_axes, m_mode));
+}
+
+op::v1::Reverse::Mode op::v1::Reverse::mode_from_string(const std::string& mode) const
+{
+    static const std::map<std::string, Mode> allowed_values = {{"index", Mode::INDEX},
+                                                               {"mask", Mode::MASK}};
+
+    NODE_VALIDATION_CHECK(this, allowed_values.count(mode) > 0, "Invalid 'mode' value passed in.");
+
+    return allowed_values.at(mode);
 }

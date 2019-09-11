@@ -42,7 +42,7 @@ TEST(serialize, opset1_reverse_upgrade)
         f->get_result()->input(0).get_source_output().get_node_shared_ptr();
     const auto reverse_v1 = static_pointer_cast<op::v1::Reverse>(pass_replacement_node);
 
-    EXPECT_EQ(reverse_v1->get_mode(), "index");
+    EXPECT_EQ(reverse_v1->get_mode(), op::v1::Reverse::Mode::INDEX);
     EXPECT_EQ(reverse_v1->description(), "Reverse");
     EXPECT_EQ(reverse_v1->get_version(), 1);
 
