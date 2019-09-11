@@ -23,9 +23,9 @@
 using namespace std;
 using namespace ngraph;
 
-static int PARAMS = 0;
-static int INDICES = 1;
-static int AXIS = 2;
+static const int PARAMS = 0;
+static const int INDICES = 1;
+static const int AXIS = 2;
 
 static size_t AXIS_NOT_SET_VALUE = std::numeric_limits<int64_t>::max();
 
@@ -117,7 +117,7 @@ void op::v1::Gather::validate_and_infer_types()
     const auto& axis_shape = get_input_partial_shape(AXIS);
     const auto& axis_rank = axis_shape.rank();
 
-    if (axis_rank.is_static())
+    if (axis_rank.is_static() && axis_shape.is_static())
     {
         NODE_VALIDATION_CHECK(this,
                               static_cast<size_t>(axis_rank) == 1 &&
@@ -182,20 +182,12 @@ int64_t op::v1::Gather::get_axis() const
     {
         axis = const_op->get_vector<int64_t>()[0];
     }
-    else
-    {
-        axis = AXIS_NOT_SET_VALUE;
-    }
     if (axis < 0)
     {
         const auto& input_rank = get_input_partial_shape(PARAMS).rank();
         if (input_rank.is_static())
         {
             axis += static_cast<size_t>(input_rank);
-        }
-        else
-        {
-            axis = AXIS_NOT_SET_VALUE;
         }
     }
     return axis;
