@@ -60,13 +60,13 @@ shared_ptr<Node> op::LSTMSequence::copy_with_new_args(const NodeVector& new_args
 {
     check_new_args_count(this, new_args);
     return make_shared<LSTMSequence>(new_args.at(0), // X
-                                     new_args.at(5), // initial_hidden_state
-                                     new_args.at(6), // initial_cell_state
-                                     new_args.at(7), // sequence_lengths
-                                     new_args.at(1), // W
-                                     new_args.at(2), // R
-                                     new_args.at(3), // B
-                                     new_args.at(4), // P
+                                     new_args.at(1), // initial_hidden_state
+                                     new_args.at(2), // initial_cell_state
+                                     new_args.at(3), // sequence_lengths
+                                     new_args.at(4), // W
+                                     new_args.at(5), // R
+                                     new_args.at(6), // B
+                                     new_args.at(7), // P
                                      m_hidden_size,
                                      m_direction,
                                      m_activations_alpha,
@@ -133,13 +133,13 @@ NodeVector op::LSTMSequence::lstm_pass(bool is_reverse) const
 
     NodeVector h_list;
     shared_ptr<Node> X = input_value(0).get_node_shared_ptr();
-    shared_ptr<Node> W = prepare_input(input_value(1), is_reverse);
-    shared_ptr<Node> R = prepare_input(input_value(2), is_reverse);
-    shared_ptr<Node> B = prepare_input(input_value(3), is_reverse);
-    shared_ptr<Node> P = prepare_input(input_value(4), is_reverse);
-    shared_ptr<Node> H_t = prepare_input(input_value(5), is_reverse);
-    shared_ptr<Node> C_t = prepare_input(input_value(6), is_reverse);
-    shared_ptr<Node> seq_lengths = input_value(7).get_node_shared_ptr();
+    shared_ptr<Node> H_t = prepare_input(input_value(1), is_reverse);
+    shared_ptr<Node> C_t = prepare_input(input_value(2), is_reverse);
+    shared_ptr<Node> seq_lengths = input_value(3).get_node_shared_ptr();
+    shared_ptr<Node> W = prepare_input(input_value(4), is_reverse);
+    shared_ptr<Node> R = prepare_input(input_value(5), is_reverse);
+    shared_ptr<Node> B = prepare_input(input_value(6), is_reverse);
+    shared_ptr<Node> P = prepare_input(input_value(7), is_reverse);
 
     if (is_reverse)
     {

@@ -59,8 +59,16 @@ namespace ngraph
                                   const std::vector<std::string> activations = {},
                                   const float clip_threshold = 0,
                                   const bool input_forget = false)
-                : FusedOp(
-                      {X, W, R, B, P, initial_hidden_state, initial_cell_state, sequence_lengths})
+                : FusedOp({
+                      X,
+                      initial_hidden_state,
+                      initial_cell_state,
+                      sequence_lengths,
+                      W,
+                      R,
+                      B,
+                      P,
+                  })
                 , m_activations_alpha(activations_alpha)
                 , m_activations_beta(activations_beta)
                 , m_activations(activations)
