@@ -27,8 +27,8 @@ namespace ngraph
         class DeconvolutionBias : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"DeconvolutionBias", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a batched-convolution data batch-backprop operation.
             ///
             /// \param data_batch_shape The shape of the data batch from forward-prop.

@@ -67,10 +67,6 @@ class NG_Op<string mnemonic, list<OpTrait> traits = []> :
 class NG_OneResult_Op<string mnemonic, list<OpTrait> traits = []> :
       NG_Op<mnemonic, traits>, Results<(outs NG_TensorType:$res)> {}
 
-// Base for fake instructions defining MemRef values
-class NG_MemRefDef_Op<string mnemonic, list<OpTrait> traits = []> :
-      NG_Op<mnemonic, traits>, Results<(outs NG_MemRefType:$res)> {}
-
 // Operations producing no results
 class NG_ZeroResult_Op<string mnemonic, list<OpTrait> traits = []> :
       NG_Op<mnemonic, traits>, Results<(outs)> {}
@@ -309,6 +305,3 @@ def NGConvolutionOp :
 
 // Terminator Ops
 def NGReturnOp : NG_Terminator_Op<"return">;
-
-// Fake ops
-def NGFakeInputOp : NG_MemRefDef_Op<"fake.input", [NoSideEffect]>;

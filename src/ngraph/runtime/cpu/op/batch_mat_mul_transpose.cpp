@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::BatchMatMulTranspose::type_name{"BatchMatMulTranspose"};
+constexpr NodeTypeInfo op::BatchMatMulTranspose::type_info;
 
 op::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
                                                const Output<Node>& arg1,

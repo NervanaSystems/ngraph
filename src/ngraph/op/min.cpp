@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Min::type_name{"Min"};
+constexpr NodeTypeInfo op::Min::type_info;
 
 op::Min::Min(const Output<Node>& arg, const AxisSet& reduction_axes)
     : ArithmeticReduction(arg, reduction_axes)

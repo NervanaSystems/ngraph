@@ -30,7 +30,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Acos::type_name{"Acos"};
+constexpr NodeTypeInfo op::Acos::type_info;
 
 op::Acos::Acos(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

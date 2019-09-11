@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Concat::type_name{"Concat"};
+constexpr NodeTypeInfo op::Concat::type_info;
 
 op::Concat::Concat(const OutputVector& args, size_t concatenation_axis)
     : Op(args)

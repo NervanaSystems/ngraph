@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ReplaceSlice::type_name{"ReplaceSlice"};
+constexpr NodeTypeInfo op::ReplaceSlice::type_info;
 
 op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
                                const Output<Node>& arg1,

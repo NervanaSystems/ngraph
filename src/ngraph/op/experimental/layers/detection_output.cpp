@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DetectionOutput::type_name{"DetectionOutput"};
+constexpr NodeTypeInfo op::DetectionOutput::type_info;
 
 op::DetectionOutput::DetectionOutput(const Output<Node>& box_logits,
                                      const Output<Node>& class_preds,

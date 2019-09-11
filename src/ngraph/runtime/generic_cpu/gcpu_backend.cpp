@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-extern "C" GCPU_BACKEND_API void ngraph_register_nop_backend()
+extern "C" GCPU_BACKEND_API void ngraph_register_gcpu_backend()
 {
     runtime::BackendManager::register_backend("GCPU", [](const std::string& config) {
         return std::make_shared<runtime::gcpu::GCPUBackend>();

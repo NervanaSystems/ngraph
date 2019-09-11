@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::CPULeakyRelu::type_name{"CPULeakyRelu"};
+constexpr NodeTypeInfo op::CPULeakyRelu::type_info;
 
 op::CPULeakyRelu::CPULeakyRelu(const Output<Node>& arg, float alpha)
     : UnaryElementwiseArithmetic(arg)
