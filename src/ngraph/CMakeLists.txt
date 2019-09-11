@@ -249,6 +249,10 @@ set (SRC
     op/power.hpp
     op/product.cpp
     op/product.hpp
+    op/reduce_prod.cpp
+    op/reduce_prod.hpp
+    op/reduce_sum.cpp
+    op/reduce_sum.hpp
     op/quantize.cpp
     op/quantize.hpp
     op/quantized_convolution.cpp

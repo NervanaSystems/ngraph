@@ -23,38 +23,49 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v1
         {
             /// \brief Product reduction operation.
             ///
             /// Reduces the tensor, eliminating the specified reduction axes by taking the product.
-            class Product : public util::ArithmeticReduction
+            class ReduceProd : public util::ArithmeticReduction
             {
             public:
                 NGRAPH_API
-                static const std::string type_name;
+                    static const std::string type_name;
                 const std::string& description() const override { return type_name; }
                 /// \brief Constructs a product reduction operation.
-                Product() = default;
+                ReduceProd() = default;
                 /// \brief Constructs a product reduction operation.
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                Product(const Output<Node>& arg, const AxisSet& reduction_axes);
+                /// \param keep_dims If set to true it holds axes that are used for reduction.
+                ReduceProd(const Output<Node>& arg,
+                    const AxisSet& reduction_axes,
+                    bool keep_dims = false);
                 /// \brief Constructs a product reduction operation.
                 ///
                 /// \param arg The tensor to be reduced.
                 /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                Product(const Output<Node>& arg, const Output<Node>& reduction_axes);
+                /// \param keep_dims If set to true it holds axes that are used for reduction.
+                ReduceProd(const Output<Node>& arg,
+                    const Output<Node>& reduction_axes,
+                    bool keep_dims = false);
 
+                size_t get_version() const override { return 1; }
+                /// \return If set to 1 it holds axes that are used for reduction.
+                /// For each such axis, output dimension is equal to 1.
+                bool get_keep_dims() const { return m_keep_dims; }
                 /// \return The default value for Product.
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
+
+            private:
+                bool m_keep_dims;
             };
         }
-        // default opset version
-        using v0::Product;
     }
 }

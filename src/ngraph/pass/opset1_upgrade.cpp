@@ -17,6 +17,8 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/product.hpp"
+#include "ngraph/op/reduce_prod.hpp"
+#include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/op/sum.hpp"
 
