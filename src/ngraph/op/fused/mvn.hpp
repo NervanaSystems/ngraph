@@ -70,9 +70,9 @@ namespace ngraph
             bool get_normalize_variance() const { return m_normalize_variance; }
             AxisSet get_reduction_axes() const { return m_reduction_axes; }
         private:
-            const double m_eps;
-            const bool m_across_channels;
-            const bool m_normalize_variance;
+            double m_eps;
+            bool m_across_channels;
+            bool m_normalize_variance;
             AxisSet m_reduction_axes;
         };
     } // namespace op

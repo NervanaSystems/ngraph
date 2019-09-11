@@ -82,7 +82,7 @@ namespace ngraph
                 }
                 else
                 {
-                    BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add);
+                    BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::add)
                 }
             }
 

@@ -34,7 +34,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Product)
             {
-                BUILD_REDUCTION_FUNCTOR(Product, product);
+                BUILD_REDUCTION_FUNCTOR(Product, product)
             }
 
             void register_builders_product_cpp() { REGISTER_OP_BUILDER(Product); }
