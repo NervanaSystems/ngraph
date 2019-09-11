@@ -34,7 +34,7 @@ namespace ngraph
         {
             class CPU_ExternalFunction;
             class CPU_CallFrame;
-            BackendConstructor* get_backend_constructor_pointer();
+            BackendConstructor CPU_BACKEND_API get_backend_constructor_pointer();
             class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:
