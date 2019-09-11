@@ -19,7 +19,8 @@ We are pleased to announce the release of version |version|.
 Core updates for |version|
 --------------------------
 
-+ 
++ All ops support ``Output<Node>`` arguments
++ Additional ops
 
 
 Latest documentation updates for |version|
@@ -39,7 +40,8 @@ Changelog on Previous Releases
 ------
 
 + Allow DLLs that link nGraph statically to load backends
-+ Add rank id to trace file name.
++ Add rank id to trace file name
++ Allow provenance merging to be disabled
 
 
 0.25.0
