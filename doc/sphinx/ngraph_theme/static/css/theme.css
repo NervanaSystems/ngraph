@@ -327,9 +327,6 @@ big, small {
   margin-left: .3em;
 }
 
-
-
-
 .rst-content .admonition-title:before, .rst-content h1 .headerlink:before, .rst-content h2 .headerlink:before, .rst-content h3 .headerlink:before, .rst-content h4 .headerlink:before, .rst-content h5 .headerlink:before, .rst-content h6 .headerlink:before, .rst-content dl dt .headerlink:before, .rst-content p.caption .headerlink:before, .rst-content tt.download span:first-child:before, .rst-content code.download span:first-child:before, .icon:before, .wy-menu-vertical li span.toctree-expand:before, .wy-menu-vertical li.on a span.toctree-expand:before, .wy-menu-vertical li.current > a span.toctree-expand:before, .wy-dropdown .caret:before, .wy-inline-validate.wy-inline-validate-success .wy-input-context:before, .wy-inline-validate.wy-inline-validate-danger .wy-input-context:before, .wy-inline-validate.wy-inline-validate-warning .wy-input-context:before, .wy-inline-validate.wy-inline-validate-info .wy-input-context:before {
   font-family: "Nunito Sans", sans;
   display: inline-block;
@@ -1335,18 +1332,19 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
   white-space: pre-wrap;
 }
 
+
 a {
-  color: #9d6720;
+  color: #FFA400;
   text-decoration: none;
   cursor: pointer;
 }
 a:hover {
-  color: #92590c;
-  background: #fbf2e6;
-
+  color: #DC700D;
+  background: #D4D4D4;
 }
+
 a:visited {
-  color: #9d6720;
+  color: #FFA400;
 }
 
 html {
@@ -1451,24 +1449,24 @@ p {
 
 h1 {
   font-size: 153%;
-  color: #393f4d;
+  color: #393F4D;
 }
 
 h2, .rst-content .toctree-wrapper p.caption {
   font-size: 139%;
-  font-weight: bolder;
-  color: #505257;
+  font-weight: lighter;
+  color: #393F4D;
 }
 
 h3 {
   font-size: 127%;
-  color: #9ba7c3;
-  font-weight: lighter;
+  color: #393F4D;
+  text-decoration: underline 1px solid #999999;
 }
 
 h4 {
   font-size: 115%;
-  color: #454c5d;
+  color: #393F4D;
 
 }
 
@@ -2288,7 +2286,7 @@ div[class^='highlight'] pre {
 }
 
 .function {
-    border-right: dotted 0.41em #DC700D;
+    border-right: dotted 0.41em #999999;
     border-bottom: solid 0.31em #FFA400;
     border-top: solid 0.31em #FFA400;
     background: #fff;
