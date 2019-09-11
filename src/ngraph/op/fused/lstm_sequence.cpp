@@ -220,3 +220,12 @@ shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reve
     // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
     return builder::squeeze(tmp);
 }
+
+void op::LSTMSequence::validate_and_infer_types()
+{
+    NGRAPH_CHECK(m_direction == "bidirectional" || m_direction == "forward" ||
+                     m_direction == "reverse",
+                 "Provided direction: ",
+                 m_direction,
+                 " is invalid");
+}

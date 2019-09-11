@@ -104,6 +104,8 @@ namespace ngraph
             {
             }
 
+            void validate_and_infer_types() override;
+
             virtual NodeVector decompose_op() const override;
 
             virtual std::shared_ptr<Node>
