@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 
 namespace ngraph

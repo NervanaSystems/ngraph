@@ -17,7 +17,6 @@
 #pragma once
 
 #include "ngraph/coordinate_diff.hpp"
-#include "ngraph/graph_util.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 
@@ -180,10 +179,7 @@ namespace ngraph
             const PadType& get_pad_type() const { return m_pad_type; }
             void set_pad_type(const PadType& pad_type) { m_pad_type = pad_type; }
             /// \return The default value for Convolution.
-            virtual std::shared_ptr<Node> get_default_value() const override
-            {
-                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
-            }
+            virtual std::shared_ptr<Node> get_default_value() const override;
 
         protected:
             Strides m_window_movement_strides;

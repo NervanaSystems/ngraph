@@ -1,0 +1,81 @@
+diff --git a/cmake/OpenMP.cmake b/cmake/OpenMP.cmake
+index 99970659..ef88a0a7 100644
+--- a/cmake/OpenMP.cmake
++++ b/cmake/OpenMP.cmake
+@@ -28,7 +28,7 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+     # But we still want to build the library.
+     set(_omp_severity "WARNING")
+ else()
+-    set(_omp_severity "FATAL_ERROR")
++    set(_omp_severity "WARNING")
+ endif()
+
+ macro(forbid_link_compiler_omp_rt)
+@@ -45,6 +45,42 @@ macro(forbid_link_compiler_omp_rt)
+     endif()
+ endmacro()
+
++macro(use_intel_omp_rt)
++    # fast return
++    if (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
++        set(MKLDNN_USES_INTEL_OPENMP TRUE)
++        return()
++    endif()
++
++    # Do not link with compiler-native OpenMP library if Intel MKL is present.
++    # Rationale: Intel MKL comes with Intel OpenMP library which is compatible
++    # with all libraries shipped with compilers that Intel MKL-DNN supports.
++    find_library(IOMP5LIB
++                NAMES "iomp5" "iomp5md" "libiomp5" "libiomp5md"
++                PATHS
++                    ${CMAKE_CURRENT_SOURCE_DIR}/external/mkl/lib
++                    NO_DEFAULT_PATH)
++    if(IOMP5LIB)
++        forbid_link_compiler_omp_rt()
++        if (WIN32)
++            find_file(IOMP5DLL
++                NAMES "libiomp5.dll" "libiomp5md.dll"
++                PATHS
++                    ${CMAKE_CURRENT_SOURCE_DIR}/external/mkl/lib
++                    NO_DEFAULT_PATH)
++        endif()
++        list(APPEND EXTRA_SHARED_LIBS ${IOMP5LIB})
++    else()
++        if (MKLDNN_THREADING STREQUAL "OMP:INTEL")
++            message(${_omp_severity} "Intel OpenMP runtime could not be found. "
++                "Please either use OpenMP runtime that comes with the compiler "
++                "(via -DMKLDNN_THREADING={OMP,OMP:COMP}), or "
++                "explicitely provide the path to libiomp with the "
++                "-DCMAKE_LIBRARY_PATH option")
++        endif()
++    endif()
++endmacro()
++
+ if(WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+     add_definitions(/Qpar)
+     add_definitions(/openmp)
+@@ -78,6 +114,7 @@ if (MKLDNN_CPU_RUNTIME MATCHES "OMP")
+         message(${_omp_severity} "OpenMP library could not be found. "
+             "Proceeding might lead to highly sub-optimal performance.")
+     endif()
++    use_intel_omp_rt()
+ else()
+     # Compilation happens with OpenMP to enable `#pragma omp simd`
+     # but during linkage OpenMP dependency should be avoided
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 60bb0c94..cc3fc9d6 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -73,8 +73,10 @@ endif()
+ add_library(${LIB_NAME}
+     ${MKLDNN_LIBRARY_TYPE} ${HEADERS} ${${LIB_NAME}_SUB_OBJS})
+
+-set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${PROJECT_VERSION}.0")
+-set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "0")
++if(MKLDNN_LIB_VERSIONING_ENABLE)
++       set_property(TARGET ${LIB_NAME} PROPERTY VERSION "${PROJECT_VERSION}.0")
++       set_property(TARGET ${LIB_NAME} PROPERTY SOVERSION "0")
++endif()
+ set_property(TARGET ${LIB_NAME} PROPERTY PUBLIC_HEADER ${HEADERS})
+
+ target_include_directories(${LIB_NAME} PUBLIC

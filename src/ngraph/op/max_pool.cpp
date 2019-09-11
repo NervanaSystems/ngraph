@@ -145,6 +145,10 @@ shared_ptr<Node> op::MaxPool::copy_with_new_args(const NodeVector& new_args) con
 }
 
 constexpr NodeTypeInfo op::MaxPoolBackprop::type_info;
+shared_ptr<Node> op::MaxPool::get_default_value() const
+{
+    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+}
 
 op::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
                                      const Output<Node>& delta,

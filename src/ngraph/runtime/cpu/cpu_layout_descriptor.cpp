@@ -21,6 +21,14 @@
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
+#if MKLDNN_VERSION_MAJOR < 1
+#define UNDEF format_undef
+#define F32 f32
+#else
+#define UNDEF undef
+#define F32 data_type::f32
+#endif
+
 namespace ngraph
 {
     namespace runtime
@@ -29,8 +37,8 @@ namespace ngraph
         {
             const mkldnn::memory::desc
                 LayoutDescriptor::DummyDesc(mkldnn::memory::dims(TENSOR_MAX_DIMS),
-                                            mkldnn::memory::f32,
-                                            mkldnn::memory::format::format_undef);
+                                            mkldnn::memory::F32,
+                                            mkldnn::memory::FORMAT::UNDEF);
 
             LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::Tensor& tv)
                 : TensorLayout(tv)
@@ -109,15 +117,18 @@ namespace ngraph
                 // http://intel.github.io/mkl-dnn/understanding_memory_formats.html
                 try
                 {
+#if MKLDNN_VERSION_MAJOR < 1
                     auto mem_prim_desc =
                         mkldnn::memory::primitive_desc(md, executor::global_cpu_engine);
                     m_buffer_size = mem_prim_desc.get_size();
+#else
+                    m_buffer_size = md.get_size();
+#endif
                 }
                 catch (const mkldnn::error& e)
                 {
-                    throw ngraph_error(
-                        "error in computing mkldnn memory size from memory primitive desc: " +
-                        e.message);
+                    throw ngraph_error("error in computing mkldnn memory size from memory desc: " +
+                                       MKLDNN_ERROR_MESSAGE);
                 }
             }
 

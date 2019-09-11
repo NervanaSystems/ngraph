@@ -44,6 +44,8 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto bounded_relu_desc = mkldnn_emitter->get_bounded_relu_desc(node);
+                    QUERY_SCRATCHPAD(eltwise_forward, bounded_relu_desc);
+
                     // BoundedRelu needs 3 primitives: input, result, and eltwise_forward.
                     auto bounded_relu_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(bounded_relu_index);
@@ -56,7 +58,9 @@ namespace ngraph
                                                       CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_bounded_relu(ctx->mkldnn_primitives,
+                            mkldnn_emitter->build_bounded_relu(ctx->mkldnn_memories,
+                                                               ctx->mkldnn_primitives,
+                                                               ctx->mkldnn_scratchpad_mds,
                                                                bounded_relu_desc,
                                                                deps,
                                                                bounded_relu_index);
@@ -65,7 +69,9 @@ namespace ngraph
                             ctx, deps[0], ctx->buffer_data[input_buffer_index]);
                         cpu::mkldnn_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, bounded_relu_index);
+
+                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                            ctx, bounded_relu_index, deps, cpu::mkldnn_utils::OpType::BOUNDEDRELU);
                     };
                     functors.emplace_back(functor);
                 }

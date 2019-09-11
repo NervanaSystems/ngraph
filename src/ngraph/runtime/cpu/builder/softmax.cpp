@@ -48,6 +48,8 @@ namespace ngraph
                 {
                     auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
                     auto softmax_desc = mkldnn_emitter->get_softmax_forward_desc(node);
+                    QUERY_SCRATCHPAD(softmax_forward, softmax_desc);
+
                     // Softmax needs 3 primitives: input, result, and softmax_forward.
                     size_t softmax_index = mkldnn_emitter->reserve_primitive_space(3);
                     auto& deps = mkldnn_emitter->get_primitive_deps(softmax_index);
@@ -57,14 +59,20 @@ namespace ngraph
                             CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             if (ctx->first_iteration)
                             {
-                                mkldnn_emitter->build_softmax_forward(
-                                    ctx->mkldnn_primitives, softmax_desc, deps, softmax_index);
+                                mkldnn_emitter->build_softmax_forward(ctx->mkldnn_memories,
+                                                                      ctx->mkldnn_primitives,
+                                                                      ctx->mkldnn_scratchpad_mds,
+                                                                      softmax_desc,
+                                                                      deps,
+                                                                      softmax_index);
                             }
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
                             cpu::mkldnn_utils::set_memory_ptr(
                                 ctx, deps[1], ctx->buffer_data[out_buffer_index]);
-                            cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx, softmax_index);
+
+                            cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                                ctx, softmax_index, deps, cpu::mkldnn_utils::OpType::SOFTMAX);
                         };
                     functors.emplace_back(functor);
                 }
