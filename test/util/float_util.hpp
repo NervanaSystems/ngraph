@@ -58,7 +58,7 @@ namespace ngraph
 
         float16 bits_to_float16(const std::string& s);
 
-        void float_to_bf16(const float* src, void* dst, int size);
+        void float_to_bf16(void* src, void* dst, int size);
 
         void bf16_to_float(const void* src, float* dst, int size);
     }

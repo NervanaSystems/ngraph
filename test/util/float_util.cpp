@@ -185,14 +185,14 @@ double ngraph::test::bits_to_double(const std::string& s)
     return du.d;
 }
 
-void ngraph::test::float_to_bf16(const float* src, void* dst, int size)
+void ngraph::test::float_to_bf16(void* src, void* dst, int size)
 {
-    const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
-    uint16_t* q = reinterpret_cast<uint16_t*>(dst);
+    int* a = static_cast<int*>(src);
+    char16_t* b = static_cast<char16_t*>(dst);
 
-    for (; size != 0; p += 2, q++, size--)
+    for (; size != 0; b++, size--, a++)
     {
-        *q = p[1];
+        *b = (a[0] >> 16) & 0xffff;
     }
 }
 

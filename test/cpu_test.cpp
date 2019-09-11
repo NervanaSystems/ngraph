@@ -49,6 +49,7 @@
 #include "util/all_close_f.hpp"
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
+#include "util/float_util.hpp"
 #include "util/ndarray.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
@@ -2149,4 +2150,36 @@ TEST(cpu_test, tensor_copy_from_different_layout)
     b->copy_from(*result);
 
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
+}
+
+TEST(cpu_test, max_pool_bf16)
+{
+    Shape shape_a{1, 1, 3, 5};
+    Shape window_shape{2, 3};
+    auto window_movement_strides = Strides{1, 1};
+    Shape padding_below{0, 0};
+    Shape padding_above{0, 0};
+    Shape shape_r{1, 1, 2, 3};
+
+    // input data
+    vector<float> a_data = {0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0, 1};
+
+    // allocate memory for destination
+    int size = a_data.size() * sizeof(float) / 2;
+    void* bf16_dst = std::malloc(size);
+    // convert float data to bfloat16
+    ngraph::test::float_to_bf16(a_data.data(), bf16_dst, a_data.size());
+
+    auto A = make_shared<op::Parameter>(element::bf16, shape_a);
+    auto QMP = make_shared<ngraph::op::MaxPool>(
+        A, window_shape, window_movement_strides, padding_below, padding_above);
+    auto f = make_shared<Function>(NodeVector{QMP}, ParameterVector{A});
+    auto backend = runtime::Backend::create("CPU");
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::bf16, shape_a);
+    a->write(bf16_dst, size);
+    auto result = backend->create_tensor(element::bf16, shape_r);
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<bfloat16>{3, 3, 2, 3, 3, 2}), read_vector<bfloat16>(result));
 }
