@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Pad::type_name{"Pad"};
+constexpr NodeTypeInfo op::Pad::type_info;
 
 op::Pad::Pad(const Output<Node>& arg,
              const Output<Node>& arg_pad_value,

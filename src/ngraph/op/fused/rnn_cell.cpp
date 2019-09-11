@@ -29,7 +29,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::RNNCell::type_name{"RNNCell"};
+constexpr NodeTypeInfo op::RNNCell::type_info;
 
 op::RNNCell::RNNCell(const Output<Node>& X,
                      const Output<Node>& W,

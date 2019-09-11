@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Reshape::type_name{"Reshape"};
+constexpr NodeTypeInfo op::Reshape::type_info;
 
 op::Reshape::Reshape(const Output<Node>& arg,
                      const AxisVector& input_order,

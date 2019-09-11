@@ -21,8 +21,8 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Sigmoid::type_name{"Sigmoid"};
-const string op::SigmoidBackprop::type_name{"SigmoidBackprop"};
+constexpr NodeTypeInfo op::Sigmoid::type_info;
+constexpr NodeTypeInfo op::SigmoidBackprop::type_info;
 
 shared_ptr<Node> op::Sigmoid::copy_with_new_args(const NodeVector& new_args) const
 {

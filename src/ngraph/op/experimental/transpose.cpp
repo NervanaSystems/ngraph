@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Transpose::type_name{"Transpose"};
+constexpr NodeTypeInfo op::Transpose::type_info;
 
 op::Transpose::Transpose(const Output<Node>& arg, const Output<Node>& input_order)
     : Op({arg, input_order})

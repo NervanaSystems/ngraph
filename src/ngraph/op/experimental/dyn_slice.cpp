@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DynSlice::type_name{"DynSlice"};
+constexpr NodeTypeInfo op::DynSlice::type_info;
 
 op::DynSlice::DynSlice(const Output<Node>& arg,
                        const Output<Node>& lower_bounds,

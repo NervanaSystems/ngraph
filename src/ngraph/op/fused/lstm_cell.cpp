@@ -29,7 +29,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::LSTMCell::type_name{"LSTMCell"};
+constexpr NodeTypeInfo op::LSTMCell::type_info;
 
 op::LSTMCell::LSTMCell(const Output<Node>& X,
                        const Output<Node>& W,
