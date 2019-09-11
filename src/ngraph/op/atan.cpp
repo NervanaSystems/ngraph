@@ -30,7 +30,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Atan::type_name{"Atan"};
+constexpr NodeTypeInfo op::Atan::type_info;
 
 op::Atan::Atan(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)

@@ -30,7 +30,7 @@ namespace ngraph
     }
 }
 
-const std::string ngraph::runtime::plaidml::op::Winograd::type_name{"Winograd"};
+constexpr ngraph::NodeTypeInfo ngraph::runtime::plaidml::op::Winograd::type_info;
 
 ngraph::runtime::plaidml::op::Winograd::Winograd(std::shared_ptr<plaidml::op::Convolution> conv,
                                                  const OutputVector& args)

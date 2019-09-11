@@ -29,7 +29,7 @@ using namespace std;
 using namespace ngraph;
 
 // *** SOFTMAX OP SET 0 ***
-const string op::Softmax::type_name{"Softmax"};
+constexpr NodeTypeInfo op::v0::Softmax::type_info;
 
 op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
     : Op({arg})
@@ -107,7 +107,7 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 }
 
 // *** SOFTMAX OP SET V1 ***
-const string op::v1::Softmax::type_name{"Softmax"};
+constexpr NodeTypeInfo op::v1::Softmax::type_info;
 
 op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
     : Op({arg})

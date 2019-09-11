@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Parameter::type_name{"Parameter"};
+constexpr NodeTypeInfo op::Parameter::type_info;
 
 op::Parameter::Parameter(const element::Type& element_type,
                          const PartialShape& pshape,

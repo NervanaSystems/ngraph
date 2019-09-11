@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Greater::type_name{"Greater"};
+constexpr NodeTypeInfo op::Greater::type_info;
 
 op::Greater::Greater(const Output<Node>& arg0,
                      const Output<Node>& arg1,

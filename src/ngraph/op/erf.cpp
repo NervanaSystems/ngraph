@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Erf::type_name{"Erf"};
+constexpr NodeTypeInfo op::Erf::type_info;
 
 shared_ptr<Node> op::Erf::copy_with_new_args(const NodeVector& new_args) const
 {

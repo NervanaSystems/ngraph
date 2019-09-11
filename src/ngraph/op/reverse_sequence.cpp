@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::ReverseSequence::type_name{"ReverseSequence"};
+constexpr NodeTypeInfo op::ReverseSequence::type_info;
 
 op::ReverseSequence::ReverseSequence(const Output<Node>& arg,
                                      const Output<Node>& seq_indices,
