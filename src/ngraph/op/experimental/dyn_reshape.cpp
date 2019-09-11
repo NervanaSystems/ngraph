@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DynReshape::type_name{"DynReshape"};
+constexpr NodeTypeInfo op::DynReshape::type_info;
 
 op::DynReshape::DynReshape(const Output<Node>& arg, const Output<Node>& pattern, bool zero_flag)
     : Op({arg, pattern})

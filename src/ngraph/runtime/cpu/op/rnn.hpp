@@ -55,8 +55,8 @@ namespace ngraph
         class Rnn : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Rnn", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
 #if MKLDNN_VERSION_MAJOR < 1
             CPU_BACKEND_API Rnn(const Output<Node>& src_layer,
                                 const Output<Node>& src_iter,

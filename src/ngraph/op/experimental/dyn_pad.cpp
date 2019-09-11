@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DynPad::type_name{"DynPad"};
+constexpr NodeTypeInfo op::DynPad::type_info;
 
 op::DynPad::DynPad(const Output<Node>& arg,
                    const Output<Node>& padding_below,

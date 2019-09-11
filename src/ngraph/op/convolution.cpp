@@ -25,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Convolution::type_name{"Convolution"};
+constexpr NodeTypeInfo op::Convolution::type_info;
 
 op::Convolution::Convolution(const Output<Node>& data_batch,
                              const Output<Node>& filters,
@@ -211,12 +211,11 @@ void op::Convolution::generate_adjoints(autodiff::Adjoints& adjoints, const Node
                                                                    m_data_dilation_strides));
 }
 
+constexpr NodeTypeInfo op::ConvolutionBackpropData::type_info;
 shared_ptr<Node> op::Convolution::get_default_value() const
 {
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
 }
-
-const string op::ConvolutionBackpropData::type_name{"ConvolutionBackpropData"};
 
 op::ConvolutionBackpropData::ConvolutionBackpropData(const Shape& data_batch_shape,
                                                      const Output<Node>& filters,
@@ -445,7 +444,7 @@ CoordinateDiff op::ConvolutionBackpropData::compute_backward_delta_out_pad_above
     return backward_delta_out_pad_above;
 }
 
-const string op::ConvolutionBackpropFilters::type_name{"ConvolutionBackpropFilters"};
+constexpr NodeTypeInfo op::ConvolutionBackpropFilters::type_info;
 
 op::ConvolutionBackpropFilters::ConvolutionBackpropFilters(
     const Output<Node>& data_batch,

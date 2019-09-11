@@ -26,7 +26,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::DeconvolutionBias::type_name{"DeconvolutionBias"};
+constexpr NodeTypeInfo op::DeconvolutionBias::type_info;
 
 op::DeconvolutionBias::DeconvolutionBias(const Shape& data_batch_shape,
                                          const Output<Node>& filters,
