@@ -16,8 +16,8 @@
 """Writer classes"""
 
 
-from opgen.spec import (OpArgument, OpAttribute, OpResult, OpClass)
-from opgen.spec_parser import SpecParser
+from opgen.spec.ast import (OpArgument, OpAttribute, OpResult, OpClass)
+from opgen.spec.parser import SpecParser
 
 import json
 import sys

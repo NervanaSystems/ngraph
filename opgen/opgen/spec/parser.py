@@ -16,8 +16,7 @@
 """Class specifications"""
 
 
-import opgen.spec as spec
-from opgen.spec import (OpArgument, OpResult, OpAttribute, OpClass)
+from opgen.spec.ast import (OpArgument, OpResult, OpAttribute, OpClass)
 
 import json
 
