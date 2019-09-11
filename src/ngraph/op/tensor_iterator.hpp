@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
@@ -34,6 +36,9 @@ namespace ngraph
             class SliceInputDescription;
             class BodyConnectionInputDescription;
 
+            TensorIterator() = default;
+            TensorIterator(const OutputVector& values);
+
             /// \brief Describes a connection between a TensorIterator input and the body.
             class InputDescription
             {
@@ -45,6 +50,8 @@ namespace ngraph
 
             public:
                 virtual ~InputDescription() {}
+                virtual std::shared_ptr<InputDescription> copy() const = 0;
+
                 /// \returns If a slice description, return it, else nullptr
                 virtual const SliceInputDescription* as_slice() const;
                 /// \returns If a body connection, return it, else nullptr
@@ -72,6 +79,7 @@ namespace ngraph
                                       uint64_t part_size,
                                       int64_t end,
                                       int64_t axis);
+                std::shared_ptr<InputDescription> copy() const override;
 
                 const SliceInputDescription* as_slice() const override;
                 int64_t m_start;
@@ -94,9 +102,9 @@ namespace ngraph
                 BodyConnectionInputDescription(uint64_t input_index,
                                                const std::shared_ptr<Parameter>& body_parameter,
                                                const Output<Node>& body_value);
+                std::shared_ptr<InputDescription> copy() const override;
                 const BodyConnectionInputDescription* as_body_connection() const override;
 
-            protected:
                 Output<Node> m_body_value;
             };
 
@@ -114,6 +122,7 @@ namespace ngraph
 
             public:
                 virtual ~OutputDescription() {}
+                virtual std::shared_ptr<OutputDescription> copy() const = 0;
                 /// \returns If a concat, the concat, else nullptr
                 virtual const ConcatOutputDescription* as_concat_output_description() const;
                 /// \returns If a body output, the body output, else nullptr
@@ -144,6 +153,8 @@ namespace ngraph
 
                 const ConcatOutputDescription* as_concat_output_description() const override;
 
+                virtual std::shared_ptr<OutputDescription> copy() const override;
+
                 int64_t m_start;
                 int64_t m_stride;
                 uint64_t m_part_size;
@@ -161,6 +172,7 @@ namespace ngraph
                 BodyOutputDescription(const Output<Node>& body_value,
                                       uint64_t output_index,
                                       int64_t iteration);
+                std::shared_ptr<OutputDescription> copy() const override;
                 const BodyOutputDescription* as_body_output_description() const override;
 
                 int64_t m_iteration;
@@ -213,7 +225,30 @@ namespace ngraph
             std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
             NodeVector decompose_op() const override;
 
+            const std::vector<std::shared_ptr<InputDescription>>& get_input_descriptions() const
+            {
+                return m_input_descriptions;
+            }
+
+            std::vector<std::shared_ptr<InputDescription>>& get_input_descriptions()
+            {
+                return m_input_descriptions;
+            }
+
+            const std::vector<std::shared_ptr<OutputDescription>>& get_output_descriptions() const
+            {
+                return m_output_descriptions;
+            }
+
+            std::vector<std::shared_ptr<OutputDescription>>& get_output_descriptions()
+            {
+                return m_output_descriptions;
+            }
+
         private:
+            // Find an input corresponding to value, adding one if necessary.
+            Input<Node> input_for_value(const Output<Node>& value);
+
             std::vector<std::shared_ptr<InputDescription>> m_input_descriptions;
             std::vector<std::shared_ptr<OutputDescription>> m_output_descriptions;
         };

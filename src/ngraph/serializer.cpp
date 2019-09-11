@@ -231,6 +231,10 @@ public:
     json serialize_node_reference(const Node& node);
     json serialize_node(const Node& node);
     json serialize_axis_set(const AxisSet& axis_set);
+    json serialize_tensor_iterator_input_description(
+        const std::shared_ptr<op::TensorIterator::InputDescription>&);
+    json serialize_tensor_iterator_output_description(
+        const std::shared_ptr<op::TensorIterator::OutputDescription>&);
 
 protected:
     size_t m_indent{0};
@@ -256,6 +260,10 @@ public:
     shared_ptr<Node> deserialize_node_reference(json j);
     shared_ptr<Node> deserialize_node(json j);
     AxisSet deserialize_axis_set(json j);
+    shared_ptr<op::TensorIterator::InputDescription>
+        deserialize_tensor_iterator_input_description(json j);
+    shared_ptr<op::TensorIterator::OutputDescription>
+        deserialize_tensor_iterator_output_description(json j);
 
 protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
@@ -616,6 +624,130 @@ AxisSet JSONDeserializer::deserialize_axis_set(json j)
     if (j.is_array())
     {
         result = j.get<set<size_t>>();
+    }
+    return result;
+}
+
+json JSONSerializer::serialize_tensor_iterator_input_description(
+    const std::shared_ptr<op::TensorIterator::InputDescription>& input_description)
+{
+    json result;
+    if (auto slice = input_description->as_slice())
+    {
+        result["kind"] = "slice";
+        result["input_index"] = slice->m_input_index;
+        result["body_parameter"] = serialize_node(*slice->m_body_parameter.get());
+        result["start"] = slice->m_start;
+        result["stride"] = slice->m_stride;
+        result["part_size"] = slice->m_part_size;
+        result["end"] = slice->m_end;
+        result["axis"] = slice->m_axis;
+    }
+    else if (auto body_connection = input_description->as_body_connection())
+    {
+        result["kind"] = "body_connection";
+        result["input_index"] = body_connection->m_input_index;
+        result["body_parameter"] = serialize_node(*body_connection->m_body_parameter.get());
+        result["body_value"] = serialize_output(body_connection->m_body_value);
+    }
+    else
+    {
+        NGRAPH_UNREACHABLE("Unknown input description type");
+    }
+    return result;
+}
+
+shared_ptr<op::TensorIterator::InputDescription>
+    JSONDeserializer::deserialize_tensor_iterator_input_description(json j)
+{
+    string kind = j["kind"];
+    shared_ptr<op::TensorIterator::InputDescription> result;
+    if (kind == "slice")
+    {
+        uint64_t input_index = j["input_index"].get<uint64_t>();
+        std::shared_ptr<op::Parameter> body_parameter =
+            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(j["body_parameter"]));
+        int64_t start = j["start"].get<int64_t>();
+        int64_t stride = j["stride"].get<int64_t>();
+        uint64_t part_size = j["part_size"].get<uint64_t>();
+        int64_t end = j["end"].get<int64_t>();
+        int64_t axis = j["axis"].get<int64_t>();
+        result = make_shared<op::TensorIterator::SliceInputDescription>(
+            input_index, body_parameter, start, stride, part_size, end, axis);
+    }
+    else if (kind == "body_connection")
+    {
+        uint64_t input_index = j["input_index"].get<uint64_t>();
+        std::shared_ptr<op::Parameter> body_parameter =
+            dynamic_pointer_cast<op::Parameter>(deserialize_node_reference(j["body_parameter"]));
+        Output<Node> body_value = (deserialize_output(j["body_value"]));
+        result = make_shared<op::TensorIterator::BodyConnectionInputDescription>(
+            input_index, body_parameter, body_value);
+    }
+    else
+    {
+        NGRAPH_UNREACHABLE("Unknown input description type: ", kind);
+    }
+    return result;
+}
+
+json JSONSerializer::serialize_tensor_iterator_output_description(
+    const std::shared_ptr<op::TensorIterator::OutputDescription>& output_description)
+{
+    json result;
+    if (auto concat = output_description->as_concat_output_description())
+    {
+        result["kind"] = "concat";
+        result["body_value"] = serialize_output(concat->m_body_value);
+        result["output_index"] = concat->m_output_index;
+        result["start"] = concat->m_start;
+        result["stride"] = concat->m_stride;
+        result["part_size"] = concat->m_part_size;
+        result["end"] = concat->m_end;
+        result["axis"] = concat->m_axis;
+    }
+    else if (auto body_output = output_description->as_body_output_description())
+    {
+        result["kind"] = "body_output";
+        result["body_value"] = serialize_output(body_output->m_body_value);
+        result["output_index"] = body_output->m_output_index;
+        result["iteration"] = body_output->m_iteration;
+    }
+    else
+    {
+        NGRAPH_UNREACHABLE("Unknown input description type");
+    }
+    return result;
+}
+
+std::shared_ptr<op::TensorIterator::OutputDescription>
+    JSONDeserializer::deserialize_tensor_iterator_output_description(json j)
+{
+    string kind = j["kind"];
+    shared_ptr<op::TensorIterator::OutputDescription> result;
+    if (kind == "concat")
+    {
+        Output<Node> body_value = deserialize_output(j["body_parameter"]);
+        uint64_t output_index = j["output_index"].get<uint64_t>();
+        int64_t start = j["start"].get<int64_t>();
+        int64_t stride = j["stride"].get<int64_t>();
+        uint64_t part_size = j["part_size"].get<uint64_t>();
+        int64_t end = j["end"].get<int64_t>();
+        int64_t axis = j["axis"].get<int64_t>();
+        result = make_shared<op::TensorIterator::ConcatOutputDescription>(
+            body_value, output_index, start, stride, part_size, end, axis);
+    }
+    else if (kind == "body_output")
+    {
+        Output<Node> body_value = deserialize_output(j["body_parameter"]);
+        uint64_t output_index = j["output_index"].get<uint64_t>();
+        int64_t iteration = j["iteration"].get<int64_t>();
+        result = make_shared<op::TensorIterator::BodyOutputDescription>(
+            body_value, output_index, iteration);
+    }
+    else
+    {
+        NGRAPH_UNREACHABLE("Unknown input description type: ", kind);
     }
     return result;
 }
@@ -1907,13 +2039,21 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::TensorIterator:
         {
-            OutputVector tensor_input_args = args;
-            ParameterVector body_parameters =
-                deserialize_parameter_vector(node_js["body_parameters"]);
-            OutputVector body_outputs = deserialize_output_vector(node_js["body_outputs"]);
-            OutputVector tensor_iterator_outputs =
-                deserialize_output_vector(node_js["tensor_iterator_outputs"]);
-            node = make_shared<op::TensorIterator>();
+            auto ti = make_shared<op::TensorIterator>(args);
+            json jins = node_js["input_descriptions"];
+            for (json jin : jins)
+            {
+                ti->get_input_descriptions().push_back(
+                    deserialize_tensor_iterator_input_description(jin));
+            }
+            json jouts = node_js["output_descriptions"];
+            for (json jout : jouts)
+            {
+                ti->get_output_descriptions().push_back(
+                    deserialize_tensor_iterator_output_description(jout));
+            }
+
+            node = ti;
             break;
         }
 
@@ -2942,6 +3082,18 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::TensorIterator:
     {
         auto tmp = dynamic_cast<const op::TensorIterator*>(&n);
+        json ins = json::array();
+        for (auto in : tmp->get_input_descriptions())
+        {
+            ins.push_back(serialize_tensor_iterator_input_description(in));
+        }
+        node["input_descriptions"] = ins;
+        json outs = json::array();
+        for (auto out : tmp->get_output_descriptions())
+        {
+            outs.push_back(serialize_tensor_iterator_output_description(out));
+        }
+        node["output_descriptions"] = outs;
         break;
     }
     case OP_TYPEID::Tile: { break;
