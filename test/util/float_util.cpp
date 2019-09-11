@@ -196,14 +196,13 @@ void ngraph::test::float_to_bf16(void* src, void* dst, int size)
     }
 }
 
-void ngraph::test::bf16_to_float(const void* src, float* dst, int size)
+void ngraph::test::bf16_to_float(void* src, void* dst, int size)
 {
-    const uint16_t* p = reinterpret_cast<const uint16_t*>(src);
-    uint16_t* q = reinterpret_cast<uint16_t*>(dst);
+    char16_t* a = static_cast<char16_t*>(src);
+    int* b = static_cast<int*>(dst);
 
-    for (; size != 0; p++, q += 2, size--)
+    for (; size != 0; a++, b++, size--)
     {
-        q[0] = 0;
-        q[1] = *p;
+        *b = (a[0] & 0xffff) << 16;
     }
 }

@@ -2181,5 +2181,13 @@ TEST(cpu_test, max_pool_bf16)
     auto result = backend->create_tensor(element::bf16, shape_r);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<bfloat16>{3, 3, 2, 3, 3, 2}), read_vector<bfloat16>(result));
+    // convert the output back to float
+    void* fp_dst = malloc(shape_size(shape_r) * 4);
+    ngraph::test::bf16_to_float(
+        static_pointer_cast<runtime::cpu::CPUTensorView>(result)->get_data_ptr(),
+        fp_dst,
+        shape_size(shape_r));
+    auto b = backend->create_tensor(element::f32, shape_r);
+    b->write(fp_dst, shape_size(shape_r) * 4);
+    EXPECT_EQ((vector<float>{3, 3, 2, 3, 3, 2}), read_vector<float>(b));
 }

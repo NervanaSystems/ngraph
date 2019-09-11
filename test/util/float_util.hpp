@@ -60,6 +60,6 @@ namespace ngraph
 
         void float_to_bf16(void* src, void* dst, int size);
 
-        void bf16_to_float(const void* src, float* dst, int size);
+        void bf16_to_float(void* src, void* dst, int size);
     }
 }
