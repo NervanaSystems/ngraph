@@ -17,3 +17,7 @@
 
 
 import opgen.spec.ast as ast
+
+class CPPGenerator():
+    def __init__(self):
+        pass
