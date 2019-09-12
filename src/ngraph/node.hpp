@@ -144,7 +144,8 @@ namespace ngraph
                                        const NodeVector& /* deltas */)
         {
         }
-        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows on deep networks.
+        /// \brief Moves nodes that would be deleted from inputs to nodes to avoid stack overflows
+        /// on deep networks.
         void safe_delete(NodeVector& nodes, bool recurse);
 
     public:
