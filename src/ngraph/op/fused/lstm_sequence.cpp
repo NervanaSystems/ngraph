@@ -97,7 +97,7 @@ shared_ptr<Node> op::LSTMSequence::get_masked_node(const shared_ptr<Node>& data,
 
     shared_ptr<Node> batch_seq_length =
         op::legacy_style_broadcast_for_binary_operation(
-            curr_time_step_node, input_value(7).get_node_shared_ptr(), batch_axis)
+            curr_time_step_node, input_value(3).get_node_shared_ptr(), batch_axis)
             .at(1);
 
     // Create mask node deciding whether or not to mask batch data.
