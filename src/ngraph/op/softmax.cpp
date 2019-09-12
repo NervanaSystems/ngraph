@@ -32,7 +32,7 @@ using namespace ngraph;
 const string op::Softmax::type_name{"Softmax"};
 
 op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
-    : Op({arg})
+    : UnaryElementwiseArithmetic({arg})
     , m_axes(axes)
 {
     constructor_validate_and_infer_types();
@@ -110,7 +110,7 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Node
 const string op::v1::Softmax::type_name{"Softmax"};
 
 op::v1::Softmax::Softmax(const Output<Node>& arg, const size_t axis)
-    : Op({arg})
+    : UnaryElementwiseArithmetic({arg})
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();
