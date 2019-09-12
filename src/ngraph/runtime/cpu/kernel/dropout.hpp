@@ -19,7 +19,6 @@
 #include <random>
 
 #include "ngraph/shape.hpp"
-#include "ngraph/state/rng_state.hpp"
 
 namespace ngraph
 {
