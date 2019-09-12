@@ -152,11 +152,11 @@ namespace ngraph
                     copy_with_new_args(const NodeVector& new_args) const override;
 
                 virtual size_t get_version() const override { return 1; }
-                size_t get_axis() const { return m_axis; };
+                size_t get_axis() const { return m_axis; }
                 void set_axis(const size_t axis) { m_axis = axis; }
-                Mode get_mode() const { return m_mode; };
+                Mode get_mode() const { return m_mode; }
                 void set_mode(const Mode mode) { m_mode = mode; }
-                SortType get_sort() const { return m_sort; };
+                SortType get_sort() const { return m_sort; }
                 void set_sort(const SortType sort) { m_sort = sort; }
                 element::Type get_index_element_type() const { return m_index_element_type; }
                 void set_index_element_type(const element::Type& index_element_type)
