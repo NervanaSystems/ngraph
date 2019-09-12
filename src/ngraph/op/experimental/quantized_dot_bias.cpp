@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::QuantizedDotBias::type_name{"QuantizedDotBias"};
+constexpr NodeTypeInfo op::QuantizedDotBias::type_info;
 
 op::QuantizedDotBias::QuantizedDotBias(const Output<Node>& data,
                                        const Output<Node>& weights,

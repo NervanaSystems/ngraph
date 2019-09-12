@@ -28,8 +28,8 @@ namespace ngraph
         class Lstm : public Op
         {
         public:
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Lstm", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
 // INPUTS:
 // [0] - {Xt} input tensor of layout TNC, Shape{sequence length*batch_size,
 //       feature_size}

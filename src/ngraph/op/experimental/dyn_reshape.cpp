@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::DynReshape::type_name{"DynReshape"};
+constexpr NodeTypeInfo op::DynReshape::type_info;
 
 op::DynReshape::DynReshape(const Output<Node>& arg, const Output<Node>& pattern, bool zero_flag)
     : Op({arg, pattern})
@@ -153,7 +153,8 @@ shared_ptr<Node> op::DynReshape::copy_with_new_args(const NodeVector& new_args) 
     return make_shared<DynReshape>(new_args.at(0), new_args.at(1), m_zero_flag);
 }
 
-void op::DynReshape::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::DynReshape::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const NodeVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynReshape");
 }

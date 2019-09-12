@@ -57,7 +57,7 @@ namespace ngraph
 
                 auto functor =
                     [&, count, reduce_type, data_type, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         get_distributed_interface()->all_reduce(ctx->buffer_data[arg_buffer_index],
                                                                 ctx->buffer_data[out_buffer_index],
                                                                 data_type,

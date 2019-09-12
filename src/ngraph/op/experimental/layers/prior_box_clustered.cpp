@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::PriorBoxClustered::type_name{"PriorBoxClustered"};
+constexpr NodeTypeInfo op::PriorBoxClustered::type_info;
 
 op::PriorBoxClustered::PriorBoxClustered(const Output<Node>& layer_shape,
                                          const Output<Node>& image_shape,

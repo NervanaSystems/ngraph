@@ -34,8 +34,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"Constant", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             /// \brief Constructs a tensor constant.
             ///
             /// \param type The element type of the tensor constant.
@@ -276,7 +276,7 @@ namespace ngraph
 
             template <typename T>
             void write_to_buffer(const element::Type& target_type,
-                                 const Shape& target_shape,
+                                 const Shape& /* target_shape */,
                                  const std::vector<T>& source,
                                  void* target,
                                  size_t target_element_count)
@@ -351,8 +351,8 @@ namespace ngraph
         {
         public:
             NGRAPH_API
-            static const std::string type_name;
-            const std::string& description() const override { return type_name; }
+            static constexpr NodeTypeInfo type_info{"ScalarConstantLikeBase", 0};
+            const NodeTypeInfo& get_type_info() const override { return type_info; }
             std::shared_ptr<op::Constant> as_constant() const;
 
         protected:

@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::TopK::type_name{"TopK"};
+constexpr NodeTypeInfo op::TopK::type_info;
 
 op::TopK::TopK(const Output<Node>& arg,
                size_t top_k_axis,
@@ -133,7 +133,7 @@ shared_ptr<Node> op::TopK::copy_with_new_args(const NodeVector& new_args) const
         new_args.at(0), new_args.at(1), m_top_k_axis, m_index_element_type, m_compute_max, m_sort);
 }
 
-void op::TopK::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */, const NodeVector& /* deltas */)
 {
     throw ngraph_error("Forward-propagation-only operation");
 }

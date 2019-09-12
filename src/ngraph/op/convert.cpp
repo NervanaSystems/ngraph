@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Convert::type_name{"Convert"};
+constexpr NodeTypeInfo op::Convert::type_info;
 
 op::Convert::Convert(const Output<Node>& arg, const element::Type& element_type)
     : Op({arg})

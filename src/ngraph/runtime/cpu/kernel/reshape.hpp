@@ -150,7 +150,7 @@ namespace ngraph
                                  const Shape& in_shape,
                                  const AxisVector& in_axis_order,
                                  const Shape& out_shape,
-                                 int arena)
+                                 int /* arena */)
                 {
                     reference::reshape(static_cast<const ElementType*>(arg),
                                        static_cast<ElementType*>(out),

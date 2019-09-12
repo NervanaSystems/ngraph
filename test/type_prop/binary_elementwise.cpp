@@ -24,7 +24,7 @@ using namespace ngraph;
 //
 // Tests for binary elementwise ops.
 //
-void test_binary(std::string node_type,
+void test_binary(std::string /* node_type */,
                  shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y))
 {
     // Check for bad arguments
@@ -115,7 +115,7 @@ TEST(type_prop, subtract_bad_arguments)
 //
 // Tests for binary elementwise logical ops.
 //
-void test_binary_logical(std::string node_type,
+void test_binary_logical(std::string /* node_type */,
                          shared_ptr<Node>(f)(const shared_ptr<Node>& x, const shared_ptr<Node>& y))
 {
     // Check for bad arguments
