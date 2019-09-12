@@ -43,7 +43,9 @@ namespace
     using namespace ngraph::runtime::ngmlir;
     using namespace mlir;
 
-    /// Dialect Lowering Pass to affine ops
+    /// Memory Optimization pass
+    /// - Tries to perform operations in place where applicable by assigning a virtual buffer ID
+    //    to values. Those are used later in affine lowering pass to create or re-use memrefs
     class MemoryOptimizationPass : public mlir::FunctionPass<MemoryOptimizationPass>
     {
     public:
