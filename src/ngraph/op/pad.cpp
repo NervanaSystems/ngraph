@@ -189,6 +189,17 @@ op::v1::Pad::Pad(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
+
+op::v1::Pad::Pad(const Output<Node>& arg,
+    const Output<Node>& pads_begin,
+    const Output<Node>& pads_end,
+    PadMode pad_mode)
+    : Op({arg, pads_begin, pads_end})
+    , m_pad_mode{ pad_mode }
+{
+    constructor_validate_and_infer_types();
+}
+
 CoordinateDiff op::v1::Pad::get_pads_begin() const
 {
     auto pads_begin_node = input_value(1).get_node_shared_ptr();
@@ -218,7 +229,26 @@ void op::v1::Pad::validate_and_infer_types()
     const auto& arg_element_type = get_input_element_type(0);
     const auto& pads_begin_element_type = get_input_element_type(1);
     const auto& pads_end_element_type = get_input_element_type(2);
-    const auto& arg_pad_element_type = get_input_element_type(3);
+
+    const auto arg_pad_value_provided = get_input_size() == 4;
+    if (m_pad_mode == PadMode::CONSTANT && arg_pad_value_provided)
+    {
+        const auto& arg_pad_element_type = get_input_element_type(3);
+        const auto& arg_pad_shape = get_input_partial_shape(3);
+        NODE_VALIDATION_CHECK(this,
+            element::Type::merge(result_et, arg_element_type, arg_pad_element_type),
+            "Argument element types do not match (input arg element type: ",
+            arg_element_type,
+            ", arg_pad element type: ",
+            arg_pad_element_type,
+            ").");
+
+        NODE_VALIDATION_CHECK(this,
+            arg_pad_shape.compatible(PartialShape{}),
+            "Argument for padding value is not a scalar (shape: ",
+            arg_pad_shape,
+            ").");
+    }
 
     NODE_VALIDATION_CHECK(this,
         pads_begin_element_type.compatible(element::Type_t::i64),
@@ -231,21 +261,6 @@ void op::v1::Pad::validate_and_infer_types()
         "pads_end must be type i64 (axes type: ",
         pads_end_element_type,
         ").");
-
-    NODE_VALIDATION_CHECK(this,
-                          element::Type::merge(result_et, arg_element_type, arg_pad_element_type),
-                          "Argument element types do not match (input arg element type: ",
-                          arg_element_type,
-                          ", arg_pad element type: ",
-                          arg_pad_element_type,
-                          ").");
-
-    const auto& arg_pad_shape = get_input_partial_shape(3);
-    NODE_VALIDATION_CHECK(this,
-                          arg_pad_shape.compatible(PartialShape{}),
-                          "Argument for padding value is not a scalar (shape: ",
-                          arg_pad_shape,
-                          ").");
 
     const auto& pads_begin_shape = get_input_partial_shape(1);
     const auto& pads_begin_rank = pads_begin_shape.rank();
@@ -351,8 +366,17 @@ void op::v1::Pad::validate_and_infer_types()
 shared_ptr<Node> op::v1::Pad::copy_with_new_args(const NodeVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v1::Pad>(
-        new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), m_pad_mode);
+    const auto arg_pad_value_provided = get_input_size() == 4;
+    if (arg_pad_value_provided)
+    {
+        return make_shared<v1::Pad>(
+            new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), m_pad_mode);
+    }
+    else
+    {
+        return make_shared<v1::Pad>(
+            new_args.at(0), new_args.at(1), new_args.at(2), m_pad_mode);
+    }
 }
 
 void op::v1::Pad::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)

@@ -412,7 +412,7 @@ TEST(type_prop, pad_v1_arg_pad_value_type_mismatch)
 
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, op::PadMode::CONSTANT);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Too much negative padding not detected";
@@ -438,7 +438,7 @@ TEST(type_prop, pad_v1_arg_pad_value_shape_not_compatible)
 
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, op::PadMode::CONSTANT);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Too much negative padding not detected";
@@ -459,11 +459,10 @@ TEST(type_prop, pad_v1_arg_pads_begin_shape_not_1D)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1, 2});
     auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1});
-    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
 
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::SYMMETRIC);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Too much negative padding not detected";
@@ -484,11 +483,10 @@ TEST(type_prop, pad_v1_arg_pads_end_shape_not_1D)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
     auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1, 2});
-    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
 
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::SYMMETRIC);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Too much negative padding not detected";
@@ -508,11 +506,10 @@ TEST(type_prop, pad_v1_arg_pads_begin_size_not_correct)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{4});
     auto pads_end = make_shared<op::Parameter>(element::i64, Shape{1});
-    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
 
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::SYMMETRIC);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Too much negative padding not detected";
@@ -538,7 +535,7 @@ TEST(type_prop, pad_v1_arg_pads_end_size_not_correct)
 
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, op::PadMode::CONSTANT);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Too much negative padding not detected";
@@ -561,11 +558,10 @@ TEST(type_prop, pad_v1_arg_pads_begin_incompatible_type)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3 });
     auto pads_begin = make_shared<op::Parameter>(element::f32, Shape{ 1 });
     auto pads_end = make_shared<op::Parameter>(element::i64, Shape{ 1 });
-    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
 
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::REFLECT);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect pad begin type exception not handled";
@@ -585,11 +581,10 @@ TEST(type_prop, pad_v1_arg_pads_end_incompatible_type)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{ 1, 2, 3 });
     auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{ 1 });
     auto pads_end = make_shared<op::Parameter>(element::f32, Shape{ 1 });
-    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
 
     try
     {
-        auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+        auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::REFLECT);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect pads_end type exception not thrown";
@@ -612,7 +607,7 @@ TEST(type_prop, pad_v1_pads_begin_elem_negative_value)
     auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::REFLECT);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Negative pads_begin element exception not thrown";
@@ -634,10 +629,9 @@ TEST(type_prop, pad_v1_pads_end_elem_negative_value)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{ 5, 4, 2 });
     auto pads_begin = make_shared<op::Constant>(element::i64, Shape{ 3 }, std::vector<int64_t>{5, 3, 0});
     auto pads_end = make_shared<op::Constant>(element::i64, Shape{ 3 }, std::vector<int64_t>{6, 9, -3});
-    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
     try
     {
-        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value);
+        auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, op::PadMode::REFLECT);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Negative pads_end element exception not thrown";

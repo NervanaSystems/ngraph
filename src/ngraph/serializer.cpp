@@ -1568,12 +1568,19 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 auto pad_mode = read_pad_mode(node_js);
 
                 node =
-                    make_shared<op::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
+                    make_shared<op::v0::Pad>(args[0], args[1], padding_below, padding_above, pad_mode);
             }
             if (op_version == 1)
             {
                 auto pad_mode = read_pad_mode(node_js);
-                node = make_shared<op::v1::Pad>(args[0], args[1], args[2], args[3], pad_mode);
+                if (args.size() == 4)
+                {
+                    node = make_shared<op::v1::Pad>(args[0], args[1], args[2], args[3], pad_mode);
+                }
+                else
+                {
+                    node = make_shared<op::v1::Pad>(args[0], args[1], args[2], pad_mode);
+                }
             }
             break;
         }
@@ -2687,7 +2694,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         if (op_version == 0)
         {
-            auto tmp = dynamic_cast<const op::Pad*>(&n);
+            auto tmp = dynamic_cast<const op::v0::Pad*>(&n);
             node["padding_below"] = tmp->get_padding_below();
             node["padding_above"] = tmp->get_padding_above();
             node["pad_mode"] = tmp->get_pad_mode();

@@ -102,12 +102,26 @@ namespace ngraph
                 /// beginning of each axis
                 /// \param pads_end The node which specifies the number of padding elements at the
                 /// end of each axis
-                /// \param pad_mode The padding mode: CONSTANT(default), EDGE, REFLECT or SYMMETRIC.
+                /// \param The node with value which set to extended elements if pad_mode is CONSTANT
+                /// \param pad_mode The padding mode: CONSTANT, EDGE, REFLECT or SYMMETRIC.
                 Pad(const Output<Node>& arg,
                     const Output<Node>& pads_begin,
                     const Output<Node>& pads_end,
                     const Output<Node>& arg_pad_value,
-                    PadMode pad_mode = PadMode::CONSTANT);
+                    PadMode pad_mode);
+
+                /// \brief Constructs a generic padding operation.
+                ///
+                /// \param arg The node producing input tensor to be padded.
+                /// \param pads_begin The node which specifies the number of padding elements at the
+                /// beginning of each axis
+                /// \param pads_end The node which specifies the number of padding elements at the
+                /// end of each axis
+                /// \param pad_mode The padding mode: CONSTANT, EDGE, REFLECT or SYMMETRIC.
+                Pad(const Output<Node>& arg,
+                    const Output<Node>& pads_begin,
+                    const Output<Node>& pads_end,
+                    PadMode pad_mode);
 
                 /// \brief Constructs a generic padding operation.
                 Pad() = default;
