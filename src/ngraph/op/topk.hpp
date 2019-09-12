@@ -104,7 +104,6 @@ namespace ngraph
             class TopK : public Op
             {
             public:
-
                 enum class SortType
                 {
                     NONE,

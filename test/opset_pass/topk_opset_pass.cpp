@@ -48,5 +48,6 @@ TEST(serialize, opset1_topk_pass)
     EXPECT_EQ(topk_v1->get_mode(), op::v1::TopK::Mode::MAX);
     EXPECT_EQ(topk_v1->get_sort(), op::v1::TopK::SortType::SORT_VALUES);
 
-    //TODO: check output element types - the first out should match input data type
+    const auto values_out_element_type = topk_v1->output(0).get_element_type();
+    EXPECT_EQ(values_out_element_type, data->get_element_type());
 }
