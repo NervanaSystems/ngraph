@@ -566,7 +566,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/shape.hpp"
-#include "ngraph/state/rng_state.hpp"
+#include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
 

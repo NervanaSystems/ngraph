@@ -130,7 +130,7 @@
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
-#include "ngraph/state/rng_state.hpp"
+#include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
@@ -4153,9 +4153,9 @@ namespace ngraph
                 auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
                 writer.block_begin();
                 auto index = external_function->add_state(
-                    ngraph::RNGState::create_rng_state(gm->get_seed(), gm->get_probability()));
-                writer << "auto state = static_cast<ngraph::RNGState*>(ctx->states[" << index
-                       << "]);\n";
+                    new ngraph::BernoulliRNGState(gm->get_seed(), gm->get_probability()));
+                writer << "auto state = static_cast<ngraph::BernoulliRNGState*>(ctx->states["
+                       << index << "]);\n";
                 writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
                 writer << "bool use_seed = static_cast<bool>(" << args[2].get_name() << "[0]);\n";
 

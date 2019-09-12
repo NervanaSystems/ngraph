@@ -158,7 +158,7 @@
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/runtime/tensor.hpp"
-#include "ngraph/state/rng_state.hpp"
+#include "ngraph/state/bernoulli_rng_state.hpp"
 
 namespace ngraph
 {
@@ -380,7 +380,7 @@ private:
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
                 auto seed = use_seed ? gm->get_seed() : 0;
                 m_states[&node] = std::unique_ptr<ngraph::RNGState>(
-                    ngraph::RNGState::create_rng_state(seed, gm->get_probability()));
+                    new ngraph::BernoulliRNGState(seed, gm->get_probability()));
             }
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);

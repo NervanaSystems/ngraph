@@ -41,6 +41,8 @@ namespace ngraph
             /// \param max_value Output producing the maximum value (inclusive) for the random
             ///                  uniform distribution. Must return a scalar of floating point type,
             ///                  and the type must match that of `min_value`.
+            /// \param result_shape Output producing the shape of the output tensor. Must return a
+            ///                     vector of type `element::i64`.
             /// \param use_fixed_seed Output producing a boolean scalar Flag indicating whether to
             ///                       use the value supplied in `fixed_seed` to re-seed the random
             ///                       number generator at this iteration. Note that whenever
@@ -48,8 +50,6 @@ namespace ngraph
             ///                       in the output tensor. This flag is primarily used for
             ///                       debugging. If `use_fixed_seed` is `false`, the value in
             ///                       `fixed_seed` is ignored.
-            /// \param result_shape Output producing the shape of the output tensor. Must return a
-            ///                     vector of type `element::i64`.
             /// \param fixed_seed Fixed seed value to be supplied to the random number generator if
             ///                   `use_fixed_seed` is `true`. If `use_fixed_seed` is `false`, this
             ///                   value is ignored.
