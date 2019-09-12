@@ -189,12 +189,12 @@ double ngraph::test::bits_to_double(const std::string& s)
 //                f32 Mantissa
 //             <---------------------->
 //               bf16 Mantissa
-//   S   E      <------->
-//   0|00011110|01010101|0000111111110000
-//   1. Right sift number >> 16 which gives 0|00011110|01010101
-//   2. Logical & with 0xffff gives     &   1|11111111|11111111
+//   S   E      <------>
+//   0|00011110|0101010|1000011111111000
+//   1. Right shift number >> 16 which gives 0|00011110|0101010
+//   2. Logical & with 0xffff gives     &    1|11111111|1111111
 //                                         ---------------------
-//                                          0|00011110|01010101
+//                                           0|00011110|0101010
 void ngraph::test::float_to_bf16(void* src, void* dst, int size)
 {
     int* a = static_cast<int*>(src);
