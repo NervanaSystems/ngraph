@@ -98,7 +98,7 @@ namespace ngraph
                         kernel;
 
                     SELECT_KERNEL_3ARGS(
-                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution);
+                        kernel, out[0].get_element_type(), runtime::cpu::kernel::convolution)
 
                     auto window_movement_strides = convolution->get_window_movement_strides();
                     auto window_dilation_strides = convolution->get_window_dilation_strides();
@@ -485,7 +485,7 @@ namespace ngraph
 
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
-                                  runtime::cpu::kernel::convolution_backprop_in);
+                                  runtime::cpu::kernel::convolution_backprop_in)
                     auto& in_shape = convolution->get_data_batch_shape();
                     auto data_dilation_strides = convolution->get_data_dilation_strides_forward();
                     auto window_dilation_strides =
@@ -599,7 +599,7 @@ namespace ngraph
 
                     SELECT_KERNEL(kernel,
                                   out[0].get_element_type(),
-                                  runtime::cpu::kernel::convolution_backprop_filter);
+                                  runtime::cpu::kernel::convolution_backprop_filter)
 
                     auto& filters_shape = convolution->get_filters_shape();
                     auto window_dilation_strides =

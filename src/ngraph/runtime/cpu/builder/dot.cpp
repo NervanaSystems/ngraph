@@ -233,7 +233,7 @@ namespace ngraph
                 std::function<decltype(runtime::cpu::kernel::dot_ref<float, float, float>)> kernel;
 
                 SELECT_KERNEL_3ARGS(
-                    kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref);
+                    kernel, out[0].get_element_type(), runtime::cpu::kernel::dot_ref)
 
                 auto functor = [&,
                                 kernel,

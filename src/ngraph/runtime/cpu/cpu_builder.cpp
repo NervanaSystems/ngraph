@@ -142,7 +142,7 @@ namespace ngraph
                 auto& functors = external_function->get_functors();
                 const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
                 std::function<void(void*, void*, void*, size_t, bool, int)> kernel;
-                SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::divide);
+                SELECT_KERNEL(kernel, args[0].get_element_type(), runtime::cpu::kernel::divide)
                 auto element_count = out[0].get_size();
                 auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
@@ -448,8 +448,7 @@ namespace ngraph
             {
                 const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
                 std::function<void(void*, void*, void*, size_t, bool, int)> kernel;
-                SELECT_KERNEL(
-                    kernel, node->get_input_element_type(0), runtime::cpu::kernel::divide);
+                SELECT_KERNEL(kernel, node->get_input_element_type(0), runtime::cpu::kernel::divide)
                 auto element_count = shape_size(node->get_shape());
                 bool pythondiv = divop->is_pythondiv();
                 auto functor = [&, kernel, element_count, pythondiv](

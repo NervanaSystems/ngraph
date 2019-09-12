@@ -228,7 +228,7 @@ TEST(debugger, MLIR_DISABLE_TEST(while_stepping))
     dbg.add_breakpoint(add);
     while (dbg.step())
     {
-    };
+    }
 
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);

@@ -34,7 +34,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Max)
             {
-                BUILD_REDUCTION_FUNCTOR(Max, max)
+                BUILD_REDUCTION_FUNCTOR(Max, max);
             }
 
             void register_builders_max_cpp() { REGISTER_OP_BUILDER(Max); }

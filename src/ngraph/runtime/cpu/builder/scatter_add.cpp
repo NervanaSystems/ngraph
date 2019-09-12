@@ -71,7 +71,7 @@ namespace ngraph
                                                 args[0].get_element_type(),
                                                 inputs_shape.size(),
                                                 updates_shape.size(),
-                                                runtime::cpu::kernel::scatter_add_i64);
+                                                runtime::cpu::kernel::scatter_add_i64)
 
                         auto functor = [&,
                                         kernel,
@@ -110,7 +110,7 @@ namespace ngraph
                                                 args[0].get_element_type(),
                                                 inputs_shape.size(),
                                                 updates_shape.size(),
-                                                runtime::cpu::kernel::scatter_add_i32);
+                                                runtime::cpu::kernel::scatter_add_i32)
 
                         auto functor = [&,
                                         kernel,

@@ -152,7 +152,7 @@ namespace ngraph
                     SELECT_KERNEL_BY_RANK(kernel,
                                           out[0].get_element_type(),
                                           out[0].get_shape().size(),
-                                          runtime::cpu::kernel::concat);
+                                          runtime::cpu::kernel::concat)
 
                     auto functor = [&,
                                     kernel,
