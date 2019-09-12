@@ -64,7 +64,7 @@ namespace ngraph
             Shape get_pre_shuffle_shape(const Shape& data_shape) const;
 
             int m_axis;
-            const size_t m_groups;
+            size_t m_groups;
         };
     }
 }

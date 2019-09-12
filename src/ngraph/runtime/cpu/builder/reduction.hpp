@@ -186,4 +186,4 @@
                    reduction_axes,                                                                 \
                    ectx->arena);                                                                   \
     };                                                                                             \
-    functors.emplace_back(functor);
+    functors.emplace_back(functor)
