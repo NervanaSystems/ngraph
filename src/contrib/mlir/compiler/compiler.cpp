@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style, and nGraph naming convention for public method names only, 
-// since they are exposed to the rest of nGraph code-base.
+// NOTE: This file follows nGraph format style.
+// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
 #include "compiler.hpp"
 
@@ -228,8 +228,7 @@ void MLIRCompiler::buildNgDialectModule()
     {
         mlir::Value* arg = function.getArgument(i);
         TensorInfo tensorInfo{arg};
-        m_tensorToValueMap.insert(
-            TensorToInfo(input->get_output_tensor_ptr().get(), tensorInfo));
+        m_tensorToValueMap.insert(TensorToInfo(input->get_output_tensor_ptr().get(), tensorInfo));
         i++;
     }
 
@@ -268,8 +267,7 @@ mlir::Type MLIRCompiler::getMlirType(const descriptor::Tensor* tensor)
 {
     llvm::SmallVector<int64_t, 4> mlirShape;
     getMlirShape(tensor->get_shape(), mlirShape);
-    return mlir::NGTensorType::get(
-        &m_context, getMlirType(tensor->get_element_type()), mlirShape);
+    return mlir::NGTensorType::get(&m_context, getMlirType(tensor->get_element_type()), mlirShape);
 }
 
 // Converts an nGraph element type into an MLIR type.
@@ -569,9 +567,9 @@ namespace ngraph
             {
                 auto concat = static_cast<const ngraph::op::Concat*>(ngNode);
                 auto op = compiler.createGenericOp<mlir::NGConcatOp>(ngNode);
-                op->setAttr("concatenation_axis",
-                            compiler.m_builder->getI64IntegerAttr(
-                                concat->get_concatenation_axis()));
+                op->setAttr(
+                    "concatenation_axis",
+                    compiler.m_builder->getI64IntegerAttr(concat->get_concatenation_axis()));
                 return op;
             }
 
@@ -580,8 +578,7 @@ namespace ngraph
             {
                 auto gather = static_cast<const ngraph::op::Gather*>(ngNode);
                 auto op = compiler.createGenericOp<mlir::NGGatherOp>(ngNode);
-                op->setAttr("axis",
-                            compiler.m_builder->getI64IntegerAttr(gather->get_axis()));
+                op->setAttr("axis", compiler.m_builder->getI64IntegerAttr(gather->get_axis()));
                 return op;
             }
 

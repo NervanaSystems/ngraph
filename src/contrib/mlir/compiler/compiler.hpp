@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style, and nGraph naming convention for public method names only, 
-// since they are exposed to the rest of nGraph code-base.
+// NOTE: This file follows nGraph format style.
+// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
 
 #pragma once
 
@@ -104,8 +104,7 @@ namespace ngraph
                 void buildNgDialect();
 
                 template <typename Op>
-                static mlir::Operation* createOp(MLIRCompiler& compiler,
-                                                  const ngraph::Node* ngNode)
+                static mlir::Operation* createOp(MLIRCompiler& compiler, const ngraph::Node* ngNode)
                 {
                     throw std::runtime_error("Unimplemented op '" + ngNode->description() +
                                              "' in MLIR Compiler");

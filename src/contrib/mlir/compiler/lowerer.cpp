@@ -104,13 +104,19 @@ namespace
             // Convert the original function arguments.
             TypeConverter::SignatureConversion result(type.getNumInputs());
             for (unsigned i = 0, e = type.getNumInputs(); i != e; ++i)
+            {
                 if (failed(converter.convertSignatureArg(i, type.getInput(i), result)))
+                {
                     return matchFailure();
+                }
+            }
 
             // Convert the original function results.
             SmallVector<Type, 4> convertedResults;
             if (failed(converter.convertTypes(type.getResults(), convertedResults)))
+            {
                 return matchFailure();
+            }
 
             // Add result types as input args without mapping
             result.addInputs(convertedResults);
@@ -140,15 +146,15 @@ namespace
 
     template <typename OP>
     void lowerBinaryElementwise(Operation* op,
-                                  ArrayRef<Value*> operands,
-                                  PatternRewriter& rewriter,
-                                  DialectLoweringPass& pass);
+                                ArrayRef<Value*> operands,
+                                PatternRewriter& rewriter,
+                                DialectLoweringPass& pass);
 
     template <typename OP>
     void lowerUnaryElementwise(Operation* op,
-                                 ArrayRef<Value*> operands,
-                                 PatternRewriter& rewriter,
-                                 DialectLoweringPass& pass);
+                               ArrayRef<Value*> operands,
+                               PatternRewriter& rewriter,
+                               DialectLoweringPass& pass);
 
     ValueHandle createZeroConstant(mlir::Type type);
 
@@ -951,9 +957,9 @@ namespace
     /// End of pattern matchers
     template <typename OP>
     void lowerUnaryElementwise(Operation* op,
-                                 ArrayRef<Value*> operands,
-                                 PatternRewriter& rewriter,
-                                 DialectLoweringPass& pass)
+                               ArrayRef<Value*> operands,
+                               PatternRewriter& rewriter,
+                               DialectLoweringPass& pass)
     {
         auto loc = cast<OP>(op).getLoc();
 
@@ -1000,9 +1006,9 @@ namespace
 
     template <typename OP>
     void lowerBinaryElementwise(Operation* op,
-                                  ArrayRef<Value*> operands,
-                                  PatternRewriter& rewriter,
-                                  DialectLoweringPass& pass)
+                                ArrayRef<Value*> operands,
+                                PatternRewriter& rewriter,
+                                DialectLoweringPass& pass)
     {
         auto loc = cast<OP>(op).getLoc();
         auto result = pass.buildOutputDefs(op, rewriter)[0];
@@ -1138,7 +1144,9 @@ namespace
                 for (auto i = 0; i < vArg.rank(); i++)
                 {
                     if (i != axis)
+                    {
                         nonRedIVs.push_back(allIVs[i]);
+                    }
                 }
 
                 // Load current min index with integer data type and convert it to index data type.
