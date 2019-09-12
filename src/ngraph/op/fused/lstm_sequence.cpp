@@ -30,8 +30,7 @@
 using namespace ngraph;
 using namespace std;
 
-const string op::LSTMSequence::type_name{"LSTMSequence"};
-
+constexpr NodeTypeInfo op::LSTMSequence::type_info;
 NodeVector op::LSTMSequence::decompose_op() const
 {
     NodeVector results;
