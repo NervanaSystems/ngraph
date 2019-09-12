@@ -297,7 +297,7 @@ big, small {
 }
 
 @font-face {
-  font-family: 'Nunito Sans', sans;
+  font-family: 'Nunito Sans', sans-serif, sans;
   font-weight: normal;
   font-style: normal;
 
@@ -1334,13 +1334,15 @@ input[type="radio"][disabled], input[type="checkbox"][disabled] {
 
 
 a {
-  color: #FFA400;
+  color: #DC700D;
+  background: transparent;
   text-decoration: none;
   cursor: pointer;
 }
 a:hover {
-  color: #DC700D;
   background: #D4D4D4;
+  color: #FFA400;
+
 }
 
 a:visited {
@@ -1354,7 +1356,7 @@ html {
 
 body {
   font-family: 'Nunito Sans', Sans, sans-serif;
-  font-weight: lighter;
+  font-weight: normal;
   color: #31343D;
   min-height: 100%;
   overflow-x: visible;
@@ -1432,7 +1434,7 @@ a.wy-text-neutral:hover {
 h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
   margin-top: 0.33em;
   font-weight: 700;
-  font-family: 'Nunito Sans', "IntelClear-Regular", Lato, sans;
+  font-family: 'Nunito Sans', "IntelClear-Regular", Lato, Helvetica, "Helvetica Neue", sans;
 }
 
 p {
@@ -1443,8 +1445,6 @@ p {
   margin-bottom: 0.27em;
   margin-top: 0.27em;
   font-family: 'Nunito Sans', sans;
-  font-weight: lighter;
-
 }
 
 h1 {
