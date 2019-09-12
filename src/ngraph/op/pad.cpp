@@ -16,6 +16,7 @@
 
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -188,12 +189,48 @@ op::v1::Pad::Pad(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
+CoordinateDiff op::v1::Pad::get_pads_begin() const
+{
+    auto pads_begin_node = input_value(1).get_node_shared_ptr();
+    CoordinateDiff pads_begin_coord{};
+    if (auto pads_begin_const = dynamic_pointer_cast<op::Constant>(pads_begin_node))
+    {
+        pads_begin_coord = pads_begin_const->get_vector<ptrdiff_t>();
+    }
+    return pads_begin_coord;
+}
+
+CoordinateDiff op::v1::Pad::get_pads_end() const
+{
+    auto pads_end_node = input_value(2).get_node_shared_ptr();
+    CoordinateDiff pads_end_coord{};
+    if (auto pads_end_const = dynamic_pointer_cast<op::Constant>(pads_end_node))
+    {
+        pads_end_coord = pads_end_const->get_vector<ptrdiff_t>();
+    }
+    return pads_end_coord;
+}
+
 void op::v1::Pad::validate_and_infer_types()
 {
     element::Type result_et;
 
     const auto& arg_element_type = get_input_element_type(0);
+    const auto& pads_begin_element_type = get_input_element_type(1);
+    const auto& pads_end_element_type = get_input_element_type(2);
     const auto& arg_pad_element_type = get_input_element_type(3);
+
+    NODE_VALIDATION_CHECK(this,
+        pads_begin_element_type.compatible(element::Type_t::i64),
+        "pads_begin must be type i64 (axes type: ",
+        pads_begin_element_type,
+        ").");
+
+    NODE_VALIDATION_CHECK(this,
+        pads_end_element_type.compatible(element::Type_t::i64),
+        "pads_end must be type i64 (axes type: ",
+        pads_end_element_type,
+        ").");
 
     NODE_VALIDATION_CHECK(this,
                           element::Type::merge(result_et, arg_element_type, arg_pad_element_type),
@@ -232,7 +269,8 @@ void op::v1::Pad::validate_and_infer_types()
                               ").");
     }
 
-    const auto& arg_shape_rank = get_input_partial_shape(0).rank();
+    const auto& arg_shape = get_input_partial_shape(0);
+    const auto& arg_shape_rank = arg_shape.rank();
     if (arg_shape_rank.is_static() && pads_begin_shape.is_static())
     {
         NODE_VALIDATION_CHECK(
@@ -253,8 +291,61 @@ void op::v1::Pad::validate_and_infer_types()
             pads_end_shape[0],
             ").");
     }
+    const auto& pads_begin_coord = get_pads_begin();
+    const auto& pads_end_coord = get_pads_end();
 
-    set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    for (const auto& pads_begin_dim : pads_begin_coord)
+    {
+        NODE_VALIDATION_CHECK(this,
+            pads_begin_dim >= 0,
+            "All pads_begin element must be non-negative (pads_begin_coord ",
+            pads_begin_coord,
+            ")");
+    }
+    for (const auto& pads_end_dim : pads_end_coord)
+    {
+        NODE_VALIDATION_CHECK(this,
+            pads_end_dim >= 0,
+            "All pads_end element must be non-negative (pads_end_coord ",
+            pads_end_coord,
+            ")");
+    }
+
+    auto pads_begin_node = input_value(1).get_node_shared_ptr();
+    auto pads_end_node = input_value(2).get_node_shared_ptr();
+    if (arg_shape_rank.is_static() && pads_begin_node->is_constant() && pads_end_node->is_constant())
+    {
+        const auto implied_rank = pads_begin_coord.size();
+        std::vector<Dimension> result_dims(implied_rank, Dimension::dynamic());
+        for (size_t i = 0; i < implied_rank; i++)
+        {
+            if (arg_shape[i].is_static())
+            {
+                ptrdiff_t result_dim =
+                    pads_begin_coord[i] + static_cast<int64_t>(arg_shape[i]) + pads_end_coord[i];
+                result_dims[i] = static_cast<size_t>(result_dim);
+                if (i > 1)
+                {
+                    NODE_VALIDATION_CHECK(
+                        this,
+                        m_pad_mode != op::PadMode::EDGE || static_cast<size_t>(arg_shape[i]) >= 1,
+                        "EDGE padding mode requires an input of dimension of at least 1 at each "
+                        "spatial axis.");
+                    NODE_VALIDATION_CHECK(
+                        this,
+                        m_pad_mode != op::PadMode::REFLECT ||
+                        static_cast<size_t>(arg_shape[i]) >= 2,
+                        "REFLECT padding mode requires an input of dimension of at least 2 at each "
+                        "spatial axis.");
+                }
+            }
+        }
+        set_output_type(0, get_input_element_type(0), result_dims);
+    }
+    else
+    {
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
+    }
 }
 
 shared_ptr<Node> op::v1::Pad::copy_with_new_args(const NodeVector& new_args) const

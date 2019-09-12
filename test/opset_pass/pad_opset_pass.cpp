@@ -34,13 +34,6 @@ TEST(serialize, opset1_pad_pass)
     EXPECT_EQ(pad_v1_node->get_version(), 1);
     EXPECT_EQ(pad_v1_node->get_pad_mode(), pad_mode);
 
-    auto pads_begin = pad_v1_node->input_value(1).get_node_shared_ptr();
-    auto pads_begin_const_op = dynamic_pointer_cast<op::Constant>(pads_begin);
-    EXPECT_NE(pads_begin_const_op, nullptr);
-    EXPECT_EQ(pads_begin_const_op->get_coordinate_diff_val(), padding_below);
-
-    auto pads_end = pad_v1_node->input_value(2).get_node_shared_ptr();
-    auto pads_end_const_op = dynamic_pointer_cast<op::Constant>(pads_end);
-    EXPECT_NE(pads_end_const_op, nullptr);
-    EXPECT_EQ(pads_end_const_op->get_coordinate_diff_val(), padding_above);
+    EXPECT_EQ(pad_v1_node->get_pads_begin(), padding_below);
+    EXPECT_EQ(pad_v1_node->get_pads_end(), padding_above);
 }

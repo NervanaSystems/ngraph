@@ -101,7 +101,7 @@ namespace ngraph
                 /// \param pads_begin The node which specifies the number of padding elements at the
                 /// beginning of each axis
                 /// \param pads_end The node which specifies the number of padding elements at the
-                /// beginning of each axis
+                /// end of each axis
                 /// \param pad_mode The padding mode: CONSTANT(default), EDGE, REFLECT or SYMMETRIC.
                 Pad(const Output<Node>& arg,
                     const Output<Node>& pads_begin,
@@ -116,6 +116,11 @@ namespace ngraph
                 void validate_and_infer_types() override;
                 virtual std::shared_ptr<Node>
                     copy_with_new_args(const NodeVector& new_args) const override;
+
+                ///return param pads_begin The node which specifies the number of padding elements at the beginning of each axis
+                CoordinateDiff get_pads_begin() const;
+                ///return param pads_begin The node which specifies the number of padding elements at the end of each axis
+                CoordinateDiff get_pads_end() const;
 
                 /// \return The padding mode.
                 PadMode get_pad_mode() const { return m_pad_mode; }
