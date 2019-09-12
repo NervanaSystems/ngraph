@@ -42,9 +42,6 @@ Attributes
 |                     |               | only for testing; if ``use_fixed_seed`` is ``1``, ``RandomUniform`` will produce the    |
 |                     |               | _same_ values at each iteration.                                                        |
 +---------------------+---------------+-----------------------------------------------------------------------------------------+
-| ``broadcast_axes``  | ``AxisSet``   | Axis positions in ``shape`` that   |
-|                     |               | are broadcast.                     |
-+---------------------+---------------+------------------------------------+
 
 Outputs
 -------
