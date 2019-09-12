@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-Strides ngraph::conv_default_strides(const Node* node,
+Strides ngraph::conv_default_strides(const Node* /* node */,
                                      const PartialShape& data_batch_shape,
                                      const PartialShape& filters_shape)
 {
@@ -42,7 +42,7 @@ Strides ngraph::conv_default_strides(const Node* node,
     return Strides(rank, 1);
 }
 
-CoordinateDiff ngraph::conv_default_padding(const Node* node,
+CoordinateDiff ngraph::conv_default_padding(const Node* /* node */,
                                             const PartialShape& data_batch_shape,
                                             const PartialShape& filters_shape)
 {
