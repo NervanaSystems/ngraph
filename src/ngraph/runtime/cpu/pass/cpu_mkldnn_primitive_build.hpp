@@ -90,12 +90,12 @@ namespace ngraph
 
                     template <typename OP>
                     static void construct_primitive_build_string(
-                        ngraph::runtime::cpu::MKLDNNEmitter& mkldnn_emitter,
+                        ngraph::runtime::cpu::MKLDNNEmitter& /* mkldnn_emitter */,
                         ngraph::Node* node,
-                        std::string& construct_string,
-                        std::vector<size_t>& deps,
-                        size_t& index,
-                        std::ofstream& desc_file)
+                        std::string& /* construct_string */,
+                        std::vector<size_t>& /* deps */,
+                        size_t& /* index */,
+                        std::ofstream& /* desc_file */)
                     {
                         throw std::runtime_error("Unimplemented op '" + node->description() +
                                                  "' in MKLDNNPrimitiveBuildPass");
