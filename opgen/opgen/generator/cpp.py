@@ -13,10 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ******************************************************************************
-"""Op class generator for nGraph"""
+"""C++ class generator"""
 
 
-from opgen import main
-from opgen import spec
-from opgen import writer
-from opgen import generator
+import opgen.spec.ast as ast
