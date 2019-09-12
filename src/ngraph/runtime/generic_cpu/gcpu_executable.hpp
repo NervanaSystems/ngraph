@@ -199,7 +199,7 @@ private:
     std::shared_ptr<Function> m_function;
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
     std::vector<NodeWrapper> m_wrapped_nodes;
-    std::unordered_map<const Node*, std::shared_ptr<RNGState>> m_states;
+    std::unordered_map<const Node*, std::shared_ptr<ngraph::State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
 
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
@@ -379,12 +379,12 @@ private:
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
                 auto seed = use_seed ? gm->get_seed() : 0;
-                m_states[&node] = std::unique_ptr<ngraph::RNGState>(
+                m_states[&node] = std::unique_ptr<ngraph::State>(
                     new ngraph::BernoulliRNGState(seed, gm->get_probability()));
             }
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
-            auto state = m_states.at(&node).get();
+            auto state = static_cast<ngraph::BernoulliRNGState*>(m_states.at(&node).get());
             size_t element_count = shape_size(node.get_output_shape(0));
             if (!use_seed)
             {
