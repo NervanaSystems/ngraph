@@ -152,7 +152,7 @@ namespace
         using IdToMemRefMap = std::unordered_map<unsigned, Value*>;
 
         IdToMemRefMap m_id_to_memref;
-        
+
         ngmlir::MLIRCompiler& compiler;
     };
 
@@ -268,7 +268,8 @@ namespace
                     if (it == m_id_to_memref.end())
                     {
                         // create a new memref
-                        newResult = createTempTensor(typeConverter.convertType(tensorType), rewriter);
+                        newResult =
+                            createTempTensor(typeConverter.convertType(tensorType), rewriter);
                         m_id_to_memref[bufferId] = newResult;
                     }
                     else

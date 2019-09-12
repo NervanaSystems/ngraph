@@ -24,6 +24,7 @@
 #include "ngraph/assertion.hpp"
 
 #include <llvm/ADT/DenseSet.h>
+#include <map>
 #include <mlir/EDSC/Builders.h>
 #include <mlir/EDSC/Helpers.h>
 #include <mlir/EDSC/Intrinsics.h>
@@ -31,30 +32,26 @@
 #include <mlir/IR/IntegerSet.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/IR/StandardTypes.h>
-#include <mlir/Transforms/DialectConversion.h>
 #include <mlir/Pass/Pass.h>
-#include <map>
+#include <mlir/Transforms/DialectConversion.h>
 
 // anonymous namespace
 // no need to expose any of the following outside of this file
 namespace
 {
-    
     using namespace ngraph::runtime;
     using namespace ngraph::runtime::ngmlir;
     using namespace mlir;
-    
+
     /// Dialect Lowering Pass to affine ops
     class MemoryOptimizationPass : public mlir::FunctionPass<MemoryOptimizationPass>
     {
     public:
-        MemoryOptimizationPass()
-        {
-        }
-
+        MemoryOptimizationPass() {}
         void runOnFunction() override;
+
     private:
-        bool isSafeInPlace(mlir::Operation *op);
+        bool isSafeInPlace(mlir::Operation* op);
         static unsigned buffer_id;
     };
 
@@ -63,35 +60,41 @@ namespace
     void MemoryOptimizationPass::runOnFunction()
     {
         auto f = getFunction();
-        
-        f.walk([&](mlir::Operation *op) {
+
+        f.walk([&](mlir::Operation* op) {
             if (!isSafeInPlace(op))
+            {
                 return;
-            
+            }
+
             if (op->getNumResults() > 1)
+            {
                 return;
+            }
 
             auto defVal = op->getResult(0);
-            
+
             // If the defined value is an output of the sub-graph, cannot do it in place
             for (auto use = defVal->use_begin(); use != defVal->use_end(); use++)
             {
                 auto useOp = use->getOwner();
                 if (isa<NGReturnOp>(useOp))
+                {
                     return;
+                }
             }
 
             // Check if we can re-use the buffer of any of the inputs. Conjunction of the following:
             // - single use value or all uses in the current op
             // - not an input argument
 
-            // TODO: Check instead if last post-dominating (dataflow-wise) use. 
+            // TODO: Check instead if last post-dominating (dataflow-wise) use.
             for (auto opnd = op->operand_begin(); opnd != op->operand_end(); opnd++)
             {
                 auto val = *opnd;
                 // we optimize if the val has one use or if all uses are in the current op
                 bool optimize;
-                
+
                 optimize = val->hasOneUse();
 
                 if (!optimize)
@@ -101,73 +104,54 @@ namespace
                     for (auto use = val->use_begin(); use != val->use_end(); use++)
                     {
                         if (use->getOwner() != op)
+                        {
                             optimize = false;
+                        }
                     }
                 }
 
                 if (optimize)
                 {
-                    // do we have a buffer id attached to this value 
+                    // do we have a buffer id attached to this value
                     auto defOp = val->getDefiningOp();
                     // If no defining op, then this is a block arg, skip operand
                     if (!defOp)
+                    {
                         continue;
+                    }
                     IntegerAttr attr = getBufferId(defOp);
 
                     if (!attr)
                     {
                         // attach a new buffer id
-                        attr = setBufferId(defOp,this->buffer_id++);
+                        attr = setBufferId(defOp, this->buffer_id++);
                     }
                     // propagate attribute to dst, and we are done
                     setBufferId(op, attr);
-                    
+
                     return;
                 }
             }
         });
     }
 
-    bool MemoryOptimizationPass::isSafeInPlace(mlir::Operation *op)
+    bool MemoryOptimizationPass::isSafeInPlace(mlir::Operation* op)
     {
-        bool isBinOp = 
-            isa<NGAddOp>(op) || 
-            isa<NGAndOp>(op) ||
-            isa<NGSubOp>(op) ||
-            isa<NGDivOp>(op) ||
-            isa<NGMaxOp>(op) ||
-            isa<NGMinOp>(op) ||
-            isa<NGMulOp>(op) ||
-            isa<NGPowOp>(op);
+        bool isBinOp = isa<NGAddOp>(op) || isa<NGAndOp>(op) || isa<NGSubOp>(op) ||
+                       isa<NGDivOp>(op) || isa<NGMaxOp>(op) || isa<NGMinOp>(op) ||
+                       isa<NGMulOp>(op) || isa<NGPowOp>(op);
 
-        bool isUnaryOp = 
-            isa<NGAbsOp    >(op) ||
-            isa<NGACosOp   >(op) ||
-            isa<NGASinOp   >(op) ||
-            isa<NGATanOp   >(op) ||
-            isa<NGCeilOp   >(op) ||
-            isa<NGConvertOp>(op) ||
-            isa<NGCosOp    >(op) ||
-            isa<NGCoshOp   >(op) ||
-            isa<NGExpOp    >(op) ||
-            isa<NGFloorOp  >(op) ||
-            isa<NGLogOp    >(op) ||
-            isa<NGNegOp    >(op) ||
-            isa<NGNotOp    >(op) ||
-            isa<NGSignOp   >(op) ||
-            isa<NGSinOp    >(op) ||
-            isa<NGSinhOp   >(op) ||
-            isa<NGTanOp    >(op) ||
-            isa<NGTanhOp   >(op) ||
-            isa<NGSqrtOp   >(op) ||
-            isa<NGReluOp   >(op);
+        bool isUnaryOp =
+            isa<NGAbsOp>(op) || isa<NGACosOp>(op) || isa<NGASinOp>(op) || isa<NGATanOp>(op) ||
+            isa<NGCeilOp>(op) || isa<NGConvertOp>(op) || isa<NGCosOp>(op) || isa<NGCoshOp>(op) ||
+            isa<NGExpOp>(op) || isa<NGFloorOp>(op) || isa<NGLogOp>(op) || isa<NGNegOp>(op) ||
+            isa<NGNotOp>(op) || isa<NGSignOp>(op) || isa<NGSinOp>(op) || isa<NGSinhOp>(op) ||
+            isa<NGTanOp>(op) || isa<NGTanhOp>(op) || isa<NGSqrtOp>(op) || isa<NGReluOp>(op);
 
-            return isBinOp || isUnaryOp;
+        return isBinOp || isUnaryOp;
     }
-
-
 }
-    
+
 namespace mlir
 {
     std::unique_ptr<Pass> createMemoryOptimizationPass()

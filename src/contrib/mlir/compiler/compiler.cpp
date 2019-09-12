@@ -23,7 +23,6 @@
 #include "dialect/ops.hpp"
 #include "dialect/type.hpp"
 #include "lowerer.hpp"
-#include "pass/memory_optimization.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/graph_util.hpp"
@@ -47,6 +46,7 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "pass/memory_optimization.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -93,10 +93,10 @@ static llvm::cl::opt<bool> clPrintIRAfterAll(
 
 // *** Optimization flags ***
 
-static llvm::cl::opt<bool> clEnableNgMemoryOpt(
-    "ng-mem-opt",
-    llvm::cl::init(true),
-    llvm::cl::desc("Enable ngraph dialect memory optimization pass"));
+static llvm::cl::opt<bool>
+    clEnableNgMemoryOpt("ng-mem-opt",
+                        llvm::cl::init(true),
+                        llvm::cl::desc("Enable ngraph dialect memory optimization pass"));
 
 static llvm::cl::opt<bool>
     clEnableAffineLoopFusion("affine-loop-fusion",
@@ -351,7 +351,6 @@ void MLIRCompiler::lower_ng_dialect()
     pm.addPass(mlir::createDialectLoweringPass(this));
     pm.addPass(mlir::createCanonicalizerPass());
 
-    
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
 
@@ -391,8 +390,6 @@ void MLIRCompiler::lower_ng_dialect()
     auto maybeEngine = mlir::ExecutionEngine::create(m_module.get(), llvm_transformer);
     NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
     m_engine = std::move(maybeEngine.get());
-
-
 }
 
 /// Returns the cache level size from `targetInfo` for the `cacheLevel` provided. If `userCacheSize`
