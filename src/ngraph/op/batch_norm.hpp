@@ -142,8 +142,8 @@ namespace ngraph
                 copy_with_new_args(const NodeVector& new_args) const override;
 
         protected:
-            virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                           const NodeVector& deltas) override
+            virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                           const NodeVector& /* deltas */) override
             {
                 throw ngraph_error("Invalid operation");
             }
