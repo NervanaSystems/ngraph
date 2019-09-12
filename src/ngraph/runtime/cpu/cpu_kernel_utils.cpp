@@ -144,7 +144,7 @@ string ngraph::runtime::cpu::kernel::start_index_loop(const string& index_var,
 //
 // Ends an indexing loop on the index variable [index_var].
 //
-string ngraph::runtime::cpu::kernel::end_index_loop(const string& index_var)
+string ngraph::runtime::cpu::kernel::end_index_loop(const string& /* index_var */)
 {
     stringstream ss;
 
