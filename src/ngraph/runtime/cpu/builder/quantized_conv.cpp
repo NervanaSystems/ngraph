@@ -80,7 +80,7 @@ namespace ngraph
                                     arg4_buffer_index,
                                     arg6_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) mutable {
+                                                       CPUExecutionContext* /* ectx */) mutable {
                         // Create MKLDNN convolution primitive during the first iteration.
                         // Assumes the scales dont change for the duration of the graph
                         if (ctx->first_iteration)
@@ -153,7 +153,7 @@ namespace ngraph
                                     padding_above,
                                     data_dilation_strides,
                                     scales_size](CPURuntimeContext* ctx,
-                                                 CPUExecutionContext* ectx) {
+                                                 CPUExecutionContext* /* ectx */) {
                         vector<float> dyn_scales;
                         dyn_scales.assign(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
                                           static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
@@ -220,7 +220,7 @@ namespace ngraph
                                     padding_above,
                                     data_dilation_strides,
                                     scales_size](CPURuntimeContext* ctx,
-                                                 CPUExecutionContext* ectx) {
+                                                 CPUExecutionContext* /* ectx */) {
                         vector<float> dyn_scales;
                         dyn_scales.assign(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
                                           static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
@@ -287,7 +287,7 @@ namespace ngraph
                                     padding_above,
                                     data_dilation_strides,
                                     scales_size](CPURuntimeContext* ctx,
-                                                 CPUExecutionContext* ectx) {
+                                                 CPUExecutionContext* /* ectx */) {
                         vector<float> dyn_scales;
                         dyn_scales.assign(static_cast<float*>(ctx->buffer_data[arg2_buffer_index]),
                                           static_cast<float*>(ctx->buffer_data[arg2_buffer_index]) +
@@ -352,7 +352,7 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) mutable {
+                                                       CPUExecutionContext* /* ectx */) mutable {
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;
@@ -429,7 +429,7 @@ namespace ngraph
                                     arg2_buffer_index,
                                     arg3_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) mutable {
+                                                       CPUExecutionContext* /* ectx */) mutable {
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;
@@ -519,7 +519,7 @@ namespace ngraph
                                     arg4_buffer_index,
                                     arg5_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) mutable {
+                                                       CPUExecutionContext* /* ectx */) mutable {
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;
@@ -635,7 +635,7 @@ namespace ngraph
                                     arg4_buffer_index,
                                     arg5_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) mutable {
+                                                       CPUExecutionContext* /* ectx */) mutable {
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;

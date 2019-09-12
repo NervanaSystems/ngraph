@@ -38,7 +38,7 @@ runtime::BackendConstructor* runtime::cpu::get_backend_constructor_pointer()
     class CPU_BackendConstructor : public runtime::BackendConstructor
     {
     public:
-        std::shared_ptr<runtime::Backend> create(const std::string& config) override
+        std::shared_ptr<runtime::Backend> create(const std::string& /* config */) override
         {
             // Force TBB to link to the backend
             tbb::TBB_runtime_interface_version();
@@ -234,7 +234,7 @@ vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performanc
     return rc;
 }
 
-bool runtime::cpu::CPU_Backend::is_supported(const Node& op) const
+bool runtime::cpu::CPU_Backend::is_supported(const Node& /* op */) const
 {
     return true;
 }

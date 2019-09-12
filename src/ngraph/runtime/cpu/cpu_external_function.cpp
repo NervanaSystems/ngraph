@@ -1590,7 +1590,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         function<bool(CPURuntimeContext*)> enable;
         if (disable_caching)
         {
-            enable = [in_stale, out_stale](CPURuntimeContext* ctx) -> bool {
+            enable = [in_stale, out_stale](CPURuntimeContext * /* ctx */) -> bool {
                 for (auto& stale : out_stale)
                 {
                     stale.get() = true;
@@ -1600,7 +1600,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         }
         else
         {
-            enable = [in_stale, out_stale](CPURuntimeContext* ctx) -> bool {
+            enable = [in_stale, out_stale](CPURuntimeContext * /* ctx */) -> bool {
                 bool en = false;
                 for (const auto& stale : in_stale)
                 {
@@ -1727,14 +1727,15 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                     nodename_tbbnode_map;
                 tbb::flow::continue_node<tbb::flow::continue_msg>* flowgraph_node_start =
                     new tbb::flow::continue_node<tbb::flow::continue_msg>(
-                        *(ctx->G), [&](const tbb::flow::continue_msg& msg) {});
+                        *(ctx->G), [&](const tbb::flow::continue_msg& /* msg */) {});
                 auto it = enable_nodename_list.begin();
                 for (const auto& p : enables)
                 {
                     auto index = profiler_count++;
                     tbb::flow::continue_node<tbb::flow::continue_msg>* flowgraph_node =
                         new tbb::flow::continue_node<tbb::flow::continue_msg>(
-                            *(ctx->G), [&, functor, index](const tbb::flow::continue_msg& msg) {
+                            *(ctx->G),
+                            [&, functor, index](const tbb::flow::continue_msg& /* msg */) {
                                 if (p(ctx) || ctx->first_iteration)
                                 {
                                     if (runtime::cpu::IsTracingEnabled() || m_emit_timing)
@@ -2072,8 +2073,8 @@ void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     CodeWriter& writer,
     Node* node,
-    const std::vector<TensorViewWrapper>& in,
-    const std::vector<TensorViewWrapper>& out)
+    const std::vector<TensorViewWrapper>& /* in */,
+    const std::vector<TensorViewWrapper>& /* out */)
 {
     if (m_emit_timing)
     {
@@ -2084,8 +2085,8 @@ void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_exit(
     CodeWriter& writer,
     Node* node,
-    const std::vector<TensorViewWrapper>& in,
-    const std::vector<TensorViewWrapper>& out)
+    const std::vector<TensorViewWrapper>& /* in */,
+    const std::vector<TensorViewWrapper>& /* out */)
 {
     if (m_emit_timing)
     {

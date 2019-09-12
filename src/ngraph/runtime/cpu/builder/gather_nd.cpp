@@ -32,6 +32,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::GatherND)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
                 CPUKernelFunctor functor;
 
@@ -59,7 +60,7 @@ namespace ngraph
                                    params_buffer_index,
                                    indices_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::gather_nd<float, int64_t>(
                                 static_cast<float*>(ctx->buffer_data[params_buffer_index]),
                                 static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
@@ -78,7 +79,7 @@ namespace ngraph
                                    params_buffer_index,
                                    indices_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::gather_nd<float, int32_t>(
                                 static_cast<float*>(ctx->buffer_data[params_buffer_index]),
                                 static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),
@@ -100,7 +101,7 @@ namespace ngraph
                                    params_buffer_index,
                                    indices_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::gather_nd<double, int64_t>(
                                 static_cast<double*>(ctx->buffer_data[params_buffer_index]),
                                 static_cast<int64_t*>(ctx->buffer_data[indices_buffer_index]),
@@ -119,7 +120,7 @@ namespace ngraph
                                    params_buffer_index,
                                    indices_buffer_index,
                                    out_buffer_index](CPURuntimeContext* ctx,
-                                                     CPUExecutionContext* ectx) {
+                                                     CPUExecutionContext* /* ectx */) {
                             ngraph::runtime::reference::gather_nd<double, int32_t>(
                                 static_cast<double*>(ctx->buffer_data[params_buffer_index]),
                                 static_cast<int32_t*>(ctx->buffer_data[indices_buffer_index]),

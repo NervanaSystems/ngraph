@@ -54,7 +54,7 @@ namespace ngraph
 
                     auto functor =
                         [&, softmax_desc, softmax_index, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             if (ctx->first_iteration)
                             {
                                 mkldnn_emitter->build_softmax_forward(
@@ -177,7 +177,7 @@ namespace ngraph
                         NGRAPH_WARN << "Falling back to refernce kernel for softmax " << arg_shape
                                     << " over " << axes;
                         auto functor = [&, arg_shape, axes, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             runtime::reference::softmax<float>(
                                 static_cast<float*>(ctx->buffer_data[arg_buffer_index]),
                                 static_cast<float*>(ctx->buffer_data[out_buffer_index]),

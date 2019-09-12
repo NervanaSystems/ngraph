@@ -204,6 +204,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::And)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
@@ -226,6 +227,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Or)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
@@ -248,6 +250,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Xor)
             {
+                (void)node;
                 auto& functors = external_function->get_functors();
 
                 auto element_count = out[0].get_size();
@@ -401,6 +404,8 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Constant)
             {
+                (void)args;
+                (void)out;
                 auto& functors = external_function->get_functors();
 
                 vector<size_t> dest_indices;
@@ -416,7 +421,7 @@ namespace ngraph
                     external_function->get_buffer_index(node->get_output_tensor(0).get_name());
                 auto size = node->get_output_tensor(0).size();
                 auto functor = [&, dest_indices, src_index, size](CPURuntimeContext* ctx,
-                                                                  CPUExecutionContext* ectx) {
+                                                                  CPUExecutionContext* /* ectx */) {
                     for (auto p : dest_indices)
                     {
                         memcpy(ctx->buffer_data[p], ctx->buffer_data[src_index], size);

@@ -49,7 +49,7 @@ namespace ngraph
 
                     auto functor =
                         [&, qavg_pool_desc, qavg_pool_index, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                            CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                             if (ctx->first_iteration)
                             {
                                 mkldnn_emitter->build_pooling_forward(
