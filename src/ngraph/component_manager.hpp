@@ -16,13 +16,15 @@
 
 #pragma once
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace interpreter
-        {
-            void static_initialize();
-        }
-    }
-}
+#include <string>
+
+#include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/runtime/cpu/cpu_backend_visibility.h"
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+#include "ngraph/runtime/nop/nop_backend_visibility.hpp"
+#include "ngraph/runtime/plaidml/plaidml_backend_visibility.hpp"
+
+extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend();
+extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend();
+extern "C" PLAIDML_BACKEND_API void ngraph_register_plaidml_backend();
+extern "C" NOP_BACKEND_API void ngraph_register_nop_backend();

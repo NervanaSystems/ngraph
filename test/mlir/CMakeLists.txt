@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 # Enable use of the lit tool that we build from MLIR repo.
+set(LLVM_LIT ${LLVM_MAIN_SRC_DIR}/utils/lit/lit.py)
 set(LLVM_DEFAULT_EXTERNAL_LIT ${MLIR_TOOLS_DIR}/llvm-lit)
 
 configure_lit_site_cfg(
@@ -24,9 +25,9 @@ configure_lit_site_cfg(
     ${CMAKE_CURRENT_SOURCE_DIR}/lit.cfg.py
     )
 
-#set(NGRAPH_MLIR_TEST_DEPENDS
-#    ngraph-opt
-#    )
+set(NGRAPH_MLIR_TEST_DEPENDS
+    ngraph-opt
+    )
 
 add_lit_testsuite(check-mlir-lit "Running the nGraph MLIR regression tests"
     ${CMAKE_CURRENT_BINARY_DIR}

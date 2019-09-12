@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Reverse::type_name{"Reverse"};
+constexpr NodeTypeInfo op::Reverse::type_info;
 
 op::Reverse::Reverse(const Output<Node>& arg, const AxisSet& reversed_axes)
     : Op({arg})

@@ -23,7 +23,7 @@ using namespace ngraph;
 static int PARAMS = 0;
 static int INDICES = 1;
 
-const string op::GatherND::type_name{"GatherND"};
+constexpr NodeTypeInfo op::GatherND::type_info;
 
 shared_ptr<Node> op::GatherND::copy_with_new_args(const NodeVector& new_args) const
 {

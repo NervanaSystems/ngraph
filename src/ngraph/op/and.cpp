@@ -19,7 +19,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::And::type_name{"And"};
+constexpr NodeTypeInfo op::And::type_info;
 
 op::And::And(const Output<Node>& arg0,
              const Output<Node>& arg1,

@@ -23,7 +23,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::Dropout::type_name{"Dropout"};
+constexpr NodeTypeInfo op::Dropout::type_info;
 
 op::Dropout::Dropout(const Output<Node>& input,
                      const Output<Node>& gm_const,

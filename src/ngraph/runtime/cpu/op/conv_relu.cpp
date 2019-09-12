@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-const std::string op::ConvolutionRelu::type_name{"ConvolutionRelu"};
+constexpr NodeTypeInfo op::ConvolutionRelu::type_info;
 
 op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<op::Convolution>& conv)
     : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output()})

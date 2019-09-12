@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-const string op::Dequantize::type_name{"Dequantize"};
+constexpr NodeTypeInfo op::Dequantize::type_info;
 
 op::Dequantize::Dequantize(const Output<Node>& input,
                            const Output<Node>& scale,
