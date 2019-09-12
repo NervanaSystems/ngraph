@@ -174,7 +174,8 @@ NodeVector op::GroupConvolution::decompose_op() const
     return {std::make_shared<ngraph::op::Concat>(convolution_nodes, concatenation_axis)};
 }
 
-void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& adjoints, const NodeVector& deltas)
+void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                             const NodeVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }
