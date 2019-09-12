@@ -70,7 +70,7 @@ namespace ngraph
                                     arg1_buffer_index,
                                     arg2_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) mutable {
+                                                       CPUExecutionContext* /* ectx */) mutable {
                         if (ctx->first_iteration)
                         {
                             vector<float> dyn_scales;

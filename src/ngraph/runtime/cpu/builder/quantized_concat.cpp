@@ -68,7 +68,7 @@ namespace ngraph
                                     nargs,
                                     concat_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_concat(ctx->mkldnn_primitives,

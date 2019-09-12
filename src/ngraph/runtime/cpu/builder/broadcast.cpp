@@ -222,7 +222,7 @@ namespace ngraph
                 else
                 {
                     functor = [&, size, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         memcpy(ctx->buffer_data[out_buffer_index],
                                ctx->buffer_data[arg_buffer_index],
                                size);
