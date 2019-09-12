@@ -93,6 +93,11 @@ static llvm::cl::opt<bool> clPrintIRAfterAll(
 
 // *** Optimization flags ***
 
+static llvm::cl::opt<bool> clEnableNgMemoryOpt(
+    "ng-mem-opt",
+    llvm::cl::init(true),
+    llvm::cl::desc("Enable ngraph dialect memory optimization pass"));
+
 static llvm::cl::opt<bool>
     clEnableAffineLoopFusion("affine-loop-fusion",
                              llvm::cl::init(false),
@@ -684,7 +689,10 @@ mlir::Operation* MLIRCompiler::create_index_reduction(const ngraph::Node* ng_nod
 void MLIRCompiler::optimize_ng_dialect()
 {
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createMemoryOptimizationPass());
+    if (clEnableNgMemoryOpt)
+    {
+        pm.addPass(mlir::createMemoryOptimizationPass());
+    }
     pm.run(m_module.get());
     dump_mlir_module("IR after ng dialect optimization");
 }
