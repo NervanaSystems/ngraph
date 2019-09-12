@@ -30,14 +30,14 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            static void sum_region_across_axes(const T* arg,
-                                               size_t current_axis_index,
-                                               const std::vector<size_t>& axes,
-                                               Coordinate& sum_coord,
-                                               T& square_sum,
-                                               const std::vector<size_t>& begin_area,
-                                               const std::vector<size_t>& end_area,
-                                               const CoordinateTransform& input_transform)
+            void sum_region_across_axes(const T* arg,
+                                        size_t current_axis_index,
+                                        const std::vector<size_t>& axes,
+                                        Coordinate& sum_coord,
+                                        T& square_sum,
+                                        const std::vector<size_t>& begin_area,
+                                        const std::vector<size_t>& end_area,
+                                        const CoordinateTransform& input_transform)
             {
                 // all nested axes were visited
                 if (current_axis_index == axes.size())
