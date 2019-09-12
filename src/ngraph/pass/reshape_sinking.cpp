@@ -326,7 +326,7 @@ static void sink_reshape(shared_ptr<op::Reshape> reshape,
 
 static void sink_unary(shared_ptr<op::util::UnaryElementwiseArithmetic> n,
                        ReshapeMap& reorders,
-                       set<shared_ptr<Node>>& reshapes_to_delete)
+                       set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = read_reshapemap(reorders, n->get_argument(0));
     NGRAPH_DEBUG << "Propagating " << describe_reshape(arg_reshape) << " for " << n->get_name();
@@ -373,7 +373,7 @@ static void sink_binary(shared_ptr<op::util::BinaryElementwiseArithmetic> binary
 
 static void sink_slice(shared_ptr<op::Slice> n,
                        ReshapeMap& reorders,
-                       set<shared_ptr<Node>>& reshapes_to_delete)
+                       set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = reorders.at(n->get_argument(0));
     auto order = arg_reshape->get_input_order();
@@ -399,8 +399,9 @@ static void sink_slice(shared_ptr<op::Slice> n,
     write_reshapemap(reorders, new_slice, new_reshape);
 }
 
-static void
-    sink_pad(shared_ptr<op::Pad> n, ReshapeMap& reorders, set<shared_ptr<Node>>& reshapes_to_delete)
+static void sink_pad(shared_ptr<op::Pad> n,
+                     ReshapeMap& reorders,
+                     set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = reorders.at(n->get_argument(0));
     auto order = arg_reshape->get_input_order();
@@ -425,7 +426,7 @@ static void
 }
 static void sink_quantize(shared_ptr<op::Quantize> quantize,
                           ReshapeMap& reorders,
-                          set<shared_ptr<Node>>& reshapes_to_delete)
+                          set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = reorders.at(quantize->get_argument(0));
     AxisSet axes_in_def_order =
@@ -492,7 +493,7 @@ static void sink_concat(shared_ptr<op::Concat> n,
 
 static void sink_dequantize(shared_ptr<op::Dequantize> dequantize,
                             ReshapeMap& reorders,
-                            set<shared_ptr<Node>>& reshapes_to_delete)
+                            set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = reorders.at(dequantize->get_argument(0));
     AxisSet axes_in_def_order =

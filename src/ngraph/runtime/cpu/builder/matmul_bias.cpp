@@ -80,7 +80,7 @@ namespace ngraph
                                    arg0_buffer_index,
                                    arg1_buffer_index,
                                    out0_buffer_index](CPURuntimeContext* ctx,
-                                                      CPUExecutionContext* ectx) {
+                                                      CPUExecutionContext* /* ectx */) {
                     cblas::cblas_sgemm(
                         cblas::Layout::RowMajor,
                         transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
@@ -98,8 +98,8 @@ namespace ngraph
                         max<size_t>(1, arg2_shape[1]));
                 };
 
-                CPUKernelFunctor bias_functor = [](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {};
+                CPUKernelFunctor bias_functor = [](CPURuntimeContext* /* ctx */,
+                                                   CPUExecutionContext* /* ectx */) {};
 
                 if (args.size() > 2)
                 {
@@ -114,7 +114,7 @@ namespace ngraph
                             vector<float> ones_row(arg2_shape[0], 1.0f);
                             bias_functor =
                                 [&, ones_row, arg2_shape, arg2_buffer_index, out0_buffer_index](
-                                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                    CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                                     cblas::cblas_sgemm(
                                         cblas::Layout::RowMajor,
                                         cblas::Transpose::None,
@@ -137,7 +137,7 @@ namespace ngraph
                             vector<float> ones_col(arg2_shape[1], 1.0f);
                             bias_functor =
                                 [&, ones_col, arg2_shape, arg2_buffer_index, out0_buffer_index](
-                                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                    CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                                     cblas::cblas_sgemm(
                                         cblas::Layout::RowMajor,
                                         cblas::Transpose::None,
@@ -167,7 +167,7 @@ namespace ngraph
 
                         bias_functor =
                             [&, ones_scalar, arg2_shape, arg2_buffer_index, out0_buffer_index](
-                                CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                                 vector<float> bias(
                                     arg2_shape[1],
                                     *static_cast<float*>(ctx->buffer_data[arg2_buffer_index]));
@@ -226,7 +226,7 @@ namespace ngraph
                 size_t data_c_index;
                 int64_t group_count;
 
-                void call(CPURuntimeContext* ctx, CPUExecutionContext* ectx)
+                void call(CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */)
                 {
                     std::vector<float*> a_array(group_sizes[0]);
                     std::vector<float*> b_array(group_sizes[0]);

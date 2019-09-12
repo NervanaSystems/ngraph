@@ -35,7 +35,7 @@ namespace ngraph
                 void reduce_min_all(void* input,
                                     void* output,
                                     const Shape& input_shape,
-                                    const Shape& output_shape,
+                                    const Shape& /* output_shape */,
                                     int arena)
                 {
                     Eigen::array<Eigen::Index, Rank> in_dims;
@@ -174,7 +174,7 @@ namespace ngraph
                          const Shape& in_shape,
                          const Shape& out_shape,
                          const AxisSet& reduction_axes,
-                         int arena)
+                         int /* arena */)
                 {
                     reference::min(static_cast<ElementType*>(arg),
                                    static_cast<ElementType*>(out),

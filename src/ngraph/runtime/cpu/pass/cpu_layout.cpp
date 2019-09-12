@@ -1881,6 +1881,7 @@ namespace ngraph
                 static bool can_be_rotated(const ngraph::op::Reshape* reshape,
                                            const mkldnn::memory::desc& md)
                 {
+                    (void)md;
                     auto axis_order = reshape->get_input_order();
                     auto input_shape = reshape->get_input_shape(0);
                     auto output_shape = reshape->get_output_shape();
@@ -1941,7 +1942,7 @@ namespace ngraph
                 }
 
                 static bool can_be_expanded(const ngraph::op::Reshape* reshape,
-                                            const mkldnn::memory::desc& md,
+                                            const mkldnn::memory::desc& /* md */,
                                             AxisVector& expanded_axis)
                 {
                     auto input_shape = reshape->get_input_shape(0);

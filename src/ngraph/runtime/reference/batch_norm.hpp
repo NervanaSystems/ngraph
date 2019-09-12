@@ -127,7 +127,7 @@ namespace ngraph
             template <typename T>
             void batch_norm_backprop(double eps,
                                      const T* gamma,
-                                     const T* beta,
+                                     const T* /* beta */,
                                      const T* input,
                                      const T* mean,
                                      const T* variance,

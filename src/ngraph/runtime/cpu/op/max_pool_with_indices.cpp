@@ -358,8 +358,8 @@ shared_ptr<Node>
                                                        m_padding_above);
 }
 
-void op::MaxPoolWithIndices::generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const NodeVector& deltas)
+void op::MaxPoolWithIndices::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                               const NodeVector& /* deltas */)
 {
     throw ngraph_error("Differentation of MaxPoolWithIndices isn't supported");
 }

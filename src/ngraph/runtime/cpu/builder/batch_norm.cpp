@@ -109,7 +109,7 @@ namespace ngraph
                                     out0_buffer_index,
                                     out1_buffer_index,
                                     out2_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
+                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_memories,
@@ -180,7 +180,7 @@ namespace ngraph
                                     arg3_buffer_index,
                                     arg4_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
+                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
                             mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_memories,
@@ -262,7 +262,7 @@ namespace ngraph
                                         out0_buffer_index,
                                         out1_buffer_index,
                                         out2_buffer_index](CPURuntimeContext* ctx,
-                                                           CPUExecutionContext* ectx) {
+                                                           CPUExecutionContext* /* ectx */) {
                             kernel(eps,
                                    ctx->buffer_data[arg0_buffer_index],
                                    ctx->buffer_data[arg1_buffer_index],
@@ -311,7 +311,7 @@ namespace ngraph
                                         arg3_buffer_index,
                                         arg4_buffer_index,
                                         out0_buffer_index](CPURuntimeContext* ctx,
-                                                           CPUExecutionContext* ectx) {
+                                                           CPUExecutionContext* /* ectx */) {
                             kernel(eps,
                                    ctx->buffer_data[arg0_buffer_index],
                                    ctx->buffer_data[arg1_buffer_index],
@@ -373,7 +373,7 @@ namespace ngraph
                                     arg3_buffer_index,
                                     arg4_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
-                                                       CPUExecutionContext* ectx) {
+                                                       CPUExecutionContext* /* ectx */) {
                         kernel(eps,
                                ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[arg1_buffer_index],
@@ -463,7 +463,7 @@ namespace ngraph
                                 out0_buffer_index,
                                 out1_buffer_index,
                                 out2_buffer_index](CPURuntimeContext* ctx,
-                                                   CPUExecutionContext* ectx) {
+                                                   CPUExecutionContext* /* ectx */) {
                     if (ctx->first_iteration)
                     {
                         mkldnn_emitter->build_batchnorm_backward(ctx->mkldnn_memories,
